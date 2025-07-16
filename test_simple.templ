@@ -1,0 +1,15 @@
+package main
+
+templ SimpleTest(message string) {
+	<div class="bg-blue-100 p-4 rounded">
+		<h1 class="text-xl font-bold">Test Component</h1>
+		<p class="text-gray-600">{message}</p>
+	</div>
+}
+
+templ AnotherTest(name string, count int) {
+	<div class="bg-green-100 p-4 rounded">
+		<h2>Hello {name}!</h2>
+		<p>You have {fmt.Sprintf("%d", count)} items</p>
+	</div>
+}

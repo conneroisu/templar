@@ -1,0 +1,32 @@
+package main
+
+templ HelloWorld(name string) {
+	<div>
+		<h1>Hello, {name}!</h1>
+		<p>Welcome to Templar - your Go templ development companion.</p>
+	</div>
+}
+
+templ ButtonComponent(text string, variant string) {
+	<button class={ "btn", "btn-" + variant }>
+		{text}
+	</button>
+}
+
+templ Layout(title string) {
+	<!DOCTYPE html>
+	<html>
+	<head>
+		<title>{title}</title>
+		<style>
+			body { font-family: system-ui, sans-serif; padding: 20px; }
+			.btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+			.btn-primary { background: #007bff; color: white; }
+			.btn-secondary { background: #6c757d; color: white; }
+		</style>
+	</head>
+	<body>
+		{ children... }
+	</body>
+	</html>
+}

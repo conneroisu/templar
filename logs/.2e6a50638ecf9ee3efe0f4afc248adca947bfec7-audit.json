@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "/home/connerohnesorge/Documents/001Repos/templar/logs/.2e6a50638ecf9ee3efe0f4afc248adca947bfec7-audit.json",
+    "files": [
+        {
+            "date": 1751985334611,
+            "name": "/home/connerohnesorge/Documents/001Repos/templar/logs/mcp-puppeteer-2025-07-08.log",
+            "hash": "0fed8850daa6e0044a820696bf0165f4b271d5c0f7b8d6a6d43dec2d18d36039"
+        }
+    ],
+    "hashType": "sha256"
+}
