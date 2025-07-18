@@ -42,12 +42,18 @@ func init() {
 }
 
 func runServe(cmd *cobra.Command, args []string) error {
-	cfg := config.Load()
+	cfg, err := config.Load()
+	if err != nil {
+		return fmt.Errorf("failed to load configuration: %w", err)
+	}
 	
 	// Set target files if specified
 	cfg.TargetFiles = args
 	
-	srv := server.New(cfg)
+	srv, err := server.New(cfg)
+	if err != nil {
+		return fmt.Errorf("failed to create server: %w", err)
+	}
 	
 	// Create context that cancels on interrupt
 	ctx, cancel := context.WithCancel(context.Background())

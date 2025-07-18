@@ -15,7 +15,23 @@ var rootCmd = &cobra.Command{
 	Use:   "templar",
 	Short: "A rapid prototyping CLI helper tool for Go templ",
 	Long: `Templar is a rapid prototyping CLI helper tool for Go templ that provides
-browser preview functionality, hot reload capability, and streamlined development workflows.`,
+browser preview functionality, hot reload capability, and streamlined development workflows.
+
+Key Features:
+  • Component discovery and scanning
+  • Hot reload development server
+  • Component isolation and preview
+  • Build pipeline integration
+  • Mock data generation
+  • WebSocket-based live updates
+
+Quick Start:
+  templar init                    Initialize a new project
+  templar serve                   Start development server
+  templar list                    List all components
+  templar build                   Build all components
+
+Documentation: https://github.com/conneroisu/templar`,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

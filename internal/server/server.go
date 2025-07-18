@@ -2,15 +2,19 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os/exec"
 	"runtime"
 	"sync"
 	"time"
 
+	"github.com/conneroisu/templar/internal/build"
 	"github.com/conneroisu/templar/internal/config"
+	"github.com/conneroisu/templar/internal/errors"
 	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/renderer"
 	"github.com/conneroisu/templar/internal/scanner"
@@ -18,20 +22,29 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// Client represents a WebSocket client
+type Client struct {
+	conn   *websocket.Conn
+	send   chan []byte
+	server *PreviewServer
+}
+
 // PreviewServer serves components with live reload capability
 type PreviewServer struct {
 	config       *config.Config
 	httpServer   *http.Server
 	wsUpgrader   websocket.Upgrader
-	clients      map[*websocket.Conn]bool
+	clients      map[*websocket.Conn]*Client
 	clientsMutex sync.RWMutex
 	broadcast    chan []byte
-	register     chan *websocket.Conn
+	register     chan *Client
 	unregister   chan *websocket.Conn
 	registry     *registry.ComponentRegistry
 	watcher      *watcher.FileWatcher
 	scanner      *scanner.ComponentScanner
 	renderer     *renderer.ComponentRenderer
+	buildPipeline *build.BuildPipeline
+	lastBuildErrors []*errors.ParsedError
 }
 
 // UpdateMessage represents a message sent to the browser
@@ -43,10 +56,34 @@ type UpdateMessage struct {
 }
 
 // New creates a new preview server
-func New(cfg *config.Config) *PreviewServer {
+func New(cfg *config.Config) (*PreviewServer, error) {
 	upgrader := websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
-			return true // Allow all origins for development
+			// Get the origin from the request
+			origin := r.Header.Get("Origin")
+			if origin == "" {
+				// Allow connections without origin header (e.g., from same-origin requests)
+				return true
+			}
+			
+			// Parse the origin URL
+			originURL, err := url.Parse(origin)
+			if err != nil {
+				return false
+			}
+			
+			// Check if the origin matches the expected host and port
+			expectedHost := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
+			if originURL.Host == expectedHost || originURL.Host == "localhost:"+fmt.Sprintf("%d", cfg.Server.Port) {
+				return true
+			}
+			
+			// Allow localhost and 127.0.0.1 for development
+			if originURL.Hostname() == "localhost" || originURL.Hostname() == "127.0.0.1" {
+				return true
+			}
+			
+			return false
 		},
 	}
 
@@ -54,30 +91,41 @@ func New(cfg *config.Config) *PreviewServer {
 	
 	fileWatcher, err := watcher.NewFileWatcher(300 * time.Millisecond)
 	if err != nil {
-		log.Fatal("Failed to create file watcher:", err)
+		return nil, fmt.Errorf("failed to create file watcher: %w", err)
 	}
 	
 	scanner := scanner.NewComponentScanner(registry)
 	renderer := renderer.NewComponentRenderer(registry)
+	
+	// Create build pipeline
+	buildPipeline := build.NewBuildPipeline(4, registry)
 
 	return &PreviewServer{
-		config:     cfg,
-		wsUpgrader: upgrader,
-		clients:    make(map[*websocket.Conn]bool),
-		broadcast:  make(chan []byte),
-		register:   make(chan *websocket.Conn),
-		unregister: make(chan *websocket.Conn),
-		registry:   registry,
-		watcher:    fileWatcher,
-		scanner:    scanner,
-		renderer:   renderer,
-	}
+		config:        cfg,
+		wsUpgrader:    upgrader,
+		clients:       make(map[*websocket.Conn]*Client),
+		broadcast:     make(chan []byte),
+		register:      make(chan *Client),
+		unregister:    make(chan *websocket.Conn),
+		registry:      registry,
+		watcher:       fileWatcher,
+		scanner:       scanner,
+		renderer:      renderer,
+		buildPipeline: buildPipeline,
+		lastBuildErrors: make([]*errors.ParsedError, 0),
+	}, nil
 }
 
 // Start starts the preview server
 func (s *PreviewServer) Start(ctx context.Context) error {
 	// Set up file watcher
 	s.setupFileWatcher(ctx)
+	
+	// Start build pipeline
+	s.buildPipeline.Start(ctx)
+	
+	// Add build callback to handle errors and updates
+	s.buildPipeline.AddCallback(s.handleBuildResult)
 	
 	// Initial scan
 	if err := s.initialScan(); err != nil {
@@ -94,6 +142,10 @@ func (s *PreviewServer) Start(ctx context.Context) error {
 	mux.HandleFunc("/component/", s.handleComponent)
 	mux.HandleFunc("/render/", s.handleRender)
 	mux.HandleFunc("/static/", s.handleStatic)
+	mux.HandleFunc("/api/build/status", s.handleBuildStatus)
+	mux.HandleFunc("/api/build/metrics", s.handleBuildMetrics)
+	mux.HandleFunc("/api/build/errors", s.handleBuildErrors)
+	mux.HandleFunc("/api/build/cache", s.handleBuildCache)
 	
 	// Root handler depends on whether specific files are targeted
 	if len(s.config.TargetFiles) > 0 {
@@ -165,6 +217,8 @@ func (s *PreviewServer) initialScan() error {
 }
 
 func (s *PreviewServer) handleFileChange(events []watcher.ChangeEvent) error {
+	componentsToRebuild := make(map[string]*registry.ComponentInfo)
+	
 	for _, event := range events {
 		log.Printf("File changed: %s (%s)", event.Path, event.Type)
 		
@@ -172,15 +226,26 @@ func (s *PreviewServer) handleFileChange(events []watcher.ChangeEvent) error {
 		if err := s.scanner.ScanFile(event.Path); err != nil {
 			log.Printf("Failed to rescan file %s: %v", event.Path, err)
 		}
+		
+		// Find components in the changed file
+		components := s.registry.GetAll()
+		for _, component := range components {
+			if component.FilePath == event.Path {
+				componentsToRebuild[component.Name] = component
+			}
+		}
 	}
 	
-	// Broadcast reload message
-	msg := UpdateMessage{
-		Type:      "full_reload",
-		Timestamp: time.Now(),
+	// Queue components for rebuild
+	for _, component := range componentsToRebuild {
+		s.buildPipeline.BuildWithPriority(component)
 	}
 	
-	s.broadcastMessage(msg)
+	// If no specific components to rebuild, do a full rebuild
+	if len(componentsToRebuild) == 0 {
+		s.triggerFullRebuild()
+	}
+	
 	return nil
 }
 
@@ -226,7 +291,200 @@ func (s *PreviewServer) addMiddleware(handler http.Handler) http.Handler {
 }
 
 func (s *PreviewServer) broadcastMessage(msg UpdateMessage) {
-	// Implementation depends on JSON marshaling
-	// For now, just broadcast a simple reload message
-	s.broadcast <- []byte(`{"type":"full_reload"}`)
+	// Marshal message to JSON
+	jsonData, err := json.Marshal(msg)
+	if err != nil {
+		log.Printf("Failed to marshal message: %v", err)
+		// Fallback to simple reload message
+		s.broadcast <- []byte(`{"type":"full_reload"}`)
+		return
+	}
+	
+	s.broadcast <- jsonData
+}
+
+// handleBuildResult handles build results from the build pipeline
+func (s *PreviewServer) handleBuildResult(result build.BuildResult) {
+	if result.Error != nil {
+		// Store build errors
+		s.lastBuildErrors = result.ParsedErrors
+		
+		// Broadcast error message
+		msg := UpdateMessage{
+			Type:      "build_error",
+			Content:   errors.FormatErrorsForBrowser(result.ParsedErrors),
+			Timestamp: time.Now(),
+		}
+		s.broadcastMessage(msg)
+	} else {
+		// Clear previous errors
+		s.lastBuildErrors = make([]*errors.ParsedError, 0)
+		
+		// Broadcast success message
+		msg := UpdateMessage{
+			Type:      "build_success",
+			Target:    result.Component.Name,
+			Timestamp: time.Now(),
+		}
+		s.broadcastMessage(msg)
+	}
+}
+
+// triggerFullRebuild triggers a full rebuild of all components
+func (s *PreviewServer) triggerFullRebuild() {
+	components := s.registry.GetAll()
+	for _, component := range components {
+		s.buildPipeline.Build(component)
+	}
+}
+
+// GetBuildMetrics returns the current build metrics
+func (s *PreviewServer) GetBuildMetrics() build.BuildMetrics {
+	return s.buildPipeline.GetMetrics()
+}
+
+// GetLastBuildErrors returns the last build errors
+func (s *PreviewServer) GetLastBuildErrors() []*errors.ParsedError {
+	return s.lastBuildErrors
+}
+
+// Shutdown gracefully shuts down the server and cleans up resources
+func (s *PreviewServer) Shutdown(ctx context.Context) error {
+	// Stop file watcher
+	if s.watcher != nil {
+		s.watcher.Stop()
+	}
+	
+	// Close all WebSocket connections
+	s.clientsMutex.Lock()
+	for conn, client := range s.clients {
+		close(client.send)
+		conn.Close()
+	}
+	s.clients = make(map[*websocket.Conn]*Client)
+	s.clientsMutex.Unlock()
+	
+	// Close channels
+	close(s.broadcast)
+	close(s.register)
+	close(s.unregister)
+	
+	// Shutdown HTTP server
+	if s.httpServer != nil {
+		return s.httpServer.Shutdown(ctx)
+	}
+	
+	return nil
+}
+
+// handleBuildStatus returns the current build status
+func (s *PreviewServer) handleBuildStatus(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	metrics := s.buildPipeline.GetMetrics()
+	errors := s.GetLastBuildErrors()
+	
+	status := "healthy"
+	if len(errors) > 0 {
+		status = "error"
+	}
+	
+	response := map[string]interface{}{
+		"status":        status,
+		"total_builds":  metrics.TotalBuilds,
+		"failed_builds": metrics.FailedBuilds,
+		"cache_hits":    metrics.CacheHits,
+		"errors":        len(errors),
+		"timestamp":     time.Now().Unix(),
+	}
+	
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+// handleBuildMetrics returns detailed build metrics
+func (s *PreviewServer) handleBuildMetrics(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	metrics := s.buildPipeline.GetMetrics()
+	cacheCount, cacheSize, cacheMaxSize := s.buildPipeline.GetCacheStats()
+	
+	response := map[string]interface{}{
+		"build_metrics": map[string]interface{}{
+			"total_builds":     metrics.TotalBuilds,
+			"successful_builds": metrics.SuccessfulBuilds,
+			"failed_builds":    metrics.FailedBuilds,
+			"cache_hits":       metrics.CacheHits,
+			"average_duration": metrics.AverageDuration.String(),
+			"total_duration":   metrics.TotalDuration.String(),
+		},
+		"cache_metrics": map[string]interface{}{
+			"entries":    cacheCount,
+			"size_bytes": cacheSize,
+			"max_size":   cacheMaxSize,
+			"hit_rate":   float64(metrics.CacheHits) / float64(metrics.TotalBuilds),
+		},
+		"timestamp": time.Now().Unix(),
+	}
+	
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+// handleBuildErrors returns the last build errors
+func (s *PreviewServer) handleBuildErrors(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	errors := s.GetLastBuildErrors()
+	
+	response := map[string]interface{}{
+		"errors":    errors,
+		"count":     len(errors),
+		"timestamp": time.Now().Unix(),
+	}
+	
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+// handleBuildCache manages the build cache
+func (s *PreviewServer) handleBuildCache(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		// Return cache statistics
+		count, size, maxSize := s.buildPipeline.GetCacheStats()
+		response := map[string]interface{}{
+			"entries":    count,
+			"size_bytes": size,
+			"max_size":   maxSize,
+			"timestamp":  time.Now().Unix(),
+		}
+		
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+		
+	case http.MethodDelete:
+		// Clear cache
+		s.buildPipeline.ClearCache()
+		
+		response := map[string]interface{}{
+			"message":   "Cache cleared successfully",
+			"timestamp": time.Now().Unix(),
+		}
+		
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+		
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
 }

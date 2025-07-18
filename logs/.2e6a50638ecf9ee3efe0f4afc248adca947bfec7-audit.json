@@ -9,6 +9,21 @@
             "date": 1751985334611,
             "name": "/home/connerohnesorge/Documents/001Repos/templar/logs/mcp-puppeteer-2025-07-08.log",
             "hash": "0fed8850daa6e0044a820696bf0165f4b271d5c0f7b8d6a6d43dec2d18d36039"
+        },
+        {
+            "date": 1752679562907,
+            "name": "/home/connerohnesorge/Documents/001Repos/templar/logs/mcp-puppeteer-2025-07-16.log",
+            "hash": "d6b5bdaafe28d520f9b0043bd1aba9e2138bb1a813e936a031ca6326584d0b07"
+        },
+        {
+            "date": 1752753678733,
+            "name": "/home/connerohnesorge/Documents/001Repos/templar/logs/mcp-puppeteer-2025-07-17.log",
+            "hash": "511671727c083cad5fe9d9cfa009916bfe5ad8c6dc9442f2f2fc84ccf9fe06a2"
+        },
+        {
+            "date": 1752854449437,
+            "name": "/home/connerohnesorge/Documents/001Repos/templar/logs/mcp-puppeteer-2025-07-18.log",
+            "hash": "51c01e6659fe6871ba0c4dda223de4d00d15f7f660903106eaa694b8b0021aaf"
         }
     ],
     "hashType": "sha256"

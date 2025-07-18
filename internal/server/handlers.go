@@ -235,7 +235,9 @@ const indexHTML = `<!DOCTYPE html>
 
 func (s *PreviewServer) handleIndex(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(indexHTML))
+	if _, err := w.Write([]byte(indexHTML)); err != nil {
+		log.Printf("Failed to write index response: %v", err)
+	}
 }
 
 func (s *PreviewServer) handleComponents(w http.ResponseWriter, r *http.Request) {
@@ -269,52 +271,6 @@ func (s *PreviewServer) handleStatic(w http.ResponseWriter, r *http.Request) {
 }
 
 // renderComponentPage renders an individual component page
-func (s *PreviewServer) renderComponentPage(component *registry.ComponentInfo) string {
-	tmpl := template.Must(template.New("component").Parse(`
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{.Name}} - Templar</title>
-    <style>
-        body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; }
-        .component-header { border-bottom: 1px solid #ddd; padding-bottom: 20px; margin-bottom: 20px; }
-        .component-name { font-size: 24px; font-weight: bold; color: #333; }
-        .component-path { color: #666; margin-top: 5px; }
-        .component-preview { border: 1px solid #ddd; border-radius: 4px; padding: 20px; background: #f9f9f9; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="component-header">
-            <div class="component-name">{{.Name}}</div>
-            <div class="component-path">{{.FilePath}}</div>
-        </div>
-        
-        <div class="component-preview">
-            <p>Component preview would appear here</p>
-            <p>Parameters: {{range .Parameters}}{{.Name}}:{{.Type}} {{end}}</p>
-        </div>
-    </div>
-    
-    <script>
-        // WebSocket connection for live reload
-        const ws = new WebSocket('ws://localhost:8080/ws');
-        ws.onmessage = function(event) {
-            const message = JSON.parse(event.data);
-            if (message.type === 'full_reload') {
-                window.location.reload();
-            }
-        };
-    </script>
-</body>
-</html>
-	`))
-	
-	var buf strings.Builder
-	tmpl.Execute(&buf, component)
-	return buf.String()
-}
 
 func (s *PreviewServer) handleTargetFiles(w http.ResponseWriter, r *http.Request) {
 	// When specific files are targeted, show a file selection interface
@@ -393,7 +349,9 @@ func (s *PreviewServer) handleRender(w http.ResponseWriter, r *http.Request) {
 	fullHTML := s.renderer.RenderComponentWithLayout(componentName, html)
 	
 	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(fullHTML))
+	if _, err := w.Write([]byte(fullHTML)); err != nil {
+		log.Printf("Failed to write component response: %v", err)
+	}
 }
 
 func (s *PreviewServer) renderSingleComponent(w http.ResponseWriter, r *http.Request, component *registry.ComponentInfo) {
@@ -408,7 +366,9 @@ func (s *PreviewServer) renderSingleComponent(w http.ResponseWriter, r *http.Req
 	fullHTML := s.renderer.RenderComponentWithLayout(component.Name, html)
 	
 	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(fullHTML))
+	if _, err := w.Write([]byte(fullHTML)); err != nil {
+		log.Printf("Failed to write component response: %v", err)
+	}
 }
 
 func (s *PreviewServer) renderComponentSelection(w http.ResponseWriter, r *http.Request, components []*registry.ComponentInfo, filename string) {
@@ -438,7 +398,9 @@ func (s *PreviewServer) renderComponentSelection(w http.ResponseWriter, r *http.
 </html>`
 	
 	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(html))
+	if _, err := w.Write([]byte(html)); err != nil {
+		log.Printf("Failed to write component selection response: %v", err)
+	}
 }
 
 func (s *PreviewServer) renderFileSelection(w http.ResponseWriter, r *http.Request) {
@@ -468,5 +430,7 @@ func (s *PreviewServer) renderFileSelection(w http.ResponseWriter, r *http.Reque
 </html>`
 	
 	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(html))
+	if _, err := w.Write([]byte(html)); err != nil {
+		log.Printf("Failed to write file selection response: %v", err)
+	}
 }

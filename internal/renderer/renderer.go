@@ -2,6 +2,7 @@ package renderer
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -20,7 +21,9 @@ type ComponentRenderer struct {
 // NewComponentRenderer creates a new component renderer
 func NewComponentRenderer(registry *registry.ComponentRegistry) *ComponentRenderer {
 	workDir := ".templar/render"
-	os.MkdirAll(workDir, 0755)
+	if err := os.MkdirAll(workDir, 0755); err != nil {
+		log.Printf("Failed to create work directory %s: %v", workDir, err)
+	}
 	
 	return &ComponentRenderer{
 		registry: registry,
@@ -37,8 +40,12 @@ func (r *ComponentRenderer) RenderComponent(componentName string) (string, error
 	
 	// Create a clean workspace for this component
 	componentWorkDir := filepath.Join(r.workDir, componentName)
-	os.RemoveAll(componentWorkDir) // Clean up any previous builds
-	os.MkdirAll(componentWorkDir, 0755)
+	if err := os.RemoveAll(componentWorkDir); err != nil {
+		log.Printf("Failed to remove existing component work directory %s: %v", componentWorkDir, err)
+	}
+	if err := os.MkdirAll(componentWorkDir, 0755); err != nil {
+		return "", fmt.Errorf("failed to create component work directory: %w", err)
+	}
 	
 	// Generate mock data for parameters
 	mockData := r.generateMockData(component)
@@ -200,15 +207,6 @@ func main() {
 }
 
 // copyFile copies a file from src to dst
-func (r *ComponentRenderer) copyFile(src, dst string) error {
-	input, err := os.ReadFile(src)
-	if err != nil {
-		return err
-	}
-	
-	return os.WriteFile(dst, input, 0644)
-}
-
 // copyAndModifyTemplFile copies a templ file and modifies it to use main package
 func (r *ComponentRenderer) copyAndModifyTemplFile(src, dst string) error {
 	input, err := os.ReadFile(src)

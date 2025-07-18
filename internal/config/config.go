@@ -46,10 +46,10 @@ type DevelopmentConfig struct {
 	ErrorOverlay      bool `yaml:"error_overlay"`
 }
 
-func Load() *Config {
+func Load() (*Config, error) {
 	var config Config
 	if err := viper.Unmarshal(&config); err != nil {
-		panic(err)
+		return nil, err
 	}
 	
 	// If scan paths are empty, use defaults
@@ -62,5 +62,5 @@ func Load() *Config {
 		config.Server.Open = false
 	}
 	
-	return &config
+	return &config, nil
 }

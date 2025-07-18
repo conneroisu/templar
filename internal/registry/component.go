@@ -143,6 +143,20 @@ func (r *ComponentRegistry) Watch() <-chan ComponentEvent {
 	return ch
 }
 
+// UnWatch removes a watcher channel and closes it
+func (r *ComponentRegistry) UnWatch(ch <-chan ComponentEvent) {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+	
+	for i, watcher := range r.watchers {
+		if watcher == ch {
+			close(watcher)
+			r.watchers = append(r.watchers[:i], r.watchers[i+1:]...)
+			break
+		}
+	}
+}
+
 // Count returns the number of registered components
 func (r *ComponentRegistry) Count() int {
 	r.mutex.RLock()

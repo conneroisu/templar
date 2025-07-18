@@ -28,6 +28,11 @@ func NewComponentScanner(registry *registry.ComponentRegistry) *ComponentScanner
 	}
 }
 
+// GetRegistry returns the component registry
+func (s *ComponentScanner) GetRegistry() *registry.ComponentRegistry {
+	return s.registry
+}
+
 // ScanDirectory scans a directory for templ components
 func (s *ComponentScanner) ScanDirectory(dir string) error {
 	fmt.Printf("Scanning directory: %s\n", dir)
@@ -218,11 +223,6 @@ func (s *ComponentScanner) typeToString(expr ast.Expr) string {
 	default:
 		return "unknown"
 	}
-}
-
-func extractPackage(path string) string {
-	dir := filepath.Dir(path)
-	return filepath.Base(dir)
 }
 
 func extractParameters(line string) []registry.ParameterInfo {

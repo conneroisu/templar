@@ -2,6 +2,7 @@ package watcher
 
 import (
 	"context"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -126,8 +127,14 @@ func (fw *FileWatcher) Start(ctx context.Context) error {
 	return nil
 }
 
-// Stop stops the file watcher
+// Stop stops the file watcher and cleans up resources
 func (fw *FileWatcher) Stop() error {
+	// Stop the debouncer timer if it exists
+	if fw.debouncer.timer != nil {
+		fw.debouncer.timer.Stop()
+	}
+	
+	// Close the watcher
 	return fw.watcher.Close()
 }
 
@@ -140,7 +147,7 @@ func (fw *FileWatcher) watchLoop(ctx context.Context) {
 			fw.handleFsnotifyEvent(event)
 		case err := <-fw.watcher.Errors:
 			// Log error but continue watching
-			_ = err
+			log.Printf("File watcher error: %v", err)
 		}
 	}
 }
@@ -210,7 +217,7 @@ func (fw *FileWatcher) processEvents(ctx context.Context) {
 			for _, handler := range handlers {
 				if err := handler(events); err != nil {
 					// Log error but continue processing
-					_ = err
+					log.Printf("File watcher handler error: %v", err)
 				}
 			}
 		}

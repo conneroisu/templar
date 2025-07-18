@@ -36,11 +36,12 @@ func (s *PreviewServer) handleWebSocket(w http.ResponseWriter, r *http.Request) 
 		server: s,
 	}
 
-	s.register <- conn
-
-	// Start goroutines for this client
+	// Start goroutines for this client first
 	go client.writePump()
 	go client.readPump()
+	
+	// Register client after goroutines are started
+	s.register <- client
 }
 
 func (s *PreviewServer) runWebSocketHub(ctx context.Context) {
@@ -51,16 +52,17 @@ func (s *PreviewServer) runWebSocketHub(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		case conn := <-s.register:
+		case client := <-s.register:
 			s.clientsMutex.Lock()
-			s.clients[conn] = true
+			s.clients[client.conn] = client
 			s.clientsMutex.Unlock()
 			log.Printf("Client connected, total: %d", len(s.clients))
 
 		case conn := <-s.unregister:
 			s.clientsMutex.Lock()
-			if _, ok := s.clients[conn]; ok {
+			if client, ok := s.clients[conn]; ok {
 				delete(s.clients, conn)
+				close(client.send)
 				conn.Close()
 				log.Printf("Client disconnected, total: %d", len(s.clients))
 			}
@@ -68,23 +70,33 @@ func (s *PreviewServer) runWebSocketHub(ctx context.Context) {
 
 		case message := <-s.broadcast:
 			s.clientsMutex.RLock()
-			for conn := range s.clients {
-				if err := conn.WriteMessage(websocket.TextMessage, message); err != nil {
-					delete(s.clients, conn)
-					conn.Close()
+			var failedClients []*websocket.Conn
+			for conn, client := range s.clients {
+				select {
+				case client.send <- message:
+				default:
+					// Client's send channel is full, mark for removal
+					failedClients = append(failedClients, conn)
 				}
 			}
 			s.clientsMutex.RUnlock()
+			
+			// Clean up failed clients outside the read lock
+			if len(failedClients) > 0 {
+				s.clientsMutex.Lock()
+				for _, conn := range failedClients {
+					if client, ok := s.clients[conn]; ok {
+						delete(s.clients, conn)
+						close(client.send)
+						conn.Close()
+					}
+				}
+				s.clientsMutex.Unlock()
+			}
 		}
 	}
 }
 
-// Client represents a WebSocket client
-type Client struct {
-	conn   *websocket.Conn
-	send   chan []byte
-	server *PreviewServer
-}
 
 // readPump pumps messages from the websocket connection
 func (c *Client) readPump() {
