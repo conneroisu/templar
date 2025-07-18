@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
-	
+
 	"github.com/conneroisu/templar/internal/registry"
 )
 
@@ -241,7 +243,7 @@ func (s *PreviewServer) handleIndex(w http.ResponseWriter, r *http.Request) {
 
 func (s *PreviewServer) handleComponents(w http.ResponseWriter, r *http.Request) {
 	components := s.registry.GetAll()
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(components)
 }
@@ -250,13 +252,19 @@ func (s *PreviewServer) handleComponent(w http.ResponseWriter, r *http.Request) 
 	// Extract component name from path
 	path := strings.TrimPrefix(r.URL.Path, "/component/")
 	componentName := strings.Split(path, "/")[0]
-	
+
+	// Validate component name to prevent path traversal and injection attacks
+	if err := validateComponentName(componentName); err != nil {
+		http.Error(w, "Invalid component name: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	component, exists := s.registry.Get(componentName)
 	if !exists {
 		http.NotFound(w, r)
 		return
 	}
-	
+
 	// For now, just return component info
 	// In a full implementation, this would render the component
 	w.Header().Set("Content-Type", "application/json")
@@ -278,7 +286,7 @@ func (s *PreviewServer) handleTargetFiles(w http.ResponseWriter, r *http.Request
 		s.handleSingleFile(w, r, s.config.TargetFiles[0])
 		return
 	}
-	
+
 	// Multiple files - show selection interface
 	s.handleMultipleFiles(w, r)
 }
@@ -289,28 +297,28 @@ func (s *PreviewServer) handleSingleFile(w http.ResponseWriter, r *http.Request,
 		http.Error(w, fmt.Sprintf("Error scanning file %s: %v", filename, err), http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Get all components from this file
 	allComponents := s.registry.GetAll()
 	var fileComponents []*registry.ComponentInfo
-	
+
 	for _, component := range allComponents {
 		if component.FilePath == filename {
 			fileComponents = append(fileComponents, component)
 		}
 	}
-	
+
 	if len(fileComponents) == 0 {
 		http.Error(w, fmt.Sprintf("No components found in file %s", filename), http.StatusNotFound)
 		return
 	}
-	
+
 	// If only one component, render it directly
 	if len(fileComponents) == 1 {
 		s.renderSingleComponent(w, r, fileComponents[0])
 		return
 	}
-	
+
 	// Multiple components - show selection
 	s.renderComponentSelection(w, r, fileComponents, filename)
 }
@@ -322,7 +330,7 @@ func (s *PreviewServer) handleMultipleFiles(w http.ResponseWriter, r *http.Reque
 			log.Printf("Error scanning file %s: %v", filename, err)
 		}
 	}
-	
+
 	// Show file selection interface
 	s.renderFileSelection(w, r)
 }
@@ -331,22 +339,22 @@ func (s *PreviewServer) handleRender(w http.ResponseWriter, r *http.Request) {
 	// Extract component name from URL path
 	path := strings.TrimPrefix(r.URL.Path, "/render/")
 	componentName := strings.Split(path, "/")[0]
-	
+
 	if componentName == "" {
 		http.Error(w, "Component name required", http.StatusBadRequest)
 		return
 	}
-	
+
 	// Render the component
 	html, err := s.renderer.RenderComponent(componentName)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error rendering component %s: %v", componentName, err), http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Wrap in layout
 	fullHTML := s.renderer.RenderComponentWithLayout(componentName, html)
-	
+
 	w.Header().Set("Content-Type", "text/html")
 	if _, err := w.Write([]byte(fullHTML)); err != nil {
 		log.Printf("Failed to write component response: %v", err)
@@ -360,10 +368,10 @@ func (s *PreviewServer) renderSingleComponent(w http.ResponseWriter, r *http.Req
 		http.Error(w, fmt.Sprintf("Error rendering component %s: %v", component.Name, err), http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Wrap in layout
 	fullHTML := s.renderer.RenderComponentWithLayout(component.Name, html)
-	
+
 	w.Header().Set("Content-Type", "text/html")
 	if _, err := w.Write([]byte(fullHTML)); err != nil {
 		log.Printf("Failed to write component response: %v", err)
@@ -381,7 +389,7 @@ func (s *PreviewServer) renderComponentSelection(w http.ResponseWriter, r *http.
     <div class="max-w-2xl mx-auto">
         <h1 class="text-2xl font-bold mb-6">Select Component from %s</h1>
         <div class="grid gap-4">`, filename, filename)
-	
+
 	for _, component := range components {
 		html += fmt.Sprintf(`
             <a href="/render/%s" class="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow">
@@ -389,13 +397,13 @@ func (s *PreviewServer) renderComponentSelection(w http.ResponseWriter, r *http.
                 <p class="text-gray-600 text-sm mt-1">%d parameters</p>
             </a>`, component.Name, component.Name, len(component.Parameters))
 	}
-	
+
 	html += `
         </div>
     </div>
 </body>
 </html>`
-	
+
 	w.Header().Set("Content-Type", "text/html")
 	if _, err := w.Write([]byte(html)); err != nil {
 		log.Printf("Failed to write component selection response: %v", err)
@@ -413,7 +421,7 @@ func (s *PreviewServer) renderFileSelection(w http.ResponseWriter, r *http.Reque
     <div class="max-w-2xl mx-auto">
         <h1 class="text-2xl font-bold mb-6">Select File to Preview</h1>
         <div class="grid gap-4">`
-	
+
 	for _, filename := range s.config.TargetFiles {
 		html += fmt.Sprintf(`
             <a href="/?file=%s" class="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow">
@@ -421,15 +429,56 @@ func (s *PreviewServer) renderFileSelection(w http.ResponseWriter, r *http.Reque
                 <p class="text-gray-600 text-sm mt-1">Templ file</p>
             </a>`, filename, filename)
 	}
-	
+
 	html += `
         </div>
     </div>
 </body>
 </html>`
-	
+
 	w.Header().Set("Content-Type", "text/html")
 	if _, err := w.Write([]byte(html)); err != nil {
 		log.Printf("Failed to write file selection response: %v", err)
 	}
+}
+
+// validateComponentName validates component name to prevent security issues
+func validateComponentName(name string) error {
+	// Reject empty names
+	if name == "" {
+		return fmt.Errorf("empty component name")
+	}
+	
+	// Clean the name
+	cleanName := filepath.Clean(name)
+	
+	// Reject names containing path traversal patterns
+	if strings.Contains(cleanName, "..") {
+		return fmt.Errorf("path traversal attempt detected")
+	}
+	
+	// Reject absolute paths
+	if filepath.IsAbs(cleanName) {
+		return fmt.Errorf("absolute path not allowed")
+	}
+	
+	// Reject special characters that could be used in injection attacks (check first for security)
+	dangerousChars := []string{"<", ">", "\"", "'", "&", ";", "|", "$", "`", "(", ")", "{", "}", "[", "]", "\\"}
+	for _, char := range dangerousChars {
+		if strings.Contains(cleanName, char) {
+			return fmt.Errorf("dangerous character not allowed: %s", char)
+		}
+	}
+	
+	// Reject names with path separators (should be simple component names)
+	if strings.ContainsRune(cleanName, os.PathSeparator) {
+		return fmt.Errorf("path separators not allowed in component name")
+	}
+	
+	// Reject if name is too long (prevent buffer overflow attacks)
+	if len(cleanName) > 100 {
+		return fmt.Errorf("component name too long (max 100 characters)")
+	}
+	
+	return nil
 }

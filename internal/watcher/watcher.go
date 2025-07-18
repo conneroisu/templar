@@ -2,6 +2,7 @@ package watcher
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -14,11 +15,11 @@ import (
 
 // FileWatcher watches for file changes with intelligent debouncing
 type FileWatcher struct {
-	watcher    *fsnotify.Watcher
-	debouncer  *Debouncer
-	filters    []FileFilter
-	handlers   []ChangeHandler
-	mutex      sync.RWMutex
+	watcher   *fsnotify.Watcher
+	debouncer *Debouncer
+	filters   []FileFilter
+	handlers  []ChangeHandler
+	mutex     sync.RWMutex
 }
 
 // ChangeEvent represents a file change event
@@ -39,6 +40,22 @@ const (
 	EventTypeRenamed
 )
 
+// String returns the string representation of the EventType
+func (e EventType) String() string {
+	switch e {
+	case EventTypeCreated:
+		return "created"
+	case EventTypeModified:
+		return "modified"
+	case EventTypeDeleted:
+		return "deleted"
+	case EventTypeRenamed:
+		return "renamed"
+	default:
+		return "unknown"
+	}
+}
+
 // FileFilter determines if a file should be watched
 type FileFilter func(path string) bool
 
@@ -47,12 +64,12 @@ type ChangeHandler func(events []ChangeEvent) error
 
 // Debouncer groups rapid file changes together
 type Debouncer struct {
-	delay    time.Duration
-	events   chan ChangeEvent
-	output   chan []ChangeEvent
-	timer    *time.Timer
-	pending  []ChangeEvent
-	mutex    sync.Mutex
+	delay   time.Duration
+	events  chan ChangeEvent
+	output  chan []ChangeEvent
+	timer   *time.Timer
+	pending []ChangeEvent
+	mutex   sync.Mutex
 }
 
 // NewFileWatcher creates a new file watcher
@@ -95,22 +112,70 @@ func (fw *FileWatcher) AddHandler(handler ChangeHandler) {
 
 // AddPath adds a path to watch
 func (fw *FileWatcher) AddPath(path string) error {
-	return fw.watcher.Add(path)
+	// Validate and clean the path
+	cleanPath, err := fw.validatePath(path)
+	if err != nil {
+		return fmt.Errorf("invalid path: %w", err)
+	}
+	return fw.watcher.Add(cleanPath)
 }
 
 // AddRecursive adds a directory and all subdirectories to watch
 func (fw *FileWatcher) AddRecursive(root string) error {
-	return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+	// Validate and clean the root path
+	cleanRoot, err := fw.validatePath(root)
+	if err != nil {
+		return fmt.Errorf("invalid root path: %w", err)
+	}
+
+	return filepath.Walk(cleanRoot, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
 		if info.IsDir() {
-			return fw.watcher.Add(path)
+			// Validate each directory path before adding
+			cleanPath, err := fw.validatePath(path)
+			if err != nil {
+				log.Printf("Skipping invalid directory path: %s", path)
+				return nil
+			}
+			return fw.watcher.Add(cleanPath)
 		}
 
 		return nil
 	})
+}
+
+// validatePath validates and cleans a file path to prevent directory traversal
+func (fw *FileWatcher) validatePath(path string) (string, error) {
+	// Clean the path to resolve . and .. elements
+	cleanPath := filepath.Clean(path)
+	
+	// Get absolute path to normalize
+	absPath, err := filepath.Abs(cleanPath)
+	if err != nil {
+		return "", fmt.Errorf("getting absolute path: %w", err)
+	}
+	
+	// Get current working directory
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "", fmt.Errorf("getting current directory: %w", err)
+	}
+	
+	// Ensure the path is within the current working directory or its subdirectories
+	// This prevents directory traversal attacks
+	if !strings.HasPrefix(absPath, cwd) {
+		return "", fmt.Errorf("path %s is outside current working directory", path)
+	}
+	
+	// Additional security check: reject paths with suspicious patterns
+	if strings.Contains(cleanPath, "..") {
+		return "", fmt.Errorf("path contains directory traversal: %s", path)
+	}
+	
+	return cleanPath, nil
 }
 
 // Start starts the file watcher
@@ -133,7 +198,7 @@ func (fw *FileWatcher) Stop() error {
 	if fw.debouncer.timer != nil {
 		fw.debouncer.timer.Stop()
 	}
-	
+
 	// Close the watcher
 	return fw.watcher.Close()
 }

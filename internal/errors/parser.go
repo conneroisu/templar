@@ -20,19 +20,18 @@ const (
 	ErrorTypePermission
 )
 
-
 // ParsedError represents a parsed error with structured information
 type ParsedError struct {
-	Type        ErrorType     `json:"type"`
-	Severity    ErrorSeverity `json:"severity"`
-	Component   string        `json:"component"`
-	File        string        `json:"file"`
-	Line        int           `json:"line"`
-	Column      int           `json:"column"`
-	Message     string        `json:"message"`
-	Suggestion  string        `json:"suggestion,omitempty"`
-	RawError    string        `json:"raw_error"`
-	Context     []string      `json:"context,omitempty"`
+	Type       ErrorType     `json:"type"`
+	Severity   ErrorSeverity `json:"severity"`
+	Component  string        `json:"component"`
+	File       string        `json:"file"`
+	Line       int           `json:"line"`
+	Column     int           `json:"column"`
+	Message    string        `json:"message"`
+	Suggestion string        `json:"suggestion,omitempty"`
+	RawError   string        `json:"raw_error"`
+	Context    []string      `json:"context,omitempty"`
 }
 
 // ErrorParser parses templ and Go errors into structured format
@@ -60,15 +59,15 @@ func NewErrorParser() *ErrorParser {
 // ParseError parses a build error output into structured errors
 func (ep *ErrorParser) ParseError(output string) []*ParsedError {
 	var errors []*ParsedError
-	
+
 	lines := strings.Split(output, "\n")
-	
+
 	for i, line := range lines {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
 		}
-		
+
 		// Try templ patterns first
 		if err := ep.tryParseWithPatterns(line, ep.templPatterns); err != nil {
 			// Add context lines
@@ -76,7 +75,7 @@ func (ep *ErrorParser) ParseError(output string) []*ParsedError {
 			errors = append(errors, err)
 			continue
 		}
-		
+
 		// Try Go patterns
 		if err := ep.tryParseWithPatterns(line, ep.goPatterns); err != nil {
 			// Add context lines
@@ -84,10 +83,10 @@ func (ep *ErrorParser) ParseError(output string) []*ParsedError {
 			errors = append(errors, err)
 			continue
 		}
-		
+
 		// If no pattern matches, create a generic error
-		if strings.Contains(strings.ToLower(line), "error") || 
-		   strings.Contains(strings.ToLower(line), "failed") {
+		if strings.Contains(strings.ToLower(line), "error") ||
+			strings.Contains(strings.ToLower(line), "failed") {
 			errors = append(errors, &ParsedError{
 				Type:     ErrorTypeUnknown,
 				Severity: ErrorSeverityError,
@@ -97,7 +96,7 @@ func (ep *ErrorParser) ParseError(output string) []*ParsedError {
 			})
 		}
 	}
-	
+
 	return errors
 }
 
@@ -106,7 +105,7 @@ func (ep *ErrorParser) tryParseWithPatterns(line string, patterns []errorPattern
 		matches := pattern.regex.FindStringSubmatch(line)
 		if matches != nil {
 			file, lineNum, column, message := pattern.parseFields(matches)
-			
+
 			return &ParsedError{
 				Type:       pattern.errorType,
 				Severity:   pattern.severity,
@@ -125,7 +124,7 @@ func (ep *ErrorParser) tryParseWithPatterns(line string, patterns []errorPattern
 func (ep *ErrorParser) getContextLines(lines []string, index int, radius int) []string {
 	start := max(0, index-radius)
 	end := min(len(lines), index+radius+1)
-	
+
 	var context []string
 	for i := start; i < end; i++ {
 		prefix := "  "
@@ -134,16 +133,16 @@ func (ep *ErrorParser) getContextLines(lines []string, index int, radius int) []
 		}
 		context = append(context, fmt.Sprintf("%s%s", prefix, lines[i]))
 	}
-	
+
 	return context
 }
 
 func buildTemplPatterns() []errorPattern {
 	return []errorPattern{
 		{
-			regex:     regexp.MustCompile(`^(.+?):(\d+):(\d+): (.+)$`),
-			errorType: ErrorTypeTemplSyntax,
-			severity:  ErrorSeverityError,
+			regex:      regexp.MustCompile(`^(.+?):(\d+):(\d+): (.+)$`),
+			errorType:  ErrorTypeTemplSyntax,
+			severity:   ErrorSeverityError,
 			suggestion: "Check the templ syntax at the specified location",
 			parseFields: func(matches []string) (string, int, int, string) {
 				file := matches[1]
@@ -154,9 +153,9 @@ func buildTemplPatterns() []errorPattern {
 			},
 		},
 		{
-			regex:     regexp.MustCompile(`^templ: (.+?) \((.+?):(\d+):(\d+)\): (.+)$`),
-			errorType: ErrorTypeTemplSemantics,
-			severity:  ErrorSeverityError,
+			regex:      regexp.MustCompile(`^templ: (.+?) \((.+?):(\d+):(\d+)\): (.+)$`),
+			errorType:  ErrorTypeTemplSemantics,
+			severity:   ErrorSeverityError,
 			suggestion: "Check the templ component definition and usage",
 			parseFields: func(matches []string) (string, int, int, string) {
 				file := matches[2]
@@ -167,18 +166,18 @@ func buildTemplPatterns() []errorPattern {
 			},
 		},
 		{
-			regex:     regexp.MustCompile(`^templ generate: (.+)$`),
-			errorType: ErrorTypeTemplSyntax,
-			severity:  ErrorSeverityError,
+			regex:      regexp.MustCompile(`^templ generate: (.+)$`),
+			errorType:  ErrorTypeTemplSyntax,
+			severity:   ErrorSeverityError,
 			suggestion: "Run 'templ generate' to see detailed error information",
 			parseFields: func(matches []string) (string, int, int, string) {
 				return "", 0, 0, matches[1]
 			},
 		},
 		{
-			regex:     regexp.MustCompile(`^(.+\.templ): (.+)$`),
-			errorType: ErrorTypeTemplSyntax,
-			severity:  ErrorSeverityError,
+			regex:      regexp.MustCompile(`^(.+\.templ): (.+)$`),
+			errorType:  ErrorTypeTemplSyntax,
+			severity:   ErrorSeverityError,
 			suggestion: "Check the templ file for syntax errors",
 			parseFields: func(matches []string) (string, int, int, string) {
 				return matches[1], 0, 0, matches[2]
@@ -190,9 +189,9 @@ func buildTemplPatterns() []errorPattern {
 func buildGoPatterns() []errorPattern {
 	return []errorPattern{
 		{
-			regex:     regexp.MustCompile(`^(.+?):(\d+):(\d+): (.+)$`),
-			errorType: ErrorTypeGoCompile,
-			severity:  ErrorSeverityError,
+			regex:      regexp.MustCompile(`^(.+?):(\d+):(\d+): (.+)$`),
+			errorType:  ErrorTypeGoCompile,
+			severity:   ErrorSeverityError,
 			suggestion: "Check the Go syntax and imports",
 			parseFields: func(matches []string) (string, int, int, string) {
 				file := matches[1]
@@ -203,9 +202,9 @@ func buildGoPatterns() []errorPattern {
 			},
 		},
 		{
-			regex:     regexp.MustCompile(`^(.+?):(\d+): (.+)$`),
-			errorType: ErrorTypeGoCompile,
-			severity:  ErrorSeverityError,
+			regex:      regexp.MustCompile(`^(.+?):(\d+): (.+)$`),
+			errorType:  ErrorTypeGoCompile,
+			severity:   ErrorSeverityError,
 			suggestion: "Check the Go syntax and types",
 			parseFields: func(matches []string) (string, int, int, string) {
 				file := matches[1]
@@ -215,45 +214,45 @@ func buildGoPatterns() []errorPattern {
 			},
 		},
 		{
-			regex:     regexp.MustCompile(`^go: (.+)$`),
-			errorType: ErrorTypeGoRuntime,
-			severity:  ErrorSeverityError,
+			regex:      regexp.MustCompile(`^go: (.+)$`),
+			errorType:  ErrorTypeGoRuntime,
+			severity:   ErrorSeverityError,
 			suggestion: "Check Go module dependencies and configuration",
 			parseFields: func(matches []string) (string, int, int, string) {
 				return "", 0, 0, matches[1]
 			},
 		},
 		{
-			regex:     regexp.MustCompile(`^package (.+) is not in GOROOT`),
-			errorType: ErrorTypeGoCompile,
-			severity:  ErrorSeverityError,
+			regex:      regexp.MustCompile(`^package (.+) is not in GOROOT`),
+			errorType:  ErrorTypeGoCompile,
+			severity:   ErrorSeverityError,
 			suggestion: "Check if the package is properly imported or installed",
 			parseFields: func(matches []string) (string, int, int, string) {
 				return "", 0, 0, fmt.Sprintf("Package '%s' not found", matches[1])
 			},
 		},
 		{
-			regex:     regexp.MustCompile(`^can't load package: (.+)$`),
-			errorType: ErrorTypeGoCompile,
-			severity:  ErrorSeverityError,
+			regex:      regexp.MustCompile(`^can't load package: (.+)$`),
+			errorType:  ErrorTypeGoCompile,
+			severity:   ErrorSeverityError,
 			suggestion: "Check if the package exists and is properly configured",
 			parseFields: func(matches []string) (string, int, int, string) {
 				return "", 0, 0, matches[1]
 			},
 		},
 		{
-			regex:     regexp.MustCompile(`^permission denied: (.+)$`),
-			errorType: ErrorTypePermission,
-			severity:  ErrorSeverityError,
+			regex:      regexp.MustCompile(`^permission denied: (.+)$`),
+			errorType:  ErrorTypePermission,
+			severity:   ErrorSeverityError,
 			suggestion: "Check file permissions and ownership",
 			parseFields: func(matches []string) (string, int, int, string) {
 				return matches[1], 0, 0, "Permission denied"
 			},
 		},
 		{
-			regex:     regexp.MustCompile(`^no such file or directory: (.+)$`),
-			errorType: ErrorTypeFileNotFound,
-			severity:  ErrorSeverityError,
+			regex:      regexp.MustCompile(`^no such file or directory: (.+)$`),
+			errorType:  ErrorTypeFileNotFound,
+			severity:   ErrorSeverityError,
 			suggestion: "Check if the file exists and the path is correct",
 			parseFields: func(matches []string) (string, int, int, string) {
 				return matches[1], 0, 0, "File not found"
@@ -265,10 +264,10 @@ func buildGoPatterns() []errorPattern {
 // FormatError formats a parsed error for display
 func (pe *ParsedError) FormatError() string {
 	var builder strings.Builder
-	
+
 	// Error type and severity
 	builder.WriteString(fmt.Sprintf("[%s] %s", pe.severityString(), pe.typeString()))
-	
+
 	// Location information
 	if pe.File != "" {
 		builder.WriteString(fmt.Sprintf(" in %s", pe.File))
@@ -279,17 +278,17 @@ func (pe *ParsedError) FormatError() string {
 			}
 		}
 	}
-	
+
 	builder.WriteString("\n")
-	
+
 	// Message
 	builder.WriteString(fmt.Sprintf("  %s\n", pe.Message))
-	
+
 	// Suggestion
 	if pe.Suggestion != "" {
 		builder.WriteString(fmt.Sprintf("  💡 %s\n", pe.Suggestion))
 	}
-	
+
 	// Context
 	if len(pe.Context) > 0 {
 		builder.WriteString("  Context:\n")
@@ -297,7 +296,7 @@ func (pe *ParsedError) FormatError() string {
 			builder.WriteString(fmt.Sprintf("    %s\n", line))
 		}
 	}
-	
+
 	return builder.String()
 }
 
@@ -306,9 +305,9 @@ func FormatErrorsForBrowser(errors []*ParsedError) string {
 	if len(errors) == 0 {
 		return ""
 	}
-	
+
 	var builder strings.Builder
-	
+
 	builder.WriteString(`
 <!DOCTYPE html>
 <html>
@@ -331,7 +330,7 @@ func FormatErrorsForBrowser(errors []*ParsedError) string {
 <body>
     <h1>Build Errors</h1>
 `)
-	
+
 	for _, err := range errors {
 		cssClass := "error"
 		switch err.Severity {
@@ -340,10 +339,10 @@ func FormatErrorsForBrowser(errors []*ParsedError) string {
 		case ErrorSeverityInfo:
 			cssClass = "info"
 		}
-		
+
 		builder.WriteString(fmt.Sprintf(`    <div class="%s">`, cssClass))
 		builder.WriteString(fmt.Sprintf(`        <div class="error-header">[%s] %s</div>`, err.severityString(), err.typeString()))
-		
+
 		if err.File != "" {
 			builder.WriteString(fmt.Sprintf(`        <div class="error-location">%s`, err.File))
 			if err.Line > 0 {
@@ -354,13 +353,13 @@ func FormatErrorsForBrowser(errors []*ParsedError) string {
 			}
 			builder.WriteString(`</div>`)
 		}
-		
+
 		builder.WriteString(fmt.Sprintf(`        <div class="error-message">%s</div>`, err.Message))
-		
+
 		if err.Suggestion != "" {
 			builder.WriteString(fmt.Sprintf(`        <div class="error-suggestion">💡 %s</div>`, err.Suggestion))
 		}
-		
+
 		if len(err.Context) > 0 {
 			builder.WriteString(`        <div class="error-context">`)
 			for _, line := range err.Context {
@@ -372,14 +371,14 @@ func FormatErrorsForBrowser(errors []*ParsedError) string {
 			}
 			builder.WriteString(`        </div>`)
 		}
-		
+
 		builder.WriteString(`    </div>`)
 	}
-	
+
 	builder.WriteString(`
 </body>
 </html>`)
-	
+
 	return builder.String()
 }
 

@@ -60,21 +60,21 @@ func NewComponentRegistry() *ComponentRegistry {
 func (r *ComponentRegistry) Register(component *ComponentInfo) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	
+
 	eventType := EventTypeAdded
 	if _, exists := r.components[component.Name]; exists {
 		eventType = EventTypeUpdated
 	}
-	
+
 	r.components[component.Name] = component
-	
+
 	// Notify watchers
 	event := ComponentEvent{
 		Type:      eventType,
 		Component: component,
 		Timestamp: time.Now(),
 	}
-	
+
 	for _, watcher := range r.watchers {
 		select {
 		case watcher <- event:
@@ -88,7 +88,7 @@ func (r *ComponentRegistry) Register(component *ComponentInfo) {
 func (r *ComponentRegistry) Get(name string) (*ComponentInfo, bool) {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
-	
+
 	component, exists := r.components[name]
 	return component, exists
 }
@@ -97,7 +97,7 @@ func (r *ComponentRegistry) Get(name string) (*ComponentInfo, bool) {
 func (r *ComponentRegistry) GetAll() map[string]*ComponentInfo {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
-	
+
 	result := make(map[string]*ComponentInfo)
 	for name, component := range r.components {
 		result[name] = component
@@ -109,21 +109,21 @@ func (r *ComponentRegistry) GetAll() map[string]*ComponentInfo {
 func (r *ComponentRegistry) Remove(name string) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	
+
 	component, exists := r.components[name]
 	if !exists {
 		return
 	}
-	
+
 	delete(r.components, name)
-	
+
 	// Notify watchers
 	event := ComponentEvent{
 		Type:      EventTypeRemoved,
 		Component: component,
 		Timestamp: time.Now(),
 	}
-	
+
 	for _, watcher := range r.watchers {
 		select {
 		case watcher <- event:
@@ -137,7 +137,7 @@ func (r *ComponentRegistry) Remove(name string) {
 func (r *ComponentRegistry) Watch() <-chan ComponentEvent {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	
+
 	ch := make(chan ComponentEvent, 100)
 	r.watchers = append(r.watchers, ch)
 	return ch
@@ -147,7 +147,7 @@ func (r *ComponentRegistry) Watch() <-chan ComponentEvent {
 func (r *ComponentRegistry) UnWatch(ch <-chan ComponentEvent) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	
+
 	for i, watcher := range r.watchers {
 		if watcher == ch {
 			close(watcher)
@@ -161,6 +161,6 @@ func (r *ComponentRegistry) UnWatch(ch <-chan ComponentEvent) {
 func (r *ComponentRegistry) Count() int {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
-	
+
 	return len(r.components)
 }

@@ -39,7 +39,7 @@ func (s *PreviewServer) handleWebSocket(w http.ResponseWriter, r *http.Request) 
 	// Start goroutines for this client first
 	go client.writePump()
 	go client.readPump()
-	
+
 	// Register client after goroutines are started
 	s.register <- client
 }
@@ -53,42 +53,59 @@ func (s *PreviewServer) runWebSocketHub(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case client := <-s.register:
+			if client == nil || client.conn == nil {
+				continue
+			}
 			s.clientsMutex.Lock()
-			s.clients[client.conn] = client
-			s.clientsMutex.Unlock()
-			log.Printf("Client connected, total: %d", len(s.clients))
+			if s.clients != nil {
+				s.clients[client.conn] = client
+				clientCount := len(s.clients)
+				s.clientsMutex.Unlock()
+				log.Printf("Client connected, total: %d", clientCount)
+			} else {
+				s.clientsMutex.Unlock()
+			}
 
 		case conn := <-s.unregister:
+			if conn == nil {
+				continue
+			}
 			s.clientsMutex.Lock()
-			if client, ok := s.clients[conn]; ok {
-				delete(s.clients, conn)
-				close(client.send)
-				conn.Close()
-				log.Printf("Client disconnected, total: %d", len(s.clients))
+			if s.clients != nil {
+				if client, ok := s.clients[conn]; ok {
+					delete(s.clients, conn)
+					close(client.send)
+					conn.Close()
+					log.Printf("Client disconnected, total: %d", len(s.clients))
+				}
 			}
 			s.clientsMutex.Unlock()
 
 		case message := <-s.broadcast:
 			s.clientsMutex.RLock()
 			var failedClients []*websocket.Conn
-			for conn, client := range s.clients {
-				select {
-				case client.send <- message:
-				default:
-					// Client's send channel is full, mark for removal
-					failedClients = append(failedClients, conn)
+			if s.clients != nil {
+				for conn, client := range s.clients {
+					select {
+					case client.send <- message:
+					default:
+						// Client's send channel is full, mark for removal
+						failedClients = append(failedClients, conn)
+					}
 				}
 			}
 			s.clientsMutex.RUnlock()
-			
+
 			// Clean up failed clients outside the read lock
 			if len(failedClients) > 0 {
 				s.clientsMutex.Lock()
-				for _, conn := range failedClients {
-					if client, ok := s.clients[conn]; ok {
-						delete(s.clients, conn)
-						close(client.send)
-						conn.Close()
+				if s.clients != nil {
+					for _, conn := range failedClients {
+						if client, ok := s.clients[conn]; ok {
+							delete(s.clients, conn)
+							close(client.send)
+							conn.Close()
+						}
 					}
 				}
 				s.clientsMutex.Unlock()
@@ -96,7 +113,6 @@ func (s *PreviewServer) runWebSocketHub(ctx context.Context) {
 		}
 	}
 }
-
 
 // readPump pumps messages from the websocket connection
 func (c *Client) readPump() {

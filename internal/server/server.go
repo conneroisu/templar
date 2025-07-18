@@ -31,19 +31,19 @@ type Client struct {
 
 // PreviewServer serves components with live reload capability
 type PreviewServer struct {
-	config       *config.Config
-	httpServer   *http.Server
-	wsUpgrader   websocket.Upgrader
-	clients      map[*websocket.Conn]*Client
-	clientsMutex sync.RWMutex
-	broadcast    chan []byte
-	register     chan *Client
-	unregister   chan *websocket.Conn
-	registry     *registry.ComponentRegistry
-	watcher      *watcher.FileWatcher
-	scanner      *scanner.ComponentScanner
-	renderer     *renderer.ComponentRenderer
-	buildPipeline *build.BuildPipeline
+	config          *config.Config
+	httpServer      *http.Server
+	wsUpgrader      websocket.Upgrader
+	clients         map[*websocket.Conn]*Client
+	clientsMutex    sync.RWMutex
+	broadcast       chan []byte
+	register        chan *Client
+	unregister      chan *websocket.Conn
+	registry        *registry.ComponentRegistry
+	watcher         *watcher.FileWatcher
+	scanner         *scanner.ComponentScanner
+	renderer        *renderer.ComponentRenderer
+	buildPipeline   *build.BuildPipeline
 	lastBuildErrors []*errors.ParsedError
 }
 
@@ -62,56 +62,67 @@ func New(cfg *config.Config) (*PreviewServer, error) {
 			// Get the origin from the request
 			origin := r.Header.Get("Origin")
 			if origin == "" {
-				// Allow connections without origin header (e.g., from same-origin requests)
-				return true
+				// Reject connections without origin header for security
+				return false
 			}
-			
+
 			// Parse the origin URL
 			originURL, err := url.Parse(origin)
 			if err != nil {
 				return false
 			}
-			
-			// Check if the origin matches the expected host and port
+
+			// First check scheme - only allow http/https
+			if originURL.Scheme != "http" && originURL.Scheme != "https" {
+				return false
+			}
+
+			// Strict origin validation - only allow specific origins
 			expectedHost := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
-			if originURL.Host == expectedHost || originURL.Host == "localhost:"+fmt.Sprintf("%d", cfg.Server.Port) {
-				return true
+			allowedOrigins := []string{
+				expectedHost,
+				fmt.Sprintf("localhost:%d", cfg.Server.Port),
+				fmt.Sprintf("127.0.0.1:%d", cfg.Server.Port),
+				"localhost:3000", // Common dev server
+				"127.0.0.1:3000", // Common dev server
 			}
-			
-			// Allow localhost and 127.0.0.1 for development
-			if originURL.Hostname() == "localhost" || originURL.Hostname() == "127.0.0.1" {
-				return true
+
+			// Check if origin is in allowed list
+			for _, allowed := range allowedOrigins {
+				if originURL.Host == allowed {
+					return true
+				}
 			}
-			
+
 			return false
 		},
 	}
 
 	registry := registry.NewComponentRegistry()
-	
+
 	fileWatcher, err := watcher.NewFileWatcher(300 * time.Millisecond)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create file watcher: %w", err)
 	}
-	
+
 	scanner := scanner.NewComponentScanner(registry)
 	renderer := renderer.NewComponentRenderer(registry)
-	
+
 	// Create build pipeline
 	buildPipeline := build.NewBuildPipeline(4, registry)
 
 	return &PreviewServer{
-		config:        cfg,
-		wsUpgrader:    upgrader,
-		clients:       make(map[*websocket.Conn]*Client),
-		broadcast:     make(chan []byte),
-		register:      make(chan *Client),
-		unregister:    make(chan *websocket.Conn),
-		registry:      registry,
-		watcher:       fileWatcher,
-		scanner:       scanner,
-		renderer:      renderer,
-		buildPipeline: buildPipeline,
+		config:          cfg,
+		wsUpgrader:      upgrader,
+		clients:         make(map[*websocket.Conn]*Client),
+		broadcast:       make(chan []byte),
+		register:        make(chan *Client),
+		unregister:      make(chan *websocket.Conn),
+		registry:        registry,
+		watcher:         fileWatcher,
+		scanner:         scanner,
+		renderer:        renderer,
+		buildPipeline:   buildPipeline,
 		lastBuildErrors: make([]*errors.ParsedError, 0),
 	}, nil
 }
@@ -120,13 +131,13 @@ func New(cfg *config.Config) (*PreviewServer, error) {
 func (s *PreviewServer) Start(ctx context.Context) error {
 	// Set up file watcher
 	s.setupFileWatcher(ctx)
-	
+
 	// Start build pipeline
 	s.buildPipeline.Start(ctx)
-	
+
 	// Add build callback to handle errors and updates
 	s.buildPipeline.AddCallback(s.handleBuildResult)
-	
+
 	// Initial scan
 	if err := s.initialScan(); err != nil {
 		log.Printf("Initial scan failed: %v", err)
@@ -146,7 +157,7 @@ func (s *PreviewServer) Start(ctx context.Context) error {
 	mux.HandleFunc("/api/build/metrics", s.handleBuildMetrics)
 	mux.HandleFunc("/api/build/errors", s.handleBuildErrors)
 	mux.HandleFunc("/api/build/cache", s.handleBuildCache)
-	
+
 	// Root handler depends on whether specific files are targeted
 	if len(s.config.TargetFiles) > 0 {
 		mux.HandleFunc("/", s.handleTargetFiles)
@@ -211,22 +222,22 @@ func (s *PreviewServer) initialScan() error {
 			continue
 		}
 	}
-	
+
 	log.Printf("Found %d components", s.registry.Count())
 	return nil
 }
 
 func (s *PreviewServer) handleFileChange(events []watcher.ChangeEvent) error {
 	componentsToRebuild := make(map[string]*registry.ComponentInfo)
-	
+
 	for _, event := range events {
 		log.Printf("File changed: %s (%s)", event.Path, event.Type)
-		
+
 		// Rescan the file
 		if err := s.scanner.ScanFile(event.Path); err != nil {
 			log.Printf("Failed to rescan file %s: %v", event.Path, err)
 		}
-		
+
 		// Find components in the changed file
 		components := s.registry.GetAll()
 		for _, component := range components {
@@ -235,23 +246,23 @@ func (s *PreviewServer) handleFileChange(events []watcher.ChangeEvent) error {
 			}
 		}
 	}
-	
+
 	// Queue components for rebuild
 	for _, component := range componentsToRebuild {
 		s.buildPipeline.BuildWithPriority(component)
 	}
-	
+
 	// If no specific components to rebuild, do a full rebuild
 	if len(componentsToRebuild) == 0 {
 		s.triggerFullRebuild()
 	}
-	
+
 	return nil
 }
 
 func (s *PreviewServer) openBrowser(url string) {
 	time.Sleep(100 * time.Millisecond) // Give server time to start
-	
+
 	var err error
 	switch runtime.GOOS {
 	case "linux":
@@ -263,7 +274,7 @@ func (s *PreviewServer) openBrowser(url string) {
 	default:
 		err = fmt.Errorf("unsupported platform")
 	}
-	
+
 	if err != nil {
 		log.Printf("Failed to open browser: %v", err)
 	}
@@ -276,13 +287,13 @@ func (s *PreviewServer) addMiddleware(handler http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-		
+
 		// Handle preflight requests
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
-		
+
 		// Log requests
 		start := time.Now()
 		handler.ServeHTTP(w, r)
@@ -299,7 +310,7 @@ func (s *PreviewServer) broadcastMessage(msg UpdateMessage) {
 		s.broadcast <- []byte(`{"type":"full_reload"}`)
 		return
 	}
-	
+
 	s.broadcast <- jsonData
 }
 
@@ -308,7 +319,7 @@ func (s *PreviewServer) handleBuildResult(result build.BuildResult) {
 	if result.Error != nil {
 		// Store build errors
 		s.lastBuildErrors = result.ParsedErrors
-		
+
 		// Broadcast error message
 		msg := UpdateMessage{
 			Type:      "build_error",
@@ -319,7 +330,7 @@ func (s *PreviewServer) handleBuildResult(result build.BuildResult) {
 	} else {
 		// Clear previous errors
 		s.lastBuildErrors = make([]*errors.ParsedError, 0)
-		
+
 		// Broadcast success message
 		msg := UpdateMessage{
 			Type:      "build_success",
@@ -354,7 +365,7 @@ func (s *PreviewServer) Shutdown(ctx context.Context) error {
 	if s.watcher != nil {
 		s.watcher.Stop()
 	}
-	
+
 	// Close all WebSocket connections
 	s.clientsMutex.Lock()
 	for conn, client := range s.clients {
@@ -363,17 +374,17 @@ func (s *PreviewServer) Shutdown(ctx context.Context) error {
 	}
 	s.clients = make(map[*websocket.Conn]*Client)
 	s.clientsMutex.Unlock()
-	
+
 	// Close channels
 	close(s.broadcast)
 	close(s.register)
 	close(s.unregister)
-	
+
 	// Shutdown HTTP server
 	if s.httpServer != nil {
 		return s.httpServer.Shutdown(ctx)
 	}
-	
+
 	return nil
 }
 
@@ -386,12 +397,12 @@ func (s *PreviewServer) handleBuildStatus(w http.ResponseWriter, r *http.Request
 
 	metrics := s.buildPipeline.GetMetrics()
 	errors := s.GetLastBuildErrors()
-	
+
 	status := "healthy"
 	if len(errors) > 0 {
 		status = "error"
 	}
-	
+
 	response := map[string]interface{}{
 		"status":        status,
 		"total_builds":  metrics.TotalBuilds,
@@ -400,7 +411,7 @@ func (s *PreviewServer) handleBuildStatus(w http.ResponseWriter, r *http.Request
 		"errors":        len(errors),
 		"timestamp":     time.Now().Unix(),
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
@@ -414,15 +425,15 @@ func (s *PreviewServer) handleBuildMetrics(w http.ResponseWriter, r *http.Reques
 
 	metrics := s.buildPipeline.GetMetrics()
 	cacheCount, cacheSize, cacheMaxSize := s.buildPipeline.GetCacheStats()
-	
+
 	response := map[string]interface{}{
 		"build_metrics": map[string]interface{}{
-			"total_builds":     metrics.TotalBuilds,
+			"total_builds":      metrics.TotalBuilds,
 			"successful_builds": metrics.SuccessfulBuilds,
-			"failed_builds":    metrics.FailedBuilds,
-			"cache_hits":       metrics.CacheHits,
-			"average_duration": metrics.AverageDuration.String(),
-			"total_duration":   metrics.TotalDuration.String(),
+			"failed_builds":     metrics.FailedBuilds,
+			"cache_hits":        metrics.CacheHits,
+			"average_duration":  metrics.AverageDuration.String(),
+			"total_duration":    metrics.TotalDuration.String(),
 		},
 		"cache_metrics": map[string]interface{}{
 			"entries":    cacheCount,
@@ -432,7 +443,7 @@ func (s *PreviewServer) handleBuildMetrics(w http.ResponseWriter, r *http.Reques
 		},
 		"timestamp": time.Now().Unix(),
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
@@ -445,13 +456,13 @@ func (s *PreviewServer) handleBuildErrors(w http.ResponseWriter, r *http.Request
 	}
 
 	errors := s.GetLastBuildErrors()
-	
+
 	response := map[string]interface{}{
 		"errors":    errors,
 		"count":     len(errors),
 		"timestamp": time.Now().Unix(),
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
@@ -468,22 +479,22 @@ func (s *PreviewServer) handleBuildCache(w http.ResponseWriter, r *http.Request)
 			"max_size":   maxSize,
 			"timestamp":  time.Now().Unix(),
 		}
-		
+
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(response)
-		
+
 	case http.MethodDelete:
 		// Clear cache
 		s.buildPipeline.ClearCache()
-		
+
 		response := map[string]interface{}{
 			"message":   "Cache cleared successfully",
 			"timestamp": time.Now().Unix(),
 		}
-		
+
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(response)
-		
+
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}

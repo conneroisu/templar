@@ -1,0 +1,34 @@
+package components
+
+import "fmt"
+
+type FormField struct {
+	Name  string
+	Label string
+	Type  string
+	Value string
+}
+
+templ ComplexForm(fields []FormField, submitted bool, errors map[string]string) {
+	<form class="form">
+		for _, field := range fields {
+			<div class="field">
+				<label for={field.Name}>{field.Label}</label>
+				<input 
+					type={field.Type} 
+					name={field.Name} 
+					id={field.Name}
+					value={field.Value}
+					class={ "input", templ.KV("error", errors[field.Name] != "") }
+				/>
+				if err, exists := errors[field.Name]; exists {
+					<span class="error-message">{err}</span>
+				}
+			</div>
+		}
+		if submitted {
+			<div class="success-message">Form submitted successfully!</div>
+		}
+		<button type="submit" class="submit-btn">Submit</button>
+	</form>
+}

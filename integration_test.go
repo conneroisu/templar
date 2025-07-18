@@ -11,7 +11,6 @@ import (
 
 	"github.com/conneroisu/templar/internal/config"
 	"github.com/conneroisu/templar/internal/server"
-	"github.com/gorilla/websocket"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -20,7 +19,7 @@ import (
 func TestIntegration_ServerStartStop(t *testing.T) {
 	// Create a temporary directory for components
 	tempDir := t.TempDir()
-	
+
 	// Create a test component file
 	componentFile := filepath.Join(tempDir, "test.templ")
 	err := os.WriteFile(componentFile, []byte(`
@@ -31,39 +30,39 @@ templ TestComponent(title string) {
 }
 `), 0644)
 	require.NoError(t, err)
-	
+
 	// Set up configuration
 	viper.Reset()
 	viper.Set("server.port", 0) // Use random port
 	viper.Set("server.host", "localhost")
 	viper.Set("server.open", false)
 	viper.Set("components.scan_paths", []string{tempDir})
-	
+
 	cfg, err := config.Load()
 	require.NoError(t, err)
-	
+
 	// Create server
 	srv, err := server.New(cfg)
 	require.NoError(t, err)
-	
+
 	// Start server
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	
+
 	go func() {
 		err := srv.Start(ctx)
 		if err != nil && err != http.ErrServerClosed {
 			t.Errorf("Server start failed: %v", err)
 		}
 	}()
-	
+
 	// Give server time to start
 	time.Sleep(100 * time.Millisecond)
-	
+
 	// Test server shutdown
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer shutdownCancel()
-	
+
 	err = srv.Shutdown(shutdownCtx)
 	assert.NoError(t, err)
 }
@@ -71,42 +70,42 @@ templ TestComponent(title string) {
 func TestIntegration_WebSocketConnection(t *testing.T) {
 	// Create a temporary directory for components
 	tempDir := t.TempDir()
-	
+
 	// Set up configuration
 	viper.Reset()
 	viper.Set("server.port", 0) // Use random port
 	viper.Set("server.host", "localhost")
 	viper.Set("server.open", false)
 	viper.Set("components.scan_paths", []string{tempDir})
-	
+
 	cfg, err := config.Load()
 	require.NoError(t, err)
-	
+
 	// Create server
 	srv, err := server.New(cfg)
 	require.NoError(t, err)
-	
+
 	// Start server
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	
+
 	go func() {
 		err := srv.Start(ctx)
 		if err != nil && err != http.ErrServerClosed {
 			t.Errorf("Server start failed: %v", err)
 		}
 	}()
-	
+
 	// Give server time to start
 	time.Sleep(100 * time.Millisecond)
-	
+
 	// Note: Since we're using port 0, we'd need to extract the actual port
 	// For this test, we'll just verify the server can be created and shut down
-	
+
 	// Test server shutdown
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer shutdownCancel()
-	
+
 	err = srv.Shutdown(shutdownCtx)
 	assert.NoError(t, err)
 }
@@ -114,35 +113,35 @@ func TestIntegration_WebSocketConnection(t *testing.T) {
 func TestIntegration_ComponentRegistryWithFileWatcher(t *testing.T) {
 	// Create a temporary directory for components
 	tempDir := t.TempDir()
-	
+
 	// Set up configuration
 	viper.Reset()
 	viper.Set("server.port", 0)
 	viper.Set("server.host", "localhost")
 	viper.Set("server.open", false)
 	viper.Set("components.scan_paths", []string{tempDir})
-	
+
 	cfg, err := config.Load()
 	require.NoError(t, err)
-	
+
 	// Create server
 	srv, err := server.New(cfg)
 	require.NoError(t, err)
-	
+
 	// Start server
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	
+
 	go func() {
 		err := srv.Start(ctx)
 		if err != nil && err != http.ErrServerClosed {
 			t.Errorf("Server start failed: %v", err)
 		}
 	}()
-	
+
 	// Give server time to start and scan
 	time.Sleep(100 * time.Millisecond)
-	
+
 	// Create a component file
 	componentFile := filepath.Join(tempDir, "new_component.templ")
 	err = os.WriteFile(componentFile, []byte(`
@@ -154,14 +153,14 @@ templ NewComponent(title string) {
 }
 `), 0644)
 	require.NoError(t, err)
-	
+
 	// Give file watcher time to detect the change
 	time.Sleep(200 * time.Millisecond)
-	
+
 	// Test server shutdown
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer shutdownCancel()
-	
+
 	err = srv.Shutdown(shutdownCtx)
 	assert.NoError(t, err)
 }
@@ -179,7 +178,7 @@ func TestIntegration_ConfigurationLoading(t *testing.T) {
 			}
 		}
 	}()
-	
+
 	// Test different configuration sources
 	tests := []struct {
 		name   string
@@ -218,14 +217,14 @@ func TestIntegration_ConfigurationLoading(t *testing.T) {
 			},
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			
+
 			cfg, err := config.Load()
 			require.NoError(t, err)
-			
+
 			tt.verify(t, cfg)
 		})
 	}
@@ -235,16 +234,16 @@ func TestIntegration_ErrorHandling(t *testing.T) {
 	// Test configuration loading with invalid data
 	viper.Reset()
 	viper.Set("server.port", "invalid_port") // This should cause an error
-	
+
 	_, err := config.Load()
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "failed to load configuration")
+	assert.Contains(t, err.Error(), "cannot parse 'Server.Port' as int")
 }
 
 func TestIntegration_ServerRoutes(t *testing.T) {
 	// Create a temporary directory for components
 	tempDir := t.TempDir()
-	
+
 	// Create a test component file
 	componentFile := filepath.Join(tempDir, "test.templ")
 	err := os.WriteFile(componentFile, []byte(`
@@ -255,39 +254,39 @@ templ TestComponent(title string) {
 }
 `), 0644)
 	require.NoError(t, err)
-	
+
 	// Set up configuration
 	viper.Reset()
 	viper.Set("server.port", 0)
 	viper.Set("server.host", "localhost")
 	viper.Set("server.open", false)
 	viper.Set("components.scan_paths", []string{tempDir})
-	
+
 	cfg, err := config.Load()
 	require.NoError(t, err)
-	
+
 	// Create server
 	srv, err := server.New(cfg)
 	require.NoError(t, err)
-	
+
 	// Start server
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	
+
 	go func() {
 		err := srv.Start(ctx)
 		if err != nil && err != http.ErrServerClosed {
 			t.Errorf("Server start failed: %v", err)
 		}
 	}()
-	
+
 	// Give server time to start
 	time.Sleep(100 * time.Millisecond)
-	
+
 	// Test server shutdown
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer shutdownCancel()
-	
+
 	err = srv.Shutdown(shutdownCtx)
 	assert.NoError(t, err)
 }
@@ -298,7 +297,7 @@ func TestIntegration_ComponentScanningAndRegistry(t *testing.T) {
 	subDir := filepath.Join(tempDir, "subdir")
 	err := os.MkdirAll(subDir, 0755)
 	require.NoError(t, err)
-	
+
 	// Create multiple component files
 	components := []struct {
 		path    string
@@ -325,44 +324,44 @@ templ Component2(content string) {
 `,
 		},
 	}
-	
+
 	for _, comp := range components {
 		err := os.WriteFile(comp.path, []byte(comp.content), 0644)
 		require.NoError(t, err)
 	}
-	
+
 	// Set up configuration
 	viper.Reset()
 	viper.Set("server.port", 0)
 	viper.Set("server.host", "localhost")
 	viper.Set("server.open", false)
 	viper.Set("components.scan_paths", []string{tempDir})
-	
+
 	cfg, err := config.Load()
 	require.NoError(t, err)
-	
+
 	// Create server
 	srv, err := server.New(cfg)
 	require.NoError(t, err)
-	
+
 	// Start server
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	
+
 	go func() {
 		err := srv.Start(ctx)
 		if err != nil && err != http.ErrServerClosed {
 			t.Errorf("Server start failed: %v", err)
 		}
 	}()
-	
+
 	// Give server time to start and scan
 	time.Sleep(200 * time.Millisecond)
-	
+
 	// Test server shutdown
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer shutdownCancel()
-	
+
 	err = srv.Shutdown(shutdownCtx)
 	assert.NoError(t, err)
 }
@@ -370,41 +369,41 @@ templ Component2(content string) {
 func TestIntegration_ResourceCleanup(t *testing.T) {
 	// Create a temporary directory
 	tempDir := t.TempDir()
-	
+
 	// Set up configuration
 	viper.Reset()
 	viper.Set("server.port", 0)
 	viper.Set("server.host", "localhost")
 	viper.Set("server.open", false)
 	viper.Set("components.scan_paths", []string{tempDir})
-	
+
 	cfg, err := config.Load()
 	require.NoError(t, err)
-	
+
 	// Create multiple servers to test resource cleanup
 	for i := 0; i < 3; i++ {
 		srv, err := server.New(cfg)
 		require.NoError(t, err)
-		
+
 		// Start server
 		ctx, cancel := context.WithCancel(context.Background())
-		
+
 		go func() {
 			err := srv.Start(ctx)
 			if err != nil && err != http.ErrServerClosed {
 				t.Errorf("Server start failed: %v", err)
 			}
 		}()
-		
+
 		// Give server time to start
 		time.Sleep(50 * time.Millisecond)
-		
+
 		// Shutdown server
 		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 2*time.Second)
-		
+
 		err = srv.Shutdown(shutdownCtx)
 		assert.NoError(t, err)
-		
+
 		shutdownCancel()
 		cancel()
 	}
@@ -421,10 +420,10 @@ func TestIntegration_FullSystem(t *testing.T) {
 	// 4. File watching
 	// 5. WebSocket connections
 	// 6. Graceful shutdown
-	
+
 	// Create a temporary directory structure
 	tempDir := t.TempDir()
-	
+
 	// Create a test component
 	componentFile := filepath.Join(tempDir, "test.templ")
 	err := os.WriteFile(componentFile, []byte(`
@@ -436,7 +435,7 @@ templ TestComponent(title string) {
 }
 `), 0644)
 	require.NoError(t, err)
-	
+
 	// Set up configuration
 	viper.Reset()
 	viper.Set("server.port", 0)
@@ -444,29 +443,29 @@ templ TestComponent(title string) {
 	viper.Set("server.open", false)
 	viper.Set("components.scan_paths", []string{tempDir})
 	viper.Set("development.hot_reload", true)
-	
+
 	// Load configuration
 	cfg, err := config.Load()
 	require.NoError(t, err)
-	
+
 	// Create server
 	srv, err := server.New(cfg)
 	require.NoError(t, err)
-	
+
 	// Start server
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	
+
 	go func() {
 		err := srv.Start(ctx)
 		if err != nil && err != http.ErrServerClosed {
 			t.Errorf("Server start failed: %v", err)
 		}
 	}()
-	
+
 	// Give server time to start and scan
 	time.Sleep(200 * time.Millisecond)
-	
+
 	// Modify the component to trigger file watching
 	err = os.WriteFile(componentFile, []byte(`
 package main
@@ -477,14 +476,14 @@ templ TestComponent(title string) {
 }
 `), 0644)
 	require.NoError(t, err)
-	
+
 	// Give file watcher time to detect change
 	time.Sleep(200 * time.Millisecond)
-	
+
 	// Test graceful shutdown
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer shutdownCancel()
-	
+
 	err = srv.Shutdown(shutdownCtx)
 	assert.NoError(t, err)
 }

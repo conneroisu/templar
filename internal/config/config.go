@@ -1,6 +1,10 @@
 package config
 
 import (
+	"fmt"
+	"path/filepath"
+	"strings"
+
 	"github.com/spf13/viper"
 )
 
@@ -22,10 +26,10 @@ type ServerConfig struct {
 }
 
 type BuildConfig struct {
-	Command   string   `yaml:"command"`
-	Watch     []string `yaml:"watch"`
-	Ignore    []string `yaml:"ignore"`
-	CacheDir  string   `yaml:"cache_dir"`
+	Command  string   `yaml:"command"`
+	Watch    []string `yaml:"watch"`
+	Ignore   []string `yaml:"ignore"`
+	CacheDir string   `yaml:"cache_dir"`
 }
 
 type PreviewConfig struct {
@@ -51,16 +55,196 @@ func Load() (*Config, error) {
 	if err := viper.Unmarshal(&config); err != nil {
 		return nil, err
 	}
-	
-	// If scan paths are empty, use defaults
-	if len(config.Components.ScanPaths) == 0 {
+
+	// Apply defaults for components scan paths only if not explicitly set
+	if !viper.IsSet("components.scan_paths") && len(config.Components.ScanPaths) == 0 {
 		config.Components.ScanPaths = []string{"./components", "./views", "./examples"}
 	}
 	
+	// Handle scan_paths set via viper (workaround for viper slice handling)
+	if viper.IsSet("components.scan_paths") && len(config.Components.ScanPaths) == 0 {
+		scanPaths := viper.GetStringSlice("components.scan_paths")
+		if len(scanPaths) > 0 {
+			config.Components.ScanPaths = scanPaths
+		}
+	}
+	
+	// Handle development settings set via viper (workaround for viper bool handling)
+	if viper.IsSet("development.hot_reload") {
+		config.Development.HotReload = viper.GetBool("development.hot_reload")
+	}
+	if viper.IsSet("development.css_injection") {
+		config.Development.CSSInjection = viper.GetBool("development.css_injection")
+	}
+	if viper.IsSet("development.state_preservation") {
+		config.Development.StatePreservation = viper.GetBool("development.state_preservation")
+	}
+	if viper.IsSet("development.error_overlay") {
+		config.Development.ErrorOverlay = viper.GetBool("development.error_overlay")
+	}
+	
+	// Handle preview settings
+	if viper.IsSet("preview.auto_props") {
+		config.Preview.AutoProps = viper.GetBool("preview.auto_props")
+	}
+	
+	// Handle exclude patterns set via viper (workaround for viper slice handling)
+	if viper.IsSet("components.exclude_patterns") && len(config.Components.ExcludePatterns) == 0 {
+		excludePatterns := viper.GetStringSlice("components.exclude_patterns")
+		if len(excludePatterns) > 0 {
+			config.Components.ExcludePatterns = excludePatterns
+		}
+	}
+	
+	// Apply default values for BuildConfig if not set
+	if config.Build.Command == "" {
+		config.Build.Command = "templ generate"
+	}
+	if len(config.Build.Watch) == 0 {
+		config.Build.Watch = []string{"**/*.templ"}
+	}
+	if len(config.Build.Ignore) == 0 {
+		config.Build.Ignore = []string{"node_modules", ".git"}
+	}
+	if config.Build.CacheDir == "" {
+		config.Build.CacheDir = ".templar/cache"
+	}
+	
+	// Apply default values for PreviewConfig if not set
+	if config.Preview.MockData == "" {
+		config.Preview.MockData = "auto"
+	}
+	if config.Preview.Wrapper == "" {
+		config.Preview.Wrapper = "layout.templ"
+	}
+	if !viper.IsSet("preview.auto_props") {
+		config.Preview.AutoProps = true
+	}
+	
+	// Apply default values for ComponentsConfig if not set
+	if len(config.Components.ExcludePatterns) == 0 {
+		config.Components.ExcludePatterns = []string{"*_test.templ", "*.bak"}
+	}
+	
+	// Apply default values for DevelopmentConfig if not set  
+	if !viper.IsSet("development.hot_reload") {
+		config.Development.HotReload = true
+	}
+	if !viper.IsSet("development.css_injection") {
+		config.Development.CSSInjection = true
+	}
+	if !viper.IsSet("development.error_overlay") {
+		config.Development.ErrorOverlay = true
+	}
+
 	// Override no-open if explicitly set via flag
 	if viper.IsSet("server.no-open") && viper.GetBool("server.no-open") {
 		config.Server.Open = false
 	}
-	
+
+	// Validate configuration values
+	if err := validateConfig(&config); err != nil {
+		return nil, fmt.Errorf("invalid configuration: %w", err)
+	}
+
 	return &config, nil
+}
+
+// validateConfig validates configuration values for security and correctness
+func validateConfig(config *Config) error {
+	// Validate server configuration
+	if err := validateServerConfig(&config.Server); err != nil {
+		return fmt.Errorf("server config: %w", err)
+	}
+	
+	// Validate build configuration
+	if err := validateBuildConfig(&config.Build); err != nil {
+		return fmt.Errorf("build config: %w", err)
+	}
+	
+	// Validate components configuration
+	if err := validateComponentsConfig(&config.Components); err != nil {
+		return fmt.Errorf("components config: %w", err)
+	}
+	
+	return nil
+}
+
+// validateServerConfig validates server configuration values
+func validateServerConfig(config *ServerConfig) error {
+	// Validate port range (allow 0 for system-assigned ports in testing)
+	if config.Port < 0 || config.Port > 65535 {
+		return fmt.Errorf("port %d is not in valid range 0-65535", config.Port)
+	}
+	
+	// Validate host
+	if config.Host != "" {
+		// Basic validation - no dangerous characters
+		dangerousChars := []string{";", "&", "|", "$", "`", "(", ")", "<", ">", "\"", "'", "\\"}
+		for _, char := range dangerousChars {
+			if strings.Contains(config.Host, char) {
+				return fmt.Errorf("host contains dangerous character: %s", char)
+			}
+		}
+	}
+	
+	return nil
+}
+
+// validateBuildConfig validates build configuration values
+func validateBuildConfig(config *BuildConfig) error {
+	// Validate cache directory if specified
+	if config.CacheDir != "" {
+		// Clean the path
+		cleanPath := filepath.Clean(config.CacheDir)
+		
+		// Reject path traversal attempts
+		if strings.Contains(cleanPath, "..") {
+			return fmt.Errorf("cache_dir contains path traversal: %s", config.CacheDir)
+		}
+		
+		// Should be relative path for security
+		if filepath.IsAbs(cleanPath) {
+			return fmt.Errorf("cache_dir should be relative path: %s", config.CacheDir)
+		}
+	}
+	
+	return nil
+}
+
+// validateComponentsConfig validates components configuration values
+func validateComponentsConfig(config *ComponentsConfig) error {
+	// Validate scan paths
+	for _, path := range config.ScanPaths {
+		if err := validatePath(path); err != nil {
+			return fmt.Errorf("invalid scan path '%s': %w", path, err)
+		}
+	}
+	
+	return nil
+}
+
+// validatePath validates a file path for security
+func validatePath(path string) error {
+	if path == "" {
+		return fmt.Errorf("empty path")
+	}
+	
+	// Clean the path
+	cleanPath := filepath.Clean(path)
+	
+	// Reject path traversal attempts
+	if strings.Contains(cleanPath, "..") {
+		return fmt.Errorf("path contains traversal: %s", path)
+	}
+	
+	// Reject dangerous characters
+	dangerousChars := []string{";", "&", "|", "$", "`", "(", ")", "<", ">", "\"", "'"}
+	for _, char := range dangerousChars {
+		if strings.Contains(cleanPath, char) {
+			return fmt.Errorf("path contains dangerous character: %s", char)
+		}
+	}
+	
+	return nil
 }

@@ -42,7 +42,7 @@ var (
 
 func init() {
 	rootCmd.AddCommand(previewCmd)
-	
+
 	previewCmd.Flags().StringVarP(&previewMock, "mock", "m", "", "Mock data file or pattern")
 	previewCmd.Flags().StringVarP(&previewWrapper, "wrapper", "w", "", "Wrapper template")
 	previewCmd.Flags().StringVarP(&previewProps, "props", "p", "", "Component properties (JSON)")
@@ -52,21 +52,21 @@ func init() {
 
 func runPreview(cmd *cobra.Command, args []string) error {
 	componentName := args[0]
-	
+
 	// Load configuration
 	cfg, err := config.Load()
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
-	
+
 	// Override server config for preview
 	cfg.Server.Port = previewPort
 	cfg.Server.Open = !previewNoOpen
-	
+
 	// Create component registry and scanner
 	componentRegistry := registry.NewComponentRegistry()
 	componentScanner := scanner.NewComponentScanner(componentRegistry)
-	
+
 	// Scan all configured paths
 	fmt.Println("📁 Scanning for components...")
 	for _, scanPath := range cfg.Components.ScanPaths {
@@ -74,25 +74,30 @@ func runPreview(cmd *cobra.Command, args []string) error {
 			fmt.Fprintf(os.Stderr, "Warning: failed to scan directory %s: %v\n", scanPath, err)
 		}
 	}
-	
+
 	// Find the requested component
 	component, exists := componentRegistry.Get(componentName)
 	if !exists {
 		return fmt.Errorf("component '%s' not found", componentName)
 	}
-	
+
 	fmt.Printf("🎭 Previewing component: %s\n", componentName)
 	fmt.Printf("   File: %s\n", component.FilePath)
 	fmt.Printf("   Package: %s\n", component.Package)
-	
+
 	// Parse component properties if provided
 	var props map[string]interface{}
 	if previewProps != "" {
+		// Validate JSON size to prevent resource exhaustion attacks
+		if len(previewProps) > 1024*1024 { // 1MB limit
+			return fmt.Errorf("props JSON too large (max 1MB)")
+		}
+		
 		if err := json.Unmarshal([]byte(previewProps), &props); err != nil {
 			return fmt.Errorf("failed to parse props JSON: %w", err)
 		}
 	}
-	
+
 	// Load mock data if specified
 	var mockData map[string]interface{}
 	if previewMock != "" {
@@ -101,32 +106,32 @@ func runPreview(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("failed to load mock data: %w", err)
 		}
 	}
-	
+
 	// Generate mock data if not provided
 	if mockData == nil && props == nil {
 		mockData = generateMockData(component)
 		fmt.Println("🎲 Generated mock data for component parameters")
 	}
-	
+
 	// Create preview-specific server
 	srv, err := createPreviewServer(cfg, component, props, mockData)
 	if err != nil {
 		return fmt.Errorf("failed to create preview server: %w", err)
 	}
-	
+
 	// Start server
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	
+
 	fmt.Printf("🚀 Starting preview server at http://%s:%d\n", cfg.Server.Host, cfg.Server.Port)
-	
+
 	// Handle graceful shutdown
 	go func() {
 		if err := srv.Start(ctx); err != nil {
 			fmt.Fprintf(os.Stderr, "Server error: %v\n", err)
 		}
 	}()
-	
+
 	// Keep the server running
 	select {
 	case <-ctx.Done():
@@ -139,22 +144,22 @@ func loadMockData(mockFile string) (map[string]interface{}, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to read mock file: %w", err)
 	}
-	
+
 	var mockData map[string]interface{}
 	if err := json.Unmarshal(data, &mockData); err != nil {
 		return nil, fmt.Errorf("failed to parse mock data JSON: %w", err)
 	}
-	
+
 	return mockData, nil
 }
 
 func generateMockData(component *registry.ComponentInfo) map[string]interface{} {
 	mockData := make(map[string]interface{})
-	
+
 	for _, param := range component.Parameters {
 		mockData[param.Name] = generateMockValue(param.Type)
 	}
-	
+
 	return mockData
 }
 
@@ -184,33 +189,33 @@ func createPreviewServer(cfg *config.Config, component *registry.ComponentInfo, 
 	// Create a new registry with just the preview component
 	previewRegistry := registry.NewComponentRegistry()
 	previewRegistry.Register(component)
-	
+
 	// Create preview server
 	srv, err := server.New(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create server: %w", err)
 	}
-	
+
 	// Create custom renderer for preview
 	previewRenderer := renderer.NewComponentRenderer(previewRegistry)
-	
+
 	// Generate preview HTML
 	html, err := generatePreviewHTML(component, props, mockData, previewRenderer)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate preview HTML: %w", err)
 	}
-	
+
 	// Store preview HTML for serving
 	// In a real implementation, this would be integrated with the server
 	previewPath := filepath.Join(".templar", "preview.html")
 	if err := os.MkdirAll(filepath.Dir(previewPath), 0755); err != nil {
 		return nil, fmt.Errorf("failed to create preview directory: %w", err)
 	}
-	
+
 	if err := os.WriteFile(previewPath, []byte(html), 0644); err != nil {
 		return nil, fmt.Errorf("failed to write preview HTML: %w", err)
 	}
-	
+
 	return srv, nil
 }
 
@@ -220,16 +225,16 @@ func generatePreviewHTML(component *registry.ComponentInfo, props map[string]int
 	if data == nil {
 		data = mockData
 	}
-	
+
 	// Generate component HTML
 	componentHTML, err := renderer.RenderComponent(component.Name)
 	if err != nil {
 		return "", fmt.Errorf("failed to render component: %w", err)
 	}
-	
+
 	// Create wrapper HTML
 	wrapperHTML := generateWrapperHTML(component, data, componentHTML)
-	
+
 	return wrapperHTML, nil
 }
 
@@ -335,7 +340,7 @@ func generateWrapperHTML(component *registry.ComponentInfo, data map[string]inte
 			previewPort,
 		)
 	}
-	
+
 	// Use custom wrapper (placeholder for now)
 	return fmt.Sprintf(`<!-- Custom wrapper would be loaded from %s -->
 %s`, previewWrapper, componentHTML)

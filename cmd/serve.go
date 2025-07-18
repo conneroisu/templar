@@ -46,38 +46,38 @@ func runServe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
-	
+
 	// Set target files if specified
 	cfg.TargetFiles = args
-	
+
 	srv, err := server.New(cfg)
 	if err != nil {
 		return fmt.Errorf("failed to create server: %w", err)
 	}
-	
+
 	// Create context that cancels on interrupt
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	
+
 	// Handle graceful shutdown
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-	
+
 	go func() {
 		<-sigChan
 		log.Println("Shutting down server...")
 		cancel()
 	}()
-	
+
 	if len(args) > 0 {
 		fmt.Printf("Starting Templar server for %v at http://%s:%d\n", args, cfg.Server.Host, cfg.Server.Port)
 	} else {
 		fmt.Printf("Starting Templar server at http://%s:%d\n", cfg.Server.Host, cfg.Server.Port)
 	}
-	
+
 	if err := srv.Start(ctx); err != nil {
 		return fmt.Errorf("server error: %w", err)
 	}
-	
+
 	return nil
 }

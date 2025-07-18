@@ -2,6 +2,7 @@ package errors
 
 import (
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -50,6 +51,7 @@ func (be *BuildError) Error() string {
 // ErrorCollector collects and manages build errors
 type ErrorCollector struct {
 	errors []BuildError
+	mutex  sync.RWMutex
 }
 
 // NewErrorCollector creates a new error collector
@@ -61,27 +63,40 @@ func NewErrorCollector() *ErrorCollector {
 
 // Add adds an error to the collector
 func (ec *ErrorCollector) Add(err BuildError) {
+	ec.mutex.Lock()
+	defer ec.mutex.Unlock()
 	err.Timestamp = time.Now()
 	ec.errors = append(ec.errors, err)
 }
 
 // GetErrors returns all collected errors
 func (ec *ErrorCollector) GetErrors() []BuildError {
-	return ec.errors
+	ec.mutex.RLock()
+	defer ec.mutex.RUnlock()
+	// Return a copy to avoid race conditions
+	result := make([]BuildError, len(ec.errors))
+	copy(result, ec.errors)
+	return result
 }
 
 // HasErrors returns true if there are any errors
 func (ec *ErrorCollector) HasErrors() bool {
+	ec.mutex.RLock()
+	defer ec.mutex.RUnlock()
 	return len(ec.errors) > 0
 }
 
 // Clear clears all errors
 func (ec *ErrorCollector) Clear() {
+	ec.mutex.Lock()
+	defer ec.mutex.Unlock()
 	ec.errors = ec.errors[:0]
 }
 
 // GetErrorsByFile returns errors for a specific file
 func (ec *ErrorCollector) GetErrorsByFile(file string) []BuildError {
+	ec.mutex.RLock()
+	defer ec.mutex.RUnlock()
 	var fileErrors []BuildError
 	for _, err := range ec.errors {
 		if err.File == file {
@@ -93,6 +108,8 @@ func (ec *ErrorCollector) GetErrorsByFile(file string) []BuildError {
 
 // GetErrorsByComponent returns errors for a specific component
 func (ec *ErrorCollector) GetErrorsByComponent(component string) []BuildError {
+	ec.mutex.RLock()
+	defer ec.mutex.RUnlock()
 	var componentErrors []BuildError
 	for _, err := range ec.errors {
 		if err.Component == component {
@@ -107,7 +124,7 @@ func (ec *ErrorCollector) ErrorOverlay() string {
 	if !ec.HasErrors() {
 		return ""
 	}
-	
+
 	html := `
 <div id="templar-error-overlay" style="
 	position: fixed;
@@ -133,7 +150,8 @@ func (ec *ErrorCollector) ErrorOverlay() string {
 			</button>
 		</div>
 		<div>`
-	
+
+	ec.mutex.RLock()
 	for _, err := range ec.errors {
 		severityColor := "#ff6b6b"
 		switch err.Severity {
@@ -142,7 +160,7 @@ func (ec *ErrorCollector) ErrorOverlay() string {
 		case ErrorSeverityInfo:
 			severityColor = "#48dbfb"
 		}
-		
+
 		html += fmt.Sprintf(`
 			<div style="
 				background: #2d3748;
@@ -164,25 +182,27 @@ func (ec *ErrorCollector) ErrorOverlay() string {
 			</div>
 		`, severityColor, severityColor, err.Severity.String(), err.Timestamp.Format("15:04:05"), err.Message, err.File, err.Line, err.Column)
 	}
-	
+
+	ec.mutex.RUnlock()
+
 	html += `
 		</div>
 	</div>
 </div>`
-	
+
 	return html
 }
 
 // ParseTemplError parses templ compiler error output
 func ParseTemplError(output []byte, component string) []BuildError {
 	var errors []BuildError
-	
+
 	// Simple error parsing - in a real implementation, this would be more sophisticated
 	lines := string(output)
 	if lines == "" {
 		return errors
 	}
-	
+
 	// Basic error parsing for demonstration
 	// Real implementation would parse actual templ error format
 	err := BuildError{
@@ -194,7 +214,7 @@ func ParseTemplError(output []byte, component string) []BuildError {
 		Severity:  ErrorSeverityError,
 		Timestamp: time.Now(),
 	}
-	
+
 	errors = append(errors, err)
 	return errors
 }

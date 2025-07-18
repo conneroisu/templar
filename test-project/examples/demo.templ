@@ -1,0 +1,25 @@
+package examples
+
+import "test-project/components"
+import "test-project/views"
+
+templ DemoPage() {
+	@views.Layout("Demo Page") {
+		<div class="demo-container">
+			<h2>Component Demo</h2>
+			
+			<section class="demo-section">
+				<h3>Buttons</h3>
+				@components.PrimaryButton("Primary Button")
+				@components.SecondaryButton("Secondary Button")
+				@components.Button("Custom Button", "warning")
+			</section>
+			
+			<section class="demo-section">
+				<h3>Cards</h3>
+				@components.Card("Simple Card", "This is a simple card component with just title and content.")
+				@components.CardWithImage("Card with Image", "This card includes an image along with the title and content.", "/static/images/placeholder.jpg")
+			</section>
+		</div>
+	}
+}

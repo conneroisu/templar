@@ -25,14 +25,14 @@ Examples:
 }
 
 var (
-	initMinimal bool
-	initExample bool
+	initMinimal  bool
+	initExample  bool
 	initTemplate string
 )
 
 func init() {
 	rootCmd.AddCommand(initCmd)
-	
+
 	initCmd.Flags().BoolVar(&initMinimal, "minimal", false, "Minimal setup without examples")
 	initCmd.Flags().BoolVar(&initExample, "example", false, "Include example components")
 	initCmd.Flags().StringVarP(&initTemplate, "template", "t", "", "Project template to use")
@@ -40,7 +40,7 @@ func init() {
 
 func runInit(cmd *cobra.Command, args []string) error {
 	var projectDir string
-	
+
 	if len(args) == 0 {
 		// Initialize in current directory
 		cwd, err := os.Getwd()
@@ -55,44 +55,44 @@ func runInit(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("failed to create project directory: %w", err)
 		}
 	}
-	
+
 	fmt.Printf("Initializing templar project in %s\n", projectDir)
-	
+
 	// Create directory structure
 	if err := createDirectoryStructure(projectDir); err != nil {
 		return fmt.Errorf("failed to create directory structure: %w", err)
 	}
-	
+
 	// Create configuration file
 	if err := createConfigFile(projectDir); err != nil {
 		return fmt.Errorf("failed to create configuration file: %w", err)
 	}
-	
+
 	// Create Go module if it doesn't exist
 	if err := createGoModule(projectDir); err != nil {
 		return fmt.Errorf("failed to create Go module: %w", err)
 	}
-	
+
 	// Create example components if requested
 	if initExample || (!initMinimal && initTemplate == "") {
 		if err := createExampleComponents(projectDir); err != nil {
 			return fmt.Errorf("failed to create example components: %w", err)
 		}
 	}
-	
+
 	// Create template files if template is specified
 	if initTemplate != "" {
 		if err := createFromTemplate(projectDir, initTemplate); err != nil {
 			return fmt.Errorf("failed to create from template: %w", err)
 		}
 	}
-	
+
 	fmt.Println("✓ Project initialized successfully!")
 	fmt.Println("\nNext steps:")
 	fmt.Println("  1. cd " + projectDir)
 	fmt.Println("  2. templar serve")
 	fmt.Println("  3. Open http://localhost:8080 in your browser")
-	
+
 	return nil
 }
 
@@ -110,26 +110,26 @@ func createDirectoryStructure(projectDir string) error {
 		".templar",
 		".templar/cache",
 	}
-	
+
 	for _, dir := range dirs {
 		dirPath := filepath.Join(projectDir, dir)
 		if err := os.MkdirAll(dirPath, 0755); err != nil {
 			return fmt.Errorf("failed to create directory %s: %w", dir, err)
 		}
 	}
-	
+
 	return nil
 }
 
 func createConfigFile(projectDir string) error {
 	configPath := filepath.Join(projectDir, ".templar.yml")
-	
+
 	// Don't overwrite existing config
 	if _, err := os.Stat(configPath); err == nil {
 		fmt.Println("⚠ Configuration file already exists, skipping")
 		return nil
 	}
-	
+
 	configContent := `# Templar configuration file
 server:
   port: 8080
@@ -171,24 +171,24 @@ development:
   state_preservation: true
   error_overlay: true
 `
-	
+
 	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
 		return fmt.Errorf("failed to write config file: %w", err)
 	}
-	
+
 	fmt.Println("✓ Created .templar.yml configuration file")
 	return nil
 }
 
 func createGoModule(projectDir string) error {
 	goModPath := filepath.Join(projectDir, "go.mod")
-	
+
 	// Don't overwrite existing go.mod
 	if _, err := os.Stat(goModPath); err == nil {
 		fmt.Println("⚠ go.mod already exists, skipping")
 		return nil
 	}
-	
+
 	// Use directory name as module name
 	projectName := filepath.Base(projectDir)
 	if projectName == "." {
@@ -198,12 +198,12 @@ func createGoModule(projectDir string) error {
 		}
 		projectName = filepath.Base(cwd)
 	}
-	
+
 	// Clean up project name for module
 	projectName = strings.ToLower(projectName)
 	projectName = strings.ReplaceAll(projectName, " ", "-")
 	projectName = strings.ReplaceAll(projectName, "_", "-")
-	
+
 	goModContent := fmt.Sprintf(`module %s
 
 go 1.24
@@ -212,11 +212,11 @@ require (
 	github.com/a-h/templ v0.2.778
 )
 `, projectName)
-	
+
 	if err := os.WriteFile(goModPath, []byte(goModContent), 0644); err != nil {
 		return fmt.Errorf("failed to write go.mod: %w", err)
 	}
-	
+
 	fmt.Println("✓ Created go.mod file")
 	return nil
 }
@@ -240,11 +240,11 @@ templ SecondaryButton(text string) {
 	@Button(text, "secondary")
 }
 `
-	
+
 	if err := os.WriteFile(buttonPath, []byte(buttonContent), 0644); err != nil {
 		return fmt.Errorf("failed to create button component: %w", err)
 	}
-	
+
 	// Create a card component
 	cardPath := filepath.Join(projectDir, "components", "card.templ")
 	cardContent := `package components
@@ -272,11 +272,11 @@ templ CardWithImage(title string, content string, imageUrl string) {
 	</div>
 }
 `
-	
+
 	if err := os.WriteFile(cardPath, []byte(cardContent), 0644); err != nil {
 		return fmt.Errorf("failed to create card component: %w", err)
 	}
-	
+
 	// Create a layout component
 	layoutPath := filepath.Join(projectDir, "views", "layout.templ")
 	layoutContent := `package views
@@ -304,11 +304,11 @@ templ Layout(title string) {
 	</html>
 }
 `
-	
+
 	if err := os.WriteFile(layoutPath, []byte(layoutContent), 0644); err != nil {
 		return fmt.Errorf("failed to create layout component: %w", err)
 	}
-	
+
 	// Create example page
 	examplePath := filepath.Join(projectDir, "examples", "demo.templ")
 	exampleContent := `package examples
@@ -337,11 +337,11 @@ templ DemoPage() {
 	}
 }
 `
-	
+
 	if err := os.WriteFile(examplePath, []byte(exampleContent), 0644); err != nil {
 		return fmt.Errorf("failed to create example page: %w", err)
 	}
-	
+
 	// Create basic CSS
 	cssPath := filepath.Join(projectDir, "static", "css", "styles.css")
 	cssContent := `/* Basic styles for templar project */
@@ -467,11 +467,11 @@ body {
   color: #007bff;
 }
 `
-	
+
 	if err := os.WriteFile(cssPath, []byte(cssContent), 0644); err != nil {
 		return fmt.Errorf("failed to create CSS file: %w", err)
 	}
-	
+
 	// Create wrapper template for previews
 	wrapperPath := filepath.Join(projectDir, "preview", "wrapper.templ")
 	wrapperContent := `package preview
@@ -504,17 +504,17 @@ templ Wrapper(title string) {
 	</html>
 }
 `
-	
+
 	if err := os.WriteFile(wrapperPath, []byte(wrapperContent), 0644); err != nil {
 		return fmt.Errorf("failed to create wrapper template: %w", err)
 	}
-	
+
 	// Create placeholder image
 	placeholderPath := filepath.Join(projectDir, "static", "images", ".gitkeep")
 	if err := os.WriteFile(placeholderPath, []byte(""), 0644); err != nil {
 		return fmt.Errorf("failed to create placeholder file: %w", err)
 	}
-	
+
 	fmt.Println("✓ Created example components and assets")
 	return nil
 }
@@ -541,11 +541,11 @@ templ Hello(name string) {
 	<h1>Hello, { name }!</h1>
 }
 `
-	
+
 	if err := os.WriteFile(componentPath, []byte(componentContent), 0644); err != nil {
 		return fmt.Errorf("failed to create hello component: %w", err)
 	}
-	
+
 	fmt.Println("✓ Created minimal template")
 	return nil
 }
@@ -585,11 +585,11 @@ templ PostList(posts []Post) {
 	</div>
 }
 `
-	
+
 	if err := os.WriteFile(postPath, []byte(postContent), 0644); err != nil {
 		return fmt.Errorf("failed to create post component: %w", err)
 	}
-	
+
 	fmt.Println("✓ Created blog template")
 	return nil
 }

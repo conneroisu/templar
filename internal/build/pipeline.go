@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -24,6 +26,9 @@ type BuildPipeline struct {
 	errorParser *errors.ErrorParser
 	metrics     *BuildMetrics
 	callbacks   []BuildCallback
+	workerWg    sync.WaitGroup
+	resultWg    sync.WaitGroup
+	cancel      context.CancelFunc
 }
 
 // BuildTask represents a build task
@@ -49,13 +54,13 @@ type BuildCallback func(result BuildResult)
 
 // BuildMetrics tracks build performance
 type BuildMetrics struct {
-	TotalBuilds     int64
+	TotalBuilds      int64
 	SuccessfulBuilds int64
-	FailedBuilds    int64
-	CacheHits       int64
-	AverageDuration time.Duration
-	TotalDuration   time.Duration
-	mutex           sync.RWMutex
+	FailedBuilds     int64
+	CacheHits        int64
+	AverageDuration  time.Duration
+	TotalDuration    time.Duration
+	mutex            sync.RWMutex
 }
 
 // TemplCompiler handles templ compilation
@@ -70,6 +75,9 @@ type BuildCache struct {
 	mutex   sync.RWMutex
 	maxSize int64
 	ttl     time.Duration
+	// LRU implementation
+	head *CacheEntry
+	tail *CacheEntry
 }
 
 // CacheEntry represents a cached build result
@@ -80,6 +88,9 @@ type CacheEntry struct {
 	CreatedAt  time.Time
 	AccessedAt time.Time
 	Size       int64
+	// LRU doubly-linked list pointers
+	prev *CacheEntry
+	next *CacheEntry
 }
 
 // BuildQueue manages build tasks
@@ -95,21 +106,27 @@ func NewBuildPipeline(workers int, registry *registry.ComponentRegistry) *BuildP
 		command: "templ",
 		args:    []string{"generate"},
 	}
-	
+
 	cache := &BuildCache{
 		entries: make(map[string]*CacheEntry),
 		maxSize: 100 * 1024 * 1024, // 100MB
 		ttl:     time.Hour,
 	}
 	
+	// Initialize LRU doubly-linked list with dummy head and tail
+	cache.head = &CacheEntry{}
+	cache.tail = &CacheEntry{}
+	cache.head.next = cache.tail
+	cache.tail.prev = cache.head
+
 	queue := &BuildQueue{
 		tasks:    make(chan BuildTask, 100),
 		results:  make(chan BuildResult, 100),
 		priority: make(chan BuildTask, 10),
 	}
-	
+
 	metrics := &BuildMetrics{}
-	
+
 	return &BuildPipeline{
 		compiler:    compiler,
 		cache:       cache,
@@ -124,13 +141,31 @@ func NewBuildPipeline(workers int, registry *registry.ComponentRegistry) *BuildP
 
 // Start starts the build pipeline
 func (bp *BuildPipeline) Start(ctx context.Context) {
+	// Create cancellable context
+	ctx, bp.cancel = context.WithCancel(ctx)
+	
 	// Start workers
 	for i := 0; i < bp.workers; i++ {
+		bp.workerWg.Add(1)
 		go bp.worker(ctx)
 	}
-	
+
 	// Start result processor
+	bp.resultWg.Add(1)
 	go bp.processResults(ctx)
+}
+
+// Stop stops the build pipeline and waits for all goroutines to finish
+func (bp *BuildPipeline) Stop() {
+	if bp.cancel != nil {
+		bp.cancel()
+	}
+	
+	// Wait for all workers to finish
+	bp.workerWg.Wait()
+	
+	// Wait for result processor to finish
+	bp.resultWg.Wait()
 }
 
 // Build queues a component for building
@@ -140,7 +175,7 @@ func (bp *BuildPipeline) Build(component *registry.ComponentInfo) {
 		Priority:  1,
 		Timestamp: time.Now(),
 	}
-	
+
 	select {
 	case bp.queue.tasks <- task:
 	default:
@@ -155,7 +190,7 @@ func (bp *BuildPipeline) BuildWithPriority(component *registry.ComponentInfo) {
 		Priority:  10,
 		Timestamp: time.Now(),
 	}
-	
+
 	select {
 	case bp.queue.priority <- task:
 	default:
@@ -187,6 +222,8 @@ func (bp *BuildPipeline) GetCacheStats() (int, int64, int64) {
 
 // worker processes build tasks
 func (bp *BuildPipeline) worker(ctx context.Context) {
+	defer bp.workerWg.Done()
+	
 	for {
 		select {
 		case <-ctx.Done():
@@ -201,10 +238,10 @@ func (bp *BuildPipeline) worker(ctx context.Context) {
 
 func (bp *BuildPipeline) processBuildTask(task BuildTask) {
 	start := time.Now()
-	
+
 	// Generate content hash for caching
 	contentHash := bp.generateContentHash(task.Component)
-	
+
 	// Check cache first
 	if result, found := bp.cache.Get(contentHash); found {
 		bp.queue.results <- BuildResult{
@@ -218,16 +255,16 @@ func (bp *BuildPipeline) processBuildTask(task BuildTask) {
 		}
 		return
 	}
-	
+
 	// Execute build
 	output, err := bp.compiler.Compile(task.Component)
-	
+
 	// Parse errors if build failed
 	var parsedErrors []*errors.ParsedError
 	if err != nil {
 		parsedErrors = bp.errorParser.ParseError(string(output))
 	}
-	
+
 	result := BuildResult{
 		Component:    task.Component,
 		Output:       output,
@@ -237,16 +274,18 @@ func (bp *BuildPipeline) processBuildTask(task BuildTask) {
 		CacheHit:     false,
 		Hash:         contentHash,
 	}
-	
+
 	// Cache successful builds
 	if err == nil {
 		bp.cache.Set(contentHash, output)
 	}
-	
+
 	bp.queue.results <- result
 }
 
 func (bp *BuildPipeline) processResults(ctx context.Context) {
+	defer bp.resultWg.Done()
+	
 	for {
 		select {
 		case <-ctx.Done():
@@ -260,7 +299,7 @@ func (bp *BuildPipeline) processResults(ctx context.Context) {
 func (bp *BuildPipeline) handleBuildResult(result BuildResult) {
 	// Update metrics
 	bp.updateMetrics(result)
-	
+
 	// Print result
 	if result.Error != nil {
 		fmt.Printf("Build failed for %s: %v\n", result.Component.Name, result.Error)
@@ -277,7 +316,7 @@ func (bp *BuildPipeline) handleBuildResult(result BuildResult) {
 		}
 		fmt.Printf("Build %s for %s in %v\n", status, result.Component.Name, result.Duration)
 	}
-	
+
 	// Call callbacks
 	for _, callback := range bp.callbacks {
 		callback(result)
@@ -286,35 +325,88 @@ func (bp *BuildPipeline) handleBuildResult(result BuildResult) {
 
 // TemplCompiler methods
 func (tc *TemplCompiler) Compile(component *registry.ComponentInfo) ([]byte, error) {
+	// Validate command and arguments to prevent command injection
+	if err := tc.validateCommand(); err != nil {
+		return nil, fmt.Errorf("command validation failed: %w", err)
+	}
+
 	// Run templ generate command
 	cmd := exec.Command(tc.command, tc.args...)
 	cmd.Dir = "." // Run in current directory
-	
+
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return nil, fmt.Errorf("templ generate failed: %w\nOutput: %s", err, output)
 	}
-	
+
 	return output, nil
+}
+
+// validateCommand validates the command and arguments to prevent command injection
+func (tc *TemplCompiler) validateCommand() error {
+	// Allowlist of permitted commands
+	allowedCommands := map[string]bool{
+		"templ": true,
+		"go":    true,
+	}
+	
+	// Check if command is in allowlist
+	if !allowedCommands[tc.command] {
+		return fmt.Errorf("command '%s' is not allowed", tc.command)
+	}
+	
+	// Validate arguments - prevent shell metacharacters and path traversal
+	for _, arg := range tc.args {
+		if err := validateArgument(arg); err != nil {
+			return fmt.Errorf("invalid argument '%s': %w", arg, err)
+		}
+	}
+	
+	return nil
+}
+
+// validateArgument validates a single command argument
+func validateArgument(arg string) error {
+	// Check for shell metacharacters that could be used for command injection
+	dangerous := []string{";", "&", "|", "$", "`", "(", ")", "<", ">", "\\", "\"", "'"}
+	for _, char := range dangerous {
+		if strings.Contains(arg, char) {
+			return fmt.Errorf("contains dangerous character: %s", char)
+		}
+	}
+	
+	// Check for path traversal attempts
+	if strings.Contains(arg, "..") {
+		return fmt.Errorf("contains path traversal: %s", arg)
+	}
+	
+	// Check for absolute paths (prefer relative paths for security)
+	if filepath.IsAbs(arg) && !strings.HasPrefix(arg, "/usr/bin/") && !strings.HasPrefix(arg, "/bin/") {
+		return fmt.Errorf("absolute path not allowed: %s", arg)
+	}
+	
+	return nil
 }
 
 // BuildCache methods
 func (bc *BuildCache) Get(key string) ([]byte, bool) {
-	bc.mutex.RLock()
-	defer bc.mutex.RUnlock()
-	
+	bc.mutex.Lock()
+	defer bc.mutex.Unlock()
+
 	entry, exists := bc.entries[key]
 	if !exists {
 		return nil, false
 	}
-	
+
 	// Check TTL
 	if time.Since(entry.CreatedAt) > bc.ttl {
+		bc.removeFromList(entry)
 		delete(bc.entries, key)
 		return nil, false
 	}
-	
-	// Update access time
+
+	// Move to front (mark as recently used)
+	bc.moveToFront(entry)
 	entry.AccessedAt = time.Now()
 	return entry.Value, true
 }
@@ -322,10 +414,20 @@ func (bc *BuildCache) Get(key string) ([]byte, bool) {
 func (bc *BuildCache) Set(key string, value []byte) {
 	bc.mutex.Lock()
 	defer bc.mutex.Unlock()
-	
+
+	// Check if entry already exists
+	if existingEntry, exists := bc.entries[key]; exists {
+		// Update existing entry
+		existingEntry.Value = value
+		existingEntry.AccessedAt = time.Now()
+		existingEntry.Size = int64(len(value))
+		bc.moveToFront(existingEntry)
+		return
+	}
+
 	// Check if we need to evict old entries
 	bc.evictIfNeeded(int64(len(value)))
-	
+
 	entry := &CacheEntry{
 		Key:        key,
 		Value:      value,
@@ -334,8 +436,9 @@ func (bc *BuildCache) Set(key string, value []byte) {
 		AccessedAt: time.Now(),
 		Size:       int64(len(value)),
 	}
-	
+
 	bc.entries[key] = entry
+	bc.addToFront(entry)
 }
 
 func (bc *BuildCache) evictIfNeeded(newSize int64) {
@@ -343,20 +446,14 @@ func (bc *BuildCache) evictIfNeeded(newSize int64) {
 	if currentSize+newSize <= bc.maxSize {
 		return
 	}
-	
-	// Simple LRU eviction
-	oldestKey := ""
-	oldestTime := time.Now()
-	
-	for key, entry := range bc.entries {
-		if entry.AccessedAt.Before(oldestTime) {
-			oldestTime = entry.AccessedAt
-			oldestKey = key
-		}
-	}
-	
-	if oldestKey != "" {
-		delete(bc.entries, oldestKey)
+
+	// Efficient LRU eviction - remove from tail (least recently used)
+	for currentSize+newSize > bc.maxSize && bc.tail.prev != bc.head {
+		// Remove the least recently used entry (tail.prev)
+		lru := bc.tail.prev
+		bc.removeFromList(lru)
+		delete(bc.entries, lru.Key)
+		currentSize -= lru.Size
 	}
 }
 
@@ -373,18 +470,39 @@ func (bc *BuildCache) Clear() {
 	bc.mutex.Lock()
 	defer bc.mutex.Unlock()
 	bc.entries = make(map[string]*CacheEntry)
+	// Reset LRU list
+	bc.head.next = bc.tail
+	bc.tail.prev = bc.head
 }
 
 // GetStats returns cache statistics
 func (bc *BuildCache) GetStats() (int, int64, int64) {
 	bc.mutex.RLock()
 	defer bc.mutex.RUnlock()
-	
+
 	count := len(bc.entries)
 	size := bc.getCurrentSize()
 	maxSize := bc.maxSize
-	
+
 	return count, size, maxSize
+}
+
+// LRU doubly-linked list operations
+func (bc *BuildCache) addToFront(entry *CacheEntry) {
+	entry.prev = bc.head
+	entry.next = bc.head.next
+	bc.head.next.prev = entry
+	bc.head.next = entry
+}
+
+func (bc *BuildCache) removeFromList(entry *CacheEntry) {
+	entry.prev.next = entry.next
+	entry.next.prev = entry.prev
+}
+
+func (bc *BuildCache) moveToFront(entry *CacheEntry) {
+	bc.removeFromList(entry)
+	bc.addToFront(entry)
 }
 
 // generateContentHash generates a hash for component content
@@ -399,7 +517,7 @@ func (bp *BuildPipeline) generateContentHash(component *registry.ComponentInfo) 
 		}
 		return fmt.Sprintf("%s:%d", component.FilePath, stat.ModTime().Unix())
 	}
-	
+
 	// Hash the content
 	hash := sha256.Sum256(content)
 	return hex.EncodeToString(hash[:])
@@ -409,20 +527,20 @@ func (bp *BuildPipeline) generateContentHash(component *registry.ComponentInfo) 
 func (bp *BuildPipeline) updateMetrics(result BuildResult) {
 	bp.metrics.mutex.Lock()
 	defer bp.metrics.mutex.Unlock()
-	
+
 	bp.metrics.TotalBuilds++
 	bp.metrics.TotalDuration += result.Duration
-	
+
 	if result.CacheHit {
 		bp.metrics.CacheHits++
 	}
-	
+
 	if result.Error != nil {
 		bp.metrics.FailedBuilds++
 	} else {
 		bp.metrics.SuccessfulBuilds++
 	}
-	
+
 	// Update average duration
 	if bp.metrics.TotalBuilds > 0 {
 		bp.metrics.AverageDuration = bp.metrics.TotalDuration / time.Duration(bp.metrics.TotalBuilds)

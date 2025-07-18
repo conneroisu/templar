@@ -1,0 +1,29 @@
+package preview
+
+templ Wrapper(title string) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>{ title } - Preview</title>
+			<link rel="stylesheet" href="/static/css/styles.css"/>
+			<style>
+				body { margin: 2rem; }
+				.preview-container { 
+					max-width: 800px; 
+					margin: 0 auto; 
+					background: white; 
+					padding: 2rem; 
+					border-radius: 0.5rem; 
+					box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+				}
+			</style>
+		</head>
+		<body>
+			<div class="preview-container">
+				{ children... }
+			</div>
+		</body>
+	</html>
+}

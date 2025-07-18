@@ -21,10 +21,10 @@ type ComponentRenderer struct {
 // NewComponentRenderer creates a new component renderer
 func NewComponentRenderer(registry *registry.ComponentRegistry) *ComponentRenderer {
 	workDir := ".templar/render"
-	if err := os.MkdirAll(workDir, 0755); err != nil {
+	if err := os.MkdirAll(workDir, 0750); err != nil {
 		log.Printf("Failed to create work directory %s: %v", workDir, err)
 	}
-	
+
 	return &ComponentRenderer{
 		registry: registry,
 		workDir:  workDir,
@@ -33,59 +33,70 @@ func NewComponentRenderer(registry *registry.ComponentRegistry) *ComponentRender
 
 // RenderComponent renders a specific component with mock data
 func (r *ComponentRenderer) RenderComponent(componentName string) (string, error) {
+	// Validate component name to prevent path traversal
+	if err := r.validateComponentName(componentName); err != nil {
+		return "", fmt.Errorf("invalid component name: %w", err)
+	}
+
 	component, exists := r.registry.Get(componentName)
 	if !exists {
 		return "", fmt.Errorf("component %s not found", componentName)
 	}
-	
+
 	// Create a clean workspace for this component
 	componentWorkDir := filepath.Join(r.workDir, componentName)
+	
+	// Validate the work directory path before operations
+	if err := r.validateWorkDir(componentWorkDir); err != nil {
+		return "", fmt.Errorf("invalid work directory: %w", err)
+	}
+	
 	if err := os.RemoveAll(componentWorkDir); err != nil {
 		log.Printf("Failed to remove existing component work directory %s: %v", componentWorkDir, err)
 	}
-	if err := os.MkdirAll(componentWorkDir, 0755); err != nil {
+	if err := os.MkdirAll(componentWorkDir, 0750); err != nil {
 		return "", fmt.Errorf("failed to create component work directory: %w", err)
 	}
-	
+
 	// Generate mock data for parameters
 	mockData := r.generateMockData(component)
-	
+
 	// Create a Go file that renders the component
 	goCode, err := r.generateGoCode(component, mockData)
 	if err != nil {
 		return "", fmt.Errorf("generating Go code: %w", err)
 	}
-	
+
 	// Write the Go file
 	goFile := filepath.Join(componentWorkDir, "main.go")
-	if err := os.WriteFile(goFile, []byte(goCode), 0644); err != nil {
+	if err := os.WriteFile(goFile, []byte(goCode), 0600); err != nil {
 		return "", fmt.Errorf("writing Go file: %w", err)
 	}
-	
+
 	// Copy and modify the templ file to use main package
 	templFile := filepath.Join(componentWorkDir, filepath.Base(component.FilePath))
 	if err := r.copyAndModifyTemplFile(component.FilePath, templFile); err != nil {
 		return "", fmt.Errorf("copying templ file: %w", err)
 	}
-	
+
 	// Run templ generate
 	if err := r.runTemplGenerate(componentWorkDir); err != nil {
 		return "", fmt.Errorf("running templ generate: %w", err)
 	}
-	
+
 	// Build and run the Go program
 	html, err := r.buildAndRun(componentWorkDir)
 	if err != nil {
 		return "", fmt.Errorf("building and running: %w", err)
 	}
-	
+
 	return html, nil
 }
 
 // generateMockData creates mock data for component parameters
 func (r *ComponentRenderer) generateMockData(component *registry.ComponentInfo) map[string]interface{} {
 	mockData := make(map[string]interface{})
-	
+
 	for _, param := range component.Parameters {
 		switch param.Type {
 		case "string":
@@ -100,7 +111,7 @@ func (r *ComponentRenderer) generateMockData(component *registry.ComponentInfo) 
 			mockData[param.Name] = fmt.Sprintf("mock_%s", param.Name)
 		}
 	}
-	
+
 	return mockData
 }
 
@@ -149,12 +160,12 @@ func main() {
 	}
 }
 `
-	
+
 	tmpl, err := template.New("go").Parse(tmplStr)
 	if err != nil {
 		return "", err
 	}
-	
+
 	// Prepare template data
 	templateData := struct {
 		ComponentName string
@@ -165,11 +176,11 @@ func main() {
 	}{
 		ComponentName: component.Name,
 	}
-	
+
 	for _, param := range component.Parameters {
 		mockValue := mockData[param.Name]
 		var mockValueStr string
-		
+
 		switch v := mockValue.(type) {
 		case string:
 			mockValueStr = fmt.Sprintf(`"%s"`, v)
@@ -188,7 +199,7 @@ func main() {
 		default:
 			mockValueStr = fmt.Sprintf(`"%v"`, v)
 		}
-		
+
 		templateData.Parameters = append(templateData.Parameters, struct {
 			Name      string
 			MockValue string
@@ -197,12 +208,12 @@ func main() {
 			MockValue: mockValueStr,
 		})
 	}
-	
+
 	var buf strings.Builder
 	if err := tmpl.Execute(&buf, templateData); err != nil {
 		return "", err
 	}
-	
+
 	return buf.String(), nil
 }
 
@@ -213,10 +224,10 @@ func (r *ComponentRenderer) copyAndModifyTemplFile(src, dst string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	content := string(input)
 	lines := strings.Split(content, "\n")
-	
+
 	// Modify the package declaration to use main
 	for i, line := range lines {
 		if strings.HasPrefix(strings.TrimSpace(line), "package ") {
@@ -224,13 +235,18 @@ func (r *ComponentRenderer) copyAndModifyTemplFile(src, dst string) error {
 			break
 		}
 	}
-	
+
 	modifiedContent := strings.Join(lines, "\n")
-	return os.WriteFile(dst, []byte(modifiedContent), 0644)
+	return os.WriteFile(dst, []byte(modifiedContent), 0600)
 }
 
 // runTemplGenerate runs templ generate in the work directory
 func (r *ComponentRenderer) runTemplGenerate(workDir string) error {
+	// Validate work directory path to prevent directory traversal
+	if err := r.validateWorkDir(workDir); err != nil {
+		return fmt.Errorf("invalid work directory: %w", err)
+	}
+	
 	cmd := exec.Command("templ", "generate")
 	cmd.Dir = workDir
 	output, err := cmd.CombinedOutput()
@@ -242,6 +258,11 @@ func (r *ComponentRenderer) runTemplGenerate(workDir string) error {
 
 // buildAndRun builds and runs the Go program to generate HTML
 func (r *ComponentRenderer) buildAndRun(workDir string) (string, error) {
+	// Validate work directory path to prevent directory traversal
+	if err := r.validateWorkDir(workDir); err != nil {
+		return "", fmt.Errorf("invalid work directory: %w", err)
+	}
+	
 	// Initialize go module if it doesn't exist
 	if _, err := os.Stat(filepath.Join(workDir, "go.mod")); os.IsNotExist(err) {
 		cmd := exec.Command("go", "mod", "init", "templar-render")
@@ -249,7 +270,7 @@ func (r *ComponentRenderer) buildAndRun(workDir string) (string, error) {
 		if err := cmd.Run(); err != nil {
 			return "", fmt.Errorf("go mod init failed: %w", err)
 		}
-		
+
 		// Add templ dependency
 		cmd = exec.Command("go", "get", "github.com/a-h/templ")
 		cmd.Dir = workDir
@@ -257,7 +278,7 @@ func (r *ComponentRenderer) buildAndRun(workDir string) (string, error) {
 			return "", fmt.Errorf("go get templ failed: %w", err)
 		}
 	}
-	
+
 	// Build and run
 	cmd := exec.Command("go", "run", ".")
 	cmd.Dir = workDir
@@ -265,9 +286,40 @@ func (r *ComponentRenderer) buildAndRun(workDir string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("go run failed: %w\nOutput: %s", err, output)
 	}
-	
+
 	return string(output), nil
 }
+
+// validateWorkDir validates the work directory path to prevent directory traversal
+func (r *ComponentRenderer) validateWorkDir(workDir string) error {
+	// Clean the path to resolve . and .. elements
+	cleanPath := filepath.Clean(workDir)
+	
+	// Get absolute path to normalize
+	absPath, err := filepath.Abs(cleanPath)
+	if err != nil {
+		return fmt.Errorf("getting absolute path: %w", err)
+	}
+	
+	// Get current working directory
+	cwd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("getting current directory: %w", err)
+	}
+	
+	// Ensure the work directory is within the current working directory
+	if !strings.HasPrefix(absPath, cwd) {
+		return fmt.Errorf("work directory %s is outside current working directory", workDir)
+	}
+	
+	// Additional security check: reject paths with suspicious patterns
+	if strings.Contains(cleanPath, "..") {
+		return fmt.Errorf("work directory contains directory traversal: %s", workDir)
+	}
+	
+	return nil
+}
+
 
 // RenderComponentWithLayout wraps component HTML in a full page layout
 func (r *ComponentRenderer) RenderComponentWithLayout(componentName string, html string) string {
@@ -323,3 +375,32 @@ func (r *ComponentRenderer) RenderComponentWithLayout(componentName string, html
 </body>
 </html>`, componentName, componentName, html)
 }
+
+// validateComponentName validates component name to prevent path traversal
+func (r *ComponentRenderer) validateComponentName(name string) error {
+	// Clean the name
+	cleanName := filepath.Clean(name)
+	
+	// Reject names containing path traversal patterns
+	if strings.Contains(cleanName, "..") {
+		return fmt.Errorf("path traversal attempt detected: %s", name)
+	}
+	
+	// Reject absolute paths
+	if filepath.IsAbs(cleanName) {
+		return fmt.Errorf("absolute path not allowed: %s", name)
+	}
+	
+	// Reject names with path separators (should be simple component names)
+	if strings.ContainsRune(cleanName, os.PathSeparator) {
+		return fmt.Errorf("path separators not allowed in component name: %s", name)
+	}
+	
+	// Reject empty names
+	if cleanName == "" || cleanName == "." {
+		return fmt.Errorf("empty or invalid component name: %s", name)
+	}
+	
+	return nil
+}
+
