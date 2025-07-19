@@ -320,5 +320,12 @@
     "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
     "hook_event_name": "UserPromptSubmit",
     "prompt": "continue"
+  },
+  {
+    "session_id": "3bfa3df1-7f70-4557-86f7-6812c1e40ac4",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/3bfa3df1-7f70-4557-86f7-6812c1e40ac4.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "UserPromptSubmit",
+    "prompt": "continue"
   }
 ]

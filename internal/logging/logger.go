@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -488,4 +489,164 @@ func (p *PerfLogger) EndWithError(ctx context.Context, err error) {
 		"duration_ms", duration.Milliseconds(),
 		"duration", duration.String(),
 	)
+}
+
+// ErrorCategory represents different types of errors for better categorization
+type ErrorCategory string
+
+const (
+	ErrorCategorySystem      ErrorCategory = "system"
+	ErrorCategoryValidation  ErrorCategory = "validation"
+	ErrorCategorySecurity    ErrorCategory = "security"
+	ErrorCategoryNetwork     ErrorCategory = "network"
+	ErrorCategoryFileSystem  ErrorCategory = "filesystem"
+	ErrorCategoryBuild       ErrorCategory = "build"
+	ErrorCategoryComponent   ErrorCategory = "component"
+	ErrorCategoryUnknown     ErrorCategory = "unknown"
+)
+
+// StructuredError provides enhanced error information for logging
+type StructuredError struct {
+	Category    ErrorCategory          `json:"category"`
+	Operation   string                 `json:"operation"`
+	Component   string                 `json:"component,omitempty"`
+	Message     string                 `json:"message"`
+	Cause       error                  `json:"cause,omitempty"`
+	Context     map[string]interface{} `json:"context,omitempty"`
+	Timestamp   time.Time              `json:"timestamp"`
+	Retryable   bool                   `json:"retryable"`
+	Severity    string                 `json:"severity"`
+}
+
+// Error implements the error interface
+func (e *StructuredError) Error() string {
+	if e.Cause != nil {
+		return fmt.Sprintf("%s: %s (caused by: %v)", e.Operation, e.Message, e.Cause)
+	}
+	return fmt.Sprintf("%s: %s", e.Operation, e.Message)
+}
+
+// Unwrap returns the underlying error for error unwrapping
+func (e *StructuredError) Unwrap() error {
+	return e.Cause
+}
+
+// NewStructuredError creates a new structured error
+func NewStructuredError(category ErrorCategory, operation, message string) *StructuredError {
+	return &StructuredError{
+		Category:  category,
+		Operation: operation,
+		Message:   message,
+		Timestamp: time.Now(),
+		Severity:  "error",
+		Context:   make(map[string]interface{}),
+	}
+}
+
+// WithCause adds a cause error
+func (e *StructuredError) WithCause(cause error) *StructuredError {
+	e.Cause = cause
+	return e
+}
+
+// WithComponent adds component context
+func (e *StructuredError) WithComponent(component string) *StructuredError {
+	e.Component = component
+	return e
+}
+
+// WithContext adds additional context
+func (e *StructuredError) WithContext(key string, value interface{}) *StructuredError {
+	if e.Context == nil {
+		e.Context = make(map[string]interface{})
+	}
+	e.Context[key] = value
+	return e
+}
+
+// WithRetryable marks the error as retryable
+func (e *StructuredError) WithRetryable(retryable bool) *StructuredError {
+	e.Retryable = retryable
+	return e
+}
+
+// WithSeverity sets the error severity
+func (e *StructuredError) WithSeverity(severity string) *StructuredError {
+	e.Severity = severity
+	return e
+}
+
+// ResilientLogger provides retry capabilities for logging operations
+type ResilientLogger struct {
+	Logger
+	maxRetries int
+	retryDelay time.Duration
+	mutex      sync.RWMutex
+}
+
+// NewResilientLogger creates a logger with retry capabilities
+func NewResilientLogger(logger Logger, maxRetries int, retryDelay time.Duration) *ResilientLogger {
+	return &ResilientLogger{
+		Logger:      logger,
+		maxRetries:  maxRetries,
+		retryDelay:  retryDelay,
+	}
+}
+
+// ErrorWithRetry logs an error with retry mechanism
+func (r *ResilientLogger) ErrorWithRetry(ctx context.Context, err error, msg string, fields ...interface{}) {
+	r.mutex.RLock()
+	defer r.mutex.RUnlock()
+	
+	for attempt := 0; attempt <= r.maxRetries; attempt++ {
+		if attempt > 0 {
+			// Add retry context
+			fields = append(fields, "retry_attempt", attempt)
+			time.Sleep(r.retryDelay)
+		}
+		
+		// Attempt to log
+		success := false
+		func() {
+			defer func() {
+				if recover() != nil {
+					// Log attempt failed, will retry if possible
+					success = false
+				} else {
+					success = true
+				}
+			}()
+			r.Logger.Error(ctx, err, msg, fields...)
+		}()
+		
+		// If logging succeeded, return
+		if success {
+			return
+		}
+	}
+	
+	// All retry attempts failed, use fallback
+	fmt.Fprintf(os.Stderr, "[CRITICAL] Failed to log error after %d retries: %s - %v\n", r.maxRetries, msg, err)
+}
+
+// LogStructuredError logs a structured error with enhanced context
+func LogStructuredError(logger Logger, ctx context.Context, structErr *StructuredError) {
+	fields := []interface{}{
+		"error_category", string(structErr.Category),
+		"operation", structErr.Operation,
+		"severity", structErr.Severity,
+		"retryable", structErr.Retryable,
+		"timestamp", structErr.Timestamp,
+	}
+	
+	if structErr.Component != "" {
+		fields = append(fields, "component", structErr.Component)
+	}
+	
+	// Add context fields
+	for k, v := range structErr.Context {
+		fields = append(fields, k, v)
+	}
+	
+	logger.Error(ctx, structErr.Cause, structErr.Message, fields...)
 }

@@ -190,7 +190,10 @@ func TestRateLimitMiddleware(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Equal(t, "60", w.Header().Get("X-RateLimit-Limit"))
-		assert.Equal(t, "2", w.Header().Get("X-RateLimit-Remaining")[0:1]) // Check first digit
+		
+		// Remaining should decrease with each request
+		expectedRemaining := fmt.Sprintf("%d", 2-i)
+		assert.Equal(t, expectedRemaining, w.Header().Get("X-RateLimit-Remaining"))
 	}
 
 	// 4th request should be rate limited
