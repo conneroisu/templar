@@ -425,8 +425,8 @@ func BenchmarkComponentRegistry_Operations(b *testing.B) {
 
 		for i := 0; i < b.N; i++ {
 			component := &registry.ComponentInfo{
-				Name:    fmt.Sprintf("Component%d", i),
-				Package: "components",
+				Name:     fmt.Sprintf("Component%d", i),
+				Package:  "components",
 				FilePath: fmt.Sprintf("component_%d.templ", i),
 				Parameters: []registry.ParameterInfo{
 					{Name: "title", Type: "string"},
@@ -443,8 +443,8 @@ func BenchmarkComponentRegistry_Operations(b *testing.B) {
 		// Pre-populate registry
 		for i := 0; i < 1000; i++ {
 			component := &registry.ComponentInfo{
-				Name:    fmt.Sprintf("Component%d", i),
-				Package: "components",
+				Name:     fmt.Sprintf("Component%d", i),
+				Package:  "components",
 				FilePath: fmt.Sprintf("component_%d.templ", i),
 			}
 			reg.Register(component)
@@ -465,8 +465,8 @@ func BenchmarkComponentRegistry_Operations(b *testing.B) {
 		// Pre-populate registry
 		for i := 0; i < 1000; i++ {
 			component := &registry.ComponentInfo{
-				Name:    fmt.Sprintf("Component%d", i),
-				Package: "components",
+				Name:     fmt.Sprintf("Component%d", i),
+				Package:  "components",
 				FilePath: fmt.Sprintf("component_%d.templ", i),
 			}
 			reg.Register(component)
@@ -480,7 +480,6 @@ func BenchmarkComponentRegistry_Operations(b *testing.B) {
 		}
 	})
 }
-
 
 // BenchmarkPathValidation benchmarks path validation performance
 func BenchmarkPathValidation(b *testing.B) {

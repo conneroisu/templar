@@ -7,9 +7,10 @@ import (
 
 // ComponentRegistry manages all discovered components
 type ComponentRegistry struct {
-	components map[string]*ComponentInfo
-	mutex      sync.RWMutex
-	watchers   []chan ComponentEvent
+	components         map[string]*ComponentInfo
+	mutex              sync.RWMutex
+	watchers           []chan ComponentEvent
+	dependencyAnalyzer *DependencyAnalyzer
 }
 
 // ComponentInfo holds metadata about a templ component
@@ -50,16 +51,20 @@ const (
 
 // NewComponentRegistry creates a new component registry
 func NewComponentRegistry() *ComponentRegistry {
-	return &ComponentRegistry{
+	registry := &ComponentRegistry{
 		components: make(map[string]*ComponentInfo),
 		watchers:   make([]chan ComponentEvent, 0),
 	}
+	
+	// Initialize dependency analyzer
+	registry.dependencyAnalyzer = NewDependencyAnalyzer(registry)
+	
+	return registry
 }
 
 // Register adds or updates a component in the registry
 func (r *ComponentRegistry) Register(component *ComponentInfo) {
 	r.mutex.Lock()
-	defer r.mutex.Unlock()
 
 	eventType := EventTypeAdded
 	if _, exists := r.components[component.Name]; exists {
@@ -67,8 +72,20 @@ func (r *ComponentRegistry) Register(component *ComponentInfo) {
 	}
 
 	r.components[component.Name] = component
+	r.mutex.Unlock()
+
+	// Analyze dependencies for the component
+	if r.dependencyAnalyzer != nil {
+		deps, err := r.dependencyAnalyzer.AnalyzeComponent(component)
+		if err == nil {
+			r.mutex.Lock()
+			component.Dependencies = deps
+			r.mutex.Unlock()
+		}
+	}
 
 	// Notify watchers
+	r.mutex.RLock()
 	event := ComponentEvent{
 		Type:      eventType,
 		Component: component,
@@ -82,6 +99,7 @@ func (r *ComponentRegistry) Register(component *ComponentInfo) {
 			// Skip if channel is full
 		}
 	}
+	r.mutex.RUnlock()
 }
 
 // Get retrieves a component by name
@@ -94,7 +112,19 @@ func (r *ComponentRegistry) Get(name string) (*ComponentInfo, bool) {
 }
 
 // GetAll returns all registered components
-func (r *ComponentRegistry) GetAll() map[string]*ComponentInfo {
+func (r *ComponentRegistry) GetAll() []*ComponentInfo {
+	r.mutex.RLock()
+	defer r.mutex.RUnlock()
+
+	result := make([]*ComponentInfo, 0, len(r.components))
+	for _, component := range r.components {
+		result = append(result, component)
+	}
+	return result
+}
+
+// GetAllMap returns all registered components as a map
+func (r *ComponentRegistry) GetAllMap() map[string]*ComponentInfo {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
 
@@ -163,4 +193,12 @@ func (r *ComponentRegistry) Count() int {
 	defer r.mutex.RUnlock()
 
 	return len(r.components)
+}
+
+// DetectCircularDependencies detects circular dependencies using the dependency analyzer
+func (r *ComponentRegistry) DetectCircularDependencies() [][]string {
+	if r.dependencyAnalyzer == nil {
+		return nil
+	}
+	return r.dependencyAnalyzer.DetectCircularDependencies()
 }

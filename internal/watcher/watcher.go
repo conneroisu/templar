@@ -151,30 +151,30 @@ func (fw *FileWatcher) AddRecursive(root string) error {
 func (fw *FileWatcher) validatePath(path string) (string, error) {
 	// Clean the path to resolve . and .. elements
 	cleanPath := filepath.Clean(path)
-	
+
 	// Get absolute path to normalize
 	absPath, err := filepath.Abs(cleanPath)
 	if err != nil {
 		return "", fmt.Errorf("getting absolute path: %w", err)
 	}
-	
+
 	// Get current working directory
 	cwd, err := os.Getwd()
 	if err != nil {
 		return "", fmt.Errorf("getting current directory: %w", err)
 	}
-	
+
 	// Ensure the path is within the current working directory or its subdirectories
 	// This prevents directory traversal attacks
 	if !strings.HasPrefix(absPath, cwd) {
 		return "", fmt.Errorf("path %s is outside current working directory", path)
 	}
-	
+
 	// Additional security check: reject paths with suspicious patterns
 	if strings.Contains(cleanPath, "..") {
 		return "", fmt.Errorf("path contains directory traversal: %s", path)
 	}
-	
+
 	return cleanPath, nil
 }
 

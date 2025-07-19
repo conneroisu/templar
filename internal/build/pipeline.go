@@ -71,10 +71,11 @@ type TemplCompiler struct {
 
 // BuildCache caches build results
 type BuildCache struct {
-	entries map[string]*CacheEntry
-	mutex   sync.RWMutex
-	maxSize int64
-	ttl     time.Duration
+	entries     map[string]*CacheEntry
+	mutex       sync.RWMutex
+	maxSize     int64
+	currentSize int64 // Track current size for O(1) access
+	ttl         time.Duration
 	// LRU implementation
 	head *CacheEntry
 	tail *CacheEntry
@@ -112,7 +113,7 @@ func NewBuildPipeline(workers int, registry *registry.ComponentRegistry) *BuildP
 		maxSize: 100 * 1024 * 1024, // 100MB
 		ttl:     time.Hour,
 	}
-	
+
 	// Initialize LRU doubly-linked list with dummy head and tail
 	cache.head = &CacheEntry{}
 	cache.tail = &CacheEntry{}
@@ -143,7 +144,7 @@ func NewBuildPipeline(workers int, registry *registry.ComponentRegistry) *BuildP
 func (bp *BuildPipeline) Start(ctx context.Context) {
 	// Create cancellable context
 	ctx, bp.cancel = context.WithCancel(ctx)
-	
+
 	// Start workers
 	for i := 0; i < bp.workers; i++ {
 		bp.workerWg.Add(1)
@@ -160,10 +161,10 @@ func (bp *BuildPipeline) Stop() {
 	if bp.cancel != nil {
 		bp.cancel()
 	}
-	
+
 	// Wait for all workers to finish
 	bp.workerWg.Wait()
-	
+
 	// Wait for result processor to finish
 	bp.resultWg.Wait()
 }
@@ -223,7 +224,7 @@ func (bp *BuildPipeline) GetCacheStats() (int, int64, int64) {
 // worker processes build tasks
 func (bp *BuildPipeline) worker(ctx context.Context) {
 	defer bp.workerWg.Done()
-	
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -285,7 +286,7 @@ func (bp *BuildPipeline) processBuildTask(task BuildTask) {
 
 func (bp *BuildPipeline) processResults(ctx context.Context) {
 	defer bp.resultWg.Done()
-	
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -349,19 +350,19 @@ func (tc *TemplCompiler) validateCommand() error {
 		"templ": true,
 		"go":    true,
 	}
-	
+
 	// Check if command is in allowlist
 	if !allowedCommands[tc.command] {
 		return fmt.Errorf("command '%s' is not allowed", tc.command)
 	}
-	
+
 	// Validate arguments - prevent shell metacharacters and path traversal
 	for _, arg := range tc.args {
 		if err := validateArgument(arg); err != nil {
 			return fmt.Errorf("invalid argument '%s': %w", arg, err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -374,17 +375,17 @@ func validateArgument(arg string) error {
 			return fmt.Errorf("contains dangerous character: %s", char)
 		}
 	}
-	
+
 	// Check for path traversal attempts
 	if strings.Contains(arg, "..") {
 		return fmt.Errorf("contains path traversal: %s", arg)
 	}
-	
+
 	// Check for absolute paths (prefer relative paths for security)
 	if filepath.IsAbs(arg) && !strings.HasPrefix(arg, "/usr/bin/") && !strings.HasPrefix(arg, "/bin/") {
 		return fmt.Errorf("absolute path not allowed: %s", arg)
 	}
-	
+
 	return nil
 }
 
@@ -402,6 +403,7 @@ func (bc *BuildCache) Get(key string) ([]byte, bool) {
 	if time.Since(entry.CreatedAt) > bc.ttl {
 		bc.removeFromList(entry)
 		delete(bc.entries, key)
+		bc.currentSize -= entry.Size
 		return nil, false
 	}
 
@@ -417,10 +419,12 @@ func (bc *BuildCache) Set(key string, value []byte) {
 
 	// Check if entry already exists
 	if existingEntry, exists := bc.entries[key]; exists {
-		// Update existing entry
+		// Update existing entry - adjust current size
+		sizeDiff := int64(len(value)) - existingEntry.Size
 		existingEntry.Value = value
 		existingEntry.AccessedAt = time.Now()
 		existingEntry.Size = int64(len(value))
+		bc.currentSize += sizeDiff
 		bc.moveToFront(existingEntry)
 		return
 	}
@@ -438,31 +442,27 @@ func (bc *BuildCache) Set(key string, value []byte) {
 	}
 
 	bc.entries[key] = entry
+	bc.currentSize += entry.Size
 	bc.addToFront(entry)
 }
 
 func (bc *BuildCache) evictIfNeeded(newSize int64) {
-	currentSize := bc.getCurrentSize()
-	if currentSize+newSize <= bc.maxSize {
+	if bc.currentSize+newSize <= bc.maxSize {
 		return
 	}
 
 	// Efficient LRU eviction - remove from tail (least recently used)
-	for currentSize+newSize > bc.maxSize && bc.tail.prev != bc.head {
+	for bc.currentSize+newSize > bc.maxSize && bc.tail.prev != bc.head {
 		// Remove the least recently used entry (tail.prev)
 		lru := bc.tail.prev
 		bc.removeFromList(lru)
 		delete(bc.entries, lru.Key)
-		currentSize -= lru.Size
+		bc.currentSize -= lru.Size
 	}
 }
 
 func (bc *BuildCache) getCurrentSize() int64 {
-	var size int64
-	for _, entry := range bc.entries {
-		size += entry.Size
-	}
-	return size
+	return bc.currentSize
 }
 
 // Clear clears all cache entries
@@ -470,6 +470,7 @@ func (bc *BuildCache) Clear() {
 	bc.mutex.Lock()
 	defer bc.mutex.Unlock()
 	bc.entries = make(map[string]*CacheEntry)
+	bc.currentSize = 0
 	// Reset LRU list
 	bc.head.next = bc.tail
 	bc.tail.prev = bc.head
@@ -505,22 +506,59 @@ func (bc *BuildCache) moveToFront(entry *CacheEntry) {
 	bc.addToFront(entry)
 }
 
-// generateContentHash generates a hash for component content
+// generateContentHash generates a hash for component content with metadata-based optimization
 func (bp *BuildPipeline) generateContentHash(component *registry.ComponentInfo) string {
-	// Read file content
+	// Get file metadata first for fast comparison
+	stat, err := os.Stat(component.FilePath)
+	if err != nil {
+		return component.FilePath
+	}
+
+	// Create metadata-based hash key for cache lookup
+	metadataKey := fmt.Sprintf("%s:%d:%d", component.FilePath, stat.ModTime().Unix(), stat.Size())
+
+	// Check if we have a cached hash for this metadata
+	bp.cache.mutex.RLock()
+	if entry, exists := bp.cache.entries[metadataKey]; exists {
+		// Update access time and return cached hash
+		entry.AccessedAt = time.Now()
+		bp.cache.moveToFront(entry)
+		bp.cache.mutex.RUnlock()
+		return entry.Hash
+	}
+	bp.cache.mutex.RUnlock()
+
+	// Only read and hash file content if metadata changed
 	content, err := os.ReadFile(component.FilePath)
 	if err != nil {
-		// If we can't read the file, use file path and mod time
-		stat, err := os.Stat(component.FilePath)
-		if err != nil {
-			return component.FilePath
-		}
+		// Fallback to metadata-based hash
 		return fmt.Sprintf("%s:%d", component.FilePath, stat.ModTime().Unix())
 	}
 
-	// Hash the content
+	// Generate content hash
 	hash := sha256.Sum256(content)
-	return hex.EncodeToString(hash[:])
+	contentHash := hex.EncodeToString(hash[:])
+
+	// Cache the hash with metadata key for future lookups
+	bp.cache.mutex.Lock()
+	entry := &CacheEntry{
+		Key:        metadataKey,
+		Value:      nil, // Only cache the hash, not the content
+		Hash:       contentHash,
+		CreatedAt:  time.Now(),
+		AccessedAt: time.Now(),
+		Size:       int64(len(metadataKey) + len(contentHash)), // Minimal size for hash cache
+	}
+
+	// Add to cache if within size limits
+	if bp.cache.currentSize+entry.Size <= bp.cache.maxSize {
+		bp.cache.entries[metadataKey] = entry
+		bp.cache.addToFront(entry)
+		bp.cache.currentSize += entry.Size
+	}
+	bp.cache.mutex.Unlock()
+
+	return contentHash
 }
 
 // updateMetrics updates build metrics

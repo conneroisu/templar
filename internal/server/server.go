@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"net/url"
 	"os/exec"
 	"runtime"
 	"sync"
@@ -18,8 +17,9 @@ import (
 	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/renderer"
 	"github.com/conneroisu/templar/internal/scanner"
+	"github.com/conneroisu/templar/internal/version"
 	"github.com/conneroisu/templar/internal/watcher"
-	"github.com/gorilla/websocket"
+	"nhooyr.io/websocket"
 )
 
 // Client represents a WebSocket client
@@ -33,7 +33,7 @@ type Client struct {
 type PreviewServer struct {
 	config          *config.Config
 	httpServer      *http.Server
-	wsUpgrader      websocket.Upgrader
+	serverMutex     sync.RWMutex // Protects httpServer and server state
 	clients         map[*websocket.Conn]*Client
 	clientsMutex    sync.RWMutex
 	broadcast       chan []byte
@@ -45,6 +45,9 @@ type PreviewServer struct {
 	renderer        *renderer.ComponentRenderer
 	buildPipeline   *build.BuildPipeline
 	lastBuildErrors []*errors.ParsedError
+	shutdownOnce    sync.Once
+	isShutdown      bool
+	shutdownMutex   sync.RWMutex
 }
 
 // UpdateMessage represents a message sent to the browser
@@ -57,46 +60,6 @@ type UpdateMessage struct {
 
 // New creates a new preview server
 func New(cfg *config.Config) (*PreviewServer, error) {
-	upgrader := websocket.Upgrader{
-		CheckOrigin: func(r *http.Request) bool {
-			// Get the origin from the request
-			origin := r.Header.Get("Origin")
-			if origin == "" {
-				// Reject connections without origin header for security
-				return false
-			}
-
-			// Parse the origin URL
-			originURL, err := url.Parse(origin)
-			if err != nil {
-				return false
-			}
-
-			// First check scheme - only allow http/https
-			if originURL.Scheme != "http" && originURL.Scheme != "https" {
-				return false
-			}
-
-			// Strict origin validation - only allow specific origins
-			expectedHost := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
-			allowedOrigins := []string{
-				expectedHost,
-				fmt.Sprintf("localhost:%d", cfg.Server.Port),
-				fmt.Sprintf("127.0.0.1:%d", cfg.Server.Port),
-				"localhost:3000", // Common dev server
-				"127.0.0.1:3000", // Common dev server
-			}
-
-			// Check if origin is in allowed list
-			for _, allowed := range allowedOrigins {
-				if originURL.Host == allowed {
-					return true
-				}
-			}
-
-			return false
-		},
-	}
 
 	registry := registry.NewComponentRegistry()
 
@@ -113,7 +76,6 @@ func New(cfg *config.Config) (*PreviewServer, error) {
 
 	return &PreviewServer{
 		config:          cfg,
-		wsUpgrader:      upgrader,
 		clients:         make(map[*websocket.Conn]*Client),
 		broadcast:       make(chan []byte),
 		register:        make(chan *Client),
@@ -149,6 +111,7 @@ func (s *PreviewServer) Start(ctx context.Context) error {
 	// Set up HTTP routes
 	mux := http.NewServeMux()
 	mux.HandleFunc("/ws", s.handleWebSocket)
+	mux.HandleFunc("/health", s.handleHealth)
 	mux.HandleFunc("/components", s.handleComponents)
 	mux.HandleFunc("/component/", s.handleComponent)
 	mux.HandleFunc("/render/", s.handleRender)
@@ -170,10 +133,14 @@ func (s *PreviewServer) Start(ctx context.Context) error {
 
 	// Create HTTP server
 	addr := fmt.Sprintf("%s:%d", s.config.Server.Host, s.config.Server.Port)
+
+	s.serverMutex.Lock()
 	s.httpServer = &http.Server{
 		Addr:    addr,
 		Handler: handler,
 	}
+	server := s.httpServer // Get local copy for safe access
+	s.serverMutex.Unlock()
 
 	// Open browser if configured
 	if s.config.Server.Open {
@@ -181,7 +148,7 @@ func (s *PreviewServer) Start(ctx context.Context) error {
 	}
 
 	// Start server
-	if err := s.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		return fmt.Errorf("server error: %w", err)
 	}
 
@@ -281,12 +248,25 @@ func (s *PreviewServer) openBrowser(url string) {
 }
 
 func (s *PreviewServer) addMiddleware(handler http.Handler) http.Handler {
+	// Create security middleware
+	securityConfig := SecurityConfigFromAppConfig(s.config)
+	securityHandler := SecurityMiddleware(securityConfig)(handler)
+	
 	// Add CORS and logging middleware
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// CORS headers
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		// CORS headers based on environment
+		origin := r.Header.Get("Origin")
+		if s.isAllowedOrigin(origin) {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		} else if s.config.Server.Environment == "development" {
+			// Only allow wildcard in development
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		}
+		// Production default: no CORS header (blocks cross-origin requests)
+
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
 
 		// Handle preflight requests
 		if r.Method == "OPTIONS" {
@@ -296,9 +276,25 @@ func (s *PreviewServer) addMiddleware(handler http.Handler) http.Handler {
 
 		// Log requests
 		start := time.Now()
-		handler.ServeHTTP(w, r)
+		securityHandler.ServeHTTP(w, r)
 		log.Printf("%s %s %v", r.Method, r.URL.Path, time.Since(start))
 	})
+}
+
+// isAllowedOrigin checks if the origin is in the allowed origins list
+func (s *PreviewServer) isAllowedOrigin(origin string) bool {
+	if origin == "" {
+		return false
+	}
+
+	// Check configured allowed origins
+	for _, allowed := range s.config.Server.AllowedOrigins {
+		if origin == allowed {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (s *PreviewServer) broadcastMessage(msg UpdateMessage) {
@@ -361,31 +357,93 @@ func (s *PreviewServer) GetLastBuildErrors() []*errors.ParsedError {
 
 // Shutdown gracefully shuts down the server and cleans up resources
 func (s *PreviewServer) Shutdown(ctx context.Context) error {
-	// Stop file watcher
-	if s.watcher != nil {
-		s.watcher.Stop()
+	var shutdownErr error
+	
+	s.shutdownOnce.Do(func() {
+		log.Println("Shutting down server...")
+
+		// Mark as shutdown to prevent new operations
+		s.shutdownMutex.Lock()
+		s.isShutdown = true
+		s.shutdownMutex.Unlock()
+
+		// Stop build pipeline first
+		if s.buildPipeline != nil {
+			s.buildPipeline.Stop()
+		}
+
+		// Stop file watcher
+		if s.watcher != nil {
+			s.watcher.Stop()
+		}
+
+		// Close all WebSocket connections
+		s.clientsMutex.Lock()
+		for conn, client := range s.clients {
+			close(client.send)
+			conn.Close(websocket.StatusNormalClosure, "")
+		}
+		s.clients = make(map[*websocket.Conn]*Client)
+		s.clientsMutex.Unlock()
+
+		// Close channels safely
+		select {
+		case <-s.broadcast:
+		default:
+			close(s.broadcast)
+		}
+		
+		select {
+		case <-s.register:
+		default:
+			close(s.register)
+		}
+		
+		select {
+		case <-s.unregister:
+		default:
+			close(s.unregister)
+		}
+
+		// Shutdown HTTP server
+		s.serverMutex.RLock()
+		server := s.httpServer
+		s.serverMutex.RUnlock()
+
+		if server != nil {
+			shutdownErr = server.Shutdown(ctx)
+		}
+	})
+
+	return shutdownErr
+}
+
+// handleHealth returns the server health status for health checks
+func (s *PreviewServer) handleHealth(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
 	}
 
-	// Close all WebSocket connections
-	s.clientsMutex.Lock()
-	for conn, client := range s.clients {
-		close(client.send)
-		conn.Close()
-	}
-	s.clients = make(map[*websocket.Conn]*Client)
-	s.clientsMutex.Unlock()
-
-	// Close channels
-	close(s.broadcast)
-	close(s.register)
-	close(s.unregister)
-
-	// Shutdown HTTP server
-	if s.httpServer != nil {
-		return s.httpServer.Shutdown(ctx)
+	health := map[string]interface{}{
+		"status":    "healthy",
+		"timestamp": time.Now().UTC(),
+		"version":   version.GetShortVersion(),
+		"build_info": version.GetBuildInfo(),
+		"checks": map[string]interface{}{
+			"server":   map[string]interface{}{"status": "healthy", "message": "HTTP server operational"},
+			"registry": map[string]interface{}{"status": "healthy", "components": len(s.registry.GetAll())},
+			"watcher":  map[string]interface{}{"status": "healthy", "message": "File watcher operational"},
+			"build":    map[string]interface{}{"status": "healthy", "message": "Build pipeline operational"},
+		},
 	}
 
-	return nil
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	if err := json.NewEncoder(w).Encode(health); err != nil {
+		log.Printf("Failed to encode health response: %v", err)
+	}
 }
 
 // handleBuildStatus returns the current build status

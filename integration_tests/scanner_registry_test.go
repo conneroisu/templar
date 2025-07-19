@@ -314,7 +314,7 @@ templ ValidComponent(text string) {
 	componentScanner := scanner.NewComponentScanner(reg)
 
 	// Scan directory - should handle errors gracefully
-	err := componentScanner.ScanDirectory(testDir)
+	_ = componentScanner.ScanDirectory(testDir)
 	// May or may not error depending on scanner implementation
 	// The key is that it should not crash
 

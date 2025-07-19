@@ -106,11 +106,11 @@ func TestValidateServerConfig_Security(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := validateServerConfig(&tt.config)
-			
+
 			if tt.expectError {
 				assert.Error(t, err, "Expected error for test case: %s", tt.name)
 				if tt.errorType != "" {
-					assert.Contains(t, strings.ToLower(err.Error()), tt.errorType, 
+					assert.Contains(t, strings.ToLower(err.Error()), tt.errorType,
 						"Error should contain expected type: %s", tt.errorType)
 				}
 			} else {
@@ -175,11 +175,11 @@ func TestValidateBuildConfig_Security(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := validateBuildConfig(&tt.config)
-			
+
 			if tt.expectError {
 				assert.Error(t, err, "Expected error for test case: %s", tt.name)
 				if tt.errorType != "" {
-					assert.Contains(t, strings.ToLower(err.Error()), tt.errorType, 
+					assert.Contains(t, strings.ToLower(err.Error()), tt.errorType,
 						"Error should contain expected type: %s", tt.errorType)
 				}
 			} else {
@@ -240,11 +240,11 @@ func TestValidateComponentsConfig_Security(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := validateComponentsConfig(&tt.config)
-			
+
 			if tt.expectError {
 				assert.Error(t, err, "Expected error for test case: %s", tt.name)
 				if tt.errorType != "" {
-					assert.Contains(t, strings.ToLower(err.Error()), tt.errorType, 
+					assert.Contains(t, strings.ToLower(err.Error()), tt.errorType,
 						"Error should contain expected type: %s", tt.errorType)
 				}
 			} else {
@@ -313,11 +313,11 @@ func TestValidatePath_Security(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := validatePath(tt.path)
-			
+
 			if tt.expectError {
 				assert.Error(t, err, "Expected error for test case: %s", tt.name)
 				if tt.errorType != "" {
-					assert.Contains(t, strings.ToLower(err.Error()), tt.errorType, 
+					assert.Contains(t, strings.ToLower(err.Error()), tt.errorType,
 						"Error should contain expected type: %s", tt.errorType)
 				}
 			} else {

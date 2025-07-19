@@ -30,14 +30,14 @@ func createTestDirStructure(fileCount int) string {
 		if subDirIndex >= fileCount/10 {
 			subDirIndex = 0
 		}
-		
+
 		var filePath string
 		if subDirIndex == 0 {
 			filePath = filepath.Join(tempDir, fmt.Sprintf("file_%d.go", i))
 		} else {
 			filePath = filepath.Join(tempDir, fmt.Sprintf("subdir_%d", subDirIndex), fmt.Sprintf("file_%d.go", i))
 		}
-		
+
 		content := fmt.Sprintf("package main\n\n// File %d content\nfunc main() {\n\tprintln(\"hello %d\")\n}\n", i, i)
 		if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
 			panic(err)
@@ -168,7 +168,7 @@ func BenchmarkFileWatcher_FilterPerformance(b *testing.B) {
 
 	testPaths := []string{
 		"main.go",
-		"component.templ", 
+		"component.templ",
 		"main_test.go",
 		"vendor/package/index.js",
 		".git/config",

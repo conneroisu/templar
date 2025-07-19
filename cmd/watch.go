@@ -197,49 +197,134 @@ func runCustomCommand(command string) error {
 	return nil
 }
 
-// validateCustomCommand validates custom commands with a more permissive allowlist
+// validateCustomCommand validates custom commands with a security-focused allowlist
 func validateCustomCommand(command string, args []string) error {
-	// Allowlist of permitted custom commands (more permissive than build commands)
+	// Allowlist of essential development commands only (security-hardened)
 	allowedCommands := map[string]bool{
-		"templ":  true,
-		"go":     true,
-		"npm":    true,
-		"yarn":   true,
-		"pnpm":   true,
-		"make":   true,
-		"echo":   true,
-		"printf": true,
-		"ls":     true,
-		"cp":     true,
-		"mv":     true,
-		"rm":     true,
-		"mkdir":  true,
-		"touch":  true,
-		"cat":    true,
-		"grep":   true,
-		"sed":    true,
-		"awk":    true,
-		"sort":   true,
-		"uniq":   true,
-		"wc":     true,
-		"head":   true,
-		"tail":   true,
-		"find":   true,
-		"git":    true,
+		"templ": true, // Template generation
+		"go":    true, // Go build/test/run commands
+		"npm":   true, // Node package manager
+		"yarn":  true, // Alternative Node package manager
+		"pnpm":  true, // Alternative Node package manager
+		"make":  true, // Build automation
+		"git":   true, // Version control (read-only operations recommended)
+		"echo":  true, // Safe output command
 	}
-	
+
 	// Check if command is in allowlist
-	if !allowedCommands[command] {
-		return fmt.Errorf("custom command '%s' is not allowed", command)
+	if err := validateCommand(command, allowedCommands); err != nil {
+		return fmt.Errorf("custom command validation failed: %w", err)
 	}
-	
+
+	// Enhanced validation for potentially dangerous commands
+	if err := validateCommandSpecific(command, args); err != nil {
+		return fmt.Errorf("command validation failed: %w", err)
+	}
+
 	// Validate arguments - prevent shell metacharacters and path traversal
-	for _, arg := range args {
-		if err := validateArgument(arg); err != nil {
-			return fmt.Errorf("invalid argument '%s': %w", arg, err)
-		}
+	if err := validateArguments(args); err != nil {
+		return fmt.Errorf("argument validation failed: %w", err)
 	}
-	
+
+	return nil
+}
+
+// validateCommandSpecific provides enhanced validation for specific commands
+func validateCommandSpecific(command string, args []string) error {
+	switch command {
+	case "git":
+		return validateGitCommand(args)
+	case "npm", "yarn", "pnpm":
+		return validatePackageManagerCommand(args)
+	case "go":
+		return validateGoCommand(args)
+	}
+	return nil
+}
+
+// validateGitCommand ensures git commands are safe (read-only operations)
+func validateGitCommand(args []string) error {
+	if len(args) == 0 {
+		return fmt.Errorf("git command requires arguments")
+	}
+
+	// Allow only safe, read-only git operations
+	safeGitCommands := map[string]bool{
+		"status":    true,
+		"log":       true,
+		"show":      true,
+		"diff":      true,
+		"branch":    true,
+		"tag":       true,
+		"remote":    true,
+		"ls-files":  true,
+		"ls-tree":   true,
+		"rev-parse": true,
+	}
+
+	subcommand := args[0]
+	if !safeGitCommands[subcommand] {
+		return fmt.Errorf("git subcommand '%s' is not allowed (only read-only operations permitted)", subcommand)
+	}
+
+	return nil
+}
+
+// validatePackageManagerCommand ensures package manager commands are safe
+func validatePackageManagerCommand(args []string) error {
+	if len(args) == 0 {
+		return fmt.Errorf("package manager command requires arguments")
+	}
+
+	// Allow common build/development operations
+	safeCommands := map[string]bool{
+		"install":  true,
+		"ci":       true,
+		"run":      true,
+		"build":    true,
+		"test":     true,
+		"start":    true,
+		"dev":      true,
+		"lint":     true,
+		"format":   true,
+		"check":    true,
+		"audit":    true,
+		"outdated": true,
+	}
+
+	subcommand := args[0]
+	if !safeCommands[subcommand] {
+		return fmt.Errorf("package manager subcommand '%s' is not allowed", subcommand)
+	}
+
+	return nil
+}
+
+// validateGoCommand ensures go commands are safe
+func validateGoCommand(args []string) error {
+	if len(args) == 0 {
+		return fmt.Errorf("go command requires arguments")
+	}
+
+	// Allow common development operations
+	safeCommands := map[string]bool{
+		"build":    true,
+		"run":      true,
+		"test":     true,
+		"generate": true,
+		"fmt":      true,
+		"vet":      true,
+		"mod":      true,
+		"version":  true,
+		"env":      true,
+		"list":     true,
+	}
+
+	subcommand := args[0]
+	if !safeCommands[subcommand] {
+		return fmt.Errorf("go subcommand '%s' is not allowed", subcommand)
+	}
+
 	return nil
 }
 
@@ -280,4 +365,3 @@ func runBuildCommand(cfg *config.Config) error {
 
 	return nil
 }
-

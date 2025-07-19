@@ -7,22 +7,22 @@ import (
 	"strings"
 )
 
-// ErrorType represents different types of build errors
-type ErrorType int
+// BuildErrorType represents different types of build errors
+type BuildErrorType int
 
 const (
-	ErrorTypeUnknown ErrorType = iota
-	ErrorTypeTemplSyntax
-	ErrorTypeTemplSemantics
-	ErrorTypeGoCompile
-	ErrorTypeGoRuntime
-	ErrorTypeFileNotFound
-	ErrorTypePermission
+	BuildErrorTypeUnknown BuildErrorType = iota
+	BuildErrorTypeTemplSyntax
+	BuildErrorTypeTemplSemantics
+	BuildErrorTypeGoCompile
+	BuildErrorTypeGoRuntime
+	BuildErrorTypeFileNotFound
+	BuildErrorTypePermission
 )
 
 // ParsedError represents a parsed error with structured information
 type ParsedError struct {
-	Type       ErrorType     `json:"type"`
+	Type       BuildErrorType `json:"type"`
 	Severity   ErrorSeverity `json:"severity"`
 	Component  string        `json:"component"`
 	File       string        `json:"file"`
@@ -42,7 +42,7 @@ type ErrorParser struct {
 
 type errorPattern struct {
 	regex       *regexp.Regexp
-	errorType   ErrorType
+	errorType   BuildErrorType
 	severity    ErrorSeverity
 	suggestion  string
 	parseFields func(matches []string) (file string, line int, column int, message string)
@@ -88,7 +88,7 @@ func (ep *ErrorParser) ParseError(output string) []*ParsedError {
 		if strings.Contains(strings.ToLower(line), "error") ||
 			strings.Contains(strings.ToLower(line), "failed") {
 			errors = append(errors, &ParsedError{
-				Type:     ErrorTypeUnknown,
+				Type:     BuildErrorTypeUnknown,
 				Severity: ErrorSeverityError,
 				Message:  line,
 				RawError: line,
@@ -141,7 +141,7 @@ func buildTemplPatterns() []errorPattern {
 	return []errorPattern{
 		{
 			regex:      regexp.MustCompile(`^(.+?):(\d+):(\d+): (.+)$`),
-			errorType:  ErrorTypeTemplSyntax,
+			errorType:  BuildErrorTypeTemplSyntax,
 			severity:   ErrorSeverityError,
 			suggestion: "Check the templ syntax at the specified location",
 			parseFields: func(matches []string) (string, int, int, string) {
@@ -154,7 +154,7 @@ func buildTemplPatterns() []errorPattern {
 		},
 		{
 			regex:      regexp.MustCompile(`^templ: (.+?) \((.+?):(\d+):(\d+)\): (.+)$`),
-			errorType:  ErrorTypeTemplSemantics,
+			errorType:  BuildErrorTypeTemplSemantics,
 			severity:   ErrorSeverityError,
 			suggestion: "Check the templ component definition and usage",
 			parseFields: func(matches []string) (string, int, int, string) {
@@ -167,7 +167,7 @@ func buildTemplPatterns() []errorPattern {
 		},
 		{
 			regex:      regexp.MustCompile(`^templ generate: (.+)$`),
-			errorType:  ErrorTypeTemplSyntax,
+			errorType:  BuildErrorTypeTemplSyntax,
 			severity:   ErrorSeverityError,
 			suggestion: "Run 'templ generate' to see detailed error information",
 			parseFields: func(matches []string) (string, int, int, string) {
@@ -176,7 +176,7 @@ func buildTemplPatterns() []errorPattern {
 		},
 		{
 			regex:      regexp.MustCompile(`^(.+\.templ): (.+)$`),
-			errorType:  ErrorTypeTemplSyntax,
+			errorType:  BuildErrorTypeTemplSyntax,
 			severity:   ErrorSeverityError,
 			suggestion: "Check the templ file for syntax errors",
 			parseFields: func(matches []string) (string, int, int, string) {
@@ -190,7 +190,7 @@ func buildGoPatterns() []errorPattern {
 	return []errorPattern{
 		{
 			regex:      regexp.MustCompile(`^(.+?):(\d+):(\d+): (.+)$`),
-			errorType:  ErrorTypeGoCompile,
+			errorType:  BuildErrorTypeGoCompile,
 			severity:   ErrorSeverityError,
 			suggestion: "Check the Go syntax and imports",
 			parseFields: func(matches []string) (string, int, int, string) {
@@ -203,7 +203,7 @@ func buildGoPatterns() []errorPattern {
 		},
 		{
 			regex:      regexp.MustCompile(`^(.+?):(\d+): (.+)$`),
-			errorType:  ErrorTypeGoCompile,
+			errorType:  BuildErrorTypeGoCompile,
 			severity:   ErrorSeverityError,
 			suggestion: "Check the Go syntax and types",
 			parseFields: func(matches []string) (string, int, int, string) {
@@ -215,7 +215,7 @@ func buildGoPatterns() []errorPattern {
 		},
 		{
 			regex:      regexp.MustCompile(`^go: (.+)$`),
-			errorType:  ErrorTypeGoRuntime,
+			errorType:  BuildErrorTypeGoRuntime,
 			severity:   ErrorSeverityError,
 			suggestion: "Check Go module dependencies and configuration",
 			parseFields: func(matches []string) (string, int, int, string) {
@@ -224,7 +224,7 @@ func buildGoPatterns() []errorPattern {
 		},
 		{
 			regex:      regexp.MustCompile(`^package (.+) is not in GOROOT`),
-			errorType:  ErrorTypeGoCompile,
+			errorType:  BuildErrorTypeGoCompile,
 			severity:   ErrorSeverityError,
 			suggestion: "Check if the package is properly imported or installed",
 			parseFields: func(matches []string) (string, int, int, string) {
@@ -233,7 +233,7 @@ func buildGoPatterns() []errorPattern {
 		},
 		{
 			regex:      regexp.MustCompile(`^can't load package: (.+)$`),
-			errorType:  ErrorTypeGoCompile,
+			errorType:  BuildErrorTypeGoCompile,
 			severity:   ErrorSeverityError,
 			suggestion: "Check if the package exists and is properly configured",
 			parseFields: func(matches []string) (string, int, int, string) {
@@ -242,7 +242,7 @@ func buildGoPatterns() []errorPattern {
 		},
 		{
 			regex:      regexp.MustCompile(`^permission denied: (.+)$`),
-			errorType:  ErrorTypePermission,
+			errorType:  BuildErrorTypePermission,
 			severity:   ErrorSeverityError,
 			suggestion: "Check file permissions and ownership",
 			parseFields: func(matches []string) (string, int, int, string) {
@@ -251,7 +251,7 @@ func buildGoPatterns() []errorPattern {
 		},
 		{
 			regex:      regexp.MustCompile(`^no such file or directory: (.+)$`),
-			errorType:  ErrorTypeFileNotFound,
+			errorType:  BuildErrorTypeFileNotFound,
 			severity:   ErrorSeverityError,
 			suggestion: "Check if the file exists and the path is correct",
 			parseFields: func(matches []string) (string, int, int, string) {
@@ -384,17 +384,17 @@ func FormatErrorsForBrowser(errors []*ParsedError) string {
 
 func (pe *ParsedError) typeString() string {
 	switch pe.Type {
-	case ErrorTypeTemplSyntax:
+	case BuildErrorTypeTemplSyntax:
 		return "Templ Syntax"
-	case ErrorTypeTemplSemantics:
+	case BuildErrorTypeTemplSemantics:
 		return "Templ Semantics"
-	case ErrorTypeGoCompile:
+	case BuildErrorTypeGoCompile:
 		return "Go Compile"
-	case ErrorTypeGoRuntime:
+	case BuildErrorTypeGoRuntime:
 		return "Go Runtime"
-	case ErrorTypeFileNotFound:
+	case BuildErrorTypeFileNotFound:
 		return "File Not Found"
-	case ErrorTypePermission:
+	case BuildErrorTypePermission:
 		return "Permission"
 	default:
 		return "Unknown"

@@ -385,10 +385,10 @@ func TestIntegration_WatcherScanner_FilteringEfficiency(t *testing.T) {
 templ Component() {
 	<div>test</div>
 }`,
-		"readme.md":       "# README",
-		"config.json":     `{"key": "value"}`,
-		"script.js":       "console.log('test');",
-		"style.css":       ".test { color: red; }",
+		"readme.md":   "# README",
+		"config.json": `{"key": "value"}`,
+		"script.js":   "console.log('test');",
+		"style.css":   ".test { color: red; }",
 	}
 
 	for name, content := range fileContents {
@@ -441,7 +441,7 @@ templ Component() {
 
 	// Verify no additional scans were triggered
 	scanCountAfterNonTempl := atomic.LoadInt64(&scanCount)
-	assert.Equal(t, initialScanCount, scanCountAfterNonTempl, 
+	assert.Equal(t, initialScanCount, scanCountAfterNonTempl,
 		"Non-templ file changes should not trigger scans")
 
 	// Modify templ file - should trigger scan
@@ -532,7 +532,7 @@ templ InvalidComponent(text string {  // Missing closing parenthesis
 
 	// System should continue working despite the error
 	// The error count might or might not increase depending on scanner implementation
-	
+
 	// Create another valid component to ensure system is still responsive
 	anotherValidContent := `package components
 templ AnotherValidComponent(title string) {
@@ -604,12 +604,12 @@ func TestIntegration_WatcherScanner_PerformanceUnderLoad(t *testing.T) {
 		wg.Add(1)
 		go func(index int) {
 			defer wg.Done()
-			
+
 			content := fmt.Sprintf(`package components
 templ Component%d(text string, id int) {
 	<div id={"comp-" + fmt.Sprintf("%%d", id)}>{text}</div>
 }`, index)
-			
+
 			createTestComponent(testDir, fmt.Sprintf("Component%d", index), content)
 			time.Sleep(10 * time.Millisecond) // Small delay between creations
 		}(i)
@@ -621,7 +621,7 @@ templ Component%d(text string, id int) {
 	time.Sleep(2 * time.Second)
 
 	// Verify all components were processed
-	assert.Equal(t, componentCount, reg.Count(), 
+	assert.Equal(t, componentCount, reg.Count(),
 		"All components should be registered")
 
 	// Check processing times
@@ -637,9 +637,9 @@ templ Component%d(text string, id int) {
 	timeMutex.Unlock()
 
 	// Performance assertion - processing should be reasonably fast
-	assert.Less(t, avgProcessingTime, 2*time.Second, 
+	assert.Less(t, avgProcessingTime, 2*time.Second,
 		"Average processing time should be reasonable")
 
-	t.Logf("Processed %d components with average processing time: %v", 
+	t.Logf("Processed %d components with average processing time: %v",
 		componentCount, avgProcessingTime)
 }

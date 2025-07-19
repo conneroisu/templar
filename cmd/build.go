@@ -211,44 +211,20 @@ func validateBuildCommand(command string, args []string) error {
 		"templ": true,
 		"go":    true,
 	}
-	
+
 	// Check if command is in allowlist
-	if !allowedCommands[command] {
-		return fmt.Errorf("command '%s' is not allowed", command)
+	if err := validateCommand(command, allowedCommands); err != nil {
+		return fmt.Errorf("build command validation failed: %w", err)
 	}
-	
+
 	// Validate arguments - prevent shell metacharacters and path traversal
-	for _, arg := range args {
-		if err := validateArgument(arg); err != nil {
-			return fmt.Errorf("invalid argument '%s': %w", arg, err)
-		}
+	if err := validateArguments(args); err != nil {
+		return fmt.Errorf("argument validation failed: %w", err)
 	}
-	
+
 	return nil
 }
 
-// validateArgument validates individual command arguments
-func validateArgument(arg string) error {
-	// Reject arguments containing shell metacharacters
-	dangerousChars := []string{";", "&", "|", "$", "`", "(", ")", "{", "}", "[", "]", "<", ">", "\"", "'", "\\"}
-	for _, char := range dangerousChars {
-		if strings.Contains(arg, char) {
-			return fmt.Errorf("contains dangerous character: %s", char)
-		}
-	}
-	
-	// Reject path traversal attempts
-	if strings.Contains(arg, "..") {
-		return fmt.Errorf("path traversal attempt detected")
-	}
-	
-	// Additional validation for common patterns
-	if strings.HasPrefix(arg, "/") && !strings.HasPrefix(arg, "/tmp/") && !strings.HasPrefix(arg, "/usr/") {
-		return fmt.Errorf("absolute path not allowed: %s", arg)
-	}
-	
-	return nil
-}
 
 func runProductionBuild(cfg *config.Config) error {
 	// Run go build with optimizations

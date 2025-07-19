@@ -45,12 +45,12 @@ func (r *ComponentRenderer) RenderComponent(componentName string) (string, error
 
 	// Create a clean workspace for this component
 	componentWorkDir := filepath.Join(r.workDir, componentName)
-	
+
 	// Validate the work directory path before operations
 	if err := r.validateWorkDir(componentWorkDir); err != nil {
 		return "", fmt.Errorf("invalid work directory: %w", err)
 	}
-	
+
 	if err := os.RemoveAll(componentWorkDir); err != nil {
 		log.Printf("Failed to remove existing component work directory %s: %v", componentWorkDir, err)
 	}
@@ -246,7 +246,7 @@ func (r *ComponentRenderer) runTemplGenerate(workDir string) error {
 	if err := r.validateWorkDir(workDir); err != nil {
 		return fmt.Errorf("invalid work directory: %w", err)
 	}
-	
+
 	cmd := exec.Command("templ", "generate")
 	cmd.Dir = workDir
 	output, err := cmd.CombinedOutput()
@@ -262,7 +262,7 @@ func (r *ComponentRenderer) buildAndRun(workDir string) (string, error) {
 	if err := r.validateWorkDir(workDir); err != nil {
 		return "", fmt.Errorf("invalid work directory: %w", err)
 	}
-	
+
 	// Initialize go module if it doesn't exist
 	if _, err := os.Stat(filepath.Join(workDir, "go.mod")); os.IsNotExist(err) {
 		cmd := exec.Command("go", "mod", "init", "templar-render")
@@ -294,32 +294,31 @@ func (r *ComponentRenderer) buildAndRun(workDir string) (string, error) {
 func (r *ComponentRenderer) validateWorkDir(workDir string) error {
 	// Clean the path to resolve . and .. elements
 	cleanPath := filepath.Clean(workDir)
-	
+
 	// Get absolute path to normalize
 	absPath, err := filepath.Abs(cleanPath)
 	if err != nil {
 		return fmt.Errorf("getting absolute path: %w", err)
 	}
-	
+
 	// Get current working directory
 	cwd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("getting current directory: %w", err)
 	}
-	
+
 	// Ensure the work directory is within the current working directory
 	if !strings.HasPrefix(absPath, cwd) {
 		return fmt.Errorf("work directory %s is outside current working directory", workDir)
 	}
-	
+
 	// Additional security check: reject paths with suspicious patterns
 	if strings.Contains(cleanPath, "..") {
 		return fmt.Errorf("work directory contains directory traversal: %s", workDir)
 	}
-	
+
 	return nil
 }
-
 
 // RenderComponentWithLayout wraps component HTML in a full page layout
 func (r *ComponentRenderer) RenderComponentWithLayout(componentName string, html string) string {
@@ -380,27 +379,26 @@ func (r *ComponentRenderer) RenderComponentWithLayout(componentName string, html
 func (r *ComponentRenderer) validateComponentName(name string) error {
 	// Clean the name
 	cleanName := filepath.Clean(name)
-	
+
 	// Reject names containing path traversal patterns
 	if strings.Contains(cleanName, "..") {
 		return fmt.Errorf("path traversal attempt detected: %s", name)
 	}
-	
+
 	// Reject absolute paths
 	if filepath.IsAbs(cleanName) {
 		return fmt.Errorf("absolute path not allowed: %s", name)
 	}
-	
+
 	// Reject names with path separators (should be simple component names)
 	if strings.ContainsRune(cleanName, os.PathSeparator) {
 		return fmt.Errorf("path separators not allowed in component name: %s", name)
 	}
-	
+
 	// Reject empty names
 	if cleanName == "" || cleanName == "." {
 		return fmt.Errorf("empty or invalid component name: %s", name)
 	}
-	
+
 	return nil
 }
-

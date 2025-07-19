@@ -1,6 +1,6 @@
 module github.com/conneroisu/templar
 
-go 1.24.3
+go 1.24.4
 
 require (
 	github.com/a-h/templ v0.3.906
@@ -10,6 +10,7 @@ require (
 	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.10.0
 	gopkg.in/yaml.v3 v3.0.1
+	nhooyr.io/websocket v1.8.17
 )
 
 require (

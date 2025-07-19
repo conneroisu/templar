@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
@@ -20,13 +21,13 @@ func newTestCache(maxSize int64, ttl time.Duration) *BuildCache {
 		maxSize: maxSize,
 		ttl:     ttl,
 	}
-	
+
 	// Initialize LRU doubly-linked list with dummy head and tail
 	cache.head = &CacheEntry{}
 	cache.tail = &CacheEntry{}
 	cache.head.next = cache.tail
 	cache.tail.prev = cache.head
-	
+
 	return cache
 }
 
@@ -99,10 +100,13 @@ func TestBuildPipelineCallback(t *testing.T) {
 
 	bp.Start(ctx)
 
-	// Add a callback
+	// Add a callback with mutex protection
+	var callbackMutex sync.Mutex
 	callbackCalled := false
 	bp.AddCallback(func(result BuildResult) {
+		callbackMutex.Lock()
 		callbackCalled = true
+		callbackMutex.Unlock()
 	})
 
 	// Create a test component
@@ -119,8 +123,11 @@ func TestBuildPipelineCallback(t *testing.T) {
 	// Wait a bit for processing
 	time.Sleep(50 * time.Millisecond)
 
-	// Callback should have been called
-	assert.True(t, callbackCalled)
+	// Callback should have been called (with mutex protection)
+	callbackMutex.Lock()
+	called := callbackCalled
+	callbackMutex.Unlock()
+	assert.True(t, called)
 }
 
 func TestBuildCache(t *testing.T) {
@@ -352,23 +359,23 @@ func TestTemplCompilerSecurity(t *testing.T) {
 		command: "echo",
 		args:    []string{"test"},
 	}
-	
+
 	component := &registry.ComponentInfo{
 		Name:     "TestComponent",
 		FilePath: "test.templ",
 		Package:  "test",
 	}
-	
+
 	_, err := compiler.Compile(component)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "command 'echo' is not allowed")
-	
+
 	// Test dangerous argument rejection
 	compiler = &TemplCompiler{
 		command: "go",
 		args:    []string{"version; rm -rf /"},
 	}
-	
+
 	_, err = compiler.Compile(component)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "contains dangerous character")

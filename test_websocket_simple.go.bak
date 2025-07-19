@@ -1,0 +1,138 @@
+package main
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"log"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"time"
+
+	"nhooyr.io/websocket"
+)
+
+// Simple WebSocket test server
+func createSimpleTestServer() *httptest.Server {
+	clients := make(map[*websocket.Conn]chan []byte)
+
+	// WebSocket handler
+	wsHandler := func(w http.ResponseWriter, r *http.Request) {
+		conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
+			InsecureSkipVerify: true,
+		})
+		if err != nil {
+			http.Error(w, "WebSocket upgrade failed", http.StatusBadRequest)
+			return
+		}
+
+		clients[conn] = make(chan []byte, 256)
+		defer func() {
+			delete(clients, conn)
+			conn.Close(websocket.StatusNormalClosure, "")
+		}()
+
+		// Handle messages
+		ctx := context.Background()
+		for {
+			_, _, err := conn.Read(ctx)
+			if err != nil {
+				break
+			}
+		}
+	}
+
+	// Broadcast handler
+	broadcastHandler := func(w http.ResponseWriter, r *http.Request) {
+		var message map[string]interface{}
+		json.NewDecoder(r.Body).Decode(&message)
+		
+		messageBytes, _ := json.Marshal(message)
+		
+		// Send to all clients
+		for conn, ch := range clients {
+			select {
+			case ch <- messageBytes:
+				go func(c *websocket.Conn, msg []byte) {
+					ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+					defer cancel()
+					c.Write(ctx, websocket.MessageText, msg)
+				}(conn, messageBytes)
+			default:
+			}
+		}
+		
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Message sent"))
+	}
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/ws", wsHandler)
+	mux.HandleFunc("/broadcast", broadcastHandler)
+
+	return httptest.NewServer(mux)
+}
+
+func testWebSocketConnection() {
+	server := createSimpleTestServer()
+	defer server.Close()
+
+	// Connect to WebSocket
+	ctx := context.Background()
+	url := strings.Replace(server.URL, "http://", "ws://", 1) + "/ws"
+	
+	conn, _, err := websocket.Dial(ctx, url, nil)
+	if err != nil {
+		log.Fatalf("Failed to connect: %v", err)
+	}
+	defer conn.Close(websocket.StatusNormalClosure, "")
+
+	fmt.Println("✅ WebSocket connection successful")
+
+	// Test ping
+	pingCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	defer cancel()
+	
+	err = conn.Ping(pingCtx)
+	if err != nil {
+		log.Printf("Ping failed: %v", err)
+	} else {
+		fmt.Println("✅ WebSocket ping successful")
+	}
+
+	// Test message broadcasting
+	testMessage := map[string]interface{}{
+		"type": "test",
+		"data": "Hello WebSocket!",
+	}
+
+	messageBytes, _ := json.Marshal(testMessage)
+	resp, err := http.Post(server.URL+"/broadcast", "application/json", 
+		strings.NewReader(string(messageBytes)))
+	if err != nil {
+		log.Printf("Broadcast failed: %v", err)
+	} else {
+		resp.Body.Close()
+		fmt.Println("✅ WebSocket broadcast successful")
+	}
+
+	time.Sleep(100 * time.Millisecond)
+	
+	// Try to read message
+	readCtx, readCancel := context.WithTimeout(ctx, 1*time.Second)
+	defer readCancel()
+	
+	_, message, err := conn.Read(readCtx)
+	if err != nil {
+		fmt.Printf("⚠️  Message read timeout (expected in simple test): %v\n", err)
+	} else {
+		fmt.Printf("✅ Received message: %s\n", string(message))
+	}
+}
+
+func main() {
+	fmt.Println("🔌 Testing WebSocket functionality...")
+	testWebSocketConnection()
+	fmt.Println("✅ WebSocket functionality test completed")
+}

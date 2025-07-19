@@ -178,6 +178,7 @@
             graphviz
             goreleaser
             cobra-cli
+            templ
           ]
           ++ builtins.attrValues scriptPackages;
 

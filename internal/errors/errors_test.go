@@ -50,7 +50,7 @@ func TestBuildErrorError(t *testing.T) {
 
 func TestNewErrorCollector(t *testing.T) {
 	collector := NewErrorCollector()
-	
+
 	assert.NotNil(t, collector)
 	assert.NotNil(t, collector.errors)
 	assert.Empty(t, collector.errors)
@@ -59,7 +59,7 @@ func TestNewErrorCollector(t *testing.T) {
 
 func TestErrorCollectorAdd(t *testing.T) {
 	collector := NewErrorCollector()
-	
+
 	err := BuildError{
 		Component: "TestComponent",
 		File:      "test.go",
@@ -68,14 +68,14 @@ func TestErrorCollectorAdd(t *testing.T) {
 		Message:   "syntax error",
 		Severity:  ErrorSeverityError,
 	}
-	
+
 	before := time.Now()
 	collector.Add(err)
 	after := time.Now()
-	
+
 	assert.True(t, collector.HasErrors())
 	assert.Len(t, collector.GetErrors(), 1)
-	
+
 	addedErr := collector.GetErrors()[0]
 	assert.Equal(t, "TestComponent", addedErr.Component)
 	assert.Equal(t, "test.go", addedErr.File)
@@ -83,7 +83,7 @@ func TestErrorCollectorAdd(t *testing.T) {
 	assert.Equal(t, 5, addedErr.Column)
 	assert.Equal(t, "syntax error", addedErr.Message)
 	assert.Equal(t, ErrorSeverityError, addedErr.Severity)
-	
+
 	// Check that timestamp was set
 	assert.True(t, addedErr.Timestamp.After(before) || addedErr.Timestamp.Equal(before))
 	assert.True(t, addedErr.Timestamp.Before(after) || addedErr.Timestamp.Equal(after))
@@ -91,24 +91,24 @@ func TestErrorCollectorAdd(t *testing.T) {
 
 func TestErrorCollectorGetErrors(t *testing.T) {
 	collector := NewErrorCollector()
-	
+
 	err1 := BuildError{
 		Component: "Component1",
 		File:      "file1.go",
 		Message:   "error 1",
 		Severity:  ErrorSeverityError,
 	}
-	
+
 	err2 := BuildError{
 		Component: "Component2",
 		File:      "file2.go",
 		Message:   "error 2",
 		Severity:  ErrorSeverityWarning,
 	}
-	
+
 	collector.Add(err1)
 	collector.Add(err2)
-	
+
 	errors := collector.GetErrors()
 	assert.Len(t, errors, 2)
 	assert.Equal(t, "error 1", errors[0].Message)
@@ -117,30 +117,30 @@ func TestErrorCollectorGetErrors(t *testing.T) {
 
 func TestErrorCollectorHasErrors(t *testing.T) {
 	collector := NewErrorCollector()
-	
+
 	// No errors initially
 	assert.False(t, collector.HasErrors())
-	
+
 	// Add an error
 	err := BuildError{
 		Message:  "test error",
 		Severity: ErrorSeverityError,
 	}
 	collector.Add(err)
-	
+
 	// Should have errors now
 	assert.True(t, collector.HasErrors())
-	
+
 	// Clear errors
 	collector.Clear()
-	
+
 	// Should not have errors after clearing
 	assert.False(t, collector.HasErrors())
 }
 
 func TestErrorCollectorClear(t *testing.T) {
 	collector := NewErrorCollector()
-	
+
 	// Add some errors
 	for i := 0; i < 3; i++ {
 		err := BuildError{
@@ -149,53 +149,53 @@ func TestErrorCollectorClear(t *testing.T) {
 		}
 		collector.Add(err)
 	}
-	
+
 	assert.True(t, collector.HasErrors())
 	assert.Len(t, collector.GetErrors(), 3)
-	
+
 	// Clear errors
 	collector.Clear()
-	
+
 	assert.False(t, collector.HasErrors())
 	assert.Empty(t, collector.GetErrors())
 }
 
 func TestErrorCollectorGetErrorsByFile(t *testing.T) {
 	collector := NewErrorCollector()
-	
+
 	err1 := BuildError{
 		File:     "file1.go",
 		Message:  "error in file1",
 		Severity: ErrorSeverityError,
 	}
-	
+
 	err2 := BuildError{
 		File:     "file2.go",
 		Message:  "error in file2",
 		Severity: ErrorSeverityWarning,
 	}
-	
+
 	err3 := BuildError{
 		File:     "file1.go",
 		Message:  "another error in file1",
 		Severity: ErrorSeverityError,
 	}
-	
+
 	collector.Add(err1)
 	collector.Add(err2)
 	collector.Add(err3)
-	
+
 	// Get errors for file1.go
 	file1Errors := collector.GetErrorsByFile("file1.go")
 	assert.Len(t, file1Errors, 2)
 	assert.Equal(t, "error in file1", file1Errors[0].Message)
 	assert.Equal(t, "another error in file1", file1Errors[1].Message)
-	
+
 	// Get errors for file2.go
 	file2Errors := collector.GetErrorsByFile("file2.go")
 	assert.Len(t, file2Errors, 1)
 	assert.Equal(t, "error in file2", file2Errors[0].Message)
-	
+
 	// Get errors for non-existent file
 	noErrors := collector.GetErrorsByFile("nonexistent.go")
 	assert.Empty(t, noErrors)
@@ -203,40 +203,40 @@ func TestErrorCollectorGetErrorsByFile(t *testing.T) {
 
 func TestErrorCollectorGetErrorsByComponent(t *testing.T) {
 	collector := NewErrorCollector()
-	
+
 	err1 := BuildError{
 		Component: "Component1",
 		Message:   "error in component1",
 		Severity:  ErrorSeverityError,
 	}
-	
+
 	err2 := BuildError{
 		Component: "Component2",
 		Message:   "error in component2",
 		Severity:  ErrorSeverityWarning,
 	}
-	
+
 	err3 := BuildError{
 		Component: "Component1",
 		Message:   "another error in component1",
 		Severity:  ErrorSeverityError,
 	}
-	
+
 	collector.Add(err1)
 	collector.Add(err2)
 	collector.Add(err3)
-	
+
 	// Get errors for Component1
 	comp1Errors := collector.GetErrorsByComponent("Component1")
 	assert.Len(t, comp1Errors, 2)
 	assert.Equal(t, "error in component1", comp1Errors[0].Message)
 	assert.Equal(t, "another error in component1", comp1Errors[1].Message)
-	
+
 	// Get errors for Component2
 	comp2Errors := collector.GetErrorsByComponent("Component2")
 	assert.Len(t, comp2Errors, 1)
 	assert.Equal(t, "error in component2", comp2Errors[0].Message)
-	
+
 	// Get errors for non-existent component
 	noErrors := collector.GetErrorsByComponent("NonExistentComponent")
 	assert.Empty(t, noErrors)
@@ -244,7 +244,7 @@ func TestErrorCollectorGetErrorsByComponent(t *testing.T) {
 
 func TestErrorCollectorErrorOverlayEmpty(t *testing.T) {
 	collector := NewErrorCollector()
-	
+
 	// Should return empty string when no errors
 	overlay := collector.ErrorOverlay()
 	assert.Empty(t, overlay)
@@ -252,7 +252,7 @@ func TestErrorCollectorErrorOverlayEmpty(t *testing.T) {
 
 func TestErrorCollectorErrorOverlay(t *testing.T) {
 	collector := NewErrorCollector()
-	
+
 	err1 := BuildError{
 		Component: "TestComponent",
 		File:      "test.go",
@@ -262,7 +262,7 @@ func TestErrorCollectorErrorOverlay(t *testing.T) {
 		Severity:  ErrorSeverityError,
 		Timestamp: time.Now(),
 	}
-	
+
 	err2 := BuildError{
 		Component: "AnotherComponent",
 		File:      "another.go",
@@ -272,12 +272,12 @@ func TestErrorCollectorErrorOverlay(t *testing.T) {
 		Severity:  ErrorSeverityWarning,
 		Timestamp: time.Now(),
 	}
-	
+
 	collector.Add(err1)
 	collector.Add(err2)
-	
+
 	overlay := collector.ErrorOverlay()
-	
+
 	// Check that overlay contains expected elements
 	assert.Contains(t, overlay, "templar-error-overlay")
 	assert.Contains(t, overlay, "Build Errors")
@@ -289,7 +289,7 @@ func TestErrorCollectorErrorOverlay(t *testing.T) {
 	assert.Contains(t, overlay, "warning")
 	assert.Contains(t, overlay, "10:5")
 	assert.Contains(t, overlay, "20:10")
-	
+
 	// Check that it's valid HTML structure
 	assert.Contains(t, overlay, "<div")
 	assert.Contains(t, overlay, "</div>")
@@ -298,7 +298,7 @@ func TestErrorCollectorErrorOverlay(t *testing.T) {
 
 func TestErrorOverlayDifferentSeverities(t *testing.T) {
 	collector := NewErrorCollector()
-	
+
 	testCases := []struct {
 		severity ErrorSeverity
 		color    string
@@ -308,10 +308,10 @@ func TestErrorOverlayDifferentSeverities(t *testing.T) {
 		{ErrorSeverityInfo, "#48dbfb"},
 		{ErrorSeverityFatal, "#ff6b6b"}, // Fatal uses same color as error
 	}
-	
+
 	for _, tc := range testCases {
 		collector.Clear()
-		
+
 		err := BuildError{
 			Component: "TestComponent",
 			File:      "test.go",
@@ -321,10 +321,10 @@ func TestErrorOverlayDifferentSeverities(t *testing.T) {
 			Severity:  tc.severity,
 			Timestamp: time.Now(),
 		}
-		
+
 		collector.Add(err)
 		overlay := collector.ErrorOverlay()
-		
+
 		// Check that the appropriate color is used
 		assert.Contains(t, overlay, tc.color)
 		assert.Contains(t, overlay, tc.severity.String())
@@ -357,12 +357,12 @@ func TestParseTemplError(t *testing.T) {
 			expected:  1,
 		},
 	}
-	
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			errors := ParseTemplError(tc.output, tc.component)
 			assert.Len(t, errors, tc.expected)
-			
+
 			if tc.expected > 0 {
 				err := errors[0]
 				assert.Equal(t, tc.component, err.Component)
@@ -385,12 +385,12 @@ func TestParseTemplErrorSecurity(t *testing.T) {
 		[]byte("../../../etc/passwd"),
 		[]byte(strings.Repeat("A", 10000)), // Large input
 	}
-	
+
 	for i, input := range maliciousInputs {
 		t.Run(fmt.Sprintf("malicious_input_%d", i), func(t *testing.T) {
 			errors := ParseTemplError(input, "TestComponent")
 			require.Len(t, errors, 1)
-			
+
 			// Should not panic and should safely contain the input
 			err := errors[0]
 			assert.Equal(t, string(input), err.Message)
@@ -410,7 +410,7 @@ func TestBuildErrorFields(t *testing.T) {
 		Severity:  ErrorSeverityFatal,
 		Timestamp: now,
 	}
-	
+
 	assert.Equal(t, "TestComponent", err.Component)
 	assert.Equal(t, "test.templ", err.File)
 	assert.Equal(t, 42, err.Line)
@@ -422,11 +422,11 @@ func TestBuildErrorFields(t *testing.T) {
 
 func TestErrorCollectorConcurrency(t *testing.T) {
 	collector := NewErrorCollector()
-	
+
 	// Test concurrent access to collector
 	// This is a basic test - in practice, you'd want to test with go race detector
 	done := make(chan bool, 10)
-	
+
 	// Add errors concurrently
 	for i := 0; i < 10; i++ {
 		go func(i int) {
@@ -439,12 +439,12 @@ func TestErrorCollectorConcurrency(t *testing.T) {
 			done <- true
 		}(i)
 	}
-	
+
 	// Wait for all goroutines to complete
 	for i := 0; i < 10; i++ {
 		<-done
 	}
-	
+
 	// Should have all 10 errors
 	assert.Equal(t, 10, len(collector.GetErrors()))
 	assert.True(t, collector.HasErrors())

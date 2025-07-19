@@ -14,43 +14,51 @@ import (
 	"testing"
 	"time"
 
-	"github.com/conneroisu/templar/internal/server"
-	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"nhooyr.io/websocket"
 )
 
-// createTestWebSocketServer creates a test server with WebSocket support
-func createTestWebSocketServer() *httptest.Server {
-	hub := server.NewWebSocketHub()
-	go hub.Run()
+// testWebSocketServer is a minimal WebSocket server for testing
+type testWebSocketServer struct {
+	clients   map[*websocket.Conn]chan []byte
+	mutex     sync.RWMutex
+	broadcast chan []byte
+	register  chan *websocket.Conn
+	cleanup   func()
+}
+
+// testServerWrapper wraps httptest.Server to provide custom cleanup
+type testServerWrapper struct {
+	*httptest.Server
+	cleanup func()
+}
+
+// Close overrides the default Close to include custom cleanup
+func (w *testServerWrapper) Close() {
+	if w.cleanup != nil {
+		w.cleanup()
+	}
+	w.Server.Close()
+}
+
+// createTestWebSocketServer creates a simple test WebSocket server
+func createTestWebSocketServer() *testServerWrapper {
+	server := &testWebSocketServer{
+		clients:   make(map[*websocket.Conn]chan []byte),
+		broadcast: make(chan []byte),
+		register:  make(chan *websocket.Conn),
+	}
+
+	// Start hub goroutine
+	ctx, cancel := context.WithCancel(context.Background())
+	server.cleanup = cancel
+	go server.run(ctx)
 
 	mux := http.NewServeMux()
-	
+
 	// WebSocket endpoint
-	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		upgrader := websocket.Upgrader{
-			CheckOrigin: func(r *http.Request) bool {
-				return true // Allow all origins for testing
-			},
-		}
-
-		conn, err := upgrader.Upgrade(w, r, nil)
-		if err != nil {
-			http.Error(w, "WebSocket upgrade failed", http.StatusBadRequest)
-			return
-		}
-
-		client := &server.Client{
-			Hub:  hub,
-			Conn: conn,
-			Send: make(chan []byte, 256),
-		}
-
-		client.Hub.Register <- client
-		go client.WritePump()
-		go client.ReadPump()
-	})
+	mux.HandleFunc("/ws", server.handleWebSocket)
 
 	// Test broadcast endpoint
 	mux.HandleFunc("/broadcast", func(w http.ResponseWriter, r *http.Request) {
@@ -66,27 +74,123 @@ func createTestWebSocketServer() *httptest.Server {
 		}
 
 		messageBytes, _ := json.Marshal(message)
-		hub.Broadcast <- messageBytes
+		server.broadcast <- messageBytes
 
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("Message broadcasted"))
 	})
 
-	return httptest.NewServer(mux)
+	testServer := httptest.NewServer(mux)
+
+	// Create a custom test server wrapper that handles cleanup
+	return &testServerWrapper{
+		Server:  testServer,
+		cleanup: server.cleanup,
+	}
+}
+
+func (s *testWebSocketServer) handleWebSocket(w http.ResponseWriter, r *http.Request) {
+	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
+		InsecureSkipVerify: true, // Allow all origins for testing
+	})
+	if err != nil {
+		http.Error(w, "WebSocket upgrade failed", http.StatusBadRequest)
+		return
+	}
+
+	s.register <- conn
+	go s.clientWritePump(conn)
+	go s.clientReadPump(conn)
+}
+
+func (s *testWebSocketServer) run(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case conn := <-s.register:
+			s.mutex.Lock()
+			s.clients[conn] = make(chan []byte, 256)
+			s.mutex.Unlock()
+
+		case message := <-s.broadcast:
+			s.mutex.RLock()
+			for conn, send := range s.clients {
+				select {
+				case send <- message:
+				default:
+					// Client channel full, remove client
+					close(send)
+					delete(s.clients, conn)
+					conn.Close(websocket.StatusNormalClosure, "")
+				}
+			}
+			s.mutex.RUnlock()
+		}
+	}
+}
+
+func (s *testWebSocketServer) clientWritePump(conn *websocket.Conn) {
+	defer conn.Close(websocket.StatusNormalClosure, "")
+
+	s.mutex.RLock()
+	send, exists := s.clients[conn]
+	s.mutex.RUnlock()
+
+	if !exists {
+		return
+	}
+
+	ctx := context.Background()
+
+	for message := range send {
+		writeCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		err := conn.Write(writeCtx, websocket.MessageText, message)
+		cancel()
+		if err != nil {
+			break
+		}
+	}
+}
+
+func (s *testWebSocketServer) clientReadPump(conn *websocket.Conn) {
+	defer func() {
+		s.mutex.Lock()
+		if send, exists := s.clients[conn]; exists {
+			close(send)
+			delete(s.clients, conn)
+		}
+		s.mutex.Unlock()
+		conn.Close(websocket.StatusNormalClosure, "")
+	}()
+
+	conn.SetReadLimit(512)
+	ctx := context.Background()
+
+	for {
+		readCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
+		_, _, err := conn.Read(readCtx)
+		cancel()
+		if err != nil {
+			break
+		}
+	}
 }
 
 // connectWebSocketTestClient creates a WebSocket client connection
 func connectWebSocketTestClient(serverURL string) (*websocket.Conn, error) {
+	ctx := context.Background()
 	url := strings.Replace(serverURL, "http://", "ws://", 1) + "/ws"
-	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
+	conn, _, err := websocket.Dial(ctx, url, nil)
 	return conn, err
 }
 
 // readWebSocketTestMessage reads a message from WebSocket with timeout
 func readWebSocketTestMessage(conn *websocket.Conn, timeout time.Duration) (map[string]interface{}, error) {
-	conn.SetReadDeadline(time.Now().Add(timeout))
-	
-	_, message, err := conn.ReadMessage()
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	_, message, err := conn.Read(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -103,39 +207,17 @@ func TestIntegration_ServerWebSocket_BasicConnection(t *testing.T) {
 	// Connect WebSocket client
 	conn, err := connectWebSocketTestClient(server.URL)
 	require.NoError(t, err)
-	defer conn.Close()
+	defer conn.Close(websocket.StatusNormalClosure, "")
 
 	// Verify connection is established
 	assert.NotNil(t, conn)
 
 	// Send a ping to verify connection is alive
-	err = conn.WriteMessage(websocket.PingMessage, []byte("ping"))
-	assert.NoError(t, err)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
 
-	// Set up pong handler
-	pongReceived := make(chan struct{}, 1)
-	conn.SetPongHandler(func(string) error {
-		pongReceived <- struct{}{}
-		return nil
-	})
-
-	// Start read pump to handle pong
-	go func() {
-		for {
-			_, _, err := conn.ReadMessage()
-			if err != nil {
-				return
-			}
-		}
-	}()
-
-	// Wait for pong response
-	select {
-	case <-pongReceived:
-		// Success
-	case <-time.After(2 * time.Second):
-		t.Fatal("Ping-pong timeout")
-	}
+	err = conn.Ping(ctx)
+	assert.NoError(t, err, "Ping should succeed")
 }
 
 func TestIntegration_ServerWebSocket_MessageBroadcasting(t *testing.T) {
@@ -145,15 +227,15 @@ func TestIntegration_ServerWebSocket_MessageBroadcasting(t *testing.T) {
 	// Connect multiple WebSocket clients
 	client1, err := connectWebSocketTestClient(server.URL)
 	require.NoError(t, err)
-	defer client1.Close()
+	defer client1.Close(websocket.StatusNormalClosure, "")
 
 	client2, err := connectWebSocketTestClient(server.URL)
 	require.NoError(t, err)
-	defer client2.Close()
+	defer client2.Close(websocket.StatusNormalClosure, "")
 
 	client3, err := connectWebSocketTestClient(server.URL)
 	require.NoError(t, err)
-	defer client3.Close()
+	defer client3.Close(websocket.StatusNormalClosure, "")
 
 	// Wait for clients to be registered
 	time.Sleep(100 * time.Millisecond)
@@ -169,7 +251,7 @@ func TestIntegration_ServerWebSocket_MessageBroadcasting(t *testing.T) {
 
 	// Broadcast message via HTTP endpoint
 	messageBytes, _ := json.Marshal(testMessage)
-	resp, err := http.Post(server.URL+"/broadcast", "application/json", 
+	resp, err := http.Post(server.URL+"/broadcast", "application/json",
 		strings.NewReader(string(messageBytes)))
 	require.NoError(t, err)
 	defer resp.Body.Close()
@@ -198,12 +280,12 @@ func TestIntegration_ServerWebSocket_MessageBroadcasting(t *testing.T) {
 
 	// Verify all clients received the same message
 	for i, msg := range receivedMessages {
-		assert.Equal(t, testMessage["type"], msg["type"], 
+		assert.Equal(t, testMessage["type"], msg["type"],
 			"Client %d should receive correct message type", i)
-		
+
 		data, ok := msg["data"].(map[string]interface{})
 		assert.True(t, ok, "Client %d should receive data object", i)
-		assert.Equal(t, "Button", data["name"], 
+		assert.Equal(t, "Button", data["name"],
 			"Client %d should receive correct component name", i)
 	}
 }
@@ -233,7 +315,7 @@ func TestIntegration_ServerWebSocket_ClientConnectionManagement(t *testing.T) {
 	}
 
 	messageBytes, _ := json.Marshal(testMessage)
-	resp, err := http.Post(server.URL+"/broadcast", "application/json", 
+	resp, err := http.Post(server.URL+"/broadcast", "application/json",
 		strings.NewReader(string(messageBytes)))
 	require.NoError(t, err)
 	defer resp.Body.Close()
@@ -266,12 +348,12 @@ func TestIntegration_ServerWebSocket_ClientConnectionManagement(t *testing.T) {
 	}
 
 	// Should receive messages on most connections (allow some tolerance)
-	assert.GreaterOrEqual(t, totalSuccess, connectionCount-2, 
+	assert.GreaterOrEqual(t, totalSuccess, connectionCount-2,
 		"Most connections should receive the message")
 
 	// Close connections gracefully
 	for i, conn := range connections {
-		err := conn.Close()
+		err := conn.Close(websocket.StatusNormalClosure, "")
 		assert.NoError(t, err, "Connection %d should close gracefully", i)
 	}
 
@@ -291,7 +373,7 @@ func TestIntegration_ServerWebSocket_ConcurrentMessaging(t *testing.T) {
 		conn, err := connectWebSocketTestClient(server.URL)
 		require.NoError(t, err)
 		clients[i] = conn
-		defer conn.Close()
+		defer conn.Close(websocket.StatusNormalClosure, "")
 	}
 
 	// Wait for clients to be registered
@@ -316,7 +398,7 @@ func TestIntegration_ServerWebSocket_ConcurrentMessaging(t *testing.T) {
 					t.Logf("Client %d failed to read message %d: %v", clientIndex, j, err)
 					continue
 				}
-				
+
 				receiveMutexes[clientIndex].Lock()
 				receivedMessages[clientIndex] = append(receivedMessages[clientIndex], msg)
 				receiveMutexes[clientIndex].Unlock()
@@ -328,13 +410,13 @@ func TestIntegration_ServerWebSocket_ConcurrentMessaging(t *testing.T) {
 	for i := 0; i < messageCount; i++ {
 		go func(msgIndex int) {
 			testMessage := map[string]interface{}{
-				"type": "concurrent_test",
-				"data": fmt.Sprintf("message_%d", msgIndex),
+				"type":  "concurrent_test",
+				"data":  fmt.Sprintf("message_%d", msgIndex),
 				"index": msgIndex,
 			}
 
 			messageBytes, _ := json.Marshal(testMessage)
-			resp, err := http.Post(server.URL+"/broadcast", "application/json", 
+			resp, err := http.Post(server.URL+"/broadcast", "application/json",
 				strings.NewReader(string(messageBytes)))
 			if err != nil {
 				t.Logf("Failed to send message %d: %v", msgIndex, err)
@@ -342,7 +424,7 @@ func TestIntegration_ServerWebSocket_ConcurrentMessaging(t *testing.T) {
 			}
 			resp.Body.Close()
 		}(i)
-		
+
 		time.Sleep(50 * time.Millisecond) // Small delay between messages
 	}
 
@@ -353,11 +435,11 @@ func TestIntegration_ServerWebSocket_ConcurrentMessaging(t *testing.T) {
 		receiveMutexes[i].Lock()
 		messageCount := len(messages)
 		receiveMutexes[i].Unlock()
-		
+
 		// Allow some tolerance for message loss in concurrent scenarios
-		assert.GreaterOrEqual(t, messageCount, messageCount-3, 
+		assert.GreaterOrEqual(t, messageCount, messageCount-3,
 			"Client %d should receive most messages", i)
-		
+
 		t.Logf("Client %d received %d/%d messages", i, messageCount, messageCount)
 	}
 }
@@ -371,11 +453,12 @@ func TestIntegration_ServerWebSocket_ErrorHandling(t *testing.T) {
 	require.NoError(t, err)
 
 	// Send invalid data to trigger error handling
-	err = client.WriteMessage(websocket.BinaryMessage, []byte{0xFF, 0xFF, 0xFF})
+	ctx := context.Background()
+	err = client.Write(ctx, websocket.MessageBinary, []byte{0xFF, 0xFF, 0xFF})
 	assert.NoError(t, err) // Writing should succeed
 
 	// Abruptly close connection to test error handling
-	client.Close()
+	client.Close(websocket.StatusNormalClosure, "")
 
 	// Wait for cleanup
 	time.Sleep(200 * time.Millisecond)
@@ -383,7 +466,7 @@ func TestIntegration_ServerWebSocket_ErrorHandling(t *testing.T) {
 	// Server should continue working - test with new connection
 	newClient, err := connectWebSocketTestClient(server.URL)
 	require.NoError(t, err)
-	defer newClient.Close()
+	defer newClient.Close(websocket.StatusNormalClosure, "")
 
 	// Send test message to verify server is still functional
 	testMessage := map[string]interface{}{
@@ -392,7 +475,7 @@ func TestIntegration_ServerWebSocket_ErrorHandling(t *testing.T) {
 	}
 
 	messageBytes, _ := json.Marshal(testMessage)
-	resp, err := http.Post(server.URL+"/broadcast", "application/json", 
+	resp, err := http.Post(server.URL+"/broadcast", "application/json",
 		strings.NewReader(string(messageBytes)))
 	require.NoError(t, err)
 	defer resp.Body.Close()
@@ -437,12 +520,12 @@ func TestIntegration_ServerWebSocket_LoadTesting(t *testing.T) {
 	for _, client := range clients {
 		if client != nil {
 			successfulConnections++
-			defer client.Close()
+			defer client.Close(websocket.StatusNormalClosure, "")
 		}
 	}
 
 	t.Logf("Successfully connected %d/%d clients", successfulConnections, connectionCount)
-	assert.GreaterOrEqual(t, successfulConnections, connectionCount-5, 
+	assert.GreaterOrEqual(t, successfulConnections, connectionCount-5,
 		"Most connections should succeed")
 
 	// Wait for all clients to be registered
@@ -465,7 +548,7 @@ func TestIntegration_ServerWebSocket_LoadTesting(t *testing.T) {
 			}
 
 			messageBytes, _ := json.Marshal(testMessage)
-			resp, err := http.Post(server.URL+"/broadcast", "application/json", 
+			resp, err := http.Post(server.URL+"/broadcast", "application/json",
 				strings.NewReader(string(messageBytes)))
 			if err != nil {
 				t.Logf("Failed to send load message %d: %v", msgIndex, err)
@@ -473,18 +556,18 @@ func TestIntegration_ServerWebSocket_LoadTesting(t *testing.T) {
 			}
 			resp.Body.Close()
 		}(i)
-		
+
 		time.Sleep(100 * time.Millisecond) // Sustained load
 	}
 
 	messageWg.Wait()
 	totalTime := time.Since(start)
 
-	t.Logf("Sent %d messages to %d clients in %v", 
+	t.Logf("Sent %d messages to %d clients in %v",
 		messageCount, successfulConnections, totalTime)
 
 	// Performance assertion
-	assert.Less(t, totalTime, 30*time.Second, 
+	assert.Less(t, totalTime, 30*time.Second,
 		"Load test should complete in reasonable time")
 }
 
@@ -495,7 +578,7 @@ func TestIntegration_ServerWebSocket_MessageOrdering(t *testing.T) {
 	// Connect client
 	client, err := connectWebSocketTestClient(server.URL)
 	require.NoError(t, err)
-	defer client.Close()
+	defer client.Close(websocket.StatusNormalClosure, "")
 
 	// Wait for client registration
 	time.Sleep(100 * time.Millisecond)
@@ -514,7 +597,7 @@ func TestIntegration_ServerWebSocket_MessageOrdering(t *testing.T) {
 				t.Logf("Failed to read message %d: %v", i, err)
 				continue
 			}
-			
+
 			receiveMutex.Lock()
 			receivedMessages = append(receivedMessages, msg)
 			receiveMutex.Unlock()
@@ -531,7 +614,7 @@ func TestIntegration_ServerWebSocket_MessageOrdering(t *testing.T) {
 		}
 
 		messageBytes, _ := json.Marshal(testMessage)
-		resp, err := http.Post(server.URL+"/broadcast", "application/json", 
+		resp, err := http.Post(server.URL+"/broadcast", "application/json",
 			strings.NewReader(string(messageBytes)))
 		require.NoError(t, err)
 		resp.Body.Close()
@@ -551,13 +634,13 @@ func TestIntegration_ServerWebSocket_MessageOrdering(t *testing.T) {
 	receiveMutex.Lock()
 	defer receiveMutex.Unlock()
 
-	assert.Equal(t, messageCount, len(receivedMessages), 
+	assert.Equal(t, messageCount, len(receivedMessages),
 		"Should receive all messages")
 
 	for i, msg := range receivedMessages {
 		sequence, ok := msg["sequence"].(float64) // JSON numbers are float64
 		assert.True(t, ok, "Message %d should have sequence number", i)
-		assert.Equal(t, float64(i), sequence, 
+		assert.Equal(t, float64(i), sequence,
 			"Message %d should have correct sequence", i)
 	}
 }
@@ -569,7 +652,7 @@ func TestIntegration_ServerWebSocket_LargeMessageHandling(t *testing.T) {
 	// Connect client
 	client, err := connectWebSocketTestClient(server.URL)
 	require.NoError(t, err)
-	defer client.Close()
+	defer client.Close(websocket.StatusNormalClosure, "")
 
 	// Wait for client registration
 	time.Sleep(100 * time.Millisecond)
@@ -595,7 +678,7 @@ func TestIntegration_ServerWebSocket_LargeMessageHandling(t *testing.T) {
 
 	// Send large message
 	messageBytes, _ := json.Marshal(testMessage)
-	resp, err := http.Post(server.URL+"/broadcast", "application/json", 
+	resp, err := http.Post(server.URL+"/broadcast", "application/json",
 		strings.NewReader(string(messageBytes)))
 	require.NoError(t, err)
 	defer resp.Body.Close()

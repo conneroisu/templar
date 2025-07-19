@@ -92,7 +92,7 @@ func runPreview(cmd *cobra.Command, args []string) error {
 		if len(previewProps) > 1024*1024 { // 1MB limit
 			return fmt.Errorf("props JSON too large (max 1MB)")
 		}
-		
+
 		if err := json.Unmarshal([]byte(previewProps), &props); err != nil {
 			return fmt.Errorf("failed to parse props JSON: %w", err)
 		}

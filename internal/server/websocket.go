@@ -2,11 +2,13 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"time"
 
-	"github.com/gorilla/websocket"
+	"nhooyr.io/websocket"
 )
 
 const (
@@ -24,7 +26,15 @@ const (
 )
 
 func (s *PreviewServer) handleWebSocket(w http.ResponseWriter, r *http.Request) {
-	conn, err := s.wsUpgrader.Upgrade(w, r, nil)
+	// Validate origin before accepting connection
+	if !s.checkOrigin(r) {
+		http.Error(w, "Origin not allowed", http.StatusForbidden)
+		return
+	}
+
+	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
+		InsecureSkipVerify: false, // Always verify origin
+	})
 	if err != nil {
 		log.Printf("WebSocket upgrade error: %v", err)
 		return
@@ -42,6 +52,46 @@ func (s *PreviewServer) handleWebSocket(w http.ResponseWriter, r *http.Request) 
 
 	// Register client after goroutines are started
 	s.register <- client
+}
+
+// checkOrigin validates the request origin for security
+func (s *PreviewServer) checkOrigin(r *http.Request) bool {
+	// Get the origin from the request
+	origin := r.Header.Get("Origin")
+	if origin == "" {
+		// Reject connections without origin header for security
+		return false
+	}
+
+	// Parse the origin URL
+	originURL, err := url.Parse(origin)
+	if err != nil {
+		return false
+	}
+
+	// First check scheme - only allow http/https
+	if originURL.Scheme != "http" && originURL.Scheme != "https" {
+		return false
+	}
+
+	// Strict origin validation - only allow specific origins
+	expectedHost := fmt.Sprintf("%s:%d", s.config.Server.Host, s.config.Server.Port)
+	allowedOrigins := []string{
+		expectedHost,
+		fmt.Sprintf("localhost:%d", s.config.Server.Port),
+		fmt.Sprintf("127.0.0.1:%d", s.config.Server.Port),
+		"localhost:3000", // Common dev server
+		"127.0.0.1:3000", // Common dev server
+	}
+
+	// Check if origin is in allowed list
+	for _, allowed := range allowedOrigins {
+		if originURL.Host == allowed {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (s *PreviewServer) runWebSocketHub(ctx context.Context) {
@@ -75,7 +125,7 @@ func (s *PreviewServer) runWebSocketHub(ctx context.Context) {
 				if client, ok := s.clients[conn]; ok {
 					delete(s.clients, conn)
 					close(client.send)
-					conn.Close()
+					conn.Close(websocket.StatusNormalClosure, "")
 					log.Printf("Client disconnected, total: %d", len(s.clients))
 				}
 			}
@@ -104,7 +154,7 @@ func (s *PreviewServer) runWebSocketHub(ctx context.Context) {
 						if client, ok := s.clients[conn]; ok {
 							delete(s.clients, conn)
 							close(client.send)
-							conn.Close()
+							conn.Close(websocket.StatusNormalClosure, "")
 						}
 					}
 				}
@@ -118,20 +168,25 @@ func (s *PreviewServer) runWebSocketHub(ctx context.Context) {
 func (c *Client) readPump() {
 	defer func() {
 		c.server.unregister <- c.conn
-		c.conn.Close()
+		c.conn.Close(websocket.StatusNormalClosure, "")
 	}()
 
+	// Set read limit
 	c.conn.SetReadLimit(maxMessageSize)
-	c.conn.SetReadDeadline(time.Now().Add(pongWait))
-	c.conn.SetPongHandler(func(string) error {
-		c.conn.SetReadDeadline(time.Now().Add(pongWait))
-		return nil
-	})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	for {
-		_, _, err := c.conn.ReadMessage()
+		// Set read timeout
+		readCtx, readCancel := context.WithTimeout(ctx, pongWait)
+		_, _, err := c.conn.Read(readCtx)
+		readCancel()
+
 		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+			// Check if it's a normal closure
+			if websocket.CloseStatus(err) != websocket.StatusNormalClosure &&
+				websocket.CloseStatus(err) != websocket.StatusGoingAway {
 				log.Printf("WebSocket error: %v", err)
 			}
 			break
@@ -144,28 +199,35 @@ func (c *Client) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
-		c.conn.Close()
+		c.conn.Close(websocket.StatusNormalClosure, "")
 	}()
+
+	ctx := context.Background()
 
 	for {
 		select {
 		case message, ok := <-c.send:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			writeCtx, cancel := context.WithTimeout(ctx, writeWait)
 			if !ok {
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				c.conn.Close(websocket.StatusNormalClosure, "")
+				cancel()
 				return
 			}
 
-			if err := c.conn.WriteMessage(websocket.TextMessage, message); err != nil {
+			if err := c.conn.Write(writeCtx, websocket.MessageText, message); err != nil {
 				log.Printf("WebSocket write error: %v", err)
+				cancel()
 				return
 			}
+			cancel()
 
 		case <-ticker.C:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+			pingCtx, cancel := context.WithTimeout(ctx, writeWait)
+			if err := c.conn.Ping(pingCtx); err != nil {
+				cancel()
 				return
 			}
+			cancel()
 		}
 	}
 }

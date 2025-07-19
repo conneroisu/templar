@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/conneroisu/templar/internal/config"
-	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"nhooyr.io/websocket"
 )
 
 func TestNew(t *testing.T) {
@@ -64,7 +64,7 @@ func TestNew_WatcherCreationFailure(t *testing.T) {
 	}
 }
 
-func TestPreviewServer_WebSocketUpgrader(t *testing.T) {
+func TestPreviewServer_CheckOrigin(t *testing.T) {
 	cfg := &config.Config{
 		Server: config.ServerConfig{
 			Port: 8080,
@@ -83,27 +83,27 @@ func TestPreviewServer_WebSocketUpgrader(t *testing.T) {
 	req := httptest.NewRequest("GET", "http://localhost:8080/ws", nil)
 
 	// Test with no origin header - should reject for security
-	assert.False(t, server.wsUpgrader.CheckOrigin(req))
+	assert.False(t, server.checkOrigin(req))
 
 	// Test with valid origin
 	req.Header.Set("Origin", "http://localhost:8080")
-	assert.True(t, server.wsUpgrader.CheckOrigin(req))
+	assert.True(t, server.checkOrigin(req))
 
 	// Test with invalid origin
 	req.Header.Set("Origin", "http://malicious.com")
-	assert.False(t, server.wsUpgrader.CheckOrigin(req))
+	assert.False(t, server.checkOrigin(req))
 
 	// Test with localhost origin
 	req.Header.Set("Origin", "http://localhost:3000")
-	assert.True(t, server.wsUpgrader.CheckOrigin(req))
+	assert.True(t, server.checkOrigin(req))
 
 	// Test with 127.0.0.1 origin
 	req.Header.Set("Origin", "http://127.0.0.1:3000")
-	assert.True(t, server.wsUpgrader.CheckOrigin(req))
+	assert.True(t, server.checkOrigin(req))
 
 	// Test with malformed origin
 	req.Header.Set("Origin", "not-a-valid-url")
-	assert.False(t, server.wsUpgrader.CheckOrigin(req))
+	assert.False(t, server.checkOrigin(req))
 }
 
 func TestPreviewServer_Shutdown(t *testing.T) {
@@ -174,13 +174,12 @@ func TestPreviewServer_BroadcastMessage(t *testing.T) {
 func TestClient_String(t *testing.T) {
 	// Create a mock websocket connection
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		upgrader := websocket.Upgrader{}
-		conn, err := upgrader.Upgrade(w, r, nil)
+		conn, err := websocket.Accept(w, r, nil)
 		if err != nil {
 			t.Errorf("Failed to upgrade connection: %v", err)
 			return
 		}
-		defer conn.Close()
+		defer conn.Close(websocket.StatusNormalClosure, "")
 
 		// Keep connection alive for test
 		<-time.After(100 * time.Millisecond)
@@ -189,9 +188,10 @@ func TestClient_String(t *testing.T) {
 
 	// Connect to the test server
 	wsURL := "ws" + server.URL[4:] // Replace http with ws
-	conn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+	ctx := context.Background()
+	conn, _, err := websocket.Dial(ctx, wsURL, nil)
 	require.NoError(t, err)
-	defer conn.Close()
+	defer conn.Close(websocket.StatusNormalClosure, "")
 
 	cfg := &config.Config{
 		Server: config.ServerConfig{

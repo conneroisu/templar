@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.24-alpine AS builder
+FROM golang:1.24.4-alpine AS builder
 
 # Install necessary packages
 RUN apk add --no-cache git ca-certificates tzdata
@@ -13,8 +13,8 @@ COPY go.mod go.sum ./
 # Download dependencies
 RUN go mod download
 
-# Install templ for code generation
-RUN go install github.com/a-h/templ/cmd/templ@latest
+# Install templ for code generation (pinned version for security)
+RUN go install github.com/a-h/templ/cmd/templ@v0.3.819
 
 # Copy source code
 COPY . .

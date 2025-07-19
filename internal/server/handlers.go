@@ -448,20 +448,20 @@ func validateComponentName(name string) error {
 	if name == "" {
 		return fmt.Errorf("empty component name")
 	}
-	
+
 	// Clean the name
 	cleanName := filepath.Clean(name)
-	
+
 	// Reject names containing path traversal patterns
 	if strings.Contains(cleanName, "..") {
 		return fmt.Errorf("path traversal attempt detected")
 	}
-	
+
 	// Reject absolute paths
 	if filepath.IsAbs(cleanName) {
 		return fmt.Errorf("absolute path not allowed")
 	}
-	
+
 	// Reject special characters that could be used in injection attacks (check first for security)
 	dangerousChars := []string{"<", ">", "\"", "'", "&", ";", "|", "$", "`", "(", ")", "{", "}", "[", "]", "\\"}
 	for _, char := range dangerousChars {
@@ -469,16 +469,16 @@ func validateComponentName(name string) error {
 			return fmt.Errorf("dangerous character not allowed: %s", char)
 		}
 	}
-	
+
 	// Reject names with path separators (should be simple component names)
 	if strings.ContainsRune(cleanName, os.PathSeparator) {
 		return fmt.Errorf("path separators not allowed in component name")
 	}
-	
+
 	// Reject if name is too long (prevent buffer overflow attacks)
 	if len(cleanName) > 100 {
 		return fmt.Errorf("component name too long (max 100 characters)")
 	}
-	
+
 	return nil
 }

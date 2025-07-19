@@ -111,9 +111,7 @@ func outputJSON(components []*registry.ComponentInfo) error {
 		}
 
 		if listWithDeps {
-			// For now, dependencies are not implemented in the registry
-			// This is a placeholder for future implementation
-			item["dependencies"] = []string{}
+			item["dependencies"] = component.Dependencies
 		}
 
 		output[i] = item

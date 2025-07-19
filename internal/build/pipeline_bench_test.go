@@ -12,7 +12,7 @@ import (
 // createTestComponent creates a test component for benchmarking
 func createTestComponent(name string, complexity string) *registry.ComponentInfo {
 	var parameters []registry.ParameterInfo
-	
+
 	switch complexity {
 	case "simple":
 		parameters = []registry.ParameterInfo{
@@ -246,7 +246,7 @@ func BenchmarkBuildPipeline_WorkerPoolPerformance(b *testing.B) {
 
 				for i := 0; i < b.N; i++ {
 					reg := registry.NewComponentRegistry()
-				pipeline := NewBuildPipeline(workers, reg)
+					pipeline := NewBuildPipeline(workers, reg)
 
 					// Submit tasks
 					var wg sync.WaitGroup
@@ -372,4 +372,3 @@ func BenchmarkBuildResult_Serialization(b *testing.B) {
 		})
 	}
 }
-
