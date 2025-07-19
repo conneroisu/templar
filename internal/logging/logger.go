@@ -184,6 +184,12 @@ func (l *TemplarLogger) WithComponent(component string) Logger {
 
 // log is the internal logging method
 func (l *TemplarLogger) log(ctx context.Context, level slog.Level, err error, msg string, fields ...interface{}) {
+	// Defensive programming - ensure we don't panic on nil logger
+	if l.logger == nil {
+		fmt.Fprintf(os.Stderr, "[ERROR] Logger is nil - message: %s\n", msg)
+		return
+	}
+	
 	attrs := make([]slog.Attr, 0, len(l.fields)+len(fields)/2+3)
 
 	// Add component if set
@@ -191,9 +197,11 @@ func (l *TemplarLogger) log(ctx context.Context, level slog.Level, err error, ms
 		attrs = append(attrs, slog.String("component", l.component))
 	}
 
-	// Add error if provided
+	// Add error if provided with enhanced error context
 	if err != nil {
 		attrs = append(attrs, slog.String("error", err.Error()))
+		// Add error type for better error categorization
+		attrs = append(attrs, slog.String("error_type", fmt.Sprintf("%T", err)))
 	}
 
 	// Add persistent fields
@@ -201,11 +209,16 @@ func (l *TemplarLogger) log(ctx context.Context, level slog.Level, err error, ms
 		attrs = append(attrs, slog.Any(k, v))
 	}
 
-	// Add provided fields
+	// Add provided fields with validation
 	for i := 0; i < len(fields); i += 2 {
 		if i+1 < len(fields) {
-			if key, ok := fields[i].(string); ok {
-				attrs = append(attrs, slog.Any(key, fields[i+1]))
+			if key, ok := fields[i].(string); ok && key != "" {
+				// Sanitize field values for security
+				value := fields[i+1]
+				if str, isString := value.(string); isString {
+					value = SanitizeForLog(str)
+				}
+				attrs = append(attrs, slog.Any(key, value))
 			}
 		}
 	}
@@ -213,7 +226,13 @@ func (l *TemplarLogger) log(ctx context.Context, level slog.Level, err error, ms
 	record := slog.NewRecord(time.Now(), level, msg, 0)
 	record.AddAttrs(attrs...)
 
-	l.logger.Handler().Handle(ctx, record)
+	// Handle potential errors in logging itself
+	if handler := l.logger.Handler(); handler != nil {
+		if err := handler.Handle(ctx, record); err != nil {
+			// Fallback to stderr if primary logging fails
+			fmt.Fprintf(os.Stderr, "[ERROR] Failed to write log: %v - Original message: %s\n", err, msg)
+		}
+	}
 }
 
 // FileLogger creates a logger that writes to files with rotation
@@ -225,18 +244,33 @@ type FileLogger struct {
 
 // NewFileLogger creates a file-based logger with daily rotation
 func NewFileLogger(config *LoggerConfig, logDir string) (*FileLogger, error) {
-	if err := os.MkdirAll(logDir, 0755); err != nil {
-		return nil, fmt.Errorf("failed to create log directory: %w", err)
+	if config == nil {
+		config = DefaultConfig()
+	}
+	
+	// Validate log directory path
+	if logDir == "" {
+		return nil, fmt.Errorf("log directory cannot be empty")
+	}
+	
+	// Clean the path to prevent path traversal
+	cleanLogDir := filepath.Clean(logDir)
+	if strings.Contains(cleanLogDir, "..") {
+		return nil, fmt.Errorf("invalid log directory path (contains path traversal): %s", logDir)
+	}
+	
+	if err := os.MkdirAll(cleanLogDir, 0755); err != nil {
+		return nil, fmt.Errorf("failed to create log directory %s: %w", cleanLogDir, err)
 	}
 
 	// Create log file with date
 	now := time.Now()
 	fileName := fmt.Sprintf("templar-%s.log", now.Format("2006-01-02"))
-	filePath := filepath.Join(logDir, fileName)
+	filePath := filepath.Join(cleanLogDir, fileName)
 
 	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open log file: %w", err)
+		return nil, fmt.Errorf("failed to open log file %s: %w", filePath, err)
 	}
 
 	// Update config to use file output
@@ -255,7 +289,10 @@ func NewFileLogger(config *LoggerConfig, logDir string) (*FileLogger, error) {
 // Close closes the file logger
 func (f *FileLogger) Close() error {
 	if f.file != nil {
-		return f.file.Close()
+		if err := f.file.Close(); err != nil {
+			return fmt.Errorf("failed to close log file %s: %w", f.filePath, err)
+		}
+		f.file = nil // Prevent double-close
 	}
 	return nil
 }

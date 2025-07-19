@@ -10548,5 +10548,431 @@
       "old_string": "import (\n\t\"net/http\"\n\t\"net/http/httptest\"\n\t\"sync\"\n\t\"testing\"\n\t\"time\"\n\n\t\"github.com/stretchr/testify/assert\"\n\t\"github.com/stretchr/testify/require\"\n)",
       "new_string": "import (\n\t\"fmt\"\n\t\"net/http\"\n\t\"net/http/httptest\"\n\t\"sync\"\n\t\"testing\"\n\t\"time\"\n\n\t\"github.com/stretchr/testify/assert\"\n\t\"github.com/stretchr/testify/require\"\n)"
     }
+  },
+  {
+    "session_id": "8e6737a7-4309-4012-bf3d-69084fa0ffb2",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/8e6737a7-4309-4012-bf3d-69084fa0ffb2.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Edit",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/server/server.go",
+      "old_string": "func (s *PreviewServer) addMiddleware(handler http.Handler) http.Handler {\n\t// Create security middleware\n\tsecurityConfig := SecurityConfigFromAppConfig(s.config)\n\tsecurityHandler := SecurityMiddleware(securityConfig)(handler)\n\t\n\t// Add CORS and logging middleware\n\treturn http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {\n\t\t// CORS headers based on environment\n\t\torigin := r.Header.Get(\"Origin\")\n\t\tif s.isAllowedOrigin(origin) {\n\t\t\tw.Header().Set(\"Access-Control-Allow-Origin\", origin)\n\t\t} else if s.config.Server.Environment == \"development\" {\n\t\t\t// Only allow wildcard in development\n\t\t\tw.Header().Set(\"Access-Control-Allow-Origin\", \"*\")\n\t\t}\n\t\t// Production default: no CORS header (blocks cross-origin requests)\n\n\t\tw.Header().Set(\"Access-Control-Allow-Methods\", \"GET, POST, OPTIONS\")\n\t\tw.Header().Set(\"Access-Control-Allow-Headers\", \"Content-Type\")\n\t\tw.Header().Set(\"Access-Control-Allow-Credentials\", \"true\")\n\n\t\t// Handle preflight requests\n\t\tif r.Method == \"OPTIONS\" {\n\t\t\tw.WriteHeader(http.StatusOK)\n\t\t\treturn\n\t\t}\n\n\t\t// Log requests\n\t\tstart := time.Now()\n\t\tsecurityHandler.ServeHTTP(w, r)\n\t\tlog.Printf(\"%s %s %v\", r.Method, r.URL.Path, time.Since(start))\n\t})\n}",
+      "new_string": "func (s *PreviewServer) addMiddleware(handler http.Handler) http.Handler {\n\t// Create security middleware\n\tsecurityConfig := SecurityConfigFromAppConfig(s.config)\n\tsecurityHandler := SecurityMiddleware(securityConfig)(handler)\n\t\n\t// Create rate limiting middleware\n\trateLimitConfig := securityConfig.RateLimiting\n\tif rateLimitConfig != nil && rateLimitConfig.Enabled {\n\t\trateLimiter := NewRateLimiter(rateLimitConfig, nil)\n\t\trateLimitHandler := RateLimitMiddleware(rateLimiter)(securityHandler)\n\t\tsecurityHandler = rateLimitHandler\n\t}\n\t\n\t// Add CORS and logging middleware\n\treturn http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {\n\t\t// CORS headers based on environment\n\t\torigin := r.Header.Get(\"Origin\")\n\t\tif s.isAllowedOrigin(origin) {\n\t\t\tw.Header().Set(\"Access-Control-Allow-Origin\", origin)\n\t\t} else if s.config.Server.Environment == \"development\" {\n\t\t\t// Only allow wildcard in development\n\t\t\tw.Header().Set(\"Access-Control-Allow-Origin\", \"*\")\n\t\t}\n\t\t// Production default: no CORS header (blocks cross-origin requests)\n\n\t\tw.Header().Set(\"Access-Control-Allow-Methods\", \"GET, POST, OPTIONS\")\n\t\tw.Header().Set(\"Access-Control-Allow-Headers\", \"Content-Type\")\n\t\tw.Header().Set(\"Access-Control-Allow-Credentials\", \"true\")\n\n\t\t// Handle preflight requests\n\t\tif r.Method == \"OPTIONS\" {\n\t\t\tw.WriteHeader(http.StatusOK)\n\t\t\treturn\n\t\t}\n\n\t\t// Log requests\n\t\tstart := time.Now()\n\t\tsecurityHandler.ServeHTTP(w, r)\n\t\tlog.Printf(\"%s %s %v\", r.Method, r.URL.Path, time.Since(start))\n\t})\n}"
+    }
+  },
+  {
+    "session_id": "8e6737a7-4309-4012-bf3d-69084fa0ffb2",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/8e6737a7-4309-4012-bf3d-69084fa0ffb2.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "TodoWrite",
+    "tool_input": {
+      "todos": [
+        {
+          "content": "Fix integration test API mismatches",
+          "status": "completed",
+          "priority": "high",
+          "id": "1"
+        },
+        {
+          "content": "Fix registry benchmark API issues",
+          "status": "completed",
+          "priority": "high",
+          "id": "2"
+        },
+        {
+          "content": "Improve error handling patterns",
+          "status": "completed",
+          "priority": "medium",
+          "id": "3"
+        },
+        {
+          "content": "Add comprehensive logging system",
+          "status": "completed",
+          "priority": "medium",
+          "id": "4"
+        },
+        {
+          "content": "Optimize performance bottlenecks",
+          "status": "pending",
+          "priority": "medium",
+          "id": "5"
+        },
+        {
+          "content": "Enhance component preview system",
+          "status": "pending",
+          "priority": "medium",
+          "id": "6"
+        },
+        {
+          "content": "Add security headers and CSP",
+          "status": "completed",
+          "priority": "high",
+          "id": "7"
+        },
+        {
+          "content": "Implement rate limiting",
+          "status": "completed",
+          "priority": "medium",
+          "id": "8"
+        },
+        {
+          "content": "Create API documentation",
+          "status": "pending",
+          "priority": "low",
+          "id": "9"
+        },
+        {
+          "content": "Add usage examples",
+          "status": "pending",
+          "priority": "low",
+          "id": "10"
+        }
+      ]
+    }
+  },
+  {
+    "session_id": "3bfa3df1-7f70-4557-86f7-6812c1e40ac4",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/3bfa3df1-7f70-4557-86f7-6812c1e40ac4.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "go test -v ./... -short",
+      "description": "Run all tests to verify everything passes"
+    }
+  },
+  {
+    "session_id": "3bfa3df1-7f70-4557-86f7-6812c1e40ac4",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/3bfa3df1-7f70-4557-86f7-6812c1e40ac4.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Read",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/registry/component_test.go",
+      "offset": 40,
+      "limit": 50
+    }
+  },
+  {
+    "session_id": "3bfa3df1-7f70-4557-86f7-6812c1e40ac4",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/3bfa3df1-7f70-4557-86f7-6812c1e40ac4.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Edit",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/registry/component_test.go",
+      "old_string": "\t// Test GetAll\n\tall := registry.GetAll()\n\tassert.Len(t, all, 1)\n\tassert.Equal(t, component, all[\"TestComponent\"])",
+      "new_string": "\t// Test GetAll\n\tall := registry.GetAll()\n\tassert.Len(t, all, 1)\n\tassert.Equal(t, component, all[0])"
+    }
+  },
+  {
+    "session_id": "3bfa3df1-7f70-4557-86f7-6812c1e40ac4",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/3bfa3df1-7f70-4557-86f7-6812c1e40ac4.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Read",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/server/ratelimit_test.go",
+      "limit": 20
+    }
+  },
+  {
+    "session_id": "3bfa3df1-7f70-4557-86f7-6812c1e40ac4",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/3bfa3df1-7f70-4557-86f7-6812c1e40ac4.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Edit",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/server/ratelimit_test.go",
+      "old_string": "import (\n\t\"fmt\"\n\t\"net/http\"\n\t\"net/http/httptest\"\n\t\"sync\"\n\t\"testing\"\n\t\"time\"\n\n\t\"github.com/stretchr/testify/assert\"\n\t\"github.com/stretchr/testify/require\"\n)",
+      "new_string": "import (\n\t\"fmt\"\n\t\"net/http\"\n\t\"net/http/httptest\"\n\t\"sync\"\n\t\"testing\"\n\t\"time\"\n\n\t\"github.com/stretchr/testify/assert\"\n)"
+    }
+  },
+  {
+    "session_id": "3bfa3df1-7f70-4557-86f7-6812c1e40ac4",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/3bfa3df1-7f70-4557-86f7-6812c1e40ac4.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "go test -v ./... -short",
+      "description": "Run tests to verify all compilation errors are fixed"
+    }
+  },
+  {
+    "session_id": "3bfa3df1-7f70-4557-86f7-6812c1e40ac4",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/3bfa3df1-7f70-4557-86f7-6812c1e40ac4.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "TodoWrite",
+    "tool_input": {
+      "todos": [
+        {
+          "content": "Fix hard exit points in main.go and other files - replace os.Exit with proper error returns",
+          "status": "completed",
+          "priority": "high",
+          "id": "13"
+        },
+        {
+          "content": "Add comprehensive test coverage for core commands (build, watch, serve, preview, health, init, list)",
+          "status": "completed",
+          "priority": "high",
+          "id": "14"
+        },
+        {
+          "content": "Standardize argument validation functions between cmd files",
+          "status": "completed",
+          "priority": "medium",
+          "id": "15"
+        },
+        {
+          "content": "Improve error handling in renderer and logging modules",
+          "status": "in_progress",
+          "priority": "medium",
+          "id": "16"
+        },
+        {
+          "content": "Add missing test coverage for handlers and WebSocket functionality",
+          "status": "pending",
+          "priority": "medium",
+          "id": "17"
+        }
+      ]
+    }
+  },
+  {
+    "session_id": "3bfa3df1-7f70-4557-86f7-6812c1e40ac4",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/3bfa3df1-7f70-4557-86f7-6812c1e40ac4.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "TodoWrite",
+    "tool_input": {
+      "todos": [
+        {
+          "content": "Fix hard exit points in main.go and other files - replace os.Exit with proper error returns",
+          "status": "completed",
+          "priority": "high",
+          "id": "13"
+        },
+        {
+          "content": "Add comprehensive test coverage for core commands (build, watch, serve, preview, health, init, list)",
+          "status": "completed",
+          "priority": "high",
+          "id": "14"
+        },
+        {
+          "content": "Standardize argument validation functions between cmd files",
+          "status": "completed",
+          "priority": "medium",
+          "id": "15"
+        },
+        {
+          "content": "Improve error handling in renderer and logging modules",
+          "status": "in_progress",
+          "priority": "medium",
+          "id": "16"
+        },
+        {
+          "content": "Add missing test coverage for handlers and WebSocket functionality",
+          "status": "pending",
+          "priority": "medium",
+          "id": "17"
+        }
+      ]
+    }
+  },
+  {
+    "session_id": "3bfa3df1-7f70-4557-86f7-6812c1e40ac4",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/3bfa3df1-7f70-4557-86f7-6812c1e40ac4.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Glob",
+    "tool_input": {
+      "pattern": "internal/renderer/*.go"
+    }
+  },
+  {
+    "session_id": "3bfa3df1-7f70-4557-86f7-6812c1e40ac4",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/3bfa3df1-7f70-4557-86f7-6812c1e40ac4.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Read",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/renderer/renderer.go"
+    }
+  },
+  {
+    "session_id": "3bfa3df1-7f70-4557-86f7-6812c1e40ac4",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/3bfa3df1-7f70-4557-86f7-6812c1e40ac4.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Glob",
+    "tool_input": {
+      "pattern": "internal/logging/*.go"
+    }
+  },
+  {
+    "session_id": "3bfa3df1-7f70-4557-86f7-6812c1e40ac4",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/3bfa3df1-7f70-4557-86f7-6812c1e40ac4.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Read",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/logging/logger.go"
+    }
+  },
+  {
+    "session_id": "8e6737a7-4309-4012-bf3d-69084fa0ffb2",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/8e6737a7-4309-4012-bf3d-69084fa0ffb2.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "TodoWrite",
+    "tool_input": {
+      "todos": [
+        {
+          "content": "Fix integration test API mismatches",
+          "status": "completed",
+          "priority": "high",
+          "id": "1"
+        },
+        {
+          "content": "Fix registry benchmark API issues",
+          "status": "completed",
+          "priority": "high",
+          "id": "2"
+        },
+        {
+          "content": "Improve error handling patterns",
+          "status": "completed",
+          "priority": "medium",
+          "id": "3"
+        },
+        {
+          "content": "Add comprehensive logging system",
+          "status": "completed",
+          "priority": "medium",
+          "id": "4"
+        },
+        {
+          "content": "Optimize performance bottlenecks",
+          "status": "in_progress",
+          "priority": "medium",
+          "id": "5"
+        },
+        {
+          "content": "Enhance component preview system",
+          "status": "pending",
+          "priority": "medium",
+          "id": "6"
+        },
+        {
+          "content": "Add security headers and CSP",
+          "status": "completed",
+          "priority": "high",
+          "id": "7"
+        },
+        {
+          "content": "Implement rate limiting",
+          "status": "completed",
+          "priority": "medium",
+          "id": "8"
+        },
+        {
+          "content": "Create API documentation",
+          "status": "pending",
+          "priority": "low",
+          "id": "9"
+        },
+        {
+          "content": "Add usage examples",
+          "status": "pending",
+          "priority": "low",
+          "id": "10"
+        }
+      ]
+    }
+  },
+  {
+    "session_id": "3bfa3df1-7f70-4557-86f7-6812c1e40ac4",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/3bfa3df1-7f70-4557-86f7-6812c1e40ac4.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "MultiEdit",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/renderer/renderer.go",
+      "edits": [
+        {
+          "old_string": "// NewComponentRenderer creates a new component renderer\nfunc NewComponentRenderer(registry *registry.ComponentRegistry) *ComponentRenderer {\n\tworkDir := \".templar/render\"\n\tif err := os.MkdirAll(workDir, 0750); err != nil {\n\t\tlog.Printf(\"Failed to create work directory %s: %v\", workDir, err)\n\t}\n\n\treturn &ComponentRenderer{\n\t\tregistry: registry,\n\t\tworkDir:  workDir,\n\t}\n}",
+          "new_string": "// NewComponentRenderer creates a new component renderer\nfunc NewComponentRenderer(registry *registry.ComponentRegistry) *ComponentRenderer {\n\tworkDir := \".templar/render\"\n\tif err := os.MkdirAll(workDir, 0750); err != nil {\n\t\tlog.Printf(\"Failed to create work directory %s: %v\", workDir, err)\n\t\t// Continue with renderer creation - work directory creation can be retried later\n\t}\n\n\treturn &ComponentRenderer{\n\t\tregistry: registry,\n\t\tworkDir:  workDir,\n\t}\n}"
+        },
+        {
+          "old_string": "\tif err := os.RemoveAll(componentWorkDir); err != nil {\n\t\tlog.Printf(\"Failed to remove existing component work directory %s: %v\", componentWorkDir, err)\n\t}\n\tif err := os.MkdirAll(componentWorkDir, 0750); err != nil {\n\t\treturn \"\", fmt.Errorf(\"failed to create component work directory: %w\", err)\n\t}",
+          "new_string": "\tif err := os.RemoveAll(componentWorkDir); err != nil {\n\t\tlog.Printf(\"Failed to remove existing component work directory %s: %v\", componentWorkDir, err)\n\t\t// Continue - directory removal failure is not critical if we can still create the new one\n\t}\n\tif err := os.MkdirAll(componentWorkDir, 0750); err != nil {\n\t\treturn \"\", fmt.Errorf(\"failed to create component work directory %s: %w\", componentWorkDir, err)\n\t}"
+        },
+        {
+          "old_string": "\t// Run templ generate\n\tif err := r.runTemplGenerate(componentWorkDir); err != nil {\n\t\treturn \"\", fmt.Errorf(\"running templ generate: %w\", err)\n\t}",
+          "new_string": "\t// Run templ generate\n\tif err := r.runTemplGenerate(componentWorkDir); err != nil {\n\t\treturn \"\", fmt.Errorf(\"running templ generate in %s: %w\", componentWorkDir, err)\n\t}"
+        },
+        {
+          "old_string": "\t// Build and run the Go program\n\thtml, err := r.buildAndRun(componentWorkDir)\n\tif err != nil {\n\t\treturn \"\", fmt.Errorf(\"building and running: %w\", err)\n\t}",
+          "new_string": "\t// Build and run the Go program\n\thtml, err := r.buildAndRun(componentWorkDir)\n\tif err != nil {\n\t\treturn \"\", fmt.Errorf(\"building and running component %s: %w\", componentName, err)\n\t}"
+        },
+        {
+          "old_string": "// runTemplGenerate runs templ generate in the work directory\nfunc (r *ComponentRenderer) runTemplGenerate(workDir string) error {\n\t// Validate work directory path to prevent directory traversal\n\tif err := r.validateWorkDir(workDir); err != nil {\n\t\treturn fmt.Errorf(\"invalid work directory: %w\", err)\n\t}\n\n\tcmd := exec.Command(\"templ\", \"generate\")\n\tcmd.Dir = workDir\n\toutput, err := cmd.CombinedOutput()\n\tif err != nil {\n\t\treturn fmt.Errorf(\"templ generate failed: %w\\nOutput: %s\", err, output)\n\t}\n\treturn nil\n}",
+          "new_string": "// runTemplGenerate runs templ generate in the work directory\nfunc (r *ComponentRenderer) runTemplGenerate(workDir string) error {\n\t// Validate work directory path to prevent directory traversal\n\tif err := r.validateWorkDir(workDir); err != nil {\n\t\treturn fmt.Errorf(\"invalid work directory: %w\", err)\n\t}\n\n\t// Check if templ command is available\n\tif _, err := exec.LookPath(\"templ\"); err != nil {\n\t\treturn fmt.Errorf(\"templ command not found: %w. Please install it with: go install github.com/a-h/templ/cmd/templ@latest\", err)\n\t}\n\n\tcmd := exec.Command(\"templ\", \"generate\")\n\tcmd.Dir = workDir\n\toutput, err := cmd.CombinedOutput()\n\tif err != nil {\n\t\treturn fmt.Errorf(\"templ generate failed in directory %s: %w\\nOutput: %s\", workDir, err, output)\n\t}\n\treturn nil\n}"
+        },
+        {
+          "old_string": "// buildAndRun builds and runs the Go program to generate HTML\nfunc (r *ComponentRenderer) buildAndRun(workDir string) (string, error) {\n\t// Validate work directory path to prevent directory traversal\n\tif err := r.validateWorkDir(workDir); err != nil {\n\t\treturn \"\", fmt.Errorf(\"invalid work directory: %w\", err)\n\t}\n\n\t// Initialize go module if it doesn't exist\n\tif _, err := os.Stat(filepath.Join(workDir, \"go.mod\")); os.IsNotExist(err) {\n\t\tcmd := exec.Command(\"go\", \"mod\", \"init\", \"templar-render\")\n\t\tcmd.Dir = workDir\n\t\tif err := cmd.Run(); err != nil {\n\t\t\treturn \"\", fmt.Errorf(\"go mod init failed: %w\", err)\n\t\t}\n\n\t\t// Add templ dependency\n\t\tcmd = exec.Command(\"go\", \"get\", \"github.com/a-h/templ\")\n\t\tcmd.Dir = workDir\n\t\tif err := cmd.Run(); err != nil {\n\t\t\treturn \"\", fmt.Errorf(\"go get templ failed: %w\", err)\n\t\t}\n\t}\n\n\t// Build and run\n\tcmd := exec.Command(\"go\", \"run\", \".\")\n\tcmd.Dir = workDir\n\toutput, err := cmd.CombinedOutput()\n\tif err != nil {\n\t\treturn \"\", fmt.Errorf(\"go run failed: %w\\nOutput: %s\", err, output)\n\t}\n\n\treturn string(output), nil\n}",
+          "new_string": "// buildAndRun builds and runs the Go program to generate HTML\nfunc (r *ComponentRenderer) buildAndRun(workDir string) (string, error) {\n\t// Validate work directory path to prevent directory traversal\n\tif err := r.validateWorkDir(workDir); err != nil {\n\t\treturn \"\", fmt.Errorf(\"invalid work directory: %w\", err)\n\t}\n\n\t// Check if go command is available\n\tif _, err := exec.LookPath(\"go\"); err != nil {\n\t\treturn \"\", fmt.Errorf(\"go command not found: %w\", err)\n\t}\n\n\t// Initialize go module if it doesn't exist\n\tgoModPath := filepath.Join(workDir, \"go.mod\")\n\tif _, err := os.Stat(goModPath); os.IsNotExist(err) {\n\t\tcmd := exec.Command(\"go\", \"mod\", \"init\", \"templar-render\")\n\t\tcmd.Dir = workDir\n\t\tif output, err := cmd.CombinedOutput(); err != nil {\n\t\t\treturn \"\", fmt.Errorf(\"go mod init failed in %s: %w\\nOutput: %s\", workDir, err, output)\n\t\t}\n\n\t\t// Add templ dependency\n\t\tcmd = exec.Command(\"go\", \"get\", \"github.com/a-h/templ\")\n\t\tcmd.Dir = workDir\n\t\tif output, err := cmd.CombinedOutput(); err != nil {\n\t\t\treturn \"\", fmt.Errorf(\"go get templ failed in %s: %w\\nOutput: %s\", workDir, err, output)\n\t\t}\n\t}\n\n\t// Build and run\n\tcmd := exec.Command(\"go\", \"run\", \".\")\n\tcmd.Dir = workDir\n\toutput, err := cmd.CombinedOutput()\n\tif err != nil {\n\t\treturn \"\", fmt.Errorf(\"go run failed in %s: %w\\nOutput: %s\", workDir, err, output)\n\t}\n\n\treturn string(output), nil\n}"
+        }
+      ]
+    }
+  },
+  {
+    "session_id": "8e6737a7-4309-4012-bf3d-69084fa0ffb2",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/8e6737a7-4309-4012-bf3d-69084fa0ffb2.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Read",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/build/pipeline.go"
+    }
+  },
+  {
+    "session_id": "8e6737a7-4309-4012-bf3d-69084fa0ffb2",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/8e6737a7-4309-4012-bf3d-69084fa0ffb2.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Read",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/scanner/scanner.go",
+      "limit": 100
+    }
+  },
+  {
+    "session_id": "3bfa3df1-7f70-4557-86f7-6812c1e40ac4",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/3bfa3df1-7f70-4557-86f7-6812c1e40ac4.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "MultiEdit",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/logging/logger.go",
+      "edits": [
+        {
+          "old_string": "// NewFileLogger creates a file-based logger with daily rotation\nfunc NewFileLogger(config *LoggerConfig, logDir string) (*FileLogger, error) {\n\tif err := os.MkdirAll(logDir, 0755); err != nil {\n\t\treturn nil, fmt.Errorf(\"failed to create log directory: %w\", err)\n\t}\n\n\t// Create log file with date\n\tnow := time.Now()\n\tfileName := fmt.Sprintf(\"templar-%s.log\", now.Format(\"2006-01-02\"))\n\tfilePath := filepath.Join(logDir, fileName)\n\n\tfile, err := os.OpenFile(filePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)\n\tif err != nil {\n\t\treturn nil, fmt.Errorf(\"failed to open log file: %w\", err)\n\t}\n\n\t// Update config to use file output\n\tfileConfig := *config\n\tfileConfig.Output = file\n\n\tlogger := NewLogger(&fileConfig)\n\n\treturn &FileLogger{\n\t\tTemplarLogger: logger,\n\t\tfile:          file,\n\t\tfilePath:      filePath,\n\t}, nil\n}",
+          "new_string": "// NewFileLogger creates a file-based logger with daily rotation\nfunc NewFileLogger(config *LoggerConfig, logDir string) (*FileLogger, error) {\n\tif config == nil {\n\t\tconfig = DefaultConfig()\n\t}\n\t\n\t// Validate log directory path\n\tif logDir == \"\" {\n\t\treturn nil, fmt.Errorf(\"log directory cannot be empty\")\n\t}\n\t\n\t// Clean the path to prevent path traversal\n\tcleanLogDir := filepath.Clean(logDir)\n\tif strings.Contains(cleanLogDir, \"..\") {\n\t\treturn nil, fmt.Errorf(\"invalid log directory path (contains path traversal): %s\", logDir)\n\t}\n\t\n\tif err := os.MkdirAll(cleanLogDir, 0755); err != nil {\n\t\treturn nil, fmt.Errorf(\"failed to create log directory %s: %w\", cleanLogDir, err)\n\t}\n\n\t// Create log file with date\n\tnow := time.Now()\n\tfileName := fmt.Sprintf(\"templar-%s.log\", now.Format(\"2006-01-02\"))\n\tfilePath := filepath.Join(cleanLogDir, fileName)\n\n\tfile, err := os.OpenFile(filePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)\n\tif err != nil {\n\t\treturn nil, fmt.Errorf(\"failed to open log file %s: %w\", filePath, err)\n\t}\n\n\t// Update config to use file output\n\tfileConfig := *config\n\tfileConfig.Output = file\n\n\tlogger := NewLogger(&fileConfig)\n\n\treturn &FileLogger{\n\t\tTemplarLogger: logger,\n\t\tfile:          file,\n\t\tfilePath:      filePath,\n\t}, nil\n}"
+        },
+        {
+          "old_string": "// Close closes the file logger\nfunc (f *FileLogger) Close() error {\n\tif f.file != nil {\n\t\treturn f.file.Close()\n\t}\n\treturn nil\n}",
+          "new_string": "// Close closes the file logger\nfunc (f *FileLogger) Close() error {\n\tif f.file != nil {\n\t\tif err := f.file.Close(); err != nil {\n\t\t\treturn fmt.Errorf(\"failed to close log file %s: %w\", f.filePath, err)\n\t\t}\n\t\tf.file = nil // Prevent double-close\n\t}\n\treturn nil\n}"
+        },
+        {
+          "old_string": "// log is the internal logging method\nfunc (l *TemplarLogger) log(ctx context.Context, level slog.Level, err error, msg string, fields ...interface{}) {\n\tattrs := make([]slog.Attr, 0, len(l.fields)+len(fields)/2+3)\n\n\t// Add component if set\n\tif l.component != \"\" {\n\t\tattrs = append(attrs, slog.String(\"component\", l.component))\n\t}\n\n\t// Add error if provided\n\tif err != nil {\n\t\tattrs = append(attrs, slog.String(\"error\", err.Error()))\n\t}\n\n\t// Add persistent fields\n\tfor k, v := range l.fields {\n\t\tattrs = append(attrs, slog.Any(k, v))\n\t}\n\n\t// Add provided fields\n\tfor i := 0; i < len(fields); i += 2 {\n\t\tif i+1 < len(fields) {\n\t\t\tif key, ok := fields[i].(string); ok {\n\t\t\t\tattrs = append(attrs, slog.Any(key, fields[i+1]))\n\t\t\t}\n\t\t}\n\t}\n\n\trecord := slog.NewRecord(time.Now(), level, msg, 0)\n\trecord.AddAttrs(attrs...)\n\n\tl.logger.Handler().Handle(ctx, record)\n}",
+          "new_string": "// log is the internal logging method\nfunc (l *TemplarLogger) log(ctx context.Context, level slog.Level, err error, msg string, fields ...interface{}) {\n\t// Defensive programming - ensure we don't panic on nil logger\n\tif l.logger == nil {\n\t\tfmt.Fprintf(os.Stderr, \"[ERROR] Logger is nil - message: %s\\n\", msg)\n\t\treturn\n\t}\n\t\n\tattrs := make([]slog.Attr, 0, len(l.fields)+len(fields)/2+3)\n\n\t// Add component if set\n\tif l.component != \"\" {\n\t\tattrs = append(attrs, slog.String(\"component\", l.component))\n\t}\n\n\t// Add error if provided with enhanced error context\n\tif err != nil {\n\t\tattrs = append(attrs, slog.String(\"error\", err.Error()))\n\t\t// Add error type for better error categorization\n\t\tattrs = append(attrs, slog.String(\"error_type\", fmt.Sprintf(\"%T\", err)))\n\t}\n\n\t// Add persistent fields\n\tfor k, v := range l.fields {\n\t\tattrs = append(attrs, slog.Any(k, v))\n\t}\n\n\t// Add provided fields with validation\n\tfor i := 0; i < len(fields); i += 2 {\n\t\tif i+1 < len(fields) {\n\t\t\tif key, ok := fields[i].(string); ok && key != \"\" {\n\t\t\t\t// Sanitize field values for security\n\t\t\t\tvalue := fields[i+1]\n\t\t\t\tif str, isString := value.(string); isString {\n\t\t\t\t\tvalue = SanitizeForLog(str)\n\t\t\t\t}\n\t\t\t\tattrs = append(attrs, slog.Any(key, value))\n\t\t\t}\n\t\t}\n\t}\n\n\trecord := slog.NewRecord(time.Now(), level, msg, 0)\n\trecord.AddAttrs(attrs...)\n\n\t// Handle potential errors in logging itself\n\tif handler := l.logger.Handler(); handler != nil {\n\t\tif err := handler.Handle(ctx, record); err != nil {\n\t\t\t// Fallback to stderr if primary logging fails\n\t\t\tfmt.Fprintf(os.Stderr, \"[ERROR] Failed to write log: %v - Original message: %s\\n\", err, msg)\n\t\t}\n\t}\n}"
+        }
+      ]
+    }
   }
 ]

@@ -43,7 +43,7 @@ func TestComponentRegistry_Add(t *testing.T) {
 	// Test GetAll
 	all := registry.GetAll()
 	assert.Len(t, all, 1)
-	assert.Equal(t, component, all["TestComponent"])
+	assert.Equal(t, component, all[0])
 }
 
 func TestComponentRegistry_Update(t *testing.T) {

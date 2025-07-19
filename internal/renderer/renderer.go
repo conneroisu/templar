@@ -23,6 +23,7 @@ func NewComponentRenderer(registry *registry.ComponentRegistry) *ComponentRender
 	workDir := ".templar/render"
 	if err := os.MkdirAll(workDir, 0750); err != nil {
 		log.Printf("Failed to create work directory %s: %v", workDir, err)
+		// Continue with renderer creation - work directory creation can be retried later
 	}
 
 	return &ComponentRenderer{
@@ -53,9 +54,10 @@ func (r *ComponentRenderer) RenderComponent(componentName string) (string, error
 
 	if err := os.RemoveAll(componentWorkDir); err != nil {
 		log.Printf("Failed to remove existing component work directory %s: %v", componentWorkDir, err)
+		// Continue - directory removal failure is not critical if we can still create the new one
 	}
 	if err := os.MkdirAll(componentWorkDir, 0750); err != nil {
-		return "", fmt.Errorf("failed to create component work directory: %w", err)
+		return "", fmt.Errorf("failed to create component work directory %s: %w", componentWorkDir, err)
 	}
 
 	// Generate mock data for parameters
@@ -81,13 +83,13 @@ func (r *ComponentRenderer) RenderComponent(componentName string) (string, error
 
 	// Run templ generate
 	if err := r.runTemplGenerate(componentWorkDir); err != nil {
-		return "", fmt.Errorf("running templ generate: %w", err)
+		return "", fmt.Errorf("running templ generate in %s: %w", componentWorkDir, err)
 	}
 
 	// Build and run the Go program
 	html, err := r.buildAndRun(componentWorkDir)
 	if err != nil {
-		return "", fmt.Errorf("building and running: %w", err)
+		return "", fmt.Errorf("building and running component %s: %w", componentName, err)
 	}
 
 	return html, nil
@@ -247,11 +249,16 @@ func (r *ComponentRenderer) runTemplGenerate(workDir string) error {
 		return fmt.Errorf("invalid work directory: %w", err)
 	}
 
+	// Check if templ command is available
+	if _, err := exec.LookPath("templ"); err != nil {
+		return fmt.Errorf("templ command not found: %w. Please install it with: go install github.com/a-h/templ/cmd/templ@latest", err)
+	}
+
 	cmd := exec.Command("templ", "generate")
 	cmd.Dir = workDir
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("templ generate failed: %w\nOutput: %s", err, output)
+		return fmt.Errorf("templ generate failed in directory %s: %w\nOutput: %s", workDir, err, output)
 	}
 	return nil
 }
@@ -263,19 +270,25 @@ func (r *ComponentRenderer) buildAndRun(workDir string) (string, error) {
 		return "", fmt.Errorf("invalid work directory: %w", err)
 	}
 
+	// Check if go command is available
+	if _, err := exec.LookPath("go"); err != nil {
+		return "", fmt.Errorf("go command not found: %w", err)
+	}
+
 	// Initialize go module if it doesn't exist
-	if _, err := os.Stat(filepath.Join(workDir, "go.mod")); os.IsNotExist(err) {
+	goModPath := filepath.Join(workDir, "go.mod")
+	if _, err := os.Stat(goModPath); os.IsNotExist(err) {
 		cmd := exec.Command("go", "mod", "init", "templar-render")
 		cmd.Dir = workDir
-		if err := cmd.Run(); err != nil {
-			return "", fmt.Errorf("go mod init failed: %w", err)
+		if output, err := cmd.CombinedOutput(); err != nil {
+			return "", fmt.Errorf("go mod init failed in %s: %w\nOutput: %s", workDir, err, output)
 		}
 
 		// Add templ dependency
 		cmd = exec.Command("go", "get", "github.com/a-h/templ")
 		cmd.Dir = workDir
-		if err := cmd.Run(); err != nil {
-			return "", fmt.Errorf("go get templ failed: %w", err)
+		if output, err := cmd.CombinedOutput(); err != nil {
+			return "", fmt.Errorf("go get templ failed in %s: %w\nOutput: %s", workDir, err, output)
 		}
 	}
 
@@ -284,7 +297,7 @@ func (r *ComponentRenderer) buildAndRun(workDir string) (string, error) {
 	cmd.Dir = workDir
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("go run failed: %w\nOutput: %s", err, output)
+		return "", fmt.Errorf("go run failed in %s: %w\nOutput: %s", workDir, err, output)
 	}
 
 	return string(output), nil

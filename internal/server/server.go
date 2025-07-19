@@ -252,6 +252,14 @@ func (s *PreviewServer) addMiddleware(handler http.Handler) http.Handler {
 	securityConfig := SecurityConfigFromAppConfig(s.config)
 	securityHandler := SecurityMiddleware(securityConfig)(handler)
 	
+	// Create rate limiting middleware
+	rateLimitConfig := securityConfig.RateLimiting
+	if rateLimitConfig != nil && rateLimitConfig.Enabled {
+		rateLimiter := NewRateLimiter(rateLimitConfig, nil)
+		rateLimitHandler := RateLimitMiddleware(rateLimiter)(securityHandler)
+		securityHandler = rateLimitHandler
+	}
+	
 	// Add CORS and logging middleware
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// CORS headers based on environment
