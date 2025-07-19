@@ -17,6 +17,7 @@ import (
 	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/renderer"
 	"github.com/conneroisu/templar/internal/scanner"
+	"github.com/conneroisu/templar/internal/validation"
 	"github.com/conneroisu/templar/internal/version"
 	"github.com/conneroisu/templar/internal/watcher"
 	"nhooyr.io/websocket"
@@ -229,6 +230,12 @@ func (s *PreviewServer) handleFileChange(events []watcher.ChangeEvent) error {
 
 func (s *PreviewServer) openBrowser(url string) {
 	time.Sleep(100 * time.Millisecond) // Give server time to start
+
+	// Validate URL for security before passing to system commands
+	if err := validation.ValidateURL(url); err != nil {
+		log.Printf("Browser open failed due to invalid URL: %v", err)
+		return
+	}
 
 	var err error
 	switch runtime.GOOS {

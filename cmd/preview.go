@@ -140,6 +140,11 @@ func runPreview(cmd *cobra.Command, args []string) error {
 }
 
 func loadMockData(mockFile string) (map[string]interface{}, error) {
+	// Validate mock file path for security
+	if err := validateMockFilePath(mockFile); err != nil {
+		return nil, fmt.Errorf("invalid mock file path: %w", err)
+	}
+
 	data, err := os.ReadFile(mockFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read mock file: %w", err)
@@ -352,4 +357,40 @@ func formatJSON(data interface{}) string {
 		return fmt.Sprintf("Error formatting JSON: %v", err)
 	}
 	return string(jsonData)
+}
+
+// validateMockFilePath validates mock file paths to prevent security vulnerabilities
+func validateMockFilePath(mockFile string) error {
+	if mockFile == "" {
+		return fmt.Errorf("empty mock file path")
+	}
+
+	// Clean the path
+	cleanPath := filepath.Clean(mockFile)
+
+	// Reject path traversal attempts
+	if strings.Contains(cleanPath, "..") {
+		return fmt.Errorf("path traversal attempt detected: %s", mockFile)
+	}
+
+	// Only allow relative paths within the current directory and its subdirectories
+	if filepath.IsAbs(cleanPath) {
+		return fmt.Errorf("absolute paths not allowed: %s", mockFile)
+	}
+
+	// Reject dangerous characters that could be used for injection
+	dangerousChars := []string{";", "&", "|", "$", "`", "(", ")", "<", ">", "\"", "'", "\\"}
+	for _, char := range dangerousChars {
+		if strings.Contains(cleanPath, char) {
+			return fmt.Errorf("path contains dangerous character '%s': %s", char, mockFile)
+		}
+	}
+
+	// Limit file extension to JSON for security
+	ext := strings.ToLower(filepath.Ext(cleanPath))
+	if ext != ".json" {
+		return fmt.Errorf("only JSON files are allowed for mock data: %s", mockFile)
+	}
+
+	return nil
 }

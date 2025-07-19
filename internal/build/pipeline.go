@@ -29,6 +29,10 @@ type BuildPipeline struct {
 	workerWg    sync.WaitGroup
 	resultWg    sync.WaitGroup
 	cancel      context.CancelFunc
+	// Object pools for memory optimization
+	objectPools *ObjectPools
+	slicePools  *SlicePools
+	workerPool  *WorkerPool
 }
 
 // BuildTask represents a build task
@@ -137,6 +141,10 @@ func NewBuildPipeline(workers int, registry *registry.ComponentRegistry) *BuildP
 		errorParser: errors.NewErrorParser(),
 		metrics:     metrics,
 		callbacks:   make([]BuildCallback, 0),
+		// Initialize object pools for memory optimization
+		objectPools: NewObjectPools(),
+		slicePools:  NewSlicePools(),
+		workerPool:  NewWorkerPool(),
 	}
 }
 
@@ -245,20 +253,23 @@ func (bp *BuildPipeline) processBuildTask(task BuildTask) {
 
 	// Check cache first
 	if result, found := bp.cache.Get(contentHash); found {
-		bp.queue.results <- BuildResult{
-			Component:    task.Component,
-			Output:       result,
-			Error:        nil,
-			ParsedErrors: nil,
-			Duration:     time.Since(start),
-			CacheHit:     true,
-			Hash:         contentHash,
-		}
+		// Use object pool for cache hit result
+		buildResult := bp.objectPools.GetBuildResult()
+		buildResult.Component = task.Component
+		buildResult.Output = result
+		buildResult.Error = nil
+		buildResult.ParsedErrors = nil
+		buildResult.Duration = time.Since(start)
+		buildResult.CacheHit = true
+		buildResult.Hash = contentHash
+		
+		bp.queue.results <- *buildResult
+		bp.objectPools.PutBuildResult(buildResult)
 		return
 	}
 
-	// Execute build
-	output, err := bp.compiler.Compile(task.Component)
+	// Execute build with pooled output buffer
+	output, err := bp.compiler.CompileWithPools(task.Component, bp.objectPools)
 
 	// Parse errors if build failed
 	var parsedErrors []*errors.ParsedError
@@ -266,22 +277,23 @@ func (bp *BuildPipeline) processBuildTask(task BuildTask) {
 		parsedErrors = bp.errorParser.ParseError(string(output))
 	}
 
-	result := BuildResult{
-		Component:    task.Component,
-		Output:       output,
-		Error:        err,
-		ParsedErrors: parsedErrors,
-		Duration:     time.Since(start),
-		CacheHit:     false,
-		Hash:         contentHash,
-	}
+	// Use object pool for build result
+	buildResult := bp.objectPools.GetBuildResult()
+	buildResult.Component = task.Component
+	buildResult.Output = output
+	buildResult.Error = err
+	buildResult.ParsedErrors = parsedErrors
+	buildResult.Duration = time.Since(start)
+	buildResult.CacheHit = false
+	buildResult.Hash = contentHash
 
 	// Cache successful builds
 	if err == nil {
 		bp.cache.Set(contentHash, output)
 	}
 
-	bp.queue.results <- result
+	bp.queue.results <- *buildResult
+	bp.objectPools.PutBuildResult(buildResult)
 }
 
 func (bp *BuildPipeline) processResults(ctx context.Context) {
@@ -341,6 +353,41 @@ func (tc *TemplCompiler) Compile(component *registry.ComponentInfo) ([]byte, err
 	}
 
 	return output, nil
+}
+
+// CompileWithPools performs compilation using object pools for memory efficiency
+func (tc *TemplCompiler) CompileWithPools(component *registry.ComponentInfo, pools *ObjectPools) ([]byte, error) {
+	// Validate command and arguments to prevent command injection
+	if err := tc.validateCommand(); err != nil {
+		return nil, fmt.Errorf("command validation failed: %w", err)
+	}
+
+	// Get pooled buffer for output
+	outputBuffer := pools.GetOutputBuffer()
+	defer pools.PutOutputBuffer(outputBuffer)
+
+	// Run templ generate command
+	cmd := exec.Command(tc.command, tc.args...)
+	cmd.Dir = "." // Run in current directory
+
+	// Use pooled buffers for command output
+	var stdout, stderr []byte
+	var err error
+	
+	if output, cmdErr := cmd.CombinedOutput(); cmdErr != nil {
+		// Copy output to our buffer to avoid keeping the original allocation
+		outputBuffer = append(outputBuffer, output...)
+		err = fmt.Errorf("templ generate failed: %w\nOutput: %s", cmdErr, outputBuffer)
+		return nil, err
+	} else {
+		// Copy successful output to our buffer
+		outputBuffer = append(outputBuffer, output...)
+	}
+
+	// Return a copy of the buffer content (caller owns this memory)
+	result := make([]byte, len(outputBuffer))
+	copy(result, outputBuffer)
+	return result, nil
 }
 
 // validateCommand validates the command and arguments to prevent command injection
