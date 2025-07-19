@@ -1,0 +1,21 @@
+server:
+  port: 8080
+  host: "localhost"
+  open: true
+
+components:
+  scan_paths: 
+    - "./components"
+    - "./layouts"
+  exclude_patterns:
+    - "*_test.templ"
+    - "*.backup"
+
+build:
+  command: "templ generate"
+  watch: ["**/*.templ", "**/*.go"]
+  cache_dir: ".templar/cache"
+
+development:
+  hot_reload: true
+  error_overlay: true

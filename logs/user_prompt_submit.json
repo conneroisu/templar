@@ -327,5 +327,54 @@
     "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
     "hook_event_name": "UserPromptSubmit",
     "prompt": "continue"
+  },
+  {
+    "session_id": "8e6737a7-4309-4012-bf3d-69084fa0ffb2",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/8e6737a7-4309-4012-bf3d-69084fa0ffb2.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "UserPromptSubmit",
+    "prompt": "continue"
+  },
+  {
+    "session_id": "3bfa3df1-7f70-4557-86f7-6812c1e40ac4",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/3bfa3df1-7f70-4557-86f7-6812c1e40ac4.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "UserPromptSubmit",
+    "prompt": "continue"
+  },
+  {
+    "session_id": "91c1aab5-fbfe-40ba-8a9f-98f5bbd841cc",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/91c1aab5-fbfe-40ba-8a9f-98f5bbd841cc.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "UserPromptSubmit",
+    "prompt": "continue"
+  },
+  {
+    "session_id": "91c1aab5-fbfe-40ba-8a9f-98f5bbd841cc",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/91c1aab5-fbfe-40ba-8a9f-98f5bbd841cc.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "UserPromptSubmit",
+    "prompt": "Verify Tests Pass"
+  },
+  {
+    "session_id": "0bfdd2a9-a9a8-47c7-bf04-457b74a8618c",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/0bfdd2a9-a9a8-47c7-bf04-457b74a8618c.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "UserPromptSubmit",
+    "prompt": "continue"
+  },
+  {
+    "session_id": "82bf7a3b-955e-42bf-9581-1918307e72bb",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/82bf7a3b-955e-42bf-9581-1918307e72bb.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "UserPromptSubmit",
+    "prompt": "continue"
+  },
+  {
+    "session_id": "71b3da67-5093-408d-80cd-99b7774a8a43",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/71b3da67-5093-408d-80cd-99b7774a8a43.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "UserPromptSubmit",
+    "prompt": "continue"
   }
 ]
