@@ -23,20 +23,20 @@ type RateLimiter struct {
 
 // TokenBucket represents a token bucket for rate limiting
 type TokenBucket struct {
-	tokens       int
-	capacity     int
-	refillRate   int           // tokens per minute
-	lastRefill   time.Time
-	mutex        sync.Mutex
-	lastAccess   time.Time
+	tokens     int
+	capacity   int
+	refillRate int // tokens per minute
+	lastRefill time.Time
+	mutex      sync.Mutex
+	lastAccess time.Time
 }
 
 // RateLimitResult represents the result of a rate limit check
 type RateLimitResult struct {
-	Allowed       bool
-	Remaining     int
-	RetryAfter    time.Duration
-	ResetTime     time.Time
+	Allowed    bool
+	Remaining  int
+	RetryAfter time.Duration
+	ResetTime  time.Time
 }
 
 // NewRateLimiter creates a new rate limiter
@@ -223,19 +223,19 @@ func RateLimitMiddleware(limiter *RateLimiter) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Extract client IP
 			clientIP := getClientIP(r)
-			
+
 			// Check rate limit
 			result := limiter.Check(clientIP)
-			
+
 			// Set rate limit headers
 			w.Header().Set("X-RateLimit-Limit", fmt.Sprintf("%d", limiter.config.RequestsPerMinute))
 			w.Header().Set("X-RateLimit-Remaining", fmt.Sprintf("%d", result.Remaining))
 			w.Header().Set("X-RateLimit-Reset", fmt.Sprintf("%d", result.ResetTime.Unix()))
-			
+
 			if !result.Allowed {
 				// Set retry after header
 				w.Header().Set("Retry-After", fmt.Sprintf("%.0f", result.RetryAfter.Seconds()))
-				
+
 				// Log rate limit exceeded
 				if limiter.logger != nil {
 					limiter.logger.Warn(r.Context(),
@@ -246,12 +246,12 @@ func RateLimitMiddleware(limiter *RateLimiter) func(http.Handler) http.Handler {
 						"path", r.URL.Path,
 						"method", r.Method)
 				}
-				
+
 				// Return 429 Too Many Requests
 				http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
 				return
 			}
-			
+
 			next.ServeHTTP(w, r)
 		})
 	}
@@ -260,19 +260,19 @@ func RateLimitMiddleware(limiter *RateLimiter) func(http.Handler) http.Handler {
 // AdaptiveRateLimiter implements adaptive rate limiting based on system load
 type AdaptiveRateLimiter struct {
 	*RateLimiter
-	loadThreshold    float64
-	reductionFactor  float64
-	checkInterval    time.Duration
-	lastCheck        time.Time
-	currentLimit     int
-	baseLimit        int
-	adjustmentMutex  sync.RWMutex
+	loadThreshold   float64
+	reductionFactor float64
+	checkInterval   time.Duration
+	lastCheck       time.Time
+	currentLimit    int
+	baseLimit       int
+	adjustmentMutex sync.RWMutex
 }
 
 // NewAdaptiveRateLimiter creates a new adaptive rate limiter
 func NewAdaptiveRateLimiter(config *RateLimitConfig, logger logging.Logger) *AdaptiveRateLimiter {
 	baseLimiter := NewRateLimiter(config, logger)
-	
+
 	return &AdaptiveRateLimiter{
 		RateLimiter:     baseLimiter,
 		loadThreshold:   0.8, // 80% load threshold
@@ -309,7 +309,7 @@ func (arl *AdaptiveRateLimiter) adjustLimitsIfNeeded() {
 		if newLimit != arl.currentLimit {
 			arl.currentLimit = newLimit
 			arl.config.RequestsPerMinute = newLimit
-			
+
 			if arl.logger != nil {
 				arl.logger.Warn(context.Background(), nil,
 					"Rate limit reduced due to high load",
@@ -323,7 +323,7 @@ func (arl *AdaptiveRateLimiter) adjustLimitsIfNeeded() {
 		if arl.currentLimit != arl.baseLimit {
 			arl.currentLimit = arl.baseLimit
 			arl.config.RequestsPerMinute = arl.baseLimit
-			
+
 			if arl.logger != nil {
 				arl.logger.Info(context.Background(),
 					"Rate limit restored to normal",
@@ -355,7 +355,7 @@ func NewIPWhitelist(ips []string) *IPWhitelist {
 	for _, ip := range ips {
 		whitelist[ip] = true
 	}
-	
+
 	return &IPWhitelist{
 		whitelist: whitelist,
 	}
@@ -387,13 +387,13 @@ func WhitelistMiddleware(whitelist *IPWhitelist, rateLimitHandler http.Handler) 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			clientIP := getClientIP(r)
-			
+
 			if whitelist.IsWhitelisted(clientIP) {
 				// Bypass rate limiting
 				next.ServeHTTP(w, r)
 				return
 			}
-			
+
 			// Apply rate limiting
 			rateLimitHandler.ServeHTTP(w, r)
 		})
@@ -402,13 +402,13 @@ func WhitelistMiddleware(whitelist *IPWhitelist, rateLimitHandler http.Handler) 
 
 // DDoSProtection implements basic DDoS protection
 type DDoSProtection struct {
-	rateLimiter     *RateLimiter
-	suspiciousIPs   map[string]*SuspiciousIP
-	mutex           sync.RWMutex
-	blockDuration   time.Duration
+	rateLimiter      *RateLimiter
+	suspiciousIPs    map[string]*SuspiciousIP
+	mutex            sync.RWMutex
+	blockDuration    time.Duration
 	requestThreshold int
-	timeWindow      time.Duration
-	logger          logging.Logger
+	timeWindow       time.Duration
+	logger           logging.Logger
 }
 
 // SuspiciousIP tracks suspicious IP activity
@@ -438,7 +438,7 @@ func (ddos *DDoSProtection) CheckRequest(ip string) bool {
 	defer ddos.mutex.Unlock()
 
 	now := time.Now()
-	
+
 	// Get or create suspicious IP entry
 	suspIP, exists := ddos.suspiciousIPs[ip]
 	if !exists {
@@ -477,7 +477,7 @@ func (ddos *DDoSProtection) CheckRequest(ip string) bool {
 	if suspIP.requestCount > ddos.requestThreshold {
 		suspIP.blocked = true
 		suspIP.blockUntil = now.Add(ddos.blockDuration)
-		
+
 		if ddos.logger != nil {
 			ddos.logger.Error(context.Background(),
 				errors.NewSecurityError("DDOS_PROTECTION_TRIGGERED", "DDoS protection triggered"),
@@ -487,7 +487,7 @@ func (ddos *DDoSProtection) CheckRequest(ip string) bool {
 				"time_window", ddos.timeWindow.String(),
 				"block_duration", ddos.blockDuration.String())
 		}
-		
+
 		return false
 	}
 
@@ -516,12 +516,12 @@ func DDoSMiddleware(ddos *DDoSProtection) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			clientIP := getClientIP(r)
-			
+
 			if !ddos.CheckRequest(clientIP) {
 				http.Error(w, "Too Many Requests - Blocked", http.StatusTooManyRequests)
 				return
 			}
-			
+
 			next.ServeHTTP(w, r)
 		})
 	}

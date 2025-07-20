@@ -578,7 +578,7 @@ templ TestComponent(title string) {
 func TestHealthCommand(t *testing.T) {
 	// Test health command - this should work in test environment
 	// since it doesn't require external dependencies
-	
+
 	// Reset health flags
 	healthPort = 8080
 	healthHost = "localhost"

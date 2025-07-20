@@ -69,7 +69,7 @@ func TestLogStructuredError(t *testing.T) {
 	LogStructuredError(mockLogger, context.Background(), structErr)
 
 	assert.Equal(t, "syntax error", capturedMessage)
-	
+
 	// Check that structured fields are included
 	fieldsMap := fieldsToMap(capturedFields)
 	assert.Equal(t, "build", fieldsMap["error_category"])
@@ -154,18 +154,18 @@ func TestNewFileLogger(t *testing.T) {
 	t.Run("valid directory", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		config := DefaultConfig()
-		
+
 		fileLogger, err := NewFileLogger(config, tmpDir)
 		require.NoError(t, err)
 		assert.NotNil(t, fileLogger)
-		
+
 		err = fileLogger.Close()
 		assert.NoError(t, err)
 	})
 
 	t.Run("invalid directory with path traversal", func(t *testing.T) {
 		config := DefaultConfig()
-		
+
 		_, err := NewFileLogger(config, "../../../etc")
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "path traversal")
@@ -173,7 +173,7 @@ func TestNewFileLogger(t *testing.T) {
 
 	t.Run("empty directory", func(t *testing.T) {
 		config := DefaultConfig()
-		
+
 		_, err := NewFileLogger(config, "")
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "cannot be empty")
@@ -186,8 +186,8 @@ type mockLogger struct {
 	errorFunc      func(ctx context.Context, err error, msg string, fields ...interface{})
 }
 
-func (m *mockLogger) Debug(ctx context.Context, msg string, fields ...interface{}) {}
-func (m *mockLogger) Info(ctx context.Context, msg string, fields ...interface{})  {}
+func (m *mockLogger) Debug(ctx context.Context, msg string, fields ...interface{})           {}
+func (m *mockLogger) Info(ctx context.Context, msg string, fields ...interface{})            {}
 func (m *mockLogger) Warn(ctx context.Context, err error, msg string, fields ...interface{}) {}
 func (m *mockLogger) Error(ctx context.Context, err error, msg string, fields ...interface{}) {
 	m.errorCallCount++

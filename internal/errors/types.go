@@ -11,7 +11,7 @@ type ErrorType string
 
 const (
 	ErrorTypeValidation ErrorType = "validation"
-	ErrorTypeSecurity   ErrorType = "security" 
+	ErrorTypeSecurity   ErrorType = "security"
 	ErrorTypeIO         ErrorType = "io"
 	ErrorTypeNetwork    ErrorType = "network"
 	ErrorTypeBuild      ErrorType = "build"
@@ -21,30 +21,30 @@ const (
 
 // TemplarError is a structured error type with context
 type TemplarError struct {
-	Type       ErrorType
-	Code       string
-	Message    string
-	Cause      error
-	Context    map[string]interface{}
-	Component  string
-	FilePath   string
-	Line       int
-	Column     int
+	Type        ErrorType
+	Code        string
+	Message     string
+	Cause       error
+	Context     map[string]interface{}
+	Component   string
+	FilePath    string
+	Line        int
+	Column      int
 	Recoverable bool
 }
 
 // Error implements the error interface
 func (e *TemplarError) Error() string {
 	var parts []string
-	
+
 	if e.Code != "" {
 		parts = append(parts, fmt.Sprintf("[%s]", e.Code))
 	}
-	
+
 	if e.Component != "" {
 		parts = append(parts, fmt.Sprintf("component:%s", e.Component))
 	}
-	
+
 	if e.FilePath != "" {
 		location := e.FilePath
 		if e.Line > 0 {
@@ -55,15 +55,15 @@ func (e *TemplarError) Error() string {
 		}
 		parts = append(parts, location)
 	}
-	
+
 	parts = append(parts, e.Message)
-	
+
 	result := strings.Join(parts, " ")
-	
+
 	if e.Cause != nil {
 		result += fmt.Sprintf(": %v", e.Cause)
 	}
-	
+
 	return result
 }
 
@@ -196,7 +196,7 @@ func IsBuildError(err error) bool {
 
 // ErrorHandler provides centralized error handling
 type ErrorHandler struct {
-	logger Logger
+	logger   Logger
 	notifier Notifier
 }
 
@@ -224,7 +224,7 @@ func (h *ErrorHandler) Handle(ctx context.Context, err error) {
 	if err == nil {
 		return
 	}
-	
+
 	if te, ok := err.(*TemplarError); ok {
 		h.handleTemplarError(ctx, te)
 	} else {
@@ -236,8 +236,8 @@ func (h *ErrorHandler) handleTemplarError(ctx context.Context, err *TemplarError
 	switch err.Type {
 	case ErrorTypeSecurity:
 		if h.logger != nil {
-			h.logger.Error(ctx, err, "Security error occurred", 
-				"type", err.Type, 
+			h.logger.Error(ctx, err, "Security error occurred",
+				"type", err.Type,
 				"code", err.Code,
 				"component", err.Component)
 		}
@@ -277,16 +277,16 @@ func (h *ErrorHandler) handleGenericError(ctx context.Context, err error) {
 
 // Common error codes
 const (
-	ErrCodeInvalidPath        = "ERR_INVALID_PATH"
-	ErrCodePathTraversal      = "ERR_PATH_TRAVERSAL"
-	ErrCodeCommandInjection   = "ERR_COMMAND_INJECTION"
-	ErrCodeInvalidOrigin      = "ERR_INVALID_ORIGIN"
-	ErrCodeComponentNotFound  = "ERR_COMPONENT_NOT_FOUND"
-	ErrCodeBuildFailed        = "ERR_BUILD_FAILED"
-	ErrCodeConfigInvalid      = "ERR_CONFIG_INVALID"
-	ErrCodeFileNotFound       = "ERR_FILE_NOT_FOUND"
-	ErrCodePermissionDenied   = "ERR_PERMISSION_DENIED"
-	ErrCodeInternalError      = "ERR_INTERNAL"
+	ErrCodeInvalidPath       = "ERR_INVALID_PATH"
+	ErrCodePathTraversal     = "ERR_PATH_TRAVERSAL"
+	ErrCodeCommandInjection  = "ERR_COMMAND_INJECTION"
+	ErrCodeInvalidOrigin     = "ERR_INVALID_ORIGIN"
+	ErrCodeComponentNotFound = "ERR_COMPONENT_NOT_FOUND"
+	ErrCodeBuildFailed       = "ERR_BUILD_FAILED"
+	ErrCodeConfigInvalid     = "ERR_CONFIG_INVALID"
+	ErrCodeFileNotFound      = "ERR_FILE_NOT_FOUND"
+	ErrCodePermissionDenied  = "ERR_PERMISSION_DENIED"
+	ErrCodeInternalError     = "ERR_INTERNAL"
 )
 
 // Helper functions for common errors

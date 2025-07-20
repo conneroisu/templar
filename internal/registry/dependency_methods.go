@@ -28,4 +28,3 @@ func (r *ComponentRegistry) GetDependencyGraph() map[string][]string {
 	}
 	return r.dependencyAnalyzer.GetDependencyGraph()
 }
-

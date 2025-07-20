@@ -22,12 +22,12 @@ func setupTestWebSocketServer(t *testing.T) *PreviewServer {
 	}
 
 	server := &PreviewServer{
-		config:       cfg,
-		clients:      make(map[*websocket.Conn]*Client),
-		broadcast:    make(chan []byte),
-		register:     make(chan *Client),
-		unregister:   make(chan *websocket.Conn),
-		registry:     registry.NewComponentRegistry(),
+		config:     cfg,
+		clients:    make(map[*websocket.Conn]*Client),
+		broadcast:  make(chan []byte),
+		register:   make(chan *Client),
+		unregister: make(chan *websocket.Conn),
+		registry:   registry.NewComponentRegistry(),
 	}
 
 	return server
@@ -153,7 +153,7 @@ func TestWebSocketHub(t *testing.T) {
 
 	t.Run("context cancellation", func(t *testing.T) {
 		testCtx, testCancel := context.WithCancel(context.Background())
-		
+
 		// Start a new hub with test context
 		hubDone := make(chan bool)
 		go func() {
@@ -224,7 +224,7 @@ func TestWebSocketHandlerOriginValidation(t *testing.T) {
 
 func TestBroadcastMessage(t *testing.T) {
 	server := setupTestWebSocketServer(t)
-	
+
 	msg := UpdateMessage{
 		Type:      "test",
 		Target:    "component",
@@ -237,14 +237,14 @@ func TestBroadcastMessage(t *testing.T) {
 
 	// Test with invalid JSON (should fallback to simple reload)
 	server.broadcast = make(chan []byte, 1)
-	
+
 	// Create a message that will cause JSON marshaling to fail
 	invalidMsg := UpdateMessage{
 		Content: string([]byte{0xff, 0xfe, 0xfd}), // Invalid UTF-8
 	}
-	
+
 	server.broadcastMessage(invalidMsg)
-	
+
 	// Should receive fallback message
 	select {
 	case message := <-server.broadcast:

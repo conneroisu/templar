@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"testing"
 	"github.com/conneroisu/templar/internal/validation"
+	"testing"
 )
 
 func TestValidateArgument(t *testing.T) {
@@ -33,7 +33,7 @@ func TestValidateArgument(t *testing.T) {
 			arg:         "/usr/local/bin/templ",
 			expectError: false,
 		},
-		
+
 		// Command injection attempts
 		{
 			name:        "semicolon injection",
@@ -119,7 +119,7 @@ func TestValidateArgument(t *testing.T) {
 			expectError: true,
 			errorMsg:    "contains dangerous character: \\",
 		},
-		
+
 		// Path traversal attempts
 		{
 			name:        "simple path traversal",
@@ -139,7 +139,7 @@ func TestValidateArgument(t *testing.T) {
 			expectError: true,
 			errorMsg:    "path traversal attempt detected",
 		},
-		
+
 		// Suspicious absolute paths
 		{
 			name:        "etc directory access",
@@ -164,7 +164,7 @@ func TestValidateArgument(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := validateArgument(tt.arg)
-			
+
 			if tt.expectError {
 				if err == nil {
 					t.Errorf("Expected error for argument '%s', but got none", tt.arg)
@@ -231,7 +231,7 @@ func TestValidateCommand(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := validateCommand(tt.command, allowedCommands)
-			
+
 			if tt.expectError {
 				if err == nil {
 					t.Errorf("Expected error for command '%s', but got none", tt.command)
@@ -280,7 +280,7 @@ func TestValidateURL(t *testing.T) {
 			url:         "http://127.0.0.1:3000",
 			expectError: false,
 		},
-		
+
 		// Invalid URL structure
 		{
 			name:        "malformed URL",
@@ -293,7 +293,7 @@ func TestValidateURL(t *testing.T) {
 			expectError: true,
 			errorMsg:    "URL must have a valid hostname",
 		},
-		
+
 		// Dangerous schemes
 		{
 			name:        "javascript scheme",
@@ -319,7 +319,7 @@ func TestValidateURL(t *testing.T) {
 			expectError: true,
 			errorMsg:    "invalid URL scheme: ftp (only http/https allowed)",
 		},
-		
+
 		// Command injection attempts (caught by URL parser)
 		{
 			name:        "semicolon injection",
@@ -381,25 +381,25 @@ func TestValidateURL(t *testing.T) {
 			expectError: true,
 			// URL parser catches this as control character
 		},
-		
+
 		// More sophisticated injection attempts that might pass URL parsing
 		{
 			name:        "query parameter injection",
 			url:         "http://localhost:8080/?cmd=;rm+-rf+/",
 			expectError: true,
-			errorMsg:    "URL contains dangerous character: ;",
+			errorMsg:    "URL contains shell metacharacter ';' (potential command injection)",
 		},
 		{
 			name:        "fragment injection",
 			url:         "http://localhost:8080/#;rm+-rf+/",
 			expectError: true,
-			errorMsg:    "URL contains dangerous character: ;",
+			errorMsg:    "URL contains shell metacharacter ';' (potential command injection)",
 		},
 		{
 			name:        "path injection with dangerous chars",
 			url:         "http://localhost:8080/path;rm+-rf+/",
 			expectError: true,
-			errorMsg:    "URL contains dangerous character: ;",
+			errorMsg:    "URL contains shell metacharacter ';' (potential command injection)",
 		},
 		{
 			name:        "URL with legitimate spaces encoded",
@@ -411,7 +411,7 @@ func TestValidateURL(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := validation.ValidateURL(tt.url)
-			
+
 			if tt.expectError {
 				if err == nil {
 					t.Errorf("Expected error for URL '%s', but got none", tt.url)
@@ -461,7 +461,7 @@ func TestValidateArguments(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := validateArguments(tt.args)
-			
+
 			if tt.expectError {
 				if err == nil {
 					t.Errorf("Expected error for arguments %v, but got none", tt.args)
@@ -497,7 +497,7 @@ func BenchmarkValidateArgumentsLarge(b *testing.B) {
 	for i := range args {
 		args[i] = "component.templ"
 	}
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		validateArguments(args)

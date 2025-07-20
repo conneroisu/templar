@@ -37,12 +37,12 @@ func TestTokenBucket_Refill(t *testing.T) {
 	bucket := &TokenBucket{
 		tokens:     0,
 		capacity:   10,
-		refillRate: 60, // 60 tokens per minute
+		refillRate: 60,                               // 60 tokens per minute
 		lastRefill: time.Now().Add(-2 * time.Minute), // 2 minutes ago
 	}
 
 	result := bucket.consume()
-	
+
 	// Should have refilled and allowed request
 	assert.True(t, result.Allowed)
 	assert.Greater(t, result.Remaining, 0)
@@ -57,7 +57,7 @@ func TestTokenBucket_RefillCap(t *testing.T) {
 	}
 
 	bucket.refill(time.Now())
-	
+
 	// Should not exceed capacity
 	assert.Equal(t, 10, bucket.tokens)
 }
@@ -146,7 +146,7 @@ func TestRateLimiter_Concurrent(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			result := limiter.Check("192.168.1.1")
-			
+
 			mu.Lock()
 			if result.Allowed {
 				allowedCount++
@@ -190,7 +190,7 @@ func TestRateLimitMiddleware(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Equal(t, "60", w.Header().Get("X-RateLimit-Limit"))
-		
+
 		// Remaining should decrease with each request
 		expectedRemaining := fmt.Sprintf("%d", 2-i)
 		assert.Equal(t, expectedRemaining, w.Header().Get("X-RateLimit-Remaining"))
@@ -263,7 +263,7 @@ func TestWhitelistMiddleware(t *testing.T) {
 	defer limiter.Stop()
 
 	whitelist := NewIPWhitelist([]string{"192.168.1.100"})
-	
+
 	rateLimitHandler := RateLimitMiddleware(limiter)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
@@ -320,7 +320,7 @@ func TestAdaptiveRateLimiter(t *testing.T) {
 
 	// Force adjustment check
 	limiter.adjustLimitsIfNeeded()
-	
+
 	// Should have reduced limit due to high load
 	assert.Less(t, limiter.GetCurrentLimit(), 100)
 }
@@ -347,7 +347,7 @@ func TestDDoSProtection(t *testing.T) {
 	// Test excessive requests that should trigger protection
 	ip := "192.168.1.2"
 	var blockedCount int
-	
+
 	for i := 0; i < 1500; i++ {
 		if !ddos.CheckRequest(ip) {
 			blockedCount++
@@ -355,7 +355,7 @@ func TestDDoSProtection(t *testing.T) {
 	}
 
 	assert.Greater(t, blockedCount, 0)
-	
+
 	// Check that IP is in blocked list
 	blockedIPs := ddos.GetBlockedIPs()
 	assert.Contains(t, blockedIPs, ip)

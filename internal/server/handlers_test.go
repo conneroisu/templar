@@ -28,7 +28,7 @@ func setupTestServer(t *testing.T) *PreviewServer {
 	}
 
 	reg := registry.NewComponentRegistry()
-	
+
 	// Add test components
 	testComponent := &registry.ComponentInfo{
 		Name:     "TestButton",
@@ -78,7 +78,7 @@ func TestHandleComponents(t *testing.T) {
 	var components []*registry.ComponentInfo
 	err := json.Unmarshal(w.Body.Bytes(), &components)
 	require.NoError(t, err)
-	
+
 	assert.Len(t, components, 1)
 	assert.Equal(t, "TestButton", components[0].Name)
 	assert.Equal(t, "/test/button.templ", components[0].FilePath)
@@ -100,7 +100,7 @@ func TestHandleComponent(t *testing.T) {
 		var component registry.ComponentInfo
 		err := json.Unmarshal(w.Body.Bytes(), &component)
 		require.NoError(t, err)
-		
+
 		assert.Equal(t, "TestButton", component.Name)
 		assert.Equal(t, "/test/button.templ", component.FilePath)
 	})
@@ -325,7 +325,7 @@ func TestValidateComponentName(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := validateComponentName(tt.input)
-			
+
 			if tt.expectError {
 				assert.Error(t, err)
 				if tt.errorText != "" {
@@ -359,7 +359,7 @@ func TestRenderComponentSelection(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, "text/html", w.Header().Get("Content-Type"))
-	
+
 	body := w.Body.String()
 	assert.Contains(t, body, "Select Component from test.templ")
 	assert.Contains(t, body, "Button")
@@ -391,7 +391,7 @@ func TestRenderFileSelection(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, "text/html", w.Header().Get("Content-Type"))
-	
+
 	body := w.Body.String()
 	assert.Contains(t, body, "Select File to Preview")
 	assert.Contains(t, body, "button.templ")

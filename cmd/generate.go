@@ -204,7 +204,7 @@ type %sProps struct {
 `, component.Name, component.Name, component.Name)
 
 	for _, param := range component.Parameters {
-		content += fmt.Sprintf("\t%s %s `json:\"%s\"`\n", 
+		content += fmt.Sprintf("\t%s %s `json:\"%s\"`\n",
 			strings.Title(param.Name), param.Type, param.Name)
 	}
 
@@ -294,7 +294,7 @@ func generateDocumentation(component *registry.ComponentInfo, outputDir string, 
 			if param.Default != nil {
 				defaultVal = fmt.Sprintf("%v", param.Default)
 			}
-			content += fmt.Sprintf("| %s | %s | %s | %s |\n", 
+			content += fmt.Sprintf("| %s | %s | %s | %s |\n",
 				param.Name, param.Type, optional, defaultVal)
 		}
 		content += "\n"
@@ -310,7 +310,7 @@ func generateDocumentation(component *registry.ComponentInfo, outputDir string, 
 
 	content += "## Usage\n\n"
 	content += fmt.Sprintf("```templ\n@%s(", component.Name)
-	
+
 	if len(component.Parameters) > 0 {
 		for i, param := range component.Parameters {
 			if i > 0 {
@@ -319,7 +319,7 @@ func generateDocumentation(component *registry.ComponentInfo, outputDir string, 
 			content += fmt.Sprintf("%s: %s", param.Name, generateExampleValue(param.Type))
 		}
 	}
-	
+
 	content += ")\n```\n"
 
 	if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {

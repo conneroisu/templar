@@ -225,7 +225,6 @@ func validateBuildCommand(command string, args []string) error {
 	return nil
 }
 
-
 func runProductionBuild(cfg *config.Config) error {
 	// Run go build with optimizations
 	cmd := exec.Command("go", "build", "-ldflags", "-s -w", "-o", "main", ".")

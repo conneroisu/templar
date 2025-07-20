@@ -24,35 +24,35 @@ func NewDependencyAnalyzer(registry *ComponentRegistry) *DependencyAnalyzer {
 // AnalyzeComponent analyzes dependencies for a single component
 func (da *DependencyAnalyzer) AnalyzeComponent(component *ComponentInfo) ([]string, error) {
 	dependencies := make([]string, 0)
-	
+
 	// Read and parse the component file
 	fset := token.NewFileSet()
 	node, err := parser.ParseFile(fset, component.FilePath, nil, parser.ParseComments)
 	if err != nil {
 		return dependencies, fmt.Errorf("failed to parse file %s: %w", component.FilePath, err)
 	}
-	
+
 	// Find templ component calls in the AST
 	visitor := &dependencyVisitor{
 		registry:     da.registry,
 		dependencies: make(map[string]bool),
 		currentComp:  component.Name,
 	}
-	
+
 	ast.Walk(visitor, node)
-	
+
 	// Convert map to slice
 	for dep := range visitor.dependencies {
 		dependencies = append(dependencies, dep)
 	}
-	
+
 	return dependencies, nil
 }
 
 // AnalyzeComponentFromContent analyzes dependencies from raw content
 func (da *DependencyAnalyzer) AnalyzeComponentFromContent(content, componentName string) []string {
 	dependencies := make(map[string]bool)
-	
+
 	// Pattern to match component calls in templ syntax
 	// Matches: @ComponentName(...) and ComponentName(...)
 	patterns := []*regexp.Regexp{
@@ -61,14 +61,14 @@ func (da *DependencyAnalyzer) AnalyzeComponentFromContent(content, componentName
 		regexp.MustCompile(`{!\s*([A-Z][a-zA-Z0-9_]*)\s*\(`),    // {! ComponentName(
 		regexp.MustCompile(`templ\s+([A-Z][a-zA-Z0-9_]*)\s*\(`), // templ ComponentName(
 	}
-	
+
 	lines := strings.Split(content, "\n")
 	for _, line := range lines {
 		// Skip comment lines
 		if strings.HasPrefix(strings.TrimSpace(line), "//") {
 			continue
 		}
-		
+
 		for _, pattern := range patterns {
 			matches := pattern.FindAllStringSubmatch(line, -1)
 			for _, match := range matches {
@@ -85,27 +85,27 @@ func (da *DependencyAnalyzer) AnalyzeComponentFromContent(content, componentName
 			}
 		}
 	}
-	
+
 	// Convert to slice
 	result := make([]string, 0, len(dependencies))
 	for dep := range dependencies {
 		result = append(result, dep)
 	}
-	
+
 	return result
 }
 
 // UpdateAllDependencies updates dependencies for all components
 func (da *DependencyAnalyzer) UpdateAllDependencies() error {
 	components := da.registry.GetAll()
-	
+
 	for _, component := range components {
 		deps, err := da.AnalyzeComponent(component)
 		if err != nil {
 			// Log error but continue with other components
 			continue
 		}
-		
+
 		// Update component dependencies
 		da.registry.mutex.Lock()
 		if existing := da.registry.components[component.Name]; existing != nil {
@@ -113,17 +113,17 @@ func (da *DependencyAnalyzer) UpdateAllDependencies() error {
 		}
 		da.registry.mutex.Unlock()
 	}
-	
+
 	return nil
 }
 
 // GetDependents returns components that depend on the given component
 func (da *DependencyAnalyzer) GetDependents(componentName string) []*ComponentInfo {
 	var dependents []*ComponentInfo
-	
+
 	da.registry.mutex.RLock()
 	defer da.registry.mutex.RUnlock()
-	
+
 	for _, component := range da.registry.components {
 		for _, dep := range component.Dependencies {
 			if dep == componentName {
@@ -132,22 +132,22 @@ func (da *DependencyAnalyzer) GetDependents(componentName string) []*ComponentIn
 			}
 		}
 	}
-	
+
 	return dependents
 }
 
 // GetDependencyGraph returns the full dependency graph
 func (da *DependencyAnalyzer) GetDependencyGraph() map[string][]string {
 	graph := make(map[string][]string)
-	
+
 	da.registry.mutex.RLock()
 	defer da.registry.mutex.RUnlock()
-	
+
 	for name, component := range da.registry.components {
 		graph[name] = make([]string, len(component.Dependencies))
 		copy(graph[name], component.Dependencies)
 	}
-	
+
 	return graph
 }
 
@@ -155,11 +155,11 @@ func (da *DependencyAnalyzer) GetDependencyGraph() map[string][]string {
 func (da *DependencyAnalyzer) DetectCircularDependencies() [][]string {
 	var cycles [][]string
 	graph := da.GetDependencyGraph()
-	
+
 	visited := make(map[string]bool)
 	recStack := make(map[string]bool)
 	path := make([]string, 0)
-	
+
 	for component := range graph {
 		if !visited[component] {
 			if cycle := da.detectCycleDFS(component, graph, visited, recStack, path); cycle != nil {
@@ -167,7 +167,7 @@ func (da *DependencyAnalyzer) DetectCircularDependencies() [][]string {
 			}
 		}
 	}
-	
+
 	return cycles
 }
 
@@ -176,7 +176,7 @@ func (da *DependencyAnalyzer) detectCycleDFS(component string, graph map[string]
 	visited[component] = true
 	recStack[component] = true
 	path = append(path, component)
-	
+
 	for _, dep := range graph[component] {
 		if !visited[dep] {
 			if cycle := da.detectCycleDFS(dep, graph, visited, recStack, path); cycle != nil {
@@ -199,7 +199,7 @@ func (da *DependencyAnalyzer) detectCycleDFS(component string, graph map[string]
 			}
 		}
 	}
-	
+
 	recStack[component] = false
 	return nil
 }
@@ -238,6 +238,6 @@ func (v *dependencyVisitor) Visit(node ast.Node) ast.Visitor {
 			}
 		}
 	}
-	
+
 	return v
 }

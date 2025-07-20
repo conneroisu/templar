@@ -6,9 +6,11 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/conneroisu/templar/internal/config"
+	"github.com/conneroisu/templar/internal/errors"
 	"github.com/conneroisu/templar/internal/server"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -44,7 +46,17 @@ func init() {
 func runServe(cmd *cobra.Command, args []string) error {
 	cfg, err := config.Load()
 	if err != nil {
-		return fmt.Errorf("failed to load configuration: %w", err)
+		// Enhanced error for configuration issues
+		ctx := &errors.SuggestionContext{
+			ConfigPath: ".templar.yml",
+		}
+		suggestions := errors.ConfigurationError(err.Error(), ".templar.yml", ctx)
+		enhancedErr := errors.NewEnhancedError(
+			"Failed to load configuration",
+			err,
+			suggestions,
+		)
+		return enhancedErr
 	}
 
 	// Set target files if specified
@@ -52,6 +64,17 @@ func runServe(cmd *cobra.Command, args []string) error {
 
 	srv, err := server.New(cfg)
 	if err != nil {
+		// Check for server creation errors
+		if strings.Contains(err.Error(), "address already in use") || strings.Contains(err.Error(), "bind") {
+			ctx := &errors.SuggestionContext{}
+			suggestions := errors.ServerStartError(err, cfg.Server.Port, ctx)
+			enhancedErr := errors.NewEnhancedError(
+				fmt.Sprintf("Failed to start server on port %d", cfg.Server.Port),
+				err,
+				suggestions,
+			)
+			return enhancedErr
+		}
 		return fmt.Errorf("failed to create server: %w", err)
 	}
 

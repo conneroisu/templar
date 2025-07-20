@@ -2,7 +2,7 @@ package build
 
 import (
 	"sync"
-	
+
 	"github.com/conneroisu/templar/internal/registry"
 )
 
@@ -125,7 +125,7 @@ func (bt *BuildTask) Reset() {
 
 // WorkerPool manages a pool of build workers with their contexts
 type WorkerPool struct {
-	workers sync.Pool
+	workers  sync.Pool
 	contexts sync.Pool
 }
 
@@ -163,7 +163,7 @@ const (
 
 // WorkerContext holds the working context for a build worker
 type WorkerContext struct {
-	TempDir    string
+	TempDir      string
 	OutputBuffer []byte
 	ErrorBuffer  []byte
 	Environment  map[string]string

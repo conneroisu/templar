@@ -1,399 +1,370 @@
 package performance
 
 import (
-	"context"
-	"runtime"
-	"sync"
-	"sync/atomic"
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/conneroisu/templar/internal/build"
+	"github.com/conneroisu/templar/internal/registry"
 )
 
-func TestDefaultOptimizationConfig(t *testing.T) {
-	config := DefaultOptimizationConfig()
-	
-	assert.True(t, config.EnableCPUOptimization)
-	assert.True(t, config.EnableMemoryOptimization)
-	assert.True(t, config.EnableIOOptimization)
-	assert.True(t, config.EnableCacheOptimization)
-	
-	assert.Equal(t, runtime.GOMAXPROCS(0)*4, config.MaxGoroutines)
-	assert.Equal(t, 100, config.GCTargetPercent)
-	assert.Equal(t, runtime.GOMAXPROCS(0)*2, config.IOConcurrencyLimit)
-	assert.Equal(t, 2, config.CacheOptimizationLevel)
-	
-	assert.Equal(t, 5*time.Second, config.MonitoringInterval)
-	assert.Equal(t, 30*time.Second, config.OptimizationInterval)
-	assert.Equal(t, 0.8, config.MemoryThreshold)
-	assert.Equal(t, 0.9, config.CPUThreshold)
+func TestAdaptiveOptimizer(t *testing.T) {
+	monitor := NewPerformanceMonitor(time.Millisecond * 100)
+	registry := registry.NewComponentRegistry()
+	pipeline := build.NewBuildPipeline(2, registry)
+
+	optimizer := NewAdaptiveOptimizer(monitor, pipeline, registry)
+
+	if optimizer == nil {
+		t.Fatal("Failed to create adaptive optimizer")
+	}
+
+	// Test starting and stopping
+	optimizer.Start()
+	optimizer.Stop()
 }
 
-func TestPerformanceMetrics_UpdateAndGet(t *testing.T) {
-	optimizer := NewPerformanceOptimizer(nil, nil, nil)
-	
-	// Update metrics
-	optimizer.updateMetrics()
-	
-	// Get metrics
+func TestOptimizerConfig(t *testing.T) {
+	monitor := NewPerformanceMonitor(time.Millisecond * 100)
+	registry := registry.NewComponentRegistry()
+	pipeline := build.NewBuildPipeline(2, registry)
+
+	optimizer := NewAdaptiveOptimizer(monitor, pipeline, registry)
+
+	// Test default config
 	metrics := optimizer.GetMetrics()
-	
-	assert.Greater(t, metrics.MemoryUsage, int64(0))
-	assert.Greater(t, metrics.GoroutineCount, 0)
-	assert.False(t, metrics.LastUpdated.IsZero())
-}
-
-func TestCPUOptimizer_Optimize(t *testing.T) {
-	config := DefaultOptimizationConfig()
-	optimizer := NewCPUOptimizer(config)
-	
-	ctx := context.Background()
-	metrics := PerformanceMetrics{
-		CPUUsage: 0.95, // High CPU usage
+	if metrics == nil {
+		t.Error("Expected metrics, got nil")
 	}
-	
-	initialProcs := runtime.GOMAXPROCS(0)
-	
-	// Should not crash
-	optimizer.Optimize(ctx, metrics)
-	
-	// Verify GOMAXPROCS was adjusted (may or may not change depending on system)
-	finalProcs := runtime.GOMAXPROCS(0)
-	assert.GreaterOrEqual(t, finalProcs, 1)
-	
-	// Reset to initial value
-	runtime.GOMAXPROCS(initialProcs)
-}
 
-func TestMemoryOptimizer_Optimize(t *testing.T) {
-	config := DefaultOptimizationConfig()
-	optimizer := NewMemoryOptimizer(config)
-	
-	ctx := context.Background()
-	metrics := PerformanceMetrics{
-		MemoryUsage: 1024 * 1024 * 100, // 100MB
+	// Test config update
+	newConfig := &OptimizerConfig{
+		EnableAutoApply:     false,
+		ConfidenceThreshold: 0.9,
+		DryRunMode:         true,
 	}
-	
-	// Should not crash
-	optimizer.Optimize(ctx, metrics)
-	
-	// Test GC cooldown
-	optimizer.lastGCForced = time.Now()
-	optimizer.Optimize(ctx, metrics) // Should not force GC due to cooldown
+	optimizer.UpdateConfig(newConfig)
+
+	// Config should be updated (not directly testable without exposing private fields)
 }
 
-func TestIOOptimizer_AcquireRelease(t *testing.T) {
-	config := DefaultOptimizationConfig()
-	config.IOConcurrencyLimit = 2
-	
-	optimizer := NewIOOptimizer(config)
-	ctx := context.Background()
-	
-	// Should be able to acquire up to the limit
-	err1 := optimizer.AcquireIOSlot(ctx)
-	assert.NoError(t, err1)
-	
-	err2 := optimizer.AcquireIOSlot(ctx)
-	assert.NoError(t, err2)
-	
-	// Third acquisition should block
-	ctx3, cancel3 := context.WithTimeout(ctx, 10*time.Millisecond)
-	defer cancel3()
-	
-	err3 := optimizer.AcquireIOSlot(ctx3)
-	assert.Error(t, err3)
-	assert.Equal(t, context.DeadlineExceeded, err3)
-	
-	// Release and try again
-	optimizer.ReleaseIOSlot()
-	
-	err4 := optimizer.AcquireIOSlot(ctx)
-	assert.NoError(t, err4)
-	
-	// Clean up
-	optimizer.ReleaseIOSlot()
-	optimizer.ReleaseIOSlot()
-}
+func TestOptimizationActions(t *testing.T) {
+	monitor := NewPerformanceMonitor(time.Millisecond * 100)
+	registry := registry.NewComponentRegistry()
+	pipeline := build.NewBuildPipeline(2, registry)
 
-func TestIOOptimizer_Optimize(t *testing.T) {
-	config := DefaultOptimizationConfig()
-	config.MaxGoroutines = 100
-	config.IOConcurrencyLimit = 10
-	
-	optimizer := NewIOOptimizer(config)
-	ctx := context.Background()
-	
-	// Test with high goroutine count
-	metrics := PerformanceMetrics{
-		GoroutineCount: 150, // Above max
+	optimizer := NewAdaptiveOptimizer(monitor, pipeline, registry)
+
+	tests := []struct {
+		name   string
+		action Action
+	}{
+		{
+			name: "Scale Workers",
+			action: Action{
+				Type: ActionScaleWorkers,
+				Parameters: map[string]interface{}{
+					"target_workers": 4,
+				},
+			},
+		},
+		{
+			name: "Adjust Cache Size",
+			action: Action{
+				Type: ActionAdjustCacheSize,
+				Parameters: map[string]interface{}{
+					"reduce_by_percent": 25.0,
+				},
+			},
+		},
+		{
+			name: "Optimize GC",
+			action: Action{
+				Type:       ActionOptimizeGC,
+				Parameters: map[string]interface{}{},
+			},
+		},
+		{
+			name: "Clear Cache",
+			action: Action{
+				Type: ActionClearCache,
+				Parameters: map[string]interface{}{
+					"cache_type": "build",
+				},
+			},
+		},
 	}
-	
-	optimizer.Optimize(ctx, metrics)
-	
-	// Should have reduced I/O concurrency limit
-	assert.Less(t, config.IOConcurrencyLimit, 10)
-	
-	// Test with low goroutine count
-	metrics.GoroutineCount = 25 // Below max/2
-	optimizer.Optimize(ctx, metrics)
-	
-	// May have increased I/O concurrency limit (up to system limits)
-}
 
-func TestCacheOptimizer_Optimize(t *testing.T) {
-	config := DefaultOptimizationConfig()
-	optimizer := NewCacheOptimizer(config)
-	
-	ctx := context.Background()
-	metrics := PerformanceMetrics{
-		CacheHitRate: 0.2, // Poor cache performance
-	}
-	
-	// Should not crash with nil build pipeline
-	optimizer.Optimize(ctx, metrics, nil)
-	
-	// Test with mock build pipeline would require more complex setup
-}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := optimizer.applyOptimization(tt.action)
 
-func TestOptimizedFileScanner_ScanFile(t *testing.T) {
-	config := DefaultOptimizationConfig()
-	config.IOConcurrencyLimit = 1
-	
-	ioOptimizer := NewIOOptimizer(config)
-	scanner := NewOptimizedFileScanner(ioOptimizer)
-	
-	ctx := context.Background()
-	
-	// Should acquire and release I/O slot
-	err := scanner.ScanFileOptimized(ctx, "test.txt")
-	assert.NoError(t, err)
-}
-
-func TestOptimizedFileScanner_Concurrency(t *testing.T) {
-	config := DefaultOptimizationConfig()
-	config.IOConcurrencyLimit = 2
-	
-	ioOptimizer := NewIOOptimizer(config)
-	scanner := NewOptimizedFileScanner(ioOptimizer)
-	
-	ctx := context.Background()
-	
-	var wg sync.WaitGroup
-	successCount := int32(0)
-	timeoutCount := int32(0)
-	
-	// Start multiple concurrent scans
-	for i := 0; i < 5; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			
-			// Use a longer timeout to ensure the test behavior is predictable
-			scanCtx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
-			defer cancel()
-			
-			err := scanner.ScanFileOptimized(scanCtx, "test.txt")
-			
-			if err == context.DeadlineExceeded {
-				atomic.AddInt32(&timeoutCount, 1)
-			} else {
-				atomic.AddInt32(&successCount, 1)
+			if !result.Success {
+				t.Errorf("Expected successful optimization, got error: %s", result.Error)
 			}
-		}()
-	}
-	
-	wg.Wait()
-	
-	// At least some should succeed (exact numbers may vary due to timing)
-	totalProcessed := atomic.LoadInt32(&successCount) + atomic.LoadInt32(&timeoutCount)
-	assert.Equal(t, int32(5), totalProcessed)
-	assert.GreaterOrEqual(t, atomic.LoadInt32(&successCount), int32(1))
-}
 
-func TestBatchProcessor_ProcessBatch(t *testing.T) {
-	processor := NewBatchProcessor(10, 2)
-	
-	ctx := context.Background()
-	items := []interface{}{1, 2, 3, 4, 5}
-	
-	processorFunc := func(item interface{}) (interface{}, error) {
-		num := item.(int)
-		return num * 2, nil
-	}
-	
-	results, err := processor.ProcessBatch(ctx, items, processorFunc)
-	
-	assert.NoError(t, err)
-	assert.Len(t, results, 5)
-	
-	// Convert results to map for easier comparison (order may vary due to concurrency)
-	resultMap := make(map[int]bool)
-	for _, result := range results {
-		resultMap[result.(int)] = true
-	}
-	
-	// Check that all expected doubled values are present
-	expectedValues := []int{2, 4, 6, 8, 10}
-	for _, expected := range expectedValues {
-		assert.True(t, resultMap[expected], "Expected value %d not found in results", expected)
+			if result.Impact == "" {
+				t.Error("Expected impact description")
+			}
+
+			if result.Duration == 0 {
+				t.Error("Expected non-zero duration")
+			}
+		})
 	}
 }
 
-func TestBatchProcessor_ErrorHandling(t *testing.T) {
-	processor := NewBatchProcessor(10, 2)
-	
-	ctx := context.Background()
-	items := []interface{}{1, 2, 3}
-	
-	processorFunc := func(item interface{}) (interface{}, error) {
-		num := item.(int)
-		if num == 2 {
-			return nil, assert.AnError
-		}
-		return num * 2, nil
+func TestRecommendationFiltering(t *testing.T) {
+	monitor := NewPerformanceMonitor(time.Millisecond * 100)
+	registry := registry.NewComponentRegistry()
+	pipeline := build.NewBuildPipeline(2, registry)
+
+	optimizer := NewAdaptiveOptimizer(monitor, pipeline, registry)
+
+	// Test low confidence recommendation (should be filtered out)
+	lowConfidenceRecommendation := Recommendation{
+		Type:        "test_optimization",
+		Priority:    1,
+		Description: "Test optimization",
+		Confidence:  0.5, // Below default threshold of 0.7
+		CreatedAt:   time.Now(),
 	}
-	
-	_, err := processor.ProcessBatch(ctx, items, processorFunc)
-	
-	assert.Error(t, err)
-	assert.Equal(t, assert.AnError, err)
-}
 
-func TestBatchProcessor_ContextCancellation(t *testing.T) {
-	processor := NewBatchProcessor(10, 2)
-	
-	ctx, cancel := context.WithCancel(context.Background())
-	items := []interface{}{1, 2, 3, 4, 5}
-	
-	processorFunc := func(item interface{}) (interface{}, error) {
-		time.Sleep(100 * time.Millisecond) // Simulate slow processing
-		return item, nil
+	if optimizer.shouldApplyRecommendation(lowConfidenceRecommendation) {
+		t.Error("Expected low confidence recommendation to be filtered out")
 	}
-	
-	// Cancel context after a short delay
-	go func() {
-		time.Sleep(10 * time.Millisecond)
-		cancel()
-	}()
-	
-	_, err := processor.ProcessBatch(ctx, items, processorFunc)
-	
-	assert.Error(t, err)
-	assert.Equal(t, context.Canceled, err)
-}
 
-func TestHelperFunctions(t *testing.T) {
-	// Test max function
-	assert.Equal(t, 5, max(3, 5))
-	assert.Equal(t, 5, max(5, 3))
-	assert.Equal(t, 5, max(5, 5))
-	
-	// Test min function
-	assert.Equal(t, 3, min(3, 5))
-	assert.Equal(t, 3, min(5, 3))
-	assert.Equal(t, 5, min(5, 5))
-}
+	// Test high confidence recommendation (should pass)
+	highConfidenceRecommendation := Recommendation{
+		Type:        "test_optimization",
+		Priority:    1,
+		Description: "Test optimization",
+		Confidence:  0.9, // Above threshold
+		CreatedAt:   time.Now(),
+	}
 
-func TestPerformanceOptimizer_StartStop(t *testing.T) {
-	optimizer := NewPerformanceOptimizer(nil, nil, nil)
-	
-	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-	defer cancel()
-	
-	// Should start without error
-	optimizer.Start(ctx)
-	
-	// Wait for context cancellation (simulates stopping)
-	<-ctx.Done()
-	
-	// Should not have any running goroutines after context cancellation
-	// (This is harder to test directly, but the function should handle cleanup)
-}
-
-func TestPerformanceOptimizer_Configuration(t *testing.T) {
-	optimizer := NewPerformanceOptimizer(nil, nil, nil)
-	
-	require.NotNil(t, optimizer.config)
-	require.NotNil(t, optimizer.metrics)
-	require.NotNil(t, optimizer.cpuOptimizer)
-	require.NotNil(t, optimizer.memOptimizer)
-	require.NotNil(t, optimizer.ioOptimizer)
-	require.NotNil(t, optimizer.cacheOptimizer)
-	
-	// Verify configuration values
-	assert.True(t, optimizer.config.EnableCPUOptimization)
-	assert.True(t, optimizer.config.EnableMemoryOptimization)
-	assert.True(t, optimizer.config.EnableIOOptimization)
-	assert.True(t, optimizer.config.EnableCacheOptimization)
-}
-
-func BenchmarkPerformanceMetrics_Update(b *testing.B) {
-	optimizer := NewPerformanceOptimizer(nil, nil, nil)
-	
-	b.ResetTimer()
-	b.ReportAllocs()
-	
-	for i := 0; i < b.N; i++ {
-		optimizer.updateMetrics()
+	if !optimizer.shouldApplyRecommendation(highConfidenceRecommendation) {
+		t.Error("Expected high confidence recommendation to be accepted")
 	}
 }
 
-func BenchmarkIOOptimizer_AcquireRelease(b *testing.B) {
-	config := DefaultOptimizationConfig()
-	config.IOConcurrencyLimit = 1000 // High limit to avoid blocking
-	
-	optimizer := NewIOOptimizer(config)
-	ctx := context.Background()
-	
-	b.ResetTimer()
-	b.ReportAllocs()
-	
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			optimizer.AcquireIOSlot(ctx)
-			optimizer.ReleaseIOSlot()
-		}
+func TestCooldownPeriod(t *testing.T) {
+	monitor := NewPerformanceMonitor(time.Millisecond * 100)
+	registry := registry.NewComponentRegistry()
+	pipeline := build.NewBuildPipeline(2, registry)
+
+	optimizer := NewAdaptiveOptimizer(monitor, pipeline, registry)
+
+	recommendation := Recommendation{
+		Type:        "test_optimization",
+		Priority:    1,
+		Description: "Test optimization",
+		Confidence:  0.9,
+		CreatedAt:   time.Now(),
+	}
+
+	// First application should succeed
+	if !optimizer.shouldApplyRecommendation(recommendation) {
+		t.Error("Expected first recommendation to be accepted")
+	}
+
+	// Mark as recently applied
+	optimizer.appliedActions[recommendation.Type] = time.Now()
+
+	// Second application should be rejected due to cooldown
+	if optimizer.shouldApplyRecommendation(recommendation) {
+		t.Error("Expected recommendation to be rejected due to cooldown")
+	}
+}
+
+func TestDryRunMode(t *testing.T) {
+	monitor := NewPerformanceMonitor(time.Millisecond * 100)
+	registry := registry.NewComponentRegistry()
+	pipeline := build.NewBuildPipeline(2, registry)
+
+	optimizer := NewAdaptiveOptimizer(monitor, pipeline, registry)
+
+	// Enable dry run mode
+	config := &OptimizerConfig{
+		EnableAutoApply:     true,
+		ConfidenceThreshold: 0.5,
+		DryRunMode:         true,
+	}
+	optimizer.UpdateConfig(config)
+
+	action := Action{
+		Type: ActionScaleWorkers,
+		Parameters: map[string]interface{}{
+			"target_workers": 4,
+		},
+	}
+
+	result := optimizer.applyOptimization(action)
+
+	if !result.Success {
+		t.Error("Expected dry run to succeed")
+	}
+
+	if result.Impact != "Dry run - no actual changes made" {
+		t.Errorf("Expected dry run message, got: %s", result.Impact)
+	}
+}
+
+func TestMetricsCapture(t *testing.T) {
+	monitor := NewPerformanceMonitor(time.Millisecond * 100)
+	registry := registry.NewComponentRegistry()
+	pipeline := build.NewBuildPipeline(2, registry)
+
+	optimizer := NewAdaptiveOptimizer(monitor, pipeline, registry)
+
+	// Add some metrics to the monitor first
+	monitor.Record(Metric{
+		Type:  MetricTypeMemoryUsage,
+		Value: 1024 * 1024, // 1MB
+		Unit:  "bytes",
 	})
+
+	monitor.Record(Metric{
+		Type:  MetricTypeBuildTime,
+		Value: 500, // 500ms
+		Unit:  "ms",
+	})
+
+	metrics := optimizer.captureCurrentMetrics()
+
+	if len(metrics) == 0 {
+		t.Error("Expected metrics to be captured")
+	}
+
+	// Check that system metrics are captured
+	if _, exists := metrics["memory_alloc_mb"]; !exists {
+		t.Error("Expected memory allocation metric")
+	}
+
+	if _, exists := metrics["goroutines"]; !exists {
+		t.Error("Expected goroutines metric")
+	}
+
+	if _, exists := metrics["gc_cycles"]; !exists {
+		t.Error("Expected GC cycles metric")
+	}
 }
 
-func BenchmarkBatchProcessor_SmallBatch(b *testing.B) {
-	processor := NewBatchProcessor(10, 4)
-	
-	ctx := context.Background()
-	items := []interface{}{1, 2, 3, 4, 5}
-	
-	processorFunc := func(item interface{}) (interface{}, error) {
-		return item.(int) * 2, nil
+func TestWorkerScaler(t *testing.T) {
+	scaler := NewWorkerScaler(4, 16)
+
+	if scaler.GetCurrentWorkers() != 4 {
+		t.Errorf("Expected 4 initial workers, got %d", scaler.GetCurrentWorkers())
 	}
-	
-	b.ResetTimer()
-	b.ReportAllocs()
-	
-	for i := 0; i < b.N; i++ {
-		processor.ProcessBatch(ctx, items, processorFunc)
+
+	// Scale up
+	newCount := scaler.Scale("up", 1.0)
+	if newCount <= 4 {
+		t.Errorf("Expected workers to increase, got %d", newCount)
+	}
+
+	// Scale down
+	currentWorkers := scaler.GetCurrentWorkers()
+	newCount = scaler.Scale("down", 1.0)
+	if newCount >= currentWorkers {
+		t.Errorf("Expected workers to decrease, got %d", newCount)
+	}
+
+	// Test bounds
+	scaler.Scale("up", 10.0) // Try to scale way up
+	if scaler.GetCurrentWorkers() > 16 {
+		t.Errorf("Expected workers to be capped at 16, got %d", scaler.GetCurrentWorkers())
+	}
+
+	scaler.Scale("down", 10.0) // Try to scale way down
+	if scaler.GetCurrentWorkers() < 1 {
+		t.Errorf("Expected workers to be at least 1, got %d", scaler.GetCurrentWorkers())
 	}
 }
 
-func BenchmarkBatchProcessor_LargeBatch(b *testing.B) {
-	processor := NewBatchProcessor(100, 8)
-	
-	// Create large batch
-	items := make([]interface{}, 1000)
-	for i := range items {
-		items[i] = i
+func TestOptimizerMetrics(t *testing.T) {
+	monitor := NewPerformanceMonitor(time.Millisecond * 100)
+	registry := registry.NewComponentRegistry()
+	pipeline := build.NewBuildPipeline(2, registry)
+
+	optimizer := NewAdaptiveOptimizer(monitor, pipeline, registry)
+
+	// Test initial metrics
+	metrics := optimizer.GetMetrics()
+	if metrics.ActionsApplied != 0 {
+		t.Errorf("Expected 0 actions applied initially, got %d", metrics.ActionsApplied)
 	}
-	
-	ctx := context.Background()
-	processorFunc := func(item interface{}) (interface{}, error) {
-		return item.(int) * 2, nil
+
+	// Simulate applying an optimization
+	recommendation := Recommendation{
+		Type:        "test_optimization",
+		Priority:    1,
+		Description: "Test optimization",
+		Confidence:  0.9,
+		Action: Action{
+			Type:       ActionOptimizeGC,
+			Parameters: map[string]interface{}{},
+		},
+		CreatedAt: time.Now(),
 	}
-	
+
+	optimizer.handleRecommendation(recommendation)
+
+	// Check updated metrics
+	updatedMetrics := optimizer.GetMetrics()
+	if updatedMetrics.ActionsApplied != 1 {
+		t.Errorf("Expected 1 action applied, got %d", updatedMetrics.ActionsApplied)
+	}
+
+	if updatedMetrics.ActionsSuccessful != 1 {
+		t.Errorf("Expected 1 successful action, got %d", updatedMetrics.ActionsSuccessful)
+	}
+}
+
+func TestPeriodicOptimization(t *testing.T) {
+	monitor := NewPerformanceMonitor(time.Millisecond * 100)
+	registry := registry.NewComponentRegistry()
+	pipeline := build.NewBuildPipeline(2, registry)
+
+	optimizer := NewAdaptiveOptimizer(monitor, pipeline, registry)
+
+	// Test periodic optimization logic
+	optimizer.performPeriodicOptimization()
+
+	// Should have recorded some optimizer metrics
+	optimizerMetrics := monitor.GetMetrics("optimizer_actions_applied", time.Time{})
+	if len(optimizerMetrics) == 0 {
+		t.Error("Expected optimizer metrics to be recorded")
+	}
+}
+
+func BenchmarkOptimizationApplication(b *testing.B) {
+	monitor := NewPerformanceMonitor(time.Millisecond * 100)
+	registry := registry.NewComponentRegistry()
+	pipeline := build.NewBuildPipeline(2, registry)
+
+	optimizer := NewAdaptiveOptimizer(monitor, pipeline, registry)
+
+	action := Action{
+		Type:       ActionOptimizeGC,
+		Parameters: map[string]interface{}{},
+	}
+
 	b.ResetTimer()
-	b.ReportAllocs()
-	
 	for i := 0; i < b.N; i++ {
-		processor.ProcessBatch(ctx, items, processorFunc)
+		optimizer.applyOptimization(action)
+	}
+}
+
+func BenchmarkMetricsCapture(b *testing.B) {
+	monitor := NewPerformanceMonitor(time.Millisecond * 100)
+	registry := registry.NewComponentRegistry()
+	pipeline := build.NewBuildPipeline(2, registry)
+
+	optimizer := NewAdaptiveOptimizer(monitor, pipeline, registry)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		optimizer.captureCurrentMetrics()
 	}
 }

@@ -262,7 +262,7 @@ func (bp *BuildPipeline) processBuildTask(task BuildTask) {
 		buildResult.Duration = time.Since(start)
 		buildResult.CacheHit = true
 		buildResult.Hash = contentHash
-		
+
 		bp.queue.results <- *buildResult
 		bp.objectPools.PutBuildResult(buildResult)
 		return
@@ -371,9 +371,8 @@ func (tc *TemplCompiler) CompileWithPools(component *registry.ComponentInfo, poo
 	cmd.Dir = "." // Run in current directory
 
 	// Use pooled buffers for command output
-	var stdout, stderr []byte
 	var err error
-	
+
 	if output, cmdErr := cmd.CombinedOutput(); cmdErr != nil {
 		// Copy output to our buffer to avoid keeping the original allocation
 		outputBuffer = append(outputBuffer, output...)

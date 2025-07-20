@@ -48,7 +48,7 @@ type Logger interface {
 	Warn(ctx context.Context, err error, msg string, fields ...interface{})
 	Error(ctx context.Context, err error, msg string, fields ...interface{})
 	Fatal(ctx context.Context, err error, msg string, fields ...interface{})
-	
+
 	With(fields ...interface{}) Logger
 	WithComponent(component string) Logger
 }
@@ -190,7 +190,7 @@ func (l *TemplarLogger) log(ctx context.Context, level slog.Level, err error, ms
 		fmt.Fprintf(os.Stderr, "[ERROR] Logger is nil - message: %s\n", msg)
 		return
 	}
-	
+
 	attrs := make([]slog.Attr, 0, len(l.fields)+len(fields)/2+3)
 
 	// Add component if set
@@ -248,18 +248,18 @@ func NewFileLogger(config *LoggerConfig, logDir string) (*FileLogger, error) {
 	if config == nil {
 		config = DefaultConfig()
 	}
-	
+
 	// Validate log directory path
 	if logDir == "" {
 		return nil, fmt.Errorf("log directory cannot be empty")
 	}
-	
+
 	// Clean the path to prevent path traversal
 	cleanLogDir := filepath.Clean(logDir)
 	if strings.Contains(cleanLogDir, "..") {
 		return nil, fmt.Errorf("invalid log directory path (contains path traversal): %s", logDir)
 	}
-	
+
 	if err := os.MkdirAll(cleanLogDir, 0755); err != nil {
 		return nil, fmt.Errorf("failed to create log directory %s: %w", cleanLogDir, err)
 	}
@@ -400,13 +400,13 @@ func (f *LogFormatter) FormatLevel(level LogLevel) string {
 	case LevelDebug:
 		return fmt.Sprintf("\033[36m%s\033[0m", level.String()) // Cyan
 	case LevelInfo:
-		return fmt.Sprintf("\033[32m%s\033[0m", level.String())  // Green
+		return fmt.Sprintf("\033[32m%s\033[0m", level.String()) // Green
 	case LevelWarn:
-		return fmt.Sprintf("\033[33m%s\033[0m", level.String())  // Yellow
+		return fmt.Sprintf("\033[33m%s\033[0m", level.String()) // Yellow
 	case LevelError:
-		return fmt.Sprintf("\033[31m%s\033[0m", level.String())  // Red
+		return fmt.Sprintf("\033[31m%s\033[0m", level.String()) // Red
 	case LevelFatal:
-		return fmt.Sprintf("\033[35m%s\033[0m", level.String())  // Magenta
+		return fmt.Sprintf("\033[35m%s\033[0m", level.String()) // Magenta
 	default:
 		return level.String()
 	}
@@ -420,19 +420,19 @@ func SanitizeForLog(data string) string {
 	sensitive := []string{
 		"password", "token", "secret", "key", "auth",
 	}
-	
+
 	lower := strings.ToLower(data)
 	for _, word := range sensitive {
 		if strings.Contains(lower, word) {
 			return "[REDACTED]"
 		}
 	}
-	
+
 	// Truncate very long strings
 	if len(data) > 1000 {
 		return data[:1000] + "...[TRUNCATED]"
 	}
-	
+
 	return data
 }
 
@@ -446,12 +446,12 @@ func LogSecurityEvent(logger Logger, ctx context.Context, event string, details 
 			sanitizedDetails[k] = v
 		}
 	}
-	
+
 	fields := []interface{}{"event_type", "security", "event", event}
 	for k, v := range sanitizedDetails {
 		fields = append(fields, k, v)
 	}
-	
+
 	logger.Error(ctx, nil, "Security event occurred", fields...)
 }
 
@@ -495,27 +495,27 @@ func (p *PerfLogger) EndWithError(ctx context.Context, err error) {
 type ErrorCategory string
 
 const (
-	ErrorCategorySystem      ErrorCategory = "system"
-	ErrorCategoryValidation  ErrorCategory = "validation"
-	ErrorCategorySecurity    ErrorCategory = "security"
-	ErrorCategoryNetwork     ErrorCategory = "network"
-	ErrorCategoryFileSystem  ErrorCategory = "filesystem"
-	ErrorCategoryBuild       ErrorCategory = "build"
-	ErrorCategoryComponent   ErrorCategory = "component"
-	ErrorCategoryUnknown     ErrorCategory = "unknown"
+	ErrorCategorySystem     ErrorCategory = "system"
+	ErrorCategoryValidation ErrorCategory = "validation"
+	ErrorCategorySecurity   ErrorCategory = "security"
+	ErrorCategoryNetwork    ErrorCategory = "network"
+	ErrorCategoryFileSystem ErrorCategory = "filesystem"
+	ErrorCategoryBuild      ErrorCategory = "build"
+	ErrorCategoryComponent  ErrorCategory = "component"
+	ErrorCategoryUnknown    ErrorCategory = "unknown"
 )
 
 // StructuredError provides enhanced error information for logging
 type StructuredError struct {
-	Category    ErrorCategory          `json:"category"`
-	Operation   string                 `json:"operation"`
-	Component   string                 `json:"component,omitempty"`
-	Message     string                 `json:"message"`
-	Cause       error                  `json:"cause,omitempty"`
-	Context     map[string]interface{} `json:"context,omitempty"`
-	Timestamp   time.Time              `json:"timestamp"`
-	Retryable   bool                   `json:"retryable"`
-	Severity    string                 `json:"severity"`
+	Category  ErrorCategory          `json:"category"`
+	Operation string                 `json:"operation"`
+	Component string                 `json:"component,omitempty"`
+	Message   string                 `json:"message"`
+	Cause     error                  `json:"cause,omitempty"`
+	Context   map[string]interface{} `json:"context,omitempty"`
+	Timestamp time.Time              `json:"timestamp"`
+	Retryable bool                   `json:"retryable"`
+	Severity  string                 `json:"severity"`
 }
 
 // Error implements the error interface
@@ -587,9 +587,9 @@ type ResilientLogger struct {
 // NewResilientLogger creates a logger with retry capabilities
 func NewResilientLogger(logger Logger, maxRetries int, retryDelay time.Duration) *ResilientLogger {
 	return &ResilientLogger{
-		Logger:      logger,
-		maxRetries:  maxRetries,
-		retryDelay:  retryDelay,
+		Logger:     logger,
+		maxRetries: maxRetries,
+		retryDelay: retryDelay,
 	}
 }
 
@@ -597,14 +597,14 @@ func NewResilientLogger(logger Logger, maxRetries int, retryDelay time.Duration)
 func (r *ResilientLogger) ErrorWithRetry(ctx context.Context, err error, msg string, fields ...interface{}) {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
-	
+
 	for attempt := 0; attempt <= r.maxRetries; attempt++ {
 		if attempt > 0 {
 			// Add retry context
 			fields = append(fields, "retry_attempt", attempt)
 			time.Sleep(r.retryDelay)
 		}
-		
+
 		// Attempt to log
 		success := false
 		func() {
@@ -618,13 +618,13 @@ func (r *ResilientLogger) ErrorWithRetry(ctx context.Context, err error, msg str
 			}()
 			r.Logger.Error(ctx, err, msg, fields...)
 		}()
-		
+
 		// If logging succeeded, return
 		if success {
 			return
 		}
 	}
-	
+
 	// All retry attempts failed, use fallback
 	fmt.Fprintf(os.Stderr, "[CRITICAL] Failed to log error after %d retries: %s - %v\n", r.maxRetries, msg, err)
 }
@@ -638,15 +638,15 @@ func LogStructuredError(logger Logger, ctx context.Context, structErr *Structure
 		"retryable", structErr.Retryable,
 		"timestamp", structErr.Timestamp,
 	}
-	
+
 	if structErr.Component != "" {
 		fields = append(fields, "component", structErr.Component)
 	}
-	
+
 	// Add context fields
 	for k, v := range structErr.Context {
 		fields = append(fields, k, v)
 	}
-	
+
 	logger.Error(ctx, structErr.Cause, structErr.Message, fields...)
 }

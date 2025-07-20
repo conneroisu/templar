@@ -236,5 +236,54 @@
     "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
     "hook_event_name": "Notification",
     "message": "Claude is waiting for your input"
+  },
+  {
+    "session_id": "1dc2c0b1-3e62-4f65-80ce-73d1e2d28d50",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/1dc2c0b1-3e62-4f65-80ce-73d1e2d28d50.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "Notification",
+    "message": "Claude is waiting for your input"
+  },
+  {
+    "session_id": "18eaa077-534d-4942-9304-1215b86152b1",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/18eaa077-534d-4942-9304-1215b86152b1.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "Notification",
+    "message": "Claude is waiting for your input"
+  },
+  {
+    "session_id": "4e5eda15-024a-4687-8700-896eb4ac49e0",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/4e5eda15-024a-4687-8700-896eb4ac49e0.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "Notification",
+    "message": "Claude is waiting for your input"
+  },
+  {
+    "session_id": "ae2f1a19-a7d2-427f-9a7c-4ff429cd6a20",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/ae2f1a19-a7d2-427f-9a7c-4ff429cd6a20.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "Notification",
+    "message": "Claude is waiting for your input"
+  },
+  {
+    "session_id": "4e5eda15-024a-4687-8700-896eb4ac49e0",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/4e5eda15-024a-4687-8700-896eb4ac49e0.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "Notification",
+    "message": "Claude is waiting for your input"
+  },
+  {
+    "session_id": "9c839bfe-5ec5-4dc1-ab55-8a9fd190f601",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/9c839bfe-5ec5-4dc1-ab55-8a9fd190f601.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "Notification",
+    "message": "Claude is waiting for your input"
+  },
+  {
+    "session_id": "9c839bfe-5ec5-4dc1-ab55-8a9fd190f601",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/9c839bfe-5ec5-4dc1-ab55-8a9fd190f601.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "Notification",
+    "message": "Claude is waiting for your input"
   }
 ]

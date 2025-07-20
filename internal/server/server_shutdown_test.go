@@ -43,7 +43,7 @@ func TestShutdownRaceCondition(t *testing.T) {
 			defer wg.Done()
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
-			
+
 			err := server.Shutdown(ctx)
 			shutdownResults <- err
 		}()
@@ -78,7 +78,7 @@ func TestShutdownOnce(t *testing.T) {
 	// First shutdown should work
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-	
+
 	err1 := server.Shutdown(ctx)
 	assert.NoError(t, err1)
 
@@ -90,14 +90,14 @@ func TestShutdownOnce(t *testing.T) {
 	server.shutdownMutex.RLock()
 	isShutdown := server.isShutdown
 	server.shutdownMutex.RUnlock()
-	
+
 	assert.True(t, isShutdown, "Server should be marked as shutdown")
 }
 
 func TestChannelSafeClose(t *testing.T) {
 	cfg := &config.Config{
 		Server: config.ServerConfig{
-			Host: "localhost", 
+			Host: "localhost",
 			Port: 0,
 		},
 	}
@@ -111,7 +111,7 @@ func TestChannelSafeClose(t *testing.T) {
 	// Shutdown should handle already-closed channels gracefully
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-	
+
 	err = server.Shutdown(ctx)
 	assert.NoError(t, err, "Shutdown should handle pre-closed channels gracefully")
 }
@@ -137,7 +137,7 @@ func TestBuildPipelineShutdown(t *testing.T) {
 	// Shutdown should stop build pipeline
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-	
+
 	err = server.Shutdown(shutdownCtx)
 	assert.NoError(t, err)
 
@@ -161,7 +161,7 @@ func TestFileWatcherShutdown(t *testing.T) {
 	// Shutdown should stop file watcher
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-	
+
 	err = server.Shutdown(ctx)
 	assert.NoError(t, err)
 

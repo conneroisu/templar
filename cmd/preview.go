@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/conneroisu/templar/internal/config"
+	"github.com/conneroisu/templar/internal/errors"
 	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/renderer"
 	"github.com/conneroisu/templar/internal/scanner"
@@ -78,7 +79,19 @@ func runPreview(cmd *cobra.Command, args []string) error {
 	// Find the requested component
 	component, exists := componentRegistry.Get(componentName)
 	if !exists {
-		return fmt.Errorf("component '%s' not found", componentName)
+		// Create enhanced error with suggestions
+		ctx := &errors.SuggestionContext{
+			Registry:       componentRegistry,
+			ConfigPath:     ".templar.yml",
+			ComponentsPath: cfg.Components.ScanPaths,
+		}
+		suggestions := errors.ComponentNotFoundError(componentName, ctx)
+		enhancedErr := errors.NewEnhancedError(
+			fmt.Sprintf("Component '%s' not found", componentName),
+			fmt.Errorf("component not found"),
+			suggestions,
+		)
+		return enhancedErr
 	}
 
 	fmt.Printf("🎭 Previewing component: %s\n", componentName)

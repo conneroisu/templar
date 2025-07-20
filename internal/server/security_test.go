@@ -223,16 +223,16 @@ func TestSecurityRegression_NoSQLInjection(t *testing.T) {
 func TestSecurityMiddleware_DefaultHeaders(t *testing.T) {
 	config := DefaultSecurityConfig()
 	middleware := SecurityMiddleware(config)
-	
+
 	handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
-	
+
 	req := httptest.NewRequest(http.MethodGet, "/test", nil)
 	w := httptest.NewRecorder()
-	
+
 	handler.ServeHTTP(w, req)
-	
+
 	// Check security headers
 	assert.Equal(t, "DENY", w.Header().Get("X-Frame-Options"))
 	assert.Equal(t, "nosniff", w.Header().Get("X-Content-Type-Options"))
@@ -244,7 +244,7 @@ func TestSecurityMiddleware_DefaultHeaders(t *testing.T) {
 	assert.Equal(t, "require-corp", w.Header().Get("Cross-Origin-Embedder-Policy"))
 	assert.Equal(t, "same-origin", w.Header().Get("Cross-Origin-Opener-Policy"))
 	assert.Equal(t, "same-origin", w.Header().Get("Cross-Origin-Resource-Policy"))
-	
+
 	// Check CSP header exists and contains expected directives
 	csp := w.Header().Get("Content-Security-Policy")
 	assert.NotEmpty(t, csp)
@@ -278,7 +278,7 @@ func TestSecurityMiddleware_CSP_BuildHeader(t *testing.T) {
 				DefaultSrc:              []string{"'self'"},
 				UpgradeInsecureRequests: true,
 				BlockAllMixedContent:    true,
-				RequireSRIFor:          []string{"script", "style"},
+				RequireSRIFor:           []string{"script", "style"},
 			},
 			expected: []string{
 				"default-src 'self'",
@@ -301,11 +301,11 @@ func TestSecurityMiddleware_CSP_BuildHeader(t *testing.T) {
 			},
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			header := buildCSPHeader(tt.csp, false)
-			
+
 			for _, expected := range tt.expected {
 				assert.Contains(t, header, expected)
 			}
@@ -344,7 +344,7 @@ func TestSecurityMiddleware_HSTS(t *testing.T) {
 			expected: "max-age=31536000; includeSubDomains; preload",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			header := buildHSTSHeader(tt.hsts)
@@ -391,7 +391,7 @@ func TestSecurityMiddleware_XSSProtection(t *testing.T) {
 			expected: "1; report=/xss-report",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			header := buildXSSProtectionHeader(tt.xss)
@@ -407,9 +407,9 @@ func TestSecurityMiddleware_PermissionsPolicy(t *testing.T) {
 		Microphone:  []string{"'self'", "https://example.com"},
 		Fullscreen:  []string{"'self'"},
 	}
-	
+
 	header := buildPermissionsPolicyHeader(pp)
-	
+
 	assert.Contains(t, header, "geolocation=()")
 	assert.Contains(t, header, "camera=('self')")
 	assert.Contains(t, header, "microphone=('self' https://example.com)")
@@ -421,11 +421,11 @@ func TestSecurityMiddleware_BlockedUserAgents(t *testing.T) {
 		BlockedUserAgents: []string{"BadBot", "Malicious Scanner"},
 	}
 	middleware := SecurityMiddleware(config)
-	
+
 	handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
-	
+
 	tests := []struct {
 		name      string
 		userAgent string
@@ -452,15 +452,15 @@ func TestSecurityMiddleware_BlockedUserAgents(t *testing.T) {
 			expected:  http.StatusForbidden,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/test", nil)
 			req.Header.Set("User-Agent", tt.userAgent)
 			w := httptest.NewRecorder()
-			
+
 			handler.ServeHTTP(w, req)
-			
+
 			assert.Equal(t, tt.expected, w.Code)
 		})
 	}
@@ -471,11 +471,11 @@ func TestSecurityMiddleware_OriginValidation(t *testing.T) {
 		AllowedOrigins: []string{"https://example.com", "http://localhost:3000"},
 	}
 	middleware := SecurityMiddleware(config)
-	
+
 	handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
-	
+
 	tests := []struct {
 		name     string
 		method   string
@@ -522,7 +522,7 @@ func TestSecurityMiddleware_OriginValidation(t *testing.T) {
 			expected: http.StatusOK,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest(tt.method, "/test", nil)
@@ -533,9 +533,9 @@ func TestSecurityMiddleware_OriginValidation(t *testing.T) {
 				req.Header.Set("Referer", tt.referer)
 			}
 			w := httptest.NewRecorder()
-			
+
 			handler.ServeHTTP(w, req)
-			
+
 			assert.Equal(t, tt.expected, w.Code)
 		})
 	}
@@ -543,7 +543,7 @@ func TestSecurityMiddleware_OriginValidation(t *testing.T) {
 
 func TestSecurityMiddleware_DevelopmentConfig(t *testing.T) {
 	config := DevelopmentSecurityConfig()
-	
+
 	// Development should be more permissive
 	assert.Contains(t, config.CSP.ScriptSrc, "'unsafe-eval'")
 	assert.Contains(t, config.CSP.ScriptSrc, "'unsafe-inline'")
@@ -554,7 +554,7 @@ func TestSecurityMiddleware_DevelopmentConfig(t *testing.T) {
 
 func TestSecurityMiddleware_ProductionConfig(t *testing.T) {
 	config := ProductionSecurityConfig()
-	
+
 	// Production should be strict
 	assert.Equal(t, []string{"'self'"}, config.CSP.ScriptSrc)
 	assert.Equal(t, []string{"'self'"}, config.CSP.StyleSrc)
@@ -598,7 +598,7 @@ func TestSecurityConfigFromAppConfig(t *testing.T) {
 			},
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := &config.Config{
@@ -606,10 +606,10 @@ func TestSecurityConfigFromAppConfig(t *testing.T) {
 					Environment: tt.environment,
 				},
 			}
-			
+
 			secConfig := SecurityConfigFromAppConfig(cfg)
 			require.NotNil(t, secConfig)
-			
+
 			tt.expectFunc(t, secConfig)
 		})
 	}
@@ -617,10 +617,10 @@ func TestSecurityConfigFromAppConfig(t *testing.T) {
 
 func TestGetClientIP(t *testing.T) {
 	tests := []struct {
-		name     string
-		headers  map[string]string
+		name       string
+		headers    map[string]string
 		remoteAddr string
-		expected string
+		expected   string
 	}{
 		{
 			name: "X-Forwarded-For header",
@@ -651,16 +651,16 @@ func TestGetClientIP(t *testing.T) {
 			expected:   "203.0.113.1",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/test", nil)
 			req.RemoteAddr = tt.remoteAddr
-			
+
 			for key, value := range tt.headers {
 				req.Header.Set(key, value)
 			}
-			
+
 			ip := getClientIP(req)
 			assert.Equal(t, tt.expected, ip)
 		})
@@ -669,7 +669,7 @@ func TestGetClientIP(t *testing.T) {
 
 func TestIsBlockedUserAgent(t *testing.T) {
 	blockedAgents := []string{"BadBot", "Scanner", "Malicious"}
-	
+
 	tests := []struct {
 		name      string
 		userAgent string
@@ -706,7 +706,7 @@ func TestIsBlockedUserAgent(t *testing.T) {
 			expected:  true,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := isBlockedUserAgent(tt.userAgent, blockedAgents)
@@ -718,17 +718,17 @@ func TestIsBlockedUserAgent(t *testing.T) {
 func BenchmarkSecurityMiddleware(b *testing.B) {
 	config := DefaultSecurityConfig()
 	middleware := SecurityMiddleware(config)
-	
+
 	handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
-	
+
 	req := httptest.NewRequest(http.MethodGet, "/test", nil)
 	req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; TestBot)")
-	
+
 	b.ResetTimer()
 	b.ReportAllocs()
-	
+
 	for i := 0; i < b.N; i++ {
 		w := httptest.NewRecorder()
 		handler.ServeHTTP(w, req)
@@ -737,21 +737,21 @@ func BenchmarkSecurityMiddleware(b *testing.B) {
 
 func BenchmarkCSPHeaderBuild(b *testing.B) {
 	csp := &CSPConfig{
-		DefaultSrc:    []string{"'self'"},
-		ScriptSrc:     []string{"'self'", "'unsafe-inline'", "'unsafe-eval'"},
-		StyleSrc:      []string{"'self'", "'unsafe-inline'"},
-		ImgSrc:        []string{"'self'", "data:", "blob:"},
-		ConnectSrc:    []string{"'self'", "ws:", "wss:"},
-		FontSrc:       []string{"'self'"},
-		ObjectSrc:     []string{"'none'"},
+		DefaultSrc:     []string{"'self'"},
+		ScriptSrc:      []string{"'self'", "'unsafe-inline'", "'unsafe-eval'"},
+		StyleSrc:       []string{"'self'", "'unsafe-inline'"},
+		ImgSrc:         []string{"'self'", "data:", "blob:"},
+		ConnectSrc:     []string{"'self'", "ws:", "wss:"},
+		FontSrc:        []string{"'self'"},
+		ObjectSrc:      []string{"'none'"},
 		FrameAncestors: []string{"'none'"},
-		BaseURI:       []string{"'self'"},
-		FormAction:    []string{"'self'"},
+		BaseURI:        []string{"'self'"},
+		FormAction:     []string{"'self'"},
 	}
-	
+
 	b.ResetTimer()
 	b.ReportAllocs()
-	
+
 	for i := 0; i < b.N; i++ {
 		_ = buildCSPHeader(csp, false)
 	}

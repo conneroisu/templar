@@ -11,7 +11,7 @@ import (
 
 func TestDefaultPreviewConfig(t *testing.T) {
 	config := DefaultPreviewConfig()
-	
+
 	assert.Equal(t, "localhost", config.Host)
 	assert.Equal(t, 8080, config.Port)
 	assert.Equal(t, "/preview", config.BasePath)
@@ -25,7 +25,7 @@ func TestDefaultPreviewConfig(t *testing.T) {
 
 func TestNewEnhancedPreviewSystem(t *testing.T) {
 	eps := NewEnhancedPreviewSystem(nil, nil, nil)
-	
+
 	require.NotNil(t, eps)
 	require.NotNil(t, eps.config)
 	require.NotNil(t, eps.templateManager)
@@ -39,7 +39,7 @@ func TestNewEnhancedPreviewSystem(t *testing.T) {
 func TestTemplateManager_Creation(t *testing.T) {
 	config := DefaultPreviewConfig()
 	tm := NewTemplateManager(config)
-	
+
 	require.NotNil(t, tm)
 	require.NotNil(t, tm.templates)
 	require.NotNil(t, tm.layoutTemplates)
@@ -49,7 +49,7 @@ func TestTemplateManager_Creation(t *testing.T) {
 func TestAssetManager_Creation(t *testing.T) {
 	config := DefaultPreviewConfig()
 	am := NewAssetManager(config)
-	
+
 	require.NotNil(t, am)
 	require.NotNil(t, am.assets)
 }
@@ -57,19 +57,19 @@ func TestAssetManager_Creation(t *testing.T) {
 func TestLiveReloadManager_Creation(t *testing.T) {
 	config := DefaultPreviewConfig()
 	lrm := NewLiveReloadManager(config)
-	
+
 	require.NotNil(t, lrm)
 	require.NotNil(t, lrm.connections)
 	require.NotNil(t, lrm.broadcastCh)
-	
+
 	// Test broadcast
 	event := LiveReloadEvent{
 		Type:      "test",
 		Timestamp: time.Now(),
 	}
-	
+
 	lrm.Broadcast(event)
-	
+
 	// Should be able to receive the event
 	select {
 	case receivedEvent := <-lrm.broadcastCh:
@@ -82,28 +82,28 @@ func TestLiveReloadManager_Creation(t *testing.T) {
 func TestSandboxManager_CreateDestroySandbox(t *testing.T) {
 	config := DefaultPreviewConfig()
 	sm := NewSandboxManager(config)
-	
+
 	require.NotNil(t, sm)
 	require.NotNil(t, sm.resourceLimits)
-	
+
 	// Test sandbox creation
 	sandbox, err := sm.CreateSandbox("TestComponent", 1)
 	require.NoError(t, err)
 	require.NotNil(t, sandbox)
-	
+
 	assert.Equal(t, "TestComponent", sandbox.ComponentName)
 	assert.Equal(t, 1, sandbox.IsolationLevel)
 	assert.NotEmpty(t, sandbox.ID)
-	
+
 	// Verify sandbox is tracked
 	sm.sandboxMutex.RLock()
 	_, exists := sm.sandboxes[sandbox.ID]
 	sm.sandboxMutex.RUnlock()
 	assert.True(t, exists)
-	
+
 	// Test sandbox destruction
 	sm.DestroySandbox(sandbox.ID)
-	
+
 	// Verify sandbox is removed
 	sm.sandboxMutex.RLock()
 	_, exists = sm.sandboxes[sandbox.ID]
@@ -114,21 +114,21 @@ func TestSandboxManager_CreateDestroySandbox(t *testing.T) {
 func TestSessionManager_GetOrCreateSession(t *testing.T) {
 	config := DefaultPreviewConfig()
 	sesm := NewSessionManager(config)
-	
+
 	ctx := context.Background()
-	
+
 	// Test creating new session with empty ID
 	session1 := sesm.GetOrCreateSession(ctx, "")
 	require.NotNil(t, session1)
 	assert.NotEmpty(t, session1.ID)
 	assert.Equal(t, 1200, session1.ViewportSize.Width)
 	assert.Equal(t, 800, session1.ViewportSize.Height)
-	
+
 	// Test getting existing session
 	session2 := sesm.GetOrCreateSession(ctx, session1.ID)
 	assert.Equal(t, session1.ID, session2.ID)
 	assert.Equal(t, session1, session2)
-	
+
 	// Test creating session with specific ID
 	customID := "custom-session-123"
 	session3 := sesm.GetOrCreateSession(ctx, customID)
@@ -137,20 +137,20 @@ func TestSessionManager_GetOrCreateSession(t *testing.T) {
 
 func TestPreviewPerformanceMonitor_RecordRender(t *testing.T) {
 	monitor := NewPreviewPerformanceMonitor()
-	
+
 	// Test successful render
 	monitor.RecordRender(100*time.Millisecond, nil)
-	
+
 	monitor.metricsMutex.RLock()
 	assert.Equal(t, int64(1), monitor.metrics.TotalRenders)
 	assert.Equal(t, int64(1), monitor.metrics.SuccessfulRenders)
 	assert.Equal(t, int64(0), monitor.metrics.FailedRenders)
 	assert.Equal(t, 100*time.Millisecond, monitor.metrics.AverageRenderTime)
 	monitor.metricsMutex.RUnlock()
-	
+
 	// Test failed render
 	monitor.RecordRender(200*time.Millisecond, assert.AnError)
-	
+
 	monitor.metricsMutex.RLock()
 	assert.Equal(t, int64(2), monitor.metrics.TotalRenders)
 	assert.Equal(t, int64(1), monitor.metrics.SuccessfulRenders)
@@ -170,7 +170,7 @@ func TestPreviewOptions_Validation(t *testing.T) {
 		ShowDebugInfo:  true,
 		Layout:         "default",
 	}
-	
+
 	assert.Equal(t, "test-session", options.SessionID)
 	assert.Equal(t, "dark", options.Theme)
 	assert.Equal(t, 1024, options.ViewportSize.Width)
@@ -182,14 +182,14 @@ func TestPreviewOptions_Validation(t *testing.T) {
 
 func TestEnhancedPreviewSystem_PreviewComponent(t *testing.T) {
 	eps := NewEnhancedPreviewSystem(nil, nil, nil)
-	
+
 	ctx := context.Background()
 	componentName := "TestComponent"
 	props := map[string]interface{}{
 		"title": "Test Title",
 		"count": 42,
 	}
-	
+
 	options := &PreviewOptions{
 		SessionID:     "test-session",
 		Theme:         "light",
@@ -198,25 +198,25 @@ func TestEnhancedPreviewSystem_PreviewComponent(t *testing.T) {
 		MockData:      true,
 		ShowDebugInfo: true,
 	}
-	
+
 	// Mock the managers to avoid actual initialization
 	eps.templateManager = NewTemplateManager(eps.config)
 	eps.assetManager = NewAssetManager(eps.config)
 	eps.liveReload = NewLiveReloadManager(eps.config)
 	eps.sandboxManager = NewSandboxManager(eps.config)
 	eps.sessionManager = NewSessionManager(eps.config)
-	
+
 	result, err := eps.PreviewComponent(ctx, componentName, props, options)
-	
+
 	require.NoError(t, err)
 	require.NotNil(t, result)
-	
+
 	assert.NotEmpty(t, result.HTML)
 	assert.NotNil(t, result.Metadata)
 	assert.Equal(t, componentName, result.Metadata.ComponentName)
 	assert.Equal(t, props, result.Metadata.Props)
 	assert.NotNil(t, result.Performance)
-	
+
 	// Verify session was created and updated
 	session := eps.sessionManager.GetOrCreateSession(ctx, options.SessionID)
 	assert.Equal(t, componentName, session.CurrentComponent)
@@ -227,18 +227,18 @@ func TestEnhancedPreviewSystem_PreviewComponent(t *testing.T) {
 
 func TestEnhancedPreviewSystem_GetPreviewMetrics(t *testing.T) {
 	eps := NewEnhancedPreviewSystem(nil, nil, nil)
-	
+
 	// Record some test metrics
 	eps.performanceMonitor.RecordRender(100*time.Millisecond, nil)
 	eps.performanceMonitor.RecordRender(200*time.Millisecond, assert.AnError)
-	
+
 	// Create some sessions to test active session count
 	ctx := context.Background()
 	eps.sessionManager.GetOrCreateSession(ctx, "session1")
 	eps.sessionManager.GetOrCreateSession(ctx, "session2")
-	
+
 	metrics := eps.GetPreviewMetrics()
-	
+
 	require.NotNil(t, metrics)
 	assert.Equal(t, int64(2), metrics.TotalRenders)
 	assert.Equal(t, int64(1), metrics.SuccessfulRenders)
@@ -254,7 +254,7 @@ func TestViewportSize_Validation(t *testing.T) {
 		Height: 1080,
 		Scale:  1.5,
 	}
-	
+
 	assert.Equal(t, 1920, viewport.Width)
 	assert.Equal(t, 1080, viewport.Height)
 	assert.Equal(t, 1.5, viewport.Scale)
@@ -267,7 +267,7 @@ func TestPreviewHistoryEntry_Creation(t *testing.T) {
 		Timestamp:     time.Now(),
 		Title:         "Button Preview",
 	}
-	
+
 	assert.Equal(t, "Button", entry.ComponentName)
 	assert.Equal(t, "Click me", entry.Props["text"])
 	assert.Equal(t, "Button Preview", entry.Title)
@@ -283,7 +283,7 @@ func TestComponentBookmark_Creation(t *testing.T) {
 		Description:   "A nice primary button",
 		CreatedAt:     time.Now(),
 	}
-	
+
 	assert.Equal(t, "bookmark-123", bookmark.ID)
 	assert.Equal(t, "My Favorite Button", bookmark.Name)
 	assert.Equal(t, "Button", bookmark.ComponentName)
@@ -295,9 +295,9 @@ func TestComponentBookmark_Creation(t *testing.T) {
 func TestResourceLimits_DefaultValues(t *testing.T) {
 	config := DefaultPreviewConfig()
 	sm := NewSandboxManager(config)
-	
+
 	limits := sm.resourceLimits
-	
+
 	assert.Equal(t, 100, limits.MaxMemoryMB)
 	assert.Equal(t, 50.0, limits.MaxCPUPercent)
 	assert.Equal(t, 30*time.Second, limits.MaxExecutionTime)
@@ -309,10 +309,10 @@ func BenchmarkSessionManager_GetOrCreateSession(b *testing.B) {
 	config := DefaultPreviewConfig()
 	sesm := NewSessionManager(config)
 	ctx := context.Background()
-	
+
 	b.ResetTimer()
 	b.ReportAllocs()
-	
+
 	for i := 0; i < b.N; i++ {
 		sessionID := "benchmark-session"
 		sesm.GetOrCreateSession(ctx, sessionID)
@@ -321,10 +321,10 @@ func BenchmarkSessionManager_GetOrCreateSession(b *testing.B) {
 
 func BenchmarkPreviewPerformanceMonitor_RecordRender(b *testing.B) {
 	monitor := NewPreviewPerformanceMonitor()
-	
+
 	b.ResetTimer()
 	b.ReportAllocs()
-	
+
 	for i := 0; i < b.N; i++ {
 		monitor.RecordRender(100*time.Millisecond, nil)
 	}
@@ -333,10 +333,10 @@ func BenchmarkPreviewPerformanceMonitor_RecordRender(b *testing.B) {
 func BenchmarkSandboxManager_CreateDestroySandbox(b *testing.B) {
 	config := DefaultPreviewConfig()
 	sm := NewSandboxManager(config)
-	
+
 	b.ResetTimer()
 	b.ReportAllocs()
-	
+
 	for i := 0; i < b.N; i++ {
 		sandbox, _ := sm.CreateSandbox("BenchmarkComponent", 1)
 		sm.DestroySandbox(sandbox.ID)

@@ -14,6 +14,7 @@ type Config struct {
 	Preview     PreviewConfig     `yaml:"preview"`
 	Components  ComponentsConfig  `yaml:"components"`
 	Development DevelopmentConfig `yaml:"development"`
+	Plugins     PluginsConfig     `yaml:"plugins"`
 	TargetFiles []string          `yaml:"-"` // CLI arguments, not from config file
 }
 
@@ -51,6 +52,15 @@ type DevelopmentConfig struct {
 	StatePreservation bool `yaml:"state_preservation"`
 	ErrorOverlay      bool `yaml:"error_overlay"`
 }
+
+type PluginsConfig struct {
+	Enabled        []string                    `yaml:"enabled"`
+	Disabled       []string                    `yaml:"disabled"`
+	DiscoveryPaths []string                    `yaml:"discovery_paths"`
+	Configurations map[string]PluginConfigMap `yaml:"configurations"`
+}
+
+type PluginConfigMap map[string]interface{}
 
 func Load() (*Config, error) {
 	var config Config
@@ -144,6 +154,25 @@ func Load() (*Config, error) {
 		config.Server.Open = false
 	}
 
+	// Apply default values for PluginsConfig if not set
+	if len(config.Plugins.DiscoveryPaths) == 0 {
+		config.Plugins.DiscoveryPaths = []string{"./plugins", "~/.templar/plugins"}
+	}
+	if config.Plugins.Configurations == nil {
+		config.Plugins.Configurations = make(map[string]PluginConfigMap)
+	}
+
+	// Handle plugin configuration set via viper
+	if viper.IsSet("plugins.enabled") {
+		config.Plugins.Enabled = viper.GetStringSlice("plugins.enabled")
+	}
+	if viper.IsSet("plugins.disabled") {
+		config.Plugins.Disabled = viper.GetStringSlice("plugins.disabled")
+	}
+	if viper.IsSet("plugins.discovery_paths") {
+		config.Plugins.DiscoveryPaths = viper.GetStringSlice("plugins.discovery_paths")
+	}
+
 	// Validate configuration values
 	if err := validateConfig(&config); err != nil {
 		return nil, fmt.Errorf("invalid configuration: %w", err)
@@ -167,6 +196,11 @@ func validateConfig(config *Config) error {
 	// Validate components configuration
 	if err := validateComponentsConfig(&config.Components); err != nil {
 		return fmt.Errorf("components config: %w", err)
+	}
+
+	// Validate plugins configuration
+	if err := validatePluginsConfig(&config.Plugins); err != nil {
+		return fmt.Errorf("plugins config: %w", err)
 	}
 
 	return nil

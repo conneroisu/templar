@@ -228,29 +228,40 @@ func (s *PreviewServer) handleFileChange(events []watcher.ChangeEvent) error {
 	return nil
 }
 
+// openBrowser safely opens the specified URL in the default browser.
+// This function implements security measures to prevent command injection
+// attacks by validating the URL before passing it to system commands.
 func (s *PreviewServer) openBrowser(url string) {
-	time.Sleep(100 * time.Millisecond) // Give server time to start
+	// Brief delay to ensure server has started listening
+	time.Sleep(100 * time.Millisecond)
 
-	// Validate URL for security before passing to system commands
+	// Critical security validation: prevent command injection attacks
 	if err := validation.ValidateURL(url); err != nil {
-		log.Printf("Browser open failed due to invalid URL: %v", err)
+		log.Printf("Security: Browser open blocked due to invalid URL: %v", err)
 		return
 	}
 
 	var err error
 	switch runtime.GOOS {
 	case "linux":
+		// Use xdg-open for Linux desktop environments
 		err = exec.Command("xdg-open", url).Start()
 	case "windows":
+		// Use rundll32 for Windows
 		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
 	case "darwin":
+		// Use open for macOS
 		err = exec.Command("open", url).Start()
 	default:
-		err = fmt.Errorf("unsupported platform")
+		err = fmt.Errorf("unsupported platform: %s", runtime.GOOS)
+		log.Printf("Browser auto-open not supported on platform: %s", runtime.GOOS)
+		return
 	}
 
 	if err != nil {
-		log.Printf("Failed to open browser: %v", err)
+		log.Printf("Failed to open browser for URL %s: %v", url, err)
+	} else {
+		log.Printf("Successfully opened browser for URL: %s", url)
 	}
 }
 
@@ -258,7 +269,7 @@ func (s *PreviewServer) addMiddleware(handler http.Handler) http.Handler {
 	// Create security middleware
 	securityConfig := SecurityConfigFromAppConfig(s.config)
 	securityHandler := SecurityMiddleware(securityConfig)(handler)
-	
+
 	// Create rate limiting middleware
 	rateLimitConfig := securityConfig.RateLimiting
 	if rateLimitConfig != nil && rateLimitConfig.Enabled {
@@ -266,7 +277,7 @@ func (s *PreviewServer) addMiddleware(handler http.Handler) http.Handler {
 		rateLimitHandler := RateLimitMiddleware(rateLimiter)(securityHandler)
 		securityHandler = rateLimitHandler
 	}
-	
+
 	// Add CORS and logging middleware
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// CORS headers based on environment
@@ -373,7 +384,7 @@ func (s *PreviewServer) GetLastBuildErrors() []*errors.ParsedError {
 // Shutdown gracefully shuts down the server and cleans up resources
 func (s *PreviewServer) Shutdown(ctx context.Context) error {
 	var shutdownErr error
-	
+
 	s.shutdownOnce.Do(func() {
 		log.Println("Shutting down server...")
 
@@ -407,13 +418,13 @@ func (s *PreviewServer) Shutdown(ctx context.Context) error {
 		default:
 			close(s.broadcast)
 		}
-		
+
 		select {
 		case <-s.register:
 		default:
 			close(s.register)
 		}
-		
+
 		select {
 		case <-s.unregister:
 		default:
@@ -441,9 +452,9 @@ func (s *PreviewServer) handleHealth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	health := map[string]interface{}{
-		"status":    "healthy",
-		"timestamp": time.Now().UTC(),
-		"version":   version.GetShortVersion(),
+		"status":     "healthy",
+		"timestamp":  time.Now().UTC(),
+		"version":    version.GetShortVersion(),
 		"build_info": version.GetBuildInfo(),
 		"checks": map[string]interface{}{
 			"server":   map[string]interface{}{"status": "healthy", "message": "HTTP server operational"},

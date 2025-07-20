@@ -14,10 +14,10 @@ import (
 )
 
 var (
-	validateAll     bool
+	validateAll      bool
 	validateCircular bool
-	validateFormat  string
-	validatePaths   []string
+	validateFormat   string
+	validatePaths    []string
 )
 
 // validateCmd represents the validate command
@@ -57,11 +57,11 @@ type ValidationResult struct {
 }
 
 type ValidationSummary struct {
-	Total          int                 `json:"total"`
-	Valid          int                 `json:"valid"`
-	Invalid        int                 `json:"invalid"`
-	CircularCycles [][]string          `json:"circular_cycles,omitempty"`
-	Results        []ValidationResult  `json:"results"`
+	Total          int                `json:"total"`
+	Valid          int                `json:"valid"`
+	Invalid        int                `json:"invalid"`
+	CircularCycles [][]string         `json:"circular_cycles,omitempty"`
+	Results        []ValidationResult `json:"results"`
 }
 
 func runValidateCommand(cmd *cobra.Command, args []string) error {
@@ -123,7 +123,7 @@ func runValidateCommand(cmd *cobra.Command, args []string) error {
 	for _, component := range componentsToValidate {
 		result := validateComponent(component)
 		summary.Results = append(summary.Results, result)
-		
+
 		if result.Valid {
 			summary.Valid++
 		} else {
@@ -143,7 +143,7 @@ func runValidateCommand(cmd *cobra.Command, args []string) error {
 					cycleComponents[comp] = true
 				}
 			}
-			
+
 			for i := range summary.Results {
 				if cycleComponents[summary.Results[i].Component] {
 					if summary.Results[i].Valid {
@@ -220,7 +220,7 @@ func validateComponent(component *registry.ComponentInfo) ValidationResult {
 		"/tmp/", "/var/tmp/", "/dev/", "/proc/", "/sys/",
 		"\\temp\\", "\\windows\\", "\\system32\\",
 	}
-	
+
 	for _, pattern := range suspiciousPatterns {
 		if strings.Contains(strings.ToLower(component.FilePath), pattern) {
 			result.Warnings = append(result.Warnings, fmt.Sprintf("File in suspicious location: %s", component.FilePath))
@@ -234,30 +234,30 @@ func validateComponent(component *registry.ComponentInfo) ValidationResult {
 func validateComponentName(name string) error {
 	// Reuse the existing validation function from handlers
 	// This ensures consistency across the application
-	
+
 	// Reject empty names
 	if name == "" {
 		return fmt.Errorf("empty component name")
 	}
-	
+
 	// Clean the name
 	cleanName := filepath.Clean(name)
-	
+
 	// Reject names containing path traversal patterns
 	if strings.Contains(cleanName, "..") {
 		return fmt.Errorf("path traversal attempt detected")
 	}
-	
+
 	// Reject absolute paths
 	if filepath.IsAbs(cleanName) {
 		return fmt.Errorf("absolute path not allowed")
 	}
-	
+
 	// Reject names with path separators (should be simple component names)
 	if strings.ContainsRune(cleanName, os.PathSeparator) {
 		return fmt.Errorf("path separators not allowed in component name")
 	}
-	
+
 	// Reject special characters that could be used in injection attacks
 	dangerousChars := []string{"<", ">", "\"", "'", "&", ";", "|", "$", "`", "(", ")", "{", "}", "[", "]", "\\"}
 	for _, char := range dangerousChars {
@@ -265,12 +265,12 @@ func validateComponentName(name string) error {
 			return fmt.Errorf("dangerous character not allowed: %s", char)
 		}
 	}
-	
+
 	// Reject if name is too long (prevent buffer overflow attacks)
 	if len(cleanName) > 100 {
 		return fmt.Errorf("component name too long (max 100 characters)")
 	}
-	
+
 	return nil
 }
 
@@ -279,11 +279,11 @@ func outputValidationText(summary ValidationSummary) error {
 	fmt.Printf("  Total components: %d\n", summary.Total)
 	fmt.Printf("  Valid: %d\n", summary.Valid)
 	fmt.Printf("  Invalid: %d\n", summary.Invalid)
-	
+
 	if len(summary.CircularCycles) > 0 {
 		fmt.Printf("  Circular dependencies detected: %d cycles\n", len(summary.CircularCycles))
 	}
-	
+
 	fmt.Println()
 
 	// Show circular dependencies first
@@ -301,17 +301,17 @@ func outputValidationText(summary ValidationSummary) error {
 		if !result.Valid {
 			status = "❌"
 		}
-		
+
 		fmt.Printf("%s %s\n", status, result.Component)
-		
+
 		for _, err := range result.Errors {
 			fmt.Printf("    Error: %s\n", err)
 		}
-		
+
 		for _, warning := range result.Warnings {
 			fmt.Printf("    Warning: %s\n", warning)
 		}
-		
+
 		if len(result.Errors) > 0 || len(result.Warnings) > 0 {
 			fmt.Println()
 		}

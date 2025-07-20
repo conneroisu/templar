@@ -1,0 +1,110 @@
+# Templar Configuration Example
+# This file demonstrates the complete configuration options for Templar CLI
+
+# Server configuration for development server
+server:
+  port: 8080
+  host: "localhost"
+  open: true                    # Auto-open browser
+  no-open: false               # Override auto-open
+  middleware: ["cors", "logging", "security"]
+  allowed_origins: 
+    - "http://localhost:3000"
+    - "http://127.0.0.1:3000"
+  environment: "development"
+
+# Build configuration
+build:
+  command: "templ generate"
+  watch: ["**/*.templ", "**/*.go"]
+  ignore: ["node_modules", ".git", "*.test", "coverage"]
+  cache_dir: ".templar/cache"
+
+# Preview configuration
+preview:
+  mock_data: "auto"            # auto, manual, or path to mock data
+  wrapper: "layout.templ"      # Default wrapper template
+  auto_props: true             # Automatically infer props from usage
+
+# Component scanning configuration
+components:
+  scan_paths: 
+    - "./components"
+    - "./views" 
+    - "./templates"
+    - "./examples"
+  exclude_patterns: 
+    - "*_test.templ"
+    - "*.bak"
+    - "*.backup"
+    - "draft_*"
+
+# Development settings
+development:
+  hot_reload: true             # Enable hot reload
+  css_injection: true          # Inject CSS changes without page reload
+  state_preservation: false    # Preserve component state during reload
+  error_overlay: true          # Show error overlay on compilation errors
+
+# Plugin configuration (NEW ENHANCED SYSTEM)
+plugins:
+  # Plugins to enable by default
+  enabled:
+    - "tailwind"               # Built-in Tailwind CSS integration
+    - "hotreload"              # Built-in hot reload functionality
+    # - "custom-plugin"        # Your custom plugins
+
+  # Plugins to explicitly disable
+  disabled:
+    - "experimental-feature"   # Disable experimental plugins
+
+  # Paths to search for external plugins
+  discovery_paths:
+    - "./plugins"              # Local project plugins
+    - "~/.templar/plugins"     # User-global plugins
+    - "/usr/local/share/templar/plugins"  # System-wide plugins
+
+  # Plugin-specific configurations
+  configurations:
+    # Tailwind CSS plugin configuration
+    tailwind:
+      auto_generate: true      # Automatically generate CSS
+      config_file: "tailwind.config.js"
+      output_file: "styles/tailwind.css"
+      watch_paths: ["**/*.templ", "**/*.html"]
+      purge_unused: true       # Remove unused CSS in production
+      
+    # Hot reload plugin configuration  
+    hotreload:
+      debounce_ms: 250        # Debounce file change events
+      websocket_port: 3001    # WebSocket port for live reload
+      inject_script: true     # Inject reload script into HTML
+      reload_delay: 100       # Delay before reloading page
+      
+    # Example custom plugin configuration
+    custom-plugin:
+      api_key: "${CUSTOM_PLUGIN_API_KEY}"  # Environment variable
+      timeout: 30
+      batch_size: 10
+      features:
+        - "feature1"
+        - "feature2"
+      settings:
+        max_retries: 3
+        log_level: "info"
+        
+    # Another example plugin with complex config
+    advanced-plugin:
+      database:
+        host: "localhost"
+        port: 5432
+        database: "templar_dev"
+      cache:
+        type: "redis"
+        url: "redis://localhost:6379"
+      notifications:
+        slack:
+          webhook_url: "${SLACK_WEBHOOK_URL}"
+        email:
+          smtp_host: "smtp.example.com"
+          smtp_port: 587

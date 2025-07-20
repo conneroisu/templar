@@ -44,7 +44,7 @@ func init() {
 
 func runVersionCommand(cmd *cobra.Command, args []string) error {
 	detailed, _ := cmd.Flags().GetBool("detailed")
-	
+
 	switch versionFormat {
 	case "json":
 		return outputVersionJSON()
@@ -68,48 +68,48 @@ func outputVersionShort() error {
 
 func outputVersionDefault() error {
 	info := version.GetBuildInfo()
-	
+
 	fmt.Printf("templar %s", info.Version)
-	
+
 	if info.GitCommit != "unknown" && len(info.GitCommit) >= 7 {
 		fmt.Printf(" (%s)", info.GitCommit[:7])
 	}
-	
+
 	if version.IsDirty() {
 		fmt.Print(" (dirty)")
 	}
-	
+
 	fmt.Println()
-	
+
 	if !info.BuildTime.IsZero() {
 		fmt.Printf("Built: %s\n", info.BuildTime.Format("2006-01-02 15:04:05 UTC"))
 	}
-	
+
 	fmt.Printf("Go: %s\n", info.GoVersion)
 	fmt.Printf("Platform: %s\n", info.Platform)
-	
+
 	return nil
 }
 
 func outputVersionDetailed() error {
 	fmt.Println(version.GetDetailedVersion())
-	
+
 	if version.IsDirty() {
 		fmt.Println("Working directory: dirty")
 	}
-	
+
 	if version.IsRelease() {
 		fmt.Println("Build type: release")
 	} else {
 		fmt.Println("Build type: development")
 	}
-	
+
 	return nil
 }
 
 func outputVersionJSON() error {
 	info := version.GetBuildInfo()
-	
+
 	// Add extra fields for JSON output
 	jsonInfo := map[string]interface{}{
 		"version":    info.Version,
@@ -121,7 +121,7 @@ func outputVersionJSON() error {
 		"is_release": version.IsRelease(),
 		"is_dirty":   version.IsDirty(),
 	}
-	
+
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(jsonInfo)

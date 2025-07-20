@@ -23,15 +23,15 @@ const (
 // ParsedError represents a parsed error with structured information
 type ParsedError struct {
 	Type       BuildErrorType `json:"type"`
-	Severity   ErrorSeverity `json:"severity"`
-	Component  string        `json:"component"`
-	File       string        `json:"file"`
-	Line       int           `json:"line"`
-	Column     int           `json:"column"`
-	Message    string        `json:"message"`
-	Suggestion string        `json:"suggestion,omitempty"`
-	RawError   string        `json:"raw_error"`
-	Context    []string      `json:"context,omitempty"`
+	Severity   ErrorSeverity  `json:"severity"`
+	Component  string         `json:"component"`
+	File       string         `json:"file"`
+	Line       int            `json:"line"`
+	Column     int            `json:"column"`
+	Message    string         `json:"message"`
+	Suggestion string         `json:"suggestion,omitempty"`
+	RawError   string         `json:"raw_error"`
+	Context    []string       `json:"context,omitempty"`
 }
 
 // ErrorParser parses templ and Go errors into structured format

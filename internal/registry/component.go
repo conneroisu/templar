@@ -23,6 +23,7 @@ type ComponentInfo struct {
 	LastMod      time.Time
 	Hash         string
 	Dependencies []string
+	Metadata     map[string]interface{} // Plugin-specific metadata
 }
 
 // ParameterInfo describes a component parameter
@@ -55,10 +56,10 @@ func NewComponentRegistry() *ComponentRegistry {
 		components: make(map[string]*ComponentInfo),
 		watchers:   make([]chan ComponentEvent, 0),
 	}
-	
+
 	// Initialize dependency analyzer
 	registry.dependencyAnalyzer = NewDependencyAnalyzer(registry)
-	
+
 	return registry
 }
 

