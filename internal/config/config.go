@@ -1,3 +1,11 @@
+// Package config provides configuration management for Templar applications
+// using Viper for flexible configuration loading from files, environment
+// variables, and command-line flags.
+//
+// The configuration system supports YAML files, environment variable overrides
+// with TEMPLAR_ prefix, validation, and security checks. It manages server
+// settings, component scanning paths, build pipeline configuration, and
+// development-specific options like hot reload and error overlays.
 package config
 
 import (

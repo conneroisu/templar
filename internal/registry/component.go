@@ -1,3 +1,11 @@
+// Package registry provides a central component registry with event-driven
+// architecture for managing templ component metadata and change notifications.
+//
+// The registry maintains a thread-safe collection of discovered components,
+// broadcasts change events to subscribers, and provides component lookup
+// and enumeration capabilities. It supports real-time component management
+// with automatic registration, updates, and removal, integrating with
+// scanners for component discovery and servers for live reload functionality.
 package registry
 
 import (

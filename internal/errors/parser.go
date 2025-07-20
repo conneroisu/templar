@@ -1,3 +1,11 @@
+// Package errors provides build error parsing and HTML overlay generation
+// for development-friendly error reporting.
+//
+// The error system parses compiler output from templ and Go build tools,
+// extracts structured error information including file paths, line numbers,
+// and error messages, and generates HTML error overlays for real-time
+// debugging. It supports race-safe error collection and provides formatted
+// error display with severity classification and context information.
 package errors
 
 import (

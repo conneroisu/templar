@@ -89,7 +89,7 @@ docker-test:
 
 # Security scanning
 security-scan:
-	@command -v govulncheck >/dev/null 2>&1 || { echo "Installing govulncheck..."; go install golang.org/x/vuln/cmd/govulncheck@latest; }
+	@command -v govulncheck >/dev/null 2>&1 || { echo "Installing govulncheck..."; go install golang.org/x/vuln/cmd/govulncheck@v1.1.3; }
 	govulncheck ./...
 
 # Run the project

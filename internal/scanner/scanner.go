@@ -1,3 +1,11 @@
+// Package scanner provides component discovery and analysis for templ templates.
+//
+// The scanner traverses file systems to find .templ files, parses them using
+// Go's AST parser to extract component metadata including parameters, dependencies,
+// and documentation. It integrates with the component registry to broadcast
+// change events and supports recursive directory scanning with exclude patterns.
+// The scanner maintains file hashes for change detection and provides both
+// single-file and batch scanning capabilities.
 package scanner
 
 import (

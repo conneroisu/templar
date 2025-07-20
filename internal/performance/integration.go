@@ -1,3 +1,5 @@
+//go:build performance
+
 package performance
 
 import (
@@ -23,7 +25,7 @@ func NewPerformanceIntegration(monitor *PerformanceMonitor) *PerformanceIntegrat
 }
 
 // WrapBuildPipeline wraps a build pipeline to collect performance metrics
-func (pi *PerformanceIntegration) WrapBuildPipeline(pipeline *build.Pipeline) *build.Pipeline {
+func (pi *PerformanceIntegration) WrapBuildPipeline(pipeline *build.BuildPipeline) *build.BuildPipeline {
 	// Create a wrapper that measures build times
 	originalBuild := pipeline.Build
 	
@@ -93,7 +95,7 @@ func (pi *PerformanceIntegration) RecordComponentScan(componentCount int, durati
 }
 
 // WrapServer wraps a server to collect request metrics
-func (pi *PerformanceIntegration) WrapServer(srv *server.Server) *server.Server {
+func (pi *PerformanceIntegration) WrapServer(srv *server.PreviewServer) *server.PreviewServer {
 	// This would require modifying the server to support middleware
 	// For now, we'll provide methods to manually record server metrics
 	return srv

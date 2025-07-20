@@ -1,3 +1,11 @@
+// Package renderer provides component rendering and template processing
+// capabilities for templ components.
+//
+// The renderer handles compilation of .templ files to Go code, manages
+// template processing with mock data support, and provides HTML generation
+// for component preview. It integrates with the build pipeline for secure
+// command execution and supports both individual component rendering and
+// batch processing with proper error handling and validation.
 package renderer
 
 import (
@@ -251,7 +259,7 @@ func (r *ComponentRenderer) runTemplGenerate(workDir string) error {
 
 	// Check if templ command is available
 	if _, err := exec.LookPath("templ"); err != nil {
-		return fmt.Errorf("templ command not found: %w. Please install it with: go install github.com/a-h/templ/cmd/templ@latest", err)
+		return fmt.Errorf("templ command not found: %w. Please install it with: go install github.com/a-h/templ/cmd/templ@v0.3.819", err)
 	}
 
 	cmd := exec.Command("templ", "generate")

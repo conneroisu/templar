@@ -1,3 +1,11 @@
+// Package build provides a concurrent build pipeline for templ components
+// with caching, error collection, and performance metrics.
+//
+// The build pipeline processes components through worker pools, maintains
+// an LRU cache for build results, and provides real-time build status
+// through callbacks and metrics. It supports parallel execution with
+// configurable worker counts and implements security-hardened command
+// execution with proper validation.
 package build
 
 import (

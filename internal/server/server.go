@@ -1,3 +1,12 @@
+// Package server provides an HTTP server with WebSocket support for real-time
+// component development and preview functionality.
+//
+// The server implements security-hardened HTTP handlers, WebSocket connections
+// for live reload, CORS middleware, and comprehensive health checking. It serves
+// component preview pages, provides REST APIs for component management, and
+// includes rate limiting and origin validation for WebSocket connections.
+// The server supports graceful shutdown and integrates with the component
+// registry for real-time updates.
 package server
 
 import (

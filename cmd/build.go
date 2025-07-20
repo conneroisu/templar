@@ -188,7 +188,7 @@ func runTemplGenerate(cfg *config.Config) error {
 	// Check if templ is available
 	if parts[0] == "templ" {
 		if _, err := exec.LookPath("templ"); err != nil {
-			return errors.New("templ command not found. Please install it with: go install github.com/a-h/templ/cmd/templ@latest")
+			return errors.New("templ command not found. Please install it with: go install github.com/a-h/templ/cmd/templ@v0.3.819")
 		}
 	}
 

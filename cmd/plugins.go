@@ -1,3 +1,5 @@
+//go:build plugins
+
 package cmd
 
 import (

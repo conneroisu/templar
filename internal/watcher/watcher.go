@@ -1,3 +1,11 @@
+// Package watcher provides real-time file system monitoring with debouncing
+// and recursive directory watching capabilities.
+//
+// The watcher monitors file system changes for .templ files and triggers
+// component rescanning and rebuilding. It implements debouncing to prevent
+// excessive rebuilds during rapid file changes, supports recursive directory
+// monitoring with configurable ignore patterns, and provides safe goroutine
+// lifecycle management with proper context cancellation.
 package watcher
 
 import (

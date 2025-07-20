@@ -1,3 +1,5 @@
+//go:build enhanced_plugins
+
 package cmd
 
 import (
