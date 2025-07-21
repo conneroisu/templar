@@ -80,7 +80,7 @@ func TestPreviewServer_CheckOrigin(t *testing.T) {
 	defer server.Stop()
 
 	// Test CheckOrigin function
-	req := httptest.NewRequest("GET", "http://localhost:8080/ws", nil)
+	req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/ws", nil)
 
 	// Test with no origin header - should reject for security
 	assert.False(t, server.checkOrigin(req))
@@ -292,7 +292,7 @@ func TestPreviewServer_MiddlewareIntegration(t *testing.T) {
 	wrappedHandler := server.addMiddleware(handler)
 
 	// Test the middleware
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest(http.MethodGet, "/test", nil)
 	rr := httptest.NewRecorder()
 
 	wrappedHandler.ServeHTTP(rr, req)
@@ -332,7 +332,7 @@ func TestPreviewServer_MiddlewareOptions(t *testing.T) {
 	wrappedHandler := server.addMiddleware(handler)
 
 	// Test OPTIONS request
-	req := httptest.NewRequest("OPTIONS", "/test", nil)
+	req := httptest.NewRequest(http.MethodOptions, "/test", nil)
 	rr := httptest.NewRecorder()
 
 	wrappedHandler.ServeHTTP(rr, req)

@@ -20,7 +20,7 @@ func TestAuthMiddleware_Disabled(t *testing.T) {
 		w.Write([]byte("success"))
 	}))
 
-	req := httptest.NewRequest("GET", "/", nil)
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	req.RemoteAddr = "192.168.1.100:1234"
 	w := httptest.NewRecorder()
 
@@ -71,7 +71,7 @@ func TestAuthMiddleware_LocalhostBypass(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest("GET", "/", nil)
+			req := httptest.NewRequest(http.MethodGet, "/", nil)
 			req.RemoteAddr = tt.remoteAddr
 			w := httptest.NewRecorder()
 
@@ -121,7 +121,7 @@ func TestAuthMiddleware_IPAllowlist(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest("GET", "/", nil)
+			req := httptest.NewRequest(http.MethodGet, "/", nil)
 			req.RemoteAddr = tt.remoteAddr
 			w := httptest.NewRecorder()
 
@@ -184,7 +184,7 @@ func TestAuthMiddleware_BasicAuth(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest("GET", "/", nil)
+			req := httptest.NewRequest(http.MethodGet, "/", nil)
 			req.RemoteAddr = "192.168.1.100:1234"
 
 			if tt.username != "" || tt.password != "" {
@@ -266,9 +266,9 @@ func TestAuthMiddleware_TokenAuth(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var req *http.Request
 			if tt.method == "query" {
-				req = httptest.NewRequest("GET", "/?token="+tt.token, nil)
+				req = httptest.NewRequest(http.MethodGet, "/?token="+tt.token, nil)
 			} else {
-				req = httptest.NewRequest("GET", "/", nil)
+				req = httptest.NewRequest(http.MethodGet, "/", nil)
 				if tt.token != "" {
 					req.Header.Set("Authorization", "Bearer "+tt.token)
 				}
@@ -308,7 +308,7 @@ func TestAuthMiddleware_NoAuthRequired(t *testing.T) {
 		w.Write([]byte("success"))
 	}))
 
-	req := httptest.NewRequest("GET", "/", nil)
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	req.RemoteAddr = "192.168.1.100:1234" // External IP
 	w := httptest.NewRecorder()
 
@@ -421,7 +421,7 @@ func TestAuthenticateToken(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest("GET", "/?token="+tt.queryToken, nil)
+			req := httptest.NewRequest(http.MethodGet, "/?token="+tt.queryToken, nil)
 			if tt.authHeader != "" {
 				req.Header.Set("Authorization", tt.authHeader)
 			}
@@ -472,7 +472,7 @@ func TestAuthenticateBasic(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest("GET", "/", nil)
+			req := httptest.NewRequest(http.MethodGet, "/", nil)
 			if tt.username != "" || tt.password != "" {
 				auth := base64.StdEncoding.EncodeToString([]byte(tt.username + ":" + tt.password))
 				req.Header.Set("Authorization", "Basic "+auth)

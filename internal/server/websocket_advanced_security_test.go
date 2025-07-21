@@ -29,7 +29,7 @@ func TestWebSocketConnectionHijacking(t *testing.T) {
 			name: "session_fixation_attack",
 			setupAttack: func(server *httptest.Server) (*http.Request, error) {
 				// Attempt to hijack by providing a fixed session cookie
-				req, err := http.NewRequest("GET", strings.Replace(server.URL, "http://", "ws://", 1)+"/ws", nil)
+				req, err := http.NewRequest(http.MethodGet, strings.Replace(server.URL, "http://", "ws://", 1)+"/ws", nil)
 				if err != nil {
 					return nil, err
 				}
@@ -44,7 +44,7 @@ func TestWebSocketConnectionHijacking(t *testing.T) {
 		{
 			name: "csrf_token_manipulation",
 			setupAttack: func(server *httptest.Server) (*http.Request, error) {
-				req, err := http.NewRequest("GET", strings.Replace(server.URL, "http://", "ws://", 1)+"/ws", nil)
+				req, err := http.NewRequest(http.MethodGet, strings.Replace(server.URL, "http://", "ws://", 1)+"/ws", nil)
 				if err != nil {
 					return nil, err
 				}
@@ -59,7 +59,7 @@ func TestWebSocketConnectionHijacking(t *testing.T) {
 		{
 			name: "host_header_injection",
 			setupAttack: func(server *httptest.Server) (*http.Request, error) {
-				req, err := http.NewRequest("GET", strings.Replace(server.URL, "http://", "ws://", 1)+"/ws", nil)
+				req, err := http.NewRequest(http.MethodGet, strings.Replace(server.URL, "http://", "ws://", 1)+"/ws", nil)
 				if err != nil {
 					return nil, err
 				}
@@ -73,7 +73,7 @@ func TestWebSocketConnectionHijacking(t *testing.T) {
 		{
 			name: "connection_upgrade_smuggling",
 			setupAttack: func(server *httptest.Server) (*http.Request, error) {
-				req, err := http.NewRequest("GET", strings.Replace(server.URL, "http://", "ws://", 1)+"/ws", nil)
+				req, err := http.NewRequest(http.MethodGet, strings.Replace(server.URL, "http://", "ws://", 1)+"/ws", nil)
 				if err != nil {
 					return nil, err
 				}
@@ -122,7 +122,7 @@ func TestWebSocketConnectionHijacking(t *testing.T) {
 
 			if tt.expectBlock {
 				// Should be blocked - either connection fails or non-101 response
-				if err == nil && response != nil && response.StatusCode == 101 {
+				if err == nil && response != nil && response.StatusCode == http.StatusSwitchingProtocols {
 					conn.Close(websocket.StatusNormalClosure, "")
 					t.Errorf("%s: Expected connection to be blocked, but it succeeded", tt.description)
 				}
@@ -231,7 +231,7 @@ func TestWebSocketProtocolDowngradeAttacks(t *testing.T) {
 				conn.Close(websocket.StatusNormalClosure, "")
 			} else {
 				// Should be rejected - either error or non-101 status
-				if err == nil && response != nil && response.StatusCode == 101 {
+				if err == nil && response != nil && response.StatusCode == http.StatusSwitchingProtocols {
 					conn.Close(websocket.StatusNormalClosure, "")
 					t.Errorf("%s: Expected protocol downgrade attack to be blocked", tt.description)
 				}
@@ -614,7 +614,7 @@ func TestWebSocketOriginValidationComprehensive(t *testing.T) {
 			}
 
 			// All malicious origins should be blocked
-			if err == nil && response != nil && response.StatusCode == 101 {
+			if err == nil && response != nil && response.StatusCode == http.StatusSwitchingProtocols {
 				conn.Close(websocket.StatusNormalClosure, "")
 				t.Errorf("Origin validation failed: %s should have been blocked (%s)", test.origin, test.description)
 			} else {
@@ -646,7 +646,7 @@ func TestWebSocketSecurityHeaders(t *testing.T) {
 		Timeout: 5 * time.Second,
 	}
 
-	req, err := http.NewRequest("GET", testServer.URL, nil)
+	req, err := http.NewRequest(http.MethodGet, testServer.URL, nil)
 	require.NoError(t, err)
 
 	req.Header.Set("Origin", "http://localhost:3000")
@@ -674,7 +674,7 @@ func TestWebSocketSecurityHeaders(t *testing.T) {
 	}
 
 	// WebSocket-specific checks
-	if resp.StatusCode == 101 {
+	if resp.StatusCode == http.StatusSwitchingProtocols {
 		// If upgrade succeeded, connection should be secure
 		upgrade := resp.Header.Get("Upgrade")
 		connection := resp.Header.Get("Connection")
@@ -697,7 +697,7 @@ func BenchmarkWebSocketSecurityValidation(b *testing.B) {
 	require.NoError(b, err)
 
 	// Create a request that will be validated
-	req := httptest.NewRequest("GET", "/ws", nil)
+	req := httptest.NewRequest(http.MethodGet, "/ws", nil)
 	req.Header.Set("Origin", "http://localhost:3000")
 	req.Header.Set("Connection", "Upgrade")
 	req.Header.Set("Upgrade", "websocket")

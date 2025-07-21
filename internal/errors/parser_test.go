@@ -9,6 +9,34 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Helper function to verify parsed error results
+func verifyParsedErrors(t *testing.T, parser *ErrorParser, testCase struct {
+	name           string
+	output         string
+	expectedCount  int
+	expectedType   BuildErrorType
+	expectedFile   string
+	expectedLine   int
+	expectedColumn int
+	expectedMsg    string
+}) {
+	errors := parser.ParseError(testCase.output)
+
+	require.Len(t, errors, testCase.expectedCount, "Expected %d errors, got %d", testCase.expectedCount, len(errors))
+
+	if testCase.expectedCount > 0 {
+		err := errors[0]
+		assert.Equal(t, testCase.expectedType, err.Type)
+		assert.Equal(t, testCase.expectedFile, err.File)
+		assert.Equal(t, testCase.expectedLine, err.Line)
+		assert.Equal(t, testCase.expectedColumn, err.Column)
+		assert.Equal(t, testCase.expectedMsg, err.Message)
+		assert.Equal(t, ErrorSeverityError, err.Severity)
+		assert.NotEmpty(t, err.Suggestion)
+		assert.Equal(t, testCase.output, err.RawError)
+	}
+}
+
 // TestParseError_TemplPatterns tests templ error parsing patterns
 func TestParseError_TemplPatterns(t *testing.T) {
 	parser := NewErrorParser()
@@ -67,21 +95,7 @@ func TestParseError_TemplPatterns(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			errors := parser.ParseError(tt.output)
-
-			require.Len(t, errors, tt.expectedCount, "Expected %d errors, got %d", tt.expectedCount, len(errors))
-
-			if tt.expectedCount > 0 {
-				err := errors[0]
-				assert.Equal(t, tt.expectedType, err.Type)
-				assert.Equal(t, tt.expectedFile, err.File)
-				assert.Equal(t, tt.expectedLine, err.Line)
-				assert.Equal(t, tt.expectedColumn, err.Column)
-				assert.Equal(t, tt.expectedMsg, err.Message)
-				assert.Equal(t, ErrorSeverityError, err.Severity)
-				assert.NotEmpty(t, err.Suggestion)
-				assert.Equal(t, tt.output, err.RawError)
-			}
+			verifyParsedErrors(t, parser, tt)
 		})
 	}
 }
@@ -174,21 +188,7 @@ func TestParseError_GoPatterns(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			errors := parser.ParseError(tt.output)
-
-			require.Len(t, errors, tt.expectedCount, "Expected %d errors, got %d", tt.expectedCount, len(errors))
-
-			if tt.expectedCount > 0 {
-				err := errors[0]
-				assert.Equal(t, tt.expectedType, err.Type)
-				assert.Equal(t, tt.expectedFile, err.File)
-				assert.Equal(t, tt.expectedLine, err.Line)
-				assert.Equal(t, tt.expectedColumn, err.Column)
-				assert.Equal(t, tt.expectedMsg, err.Message)
-				assert.Equal(t, ErrorSeverityError, err.Severity)
-				assert.NotEmpty(t, err.Suggestion)
-				assert.Equal(t, tt.output, err.RawError)
-			}
+			verifyParsedErrors(t, parser, tt)
 		})
 	}
 }

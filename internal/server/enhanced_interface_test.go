@@ -36,7 +36,7 @@ func TestEnhancedWebInterface(t *testing.T) {
 	}
 
 	t.Run("Enhanced Index Page", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/enhanced", nil)
+		req := httptest.NewRequest(http.MethodGet, "/enhanced", nil)
 		w := httptest.NewRecorder()
 
 		server.handleEnhancedIndex(w, req)
@@ -52,7 +52,7 @@ func TestEnhancedWebInterface(t *testing.T) {
 	})
 
 	t.Run("Component Editor Page", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/editor/TestButton", nil)
+		req := httptest.NewRequest(http.MethodGet, "/editor/TestButton", nil)
 		w := httptest.NewRecorder()
 
 		server.handleComponentEditor(w, req)
@@ -69,7 +69,7 @@ func TestEnhancedWebInterface(t *testing.T) {
 	})
 
 	t.Run("Component Editor - Non-existent Component", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/editor/NonExistent", nil)
+		req := httptest.NewRequest(http.MethodGet, "/editor/NonExistent", nil)
 		w := httptest.NewRecorder()
 
 		server.handleComponentEditor(w, req)
@@ -78,7 +78,7 @@ func TestEnhancedWebInterface(t *testing.T) {
 	})
 
 	t.Run("Component Editor - Invalid Component Name", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/editor/../invalid", nil)
+		req := httptest.NewRequest(http.MethodGet, "/editor/../invalid", nil)
 		w := httptest.NewRecorder()
 
 		server.handleComponentEditor(w, req)
@@ -121,7 +121,7 @@ func TestInlineEditor(t *testing.T) {
 		}
 
 		reqBody, _ := json.Marshal(requestBody)
-		req := httptest.NewRequest("POST", "/api/inline-editor", bytes.NewReader(reqBody))
+		req := httptest.NewRequest(http.MethodPost, "/api/inline-editor", bytes.NewReader(reqBody))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 
@@ -157,7 +157,7 @@ func TestInlineEditor(t *testing.T) {
 		}
 
 		reqBody, _ := json.Marshal(requestBody)
-		req := httptest.NewRequest("POST", "/api/inline-editor", bytes.NewReader(reqBody))
+		req := httptest.NewRequest(http.MethodPost, "/api/inline-editor", bytes.NewReader(reqBody))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 
@@ -190,7 +190,7 @@ func TestInlineEditor(t *testing.T) {
 		}
 
 		reqBody, _ := json.Marshal(requestBody)
-		req := httptest.NewRequest("POST", "/api/inline-editor", bytes.NewReader(reqBody))
+		req := httptest.NewRequest(http.MethodPost, "/api/inline-editor", bytes.NewReader(reqBody))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 
@@ -214,7 +214,7 @@ func TestInlineEditor(t *testing.T) {
 	})
 
 	t.Run("Invalid Request Method", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/api/inline-editor", nil)
+		req := httptest.NewRequest(http.MethodGet, "/api/inline-editor", nil)
 		w := httptest.NewRecorder()
 
 		server.handleInlineEditor(w, req)
@@ -223,7 +223,7 @@ func TestInlineEditor(t *testing.T) {
 	})
 
 	t.Run("Invalid JSON", func(t *testing.T) {
-		req := httptest.NewRequest("POST", "/api/inline-editor", strings.NewReader("invalid json"))
+		req := httptest.NewRequest(http.MethodPost, "/api/inline-editor", strings.NewReader("invalid json"))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 
@@ -240,7 +240,7 @@ func TestInlineEditor(t *testing.T) {
 		}
 
 		reqBody, _ := json.Marshal(requestBody)
-		req := httptest.NewRequest("POST", "/api/inline-editor", bytes.NewReader(reqBody))
+		req := httptest.NewRequest(http.MethodPost, "/api/inline-editor", bytes.NewReader(reqBody))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 
@@ -264,7 +264,7 @@ func TestInlineEditor(t *testing.T) {
 		}
 
 		reqBody, _ := json.Marshal(requestBody)
-		req := httptest.NewRequest("POST", "/api/inline-editor", bytes.NewReader(reqBody))
+		req := httptest.NewRequest(http.MethodPost, "/api/inline-editor", bytes.NewReader(reqBody))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 
@@ -288,7 +288,7 @@ func TestInlineEditor(t *testing.T) {
 		}
 
 		reqBody, _ := json.Marshal(requestBody)
-		req := httptest.NewRequest("POST", "/api/inline-editor", bytes.NewReader(reqBody))
+		req := httptest.NewRequest(http.MethodPost, "/api/inline-editor", bytes.NewReader(reqBody))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 

@@ -319,32 +319,44 @@ func (pd *PerformanceDetector) detectPerformanceRegression(result BenchmarkResul
 	return nil
 }
 
-// detectMemoryRegressionWithStats checks for memory usage regressions with proper statistics
-func (pd *PerformanceDetector) detectMemoryRegressionWithStats(result BenchmarkResult, baseline *PerformanceBaseline, numComparisons int) *RegressionDetection {
-	if result.BytesPerOp == 0 {
-		return nil // No memory data available
+// regressionParams holds parameters for regression detection
+type regressionParams struct {
+	metricValue     int64
+	suffix          string
+	meanMultiplier  float64
+	stdDevMultiplier float64
+	sampleScaling   float64
+	threshold       float64
+	regressionType  string
+	getRecommendation func(severity int, percentageChange float64) string
+}
+
+// detectRegressionWithStats is a helper function for memory and allocation regression detection
+func (pd *PerformanceDetector) detectRegressionWithStats(result BenchmarkResult, baseline *PerformanceBaseline, numComparisons int, params regressionParams) *RegressionDetection {
+	if params.metricValue == 0 {
+		return nil // No data available
 	}
 
-	// Create memory baseline from performance baseline samples
-	// Convert ns/op samples to a rough memory baseline (this is a simplification)
+	// Create baseline from performance baseline samples
+	// Convert ns/op samples to a rough baseline (this is a simplification)
 	// In production, you'd maintain separate baselines for each metric type
-	memoryBaseline := &PerformanceBaseline{
-		BenchmarkName: baseline.BenchmarkName + "_memory",
+	metricBaseline := &PerformanceBaseline{
+		BenchmarkName: baseline.BenchmarkName + params.suffix,
 		Samples:       make([]float64, len(baseline.Samples)),
-		Mean:          float64(result.BytesPerOp) * 0.8, // Conservative estimate
-		StdDev:        float64(result.BytesPerOp) * 0.1, // Assume 10% variance
+		Mean:          float64(params.metricValue) * params.meanMultiplier,
+		StdDev:        float64(params.metricValue) * params.stdDevMultiplier,
 		SampleCount:   baseline.SampleCount,
 	}
 
 	// Copy samples with scaling (rough approximation)
 	for i, sample := range baseline.Samples {
-		memoryBaseline.Samples[i] = sample * 0.1 // Scale performance to approximate memory
+		metricBaseline.Samples[i] = sample * params.sampleScaling
 	}
 
 	// Perform statistical analysis
 	statResult := pd.statisticalValidator.CalculateStatisticalConfidence(
-		float64(result.BytesPerOp),
-		memoryBaseline,
+		float64(params.metricValue),
+		metricBaseline,
 		numComparisons,
 	)
 
@@ -353,27 +365,41 @@ func (pd *PerformanceDetector) detectMemoryRegressionWithStats(result BenchmarkR
 		return nil // Not statistically significant
 	}
 
-	ratio := float64(result.BytesPerOp) / memoryBaseline.Mean
+	ratio := float64(params.metricValue) / metricBaseline.Mean
 
-	if ratio > pd.thresholds.MemoryThreshold {
+	if ratio > params.threshold {
 		percentageChange := (ratio - 1.0) * 100
-		severity := pd.calculateSeverity(ratio, pd.thresholds.MemoryThreshold)
+		severity := pd.calculateSeverity(ratio, params.threshold)
 
 		return &RegressionDetection{
 			BenchmarkName:     result.Name,
 			IsRegression:      true,
-			CurrentValue:      float64(result.BytesPerOp),
-			BaselineValue:     memoryBaseline.Mean,
+			CurrentValue:      float64(params.metricValue),
+			BaselineValue:     metricBaseline.Mean,
 			PercentageChange:  percentageChange,
-			Threshold:         pd.thresholds.MemoryThreshold,
+			Threshold:         params.threshold,
 			Confidence:        statResult.Confidence,
-			RegressionType:    "memory",
+			RegressionType:    params.regressionType,
 			Severity:          severity,
-			RecommendedAction: pd.getMemoryRecommendation(severity, percentageChange),
+			RecommendedAction: params.getRecommendation(severity, percentageChange),
 		}
 	}
 
 	return nil
+}
+
+// detectMemoryRegressionWithStats checks for memory usage regressions with proper statistics
+func (pd *PerformanceDetector) detectMemoryRegressionWithStats(result BenchmarkResult, baseline *PerformanceBaseline, numComparisons int) *RegressionDetection {
+	return pd.detectRegressionWithStats(result, baseline, numComparisons, regressionParams{
+		metricValue:       result.BytesPerOp,
+		suffix:            "_memory",
+		meanMultiplier:    0.8, // Conservative estimate
+		stdDevMultiplier:  0.1, // Assume 10% variance
+		sampleScaling:     0.1, // Scale performance to approximate memory
+		threshold:         pd.thresholds.MemoryThreshold,
+		regressionType:    "memory",
+		getRecommendation: pd.getMemoryRecommendation,
+	})
 }
 
 // detectMemoryRegression checks for memory usage regressions (legacy function for backward compatibility)
@@ -412,59 +438,16 @@ func (pd *PerformanceDetector) detectMemoryRegression(result BenchmarkResult, ba
 
 // detectAllocationRegressionWithStats checks for allocation count regressions with proper statistics
 func (pd *PerformanceDetector) detectAllocationRegressionWithStats(result BenchmarkResult, baseline *PerformanceBaseline, numComparisons int) *RegressionDetection {
-	if result.AllocsPerOp == 0 {
-		return nil // No allocation data available
-	}
-
-	// Create allocation baseline from performance baseline samples
-	// Convert ns/op samples to a rough allocation baseline (this is a simplification)
-	// In production, you'd maintain separate baselines for each metric type
-	allocBaseline := &PerformanceBaseline{
-		BenchmarkName: baseline.BenchmarkName + "_allocs",
-		Samples:       make([]float64, len(baseline.Samples)),
-		Mean:          float64(result.AllocsPerOp) * 0.75, // Conservative estimate
-		StdDev:        float64(result.AllocsPerOp) * 0.05, // Assume 5% variance (allocations are typically more stable)
-		SampleCount:   baseline.SampleCount,
-	}
-
-	// Copy samples with scaling (rough approximation)
-	for i, sample := range baseline.Samples {
-		allocBaseline.Samples[i] = sample * 0.001 // Scale performance to approximate allocations
-	}
-
-	// Perform statistical analysis
-	statResult := pd.statisticalValidator.CalculateStatisticalConfidence(
-		float64(result.AllocsPerOp),
-		allocBaseline,
-		numComparisons,
-	)
-
-	// Check if statistically significant
-	if !pd.statisticalValidator.IsStatisticallySignificant(statResult) {
-		return nil // Not statistically significant
-	}
-
-	ratio := float64(result.AllocsPerOp) / allocBaseline.Mean
-
-	if ratio > pd.thresholds.AllocThreshold {
-		percentageChange := (ratio - 1.0) * 100
-		severity := pd.calculateSeverity(ratio, pd.thresholds.AllocThreshold)
-
-		return &RegressionDetection{
-			BenchmarkName:     result.Name,
-			IsRegression:      true,
-			CurrentValue:      float64(result.AllocsPerOp),
-			BaselineValue:     allocBaseline.Mean,
-			PercentageChange:  percentageChange,
-			Threshold:         pd.thresholds.AllocThreshold,
-			Confidence:        statResult.Confidence,
-			RegressionType:    "allocations",
-			Severity:          severity,
-			RecommendedAction: pd.getAllocationRecommendation(severity, percentageChange),
-		}
-	}
-
-	return nil
+	return pd.detectRegressionWithStats(result, baseline, numComparisons, regressionParams{
+		metricValue:       result.AllocsPerOp,
+		suffix:            "_allocs",
+		meanMultiplier:    0.75, // Conservative estimate
+		stdDevMultiplier:  0.05, // Assume 5% variance (allocations are typically more stable)
+		sampleScaling:     0.001, // Scale performance to approximate allocations
+		threshold:         pd.thresholds.AllocThreshold,
+		regressionType:    "allocations",
+		getRecommendation: pd.getAllocationRecommendation,
+	})
 }
 
 // detectAllocationRegression checks for allocation count regressions (legacy function for backward compatibility)

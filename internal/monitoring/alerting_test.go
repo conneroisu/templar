@@ -304,7 +304,7 @@ func TestAlertManagerHTTPHandlers(t *testing.T) {
 	handler := am.HTTPHandler()
 
 	t.Run("alerts endpoint", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/alerts", nil)
+		req := httptest.NewRequest(http.MethodGet, "/alerts", nil)
 		recorder := httptest.NewRecorder()
 
 		handler(recorder, req)
@@ -322,7 +322,7 @@ func TestAlertManagerHTTPHandlers(t *testing.T) {
 	})
 
 	t.Run("active alerts endpoint", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/alerts/active", nil)
+		req := httptest.NewRequest(http.MethodGet, "/alerts/active", nil)
 		recorder := httptest.NewRecorder()
 
 		handler(recorder, req)
@@ -339,7 +339,7 @@ func TestAlertManagerHTTPHandlers(t *testing.T) {
 	})
 
 	t.Run("alert history endpoint", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/alerts/history?hours=1", nil)
+		req := httptest.NewRequest(http.MethodGet, "/alerts/history?hours=1", nil)
 		recorder := httptest.NewRecorder()
 
 		handler(recorder, req)
@@ -354,7 +354,7 @@ func TestAlertManagerHTTPHandlers(t *testing.T) {
 	})
 
 	t.Run("alert rules endpoint", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/alerts/rules", nil)
+		req := httptest.NewRequest(http.MethodGet, "/alerts/rules", nil)
 		recorder := httptest.NewRecorder()
 
 		handler(recorder, req)
@@ -370,7 +370,7 @@ func TestAlertManagerHTTPHandlers(t *testing.T) {
 	})
 
 	t.Run("not found", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/alerts/invalid", nil)
+		req := httptest.NewRequest(http.MethodGet, "/alerts/invalid", nil)
 		recorder := httptest.NewRecorder()
 
 		handler(recorder, req)

@@ -4,67 +4,76 @@ import (
 	"testing"
 )
 
+// Helper function for validation tests to reduce code duplication
+func runValidationTests(t *testing.T, testName string, validationFunc func(string) error, tests []struct {
+	name    string
+	input   string
+	wantErr bool
+}) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validationFunc(tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("%s() error = %v, wantErr %v", testName, err, tt.wantErr)
+			}
+		})
+	}
+}
+
 func TestValidateArgument(t *testing.T) {
 	tests := []struct {
 		name    string
-		arg     string
+		input   string
 		wantErr bool
 	}{
 		{
 			name:    "valid argument",
-			arg:     "generate",
+			input:   "generate",
 			wantErr: false,
 		},
 		{
 			name:    "valid relative path",
-			arg:     "./components",
+			input:   "./components",
 			wantErr: false,
 		},
 		{
 			name:    "command injection semicolon",
-			arg:     "generate; rm -rf /",
+			input:   "generate; rm -rf /",
 			wantErr: true,
 		},
 		{
 			name:    "command injection pipe",
-			arg:     "generate | cat /etc/passwd",
+			input:   "generate | cat /etc/passwd",
 			wantErr: true,
 		},
 		{
 			name:    "command injection backtick",
-			arg:     "generate`whoami`",
+			input:   "generate`whoami`",
 			wantErr: true,
 		},
 		{
 			name:    "path traversal",
-			arg:     "../../../etc/passwd",
+			input:   "../../../etc/passwd",
 			wantErr: true,
 		},
 		{
 			name:    "absolute path not allowed",
-			arg:     "/home/user/file",
+			input:   "/home/user/file",
 			wantErr: true,
 		},
 		{
 			name:    "allowed system binary path",
-			arg:     "/usr/bin/templ",
+			input:   "/usr/bin/templ",
 			wantErr: false,
 		},
 		{
 			name:    "dangerous shell characters",
-			arg:     "file$(whoami).txt",
+			input:   "file$(whoami).txt",
 			wantErr: true,
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := ValidateArgument(tt.arg)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ValidateArgument() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
+	runValidationTests(t, "ValidateArgument", ValidateArgument, tests)
 }
 
 func TestValidateCommand(t *testing.T) {
@@ -123,64 +132,57 @@ func TestValidateCommand(t *testing.T) {
 func TestValidatePath(t *testing.T) {
 	tests := []struct {
 		name    string
-		path    string
+		input   string
 		wantErr bool
 	}{
 		{
 			name:    "valid relative path",
-			path:    "./components/button.templ",
+			input:   "./components/button.templ",
 			wantErr: false,
 		},
 		{
 			name:    "valid filename",
-			path:    "component.templ",
+			input:   "component.templ",
 			wantErr: false,
 		},
 		{
 			name:    "empty path",
-			path:    "",
+			input:   "",
 			wantErr: true,
 		},
 		{
 			name:    "path traversal with dots",
-			path:    "../../../etc/passwd",
+			input:   "../../../etc/passwd",
 			wantErr: true,
 		},
 		{
 			name:    "access to /etc/passwd",
-			path:    "/etc/passwd",
+			input:   "/etc/passwd",
 			wantErr: true,
 		},
 		{
 			name:    "access to /proc",
-			path:    "/proc/version",
+			input:   "/proc/version",
 			wantErr: true,
 		},
 		{
 			name:    "access to /sys",
-			path:    "/sys/kernel",
+			input:   "/sys/kernel",
 			wantErr: true,
 		},
 		{
 			name:    "path with dangerous characters",
-			path:    "file; rm -rf /",
+			input:   "file; rm -rf /",
 			wantErr: true,
 		},
 		{
 			name:    "path with command substitution",
-			path:    "file$(whoami).txt",
+			input:   "file$(whoami).txt",
 			wantErr: true,
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := ValidatePath(tt.path)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ValidatePath() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
+	runValidationTests(t, "ValidatePath", ValidatePath, tests)
 }
 
 func TestValidateOrigin(t *testing.T) {

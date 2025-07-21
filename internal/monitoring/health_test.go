@@ -265,7 +265,7 @@ func TestHealthHTTPHandler(t *testing.T) {
 	monitor.runHealthChecks()
 
 	t.Run("healthy response", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/health", nil)
+		req := httptest.NewRequest(http.MethodGet, "/health", nil)
 		recorder := httptest.NewRecorder()
 
 		handler := monitor.HTTPHandler()
@@ -284,7 +284,7 @@ func TestHealthHTTPHandler(t *testing.T) {
 		monitor.RegisterCheck(unhealthyCheck)
 		monitor.runHealthChecks()
 
-		req := httptest.NewRequest("GET", "/health", nil)
+		req := httptest.NewRequest(http.MethodGet, "/health", nil)
 		recorder := httptest.NewRecorder()
 
 		handler := monitor.HTTPHandler()

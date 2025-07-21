@@ -492,7 +492,7 @@ func (wc *WebhookChannel) Send(ctx context.Context, alert Alert) error {
 		return fmt.Errorf("failed to marshal alert: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", wc.url, strings.NewReader(string(data)))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, wc.url, strings.NewReader(string(data)))
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}

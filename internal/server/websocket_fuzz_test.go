@@ -45,7 +45,7 @@ func FuzzWebSocketOriginValidation(f *testing.F) {
 			config: cfg,
 		}
 
-		req := httptest.NewRequest("GET", "/ws", nil)
+		req := httptest.NewRequest(http.MethodGet, "/ws", nil)
 		if origin != "" {
 			req.Header.Set("Origin", origin)
 		}
@@ -187,7 +187,7 @@ func FuzzWebSocketHeaders(f *testing.F) {
 			config: cfg,
 		}
 
-		req := httptest.NewRequest("GET", "/ws", nil)
+		req := httptest.NewRequest(http.MethodGet, "/ws", nil)
 
 		// Parse header data and add to request
 		headers := strings.Split(headerData, "\x00")
@@ -255,7 +255,7 @@ func FuzzWebSocketURL(f *testing.F) {
 			config: cfg,
 		}
 
-		req := httptest.NewRequest("GET", urlPath, nil)
+		req := httptest.NewRequest(http.MethodGet, urlPath, nil)
 		req.Header.Set("Origin", "http://localhost:8080")
 
 		w := httptest.NewRecorder()

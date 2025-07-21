@@ -30,7 +30,7 @@ func TestMonitoringMiddleware(t *testing.T) {
 			w.Write([]byte("OK"))
 		}))
 
-		req := httptest.NewRequest("GET", "/test", nil)
+		req := httptest.NewRequest(http.MethodGet, "/test", nil)
 		recorder := httptest.NewRecorder()
 
 		handler.ServeHTTP(recorder, req)
@@ -59,7 +59,7 @@ func TestMonitoringMiddleware(t *testing.T) {
 			w.Write([]byte("Error"))
 		}))
 
-		req := httptest.NewRequest("POST", "/error", nil)
+		req := httptest.NewRequest(http.MethodPost, "/error", nil)
 		recorder := httptest.NewRecorder()
 
 		handler.ServeHTTP(recorder, req)
@@ -87,7 +87,7 @@ func TestMonitoringMiddleware(t *testing.T) {
 			w.WriteHeader(http.StatusOK)
 		}))
 
-		req := httptest.NewRequest("GET", "/slow", nil)
+		req := httptest.NewRequest(http.MethodGet, "/slow", nil)
 		recorder := httptest.NewRecorder()
 
 		handler.ServeHTTP(recorder, req)
@@ -506,7 +506,7 @@ func BenchmarkMonitoringMiddleware(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		req := httptest.NewRequest("GET", "/test", nil)
+		req := httptest.NewRequest(http.MethodGet, "/test", nil)
 		recorder := httptest.NewRecorder()
 		handler.ServeHTTP(recorder, req)
 	}

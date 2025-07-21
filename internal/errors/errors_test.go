@@ -162,28 +162,21 @@ func TestErrorCollectorClear(t *testing.T) {
 
 func TestErrorCollectorGetErrorsByFile(t *testing.T) {
 	collector := NewErrorCollector()
-
-	err1 := BuildError{
+	collector.Add(BuildError{
 		File:     "file1.go",
 		Message:  "error in file1",
 		Severity: ErrorSeverityError,
-	}
-
-	err2 := BuildError{
+	})
+	collector.Add(BuildError{
 		File:     "file2.go",
 		Message:  "error in file2",
 		Severity: ErrorSeverityWarning,
-	}
-
-	err3 := BuildError{
+	})
+	collector.Add(BuildError{
 		File:     "file1.go",
 		Message:  "another error in file1",
 		Severity: ErrorSeverityError,
-	}
-
-	collector.Add(err1)
-	collector.Add(err2)
-	collector.Add(err3)
+	})
 
 	// Get errors for file1.go
 	file1Errors := collector.GetErrorsByFile("file1.go")
@@ -203,28 +196,21 @@ func TestErrorCollectorGetErrorsByFile(t *testing.T) {
 
 func TestErrorCollectorGetErrorsByComponent(t *testing.T) {
 	collector := NewErrorCollector()
-
-	err1 := BuildError{
+	collector.Add(BuildError{
 		Component: "Component1",
 		Message:   "error in component1",
 		Severity:  ErrorSeverityError,
-	}
-
-	err2 := BuildError{
+	})
+	collector.Add(BuildError{
 		Component: "Component2",
 		Message:   "error in component2",
 		Severity:  ErrorSeverityWarning,
-	}
-
-	err3 := BuildError{
+	})
+	collector.Add(BuildError{
 		Component: "Component1",
 		Message:   "another error in component1",
 		Severity:  ErrorSeverityError,
-	}
-
-	collector.Add(err1)
-	collector.Add(err2)
-	collector.Add(err3)
+	})
 
 	// Get errors for Component1
 	comp1Errors := collector.GetErrorsByComponent("Component1")

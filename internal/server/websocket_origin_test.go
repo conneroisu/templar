@@ -103,7 +103,7 @@ func TestCheckOriginValidation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req, err := http.NewRequest("GET", "/ws", nil)
+			req, err := http.NewRequest(http.MethodGet, "/ws", nil)
 			require.NoError(t, err)
 
 			if tt.origin != "" {

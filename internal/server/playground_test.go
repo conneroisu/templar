@@ -96,7 +96,7 @@ func TestPlaygroundRender(t *testing.T) {
 			reqBody, err := json.Marshal(tt.request)
 			assert.NoError(t, err)
 
-			req := httptest.NewRequest("POST", "/api/playground/render", bytes.NewReader(reqBody))
+			req := httptest.NewRequest(http.MethodPost, "/api/playground/render", bytes.NewReader(reqBody))
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
@@ -254,7 +254,7 @@ func TestPlaygroundIndex(t *testing.T) {
 
 	server := &PreviewServer{registry: reg}
 
-	req := httptest.NewRequest("GET", "/playground", nil)
+	req := httptest.NewRequest(http.MethodGet, "/playground", nil)
 	w := httptest.NewRecorder()
 
 	server.handlePlaygroundIndex(w, req)
@@ -288,7 +288,7 @@ func TestPlaygroundComponent(t *testing.T) {
 		renderer: renderer,
 	}
 
-	req := httptest.NewRequest("GET", "/playground/TestButton", nil)
+	req := httptest.NewRequest(http.MethodGet, "/playground/TestButton", nil)
 	w := httptest.NewRecorder()
 
 	server.handlePlaygroundComponent(w, req)
@@ -306,7 +306,7 @@ func TestPlaygroundComponent(t *testing.T) {
 func TestPlaygroundComponentNotFound(t *testing.T) {
 	server := &PreviewServer{registry: registry.NewComponentRegistry()}
 
-	req := httptest.NewRequest("GET", "/playground/NonExistent", nil)
+	req := httptest.NewRequest(http.MethodGet, "/playground/NonExistent", nil)
 	w := httptest.NewRecorder()
 
 	server.handlePlaygroundComponent(w, req)

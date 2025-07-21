@@ -173,7 +173,7 @@ func TestSecurityMiddlewareWithNonce(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	}))
 
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest(http.MethodGet, "/test", nil)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)

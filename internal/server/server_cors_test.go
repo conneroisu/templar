@@ -64,7 +64,7 @@ func TestCORSProduction(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest("GET", "/", nil)
+			req := httptest.NewRequest(http.MethodGet, "/", nil)
 			if tt.origin != "" {
 				req.Header.Set("Origin", tt.origin)
 			}
@@ -124,7 +124,7 @@ func TestCORSDevelopment(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest("GET", "/", nil)
+			req := httptest.NewRequest(http.MethodGet, "/", nil)
 			if tt.origin != "" {
 				req.Header.Set("Origin", tt.origin)
 			}
@@ -154,7 +154,7 @@ func TestCORSPreflightRequests(t *testing.T) {
 	server, err := New(cfg)
 	require.NoError(t, err)
 
-	req := httptest.NewRequest("OPTIONS", "/api/test", nil)
+	req := httptest.NewRequest(http.MethodOptions, "/api/test", nil)
 	req.Header.Set("Origin", "https://example.com")
 	req.Header.Set("Access-Control-Request-Method", "POST")
 
