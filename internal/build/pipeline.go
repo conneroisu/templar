@@ -170,7 +170,7 @@ func (bp *BuildPipeline) Build(component *types.ComponentInfo) {
 		// Log the error and update metrics
 		fmt.Printf("Warning: Build queue full, dropping task for component %s\n", component.Name)
 		bp.metrics.RecordDroppedTask(component.Name, "task_queue_full")
-		
+
 		// Try to handle with retry or priority queue
 		select {
 		case bp.queue.priority <- task:
@@ -197,7 +197,7 @@ func (bp *BuildPipeline) BuildWithPriority(component *types.ComponentInfo) {
 		// Priority queue also full - this is a critical error
 		fmt.Printf("Critical: Priority queue full, dropping high-priority task for component %s\n", component.Name)
 		bp.metrics.RecordDroppedTask(component.Name, "priority_queue_full")
-		
+
 		// Could implement emergency handling here (e.g., block briefly or expand queue)
 		// For now, log the critical error
 	}
@@ -257,7 +257,15 @@ func (bp *BuildPipeline) processBuildTask(task BuildTask) {
 		buildResult.CacheHit = true
 		buildResult.Hash = contentHash
 
-		bp.queue.results <- *buildResult
+		// Non-blocking send to results channel to prevent worker hangs
+		select {
+		case bp.queue.results <- *buildResult:
+			// Cache hit result successfully queued
+		default:
+			// Results queue full - this could cause result loss
+			fmt.Printf("Warning: Results queue full, dropping cache hit result for component %s\n", buildResult.Component.Name)
+			bp.metrics.RecordDroppedResult(buildResult.Component.Name, "results_queue_full_cache_hit")
+		}
 		bp.objectPools.PutBuildResult(buildResult)
 		return
 	}
@@ -286,7 +294,15 @@ func (bp *BuildPipeline) processBuildTask(task BuildTask) {
 		bp.cache.Set(contentHash, output)
 	}
 
-	bp.queue.results <- *buildResult
+	// Non-blocking send to results channel to prevent worker hangs
+	select {
+	case bp.queue.results <- *buildResult:
+		// Result successfully queued
+	default:
+		// Results queue full - this could cause result loss
+		fmt.Printf("Warning: Results queue full, dropping result for component %s\n", buildResult.Component.Name)
+		bp.metrics.RecordDroppedResult(buildResult.Component.Name, "results_queue_full")
+	}
 	bp.objectPools.PutBuildResult(buildResult)
 }
 
@@ -343,15 +359,10 @@ func (bp *BuildPipeline) generateContentHash(component *types.ComponentInfo) str
 	metadataKey := fmt.Sprintf("%s:%d:%d", component.FilePath, stat.ModTime().Unix(), stat.Size())
 
 	// Two-tier cache system: Check metadata cache first (no file I/O)
-	bp.cache.mutex.RLock()
-	if entry, exists := bp.cache.entries[metadataKey]; exists {
+	if hash, found := bp.cache.GetHash(metadataKey); found {
 		// Cache hit - no file I/O needed, just return cached hash
-		entry.AccessedAt = time.Now()
-		bp.cache.moveToFront(entry)
-		bp.cache.mutex.RUnlock()
-		return entry.Hash
+		return hash
 	}
-	bp.cache.mutex.RUnlock()
 
 	// Cache miss: Now we need to read file content and generate hash
 	// Only open file when we actually need to read content
@@ -385,24 +396,7 @@ func (bp *BuildPipeline) generateContentHash(component *types.ComponentInfo) str
 	contentHash := fmt.Sprintf("%x", crcHash)
 
 	// Cache the hash with metadata key for future lookups
-	bp.cache.mutex.Lock()
-	entry := &CacheEntry{
-		Key:        metadataKey,
-		Value:      nil, // Only cache the hash, not the content
-		Hash:       contentHash,
-		CreatedAt:  time.Now(),
-		AccessedAt: time.Now(),
-		Size:       int64(len(metadataKey) + len(contentHash)), // Minimal size for hash cache
-	}
-
-	// Evict if needed before adding new entry
-	bp.cache.evictIfNeeded(entry.Size)
-
-	// Add to cache
-	bp.cache.entries[metadataKey] = entry
-	bp.cache.addToFront(entry)
-	bp.cache.currentSize += entry.Size
-	bp.cache.mutex.Unlock()
+	bp.cache.SetHash(metadataKey, contentHash)
 
 	return contentHash
 }
@@ -440,20 +434,15 @@ func (bp *BuildPipeline) generateContentHashesBatch(components []*types.Componen
 		// OPTIMIZATION: Use efficient Stat() + metadata cache check first
 		if stat, err := os.Stat(component.FilePath); err == nil {
 			metadataKey := fmt.Sprintf("%s:%d:%d", component.FilePath, stat.ModTime().Unix(), stat.Size())
-			
+
 			// Check cache with metadata key
-			bp.cache.mutex.RLock()
-			if entry, exists := bp.cache.entries[metadataKey]; exists {
+			if hash, found := bp.cache.GetHash(metadataKey); found {
 				// Cache hit - no file reading needed
-				entry.AccessedAt = time.Now()
-				bp.cache.moveToFront(entry)
-				results[component.FilePath] = entry.Hash
-				bp.cache.mutex.RUnlock()
+				results[component.FilePath] = hash
 				continue
 			}
-			bp.cache.mutex.RUnlock()
 		}
-		
+
 		// Cache miss - needs content reading
 		needsReading = append(needsReading, component)
 	}
@@ -468,7 +457,6 @@ func (bp *BuildPipeline) generateContentHashesBatch(components []*types.Componen
 
 	return results
 }
-
 
 // batchReadAndHash reads and hashes multiple files efficiently
 func (bp *BuildPipeline) batchReadAndHash(components []*types.ComponentInfo) map[string]string {

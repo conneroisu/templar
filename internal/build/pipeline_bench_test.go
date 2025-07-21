@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/types"
 )
 
@@ -60,7 +59,7 @@ func BenchmarkBuildPipeline_Build(b *testing.B) {
 	for _, workers := range workerCounts {
 		for _, complexity := range complexities {
 			b.Run(fmt.Sprintf("workers-%d-%s", workers, complexity), func(b *testing.B) {
-				reg := registry.NewComponentRegistry()
+				reg := NewMockComponentRegistry()
 				pipeline := NewBuildPipeline(workers, reg)
 				defer pipeline.Stop()
 
@@ -79,7 +78,7 @@ func BenchmarkBuildPipeline_Build(b *testing.B) {
 
 // BenchmarkBuildPipeline_ConcurrentBuilds benchmarks concurrent build performance
 func BenchmarkBuildPipeline_ConcurrentBuilds(b *testing.B) {
-	reg := registry.NewComponentRegistry()
+	reg := NewMockComponentRegistry()
 	pipeline := NewBuildPipeline(4, reg)
 	defer pipeline.Stop()
 
@@ -246,7 +245,7 @@ func BenchmarkBuildPipeline_WorkerPoolPerformance(b *testing.B) {
 				b.ReportAllocs()
 
 				for i := 0; i < b.N; i++ {
-					reg := registry.NewComponentRegistry()
+					reg := NewMockComponentRegistry()
 					pipeline := NewBuildPipeline(workers, reg)
 
 					// Submit tasks
@@ -288,7 +287,7 @@ func benchmarkPipelineMemoryUsage(b *testing.B, workers int, componentCount int)
 	b.ReportAllocs()
 
 	for i := 0; i < b.N; i++ {
-		reg := registry.NewComponentRegistry()
+		reg := NewMockComponentRegistry()
 		pipeline := NewBuildPipeline(workers, reg)
 
 		// Create and process components

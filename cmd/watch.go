@@ -19,8 +19,9 @@ import (
 )
 
 var watchCmd = &cobra.Command{
-	Use:   "watch",
-	Short: "Watch for file changes and rebuild components",
+	Use:     "watch",
+	Aliases: []string{"w"},
+	Short:   "Watch for file changes and rebuild components",
 	Long: `Watch for file changes and automatically rebuild components without serving.
 This is useful for development workflows where you want automatic rebuilds
 but don't need the preview server.

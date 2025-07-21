@@ -1,0 +1,40 @@
+# Templar configuration file
+server:
+  port: 8080
+  host: localhost
+  open: true
+  middleware:
+    - cors
+    - logger
+
+build:
+  command: "templ generate"
+  watch:
+    - "**/*.templ"
+    - "**/*.go"
+  ignore:
+    - "*_test.go"
+    - "vendor/**"
+    - ".git/**"
+    - "node_modules/**"
+  cache_dir: ".templar/cache"
+
+preview:
+  mock_data: "./mocks"
+  wrapper: "./preview/wrapper.templ"
+  auto_props: true
+  
+components:
+  scan_paths:
+    - "./components"
+    - "./views"
+    - "./examples"
+  exclude_patterns:
+    - "*_test.templ"
+    - "*.example.templ"
+
+development:
+  hot_reload: true
+  css_injection: true
+  state_preservation: true
+  error_overlay: true

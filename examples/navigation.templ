@@ -1,5 +1,7 @@
 package examples
 
+import "strings"
+
 templ NavBar(brand string, isLoggedIn bool) {
 	<nav class="bg-white shadow-lg">
 		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -43,7 +45,7 @@ templ NavLinks() {
 
 templ NavLink(text string, href string, active bool) {
 	<a 
-		href={href}
+		href={templ.URL(href)}
 		class={
 			"px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200",
 			templ.KV("bg-blue-100 text-blue-700", active),
@@ -89,7 +91,7 @@ templ SideBar(items []string) {
 
 templ SideBarItem(text string, href string) {
 	<a 
-		href={href}
+		href={templ.URL(href)}
 		class="block px-4 py-2 rounded-md text-gray-300 hover:bg-gray-800 hover:text-white transition-colors duration-200"
 	>
 		{text}

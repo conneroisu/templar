@@ -2,18 +2,20 @@
 // configuration management supporting multiple configuration sources.
 //
 // Configuration System:
-//   The CLI supports flexible configuration through multiple sources with clear precedence:
-//   1. Command-line flags (--config, --port, etc.) - highest priority
-//   2. TEMPLAR_CONFIG_FILE environment variable - custom config file path
-//   3. Individual environment variables (TEMPLAR_SERVER_PORT, etc.)
-//   4. Configuration files (.templar.yml) - lowest priority
+//
+//	The CLI supports flexible configuration through multiple sources with clear precedence:
+//	1. Command-line flags (--config, --port, etc.) - highest priority
+//	2. TEMPLAR_CONFIG_FILE environment variable - custom config file path
+//	3. Individual environment variables (TEMPLAR_SERVER_PORT, etc.)
+//	4. Configuration files (.templar.yml) - lowest priority
 //
 // Environment Variables:
-//   TEMPLAR_CONFIG_FILE: Path to custom configuration file
-//   TEMPLAR_SERVER_PORT: Override server port
-//   TEMPLAR_SERVER_HOST: Override server host
-//   TEMPLAR_DEVELOPMENT_HOT_RELOAD: Enable/disable hot reload
-//   And many more following the TEMPLAR_<SECTION>_<OPTION> pattern
+//
+//	TEMPLAR_CONFIG_FILE: Path to custom configuration file
+//	TEMPLAR_SERVER_PORT: Override server port
+//	TEMPLAR_SERVER_HOST: Override server host
+//	TEMPLAR_DEVELOPMENT_HOT_RELOAD: Enable/disable hot reload
+//	And many more following the TEMPLAR_<SECTION>_<OPTION> pattern
 package cmd
 
 import (
@@ -46,6 +48,10 @@ Quick Start:
   templar serve                   Start development server
   templar list                    List all components
   templar build                   Build all components
+  templar interactive             Interactive command menu
+
+Command Aliases (for faster typing):
+  init (i), serve (s), preview (p), build (b), list (l), watch (w), interactive (m)
 
 Documentation: https://github.com/conneroisu/templar`,
 }

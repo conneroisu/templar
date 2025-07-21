@@ -20,8 +20,9 @@ import (
 )
 
 var buildCmd = &cobra.Command{
-	Use:   "build",
-	Short: "Build all components without serving",
+	Use:     "build",
+	Aliases: []string{"b"},
+	Short:   "Build all components without serving",
 	Long: `Build all components in the project without starting the development server.
 This runs templ generate and optionally performs production optimizations.
 

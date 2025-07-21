@@ -42,13 +42,13 @@ func TestSlidingWindowRateLimiter_WindowSliding(t *testing.T) {
 		t.Error("4th request should be rejected")
 	}
 
-	// Wait for window to slide (let first requests expire)
-	time.Sleep(120 * time.Millisecond)
+	// Wait for window to slide AND backoff to expire (1 second base backoff + window slide)
+	time.Sleep(1200 * time.Millisecond)
 
-	// Should be allowed again
+	// Should be allowed again after both window slide and backoff expiry
 	for i := 0; i < 3; i++ {
 		if !limiter.IsAllowed() {
-			t.Errorf("Request %d after window slide should be allowed", i+1)
+			t.Errorf("Request %d after window slide and backoff expiry should be allowed", i+1)
 		}
 	}
 }
@@ -71,12 +71,12 @@ func TestSlidingWindowRateLimiter_PreventsBypassAttack(t *testing.T) {
 		t.Error("Burst attack right before window expiry should be prevented")
 	}
 
-	// Wait a bit more for full expiry
-	time.Sleep(20 * time.Millisecond)
+	// Wait for backoff to expire (1 second) plus full window expiry
+	time.Sleep(1200 * time.Millisecond)
 
-	// Now should be allowed
+	// Now should be allowed after both backoff and window expiry
 	if !limiter.IsAllowed() {
-		t.Error("Request after full window expiry should be allowed")
+		t.Error("Request after full window and backoff expiry should be allowed")
 	}
 }
 

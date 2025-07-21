@@ -20,8 +20,9 @@ import (
 )
 
 var previewCmd = &cobra.Command{
-	Use:   "preview <component>",
-	Short: "Preview a specific component in isolation",
+	Use:     "preview <component>",
+	Aliases: []string{"p"},
+	Short:   "Preview a specific component in isolation",
 	Long: `Preview a specific component in isolation with optional mock data.
 This starts a lightweight server to preview just the specified component
 with configurable properties and mock data.

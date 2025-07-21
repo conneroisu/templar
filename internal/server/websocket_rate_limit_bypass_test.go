@@ -70,11 +70,10 @@ func testConnectionWithoutMessages(t *testing.T, wsURL string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// Use the test server's actual URL as origin to bypass validation
-	origin := strings.Replace(wsURL, "ws", "http", 1)
+	// Use localhost as origin to pass validation
 	conn, _, err := websocket.Dial(ctx, wsURL, &websocket.DialOptions{
 		HTTPHeader: http.Header{
-			"Origin": []string{origin},
+			"Origin": []string{"http://localhost:8080"},
 		},
 	})
 	if err != nil {
@@ -102,11 +101,10 @@ func testRapidMessageBurst(t *testing.T, wsURL string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// Use the test server's actual URL as origin to bypass validation
-	origin := strings.Replace(wsURL, "ws", "http", 1)
+	// Use localhost as origin to pass validation
 	conn, _, err := websocket.Dial(ctx, wsURL, &websocket.DialOptions{
 		HTTPHeader: http.Header{
-			"Origin": []string{origin},
+			"Origin": []string{"http://localhost:8080"},
 		},
 	})
 	if err != nil {
@@ -154,11 +152,10 @@ func testEmptyMessageHandling(t *testing.T, wsURL string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// Use the test server's actual URL as origin to bypass validation
-	origin := strings.Replace(wsURL, "ws", "http", 1)
+	// Use localhost as origin to pass validation
 	conn, _, err := websocket.Dial(ctx, wsURL, &websocket.DialOptions{
 		HTTPHeader: http.Header{
-			"Origin": []string{origin},
+			"Origin": []string{"http://localhost:8080"},
 		},
 	})
 	if err != nil {
@@ -196,11 +193,10 @@ func testRateLimitWindowBoundary(t *testing.T, wsURL string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	// Use the test server's actual URL as origin to bypass validation
-	origin := strings.Replace(wsURL, "ws", "http", 1)
+	// Use localhost as origin to pass validation
 	conn, _, err := websocket.Dial(ctx, wsURL, &websocket.DialOptions{
 		HTTPHeader: http.Header{
-			"Origin": []string{origin},
+			"Origin": []string{"http://localhost:8080"},
 		},
 	})
 	if err != nil {
@@ -252,7 +248,7 @@ func testConcurrentConnections(t *testing.T, wsURL string) {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		conn, _, err := websocket.Dial(ctx, wsURL, &websocket.DialOptions{
 			HTTPHeader: http.Header{
-				"Origin": []string{"http://localhost"},
+				"Origin": []string{"http://localhost:8080"},
 			},
 		})
 		cancel()
@@ -336,12 +332,12 @@ func TestSlidingWindowRateLimiterSecurityProperties(t *testing.T) {
 			t.Error("Request should still be denied in middle of window")
 		}
 
-		// Wait for full window to slide
-		time.Sleep(60 * time.Millisecond)
+		// Wait for full window to slide AND backoff to expire (2 second backoff after 2 violations)
+		time.Sleep(2200 * time.Millisecond)
 
-		// Now should be allowed as window has slid
+		// Now should be allowed as both window has slid and backoff expired
 		if !limiter.IsAllowed() {
-			t.Error("Request should be allowed after window slides")
+			t.Error("Request should be allowed after window slides and backoff expires")
 		}
 	})
 

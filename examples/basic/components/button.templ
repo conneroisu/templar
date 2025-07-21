@@ -12,7 +12,7 @@ templ Button(props ButtonProps) {
 	<button 
 		class={ getButtonClasses(props) }
 		disabled?={ props.Disabled }
-		onclick={ templ.SafeScript(props.OnClick) }
+		onclick={ templ.ComponentScript{Call: props.OnClick} }
 	>
 		{ props.Text }
 	</button>

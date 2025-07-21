@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/types"
 )
 
@@ -71,24 +70,26 @@ func BenchmarkRealisticBuildPipeline(b *testing.B) {
 				result := pools.GetBuildResult()
 				result.Component = components[j%len(components)]
 
-				// Use pooled output buffer
+				// Use pooled output buffer more efficiently - avoid copying
 				output := pools.GetOutputBuffer()
 				// Simulate build output
 				for k := 0; k < 2048; k++ {
 					output = append(output, byte(k%256))
 				}
-				result.Output = make([]byte, len(output))
-				copy(result.Output, output)
-				pools.PutOutputBuffer(output)
-
+				// Use the buffer directly instead of copying
+				result.Output = output
+				
 				result.Duration = time.Millisecond
 				result.Hash = "abcd1234"
 
 				results = append(results, result)
 			}
 
-			// Simulate processing and cleanup
+			// Simulate processing and cleanup - return buffers to pool first
 			for _, result := range results {
+				if result.Output != nil {
+					pools.PutOutputBuffer(result.Output)
+				}
 				pools.PutBuildResult(result)
 			}
 		}
@@ -308,7 +309,7 @@ func BenchmarkMemoryPressure(b *testing.B) {
 
 func BenchmarkBuildPipelineRealistic(b *testing.B) {
 	// This benchmark simulates a realistic build pipeline scenario
-	reg := &registry.ComponentRegistry{}
+	reg := NewMockComponentRegistry()
 
 	b.Run("Standard Pipeline", func(b *testing.B) {
 		b.ReportAllocs()

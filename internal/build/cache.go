@@ -167,3 +167,68 @@ func (bc *BuildCache) moveToFront(entry *CacheEntry) {
 	bc.removeFromList(entry)
 	bc.addToFront(entry)
 }
+
+// GetHash retrieves a cached hash for a metadata key
+// This method is thread-safe and properly handles LRU updates
+func (bc *BuildCache) GetHash(key string) (string, bool) {
+	bc.mutex.Lock()
+	defer bc.mutex.Unlock()
+
+	entry, exists := bc.entries[key]
+	if !exists {
+		return "", false
+	}
+
+	// Check TTL
+	if time.Since(entry.CreatedAt) > bc.ttl {
+		bc.removeFromList(entry)
+		delete(bc.entries, key)
+		bc.currentSize -= entry.Size
+		return "", false
+	}
+
+	// Move to front (mark as recently used) and update access time
+	bc.moveToFront(entry)
+	entry.AccessedAt = time.Now()
+	return entry.Hash, true
+}
+
+// SetHash stores a hash in the cache with a metadata key
+// This method is thread-safe and handles eviction properly
+func (bc *BuildCache) SetHash(key string, hash string) {
+	bc.mutex.Lock()
+	defer bc.mutex.Unlock()
+
+	// Calculate entry size (key + hash + minimal overhead)
+	entrySize := int64(len(key) + len(hash))
+
+	// Check if entry already exists
+	if existingEntry, exists := bc.entries[key]; exists {
+		// Update existing entry - adjust current size
+		sizeDiff := entrySize - existingEntry.Size
+		existingEntry.Hash = hash
+		existingEntry.AccessedAt = time.Now()
+		existingEntry.Size = entrySize
+		bc.currentSize += sizeDiff
+		bc.moveToFront(existingEntry)
+		return
+	}
+
+	// Check if we need to evict old entries before adding new one
+	bc.evictIfNeeded(entrySize)
+
+	// Create new entry for hash storage
+	entry := &CacheEntry{
+		Key:        key,
+		Value:      nil, // Only cache the hash, not the content
+		Hash:       hash,
+		CreatedAt:  time.Now(),
+		AccessedAt: time.Now(),
+		Size:       entrySize,
+	}
+
+	// Add to cache with proper size tracking
+	bc.entries[key] = entry
+	bc.addToFront(entry)
+	bc.currentSize += entry.Size
+}

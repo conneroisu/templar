@@ -188,11 +188,7 @@
       };
     });
 
-    packages = forAllSystems (system: let
-      pkgs = import nixpkgs {
-        inherit system;
-      };
-    in {
+    packages = forAllSystems (_system: {
       # default = pkgs.buildGoModule {
       #   pname = "my-go-project";
       #   version = "0.0.1";

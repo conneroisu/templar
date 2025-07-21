@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/types"
 )
 
@@ -18,7 +17,7 @@ func BenchmarkFileIOOptimization(b *testing.B) {
 	components := createTestComponents(b, tempDir, 100)
 
 	// Create pipeline with registry
-	reg := registry.NewComponentRegistry()
+	reg := NewMockComponentRegistry()
 	pipeline := NewBuildPipeline(4, reg)
 
 	b.ResetTimer()
@@ -36,7 +35,7 @@ func BenchmarkSingleFileIO(b *testing.B) {
 	components := createTestComponents(b, tempDir, 1)
 
 	// Create pipeline with registry
-	reg := registry.NewComponentRegistry()
+	reg := NewMockComponentRegistry()
 	pipeline := NewBuildPipeline(4, reg)
 
 	b.ResetTimer()
@@ -53,7 +52,7 @@ func BenchmarkBatchFileIO(b *testing.B) {
 	components := createTestComponents(b, tempDir, 100)
 
 	// Create pipeline with registry
-	reg := registry.NewComponentRegistry()
+	reg := NewMockComponentRegistry()
 	pipeline := NewBuildPipeline(4, reg)
 
 	b.ResetTimer()
@@ -70,7 +69,7 @@ func BenchmarkLargeFilesMmap(b *testing.B) {
 	components := createLargeTestComponents(b, tempDir, 1, 128*1024) // 128KB files
 
 	// Create pipeline with registry
-	reg := registry.NewComponentRegistry()
+	reg := NewMockComponentRegistry()
 	pipeline := NewBuildPipeline(4, reg)
 
 	b.ResetTimer()
@@ -157,7 +156,7 @@ func TestPerformanceImprovement(t *testing.T) {
 	components := createTestComponents(t, tempDir, 50)
 
 	// Create pipeline with registry
-	reg := registry.NewComponentRegistry()
+	reg := NewMockComponentRegistry()
 	pipeline := NewBuildPipeline(4, reg)
 
 	// Measure batch processing time

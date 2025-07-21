@@ -1,0 +1,36 @@
+package components
+
+type NavItem struct {
+	Label string
+	Icon  string
+	URL   string
+	Active bool
+}
+
+templ Sidebar(items []NavItem) {
+	<aside class="sidebar">
+		<div class="sidebar-header">
+			<h2>Dashboard</h2>
+		</div>
+		<nav class="sidebar-nav">
+			for _, item := range items {
+				<a href={ templ.URL(item.URL) } class={ "nav-item", templ.KV("active", item.Active) }>
+					<i class={ "icon", item.Icon }></i>
+					<span>{ item.Label }</span>
+				</a>
+			}
+		</nav>
+	</aside>
+}
+
+templ DashboardCard(title string, value string, trend string) {
+	<div class="dashboard-card">
+		<div class="card-header">
+			<h3 class="card-title">{ title }</h3>
+		</div>
+		<div class="card-content">
+			<div class="card-value">{ value }</div>
+			<div class="card-trend">{ trend }</div>
+		</div>
+	</div>
+}

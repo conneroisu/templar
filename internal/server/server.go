@@ -157,6 +157,18 @@ func (s *PreviewServer) Start(ctx context.Context) error {
 	mux.HandleFunc("/component/", s.handleComponent)
 	mux.HandleFunc("/render/", s.handleRender)
 	mux.HandleFunc("/static/", s.handleStatic)
+	
+	// Interactive Playground routes
+	mux.HandleFunc("/playground", s.handlePlaygroundIndex)
+	mux.HandleFunc("/playground/", s.handlePlaygroundComponent)
+	mux.HandleFunc("/api/playground/render", s.handlePlaygroundRender)
+	
+	// Enhanced Web Interface routes
+	mux.HandleFunc("/editor/", s.handleComponentEditor)
+	mux.HandleFunc("/api/inline-editor", s.handleInlineEditor)
+	mux.HandleFunc("/enhanced", s.handleEnhancedIndex)
+	
+	// Build API routes
 	mux.HandleFunc("/api/build/status", s.handleBuildStatus)
 	mux.HandleFunc("/api/build/metrics", s.handleBuildMetrics)
 	mux.HandleFunc("/api/build/errors", s.handleBuildErrors)
@@ -440,16 +452,16 @@ func (s *PreviewServer) triggerFullRebuild() {
 func (s *PreviewServer) GetBuildMetrics() build.BuildMetrics {
 	// Get metrics from the pipeline interface
 	metricsInterface := s.buildPipeline.GetMetrics()
-	
+
 	// Type assert to concrete type and extract values to avoid lock copying
 	if concreteMetrics, ok := metricsInterface.(*build.BuildMetrics); ok {
 		// Call GetSnapshot to get a clean copy without the mutex
 		return concreteMetrics.GetSnapshot()
 	}
-	
+
 	// Fallback: we can't safely type assert to value without copying the lock
 	// so we return empty metrics as a safe fallback
-	
+
 	// Return empty metrics if conversion fails
 	return build.BuildMetrics{}
 }

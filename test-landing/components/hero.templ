@@ -1,0 +1,38 @@
+package components
+
+templ Hero(title string, subtitle string, ctaText string, ctaLink string) {
+	<section class="hero">
+		<div class="hero-container">
+			<h1 class="hero-title">{ title }</h1>
+			<p class="hero-subtitle">{ subtitle }</p>
+			<div class="hero-actions">
+				<a href={ templ.URL(ctaLink) } class="btn btn-primary">{ ctaText }</a>
+			</div>
+		</div>
+	</section>
+}
+
+type Feature struct {
+	Icon        string
+	Title       string
+	Description string
+}
+
+templ Features(features []Feature) {
+	<section class="features">
+		<div class="features-container">
+			<h2>Features</h2>
+			<div class="features-grid">
+				for _, feature := range features {
+					<div class="feature-card">
+						<div class="feature-icon">
+							<i class={ feature.Icon }></i>
+						</div>
+						<h3 class="feature-title">{ feature.Title }</h3>
+						<p class="feature-description">{ feature.Description }</p>
+					</div>
+				}
+			</div>
+		</div>
+	</section>
+}

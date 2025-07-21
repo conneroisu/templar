@@ -18,26 +18,40 @@ import (
 )
 
 var serveCmd = &cobra.Command{
-	Use:   "serve [file.templ]",
-	Short: "Start the development server with hot reload",
-	Long: `Start the development server with hot reload capability.
-Automatically opens browser and watches for file changes.
+	Use:     "serve [file.templ]",
+	Aliases: []string{"s"},
+	Short:   "Start the development server with hot reload and live preview",
+	Long: `Start the development server with hot reload capability and live preview.
+
+The server automatically watches for file changes and rebuilds components
+as needed. WebSocket connections provide instant browser updates without
+manual page refreshes.
 
 Examples:
-  templar serve                    # Serve all components
+  templar serve                    # Serve all components on localhost:8080
+  templar serve -p 3000            # Use custom port
+  templar serve --host 0.0.0.0     # Bind to all interfaces (external access)
+  templar serve --no-open          # Don't automatically open browser  
+  templar serve --watch "**/*.go"  # Custom file watch pattern
+  templar serve -v                 # Enable verbose logging
   templar serve example.templ      # Serve specific templ file
-  templar serve components/*.templ # Serve multiple files`,
+  templar serve components/*.templ # Serve multiple files
+
+Security Note:
+  Using --host 0.0.0.0 exposes the server to external connections.
+  Only use this in secure environments or for intentional network access.`,
 	RunE: runServe,
 }
+
+var serveFlags *EnhancedStandardFlags
 
 func init() {
 	rootCmd.AddCommand(serveCmd)
 
-	serveCmd.Flags().IntP("port", "p", 8080, "Port to serve on")
-	serveCmd.Flags().String("host", "localhost", "Host to bind to")
-	serveCmd.Flags().Bool("no-open", false, "Don't open browser automatically")
-	serveCmd.Flags().StringP("watch", "w", "**/*.templ", "Watch pattern")
+	// Use enhanced standard flags for consistency
+	serveFlags = AddEnhancedFlags(serveCmd, "server", "build", "output")
 
+	// Bind flags to viper for configuration integration
 	viper.BindPFlag("server.port", serveCmd.Flags().Lookup("port"))
 	viper.BindPFlag("server.host", serveCmd.Flags().Lookup("host"))
 	viper.BindPFlag("server.no-open", serveCmd.Flags().Lookup("no-open"))
@@ -45,6 +59,11 @@ func init() {
 }
 
 func runServe(cmd *cobra.Command, args []string) error {
+	// Validate enhanced flags
+	if err := serveFlags.ValidateEnhancedFlags(); err != nil {
+		return fmt.Errorf("flag validation failed: %w", err)
+	}
+
 	cfg, err := config.Load()
 	if err != nil {
 		// Enhanced error for configuration issues

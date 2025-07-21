@@ -40,6 +40,20 @@ var (
 			return make(map[string]ChangeEvent, 100)
 		},
 	}
+
+	// Pool for ChangeEvent structs to reduce allocations
+	changeEventPool = sync.Pool{
+		New: func() interface{} {
+			return &ChangeEvent{}
+		},
+	}
+
+	// Pool for event batches to reduce slice allocations
+	eventBatchPool = sync.Pool{
+		New: func() interface{} {
+			return make([]ChangeEvent, 0, 50)
+		},
+	}
 )
 
 // FileWatcher watches for file changes with intelligent debouncing
@@ -92,16 +106,21 @@ type FileFilter func(path string) bool
 // ChangeHandler handles file change events
 type ChangeHandler func(events []ChangeEvent) error
 
-// Debouncer groups rapid file changes together
+// Debouncer groups rapid file changes together with enhanced memory management
 type Debouncer struct {
-	delay        time.Duration
-	events       chan ChangeEvent
-	output       chan []ChangeEvent
-	timer        *time.Timer
-	pending      []ChangeEvent
-	mutex        sync.Mutex
-	cleanupTimer *time.Timer
-	lastCleanup  time.Time
+	delay         time.Duration
+	events        chan ChangeEvent
+	output        chan []ChangeEvent
+	timer         *time.Timer
+	pending       []ChangeEvent
+	mutex         sync.Mutex
+	cleanupTimer  *time.Timer
+	lastCleanup   time.Time
+	// Enhanced backpressure and batching controls
+	maxBatchSize  int
+	batchTimer    *time.Timer
+	droppedEvents int64  // Counter for monitoring dropped events
+	totalEvents   int64  // Counter for total events processed
 }
 
 // NewFileWatcher creates a new file watcher
@@ -112,11 +131,12 @@ func NewFileWatcher(debounceDelay time.Duration) (*FileWatcher, error) {
 	}
 
 	debouncer := &Debouncer{
-		delay:       debounceDelay,
-		events:      make(chan ChangeEvent, 100),
-		output:      make(chan []ChangeEvent, 10),
-		pending:     make([]ChangeEvent, 0, 100),
-		lastCleanup: time.Now(),
+		delay:        debounceDelay,
+		events:       make(chan ChangeEvent, 100),
+		output:       make(chan []ChangeEvent, 10),
+		pending:      make([]ChangeEvent, 0, 100),
+		lastCleanup:  time.Now(),
+		maxBatchSize: 50,  // Process events in batches for efficiency
 	}
 
 	fw := &FileWatcher{
@@ -315,11 +335,16 @@ func (fw *FileWatcher) handleFsnotifyEvent(event fsnotify.Event) {
 		Size:    size,
 	}
 
-	// Send to debouncer
+	// Send to debouncer with backpressure handling
 	select {
 	case fw.debouncer.events <- changeEvent:
+		// Event sent successfully
+		fw.debouncer.totalEvents++
 	default:
-		// Channel full, skip this event
+		// Channel full - implement backpressure by dropping events
+		fw.debouncer.droppedEvents++
+		log.Printf("Warning: Dropping file event for %s due to backpressure (dropped: %d, total: %d)", 
+			event.Name, fw.debouncer.droppedEvents, fw.debouncer.totalEvents)
 	}
 }
 
@@ -359,17 +384,25 @@ func (d *Debouncer) addEvent(event ChangeEvent) {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 
-	// Prevent unbounded growth - drop old events if we exceed limit
+	// Prevent unbounded growth - use LRU eviction strategy
 	if len(d.pending) >= MaxPendingEvents {
-		// Remove oldest events (FIFO)
-		copy(d.pending, d.pending[1:])
-		d.pending = d.pending[:len(d.pending)-1]
+		// Implement LRU eviction by removing oldest events
+		evictCount := MaxPendingEvents / 4 // Remove 25% of events for better efficiency
+		copy(d.pending, d.pending[evictCount:])
+		d.pending = d.pending[:len(d.pending)-evictCount]
+		d.droppedEvents += int64(evictCount)
 	}
 
 	// Add event to pending list
 	d.pending = append(d.pending, event)
 
-	// Reset timer
+	// Batch processing: if we have enough events, flush immediately
+	if len(d.pending) >= d.maxBatchSize {
+		d.flushLocked() // Call internal flush without re-locking
+		return
+	}
+
+	// Reset debounce timer for smaller batches
 	if d.timer != nil {
 		d.timer.Stop()
 	}
@@ -388,7 +421,11 @@ func (d *Debouncer) addEvent(event ChangeEvent) {
 func (d *Debouncer) flush() {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
+	d.flushLocked()
+}
 
+// flushLocked performs the flush operation while already holding the mutex
+func (d *Debouncer) flushLocked() {
 	if len(d.pending) == 0 {
 		return
 	}
@@ -403,32 +440,39 @@ func (d *Debouncer) flush() {
 	}
 	events = events[:0]
 
-	// Deduplicate events by path
+	// Deduplicate events by path (keep latest event for each path)
 	for _, event := range d.pending {
 		eventMap[event.Path] = event
 	}
 
-	// Convert back to slice
+	// Convert back to slice using pooled batch
+	batch := eventBatchPool.Get().([]ChangeEvent)
+	batch = batch[:0]
+
 	for _, event := range eventMap {
-		events = append(events, event)
+		batch = append(batch, event)
 	}
 
-	// Make a copy for sending since we'll reuse the slice
-	eventsCopy := make([]ChangeEvent, len(events))
-	copy(eventsCopy, events)
+	// Make a copy for sending since we'll reuse the batch slice
+	eventsCopy := make([]ChangeEvent, len(batch))
+	copy(eventsCopy, batch)
 
 	// Return objects to pools for reuse
 	eventMapPool.Put(eventMap)
 	eventPool.Put(events)
+	eventBatchPool.Put(batch)
 
-	// Send debounced events (non-blocking)
+	// Send debounced events (non-blocking with backpressure)
 	select {
 	case d.output <- eventsCopy:
+		// Successfully sent events
 	default:
-		// Channel full, skip - this prevents goroutine leaks
+		// Channel full - implement backpressure by dropping entire batch
+		d.droppedEvents += int64(len(eventsCopy))
+		log.Printf("Warning: Dropping event batch of %d events due to output channel backpressure", len(eventsCopy))
 	}
 
-	// Clear pending events - reuse underlying array if capacity is reasonable
+	// Clear pending events - reuse underlying array if capacity is reasonable  
 	if cap(d.pending) <= MaxPendingEvents*2 {
 		d.pending = d.pending[:0]
 	} else {
@@ -477,4 +521,20 @@ func NoVendorFilter(path string) bool {
 
 func NoGitFilter(path string) bool {
 	return !filepath.HasPrefix(path, ".git/") && !strings.Contains(path, "/.git/")
+}
+
+// GetStats returns current file watcher statistics for monitoring
+func (fw *FileWatcher) GetStats() map[string]interface{} {
+	fw.debouncer.mutex.Lock()
+	defer fw.debouncer.mutex.Unlock()
+	
+	return map[string]interface{}{
+		"pending_events":    len(fw.debouncer.pending),
+		"dropped_events":    fw.debouncer.droppedEvents,
+		"total_events":      fw.debouncer.totalEvents,
+		"max_pending":       MaxPendingEvents,
+		"max_batch_size":    fw.debouncer.maxBatchSize,
+		"pending_capacity":  cap(fw.debouncer.pending),
+		"last_cleanup":      fw.debouncer.lastCleanup,
+	}
 }

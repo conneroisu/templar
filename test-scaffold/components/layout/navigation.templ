@@ -9,7 +9,7 @@ templ Navigation(brand string, links []NavLink) {
 			</div>
 			<div class="nav-menu">
 				for _, link := range links {
-					<a href={ link.URL } class={ "nav-link", templ.KV("nav-link-active", link.Active) }>
+					<a href={ templ.URL(link.URL) } class={ "nav-link", templ.KV("nav-link-active", link.Active) }>
 						{ link.Text }
 					</a>
 				}

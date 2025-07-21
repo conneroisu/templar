@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/types"
 	"github.com/leanovate/gopter"
 	"github.com/leanovate/gopter/gen"
@@ -32,7 +31,7 @@ func TestBuildPipelineProperties(t *testing.T) {
 				return true // Skip invalid inputs
 			}
 
-			reg := registry.NewComponentRegistry()
+			reg := NewMockComponentRegistry()
 			pipeline := NewBuildPipeline(workerCount, reg)
 			defer pipeline.Stop()
 
@@ -50,7 +49,7 @@ func TestBuildPipelineProperties(t *testing.T) {
 				return true
 			}
 
-			reg := registry.NewComponentRegistry()
+			reg := NewMockComponentRegistry()
 			pipeline := NewBuildPipeline(workerCount, reg)
 			defer pipeline.Stop()
 
@@ -111,7 +110,7 @@ templ ` + name + `() {
 				return true
 			}
 
-			reg := registry.NewComponentRegistry()
+			reg := NewMockComponentRegistry()
 			pipeline := NewBuildPipeline(2, reg)
 			defer pipeline.Stop()
 
@@ -162,7 +161,7 @@ templ TestComponent() {
 				return true
 			}
 
-			reg := registry.NewComponentRegistry()
+			reg := NewMockComponentRegistry()
 			pipeline := NewBuildPipeline(2, reg)
 			defer pipeline.Stop()
 
@@ -217,7 +216,7 @@ templ ` + componentName + `() {
 				return true // Limit test size
 			}
 
-			reg := registry.NewComponentRegistry()
+			reg := NewMockComponentRegistry()
 			pipeline := NewBuildPipeline(2, reg)
 			defer pipeline.Stop()
 
@@ -272,7 +271,7 @@ func TestWorkerPoolProperties(t *testing.T) {
 				return true
 			}
 
-			reg := registry.NewComponentRegistry()
+			reg := NewMockComponentRegistry()
 			pipeline := NewBuildPipeline(workers, reg)
 			defer pipeline.Stop()
 

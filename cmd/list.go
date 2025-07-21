@@ -16,8 +16,9 @@ import (
 )
 
 var listCmd = &cobra.Command{
-	Use:   "list",
-	Short: "List all discovered components",
+	Use:     "list",
+	Aliases: []string{"l"},
+	Short:   "List all discovered components",
 	Long: `List all discovered components in the project with their metadata.
 Shows component names, file paths, and optionally parameters and dependencies.
 
@@ -79,7 +80,7 @@ func runList(cmd *cobra.Command, args []string) error {
 	// Output in requested format
 	switch strings.ToLower(listFormat) {
 	case "json":
-		return outputJSON(componentSlice)
+		return outputListJSON(componentSlice)
 	case "yaml":
 		return outputYAML(componentSlice)
 	case "table":
@@ -89,7 +90,7 @@ func runList(cmd *cobra.Command, args []string) error {
 	}
 }
 
-func outputJSON(components []*types.ComponentInfo) error {
+func outputListJSON(components []*types.ComponentInfo) error {
 	output := make([]map[string]interface{}, len(components))
 
 	for i, component := range components {

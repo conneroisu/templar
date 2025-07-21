@@ -12,6 +12,7 @@ import (
 
 	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/scanner"
+	"github.com/conneroisu/templar/internal/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -455,7 +456,7 @@ templ TestComponent(text string) {
 	// Wait for and verify add event
 	select {
 	case event := <-eventChan:
-		assert.Equal(t, registry.EventTypeAdded, event.Type)
+		assert.Equal(t, types.EventTypeAdded, event.Type)
 		assert.Equal(t, "TestComponent", event.Component.Name)
 		assert.False(t, event.Timestamp.IsZero())
 	case <-time.After(1 * time.Second):
@@ -479,7 +480,7 @@ templ TestComponent(text string, active bool) {
 	// Wait for and verify update event
 	select {
 	case event := <-eventChan:
-		assert.Equal(t, registry.EventTypeUpdated, event.Type)
+		assert.Equal(t, types.EventTypeUpdated, event.Type)
 		assert.Equal(t, "TestComponent", event.Component.Name)
 		assert.Len(t, event.Component.Parameters, 2)
 	case <-time.After(1 * time.Second):

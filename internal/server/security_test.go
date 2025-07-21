@@ -578,7 +578,8 @@ func TestSecurityConfigFromAppConfig(t *testing.T) {
 			name:        "development environment",
 			environment: "development",
 			expectFunc: func(t *testing.T, sc *SecurityConfig) {
-				assert.Contains(t, sc.CSP.ScriptSrc, "'unsafe-eval'")
+				assert.NotContains(t, sc.CSP.ScriptSrc, "'unsafe-eval'")
+				assert.True(t, sc.EnableNonce)
 				assert.Equal(t, "SAMEORIGIN", sc.XFrameOptions)
 			},
 		},

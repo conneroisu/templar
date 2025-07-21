@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -12,6 +13,19 @@ import (
 type ConfigWizard struct {
 	reader *bufio.Reader
 	config *Config
+	projectDir string
+	detectedStructure *ProjectStructure
+}
+
+// ProjectStructure represents detected project characteristics
+type ProjectStructure struct {
+	HasGoMod         bool
+	HasNodeModules   bool
+	HasTailwindCSS   bool
+	HasTypeScript    bool
+	HasExistingTempl bool
+	ProjectType      string // "web", "api", "fullstack", "library"
+	ComponentDirs    []string
 }
 
 // NewConfigWizard creates a new configuration wizard
@@ -22,11 +36,39 @@ func NewConfigWizard() *ConfigWizard {
 	}
 }
 
+// NewConfigWizardWithProjectDir creates a new configuration wizard for a specific project directory
+func NewConfigWizardWithProjectDir(projectDir string) *ConfigWizard {
+	wizard := &ConfigWizard{
+		reader:     bufio.NewReader(os.Stdin),
+		config:     &Config{},
+		projectDir: projectDir,
+	}
+	wizard.detectProjectStructure()
+	return wizard
+}
+
 // Run executes the interactive configuration wizard
 func (w *ConfigWizard) Run() (*Config, error) {
 	fmt.Println("🧙 Templar Configuration Wizard")
 	fmt.Println("================================")
 	fmt.Println("This wizard will help you set up your Templar project configuration.")
+	
+	// Show detected project structure if available
+	if w.detectedStructure != nil {
+		fmt.Println()
+		fmt.Printf("🔍 Detected project type: %s\n", w.detectedStructure.ProjectType)
+		
+		if len(w.detectedStructure.ComponentDirs) > 0 {
+			fmt.Printf("📁 Found existing directories: %s\n", strings.Join(w.detectedStructure.ComponentDirs, ", "))
+		}
+		
+		if w.detectedStructure.HasExistingTempl {
+			fmt.Println("✨ Found existing .templ files")
+		}
+		
+		fmt.Println("💡 Smart defaults will be applied based on your project structure.")
+	}
+	
 	fmt.Println()
 
 	// Server configuration
@@ -107,14 +149,25 @@ func (w *ConfigWizard) configureComponents() error {
 	fmt.Println("🔍 Components Configuration")
 	fmt.Println("---------------------------")
 
-	// Scan paths
+	// Scan paths with smart defaults
 	fmt.Println("Component scan paths (directories to search for .templ files):")
 	scanPaths := []string{}
 
-	defaultPaths := []string{"./components", "./views", "./examples"}
-	for _, path := range defaultPaths {
-		if w.askBool(fmt.Sprintf("Include %s", path), true) {
-			scanPaths = append(scanPaths, path)
+	// Use detected component directories if available
+	if w.detectedStructure != nil && len(w.detectedStructure.ComponentDirs) > 0 {
+		fmt.Printf("Using detected directories: %s\n", strings.Join(w.detectedStructure.ComponentDirs, ", "))
+		for _, path := range w.detectedStructure.ComponentDirs {
+			if w.askBool(fmt.Sprintf("Include %s", path), true) {
+				scanPaths = append(scanPaths, path)
+			}
+		}
+	} else {
+		// Use default paths
+		defaultPaths := []string{"./components", "./views", "./examples"}
+		for _, path := range defaultPaths {
+			if w.askBool(fmt.Sprintf("Include %s", path), true) {
+				scanPaths = append(scanPaths, path)
+			}
 		}
 	}
 
@@ -240,14 +293,31 @@ func (w *ConfigWizard) configurePlugins() error {
 	fmt.Println("🔌 Plugins Configuration")
 	fmt.Println("------------------------")
 
-	// Built-in plugins
-	builtinPlugins := []string{"tailwind", "hotreload"}
+	// Built-in plugins with smart defaults based on project structure
 	enabledPlugins := []string{}
 
-	fmt.Println("Built-in plugins:")
-	for _, plugin := range builtinPlugins {
-		if w.askBool(fmt.Sprintf("Enable %s plugin", plugin), true) {
-			enabledPlugins = append(enabledPlugins, plugin)
+	// Always suggest hotreload
+	if w.askBool("Enable hotreload plugin (recommended)", true) {
+		enabledPlugins = append(enabledPlugins, "hotreload")
+	}
+
+	// Suggest tailwind if detected or for web projects
+	tailwindDefault := false
+	if w.detectedStructure != nil {
+		tailwindDefault = w.detectedStructure.HasTailwindCSS || w.detectedStructure.ProjectType == "web" || w.detectedStructure.ProjectType == "fullstack"
+	}
+	if tailwindDefault {
+		fmt.Println("💡 Tailwind CSS detected or recommended for web projects")
+	}
+	if w.askBool("Enable tailwind plugin", tailwindDefault) {
+		enabledPlugins = append(enabledPlugins, "tailwind")
+	}
+
+	// Suggest TypeScript plugin if detected
+	if w.detectedStructure != nil && w.detectedStructure.HasTypeScript {
+		fmt.Println("💡 TypeScript configuration detected")
+		if w.askBool("Enable typescript plugin", true) {
+			enabledPlugins = append(enabledPlugins, "typescript")
 		}
 	}
 
@@ -474,4 +544,80 @@ func (w *ConfigWizard) generateYAMLConfig() string {
 	}
 
 	return builder.String()
+}
+
+// detectProjectStructure analyzes the project directory to determine smart defaults
+func (w *ConfigWizard) detectProjectStructure() {
+	if w.projectDir == "" {
+		return
+	}
+
+	w.detectedStructure = &ProjectStructure{
+		ComponentDirs: []string{},
+	}
+
+	// Check for existing files and directories
+	w.detectedStructure.HasGoMod = w.fileExists("go.mod")
+	w.detectedStructure.HasNodeModules = w.fileExists("node_modules")
+	w.detectedStructure.HasTailwindCSS = w.fileExists("tailwind.config.js") || w.fileExists("tailwind.config.ts")
+	w.detectedStructure.HasTypeScript = w.fileExists("tsconfig.json")
+
+	// Scan for existing .templ files
+	w.detectedStructure.HasExistingTempl = w.hasTemplFiles()
+
+	// Detect existing component directories
+	possibleDirs := []string{"components", "views", "examples", "templates", "ui", "pages"}
+	for _, dir := range possibleDirs {
+		if w.fileExists(dir) {
+			w.detectedStructure.ComponentDirs = append(w.detectedStructure.ComponentDirs, "./"+dir)
+		}
+	}
+
+	// Determine project type based on structure
+	w.detectedStructure.ProjectType = w.inferProjectType()
+}
+
+// fileExists checks if a file or directory exists in the project directory
+func (w *ConfigWizard) fileExists(path string) bool {
+	if w.projectDir == "" {
+		return false
+	}
+	fullPath := w.projectDir + "/" + path
+	_, err := os.Stat(fullPath)
+	return err == nil
+}
+
+// hasTemplFiles recursively checks for .templ files
+func (w *ConfigWizard) hasTemplFiles() bool {
+	if w.projectDir == "" {
+		return false
+	}
+	
+	found := false
+	filepath.Walk(w.projectDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
+		if strings.HasSuffix(path, ".templ") {
+			found = true
+			return filepath.SkipDir
+		}
+		return nil
+	})
+	
+	return found
+}
+
+// inferProjectType determines the project type based on detected structure
+func (w *ConfigWizard) inferProjectType() string {
+	if w.detectedStructure.HasNodeModules && w.detectedStructure.HasGoMod {
+		return "fullstack"
+	}
+	if w.detectedStructure.HasTailwindCSS || len(w.detectedStructure.ComponentDirs) > 0 {
+		return "web"
+	}
+	if w.detectedStructure.HasGoMod && !w.detectedStructure.HasExistingTempl {
+		return "api"
+	}
+	return "web" // default
 }

@@ -1,0 +1,139 @@
+name: 🔒 Security Vulnerability Report
+description: Report a security vulnerability (use responsibly)
+title: '[SECURITY] '
+labels: ['security', 'critical']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # ⚠️ Security Vulnerability Reporting
+        
+        **IMPORTANT**: For serious security vulnerabilities, please consider using private reporting instead of creating a public issue.
+        
+        If this is a critical security issue that could be exploited, please:
+        1. Use GitHub's private vulnerability reporting feature
+        2. Or email the maintainers directly
+        3. Allow reasonable time for patching before public disclosure
+        
+        For general security improvements or low-risk issues, you may use this template.
+
+  - type: checkboxes
+    id: severity
+    attributes:
+      label: Severity Assessment
+      description: Please assess the severity (check one)
+      options:
+        - label: 🟢 Low - Security improvement or hardening suggestion
+        - label: 🟡 Medium - Potential security issue with limited impact
+        - label: 🟠 High - Security vulnerability that could be exploited
+        - label: 🔴 Critical - Severe vulnerability requiring immediate attention
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Vulnerability Category
+      description: What type of security issue is this?
+      options:
+        - Command Injection
+        - Path Traversal
+        - Cross-Site Scripting (XSS)
+        - SQL Injection
+        - Authentication/Authorization
+        - Input Validation
+        - Memory Safety
+        - Information Disclosure
+        - Denial of Service
+        - Cryptographic Issue
+        - Configuration Security
+        - Dependency Vulnerability
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Vulnerability Description
+      description: Provide a clear description of the security issue
+      placeholder: |
+        The vulnerability exists in...
+        An attacker could potentially...
+        This affects...
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Potential Impact
+      description: What could an attacker achieve by exploiting this?
+      placeholder: |
+        - Remote code execution
+        - Information disclosure
+        - Privilege escalation
+        - Denial of service
+        - Data corruption
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Proof of Concept
+      description: Provide steps to reproduce (be responsible - don't include actual exploits)
+      placeholder: |
+        1. Set up environment with...
+        2. Execute command...
+        3. Observe that...
+        
+        Note: Please provide enough detail to reproduce but avoid including actual exploit code.
+    validations:
+      required: true
+
+  - type: textarea
+    id: affected
+    attributes:
+      label: Affected Components
+      description: Which parts of the codebase are affected?
+      placeholder: |
+        - Package: internal/server
+        - File: handlers.go
+        - Function: handleFileUpload
+        - Version: v1.0.0 and later
+    validations:
+      required: true
+
+  - type: textarea
+    id: mitigation
+    attributes:
+      label: Suggested Mitigation
+      description: How do you think this should be fixed?
+      placeholder: |
+        - Implement input validation for...
+        - Use allowlist instead of blocklist for...
+        - Add authentication check before...
+        - Sanitize user input by...
+
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Any relevant references, similar vulnerabilities, or resources
+      placeholder: |
+        - CVE-2023-XXXXX
+        - OWASP Top 10: A03 Injection
+        - https://example.com/similar-issue
+        - CWE-79: Cross-site Scripting
+
+  - type: checkboxes
+    id: disclosure
+    attributes:
+      label: Responsible Disclosure
+      description: Please confirm your commitment to responsible disclosure
+      options:
+        - label: I will not publicly disclose details until a fix is available
+          required: true
+        - label: I will work with maintainers to verify the fix
+          required: true
+        - label: I understand this may be moved to private discussion if severe
+          required: true

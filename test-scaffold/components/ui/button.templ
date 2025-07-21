@@ -12,7 +12,7 @@ templ Button(text string, variant string, size string, disabled bool, onclick st
 			templ.KV("btn-disabled", disabled)
 		}
 		if !disabled && onclick != "" {
-			onclick={ onclick }
+			onclick={ templ.ComponentScript{Call: onclick} }
 		}
 		disabled?={ disabled }
 		type="button"

@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/types"
 )
 
@@ -41,7 +40,7 @@ func TestFileHashCachingPerformance(t *testing.T) {
 				Package:  "test",
 			}
 
-			bp := NewBuildPipeline(1, registry.NewComponentRegistry())
+			bp := NewBuildPipeline(1, NewMockComponentRegistry())
 
 			// Test first hash generation (cache miss)
 			start := time.Now()
@@ -98,7 +97,7 @@ func TestMetadataBasedCaching(t *testing.T) {
 		Package:  "test",
 	}
 
-	bp := NewBuildPipeline(1, registry.NewComponentRegistry())
+	bp := NewBuildPipeline(1, NewMockComponentRegistry())
 
 	// Get initial hash
 	hash1 := bp.generateContentHash(component)
@@ -158,7 +157,7 @@ func BenchmarkHashCachingPerformance(b *testing.B) {
 			b.ReportAllocs()
 
 			for i := 0; i < b.N; i++ {
-				bp := NewBuildPipeline(1, registry.NewComponentRegistry())
+				bp := NewBuildPipeline(1, NewMockComponentRegistry())
 				_ = bp.generateContentHash(component)
 			}
 		})
@@ -185,7 +184,7 @@ func BenchmarkHashCachingPerformance(b *testing.B) {
 				Package:  "test",
 			}
 
-			bp := NewBuildPipeline(1, registry.NewComponentRegistry())
+			bp := NewBuildPipeline(1, NewMockComponentRegistry())
 
 			// Prime the cache
 			_ = bp.generateContentHash(component)
@@ -203,7 +202,7 @@ func BenchmarkHashCachingPerformance(b *testing.B) {
 // TestCacheEvictionUnderMemoryPressure validates cache behavior under memory pressure
 func TestCacheEvictionUnderMemoryPressure(t *testing.T) {
 	// Create pipeline with smaller cache for metadata-based testing
-	reg := registry.NewComponentRegistry()
+	reg := NewMockComponentRegistry()
 	bp := NewBuildPipeline(1, reg)
 
 	// Override with smaller cache to test eviction of metadata entries (not file content)
@@ -294,7 +293,7 @@ func TestCacheEvictionUnderMemoryPressure(t *testing.T) {
 
 // TestCacheConcurrency validates thread-safety of hash caching
 func TestCacheConcurrency(t *testing.T) {
-	bp := NewBuildPipeline(4, registry.NewComponentRegistry())
+	bp := NewBuildPipeline(4, NewMockComponentRegistry())
 
 	// Create test file
 	tempFile, err := os.CreateTemp("", "concurrency_test_*.templ")

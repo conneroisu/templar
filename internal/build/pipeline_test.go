@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -33,7 +32,7 @@ func newTestCache(maxSize int64, ttl time.Duration) *BuildCache {
 }
 
 func TestNewBuildPipeline(t *testing.T) {
-	reg := registry.NewComponentRegistry()
+	reg := NewMockComponentRegistry()
 	bp := NewBuildPipeline(4, reg)
 
 	assert.NotNil(t, bp)
@@ -47,7 +46,7 @@ func TestNewBuildPipeline(t *testing.T) {
 }
 
 func TestBuildPipelineStart(t *testing.T) {
-	reg := registry.NewComponentRegistry()
+	reg := NewMockComponentRegistry()
 	bp := NewBuildPipeline(2, reg)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
@@ -63,7 +62,7 @@ func TestBuildPipelineStart(t *testing.T) {
 }
 
 func TestBuildPipelineBuild(t *testing.T) {
-	reg := registry.NewComponentRegistry()
+	reg := NewMockComponentRegistry()
 	bp := NewBuildPipeline(1, reg)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
@@ -93,7 +92,7 @@ func TestBuildPipelineBuild(t *testing.T) {
 }
 
 func TestBuildPipelineCallback(t *testing.T) {
-	reg := registry.NewComponentRegistry()
+	reg := NewMockComponentRegistry()
 	bp := NewBuildPipeline(1, reg)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
@@ -232,7 +231,7 @@ func TestGenerateContentHash(t *testing.T) {
 	err := os.WriteFile(testFile, []byte(content), 0644)
 	require.NoError(t, err)
 
-	reg := registry.NewComponentRegistry()
+	reg := NewMockComponentRegistry()
 	bp := NewBuildPipeline(1, reg)
 
 	component := &types.ComponentInfo{
@@ -257,7 +256,7 @@ func TestGenerateContentHash(t *testing.T) {
 }
 
 func TestGenerateContentHashFileNotFound(t *testing.T) {
-	reg := registry.NewComponentRegistry()
+	reg := NewMockComponentRegistry()
 	bp := NewBuildPipeline(1, reg)
 
 	component := &types.ComponentInfo{
@@ -271,7 +270,7 @@ func TestGenerateContentHashFileNotFound(t *testing.T) {
 }
 
 func TestBuildMetrics(t *testing.T) {
-	reg := registry.NewComponentRegistry()
+	reg := NewMockComponentRegistry()
 	bp := NewBuildPipeline(1, reg)
 
 	// Initial metrics

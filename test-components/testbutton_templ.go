@@ -39,7 +39,7 @@ func TestButton(text string, variant string, size string, disabled bool, onclick
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ.RenderScriptItems(ctx, templ_7745c5c3_Buffer, onclick)
+		templ_7745c5c3_Err = templ.RenderScriptItems(ctx, templ_7745c5c3_Buffer, templ.ComponentScript{Call: onclick})
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -65,7 +65,7 @@ func TestButton(text string, variant string, size string, disabled bool, onclick
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var4 templ.ComponentScript = onclick
+			var templ_7745c5c3_Var4 templ.ComponentScript = templ.ComponentScript{Call: onclick}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4.Call)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

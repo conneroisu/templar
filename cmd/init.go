@@ -11,16 +11,38 @@ import (
 )
 
 var initCmd = &cobra.Command{
-	Use:   "init [name]",
-	Short: "Initialize a new templar project",
+	Use:     "init [name]",
+	Aliases: []string{"i"},
+	Short:   "Initialize a new templar project with templates and smart configuration",
 	Long: `Initialize a new templar project with the necessary directory structure
 and configuration files. If no name is provided, initializes in the current directory.
 
+The wizard provides smart defaults based on your project structure and helps
+you choose the right template for your use case.
+
 Examples:
-  templar init                    # Initialize in current directory
-  templar init my-project         # Initialize in new directory 'my-project'
-  templar init --minimal          # Minimal setup without examples
-  templar init --example          # Include example components`,
+  templar init                         # Initialize in current directory with examples
+  templar init my-project              # Initialize in new directory 'my-project'
+  templar init --minimal               # Minimal setup without examples
+  templar init --wizard                # Interactive configuration wizard (recommended)
+  templar init --template=blog         # Use blog template with posts and layouts
+  templar init --template=dashboard    # Use dashboard template with sidebar and cards  
+  templar init --template=landing      # Use landing page template with hero and features
+  templar init --template=ecommerce    # Use e-commerce template with products and cart
+  templar init --template=documentation # Use documentation template with navigation
+
+Available Templates:
+  minimal        Basic component setup
+  blog          Blog posts, layouts, and content management
+  dashboard     Admin dashboard with sidebar navigation and data cards
+  landing       Marketing landing page with hero sections and feature lists
+  ecommerce     Product listings, shopping cart, and purchase flows
+  documentation Technical documentation with navigation and code blocks
+
+Pro Tips:
+  • Use --wizard for project-specific smart defaults
+  • Templates include production-ready components and styling
+  • All templates work with the development server and live preview`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runInit,
 }
@@ -529,15 +551,31 @@ templ Wrapper(title string) {
 }
 
 func createFromTemplate(projectDir string, templateName string) error {
-	// For now, just handle a basic template
-	// In the future, this could fetch templates from a repository
+	// Available templates with enhanced validation
+	validTemplates := []string{"minimal", "blog", "dashboard", "landing", "ecommerce", "documentation"}
+	
+	// Use enhanced validation with fuzzy suggestions
+	if err := ValidateTemplateWithSuggestion(templateName, validTemplates); err != nil {
+		return err
+	}
+
 	switch templateName {
 	case "minimal":
 		return createMinimalTemplate(projectDir)
 	case "blog":
 		return createBlogTemplate(projectDir)
+	case "dashboard":
+		return createDashboardTemplate(projectDir)
+	case "landing":
+		return createLandingTemplate(projectDir)
+	case "ecommerce":
+		return createEcommerceTemplate(projectDir)
+	case "documentation":
+		return createDocumentationTemplate(projectDir)
 	default:
-		return fmt.Errorf("unknown template: %s", templateName)
+		// This should not happen due to validation above, but keep for safety
+		return fmt.Errorf("unknown template: %s. Available templates: %s", 
+			templateName, strings.Join(validTemplates, ", "))
 	}
 }
 
@@ -603,12 +641,224 @@ templ PostList(posts []Post) {
 	return nil
 }
 
+func createDashboardTemplate(projectDir string) error {
+	// Create dashboard components
+	sidebarPath := filepath.Join(projectDir, "components", "sidebar.templ")
+	sidebarContent := `package components
+
+type NavItem struct {
+	Label string
+	Icon  string
+	URL   string
+	Active bool
+}
+
+templ Sidebar(items []NavItem) {
+	<aside class="sidebar">
+		<div class="sidebar-header">
+			<h2>Dashboard</h2>
+		</div>
+		<nav class="sidebar-nav">
+			for _, item := range items {
+				<a href={ templ.URL(item.URL) } class={ "nav-item", templ.KV("active", item.Active) }>
+					<i class={ "icon", item.Icon }></i>
+					<span>{ item.Label }</span>
+				</a>
+			}
+		</nav>
+	</aside>
+}
+
+templ DashboardCard(title string, value string, trend string) {
+	<div class="dashboard-card">
+		<div class="card-header">
+			<h3 class="card-title">{ title }</h3>
+		</div>
+		<div class="card-content">
+			<div class="card-value">{ value }</div>
+			<div class="card-trend">{ trend }</div>
+		</div>
+	</div>
+}
+`
+	if err := os.WriteFile(sidebarPath, []byte(sidebarContent), 0644); err != nil {
+		return fmt.Errorf("failed to create sidebar component: %w", err)
+	}
+
+	fmt.Println("✓ Created dashboard template")
+	return nil
+}
+
+func createLandingTemplate(projectDir string) error {
+	// Create landing page components
+	heroPath := filepath.Join(projectDir, "components", "hero.templ")
+	heroContent := `package components
+
+templ Hero(title string, subtitle string, ctaText string, ctaLink string) {
+	<section class="hero">
+		<div class="hero-container">
+			<h1 class="hero-title">{ title }</h1>
+			<p class="hero-subtitle">{ subtitle }</p>
+			<div class="hero-actions">
+				<a href={ templ.URL(ctaLink) } class="btn btn-primary">{ ctaText }</a>
+			</div>
+		</div>
+	</section>
+}
+
+type Feature struct {
+	Icon        string
+	Title       string
+	Description string
+}
+
+templ Features(features []Feature) {
+	<section class="features">
+		<div class="features-container">
+			<h2>Features</h2>
+			<div class="features-grid">
+				for _, feature := range features {
+					<div class="feature-card">
+						<div class="feature-icon">
+							<i class={ feature.Icon }></i>
+						</div>
+						<h3 class="feature-title">{ feature.Title }</h3>
+						<p class="feature-description">{ feature.Description }</p>
+					</div>
+				}
+			</div>
+		</div>
+	</section>
+}
+`
+	if err := os.WriteFile(heroPath, []byte(heroContent), 0644); err != nil {
+		return fmt.Errorf("failed to create hero component: %w", err)
+	}
+
+	fmt.Println("✓ Created landing page template")
+	return nil
+}
+
+func createEcommerceTemplate(projectDir string) error {
+	// Create e-commerce components
+	productPath := filepath.Join(projectDir, "components", "product.templ")
+	productContent := `package components
+
+type Product struct {
+	ID          string
+	Name        string
+	Price       string
+	Image       string
+	Description string
+	InStock     bool
+}
+
+templ ProductCard(product Product) {
+	<div class="product-card">
+		<div class="product-image">
+			<img src={ product.Image } alt={ product.Name }/>
+			if !product.InStock {
+				<div class="out-of-stock-overlay">Out of Stock</div>
+			}
+		</div>
+		<div class="product-info">
+			<h3 class="product-name">{ product.Name }</h3>
+			<p class="product-description">{ product.Description }</p>
+			<div class="product-footer">
+				<span class="product-price">{ product.Price }</span>
+				if product.InStock {
+					<button class="btn btn-primary">Add to Cart</button>
+				} else {
+					<button class="btn btn-secondary" disabled>Notify Me</button>
+				}
+			</div>
+		</div>
+	</div>
+}
+
+templ ProductGrid(products []Product) {
+	<div class="product-grid">
+		for _, product := range products {
+			@ProductCard(product)
+		}
+	</div>
+}
+`
+	if err := os.WriteFile(productPath, []byte(productContent), 0644); err != nil {
+		return fmt.Errorf("failed to create product component: %w", err)
+	}
+
+	fmt.Println("✓ Created e-commerce template")
+	return nil
+}
+
+func createDocumentationTemplate(projectDir string) error {
+	// Create documentation components
+	docPath := filepath.Join(projectDir, "components", "docs.templ")
+	docContent := `package components
+
+type DocSection struct {
+	ID       string
+	Title    string
+	Content  string
+	Children []DocSection
+}
+
+templ DocNav(sections []DocSection) {
+	<nav class="doc-nav">
+		<ul class="nav-list">
+			for _, section := range sections {
+				<li class="nav-item">
+					<a href={ templ.URL("#" + section.ID) } class="nav-link">
+						{ section.Title }
+					</a>
+					if len(section.Children) > 0 {
+						<ul class="nav-sublist">
+							for _, child := range section.Children {
+								<li class="nav-subitem">
+									<a href={ templ.URL("#" + child.ID) } class="nav-sublink">
+										{ child.Title }
+									</a>
+								</li>
+							}
+						</ul>
+					}
+				</li>
+			}
+		</ul>
+	</nav>
+}
+
+templ CodeBlock(language string, code string) {
+	<div class="code-block">
+		<div class="code-header">
+			<span class="code-language">{ language }</span>
+			<button class="copy-button">Copy</button>
+		</div>
+		<pre class="code-content"><code class={ language }>{ code }</code></pre>
+	</div>
+}
+
+templ Alert(type_ string, message string) {
+	<div class={ "alert", "alert-" + type_ }>
+		<div class="alert-content">{ message }</div>
+	</div>
+}
+`
+	if err := os.WriteFile(docPath, []byte(docContent), 0644); err != nil {
+		return fmt.Errorf("failed to create docs component: %w", err)
+	}
+
+	fmt.Println("✓ Created documentation template")
+	return nil
+}
+
 func createConfigWithWizard(projectDir string) error {
 	fmt.Println("\n🧙 Running Configuration Wizard")
 	fmt.Println("==============================")
 
-	// Create and run wizard
-	wizard := config.NewConfigWizard()
+	// Create wizard with project directory for smart defaults
+	wizard := config.NewConfigWizardWithProjectDir(projectDir)
 
 	cfg, err := wizard.Run()
 	if err != nil {

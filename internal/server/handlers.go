@@ -110,6 +110,14 @@ const indexHTML = `<!DOCTYPE html>
             <h1 class="text-3xl font-bold text-gray-800 border-b-2 border-primary pb-4 mb-6">
                 Templar Component Preview
             </h1>
+            <div class="mb-6 flex gap-4">
+                <a href="/enhanced" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition-colors font-medium">
+                    🛠️ Enhanced Interface
+                </a>
+                <a href="/playground" class="bg-secondary-500 text-white px-4 py-2 rounded-lg hover:bg-secondary-600 transition-colors font-medium">
+                    🎮 Component Playground
+                </a>
+            </div>
             <div id="status" class="status disconnected fixed top-4 right-4 px-4 py-2 rounded-lg text-white font-semibold z-50">
                 Disconnected
             </div>

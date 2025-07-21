@@ -232,16 +232,16 @@ func TestIntegration_WatcherScanner_NewFileCreation(t *testing.T) {
 		// Check for new components
 		componentMutex.Lock()
 		allComponents := reg.GetAll()
-		for name := range allComponents {
+		for _, component := range allComponents {
 			found := false
 			for _, existing := range newComponents {
-				if existing == name {
+				if existing == component.Name {
 					found = true
 					break
 				}
 			}
 			if !found {
-				newComponents = append(newComponents, name)
+				newComponents = append(newComponents, component.Name)
 			}
 		}
 		componentMutex.Unlock()

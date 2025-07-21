@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/conneroisu/templar/internal/registry"
 	testingpkg "github.com/conneroisu/templar/internal/testing"
 	"github.com/conneroisu/templar/internal/types"
 )
@@ -22,7 +21,7 @@ func TestBuildPipeline_ErrorInjection(t *testing.T) {
 	defer tracker.CheckLeaks(t)
 
 	// Set up test registry and pipeline
-	reg := registry.NewComponentRegistry()
+	reg := NewMockComponentRegistry()
 	pipeline := NewBuildPipeline(2, reg)
 
 	// Create test component
@@ -180,7 +179,7 @@ func TestBuildPipeline_ErrorRecovery(t *testing.T) {
 	defer tracker.CheckLeaks(t)
 
 	// Set up test environment
-	reg := registry.NewComponentRegistry()
+	reg := NewMockComponentRegistry()
 	pipeline := NewBuildPipeline(1, reg)
 
 	component := &types.ComponentInfo{
@@ -254,7 +253,7 @@ func TestBuildPipeline_ConcurrentErrorInjection(t *testing.T) {
 	})
 
 	// Set up test environment
-	reg := registry.NewComponentRegistry()
+	reg := NewMockComponentRegistry()
 	pipeline := NewBuildPipeline(4, reg) // More workers for concurrency
 
 	// Configure probabilistic failures
@@ -375,7 +374,7 @@ func TestScenarioManager_BuildPipelineScenarios(t *testing.T) {
 	}
 
 	// Set up build pipeline with scenario
-	reg := registry.NewComponentRegistry()
+	reg := NewMockComponentRegistry()
 	pipeline := NewBuildPipeline(2, reg)
 
 	mockCompiler := &MockTemplCompilerWithInjection{

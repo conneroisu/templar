@@ -1,8 +1,10 @@
 package components
 
+import "fmt"
+
 // Form renders a form with validation support
 templ Form(action string, method string, title string) {
-	<form class="form" action={ action } method={ method }>
+	<form class="form" action={ templ.URL(action) } method={ method }>
 		if title != "" {
 			<h2 class="form-title">{ title }</h2>
 		}

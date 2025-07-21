@@ -9,11 +9,11 @@
 //   - Comprehensive validation and security checks for all configuration values
 //
 // Configuration Loading Order:
-//   1. Command-line flags (--config, --port, etc.)
-//   2. TEMPLAR_CONFIG_FILE environment variable for custom config file paths
-//   3. Individual environment variables (TEMPLAR_SERVER_PORT, TEMPLAR_SERVER_HOST, etc.)
-//   4. Configuration file values (.templar.yml or custom path)
-//   5. Built-in defaults
+//  1. Command-line flags (--config, --port, etc.)
+//  2. TEMPLAR_CONFIG_FILE environment variable for custom config file paths
+//  3. Individual environment variables (TEMPLAR_SERVER_PORT, TEMPLAR_SERVER_HOST, etc.)
+//  4. Configuration file values (.templar.yml or custom path)
+//  5. Built-in defaults
 //
 // The system manages server settings, component scanning paths, build pipeline
 // configuration, development-specific options like hot reload and error overlays,
