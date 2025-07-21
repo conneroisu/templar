@@ -1,0 +1,65 @@
+package components
+
+// Form renders a form with validation support
+templ Form(action string, method string, title string) {
+	<form class="form" action={ action } method={ method }>
+		if title != "" {
+			<h2 class="form-title">{ title }</h2>
+		}
+		{ children... }
+	</form>
+}
+
+// FormField renders a form field with label and validation
+templ FormField(name string, label string, fieldType string, required bool, placeholder string, value string, errorMsg string) {
+	<div class="form-field">
+		<label for={ name } class="form-label">
+			{ label }
+			if required {
+				<span class="form-required">*</span>
+			}
+		</label>
+		<input
+			type={ fieldType }
+			id={ name }
+			name={ name }
+			class={ "form-input", templ.KV("form-input-error", errorMsg != "") }
+			placeholder={ placeholder }
+			value={ value }
+			required?={ required }
+		/>
+		if errorMsg != "" {
+			<div class="form-error">{ errorMsg }</div>
+		}
+	</div>
+}
+
+// FormTextarea renders a textarea field
+templ FormTextarea(name string, label string, required bool, placeholder string, value string, rows int, errorMsg string) {
+	<div class="form-field">
+		<label for={ name } class="form-label">
+			{ label }
+			if required {
+				<span class="form-required">*</span>
+			}
+		</label>
+		<textarea
+			id={ name }
+			name={ name }
+			class={ "form-textarea", templ.KV("form-input-error", errorMsg != "") }
+			placeholder={ placeholder }
+			required?={ required }
+			rows={ fmt.Sprintf("%d", rows) }
+		>{ value }</textarea>
+		if errorMsg != "" {
+			<div class="form-error">{ errorMsg }</div>
+		}
+	</div>
+}
+
+// FormSubmit renders a form submit button
+templ FormSubmit(text string, variant string) {
+	<button type="submit" class={ "btn", "btn-" + variant, "form-submit" }>
+		{ text }
+	</button>
+}

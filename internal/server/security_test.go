@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/conneroisu/templar/internal/config"
+	"github.com/conneroisu/templar/internal/validation"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -304,7 +305,7 @@ func TestSecurityMiddleware_CSP_BuildHeader(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			header := buildCSPHeader(tt.csp, false)
+			header := buildCSPHeader(tt.csp, "")
 
 			for _, expected := range tt.expected {
 				assert.Contains(t, header, expected)
@@ -544,9 +545,10 @@ func TestSecurityMiddleware_OriginValidation(t *testing.T) {
 func TestSecurityMiddleware_DevelopmentConfig(t *testing.T) {
 	config := DevelopmentSecurityConfig()
 
-	// Development should be more permissive
-	assert.Contains(t, config.CSP.ScriptSrc, "'unsafe-eval'")
-	assert.Contains(t, config.CSP.ScriptSrc, "'unsafe-inline'")
+	// Development should use nonces instead of unsafe directives
+	assert.True(t, config.EnableNonce)
+	assert.NotContains(t, config.CSP.ScriptSrc, "'unsafe-eval'")
+	assert.NotContains(t, config.CSP.ScriptSrc, "'unsafe-inline'")
 	assert.Equal(t, "SAMEORIGIN", config.XFrameOptions)
 	assert.Contains(t, config.AllowedOrigins, "http://localhost:8080")
 	assert.Equal(t, 5000, config.RateLimiting.RequestsPerMinute)
@@ -709,7 +711,8 @@ func TestIsBlockedUserAgent(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := isBlockedUserAgent(tt.userAgent, blockedAgents)
+			err := validation.ValidateUserAgent(tt.userAgent, blockedAgents)
+			result := err != nil // blocked if validation returns error
 			assert.Equal(t, tt.expected, result)
 		})
 	}
@@ -753,6 +756,6 @@ func BenchmarkCSPHeaderBuild(b *testing.B) {
 	b.ReportAllocs()
 
 	for i := 0; i < b.N; i++ {
-		_ = buildCSPHeader(csp, false)
+		_ = buildCSPHeader(csp, "")
 	}
 }

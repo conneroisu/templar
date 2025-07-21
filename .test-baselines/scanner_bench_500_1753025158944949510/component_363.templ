@@ -1,0 +1,72 @@
+package components
+
+templ Layout363(title string, sidebar bool) {
+	<!DOCTYPE html>
+	<html>
+		<head>
+			<title>{title}</title>
+			<meta charset="utf-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		</head>
+		<body>
+			@Header363(title)
+			<main class="main-content">
+				if sidebar {
+					<div class="layout-with-sidebar">
+						<aside class="sidebar">
+							@Sidebar363()
+						</aside>
+						<div class="content">
+							{ children... }
+						</div>
+					</div>
+				} else {
+					<div class="content-full">
+						{ children... }
+					</div>
+				}
+			</main>
+			@Footer363()
+		</body>
+	</html>
+}
+
+templ Header363(title string) {
+	<header class="header">
+		<nav class="navbar">
+			<div class="navbar-brand">
+				<a href="/">{title}</a>
+			</div>
+			<div class="navbar-nav">
+				<a href="/dashboard">Dashboard</a>
+				<a href="/projects">Projects</a>
+				<a href="/settings">Settings</a>
+			</div>
+		</nav>
+	</header>
+}
+
+templ Sidebar363() {
+	<nav class="sidebar-nav">
+		<ul class="nav-list">
+			<li><a href="/dashboard" class="nav-link">Dashboard</a></li>
+			<li><a href="/projects" class="nav-link">Projects</a></li>
+			<li class="nav-group">
+				<span class="nav-group-title">Components</span>
+				<ul class="nav-sublist">
+					<li><a href="/components/buttons" class="nav-link">Buttons</a></li>
+					<li><a href="/components/forms" class="nav-link">Forms</a></li>
+					<li><a href="/components/cards" class="nav-link">Cards</a></li>
+				</ul>
+			</li>
+		</ul>
+	</nav>
+}
+
+templ Footer363() {
+	<footer class="footer">
+		<div class="footer-content">
+			<p>&copy; 2024 Templar Framework. All rights reserved.</p>
+		</div>
+	</footer>
+}

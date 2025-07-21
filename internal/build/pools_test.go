@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/conneroisu/templar/internal/registry"
+	"github.com/conneroisu/templar/internal/types"
 )
 
 func TestObjectPools(t *testing.T) {
@@ -18,7 +18,7 @@ func TestObjectPools(t *testing.T) {
 		}
 
 		// Populate it
-		result1.Component = &registry.ComponentInfo{Name: "Test"}
+		result1.Component = &types.ComponentInfo{Name: "Test"}
 		result1.Duration = time.Second
 		result1.CacheHit = true
 
@@ -52,7 +52,7 @@ func TestObjectPools(t *testing.T) {
 		}
 
 		// Populate it
-		task1.Component = &registry.ComponentInfo{Name: "Test"}
+		task1.Component = &types.ComponentInfo{Name: "Test"}
 		task1.Priority = 5
 		task1.Timestamp = time.Now()
 
@@ -117,7 +117,7 @@ func TestSlicePools(t *testing.T) {
 		}
 
 		// Use the slice
-		component := &registry.ComponentInfo{Name: "Test"}
+		component := &types.ComponentInfo{Name: "Test"}
 		slice1 = append(slice1, component)
 		if len(slice1) != 1 {
 			t.Error("Expected slice length to be 1")
@@ -199,11 +199,14 @@ func BenchmarkBuildResultCreation(b *testing.B) {
 	b.Run("Without Pool", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			result := &BuildResult{
-				Component: &registry.ComponentInfo{Name: "Test"},
+				Component: &types.ComponentInfo{Name: "Test"},
 				Duration:  time.Millisecond,
 				CacheHit:  false,
 			}
-			result.Reset() // Simulate cleanup
+			// Reset manually since we're not pooling small structs
+			result.Component = nil
+			result.Duration = 0
+			result.CacheHit = false
 		}
 	})
 
@@ -211,7 +214,7 @@ func BenchmarkBuildResultCreation(b *testing.B) {
 		pools := NewObjectPools()
 		for i := 0; i < b.N; i++ {
 			result := pools.GetBuildResult()
-			result.Component = &registry.ComponentInfo{Name: "Test"}
+			result.Component = &types.ComponentInfo{Name: "Test"}
 			result.Duration = time.Millisecond
 			result.CacheHit = false
 			pools.PutBuildResult(result)
@@ -241,14 +244,14 @@ func BenchmarkOutputBufferUsage(b *testing.B) {
 }
 
 func BenchmarkSliceAllocation(b *testing.B) {
-	components := make([]*registry.ComponentInfo, 10)
+	components := make([]*types.ComponentInfo, 10)
 	for i := range components {
-		components[i] = &registry.ComponentInfo{Name: "Test"}
+		components[i] = &types.ComponentInfo{Name: "Test"}
 	}
 
 	b.Run("Without Pool", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			slice := make([]*registry.ComponentInfo, 0, 50)
+			slice := make([]*types.ComponentInfo, 0, 50)
 			slice = append(slice, components...)
 			_ = slice
 		}
@@ -271,7 +274,7 @@ func BenchmarkConcurrentPoolUsage(b *testing.B) {
 		for pb.Next() {
 			// Simulate concurrent build result creation
 			result := pools.GetBuildResult()
-			result.Component = &registry.ComponentInfo{Name: "Test"}
+			result.Component = &types.ComponentInfo{Name: "Test"}
 			result.Duration = time.Microsecond
 			pools.PutBuildResult(result)
 
@@ -290,7 +293,7 @@ func BenchmarkMemoryAllocation(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			// Simulate build pipeline operations without pools
 			result := &BuildResult{
-				Component: &registry.ComponentInfo{Name: "Test"},
+				Component: &types.ComponentInfo{Name: "Test"},
 				Output:    make([]byte, 1024),
 				Duration:  time.Millisecond,
 			}
@@ -304,7 +307,7 @@ func BenchmarkMemoryAllocation(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			// Simulate build pipeline operations with pools
 			result := pools.GetBuildResult()
-			result.Component = &registry.ComponentInfo{Name: "Test"}
+			result.Component = &types.ComponentInfo{Name: "Test"}
 			result.Output = pools.GetOutputBuffer()
 			result.Duration = time.Millisecond
 

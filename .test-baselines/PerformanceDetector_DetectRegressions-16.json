@@ -1,0 +1,15 @@
+{
+  "benchmark_name": "PerformanceDetector_DetectRegressions-16",
+  "samples": [
+    15656,
+    17037,
+    13409
+  ],
+  "mean": 15367.333333333334,
+  "median": 15656,
+  "std_dev": 1495.1237035405761,
+  "min": 13409,
+  "max": 17037,
+  "last_updated": "2025-07-20T10:23:47.763861295-05:00",
+  "sample_count": 3
+}

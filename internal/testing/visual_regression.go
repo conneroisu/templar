@@ -13,14 +13,15 @@ import (
 
 	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/renderer"
+	"github.com/conneroisu/templar/internal/types"
 )
 
 // VisualRegressionTester handles visual regression testing for template output
 type VisualRegressionTester struct {
-	goldenDir   string
-	updateMode  bool
-	renderer    *renderer.ComponentRenderer
-	registry    *registry.ComponentRegistry
+	goldenDir  string
+	updateMode bool
+	renderer   *renderer.ComponentRenderer
+	registry   *registry.ComponentRegistry
 }
 
 // TestCase represents a visual regression test case
@@ -35,13 +36,13 @@ type TestCase struct {
 
 // RegressionResult contains the results of a visual regression test
 type RegressionResult struct {
-	TestCase    TestCase `json:"test_case"`
-	Passed      bool     `json:"passed"`
-	Expected    string   `json:"expected,omitempty"`
-	Actual      string   `json:"actual,omitempty"`
-	Diff        string   `json:"diff,omitempty"`
-	Error       error    `json:"error,omitempty"`
-	OutputHash  string   `json:"output_hash"`
+	TestCase     TestCase `json:"test_case"`
+	Passed       bool     `json:"passed"`
+	Expected     string   `json:"expected,omitempty"`
+	Actual       string   `json:"actual,omitempty"`
+	Diff         string   `json:"diff,omitempty"`
+	Error        error    `json:"error,omitempty"`
+	OutputHash   string   `json:"output_hash"`
 	ExpectedHash string   `json:"expected_hash"`
 }
 
@@ -49,7 +50,7 @@ type RegressionResult struct {
 func NewVisualRegressionTester(goldenDir string, updateMode bool) *VisualRegressionTester {
 	reg := registry.NewComponentRegistry()
 	renderer := renderer.NewComponentRenderer(reg)
-	
+
 	return &VisualRegressionTester{
 		goldenDir:  goldenDir,
 		updateMode: updateMode,
@@ -59,7 +60,7 @@ func NewVisualRegressionTester(goldenDir string, updateMode bool) *VisualRegress
 }
 
 // RegisterComponents adds components to the registry for testing
-func (vrt *VisualRegressionTester) RegisterComponents(components []*registry.ComponentInfo) {
+func (vrt *VisualRegressionTester) RegisterComponents(components []*types.ComponentInfo) {
 	for _, component := range components {
 		vrt.registry.Register(component)
 	}
@@ -140,7 +141,7 @@ func (vrt *VisualRegressionTester) RunTestSuite(t *testing.T, testCases []TestCa
 func (vrt *VisualRegressionTester) renderComponent(componentName string, props map[string]interface{}) ([]byte, error) {
 	// This is a placeholder implementation
 	// In a real implementation, this would render the actual component
-	
+
 	component, exists := vrt.registry.Get(componentName)
 	if !exists {
 		return nil, fmt.Errorf("component %s not found", componentName)
@@ -152,12 +153,12 @@ func (vrt *VisualRegressionTester) renderComponent(componentName string, props m
 }
 
 // generateHTML generates HTML for a component (placeholder implementation)
-func (vrt *VisualRegressionTester) generateHTML(component *registry.ComponentInfo, props map[string]interface{}) string {
+func (vrt *VisualRegressionTester) generateHTML(component *types.ComponentInfo, props map[string]interface{}) string {
 	var html strings.Builder
-	
+
 	html.WriteString(fmt.Sprintf("<!-- Component: %s -->\n", component.Name))
 	html.WriteString(fmt.Sprintf("<div class=\"component %s\">\n", strings.ToLower(component.Name)))
-	
+
 	// Generate content based on component type and props
 	switch component.Name {
 	case "Button":
@@ -168,7 +169,7 @@ func (vrt *VisualRegressionTester) generateHTML(component *registry.ComponentInf
 			}
 		}
 		html.WriteString(fmt.Sprintf("  <button type=\"button\">%s</button>\n", text))
-		
+
 	case "Card":
 		title := "Card Title"
 		content := "Card content"
@@ -184,7 +185,7 @@ func (vrt *VisualRegressionTester) generateHTML(component *registry.ComponentInf
 		}
 		html.WriteString(fmt.Sprintf("  <div class=\"card-header\">%s</div>\n", title))
 		html.WriteString(fmt.Sprintf("  <div class=\"card-body\">%s</div>\n", content))
-		
+
 	case "Layout":
 		html.WriteString("  <!DOCTYPE html>\n")
 		html.WriteString("  <html>\n")
@@ -193,14 +194,14 @@ func (vrt *VisualRegressionTester) generateHTML(component *registry.ComponentInf
 		html.WriteString("    <main>Content goes here</main>\n")
 		html.WriteString("  </body>\n")
 		html.WriteString("  </html>\n")
-		
+
 	default:
 		html.WriteString(fmt.Sprintf("  <div>Unknown component: %s</div>\n", component.Name))
 	}
-	
+
 	html.WriteString("</div>\n")
 	html.WriteString(fmt.Sprintf("<!-- End Component: %s -->\n", component.Name))
-	
+
 	return html.String()
 }
 
@@ -242,7 +243,7 @@ func (vrt *VisualRegressionTester) generateDiff(expected, actual []byte) string 
 
 	for i := 0; i < maxLines; i++ {
 		var expectedLine, actualLine string
-		
+
 		if i < len(expectedLines) {
 			expectedLine = expectedLines[i]
 		}
@@ -266,7 +267,7 @@ func (vrt *VisualRegressionTester) generateDiff(expected, actual []byte) string 
 // GenerateReport creates a detailed test report
 func (vrt *VisualRegressionTester) GenerateReport(results []*RegressionResult) string {
 	var report strings.Builder
-	
+
 	passed := 0
 	failed := 0
 	errors := 0
@@ -296,7 +297,7 @@ func (vrt *VisualRegressionTester) GenerateReport(results []*RegressionResult) s
 			if !result.Passed || result.Error != nil {
 				report.WriteString(fmt.Sprintf("### %s\n", result.TestCase.Name))
 				report.WriteString(fmt.Sprintf("**Component**: %s\n", result.TestCase.Component))
-				
+
 				if result.Error != nil {
 					report.WriteString(fmt.Sprintf("**Error**: %s\n", result.Error.Error()))
 				} else {

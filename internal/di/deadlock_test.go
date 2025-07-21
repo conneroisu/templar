@@ -181,8 +181,8 @@ func TestConcurrentDifferentServices(t *testing.T) {
 			// Simulate some work
 			time.Sleep(time.Millisecond * 5)
 			return map[string]interface{}{
-				"id":    serviceValue,
-				"name":  serviceName,
+				"id":   serviceValue,
+				"name": serviceName,
 			}, nil
 		})
 	}
@@ -302,14 +302,14 @@ func TestTransientServiceCreation(t *testing.T) {
 			t.Errorf("Instance %d or %d is nil", i, i+1)
 			continue
 		}
-		
+
 		map1, ok1 := instances[i].(map[string]interface{})
 		map2, ok2 := instances[i+1].(map[string]interface{})
 		if !ok1 || !ok2 {
 			t.Errorf("Instances %d or %d are not maps", i, i+1)
 			continue
 		}
-		
+
 		id1 := map1["id"]
 		id2 := map2["id"]
 		if id1 == id2 {

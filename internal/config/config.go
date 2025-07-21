@@ -2,10 +2,22 @@
 // using Viper for flexible configuration loading from files, environment
 // variables, and command-line flags.
 //
-// The configuration system supports YAML files, environment variable overrides
-// with TEMPLAR_ prefix, validation, and security checks. It manages server
-// settings, component scanning paths, build pipeline configuration, and
-// development-specific options like hot reload and error overlays.
+// The configuration system supports:
+//   - YAML configuration files with customizable paths via TEMPLAR_CONFIG_FILE
+//   - Environment variable overrides with TEMPLAR_ prefix (e.g., TEMPLAR_SERVER_PORT)
+//   - Command-line flag overrides with highest precedence
+//   - Comprehensive validation and security checks for all configuration values
+//
+// Configuration Loading Order:
+//   1. Command-line flags (--config, --port, etc.)
+//   2. TEMPLAR_CONFIG_FILE environment variable for custom config file paths
+//   3. Individual environment variables (TEMPLAR_SERVER_PORT, TEMPLAR_SERVER_HOST, etc.)
+//   4. Configuration file values (.templar.yml or custom path)
+//   5. Built-in defaults
+//
+// The system manages server settings, component scanning paths, build pipeline
+// configuration, development-specific options like hot reload and error overlays,
+// plugin management, and monitoring configuration.
 package config
 
 import (
@@ -23,17 +35,30 @@ type Config struct {
 	Components  ComponentsConfig  `yaml:"components"`
 	Development DevelopmentConfig `yaml:"development"`
 	Plugins     PluginsConfig     `yaml:"plugins"`
+	Monitoring  MonitoringConfig  `yaml:"monitoring"`
 	TargetFiles []string          `yaml:"-"` // CLI arguments, not from config file
 }
 
 type ServerConfig struct {
-	Port           int      `yaml:"port"`
-	Host           string   `yaml:"host"`
-	Open           bool     `yaml:"open"`
-	NoOpen         bool     `yaml:"no-open"`
-	Middleware     []string `yaml:"middleware"`
-	AllowedOrigins []string `yaml:"allowed_origins"`
-	Environment    string   `yaml:"environment"`
+	Port           int        `yaml:"port"`
+	Host           string     `yaml:"host"`
+	Open           bool       `yaml:"open"`
+	NoOpen         bool       `yaml:"no-open"`
+	Middleware     []string   `yaml:"middleware"`
+	AllowedOrigins []string   `yaml:"allowed_origins"`
+	Environment    string     `yaml:"environment"`
+	Auth           AuthConfig `yaml:"auth"`
+}
+
+type AuthConfig struct {
+	Enabled         bool     `yaml:"enabled"`
+	Mode            string   `yaml:"mode"`             // "token", "basic", "none"
+	Token           string   `yaml:"token"`            // Simple token for token mode
+	Username        string   `yaml:"username"`         // Username for basic auth
+	Password        string   `yaml:"password"`         // Password for basic auth
+	AllowedIPs      []string `yaml:"allowed_ips"`      // IP allowlist
+	RequireAuth     bool     `yaml:"require_auth"`     // Require auth for non-localhost
+	LocalhostBypass bool     `yaml:"localhost_bypass"` // Allow localhost without auth
 }
 
 type BuildConfig struct {
@@ -62,14 +87,32 @@ type DevelopmentConfig struct {
 }
 
 type PluginsConfig struct {
-	Enabled        []string                    `yaml:"enabled"`
-	Disabled       []string                    `yaml:"disabled"`
-	DiscoveryPaths []string                    `yaml:"discovery_paths"`
+	Enabled        []string                   `yaml:"enabled"`
+	Disabled       []string                   `yaml:"disabled"`
+	DiscoveryPaths []string                   `yaml:"discovery_paths"`
 	Configurations map[string]PluginConfigMap `yaml:"configurations"`
 }
 
 type PluginConfigMap map[string]interface{}
 
+type MonitoringConfig struct {
+	Enabled       bool   `yaml:"enabled"`
+	LogLevel      string `yaml:"log_level"`
+	LogFormat     string `yaml:"log_format"`
+	MetricsPath   string `yaml:"metrics_path"`
+	HTTPPort      int    `yaml:"http_port"`
+	AlertsEnabled bool   `yaml:"alerts_enabled"`
+}
+
+// Load reads configuration from all available sources and returns a fully populated Config struct.
+//
+// This function expects that Viper has already been configured by cmd.initConfig() with:
+//   - Config file path (from --config flag, TEMPLAR_CONFIG_FILE env var, or default .templar.yml)
+//   - Environment variable binding with TEMPLAR_ prefix
+//   - Automatic environment variable reading enabled
+//
+// The function applies intelligent defaults, handles Viper's quirks with slice/bool values,
+// and performs comprehensive security validation on all configuration values.
 func Load() (*Config, error) {
 	var config Config
 	if err := viper.Unmarshal(&config); err != nil {
@@ -130,6 +173,20 @@ func Load() (*Config, error) {
 		config.Build.CacheDir = ".templar/cache"
 	}
 
+	// Apply default values for AuthConfig if not set
+	if config.Server.Auth.Mode == "" {
+		config.Server.Auth.Mode = "none"
+	}
+	if !viper.IsSet("server.auth.enabled") {
+		config.Server.Auth.Enabled = false
+	}
+	if !viper.IsSet("server.auth.localhost_bypass") {
+		config.Server.Auth.LocalhostBypass = true // Default to allowing localhost without auth
+	}
+	if !viper.IsSet("server.auth.require_auth") {
+		config.Server.Auth.RequireAuth = false // Default to not requiring auth
+	}
+
 	// Apply default values for PreviewConfig if not set
 	if config.Preview.MockData == "" {
 		config.Preview.MockData = "auto"
@@ -181,6 +238,46 @@ func Load() (*Config, error) {
 		config.Plugins.DiscoveryPaths = viper.GetStringSlice("plugins.discovery_paths")
 	}
 
+	// Apply default values for MonitoringConfig if not set
+	if !viper.IsSet("monitoring.enabled") {
+		config.Monitoring.Enabled = true // Enable monitoring by default
+	}
+	if config.Monitoring.LogLevel == "" {
+		config.Monitoring.LogLevel = "info"
+	}
+	if config.Monitoring.LogFormat == "" {
+		config.Monitoring.LogFormat = "json"
+	}
+	if config.Monitoring.MetricsPath == "" {
+		config.Monitoring.MetricsPath = "./logs/metrics.json"
+	}
+	if config.Monitoring.HTTPPort == 0 {
+		config.Monitoring.HTTPPort = 8081
+	}
+	if !viper.IsSet("monitoring.alerts_enabled") {
+		config.Monitoring.AlertsEnabled = false // Disable alerts by default
+	}
+
+	// Handle monitoring configuration set via viper
+	if viper.IsSet("monitoring.enabled") {
+		config.Monitoring.Enabled = viper.GetBool("monitoring.enabled")
+	}
+	if viper.IsSet("monitoring.log_level") {
+		config.Monitoring.LogLevel = viper.GetString("monitoring.log_level")
+	}
+	if viper.IsSet("monitoring.log_format") {
+		config.Monitoring.LogFormat = viper.GetString("monitoring.log_format")
+	}
+	if viper.IsSet("monitoring.metrics_path") {
+		config.Monitoring.MetricsPath = viper.GetString("monitoring.metrics_path")
+	}
+	if viper.IsSet("monitoring.http_port") {
+		config.Monitoring.HTTPPort = viper.GetInt("monitoring.http_port")
+	}
+	if viper.IsSet("monitoring.alerts_enabled") {
+		config.Monitoring.AlertsEnabled = viper.GetBool("monitoring.alerts_enabled")
+	}
+
 	// Validate configuration values
 	if err := validateConfig(&config); err != nil {
 		return nil, fmt.Errorf("invalid configuration: %w", err)
@@ -209,6 +306,11 @@ func validateConfig(config *Config) error {
 	// Validate plugins configuration
 	if err := validatePluginsConfig(&config.Plugins); err != nil {
 		return fmt.Errorf("plugins config: %w", err)
+	}
+
+	// Validate monitoring configuration
+	if err := validateMonitoringConfig(&config.Monitoring); err != nil {
+		return fmt.Errorf("monitoring config: %w", err)
 	}
 
 	return nil
@@ -287,6 +389,49 @@ func validatePath(path string) error {
 	for _, char := range dangerousChars {
 		if strings.Contains(cleanPath, char) {
 			return fmt.Errorf("path contains dangerous character: %s", char)
+		}
+	}
+
+	return nil
+}
+
+// validateMonitoringConfig validates monitoring configuration values
+func validateMonitoringConfig(config *MonitoringConfig) error {
+	// Validate log level
+	validLogLevels := []string{"debug", "info", "warn", "error", "fatal"}
+	isValidLogLevel := false
+	for _, level := range validLogLevels {
+		if config.LogLevel == level {
+			isValidLogLevel = true
+			break
+		}
+	}
+	if !isValidLogLevel {
+		return fmt.Errorf("invalid log level '%s', must be one of: %v", config.LogLevel, validLogLevels)
+	}
+
+	// Validate log format
+	validLogFormats := []string{"json", "text"}
+	isValidLogFormat := false
+	for _, format := range validLogFormats {
+		if config.LogFormat == format {
+			isValidLogFormat = true
+			break
+		}
+	}
+	if !isValidLogFormat {
+		return fmt.Errorf("invalid log format '%s', must be one of: %v", config.LogFormat, validLogFormats)
+	}
+
+	// Validate HTTP port
+	if config.HTTPPort < 0 || config.HTTPPort > 65535 {
+		return fmt.Errorf("HTTP port %d is not in valid range 0-65535", config.HTTPPort)
+	}
+
+	// Validate metrics path
+	if config.MetricsPath != "" {
+		if err := validatePath(config.MetricsPath); err != nil {
+			return fmt.Errorf("invalid metrics path '%s': %w", config.MetricsPath, err)
 		}
 	}
 

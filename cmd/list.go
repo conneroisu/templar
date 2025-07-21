@@ -10,6 +10,7 @@ import (
 	"github.com/conneroisu/templar/internal/config"
 	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/scanner"
+	"github.com/conneroisu/templar/internal/types"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -70,7 +71,7 @@ func runList(cmd *cobra.Command, args []string) error {
 	}
 
 	// Convert map to slice for output
-	componentSlice := make([]*registry.ComponentInfo, 0, len(components))
+	componentSlice := make([]*types.ComponentInfo, 0, len(components))
 	for _, comp := range components {
 		componentSlice = append(componentSlice, comp)
 	}
@@ -88,7 +89,7 @@ func runList(cmd *cobra.Command, args []string) error {
 	}
 }
 
-func outputJSON(components []*registry.ComponentInfo) error {
+func outputJSON(components []*types.ComponentInfo) error {
 	output := make([]map[string]interface{}, len(components))
 
 	for i, component := range components {
@@ -122,7 +123,7 @@ func outputJSON(components []*registry.ComponentInfo) error {
 	return encoder.Encode(output)
 }
 
-func outputYAML(components []*registry.ComponentInfo) error {
+func outputYAML(components []*types.ComponentInfo) error {
 	output := make([]map[string]interface{}, len(components))
 
 	for i, component := range components {
@@ -156,7 +157,7 @@ func outputYAML(components []*registry.ComponentInfo) error {
 	return encoder.Encode(output)
 }
 
-func outputTable(components []*registry.ComponentInfo) error {
+func outputTable(components []*types.ComponentInfo) error {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	defer w.Flush()
 

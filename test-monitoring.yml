@@ -1,0 +1,8 @@
+server:
+  port: 8080
+  host: localhost
+monitoring:
+  enabled: true
+  log_level: debug
+components:
+  scan_paths: ["./examples", "./components"]

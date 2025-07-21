@@ -11,6 +11,7 @@ import (
 
 	"github.com/conneroisu/templar/internal/registry"
 	testingpkg "github.com/conneroisu/templar/internal/testing"
+	"github.com/conneroisu/templar/internal/types"
 )
 
 // TestBuildPipeline_ErrorInjection demonstrates error injection in the build pipeline
@@ -25,7 +26,7 @@ func TestBuildPipeline_ErrorInjection(t *testing.T) {
 	pipeline := NewBuildPipeline(2, reg)
 
 	// Create test component
-	component := &registry.ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:     "TestComponent",
 		Package:  "components",
 		FilePath: "test.templ",
@@ -182,7 +183,7 @@ func TestBuildPipeline_ErrorRecovery(t *testing.T) {
 	reg := registry.NewComponentRegistry()
 	pipeline := NewBuildPipeline(1, reg)
 
-	component := &registry.ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:     "TestComponent",
 		Package:  "components",
 		FilePath: "test.templ",
@@ -272,7 +273,7 @@ func TestBuildPipeline_ConcurrentErrorInjection(t *testing.T) {
 
 	// Queue many tasks concurrently
 	const numTasks = 50
-	component := &registry.ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:     "TestComponent",
 		Package:  "components",
 		FilePath: "test.templ",
@@ -329,7 +330,7 @@ type MockTemplCompilerWithInjection struct {
 	injector *testingpkg.ErrorInjector
 }
 
-func (m *MockTemplCompilerWithInjection) CompileWithPools(component *registry.ComponentInfo, pools *ObjectPools) ([]byte, error) {
+func (m *MockTemplCompilerWithInjection) CompileWithPools(component *types.ComponentInfo, pools *ObjectPools) ([]byte, error) {
 	// Check for file read errors
 	if err := m.injector.ShouldFail("file.read"); err != nil {
 		return nil, err
@@ -349,7 +350,7 @@ func (m *MockTemplCompilerWithInjection) CompileWithPools(component *registry.Co
 	return []byte("package components\n// Generated code"), nil
 }
 
-func (m *MockTemplCompilerWithInjection) Compile(component *registry.ComponentInfo) ([]byte, error) {
+func (m *MockTemplCompilerWithInjection) Compile(component *types.ComponentInfo) ([]byte, error) {
 	return m.CompileWithPools(component, NewObjectPools())
 }
 
@@ -382,7 +383,7 @@ func TestScenarioManager_BuildPipelineScenarios(t *testing.T) {
 	}
 	pipeline.compiler = mockCompiler
 
-	component := &registry.ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:     "TestComponent",
 		Package:  "components",
 		FilePath: "test.templ",

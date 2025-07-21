@@ -20,12 +20,16 @@ import (
 	"sync"
 	"time"
 
+	"github.com/conneroisu/templar/internal/adapters"
 	"github.com/conneroisu/templar/internal/build"
 	"github.com/conneroisu/templar/internal/config"
 	"github.com/conneroisu/templar/internal/errors"
+	"github.com/conneroisu/templar/internal/interfaces"
+	"github.com/conneroisu/templar/internal/monitoring"
 	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/renderer"
 	"github.com/conneroisu/templar/internal/scanner"
+	"github.com/conneroisu/templar/internal/types"
 	"github.com/conneroisu/templar/internal/validation"
 	"github.com/conneroisu/templar/internal/version"
 	"github.com/conneroisu/templar/internal/watcher"
@@ -34,9 +38,11 @@ import (
 
 // Client represents a WebSocket client
 type Client struct {
-	conn   *websocket.Conn
-	send   chan []byte
-	server *PreviewServer
+	conn         *websocket.Conn
+	send         chan []byte
+	server       *PreviewServer
+	lastActivity time.Time            // For connection timeout tracking
+	rateLimiter  WebSocketRateLimiter // WebSocket-specific rate limiter interface
 }
 
 // PreviewServer serves components with live reload capability
@@ -49,15 +55,21 @@ type PreviewServer struct {
 	broadcast       chan []byte
 	register        chan *Client
 	unregister      chan *websocket.Conn
-	registry        *registry.ComponentRegistry
-	watcher         *watcher.FileWatcher
-	scanner         *scanner.ComponentScanner
+	registry        interfaces.ComponentRegistry
+	watcher         interfaces.FileWatcher
+	scanner         interfaces.ComponentScanner
 	renderer        *renderer.ComponentRenderer
-	buildPipeline   *build.BuildPipeline
+	buildPipeline   interfaces.BuildPipeline
 	lastBuildErrors []*errors.ParsedError
 	shutdownOnce    sync.Once
 	isShutdown      bool
 	shutdownMutex   sync.RWMutex
+	// Enhanced WebSocket management
+	enhancements *WebSocketEnhancements
+	// Monitoring integration
+	monitor *monitoring.TemplarMonitor
+	// Rate limiting
+	rateLimiter *TokenBucketManager
 }
 
 // UpdateMessage represents a message sent to the browser
@@ -70,19 +82,33 @@ type UpdateMessage struct {
 
 // New creates a new preview server
 func New(cfg *config.Config) (*PreviewServer, error) {
-
 	registry := registry.NewComponentRegistry()
 
-	fileWatcher, err := watcher.NewFileWatcher(300 * time.Millisecond)
+	fileWatcherConcrete, err := watcher.NewFileWatcher(300 * time.Millisecond)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create file watcher: %w", err)
 	}
+	fileWatcher := adapters.NewFileWatcherAdapter(fileWatcherConcrete)
 
-	scanner := scanner.NewComponentScanner(registry)
+	scannerConcrete := scanner.NewComponentScanner(registry)
+	scannerAdapter := adapters.NewComponentScannerAdapter(scannerConcrete)
 	renderer := renderer.NewComponentRenderer(registry)
 
 	// Create build pipeline
-	buildPipeline := build.NewBuildPipeline(4, registry)
+	buildPipelineConcrete := build.NewBuildPipeline(4, registry)
+	buildPipeline := adapters.NewBuildPipelineAdapter(buildPipelineConcrete)
+
+	// Initialize monitoring if enabled
+	var templatorMonitor *monitoring.TemplarMonitor
+	if cfg.Monitoring.Enabled {
+		monitor, err := monitoring.SetupTemplarMonitoring("")
+		if err != nil {
+			log.Printf("Warning: Failed to initialize monitoring: %v", err)
+		} else {
+			templatorMonitor = monitor
+			log.Printf("Server monitoring initialized")
+		}
+	}
 
 	return &PreviewServer{
 		config:          cfg,
@@ -92,10 +118,11 @@ func New(cfg *config.Config) (*PreviewServer, error) {
 		unregister:      make(chan *websocket.Conn),
 		registry:        registry,
 		watcher:         fileWatcher,
-		scanner:         scanner,
+		scanner:         scannerAdapter,
 		renderer:        renderer,
 		buildPipeline:   buildPipeline,
 		lastBuildErrors: make([]*errors.ParsedError, 0),
+		monitor:         templatorMonitor,
 	}, nil
 }
 
@@ -108,7 +135,11 @@ func (s *PreviewServer) Start(ctx context.Context) error {
 	s.buildPipeline.Start(ctx)
 
 	// Add build callback to handle errors and updates
-	s.buildPipeline.AddCallback(s.handleBuildResult)
+	s.buildPipeline.AddCallback(func(result interface{}) {
+		if buildResult, ok := result.(build.BuildResult); ok {
+			s.handleBuildResult(buildResult)
+		}
+	})
 
 	// Initial scan
 	if err := s.initialScan(); err != nil {
@@ -166,15 +197,24 @@ func (s *PreviewServer) Start(ctx context.Context) error {
 }
 
 func (s *PreviewServer) setupFileWatcher(ctx context.Context) {
-	// Add filters
-	s.watcher.AddFilter(watcher.TemplFilter)
-	s.watcher.AddFilter(watcher.GoFilter)
-	s.watcher.AddFilter(watcher.NoTestFilter)
-	s.watcher.AddFilter(watcher.NoVendorFilter)
-	s.watcher.AddFilter(watcher.NoGitFilter)
+	// Add filters (convert to interface types)
+	s.watcher.AddFilter(interfaces.FileFilterFunc(watcher.TemplFilter))
+	s.watcher.AddFilter(interfaces.FileFilterFunc(watcher.GoFilter))
+	s.watcher.AddFilter(interfaces.FileFilterFunc(watcher.NoTestFilter))
+	s.watcher.AddFilter(interfaces.FileFilterFunc(watcher.NoVendorFilter))
+	s.watcher.AddFilter(interfaces.FileFilterFunc(watcher.NoGitFilter))
 
-	// Add handler
-	s.watcher.AddHandler(s.handleFileChange)
+	// Add handler (convert to interface type)
+	s.watcher.AddHandler(func(events []interface{}) error {
+		// Convert interface events back to concrete events
+		changeEvents := make([]watcher.ChangeEvent, len(events))
+		for i, event := range events {
+			if changeEvent, ok := event.(watcher.ChangeEvent); ok {
+				changeEvents[i] = changeEvent
+			}
+		}
+		return s.handleFileChange(changeEvents)
+	})
 
 	// Add watch paths
 	for _, path := range s.config.Components.ScanPaths {
@@ -205,7 +245,7 @@ func (s *PreviewServer) initialScan() error {
 }
 
 func (s *PreviewServer) handleFileChange(events []watcher.ChangeEvent) error {
-	componentsToRebuild := make(map[string]*registry.ComponentInfo)
+	componentsToRebuild := make(map[string]*types.ComponentInfo)
 
 	for _, event := range events {
 		log.Printf("File changed: %s (%s)", event.Path, event.Type)
@@ -275,16 +315,25 @@ func (s *PreviewServer) openBrowser(url string) {
 }
 
 func (s *PreviewServer) addMiddleware(handler http.Handler) http.Handler {
+	// Create authentication middleware
+	authHandler := AuthMiddleware(&s.config.Server.Auth)(handler)
+
 	// Create security middleware
 	securityConfig := SecurityConfigFromAppConfig(s.config)
-	securityHandler := SecurityMiddleware(securityConfig)(handler)
+	securityHandler := SecurityMiddleware(securityConfig)(authHandler)
 
 	// Create rate limiting middleware
 	rateLimitConfig := securityConfig.RateLimiting
 	if rateLimitConfig != nil && rateLimitConfig.Enabled {
-		rateLimiter := NewRateLimiter(rateLimitConfig, nil)
-		rateLimitHandler := RateLimitMiddleware(rateLimiter)(securityHandler)
+		s.rateLimiter = NewRateLimiter(rateLimitConfig, nil)
+		rateLimitHandler := RateLimitMiddleware(s.rateLimiter)(securityHandler)
 		securityHandler = rateLimitHandler
+	}
+
+	// Add monitoring middleware if available
+	if s.monitor != nil {
+		monitoringMiddleware := s.monitor.CreateTemplarMiddleware()
+		securityHandler = monitoringMiddleware(securityHandler)
 	}
 
 	// Add CORS and logging middleware
@@ -309,10 +358,17 @@ func (s *PreviewServer) addMiddleware(handler http.Handler) http.Handler {
 			return
 		}
 
-		// Log requests
+		// Log requests with monitoring if available
 		start := time.Now()
 		securityHandler.ServeHTTP(w, r)
-		log.Printf("%s %s %v", r.Method, r.URL.Path, time.Since(start))
+		duration := time.Since(start)
+
+		// Track request in monitoring system
+		if s.monitor != nil {
+			s.monitor.RecordWebSocketEvent("http_request", 1)
+		}
+
+		log.Printf("%s %s %v", r.Method, r.URL.Path, duration)
 	})
 }
 
@@ -382,7 +438,20 @@ func (s *PreviewServer) triggerFullRebuild() {
 
 // GetBuildMetrics returns the current build metrics
 func (s *PreviewServer) GetBuildMetrics() build.BuildMetrics {
-	return s.buildPipeline.GetMetrics()
+	// Get metrics from the pipeline interface
+	metricsInterface := s.buildPipeline.GetMetrics()
+	
+	// Type assert to concrete type and extract values to avoid lock copying
+	if concreteMetrics, ok := metricsInterface.(*build.BuildMetrics); ok {
+		// Call GetSnapshot to get a clean copy without the mutex
+		return concreteMetrics.GetSnapshot()
+	}
+	
+	// Fallback: we can't safely type assert to value without copying the lock
+	// so we return empty metrics as a safe fallback
+	
+	// Return empty metrics if conversion fails
+	return build.BuildMetrics{}
 }
 
 // GetLastBuildErrors returns the last build errors
@@ -410,6 +479,11 @@ func (s *PreviewServer) Shutdown(ctx context.Context) error {
 		// Stop file watcher
 		if s.watcher != nil {
 			s.watcher.Stop()
+		}
+
+		// MEMORY LEAK FIX: Stop rate limiter to clean up goroutines
+		if s.rateLimiter != nil {
+			s.rateLimiter.Stop()
 		}
 
 		// Close all WebSocket connections
@@ -488,19 +562,24 @@ func (s *PreviewServer) handleBuildStatus(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	metrics := s.buildPipeline.GetMetrics()
+	// Get build metrics without lock copying
+	buildMetrics := s.GetBuildMetrics() // Use our fixed method
 	errors := s.GetLastBuildErrors()
 
 	status := "healthy"
+	totalBuilds := uint64(buildMetrics.TotalBuilds)
+	failedBuilds := uint64(buildMetrics.FailedBuilds)
+	cacheHits := uint64(buildMetrics.CacheHits)
+
 	if len(errors) > 0 {
 		status = "error"
 	}
 
 	response := map[string]interface{}{
 		"status":        status,
-		"total_builds":  metrics.TotalBuilds,
-		"failed_builds": metrics.FailedBuilds,
-		"cache_hits":    metrics.CacheHits,
+		"total_builds":  totalBuilds,
+		"failed_builds": failedBuilds,
+		"cache_hits":    cacheHits,
 		"errors":        len(errors),
 		"timestamp":     time.Now().Unix(),
 	}
@@ -516,25 +595,28 @@ func (s *PreviewServer) handleBuildMetrics(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	metrics := s.buildPipeline.GetMetrics()
-	cacheCount, cacheSize, cacheMaxSize := s.buildPipeline.GetCacheStats()
+	// Get build metrics without lock copying
+	metrics := s.GetBuildMetrics() // Use our fixed method
+	cacheInterface := s.buildPipeline.GetCache()
+
+	buildMetrics := map[string]interface{}{
+		"total_builds":      metrics.TotalBuilds,
+		"successful_builds": metrics.SuccessfulBuilds,
+		"failed_builds":     metrics.FailedBuilds,
+		"cache_hits":        metrics.CacheHits,
+		"average_duration":  metrics.AverageDuration.String(),
+		"total_duration":    metrics.TotalDuration.String(),
+	}
+
+	cacheMetrics := map[string]interface{}{}
+	if cache, ok := cacheInterface.(map[string]interface{}); ok {
+		cacheMetrics = cache
+	}
 
 	response := map[string]interface{}{
-		"build_metrics": map[string]interface{}{
-			"total_builds":      metrics.TotalBuilds,
-			"successful_builds": metrics.SuccessfulBuilds,
-			"failed_builds":     metrics.FailedBuilds,
-			"cache_hits":        metrics.CacheHits,
-			"average_duration":  metrics.AverageDuration.String(),
-			"total_duration":    metrics.TotalDuration.String(),
-		},
-		"cache_metrics": map[string]interface{}{
-			"entries":    cacheCount,
-			"size_bytes": cacheSize,
-			"max_size":   cacheMaxSize,
-			"hit_rate":   float64(metrics.CacheHits) / float64(metrics.TotalBuilds),
-		},
-		"timestamp": time.Now().Unix(),
+		"build_metrics": buildMetrics,
+		"cache_metrics": cacheMetrics,
+		"timestamp":     time.Now().Unix(),
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -565,12 +647,15 @@ func (s *PreviewServer) handleBuildCache(w http.ResponseWriter, r *http.Request)
 	switch r.Method {
 	case http.MethodGet:
 		// Return cache statistics
-		count, size, maxSize := s.buildPipeline.GetCacheStats()
+		cacheInterface := s.buildPipeline.GetCache()
 		response := map[string]interface{}{
-			"entries":    count,
-			"size_bytes": size,
-			"max_size":   maxSize,
-			"timestamp":  time.Now().Unix(),
+			"timestamp": time.Now().Unix(),
+		}
+
+		if cache, ok := cacheInterface.(map[string]interface{}); ok {
+			for k, v := range cache {
+				response[k] = v
+			}
 		}
 
 		w.Header().Set("Content-Type", "application/json")

@@ -8,6 +8,7 @@ import (
 
 	"github.com/conneroisu/templar/internal/build"
 	"github.com/conneroisu/templar/internal/registry"
+	"github.com/conneroisu/templar/internal/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -41,11 +42,11 @@ templ Button(text string, variant string) {
 	pipeline := build.NewBuildPipeline(4, reg)
 
 	// Test component registration and build
-	component := &registry.ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:         "Button",
 		Package:      "components",
 		FilePath:     componentFile,
-		Parameters:   []registry.ParameterInfo{{Name: "text", Type: "string", Optional: false}, {Name: "variant", Type: "string", Optional: false}},
+		Parameters:   []types.ParameterInfo{{Name: "text", Type: "string", Optional: false}, {Name: "variant", Type: "string", Optional: false}},
 		Imports:      []string{},
 		LastMod:      time.Now(),
 		Hash:         "testhash",
@@ -90,11 +91,11 @@ templ BrokenComponent(text string) {
 	reg := registry.NewComponentRegistry()
 	pipeline := build.NewBuildPipeline(4, reg)
 
-	component := &registry.ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:         "BrokenComponent",
 		Package:      "components",
 		FilePath:     componentFile,
-		Parameters:   []registry.ParameterInfo{{Name: "text", Type: "string", Optional: false}},
+		Parameters:   []types.ParameterInfo{{Name: "text", Type: "string", Optional: false}},
 		Imports:      []string{},
 		LastMod:      time.Now(),
 		Hash:         "brokenhash",
@@ -125,7 +126,7 @@ func TestBuildIntegration_CacheValidation(t *testing.T) {
 	assert.DirExists(t, cacheDir)
 
 	// Test cache validation
-	component := &registry.ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:    "CachedComponent",
 		Package: "components",
 		Hash:    "cachehash",
@@ -183,7 +184,7 @@ templ Nav(items []string) {
 	pipeline := build.NewBuildPipeline(4, reg)
 
 	// Register all components
-	componentInfos := []*registry.ComponentInfo{
+	componentInfos := []*types.ComponentInfo{
 		{Name: "Button", Package: "components", FilePath: filepath.Join(componentsDir, "button.templ"), Hash: "buttonhash"},
 		{Name: "Card", Package: "components", FilePath: filepath.Join(componentsDir, "card.templ"), Hash: "cardhash"},
 		{Name: "Nav", Package: "components", FilePath: filepath.Join(componentsDir, "nav.templ"), Hash: "navhash"},
@@ -231,7 +232,7 @@ func TestBuildIntegration_SecurityValidation(t *testing.T) {
 
 	for _, name := range maliciousNames {
 		t.Run("reject_malicious_name_"+name, func(t *testing.T) {
-			component := &registry.ComponentInfo{
+			component := &types.ComponentInfo{
 				Name:    name,
 				Package: "components",
 				Hash:    "malicioushash",

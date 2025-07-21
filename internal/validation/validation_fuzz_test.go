@@ -114,10 +114,15 @@ func FuzzURLParsing(f *testing.F) {
 			}
 		}
 
-		// Check path for dangerous patterns
+		// Check path for dangerous patterns - if Go's parser allows them,
+		// our validation should catch them
 		if strings.Contains(parsed.Path, "..") &&
 			(strings.Contains(parsed.Path, "etc") || strings.Contains(parsed.Path, "system32")) {
-			t.Errorf("URL parsing allowed dangerous path traversal: %q", parsed.Path)
+			// This is a dangerous URL that Go parsed - our ValidateURL should reject it
+			err := ValidateURL(testURL)
+			if err == nil {
+				t.Errorf("Our ValidateURL failed to reject dangerous path traversal URL: %q (path: %q)", testURL, parsed.Path)
+			}
 		}
 
 		// Test our validation against this parsed URL

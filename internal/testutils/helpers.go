@@ -8,6 +8,7 @@ import (
 
 	"github.com/conneroisu/templar/internal/config"
 	"github.com/conneroisu/templar/internal/registry"
+	"github.com/conneroisu/templar/internal/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -73,12 +74,12 @@ func CreateTestConfig(projectDir string) *config.Config {
 func CreateTestRegistry() *registry.ComponentRegistry {
 	reg := registry.NewComponentRegistry()
 
-	components := []*registry.ComponentInfo{
+	components := []*types.ComponentInfo{
 		{
 			Name:     "Button",
 			Package:  "components",
 			FilePath: "/test/button.templ",
-			Parameters: []registry.ParameterInfo{
+			Parameters: []types.ParameterInfo{
 				{Name: "text", Type: "string", Optional: false},
 				{Name: "variant", Type: "string", Optional: true},
 			},
@@ -91,7 +92,7 @@ func CreateTestRegistry() *registry.ComponentRegistry {
 			Name:     "Card",
 			Package:  "components",
 			FilePath: "/test/card.templ",
-			Parameters: []registry.ParameterInfo{
+			Parameters: []types.ParameterInfo{
 				{Name: "title", Type: "string", Optional: false},
 				{Name: "content", Type: "string", Optional: false},
 				{Name: "image", Type: "string", Optional: true},
@@ -105,7 +106,7 @@ func CreateTestRegistry() *registry.ComponentRegistry {
 			Name:     "Nav",
 			Package:  "components",
 			FilePath: "/test/nav.templ",
-			Parameters: []registry.ParameterInfo{
+			Parameters: []types.ParameterInfo{
 				{Name: "items", Type: "[]string", Optional: false},
 				{Name: "active", Type: "string", Optional: true},
 			},

@@ -6,16 +6,17 @@ import (
 	"time"
 
 	"github.com/conneroisu/templar/internal/registry"
+	"github.com/conneroisu/templar/internal/types"
 )
 
 func BenchmarkComponentRenderer_GenerateMockData(b *testing.B) {
 	reg := registry.NewComponentRegistry()
 	renderer := NewComponentRenderer(reg)
 
-	component := &registry.ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:    "TestComponent",
 		Package: "test",
-		Parameters: []registry.ParameterInfo{
+		Parameters: []types.ParameterInfo{
 			{Name: "title", Type: "string", Optional: false},
 			{Name: "count", Type: "int", Optional: false},
 			{Name: "active", Type: "bool", Optional: false},
@@ -49,10 +50,10 @@ func BenchmarkComponentRenderer_GenerateGoCode(b *testing.B) {
 	reg := registry.NewComponentRegistry()
 	renderer := NewComponentRenderer(reg)
 
-	component := &registry.ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:    "Button",
 		Package: "components",
-		Parameters: []registry.ParameterInfo{
+		Parameters: []types.ParameterInfo{
 			{Name: "text", Type: "string", Optional: false},
 			{Name: "disabled", Type: "bool", Optional: false},
 		},
@@ -109,10 +110,10 @@ func BenchmarkComponentRenderer_Memory(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		renderer := NewComponentRenderer(reg)
 
-		component := &registry.ComponentInfo{
+		component := &types.ComponentInfo{
 			Name:    fmt.Sprintf("Component%d", i),
 			Package: "test",
-			Parameters: []registry.ParameterInfo{
+			Parameters: []types.ParameterInfo{
 				{Name: "param1", Type: "string", Optional: false},
 				{Name: "param2", Type: "int", Optional: false},
 			},
@@ -128,16 +129,16 @@ func BenchmarkComponentRenderer_LargeComponent(b *testing.B) {
 	renderer := NewComponentRenderer(reg)
 
 	// Create a component with many parameters
-	var params []registry.ParameterInfo
+	var params []types.ParameterInfo
 	for i := 0; i < 20; i++ {
-		params = append(params, registry.ParameterInfo{
+		params = append(params, types.ParameterInfo{
 			Name:     fmt.Sprintf("param%d", i),
 			Type:     "string",
 			Optional: false,
 		})
 	}
 
-	component := &registry.ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:       "LargeComponent",
 		Package:    "components",
 		Parameters: params,
@@ -156,11 +157,11 @@ func BenchmarkComponentRenderer_ManyComponents(b *testing.B) {
 
 	// Pre-register many components
 	for i := 0; i < 100; i++ {
-		component := &registry.ComponentInfo{
+		component := &types.ComponentInfo{
 			Name:         fmt.Sprintf("Component%d", i),
 			Package:      "components",
 			FilePath:     fmt.Sprintf("/path/component%d.templ", i),
-			Parameters:   []registry.ParameterInfo{{Name: "text", Type: "string", Optional: false}},
+			Parameters:   []types.ParameterInfo{{Name: "text", Type: "string", Optional: false}},
 			Imports:      []string{},
 			LastMod:      time.Now(),
 			Hash:         fmt.Sprintf("hash%d", i),
@@ -184,10 +185,10 @@ func BenchmarkComponentRenderer_Concurrent(b *testing.B) {
 	reg := registry.NewComponentRegistry()
 	renderer := NewComponentRenderer(reg)
 
-	component := &registry.ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:    "TestComponent",
 		Package: "test",
-		Parameters: []registry.ParameterInfo{
+		Parameters: []types.ParameterInfo{
 			{Name: "title", Type: "string", Optional: false},
 			{Name: "count", Type: "int", Optional: false},
 		},

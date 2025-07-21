@@ -10,6 +10,7 @@ import (
 	"github.com/conneroisu/templar/internal/config"
 	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/scanner"
+	"github.com/conneroisu/templar/internal/types"
 	"github.com/spf13/cobra"
 )
 
@@ -95,12 +96,12 @@ func runValidateCommand(cmd *cobra.Command, args []string) error {
 	}
 
 	// Determine which components to validate
-	var componentsToValidate []*registry.ComponentInfo
+	var componentsToValidate []*types.ComponentInfo
 	if len(args) == 0 || validateAll {
 		componentsToValidate = allComponents
 	} else {
 		// Validate specific components
-		componentMap := make(map[string]*registry.ComponentInfo)
+		componentMap := make(map[string]*types.ComponentInfo)
 		for _, comp := range allComponents {
 			componentMap[comp.Name] = comp
 		}
@@ -168,7 +169,7 @@ func runValidateCommand(cmd *cobra.Command, args []string) error {
 	}
 }
 
-func validateComponent(component *registry.ComponentInfo) ValidationResult {
+func validateComponent(component *types.ComponentInfo) ValidationResult {
 	result := ValidationResult{
 		Component: component.Name,
 		Valid:     true,

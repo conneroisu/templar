@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/conneroisu/templar/internal/registry"
+	"github.com/conneroisu/templar/internal/types"
 )
 
 // createTestComponents creates a directory with test component files
@@ -424,11 +425,11 @@ func BenchmarkComponentRegistry_Operations(b *testing.B) {
 		b.ReportAllocs()
 
 		for i := 0; i < b.N; i++ {
-			component := &registry.ComponentInfo{
+			component := &types.ComponentInfo{
 				Name:     fmt.Sprintf("Component%d", i),
 				Package:  "components",
 				FilePath: fmt.Sprintf("component_%d.templ", i),
-				Parameters: []registry.ParameterInfo{
+				Parameters: []types.ParameterInfo{
 					{Name: "title", Type: "string"},
 					{Name: "active", Type: "bool"},
 				},
@@ -442,7 +443,7 @@ func BenchmarkComponentRegistry_Operations(b *testing.B) {
 
 		// Pre-populate registry
 		for i := 0; i < 1000; i++ {
-			component := &registry.ComponentInfo{
+			component := &types.ComponentInfo{
 				Name:     fmt.Sprintf("Component%d", i),
 				Package:  "components",
 				FilePath: fmt.Sprintf("component_%d.templ", i),
@@ -464,7 +465,7 @@ func BenchmarkComponentRegistry_Operations(b *testing.B) {
 
 		// Pre-populate registry
 		for i := 0; i < 1000; i++ {
-			component := &registry.ComponentInfo{
+			component := &types.ComponentInfo{
 				Name:     fmt.Sprintf("Component%d", i),
 				Package:  "components",
 				FilePath: fmt.Sprintf("component_%d.templ", i),
@@ -479,6 +480,73 @@ func BenchmarkComponentRegistry_Operations(b *testing.B) {
 			_ = reg.GetAll()
 		}
 	})
+}
+
+// BenchmarkParallelVsSequential compares parallel vs sequential scanning performance
+func BenchmarkParallelVsSequential(b *testing.B) {
+	componentCounts := []int{100, 500, 1000}
+
+	for _, count := range componentCounts {
+		testDir := createTestComponents(count)
+		defer os.RemoveAll(testDir)
+
+		b.Run(fmt.Sprintf("Sequential-%d", count), func(b *testing.B) {
+			reg := registry.NewComponentRegistry()
+			scanner := NewComponentScanner(reg)
+
+			b.ResetTimer()
+			b.ReportAllocs()
+
+			for i := 0; i < b.N; i++ {
+				// Force sequential scanning by using 1 worker
+				err := scanner.ScanDirectoryParallel(testDir, 1)
+				if err != nil {
+					b.Fatal(err)
+				}
+			}
+		})
+
+		b.Run(fmt.Sprintf("Parallel-%d", count), func(b *testing.B) {
+			reg := registry.NewComponentRegistry()
+			scanner := NewComponentScanner(reg)
+
+			b.ResetTimer()
+			b.ReportAllocs()
+
+			for i := 0; i < b.N; i++ {
+				// Use parallel scanning with default worker count (runtime.NumCPU())
+				err := scanner.ScanDirectory(testDir)
+				if err != nil {
+					b.Fatal(err)
+				}
+			}
+		})
+	}
+}
+
+// BenchmarkWorkerCount benchmarks different worker counts for parallel scanning
+func BenchmarkWorkerCount(b *testing.B) {
+	testDir := createTestComponents(500)
+	defer os.RemoveAll(testDir)
+
+	workerCounts := []int{1, 2, 4, 8, 16}
+
+	for _, workers := range workerCounts {
+		b.Run(fmt.Sprintf("Workers-%d", workers), func(b *testing.B) {
+			reg := registry.NewComponentRegistry()
+			scanner := NewComponentScanner(reg)
+
+			b.ResetTimer()
+			b.ReportAllocs()
+
+			for i := 0; i < b.N; i++ {
+				err := scanner.ScanDirectoryParallel(testDir, workers)
+				if err != nil {
+					b.Fatal(err)
+				}
+			}
+		})
+	}
 }
 
 // BenchmarkPathValidation benchmarks path validation performance

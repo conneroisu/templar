@@ -23,10 +23,10 @@ type HotReloadPlugin struct {
 
 // ReloadEvent represents a hot reload event
 type ReloadEvent struct {
-	Type      string            `json:"type"`
-	File      string            `json:"file"`
-	Component string            `json:"component,omitempty"`
-	Timestamp time.Time         `json:"timestamp"`
+	Type      string                 `json:"type"`
+	File      string                 `json:"file"`
+	Component string                 `json:"component,omitempty"`
+	Timestamp time.Time              `json:"timestamp"`
 	Data      map[string]interface{} `json:"data,omitempty"`
 }
 
@@ -57,17 +57,17 @@ func (hrp *HotReloadPlugin) Description() string {
 // Initialize initializes the hot reload plugin
 func (hrp *HotReloadPlugin) Initialize(ctx context.Context, config plugins.PluginConfig) error {
 	hrp.config = config
-	
+
 	// Start event processor
 	go hrp.processReloadEvents(ctx)
-	
+
 	return nil
 }
 
 // Shutdown shuts down the plugin
 func (hrp *HotReloadPlugin) Shutdown(ctx context.Context) error {
 	hrp.enabled = false
-	
+
 	// Close all connections
 	hrp.connMutex.Lock()
 	for id, conn := range hrp.connections {
@@ -75,7 +75,7 @@ func (hrp *HotReloadPlugin) Shutdown(ctx context.Context) error {
 		delete(hrp.connections, id)
 	}
 	hrp.connMutex.Unlock()
-	
+
 	close(hrp.reloadQueue)
 	return nil
 }
@@ -85,12 +85,12 @@ func (hrp *HotReloadPlugin) Health() plugins.PluginHealth {
 	hrp.connMutex.RLock()
 	connectionCount := len(hrp.connections)
 	hrp.connMutex.RUnlock()
-	
+
 	status := plugins.HealthStatusHealthy
 	if !hrp.enabled {
 		status = plugins.HealthStatusUnhealthy
 	}
-	
+
 	return plugins.PluginHealth{
 		Status:    status,
 		LastCheck: time.Now(),
@@ -105,13 +105,13 @@ func (hrp *HotReloadPlugin) Health() plugins.PluginHealth {
 func (hrp *HotReloadPlugin) RegisterRoutes(router plugins.Router) error {
 	// Register hot reload WebSocket endpoint
 	router.GET("/ws/hotreload", hrp.handleWebSocket)
-	
+
 	// Register hot reload status endpoint
 	router.GET("/api/hotreload/status", hrp.handleStatus)
-	
+
 	// Register manual reload trigger
 	router.POST("/api/hotreload/trigger", hrp.handleTrigger)
-	
+
 	return nil
 }
 
@@ -127,15 +127,15 @@ func (hrp *HotReloadPlugin) WebSocketHandler(ctx context.Context, conn plugins.W
 	if !hrp.enabled {
 		return fmt.Errorf("hot reload plugin is disabled")
 	}
-	
+
 	// Generate connection ID
 	connID := fmt.Sprintf("conn_%d", time.Now().UnixNano())
-	
+
 	// Store connection
 	hrp.connMutex.Lock()
 	hrp.connections[connID] = conn
 	hrp.connMutex.Unlock()
-	
+
 	// Clean up on exit
 	defer func() {
 		hrp.connMutex.Lock()
@@ -143,7 +143,7 @@ func (hrp *HotReloadPlugin) WebSocketHandler(ctx context.Context, conn plugins.W
 		hrp.connMutex.Unlock()
 		conn.Close()
 	}()
-	
+
 	// Send initial connection message
 	welcomeMsg := ReloadEvent{
 		Type:      "connected",
@@ -153,11 +153,11 @@ func (hrp *HotReloadPlugin) WebSocketHandler(ctx context.Context, conn plugins.W
 			"version": hrp.Version(),
 		},
 	}
-	
+
 	if err := hrp.sendEvent(conn, welcomeMsg); err != nil {
 		return fmt.Errorf("failed to send welcome message: %w", err)
 	}
-	
+
 	// Keep connection alive and handle incoming messages
 	for {
 		select {
@@ -170,7 +170,7 @@ func (hrp *HotReloadPlugin) WebSocketHandler(ctx context.Context, conn plugins.W
 			if err != nil {
 				return fmt.Errorf("failed to receive data: %w", err)
 			}
-			
+
 			// Handle ping/pong or other client messages
 			if string(data) == "ping" {
 				if err := conn.Send([]byte("pong")); err != nil {
@@ -200,7 +200,7 @@ func (hrp *HotReloadPlugin) HandleFileChange(ctx context.Context, event plugins.
 	if !hrp.enabled {
 		return nil
 	}
-	
+
 	// Create reload event
 	reloadEvent := ReloadEvent{
 		Type:      "file_changed",
@@ -210,20 +210,20 @@ func (hrp *HotReloadPlugin) HandleFileChange(ctx context.Context, event plugins.
 			"change_type": string(event.Type),
 		},
 	}
-	
+
 	// Determine component name from file path
 	if component := hrp.extractComponentName(event.Path); component != "" {
 		reloadEvent.Component = component
 		reloadEvent.Type = "component_changed"
 	}
-	
+
 	// Queue the event
 	select {
 	case hrp.reloadQueue <- reloadEvent:
 	default:
 		// Queue is full, skip this event
 	}
-	
+
 	return nil
 }
 
@@ -238,13 +238,13 @@ func (hrp *HotReloadPlugin) ShouldIgnore(filePath string) bool {
 		"*.log",
 		"*~",
 	}
-	
+
 	for _, pattern := range ignorePatterns {
 		if match, _ := filepath.Match(pattern, filePath); match {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -252,7 +252,7 @@ func (hrp *HotReloadPlugin) ShouldIgnore(filePath string) bool {
 func (hrp *HotReloadPlugin) processReloadEvents(ctx context.Context) {
 	debouncer := make(map[string]time.Time)
 	debounceInterval := 250 * time.Millisecond
-	
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -261,7 +261,7 @@ func (hrp *HotReloadPlugin) processReloadEvents(ctx context.Context) {
 			if !ok {
 				return
 			}
-			
+
 			// Debounce events for the same file
 			key := event.File
 			if lastTime, exists := debouncer[key]; exists {
@@ -270,10 +270,10 @@ func (hrp *HotReloadPlugin) processReloadEvents(ctx context.Context) {
 				}
 			}
 			debouncer[key] = time.Now()
-			
+
 			// Broadcast to all connections
 			hrp.broadcastEvent(event)
-			
+
 			// Clean up old debouncer entries
 			for file, timestamp := range debouncer {
 				if time.Since(timestamp) > time.Minute {
@@ -292,7 +292,7 @@ func (hrp *HotReloadPlugin) broadcastEvent(event ReloadEvent) {
 		connections = append(connections, conn)
 	}
 	hrp.connMutex.RUnlock()
-	
+
 	for _, conn := range connections {
 		if err := hrp.sendEvent(conn, event); err != nil {
 			// Log error but continue with other connections
@@ -307,7 +307,7 @@ func (hrp *HotReloadPlugin) sendEvent(conn plugins.WebSocketConnection, event Re
 	if err != nil {
 		return fmt.Errorf("failed to marshal event: %w", err)
 	}
-	
+
 	return conn.Send(data)
 }
 
@@ -319,12 +319,12 @@ func (hrp *HotReloadPlugin) extractComponentName(filePath string) string {
 	if ext != "" {
 		base = base[:len(base)-len(ext)]
 	}
-	
+
 	// Capitalize first letter to match Go conventions
 	if len(base) > 0 {
 		base = strings.ToUpper(string(base[0])) + base[1:]
 	}
-	
+
 	return base
 }
 
@@ -353,9 +353,9 @@ func (hrp *HotReloadPlugin) handleTrigger(ctx plugins.Context) error {
 			"triggered_by": "api",
 		},
 	}
-	
+
 	hrp.broadcastEvent(event)
-	
+
 	return ctx.JSON(200, map[string]interface{}{
 		"status": "reload triggered",
 		"event":  event,
@@ -367,14 +367,14 @@ func (hrp *HotReloadPlugin) injectReloadScript(next plugins.HandlerFunc) plugins
 	return func(ctx plugins.Context) error {
 		// Call the next handler
 		err := next(ctx)
-		
+
 		// If this is an HTML response, inject the reload script
 		if ctx.Header("Content-Type") == "text/html" {
 			// This is a simplified implementation
 			// In practice, you'd need to modify the response body
 			ctx.Set("hotreload_script_injected", true)
 		}
-		
+
 		return err
 	}
 }

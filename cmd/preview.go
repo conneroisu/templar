@@ -10,10 +10,12 @@ import (
 
 	"github.com/conneroisu/templar/internal/config"
 	"github.com/conneroisu/templar/internal/errors"
+	"github.com/conneroisu/templar/internal/mockdata"
 	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/renderer"
 	"github.com/conneroisu/templar/internal/scanner"
 	"github.com/conneroisu/templar/internal/server"
+	"github.com/conneroisu/templar/internal/types"
 	"github.com/spf13/cobra"
 )
 
@@ -25,34 +27,39 @@ This starts a lightweight server to preview just the specified component
 with configurable properties and mock data.
 
 Examples:
-  templar preview Button                           # Preview Button component
-  templar preview Button --props '{"text":"Click me"}' # Preview with props
-  templar preview Card --mock ./mocks/card.json   # Preview with mock data
-  templar preview Button --wrapper ./layout.templ # Preview with custom wrapper`,
+  templar preview Button                              # Preview Button component
+  templar preview Button --props '{"text":"Click me"}' # Preview with inline props
+  templar preview Button --props-file props.json     # Preview with props from file
+  templar preview Button --props @props.json         # Preview with props from file (alternative)
+  templar preview Card --mock ./mocks/card.json      # Preview with mock data
+  templar preview Button --wrapper ./layout.templ    # Preview with custom wrapper
+  templar preview Card --port 3000 --disable-browser # Preview on port 3000 without opening browser`,
 	Args: cobra.ExactArgs(1),
 	RunE: runPreview,
 }
 
-var (
-	previewMock    string
-	previewWrapper string
-	previewProps   string
-	previewPort    int
-	previewNoOpen  bool
-)
+var previewFlags *StandardFlags
 
 func init() {
 	rootCmd.AddCommand(previewCmd)
 
-	previewCmd.Flags().StringVarP(&previewMock, "mock", "m", "", "Mock data file or pattern")
-	previewCmd.Flags().StringVarP(&previewWrapper, "wrapper", "w", "", "Wrapper template")
-	previewCmd.Flags().StringVarP(&previewProps, "props", "p", "", "Component properties (JSON)")
-	previewCmd.Flags().IntVar(&previewPort, "port", 8080, "Port to serve on")
-	previewCmd.Flags().BoolVar(&previewNoOpen, "no-open", false, "Don't open browser automatically")
+	// Add standardized flags
+	previewFlags = AddStandardFlags(previewCmd, "server", "component")
+
+	// Add flag validation
+	AddFlagValidation(previewCmd, "port", ValidatePort)
+	AddFlagValidation(previewCmd, "props-file", ValidateFileExists)
+	AddFlagValidation(previewCmd, "wrapper", ValidateFileExists)
+	AddFlagValidation(previewCmd, "props", ValidateJSON)
 }
 
 func runPreview(cmd *cobra.Command, args []string) error {
 	componentName := args[0]
+
+	// Validate flags
+	if err := previewFlags.ValidateFlags(); err != nil {
+		return fmt.Errorf("invalid flags: %w", err)
+	}
 
 	// Load configuration
 	cfg, err := config.Load()
@@ -60,9 +67,10 @@ func runPreview(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
-	// Override server config for preview
-	cfg.Server.Port = previewPort
-	cfg.Server.Open = !previewNoOpen
+	// Override server config for preview using standardized flags
+	cfg.Server.Port = previewFlags.Port
+	cfg.Server.Host = previewFlags.Host
+	cfg.Server.Open = previewFlags.ShouldOpenBrowser()
 
 	// Create component registry and scanner
 	componentRegistry := registry.NewComponentRegistry()
@@ -98,23 +106,16 @@ func runPreview(cmd *cobra.Command, args []string) error {
 	fmt.Printf("   File: %s\n", component.FilePath)
 	fmt.Printf("   Package: %s\n", component.Package)
 
-	// Parse component properties if provided
-	var props map[string]interface{}
-	if previewProps != "" {
-		// Validate JSON size to prevent resource exhaustion attacks
-		if len(previewProps) > 1024*1024 { // 1MB limit
-			return fmt.Errorf("props JSON too large (max 1MB)")
-		}
-
-		if err := json.Unmarshal([]byte(previewProps), &props); err != nil {
-			return fmt.Errorf("failed to parse props JSON: %w", err)
-		}
+	// Parse component properties using standardized flag method
+	props, err := previewFlags.ParseProps()
+	if err != nil {
+		return fmt.Errorf("failed to parse component properties: %w", err)
 	}
 
 	// Load mock data if specified
 	var mockData map[string]interface{}
-	if previewMock != "" {
-		mockData, err = loadMockData(previewMock)
+	if previewFlags.MockData != "" {
+		mockData, err = loadMockData(previewFlags.MockData)
 		if err != nil {
 			return fmt.Errorf("failed to load mock data: %w", err)
 		}
@@ -122,8 +123,8 @@ func runPreview(cmd *cobra.Command, args []string) error {
 
 	// Generate mock data if not provided
 	if mockData == nil && props == nil {
-		mockData = generateMockData(component)
-		fmt.Println("🎲 Generated mock data for component parameters")
+		mockData = generateIntelligentMockData(component)
+		fmt.Println("🎲 Generated intelligent mock data for component parameters")
 	}
 
 	// Create preview-specific server
@@ -171,16 +172,19 @@ func loadMockData(mockFile string) (map[string]interface{}, error) {
 	return mockData, nil
 }
 
-func generateMockData(component *registry.ComponentInfo) map[string]interface{} {
-	mockData := make(map[string]interface{})
-
-	for _, param := range component.Parameters {
-		mockData[param.Name] = generateMockValue(param.Type)
-	}
-
-	return mockData
+// generateIntelligentMockData generates intelligent mock data using the advanced mock generator
+func generateIntelligentMockData(component *types.ComponentInfo) map[string]interface{} {
+	// Use the advanced mock generator for sophisticated mock data
+	generator := mockdata.NewAdvancedMockGenerator()
+	return generator.GenerateForComponent(component)
 }
 
+// Legacy generateMockData function kept for backward compatibility
+func generateMockData(component *types.ComponentInfo) map[string]interface{} {
+	return generateIntelligentMockData(component)
+}
+
+// Legacy generateMockValue function kept for backward compatibility
 func generateMockValue(paramType string) interface{} {
 	switch strings.ToLower(paramType) {
 	case "string":
@@ -203,7 +207,7 @@ func generateMockValue(paramType string) interface{} {
 	}
 }
 
-func createPreviewServer(cfg *config.Config, component *registry.ComponentInfo, props map[string]interface{}, mockData map[string]interface{}) (*server.PreviewServer, error) {
+func createPreviewServer(cfg *config.Config, component *types.ComponentInfo, props map[string]interface{}, mockData map[string]interface{}) (*server.PreviewServer, error) {
 	// Create a new registry with just the preview component
 	previewRegistry := registry.NewComponentRegistry()
 	previewRegistry.Register(component)
@@ -237,7 +241,7 @@ func createPreviewServer(cfg *config.Config, component *registry.ComponentInfo, 
 	return srv, nil
 }
 
-func generatePreviewHTML(component *registry.ComponentInfo, props map[string]interface{}, mockData map[string]interface{}, renderer *renderer.ComponentRenderer) (string, error) {
+func generatePreviewHTML(component *types.ComponentInfo, props map[string]interface{}, mockData map[string]interface{}, renderer *renderer.ComponentRenderer) (string, error) {
 	// Use provided props or generated mock data
 	data := props
 	if data == nil {
@@ -256,9 +260,9 @@ func generatePreviewHTML(component *registry.ComponentInfo, props map[string]int
 	return wrapperHTML, nil
 }
 
-func generateWrapperHTML(component *registry.ComponentInfo, data map[string]interface{}, componentHTML string) string {
+func generateWrapperHTML(component *types.ComponentInfo, data map[string]interface{}, componentHTML string) string {
 	// Create a simple wrapper if custom wrapper is not specified
-	if previewWrapper == "" {
+	if previewFlags.Wrapper == "" {
 		return fmt.Sprintf(`<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -355,13 +359,13 @@ func generateWrapperHTML(component *registry.ComponentInfo, data map[string]inte
 			component.Name,
 			componentHTML,
 			formatJSON(data),
-			previewPort,
+			previewFlags.Port,
 		)
 	}
 
 	// Use custom wrapper (placeholder for now)
 	return fmt.Sprintf(`<!-- Custom wrapper would be loaded from %s -->
-%s`, previewWrapper, componentHTML)
+%s`, previewFlags.Wrapper, componentHTML)
 }
 
 func formatJSON(data interface{}) string {

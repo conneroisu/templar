@@ -18,6 +18,7 @@ import (
 	"text/template"
 
 	"github.com/conneroisu/templar/internal/registry"
+	"github.com/conneroisu/templar/internal/types"
 )
 
 // ComponentRenderer handles rendering of templ components
@@ -104,7 +105,7 @@ func (r *ComponentRenderer) RenderComponent(componentName string) (string, error
 }
 
 // generateMockData creates mock data for component parameters
-func (r *ComponentRenderer) generateMockData(component *registry.ComponentInfo) map[string]interface{} {
+func (r *ComponentRenderer) generateMockData(component *types.ComponentInfo) map[string]interface{} {
 	mockData := make(map[string]interface{})
 
 	for _, param := range component.Parameters {
@@ -150,7 +151,7 @@ func (r *ComponentRenderer) generateMockString(paramName string) string {
 }
 
 // generateGoCode creates Go code that renders the component
-func (r *ComponentRenderer) generateGoCode(component *registry.ComponentInfo, mockData map[string]interface{}) (string, error) {
+func (r *ComponentRenderer) generateGoCode(component *types.ComponentInfo, mockData map[string]interface{}) (string, error) {
 	tmplStr := `package main
 
 import (
@@ -343,12 +344,25 @@ func (r *ComponentRenderer) validateWorkDir(workDir string) error {
 
 // RenderComponentWithLayout wraps component HTML in a full page layout
 func (r *ComponentRenderer) RenderComponentWithLayout(componentName string, html string) string {
+	return r.RenderComponentWithLayoutAndNonce(componentName, html, "")
+}
+
+// RenderComponentWithLayoutAndNonce wraps component HTML in a full page layout with CSP nonce support
+func (r *ComponentRenderer) RenderComponentWithLayoutAndNonce(componentName string, html string, nonce string) string {
+	// Generate nonce attributes for inline scripts and styles
+	scriptNonce := ""
+	styleNonce := ""
+	if nonce != "" {
+		scriptNonce = fmt.Sprintf(` nonce="%s"`, nonce)
+		styleNonce = fmt.Sprintf(` nonce="%s"`, nonce)
+	}
+
 	return fmt.Sprintf(`<!DOCTYPE html>
 <html>
 <head>
     <title>%s - Templar Preview</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
+    <script%s>
         tailwind.config = {
             theme: {
                 extend: {
@@ -360,7 +374,7 @@ func (r *ComponentRenderer) RenderComponentWithLayout(componentName string, html
             }
         }
     </script>
-    <style>
+    <style%s>
         .btn { @apply px-4 py-2 rounded-md font-medium transition-colors; }
         .btn-primary { @apply bg-blue-600 text-white hover:bg-blue-700; }
         .btn-secondary { @apply bg-gray-200 text-gray-800 hover:bg-gray-300; }
@@ -382,7 +396,7 @@ func (r *ComponentRenderer) RenderComponentWithLayout(componentName string, html
         </div>
     </div>
     
-    <script>
+    <script%s>
         // WebSocket connection for live reload
         const ws = new WebSocket('ws://localhost:' + window.location.port + '/ws');
         ws.onmessage = function(event) {
@@ -393,7 +407,7 @@ func (r *ComponentRenderer) RenderComponentWithLayout(componentName string, html
         };
     </script>
 </body>
-</html>`, componentName, componentName, html)
+</html>`, componentName, scriptNonce, styleNonce, componentName, html, scriptNonce)
 }
 
 // validateComponentName validates component name to prevent path traversal

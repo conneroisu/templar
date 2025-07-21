@@ -11,8 +11,8 @@ import (
 	"github.com/conneroisu/templar/internal/logging"
 )
 
-// RateLimiter implements token bucket rate limiting
-type RateLimiter struct {
+// TokenBucketManager implements token bucket rate limiting for HTTP requests
+type TokenBucketManager struct {
 	buckets     map[string]*TokenBucket
 	bucketMutex sync.RWMutex
 	config      *RateLimitConfig
@@ -39,8 +39,11 @@ type RateLimitResult struct {
 	ResetTime  time.Time
 }
 
+// RateLimiter is an alias for TokenBucketManager to maintain backwards compatibility
+type RateLimiter = TokenBucketManager
+
 // NewRateLimiter creates a new rate limiter
-func NewRateLimiter(config *RateLimitConfig, logger logging.Logger) *RateLimiter {
+func NewRateLimiter(config *RateLimitConfig, logger logging.Logger) *TokenBucketManager {
 	if config == nil {
 		config = &RateLimitConfig{
 			RequestsPerMinute: 1000,
@@ -50,7 +53,7 @@ func NewRateLimiter(config *RateLimitConfig, logger logging.Logger) *RateLimiter
 		}
 	}
 
-	rl := &RateLimiter{
+	rl := &TokenBucketManager{
 		buckets:     make(map[string]*TokenBucket),
 		config:      config,
 		logger:      logger,
@@ -65,7 +68,7 @@ func NewRateLimiter(config *RateLimitConfig, logger logging.Logger) *RateLimiter
 }
 
 // Check checks if a request is allowed for the given key (usually IP address)
-func (rl *RateLimiter) Check(key string) RateLimitResult {
+func (rl *TokenBucketManager) Check(key string) RateLimitResult {
 	if !rl.config.Enabled {
 		return RateLimitResult{
 			Allowed:   true,
@@ -78,7 +81,7 @@ func (rl *RateLimiter) Check(key string) RateLimitResult {
 }
 
 // getBucket gets or creates a token bucket for the given key
-func (rl *RateLimiter) getBucket(key string) *TokenBucket {
+func (rl *TokenBucketManager) getBucket(key string) *TokenBucket {
 	rl.bucketMutex.RLock()
 	bucket, exists := rl.buckets[key]
 	rl.bucketMutex.RUnlock()
@@ -163,7 +166,7 @@ func (tb *TokenBucket) refill(now time.Time) {
 }
 
 // cleanupExpiredBuckets removes buckets that haven't been accessed recently
-func (rl *RateLimiter) cleanupExpiredBuckets() {
+func (rl *TokenBucketManager) cleanupExpiredBuckets() {
 	defer close(rl.stopCleaner)
 
 	for {
@@ -178,7 +181,7 @@ func (rl *RateLimiter) cleanupExpiredBuckets() {
 }
 
 // performCleanup removes expired buckets
-func (rl *RateLimiter) performCleanup() {
+func (rl *TokenBucketManager) performCleanup() {
 	rl.bucketMutex.Lock()
 	defer rl.bucketMutex.Unlock()
 
@@ -195,7 +198,7 @@ func (rl *RateLimiter) performCleanup() {
 }
 
 // Stop stops the rate limiter and cleanup goroutine
-func (rl *RateLimiter) Stop() {
+func (rl *TokenBucketManager) Stop() {
 	select {
 	case rl.stopCleaner <- struct{}{}:
 	default:
@@ -203,7 +206,7 @@ func (rl *RateLimiter) Stop() {
 }
 
 // GetStats returns rate limiter statistics
-func (rl *RateLimiter) GetStats() map[string]interface{} {
+func (rl *TokenBucketManager) GetStats() map[string]interface{} {
 	rl.bucketMutex.RLock()
 	defer rl.bucketMutex.RUnlock()
 
@@ -218,7 +221,7 @@ func (rl *RateLimiter) GetStats() map[string]interface{} {
 }
 
 // RateLimitMiddleware creates HTTP middleware for rate limiting
-func RateLimitMiddleware(limiter *RateLimiter) func(http.Handler) http.Handler {
+func RateLimitMiddleware(limiter *TokenBucketManager) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Extract client IP
@@ -259,7 +262,7 @@ func RateLimitMiddleware(limiter *RateLimiter) func(http.Handler) http.Handler {
 
 // AdaptiveRateLimiter implements adaptive rate limiting based on system load
 type AdaptiveRateLimiter struct {
-	*RateLimiter
+	*TokenBucketManager
 	loadThreshold   float64
 	reductionFactor float64
 	checkInterval   time.Duration
@@ -274,19 +277,19 @@ func NewAdaptiveRateLimiter(config *RateLimitConfig, logger logging.Logger) *Ada
 	baseLimiter := NewRateLimiter(config, logger)
 
 	return &AdaptiveRateLimiter{
-		RateLimiter:     baseLimiter,
-		loadThreshold:   0.8, // 80% load threshold
-		reductionFactor: 0.5, // Reduce to 50% when overloaded
-		checkInterval:   30 * time.Second,
-		baseLimit:       config.RequestsPerMinute,
-		currentLimit:    config.RequestsPerMinute,
+		TokenBucketManager: baseLimiter,
+		loadThreshold:      0.8, // 80% load threshold
+		reductionFactor:    0.5, // Reduce to 50% when overloaded
+		checkInterval:      30 * time.Second,
+		baseLimit:          config.RequestsPerMinute,
+		currentLimit:       config.RequestsPerMinute,
 	}
 }
 
 // Check checks rate limit with adaptive adjustment
 func (arl *AdaptiveRateLimiter) Check(key string) RateLimitResult {
 	arl.adjustLimitsIfNeeded()
-	return arl.RateLimiter.Check(key)
+	return arl.TokenBucketManager.Check(key)
 }
 
 // adjustLimitsIfNeeded adjusts rate limits based on system load
@@ -402,7 +405,7 @@ func WhitelistMiddleware(whitelist *IPWhitelist, rateLimitHandler http.Handler) 
 
 // DDoSProtection implements basic DDoS protection
 type DDoSProtection struct {
-	rateLimiter      *RateLimiter
+	rateLimiter      *TokenBucketManager
 	suspiciousIPs    map[string]*SuspiciousIP
 	mutex            sync.RWMutex
 	blockDuration    time.Duration
@@ -421,7 +424,7 @@ type SuspiciousIP struct {
 }
 
 // NewDDoSProtection creates a new DDoS protection system
-func NewDDoSProtection(rateLimiter *RateLimiter, logger logging.Logger) *DDoSProtection {
+func NewDDoSProtection(rateLimiter *TokenBucketManager, logger logging.Logger) *DDoSProtection {
 	return &DDoSProtection{
 		rateLimiter:      rateLimiter,
 		suspiciousIPs:    make(map[string]*SuspiciousIP),

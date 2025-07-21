@@ -1,0 +1,74 @@
+# Example configuration with authentication enabled
+# This demonstrates various authentication modes for the Templar development server
+
+server:
+  port: 8080
+  host: "localhost"
+  open: true
+  environment: "development"
+  
+  # Authentication configuration
+  auth:
+    # Enable authentication
+    enabled: true
+    
+    # Authentication mode: "token", "basic", or "none"
+    mode: "token"
+    
+    # Token for token-based authentication
+    # Can be provided via Authorization: Bearer <token> header
+    # or as a query parameter: ?token=<token>
+    token: "development-token-123"
+    
+    # Basic authentication credentials (used when mode is "basic")
+    # username: "admin"
+    # password: "secret123"
+    
+    # IP allowlist - only these IPs can access the server
+    # If empty, all IPs are allowed (subject to other auth checks)
+    allowed_ips: []
+    
+    # Require authentication for non-localhost connections
+    require_auth: true
+    
+    # Allow localhost to bypass authentication
+    localhost_bypass: true
+
+# Alternative configuration examples:
+
+# Example 1: Basic Authentication
+# server:
+#   auth:
+#     enabled: true
+#     mode: "basic"
+#     username: "admin"
+#     password: "secure-password-123"
+#     require_auth: true
+#     localhost_bypass: true
+
+# Example 2: IP Allowlist Only
+# server:
+#   auth:
+#     enabled: true
+#     mode: "none"
+#     allowed_ips: ["192.168.1.100", "10.0.0.50"]
+#     require_auth: false
+#     localhost_bypass: true
+
+# Example 3: Production-like (no localhost bypass)
+# server:
+#   auth:
+#     enabled: true
+#     mode: "token"
+#     token: "super-secret-production-token"
+#     require_auth: true
+#     localhost_bypass: false
+#     allowed_ips: ["192.168.1.100", "10.0.0.50"]
+
+components:
+  scan_paths: ["./components", "./views", "./examples"]
+
+development:
+  hot_reload: true
+  css_injection: true
+  error_overlay: true

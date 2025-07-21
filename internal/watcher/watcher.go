@@ -21,6 +21,27 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
+// Constants for memory management
+const (
+	MaxPendingEvents = 1000             // Maximum events to queue before dropping
+	CleanupInterval  = 30 * time.Second // How often to cleanup old state
+)
+
+// Object pools for memory efficiency
+var (
+	eventPool = sync.Pool{
+		New: func() interface{} {
+			return make([]ChangeEvent, 0, 100)
+		},
+	}
+
+	eventMapPool = sync.Pool{
+		New: func() interface{} {
+			return make(map[string]ChangeEvent, 100)
+		},
+	}
+)
+
 // FileWatcher watches for file changes with intelligent debouncing
 type FileWatcher struct {
 	watcher   *fsnotify.Watcher
@@ -28,6 +49,7 @@ type FileWatcher struct {
 	filters   []FileFilter
 	handlers  []ChangeHandler
 	mutex     sync.RWMutex
+	stopped   bool
 }
 
 // ChangeEvent represents a file change event
@@ -72,12 +94,14 @@ type ChangeHandler func(events []ChangeEvent) error
 
 // Debouncer groups rapid file changes together
 type Debouncer struct {
-	delay   time.Duration
-	events  chan ChangeEvent
-	output  chan []ChangeEvent
-	timer   *time.Timer
-	pending []ChangeEvent
-	mutex   sync.Mutex
+	delay        time.Duration
+	events       chan ChangeEvent
+	output       chan []ChangeEvent
+	timer        *time.Timer
+	pending      []ChangeEvent
+	mutex        sync.Mutex
+	cleanupTimer *time.Timer
+	lastCleanup  time.Time
 }
 
 // NewFileWatcher creates a new file watcher
@@ -88,10 +112,11 @@ func NewFileWatcher(debounceDelay time.Duration) (*FileWatcher, error) {
 	}
 
 	debouncer := &Debouncer{
-		delay:   debounceDelay,
-		events:  make(chan ChangeEvent, 100),
-		output:  make(chan []ChangeEvent, 10),
-		pending: make([]ChangeEvent, 0),
+		delay:       debounceDelay,
+		events:      make(chan ChangeEvent, 100),
+		output:      make(chan []ChangeEvent, 10),
+		pending:     make([]ChangeEvent, 0, 100),
+		lastCleanup: time.Now(),
 	}
 
 	fw := &FileWatcher{
@@ -202,12 +227,33 @@ func (fw *FileWatcher) Start(ctx context.Context) error {
 
 // Stop stops the file watcher and cleans up resources
 func (fw *FileWatcher) Stop() error {
-	// Stop the debouncer timer if it exists
+	fw.mutex.Lock()
+	defer fw.mutex.Unlock()
+
+	// Check if already stopped to prevent double-close
+	if fw.stopped {
+		return nil
+	}
+	fw.stopped = true
+
+	fw.debouncer.mutex.Lock()
+	defer fw.debouncer.mutex.Unlock()
+
+	// Stop and cleanup all timers
 	if fw.debouncer.timer != nil {
 		fw.debouncer.timer.Stop()
+		fw.debouncer.timer = nil
 	}
 
-	// Close the watcher
+	if fw.debouncer.cleanupTimer != nil {
+		fw.debouncer.cleanupTimer.Stop()
+		fw.debouncer.cleanupTimer = nil
+	}
+
+	// Clear pending events to release memory
+	fw.debouncer.pending = nil
+
+	// Close the file system watcher (this will close its internal channels)
 	return fw.watcher.Close()
 }
 
@@ -313,6 +359,13 @@ func (d *Debouncer) addEvent(event ChangeEvent) {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 
+	// Prevent unbounded growth - drop old events if we exceed limit
+	if len(d.pending) >= MaxPendingEvents {
+		// Remove oldest events (FIFO)
+		copy(d.pending, d.pending[1:])
+		d.pending = d.pending[:len(d.pending)-1]
+	}
+
 	// Add event to pending list
 	d.pending = append(d.pending, event)
 
@@ -324,6 +377,12 @@ func (d *Debouncer) addEvent(event ChangeEvent) {
 	d.timer = time.AfterFunc(d.delay, func() {
 		d.flush()
 	})
+
+	// Periodic cleanup to prevent memory growth
+	if time.Since(d.lastCleanup) > CleanupInterval {
+		d.cleanup()
+		d.lastCleanup = time.Now()
+	}
 }
 
 func (d *Debouncer) flush() {
@@ -334,27 +393,66 @@ func (d *Debouncer) flush() {
 		return
 	}
 
+	// Get objects from pools to reduce allocations
+	eventMap := eventMapPool.Get().(map[string]ChangeEvent)
+	events := eventPool.Get().([]ChangeEvent)
+
+	// Clear the map and slice for reuse
+	for k := range eventMap {
+		delete(eventMap, k)
+	}
+	events = events[:0]
+
 	// Deduplicate events by path
-	eventMap := make(map[string]ChangeEvent)
 	for _, event := range d.pending {
 		eventMap[event.Path] = event
 	}
 
 	// Convert back to slice
-	events := make([]ChangeEvent, 0, len(eventMap))
 	for _, event := range eventMap {
 		events = append(events, event)
 	}
 
-	// Send debounced events
+	// Make a copy for sending since we'll reuse the slice
+	eventsCopy := make([]ChangeEvent, len(events))
+	copy(eventsCopy, events)
+
+	// Return objects to pools for reuse
+	eventMapPool.Put(eventMap)
+	eventPool.Put(events)
+
+	// Send debounced events (non-blocking)
 	select {
-	case d.output <- events:
+	case d.output <- eventsCopy:
 	default:
-		// Channel full, skip
+		// Channel full, skip - this prevents goroutine leaks
 	}
 
-	// Clear pending events
-	d.pending = d.pending[:0]
+	// Clear pending events - reuse underlying array if capacity is reasonable
+	if cap(d.pending) <= MaxPendingEvents*2 {
+		d.pending = d.pending[:0]
+	} else {
+		// Reallocate if capacity grew too large
+		d.pending = make([]ChangeEvent, 0, 100)
+	}
+}
+
+// cleanup performs periodic memory cleanup
+func (d *Debouncer) cleanup() {
+	// This function is called while holding the mutex in addEvent
+
+	// If pending slice has grown too large, reallocate with smaller capacity
+	if cap(d.pending) > MaxPendingEvents*2 {
+		newPending := make([]ChangeEvent, len(d.pending), MaxPendingEvents)
+		copy(newPending, d.pending)
+		d.pending = newPending
+	}
+
+	// Force garbage collection of any unreferenced timer objects
+	if d.timer != nil {
+		d.timer.Stop()
+		d.timer = nil
+	}
 }
 
 // Common file filters

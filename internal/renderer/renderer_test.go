@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/conneroisu/templar/internal/registry"
+	"github.com/conneroisu/templar/internal/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -28,10 +29,10 @@ func TestGenerateMockData(t *testing.T) {
 	reg := registry.NewComponentRegistry()
 	renderer := NewComponentRenderer(reg)
 
-	component := &registry.ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:    "TestComponent",
 		Package: "test",
-		Parameters: []registry.ParameterInfo{
+		Parameters: []types.ParameterInfo{
 			{Name: "title", Type: "string", Optional: false},
 			{Name: "count", Type: "int", Optional: false},
 			{Name: "active", Type: "bool", Optional: false},
@@ -89,10 +90,10 @@ func TestGenerateGoCode(t *testing.T) {
 	reg := registry.NewComponentRegistry()
 	renderer := NewComponentRenderer(reg)
 
-	component := &registry.ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:    "Button",
 		Package: "components",
-		Parameters: []registry.ParameterInfo{
+		Parameters: []types.ParameterInfo{
 			{Name: "text", Type: "string", Optional: false},
 			{Name: "disabled", Type: "bool", Optional: false},
 		},
@@ -203,11 +204,11 @@ func TestRenderComponentIntegration(t *testing.T) {
 	renderer := NewComponentRenderer(reg)
 
 	// Create a simple component
-	component := &registry.ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:         "SimpleButton",
 		Package:      "main",
 		FilePath:     "test.templ",
-		Parameters:   []registry.ParameterInfo{{Name: "text", Type: "string", Optional: false}},
+		Parameters:   []types.ParameterInfo{{Name: "text", Type: "string", Optional: false}},
 		Imports:      []string{},
 		LastMod:      time.Now(),
 		Hash:         "testhash",
@@ -267,8 +268,8 @@ func TestMockDataGeneration(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.paramType, func(t *testing.T) {
-			component := &registry.ComponentInfo{
-				Parameters: []registry.ParameterInfo{
+			component := &types.ComponentInfo{
+				Parameters: []types.ParameterInfo{
 					{Name: "test", Type: tc.paramType, Optional: false},
 				},
 			}

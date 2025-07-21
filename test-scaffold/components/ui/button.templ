@@ -1,0 +1,47 @@
+package components
+
+
+
+// Button renders an interactive button with configurable variants and states
+templ Button(text string, variant string, size string, disabled bool, onclick string) {
+	<button 
+		class={ 
+			"btn",
+			"btn-" + variant,
+			"btn-" + size,
+			templ.KV("btn-disabled", disabled)
+		}
+		if !disabled && onclick != "" {
+			onclick={ onclick }
+		}
+		disabled?={ disabled }
+		type="button"
+	>
+		{ text }
+	</button>
+}
+
+// ButtonPrimary renders a primary button variant
+templ ButtonPrimary(text string) {
+	@Button(text, "primary", "medium", false, "")
+}
+
+// ButtonSecondary renders a secondary button variant  
+templ ButtonSecondary(text string) {
+	@Button(text, "secondary", "medium", false, "")
+}
+
+// ButtonDanger renders a danger button variant
+templ ButtonDanger(text string) {
+	@Button(text, "danger", "medium", false, "")
+}
+
+// ButtonSmall renders a small button
+templ ButtonSmall(text string, variant string) {
+	@Button(text, variant, "small", false, "")
+}
+
+// ButtonLarge renders a large button
+templ ButtonLarge(text string, variant string) {
+	@Button(text, variant, "large", false, "")
+}

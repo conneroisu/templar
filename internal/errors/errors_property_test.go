@@ -114,7 +114,7 @@ func TestErrorCollectorProperties(t *testing.T) {
 				currNum := -1
 				fmt.Sscanf(errors[i-1].Component, "component_%d", &prevNum)
 				fmt.Sscanf(errors[i].Component, "component_%d", &currNum)
-				
+
 				if currNum < prevNum {
 					orderViolations++
 				}
@@ -139,9 +139,9 @@ func TestErrorCollectorProperties(t *testing.T) {
 			html := collector.ErrorOverlay()
 
 			// Property: HTML should be generated without panics and contain basic structure
-			return len(html) > 0 && 
-				   containsString(html, "<div") && 
-				   containsString(html, "</div>")
+			return len(html) > 0 &&
+				containsString(html, "<div") &&
+				containsString(html, "</div>")
 		},
 		genBuildErrors(),
 	))
@@ -241,12 +241,12 @@ func TestErrorParsingProperties(t *testing.T) {
 		func(err BuildError) bool {
 			// Format error as string using the Error() method
 			formatted := err.Error()
-			
+
 			// Property: Formatted string should contain essential information
-			return len(formatted) > 0 && 
-				   containsString(formatted, err.File) && 
-				   containsString(formatted, err.Message) &&
-				   containsString(formatted, err.Severity.String())
+			return len(formatted) > 0 &&
+				containsString(formatted, err.File) &&
+				containsString(formatted, err.Message) &&
+				containsString(formatted, err.Severity.String())
 		},
 		genBuildError(),
 	))
@@ -317,12 +317,12 @@ func TestErrorParsingProperties(t *testing.T) {
 
 func genBuildError() gopter.Gen {
 	return gopter.CombineGens(
-		gen.Identifier(),          // Component
-		gen.Identifier(),          // File
-		gen.IntRange(1, 1000),     // Line
-		gen.IntRange(1, 200),      // Column
+		gen.Identifier(),      // Component
+		gen.Identifier(),      // File
+		gen.IntRange(1, 1000), // Line
+		gen.IntRange(1, 200),  // Column
 		gen.AlphaString().SuchThat(func(s string) bool { return len(s) > 0 }), // Non-empty message
-		genSeverity(),             // Severity
+		genSeverity(), // Severity
 	).Map(func(values []interface{}) BuildError {
 		message := values[4].(string)
 		if message == "" {
@@ -353,9 +353,9 @@ func genSeverity() gopter.Gen {
 
 // Helper function to check if a string contains a substring
 func containsString(s, substr string) bool {
-	return len(s) >= len(substr) && 
-		   (len(s) == len(substr) && s == substr || 
-		   	len(s) > len(substr) && (s[:len(substr)] == substr || containsStringRec(s[1:], substr)))
+	return len(s) >= len(substr) &&
+		(len(s) == len(substr) && s == substr ||
+			len(s) > len(substr) && (s[:len(substr)] == substr || containsStringRec(s[1:], substr)))
 }
 
 func containsStringRec(s, substr string) bool {

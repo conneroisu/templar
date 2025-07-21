@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/conneroisu/templar/internal/registry"
+	"github.com/conneroisu/templar/internal/types"
 )
 
 // MockPlugin is a test plugin implementation
@@ -18,12 +18,15 @@ type MockPlugin struct {
 	health         PluginHealth
 }
 
-func (mp *MockPlugin) Name() string                                            { return mp.name }
-func (mp *MockPlugin) Version() string                                         { return mp.version }
-func (mp *MockPlugin) Description() string                                     { return "Mock plugin for testing" }
-func (mp *MockPlugin) Initialize(ctx context.Context, config PluginConfig) error { mp.initialized = true; return nil }
-func (mp *MockPlugin) Shutdown(ctx context.Context) error                     { mp.shutdownCalled = true; return nil }
-func (mp *MockPlugin) Health() PluginHealth                                   { return mp.health }
+func (mp *MockPlugin) Name() string        { return mp.name }
+func (mp *MockPlugin) Version() string     { return mp.version }
+func (mp *MockPlugin) Description() string { return "Mock plugin for testing" }
+func (mp *MockPlugin) Initialize(ctx context.Context, config PluginConfig) error {
+	mp.initialized = true
+	return nil
+}
+func (mp *MockPlugin) Shutdown(ctx context.Context) error { mp.shutdownCalled = true; return nil }
+func (mp *MockPlugin) Health() PluginHealth               { return mp.health }
 
 // MockComponentPlugin extends MockPlugin with component functionality
 type MockComponentPlugin struct {
@@ -31,7 +34,7 @@ type MockComponentPlugin struct {
 	priority int
 }
 
-func (mcp *MockComponentPlugin) HandleComponent(ctx context.Context, component *registry.ComponentInfo) (*registry.ComponentInfo, error) {
+func (mcp *MockComponentPlugin) HandleComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error) {
 	// Add test metadata
 	if component.Metadata == nil {
 		component.Metadata = make(map[string]interface{})
@@ -50,12 +53,12 @@ type MockBuildPlugin struct {
 	postBuildCalled bool
 }
 
-func (mbp *MockBuildPlugin) PreBuild(ctx context.Context, components []*registry.ComponentInfo) error {
+func (mbp *MockBuildPlugin) PreBuild(ctx context.Context, components []*types.ComponentInfo) error {
 	mbp.preBuildCalled = true
 	return nil
 }
 
-func (mbp *MockBuildPlugin) PostBuild(ctx context.Context, components []*registry.ComponentInfo, buildResult BuildResult) error {
+func (mbp *MockBuildPlugin) PostBuild(ctx context.Context, components []*types.ComponentInfo, buildResult BuildResult) error {
 	mbp.postBuildCalled = true
 	return nil
 }
@@ -171,7 +174,7 @@ func TestPluginManager_ComponentProcessing(t *testing.T) {
 	}
 
 	// Test component processing
-	component := &registry.ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:     "TestComponent",
 		Package:  "test",
 		FilePath: "/test/component.templ",
@@ -296,7 +299,7 @@ func TestBuildPlugin_Lifecycle(t *testing.T) {
 	}
 
 	// Test PreBuild
-	components := []*registry.ComponentInfo{
+	components := []*types.ComponentInfo{
 		{Name: "Component1", Package: "test"},
 		{Name: "Component2", Package: "test"},
 	}
@@ -421,7 +424,7 @@ func BenchmarkPluginManager_ProcessComponent(b *testing.B) {
 		pm.RegisterPlugin(plugin, config)
 	}
 
-	component := &registry.ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:     "BenchmarkComponent",
 		Package:  "test",
 		FilePath: "/test/component.templ",
@@ -460,4 +463,3 @@ func BenchmarkPluginManager_ListPlugins(b *testing.B) {
 		}
 	}
 }
-

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/conneroisu/templar/internal/registry"
+	"github.com/conneroisu/templar/internal/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -149,7 +150,7 @@ func TestScanFileWithNonExistentFile(t *testing.T) {
 
 	err := scanner.ScanFile("non_existent_file.templ")
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "reading file")
+	assert.Contains(t, err.Error(), "opening file")
 }
 
 func TestValidatePath(t *testing.T) {
@@ -180,17 +181,17 @@ func TestExtractParameters(t *testing.T) {
 	testCases := []struct {
 		name     string
 		line     string
-		expected []registry.ParameterInfo
+		expected []types.ParameterInfo
 	}{
 		{
 			name:     "Single parameter",
 			line:     "templ Button(text string) {",
-			expected: []registry.ParameterInfo{{Name: "text", Type: "string", Optional: false}},
+			expected: []types.ParameterInfo{{Name: "text", Type: "string", Optional: false}},
 		},
 		{
 			name: "Multiple parameters",
 			line: "templ Card(title string, content string) {",
-			expected: []registry.ParameterInfo{
+			expected: []types.ParameterInfo{
 				{Name: "title", Type: "string", Optional: false},
 				{Name: "content", Type: "string", Optional: false},
 			},
@@ -198,12 +199,12 @@ func TestExtractParameters(t *testing.T) {
 		{
 			name:     "No parameters",
 			line:     "templ Header() {",
-			expected: []registry.ParameterInfo{},
+			expected: []types.ParameterInfo{},
 		},
 		{
 			name: "Mixed types",
 			line: "templ Widget(id int, name string, active bool) {",
-			expected: []registry.ParameterInfo{
+			expected: []types.ParameterInfo{
 				{Name: "id", Type: "int", Optional: false},
 				{Name: "name", Type: "string", Optional: false},
 				{Name: "active", Type: "bool", Optional: false},

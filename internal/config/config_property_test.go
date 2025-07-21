@@ -1,3 +1,4 @@
+//go:build property
 // +build property
 
 package config
@@ -53,12 +54,12 @@ func TestConfigurationProperties(t *testing.T) {
 
 			// Validate config
 			err := validateConfig(cfg)
-			
+
 			// Should be valid if inputs are reasonable
 			return err == nil
 		},
-		gen.IntRange(1000, 9999),                          // Valid port range
-		gen.RegexMatch(`^[a-zA-Z0-9.-]+$`),                // Valid hostname
+		gen.IntRange(1000, 9999),                             // Valid port range
+		gen.RegexMatch(`^[a-zA-Z0-9.-]+$`),                   // Valid hostname
 		gen.SliceOfN(5, gen.RegexMatch(`^[a-zA-Z0-9_./]+$`)), // Valid paths
 	))
 
@@ -107,7 +108,7 @@ func TestServerConfigProperties(t *testing.T) {
 			}
 
 			err := validateServerConfig(&cfg.Server)
-			
+
 			// Should be valid only for valid port range
 			if port >= 1 && port <= 65535 {
 				return err == nil
@@ -129,7 +130,7 @@ func TestServerConfigProperties(t *testing.T) {
 			}
 
 			err := validateServerConfig(&cfg.Server)
-			
+
 			// Empty or whitespace-only hosts should be invalid
 			if strings.TrimSpace(host) == "" || strings.ContainsAny(host, " \t\n\r") {
 				return err != nil
@@ -202,7 +203,7 @@ func TestComponentsConfigProperties(t *testing.T) {
 			}
 
 			err := validateComponentsConfig(&cfg.Components)
-			
+
 			// Should validate all patterns
 			for _, pattern := range patterns {
 				if !isValidGlobPattern(pattern) {
@@ -232,7 +233,7 @@ func TestBuildConfigProperties(t *testing.T) {
 			}
 
 			err := validateBuildConfig(&cfg.Build)
-			
+
 			// Commands with dangerous characters should be rejected
 			if strings.ContainsAny(command, ";|&`$()") {
 				return err != nil
@@ -258,7 +259,7 @@ func TestBuildConfigProperties(t *testing.T) {
 			}
 
 			err := validateBuildConfig(&cfg.Build)
-			
+
 			// All patterns should be valid globs
 			for _, pattern := range patterns {
 				if pattern != "" && !isValidGlobPattern(pattern) {

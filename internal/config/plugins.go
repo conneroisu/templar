@@ -12,12 +12,12 @@ func validatePluginsConfig(config *PluginsConfig) error {
 	for _, path := range config.DiscoveryPaths {
 		// Clean the path
 		cleanPath := filepath.Clean(path)
-		
+
 		// Reject path traversal attempts
 		if strings.Contains(cleanPath, "..") {
 			return fmt.Errorf("discovery path contains path traversal: %s", path)
 		}
-		
+
 		// Check for dangerous characters
 		dangerousChars := []string{";", "&", "|", "$", "`", "(", ")", "<", ">", "\"", "'"}
 		for _, char := range dangerousChars {
@@ -26,25 +26,25 @@ func validatePluginsConfig(config *PluginsConfig) error {
 			}
 		}
 	}
-	
+
 	// Validate plugin names (both enabled and disabled)
 	allPluginNames := append(config.Enabled, config.Disabled...)
 	for _, name := range allPluginNames {
 		if name == "" {
 			return fmt.Errorf("plugin name cannot be empty")
 		}
-		
+
 		// Plugin names should be alphanumeric with dashes/underscores
 		for _, char := range name {
-			if !((char >= 'a' && char <= 'z') || 
-				 (char >= 'A' && char <= 'Z') || 
-				 (char >= '0' && char <= '9') || 
-				 char == '-' || char == '_') {
+			if !((char >= 'a' && char <= 'z') ||
+				(char >= 'A' && char <= 'Z') ||
+				(char >= '0' && char <= '9') ||
+				char == '-' || char == '_') {
 				return fmt.Errorf("plugin name contains invalid character: %s", name)
 			}
 		}
 	}
-	
+
 	// Check for conflicts between enabled and disabled
 	enabledMap := make(map[string]bool)
 	for _, name := range config.Enabled {
@@ -55,6 +55,6 @@ func validatePluginsConfig(config *PluginsConfig) error {
 			return fmt.Errorf("plugin %s cannot be both enabled and disabled", name)
 		}
 	}
-	
+
 	return nil
 }

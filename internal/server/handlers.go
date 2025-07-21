@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/conneroisu/templar/internal/registry"
+	"github.com/conneroisu/templar/internal/types"
 )
 
 const indexHTML = `<!DOCTYPE html>
@@ -292,6 +292,12 @@ func (s *PreviewServer) handleTargetFiles(w http.ResponseWriter, r *http.Request
 }
 
 func (s *PreviewServer) handleSingleFile(w http.ResponseWriter, r *http.Request, filename string) {
+	// Check if scanner is available
+	if s.scanner == nil {
+		http.Error(w, "Scanner not initialized", http.StatusInternalServerError)
+		return
+	}
+
 	// Scan the specific file to find components
 	if err := s.scanner.ScanFile(filename); err != nil {
 		http.Error(w, fmt.Sprintf("Error scanning file %s: %v", filename, err), http.StatusInternalServerError)
@@ -300,7 +306,7 @@ func (s *PreviewServer) handleSingleFile(w http.ResponseWriter, r *http.Request,
 
 	// Get all components from this file
 	allComponents := s.registry.GetAll()
-	var fileComponents []*registry.ComponentInfo
+	var fileComponents []*types.ComponentInfo
 
 	for _, component := range allComponents {
 		if component.FilePath == filename {
@@ -324,6 +330,12 @@ func (s *PreviewServer) handleSingleFile(w http.ResponseWriter, r *http.Request,
 }
 
 func (s *PreviewServer) handleMultipleFiles(w http.ResponseWriter, r *http.Request) {
+	// Check if scanner is available
+	if s.scanner == nil {
+		http.Error(w, "Scanner not initialized", http.StatusInternalServerError)
+		return
+	}
+
 	// Scan all target files
 	for _, filename := range s.config.TargetFiles {
 		if err := s.scanner.ScanFile(filename); err != nil {
@@ -352,8 +364,11 @@ func (s *PreviewServer) handleRender(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Wrap in layout
-	fullHTML := s.renderer.RenderComponentWithLayout(componentName, html)
+	// Get nonce from request context for CSP
+	nonce := GetNonceFromContext(r.Context())
+
+	// Wrap in layout with nonce support
+	fullHTML := s.renderer.RenderComponentWithLayoutAndNonce(componentName, html, nonce)
 
 	w.Header().Set("Content-Type", "text/html")
 	if _, err := w.Write([]byte(fullHTML)); err != nil {
@@ -361,7 +376,7 @@ func (s *PreviewServer) handleRender(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *PreviewServer) renderSingleComponent(w http.ResponseWriter, r *http.Request, component *registry.ComponentInfo) {
+func (s *PreviewServer) renderSingleComponent(w http.ResponseWriter, r *http.Request, component *types.ComponentInfo) {
 	// Render the component directly
 	html, err := s.renderer.RenderComponent(component.Name)
 	if err != nil {
@@ -369,8 +384,11 @@ func (s *PreviewServer) renderSingleComponent(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	// Wrap in layout
-	fullHTML := s.renderer.RenderComponentWithLayout(component.Name, html)
+	// Get nonce from request context for CSP
+	nonce := GetNonceFromContext(r.Context())
+
+	// Wrap in layout with nonce support
+	fullHTML := s.renderer.RenderComponentWithLayoutAndNonce(component.Name, html, nonce)
 
 	w.Header().Set("Content-Type", "text/html")
 	if _, err := w.Write([]byte(fullHTML)); err != nil {
@@ -378,7 +396,7 @@ func (s *PreviewServer) renderSingleComponent(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func (s *PreviewServer) renderComponentSelection(w http.ResponseWriter, r *http.Request, components []*registry.ComponentInfo, filename string) {
+func (s *PreviewServer) renderComponentSelection(w http.ResponseWriter, r *http.Request, components []*types.ComponentInfo, filename string) {
 	html := fmt.Sprintf(`<!DOCTYPE html>
 <html>
 <head>

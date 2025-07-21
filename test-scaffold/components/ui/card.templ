@@ -1,0 +1,36 @@
+package components
+
+// Card renders a flexible card component
+templ Card(title string, content string, imageUrl string, footer string) {
+	<div class="card">
+		if imageUrl != "" {
+			<img src={ imageUrl } alt={ title } class="card-image"/>
+		}
+		<div class="card-body">
+			if title != "" {
+				<h3 class="card-title">{ title }</h3>
+			}
+			if content != "" {
+				<div class="card-content">
+					{ content }
+				</div>
+			}
+			{ children... }
+		</div>
+		if footer != "" {
+			<div class="card-footer">
+				{ footer }
+			</div>
+		}
+	</div>
+}
+
+// CardSimple renders a simple card with just title and content
+templ CardSimple(title string, content string) {
+	@Card(title, content, "", "")
+}
+
+// CardWithImage renders a card with an image
+templ CardWithImage(title string, content string, imageUrl string) {
+	@Card(title, content, imageUrl, "")
+}

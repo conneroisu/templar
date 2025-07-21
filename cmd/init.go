@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/conneroisu/templar/internal/config"
 	"github.com/spf13/cobra"
 )
 
@@ -28,6 +29,7 @@ var (
 	initMinimal  bool
 	initExample  bool
 	initTemplate string
+	initWizard   bool
 )
 
 func init() {
@@ -36,6 +38,7 @@ func init() {
 	initCmd.Flags().BoolVar(&initMinimal, "minimal", false, "Minimal setup without examples")
 	initCmd.Flags().BoolVar(&initExample, "example", false, "Include example components")
 	initCmd.Flags().StringVarP(&initTemplate, "template", "t", "", "Project template to use")
+	initCmd.Flags().BoolVar(&initWizard, "wizard", false, "Run configuration wizard during initialization")
 }
 
 func runInit(cmd *cobra.Command, args []string) error {
@@ -64,8 +67,14 @@ func runInit(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create configuration file
-	if err := createConfigFile(projectDir); err != nil {
-		return fmt.Errorf("failed to create configuration file: %w", err)
+	if initWizard {
+		if err := createConfigWithWizard(projectDir); err != nil {
+			return fmt.Errorf("failed to create configuration with wizard: %w", err)
+		}
+	} else {
+		if err := createConfigFile(projectDir); err != nil {
+			return fmt.Errorf("failed to create configuration file: %w", err)
+		}
 	}
 
 	// Create Go module if it doesn't exist
@@ -591,5 +600,39 @@ templ PostList(posts []Post) {
 	}
 
 	fmt.Println("✓ Created blog template")
+	return nil
+}
+
+func createConfigWithWizard(projectDir string) error {
+	fmt.Println("\n🧙 Running Configuration Wizard")
+	fmt.Println("==============================")
+
+	// Create and run wizard
+	wizard := config.NewConfigWizard()
+
+	cfg, err := wizard.Run()
+	if err != nil {
+		return fmt.Errorf("configuration wizard failed: %w", err)
+	}
+
+	// Validate the generated configuration
+	validation := config.ValidateConfigWithDetails(cfg)
+	if validation.HasErrors() {
+		fmt.Println("\n❌ Configuration validation failed:")
+		fmt.Print(validation.String())
+		return fmt.Errorf("generated configuration is invalid")
+	}
+
+	if validation.HasWarnings() {
+		fmt.Println("\n⚠️  Configuration warnings:")
+		fmt.Print(validation.String())
+	}
+
+	// Write configuration file
+	configPath := filepath.Join(projectDir, ".templar.yml")
+	if err := wizard.WriteConfigFile(configPath); err != nil {
+		return fmt.Errorf("failed to write configuration file: %w", err)
+	}
+
 	return nil
 }

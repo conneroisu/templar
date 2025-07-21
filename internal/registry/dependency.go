@@ -7,6 +7,8 @@ import (
 	"go/token"
 	"regexp"
 	"strings"
+
+	"github.com/conneroisu/templar/internal/types"
 )
 
 // DependencyAnalyzer analyzes component dependencies
@@ -22,7 +24,7 @@ func NewDependencyAnalyzer(registry *ComponentRegistry) *DependencyAnalyzer {
 }
 
 // AnalyzeComponent analyzes dependencies for a single component
-func (da *DependencyAnalyzer) AnalyzeComponent(component *ComponentInfo) ([]string, error) {
+func (da *DependencyAnalyzer) AnalyzeComponent(component *types.ComponentInfo) ([]string, error) {
 	dependencies := make([]string, 0)
 
 	// Read and parse the component file
@@ -118,8 +120,8 @@ func (da *DependencyAnalyzer) UpdateAllDependencies() error {
 }
 
 // GetDependents returns components that depend on the given component
-func (da *DependencyAnalyzer) GetDependents(componentName string) []*ComponentInfo {
-	var dependents []*ComponentInfo
+func (da *DependencyAnalyzer) GetDependents(componentName string) []*types.ComponentInfo {
+	var dependents []*types.ComponentInfo
 
 	da.registry.mutex.RLock()
 	defer da.registry.mutex.RUnlock()

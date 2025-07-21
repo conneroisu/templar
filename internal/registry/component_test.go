@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/conneroisu/templar/internal/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,11 +22,11 @@ func TestNewComponentRegistry(t *testing.T) {
 func TestComponentRegistry_Add(t *testing.T) {
 	registry := NewComponentRegistry()
 
-	component := &ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:     "TestComponent",
 		FilePath: "/path/to/component.templ",
 		Package:  "main",
-		Parameters: []ParameterInfo{
+		Parameters: []types.ParameterInfo{
 			{Name: "title", Type: "string"},
 		},
 	}
@@ -50,22 +51,22 @@ func TestComponentRegistry_Update(t *testing.T) {
 	registry := NewComponentRegistry()
 
 	// Add initial component
-	component := &ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:     "TestComponent",
 		FilePath: "/path/to/component.templ",
 		Package:  "main",
-		Parameters: []ParameterInfo{
+		Parameters: []types.ParameterInfo{
 			{Name: "title", Type: "string"},
 		},
 	}
 	registry.Register(component)
 
 	// Update component
-	updatedComponent := &ComponentInfo{
+	updatedComponent := &types.ComponentInfo{
 		Name:     "TestComponent",
 		FilePath: "/path/to/component.templ",
 		Package:  "main",
-		Parameters: []ParameterInfo{
+		Parameters: []types.ParameterInfo{
 			{Name: "title", Type: "string"},
 			{Name: "subtitle", Type: "string"},
 		},
@@ -86,11 +87,11 @@ func TestComponentRegistry_Remove(t *testing.T) {
 	registry := NewComponentRegistry()
 
 	// Add component
-	component := &ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:       "TestComponent",
 		FilePath:   "/path/to/component.templ",
 		Package:    "main",
-		Parameters: []ParameterInfo{},
+		Parameters: []types.ParameterInfo{},
 	}
 	registry.Register(component)
 
@@ -116,17 +117,17 @@ func TestComponentRegistry_RemoveByPath(t *testing.T) {
 	registry := NewComponentRegistry()
 
 	// Add multiple components with different paths
-	component1 := &ComponentInfo{
+	component1 := &types.ComponentInfo{
 		Name:     "Component1",
 		FilePath: "/path/to/component1.templ",
 		Package:  "main",
 	}
-	component2 := &ComponentInfo{
+	component2 := &types.ComponentInfo{
 		Name:     "Component2",
 		FilePath: "/path/to/component2.templ",
 		Package:  "main",
 	}
-	component3 := &ComponentInfo{
+	component3 := &types.ComponentInfo{
 		Name:     "Component3",
 		FilePath: "/path/to/component1.templ", // Same path as component1
 		Package:  "main",
@@ -164,11 +165,11 @@ func TestComponentRegistry_Watch(t *testing.T) {
 	assert.NotNil(t, watcher)
 
 	// Add a component and check if event is received
-	component := &ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:       "TestComponent",
 		FilePath:   "/path/to/component.templ",
 		Package:    "main",
-		Parameters: []ParameterInfo{},
+		Parameters: []types.ParameterInfo{},
 	}
 
 	// Add component in goroutine to avoid blocking
@@ -180,7 +181,7 @@ func TestComponentRegistry_Watch(t *testing.T) {
 	// Wait for event
 	select {
 	case event := <-watcher:
-		assert.Equal(t, EventTypeAdded, event.Type)
+		assert.Equal(t, types.EventTypeAdded, event.Type)
 		assert.Equal(t, component, event.Component)
 	case <-time.After(100 * time.Millisecond):
 		t.Fatal("Expected to receive component added event")
@@ -212,7 +213,7 @@ func TestComponentRegistry_UnWatch(t *testing.T) {
 	// Verify the other watcher is still active
 	go func() {
 		time.Sleep(10 * time.Millisecond)
-		registry.Register(&ComponentInfo{
+		registry.Register(&types.ComponentInfo{
 			Name:     "TestComponent",
 			FilePath: "/path/to/component.templ",
 			Package:  "main",
@@ -221,7 +222,7 @@ func TestComponentRegistry_UnWatch(t *testing.T) {
 
 	select {
 	case event := <-watcher2:
-		assert.Equal(t, EventTypeAdded, event.Type)
+		assert.Equal(t, types.EventTypeAdded, event.Type)
 	case <-time.After(100 * time.Millisecond):
 		t.Fatal("Second watcher should still receive events")
 	}
@@ -231,11 +232,11 @@ func TestComponentRegistry_EventTypes(t *testing.T) {
 	registry := NewComponentRegistry()
 	watcher := registry.Watch()
 
-	component := &ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:       "TestComponent",
 		FilePath:   "/path/to/component.templ",
 		Package:    "main",
-		Parameters: []ParameterInfo{},
+		Parameters: []types.ParameterInfo{},
 	}
 
 	// Test Add event
@@ -246,18 +247,18 @@ func TestComponentRegistry_EventTypes(t *testing.T) {
 
 	select {
 	case event := <-watcher:
-		assert.Equal(t, EventTypeAdded, event.Type)
+		assert.Equal(t, types.EventTypeAdded, event.Type)
 		assert.Equal(t, component, event.Component)
 	case <-time.After(100 * time.Millisecond):
 		t.Fatal("Expected ComponentAdded event")
 	}
 
 	// Test Update event
-	updatedComponent := &ComponentInfo{
+	updatedComponent := &types.ComponentInfo{
 		Name:     "TestComponent",
 		FilePath: "/path/to/component.templ",
 		Package:  "main",
-		Parameters: []ParameterInfo{
+		Parameters: []types.ParameterInfo{
 			{Name: "title", Type: "string"},
 		},
 	}
@@ -269,7 +270,7 @@ func TestComponentRegistry_EventTypes(t *testing.T) {
 
 	select {
 	case event := <-watcher:
-		assert.Equal(t, EventTypeUpdated, event.Type)
+		assert.Equal(t, types.EventTypeUpdated, event.Type)
 		assert.Equal(t, updatedComponent, event.Component)
 	case <-time.After(100 * time.Millisecond):
 		t.Fatal("Expected ComponentUpdated event")
@@ -283,7 +284,7 @@ func TestComponentRegistry_EventTypes(t *testing.T) {
 
 	select {
 	case event := <-watcher:
-		assert.Equal(t, EventTypeRemoved, event.Type)
+		assert.Equal(t, types.EventTypeRemoved, event.Type)
 		assert.Equal(t, "TestComponent", event.Component.Name)
 	case <-time.After(100 * time.Millisecond):
 		t.Fatal("Expected ComponentRemoved event")
@@ -298,11 +299,11 @@ func TestComponentRegistry_ConcurrentAccess(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		go func(index int) {
-			component := &ComponentInfo{
+			component := &types.ComponentInfo{
 				Name:       fmt.Sprintf("Component%d", index),
 				FilePath:   fmt.Sprintf("/path/to/component%d.templ", index),
 				Package:    "main",
-				Parameters: []ParameterInfo{},
+				Parameters: []types.ParameterInfo{},
 			}
 			registry.Register(component)
 			done <- true
@@ -333,11 +334,11 @@ func TestComponentRegistry_ConcurrentAccess(t *testing.T) {
 }
 
 func TestComponentInfo_Basic(t *testing.T) {
-	component := &ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:     "TestComponent",
 		FilePath: "/path/to/component.templ",
 		Package:  "main",
-		Parameters: []ParameterInfo{
+		Parameters: []types.ParameterInfo{
 			{Name: "title", Type: "string"},
 			{Name: "count", Type: "int"},
 		},
@@ -350,7 +351,7 @@ func TestComponentInfo_Basic(t *testing.T) {
 }
 
 func TestParameterInfo_Basic(t *testing.T) {
-	param := ParameterInfo{
+	param := types.ParameterInfo{
 		Name: "title",
 		Type: "string",
 	}

@@ -1,5 +1,7 @@
 package registry
 
+import "github.com/conneroisu/templar/internal/types"
+
 // GetDependencyAnalyzer returns the dependency analyzer
 func (r *ComponentRegistry) GetDependencyAnalyzer() *DependencyAnalyzer {
 	return r.dependencyAnalyzer
@@ -14,7 +16,7 @@ func (r *ComponentRegistry) UpdateAllDependencies() error {
 }
 
 // GetDependents returns components that depend on the given component
-func (r *ComponentRegistry) GetDependents(componentName string) []*ComponentInfo {
+func (r *ComponentRegistry) GetDependents(componentName string) []*types.ComponentInfo {
 	if r.dependencyAnalyzer == nil {
 		return nil
 	}

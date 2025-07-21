@@ -1,3 +1,4 @@
+//go:build property
 // +build property
 
 package scanner
@@ -12,6 +13,7 @@ import (
 	"time"
 
 	"github.com/conneroisu/templar/internal/registry"
+	"github.com/conneroisu/templar/internal/types"
 	"github.com/leanovate/gopter"
 	"github.com/leanovate/gopter/gen"
 	"github.com/leanovate/gopter/prop"
@@ -31,14 +33,14 @@ func TestScannerProperties(t *testing.T) {
 			// Create temporary test environment
 			tempDir := t.TempDir()
 			componentFile := filepath.Join(tempDir, componentName+".templ")
-			
+
 			// Create a valid component file
 			componentContent := fmt.Sprintf(`package components
 
 templ %s(text string) {
 	<div class="component">{ text }</div>
 }`, componentName)
-			
+
 			if err := os.WriteFile(componentFile, []byte(componentContent), 0644); err != nil {
 				return true // Skip on write error
 			}
@@ -46,7 +48,7 @@ templ %s(text string) {
 			// Create two scanners and scan the same directory
 			registry1 := registry.NewComponentRegistry()
 			scanner1 := NewComponentScanner(registry1)
-			
+
 			registry2 := registry.NewComponentRegistry()
 			scanner2 := NewComponentScanner(registry2)
 
@@ -160,7 +162,7 @@ templ %s(%s %s) {
 			tempDir := t.TempDir()
 			tempFile := filepath.Join(tempDir, "test.templ")
 			os.WriteFile(tempFile, []byte(template), 0644)
-			
+
 			err := scanner.ScanFile(tempFile)
 			components := registry.GetAll()
 			if err != nil {
@@ -214,7 +216,7 @@ func TestRegistryProperties(t *testing.T) {
 
 			// Verify registry consistency
 			allComponents := reg.GetAll()
-			
+
 			// Check that all components can be retrieved individually
 			for _, component := range allComponents {
 				retrieved, exists := reg.Get(component.Name)
@@ -234,7 +236,7 @@ func TestRegistryProperties(t *testing.T) {
 // RegistryOperation represents an operation on the registry for property testing
 type RegistryOperation struct {
 	Type          string
-	Component     *registry.ComponentInfo
+	Component     *types.ComponentInfo
 	ComponentName string
 }
 
@@ -244,7 +246,7 @@ func genRegistryOperations() gopter.Gen {
 		// Register operation
 		gen.Struct(reflect.TypeOf(RegistryOperation{}), map[string]gopter.Gen{
 			"Type": gen.Const("register"),
-			"Component": gen.PtrOf(gen.Struct(reflect.TypeOf(registry.ComponentInfo{}), map[string]gopter.Gen{
+			"Component": gen.PtrOf(gen.Struct(reflect.TypeOf(types.ComponentInfo{}), map[string]gopter.Gen{
 				"Name":     gen.RegexMatch(`^[A-Z][a-zA-Z0-9]*$`),
 				"Package":  gen.Const("components"),
 				"FilePath": gen.RegexMatch(`^[a-zA-Z0-9_/]+\.templ$`),
@@ -307,7 +309,7 @@ func TestScannerConcurrencyProperties(t *testing.T) {
 			}
 
 			tempDir := t.TempDir()
-			
+
 			// Create test component
 			componentFile := filepath.Join(tempDir, "TestComponent.templ")
 			content := `package components
@@ -325,12 +327,12 @@ templ TestComponent(text string) {
 				go func() {
 					registry := registry.NewComponentRegistry()
 					scanner := NewComponentScanner(registry)
-					
+
 					if err := scanner.ScanDirectory(tempDir); err != nil {
 						results <- 0
 						return
 					}
-					
+
 					components := registry.GetAll()
 					results <- len(components)
 				}()

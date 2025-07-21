@@ -5,12 +5,13 @@ import (
 	"sync"
 
 	"github.com/conneroisu/templar/internal/registry"
+	"github.com/conneroisu/templar/internal/types"
 )
 
 // RegistryIntegration provides plugin integration with the component registry
 type RegistryIntegration struct {
-	registry       *registry.ComponentRegistry
-	pluginManager  *EnhancedPluginManager
+	registry      *registry.ComponentRegistry
+	pluginManager *EnhancedPluginManager
 	mu            sync.RWMutex
 }
 
@@ -23,19 +24,19 @@ func NewRegistryIntegration(registry *registry.ComponentRegistry, pluginManager 
 }
 
 // ProcessComponent processes a component through plugins before registering
-func (ri *RegistryIntegration) ProcessComponent(ctx context.Context, component *registry.ComponentInfo) error {
+func (ri *RegistryIntegration) ProcessComponent(ctx context.Context, component *types.ComponentInfo) error {
 	ri.mu.RLock()
 	defer ri.mu.RUnlock()
-	
+
 	// Process through plugins first
 	processedComponent, err := ri.pluginManager.ProcessComponent(ctx, component)
 	if err != nil {
 		return err
 	}
-	
+
 	// Update the original component with processed data
 	*component = *processedComponent
-	
+
 	return nil
 }
 
@@ -58,7 +59,7 @@ func NewBuildPipelineAdapter() *BuildPipelineAdapter {
 func (bpa *BuildPipelineAdapter) RegisterPreBuildHook(plugin BuildPlugin) error {
 	bpa.mu.Lock()
 	defer bpa.mu.Unlock()
-	
+
 	bpa.preHooks = append(bpa.preHooks, plugin)
 	return nil
 }
@@ -67,7 +68,7 @@ func (bpa *BuildPipelineAdapter) RegisterPreBuildHook(plugin BuildPlugin) error 
 func (bpa *BuildPipelineAdapter) RegisterPostBuildHook(plugin BuildPlugin) error {
 	bpa.mu.Lock()
 	defer bpa.mu.Unlock()
-	
+
 	bpa.postHooks = append(bpa.postHooks, plugin)
 	return nil
 }
@@ -76,7 +77,7 @@ func (bpa *BuildPipelineAdapter) RegisterPostBuildHook(plugin BuildPlugin) error
 func (bpa *BuildPipelineAdapter) RemovePlugin(pluginName string) error {
 	bpa.mu.Lock()
 	defer bpa.mu.Unlock()
-	
+
 	// Remove from pre-hooks
 	filtered := make([]BuildPlugin, 0)
 	for _, plugin := range bpa.preHooks {
@@ -85,7 +86,7 @@ func (bpa *BuildPipelineAdapter) RemovePlugin(pluginName string) error {
 		}
 	}
 	bpa.preHooks = filtered
-	
+
 	// Remove from post-hooks
 	filtered = make([]BuildPlugin, 0)
 	for _, plugin := range bpa.postHooks {
@@ -94,35 +95,35 @@ func (bpa *BuildPipelineAdapter) RemovePlugin(pluginName string) error {
 		}
 	}
 	bpa.postHooks = filtered
-	
+
 	return nil
 }
 
 // ExecutePreBuildHooks executes all registered pre-build hooks
-func (bpa *BuildPipelineAdapter) ExecutePreBuildHooks(ctx context.Context, components []*registry.ComponentInfo) error {
+func (bpa *BuildPipelineAdapter) ExecutePreBuildHooks(ctx context.Context, components []*types.ComponentInfo) error {
 	bpa.mu.RLock()
 	defer bpa.mu.RUnlock()
-	
+
 	for _, plugin := range bpa.preHooks {
 		if err := plugin.PreBuild(ctx, components); err != nil {
 			return err
 		}
 	}
-	
+
 	return nil
 }
 
 // ExecutePostBuildHooks executes all registered post-build hooks
-func (bpa *BuildPipelineAdapter) ExecutePostBuildHooks(ctx context.Context, components []*registry.ComponentInfo, result BuildResult) error {
+func (bpa *BuildPipelineAdapter) ExecutePostBuildHooks(ctx context.Context, components []*types.ComponentInfo, result BuildResult) error {
 	bpa.mu.RLock()
 	defer bpa.mu.RUnlock()
-	
+
 	for _, plugin := range bpa.postHooks {
 		if err := plugin.PostBuild(ctx, components, result); err != nil {
 			return err
 		}
 	}
-	
+
 	return nil
 }
 
@@ -143,7 +144,7 @@ func NewServerAdapter() *ServerAdapter {
 func (sa *ServerAdapter) RegisterPlugin(plugin ServerPlugin) error {
 	sa.mu.Lock()
 	defer sa.mu.Unlock()
-	
+
 	sa.plugins[plugin.Name()] = plugin
 	return nil
 }
@@ -152,7 +153,7 @@ func (sa *ServerAdapter) RegisterPlugin(plugin ServerPlugin) error {
 func (sa *ServerAdapter) RemovePlugin(pluginName string) error {
 	sa.mu.Lock()
 	defer sa.mu.Unlock()
-	
+
 	delete(sa.plugins, pluginName)
 	return nil
 }
@@ -161,12 +162,12 @@ func (sa *ServerAdapter) RemovePlugin(pluginName string) error {
 func (sa *ServerAdapter) GetPlugins() map[string]ServerPlugin {
 	sa.mu.RLock()
 	defer sa.mu.RUnlock()
-	
+
 	result := make(map[string]ServerPlugin)
 	for name, plugin := range sa.plugins {
 		result[name] = plugin
 	}
-	
+
 	return result
 }
 
@@ -187,7 +188,7 @@ func NewWatcherAdapter() *WatcherAdapter {
 func (wa *WatcherAdapter) RegisterPlugin(plugin WatcherPlugin) error {
 	wa.mu.Lock()
 	defer wa.mu.Unlock()
-	
+
 	wa.plugins[plugin.Name()] = plugin
 	return nil
 }
@@ -196,7 +197,7 @@ func (wa *WatcherAdapter) RegisterPlugin(plugin WatcherPlugin) error {
 func (wa *WatcherAdapter) RemovePlugin(pluginName string) error {
 	wa.mu.Lock()
 	defer wa.mu.Unlock()
-	
+
 	delete(wa.plugins, pluginName)
 	return nil
 }
@@ -205,12 +206,12 @@ func (wa *WatcherAdapter) RemovePlugin(pluginName string) error {
 func (wa *WatcherAdapter) GetWatchPatterns() []string {
 	wa.mu.RLock()
 	defer wa.mu.RUnlock()
-	
+
 	var patterns []string
 	for _, plugin := range wa.plugins {
 		patterns = append(patterns, plugin.WatchPatterns()...)
 	}
-	
+
 	return patterns
 }
 
@@ -218,13 +219,13 @@ func (wa *WatcherAdapter) GetWatchPatterns() []string {
 func (wa *WatcherAdapter) HandleFileChange(ctx context.Context, event FileChangeEvent) error {
 	wa.mu.RLock()
 	defer wa.mu.RUnlock()
-	
+
 	for _, plugin := range wa.plugins {
 		if err := plugin.HandleFileChange(ctx, event); err != nil {
 			// Log error but continue with other plugins
 			// TODO: Add proper error logging
 		}
 	}
-	
+
 	return nil
 }

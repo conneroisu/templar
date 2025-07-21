@@ -82,7 +82,7 @@ var (
 
 func init() {
 	rootCmd.AddCommand(pluginsCmd)
-	
+
 	pluginsCmd.AddCommand(pluginsListCmd)
 	pluginsCmd.AddCommand(pluginsEnableCmd)
 	pluginsCmd.AddCommand(pluginsDisableCmd)
@@ -90,19 +90,19 @@ func init() {
 	pluginsCmd.AddCommand(pluginsHealthCmd)
 
 	// List command flags
-	pluginsListCmd.Flags().StringVar(&pluginsOutputFormat, "format", "table", 
+	pluginsListCmd.Flags().StringVar(&pluginsOutputFormat, "format", "table",
 		"Output format: table, json, yaml")
-	pluginsListCmd.Flags().BoolVar(&pluginsShowDisabled, "show-disabled", true, 
+	pluginsListCmd.Flags().BoolVar(&pluginsShowDisabled, "show-disabled", true,
 		"Show disabled plugins")
-	pluginsListCmd.Flags().BoolVar(&pluginsVerbose, "verbose", false, 
+	pluginsListCmd.Flags().BoolVar(&pluginsVerbose, "verbose", false,
 		"Show verbose plugin information")
 
 	// Info command flags
-	pluginsInfoCmd.Flags().StringVar(&pluginsOutputFormat, "format", "table", 
+	pluginsInfoCmd.Flags().StringVar(&pluginsOutputFormat, "format", "table",
 		"Output format: table, json, yaml")
 
 	// Health command flags
-	pluginsHealthCmd.Flags().StringVar(&pluginsOutputFormat, "format", "table", 
+	pluginsHealthCmd.Flags().StringVar(&pluginsOutputFormat, "format", "table",
 		"Output format: table, json, yaml")
 }
 
@@ -140,35 +140,35 @@ func runPluginsList(cmd *cobra.Command, args []string) error {
 
 func runPluginsEnable(cmd *cobra.Command, args []string) error {
 	pluginName := args[0]
-	
+
 	fmt.Printf("🔌 Enabling plugin: %s\n", pluginName)
-	
+
 	// This would typically involve:
 	// 1. Loading plugin configuration
 	// 2. Enabling the plugin in config
 	// 3. Starting the plugin if not already running
-	
+
 	fmt.Printf("✅ Plugin %s enabled successfully\n", pluginName)
 	return nil
 }
 
 func runPluginsDisable(cmd *cobra.Command, args []string) error {
 	pluginName := args[0]
-	
+
 	fmt.Printf("🔌 Disabling plugin: %s\n", pluginName)
-	
+
 	// This would typically involve:
 	// 1. Stopping the plugin gracefully
 	// 2. Updating configuration to disable
 	// 3. Cleaning up resources
-	
+
 	fmt.Printf("✅ Plugin %s disabled successfully\n", pluginName)
 	return nil
 }
 
 func runPluginsInfo(cmd *cobra.Command, args []string) error {
 	pluginName := args[0]
-	
+
 	pm := createPluginManager()
 	defer pm.Shutdown()
 
@@ -282,7 +282,7 @@ func displayPluginsTable(pluginInfos []plugins.PluginInfo) error {
 		}
 
 		healthIcon := getHealthIcon(info.Health.Status)
-		
+
 		description := info.Description
 		if len(description) > 50 {
 			description = description[:47] + "..."
@@ -340,18 +340,18 @@ func displayPluginInfo(plugin plugins.Plugin, info plugins.PluginInfo) error {
 	fmt.Printf("Description: %s\n", info.Description)
 	fmt.Printf("Status:      %s\n", getEnabledStatus(info.Enabled))
 	fmt.Printf("Health:      %s %s\n", getHealthIcon(info.Health.Status), string(info.Health.Status))
-	
+
 	if !info.Health.LastCheck.IsZero() {
 		fmt.Printf("Last Check:  %s\n", info.Health.LastCheck.Format(time.RFC3339))
 	}
-	
+
 	if info.Health.Error != "" {
 		fmt.Printf("Error:       %s\n", info.Health.Error)
 	}
 
 	// Show plugin capabilities
 	fmt.Printf("\nCapabilities:\n")
-	
+
 	if _, ok := plugin.(plugins.ComponentPlugin); ok {
 		fmt.Printf("  • Component Processing\n")
 	}

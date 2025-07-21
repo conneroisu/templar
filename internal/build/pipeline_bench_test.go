@@ -7,25 +7,26 @@ import (
 	"time"
 
 	"github.com/conneroisu/templar/internal/registry"
+	"github.com/conneroisu/templar/internal/types"
 )
 
 // createTestComponent creates a test component for benchmarking
-func createTestComponent(name string, complexity string) *registry.ComponentInfo {
-	var parameters []registry.ParameterInfo
+func createTestComponent(name string, complexity string) *types.ComponentInfo {
+	var parameters []types.ParameterInfo
 
 	switch complexity {
 	case "simple":
-		parameters = []registry.ParameterInfo{
+		parameters = []types.ParameterInfo{
 			{Name: "text", Type: "string"},
 		}
 	case "medium":
-		parameters = []registry.ParameterInfo{
+		parameters = []types.ParameterInfo{
 			{Name: "title", Type: "string"},
 			{Name: "content", Type: "string"},
 			{Name: "active", Type: "bool"},
 		}
 	case "complex":
-		parameters = []registry.ParameterInfo{
+		parameters = []types.ParameterInfo{
 			{Name: "id", Type: "int"},
 			{Name: "title", Type: "string"},
 			{Name: "content", Type: "string"},
@@ -36,7 +37,7 @@ func createTestComponent(name string, complexity string) *registry.ComponentInfo
 		}
 	}
 
-	return &registry.ComponentInfo{
+	return &types.ComponentInfo{
 		Name:       name,
 		Package:    "components",
 		FilePath:   fmt.Sprintf("components/%s.templ", name),
@@ -83,7 +84,7 @@ func BenchmarkBuildPipeline_ConcurrentBuilds(b *testing.B) {
 	defer pipeline.Stop()
 
 	// Create test components
-	components := make([]*registry.ComponentInfo, 100)
+	components := make([]*types.ComponentInfo, 100)
 	for i := 0; i < 100; i++ {
 		complexity := []string{"simple", "medium", "complex"}[i%3]
 		components[i] = createTestComponent(fmt.Sprintf("Component%d", i), complexity)
@@ -291,7 +292,7 @@ func benchmarkPipelineMemoryUsage(b *testing.B, workers int, componentCount int)
 		pipeline := NewBuildPipeline(workers, reg)
 
 		// Create and process components
-		components := make([]*registry.ComponentInfo, componentCount)
+		components := make([]*types.ComponentInfo, componentCount)
 		for j := 0; j < componentCount; j++ {
 			complexity := []string{"simple", "medium", "complex"}[j%3]
 			components[j] = createTestComponent(fmt.Sprintf("Component%d", j), complexity)
@@ -301,7 +302,7 @@ func benchmarkPipelineMemoryUsage(b *testing.B, workers int, componentCount int)
 		var wg sync.WaitGroup
 		for _, component := range components {
 			wg.Add(1)
-			go func(comp *registry.ComponentInfo) {
+			go func(comp *types.ComponentInfo) {
 				defer wg.Done()
 				pipeline.Build(comp)
 			}(component)

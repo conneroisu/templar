@@ -11,6 +11,7 @@ import (
 
 	"github.com/conneroisu/templar/internal/config"
 	"github.com/conneroisu/templar/internal/errors"
+	"github.com/conneroisu/templar/internal/monitoring"
 	"github.com/conneroisu/templar/internal/server"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -62,6 +63,20 @@ func runServe(cmd *cobra.Command, args []string) error {
 	// Set target files if specified
 	cfg.TargetFiles = args
 
+	// Initialize monitoring system
+	monitor, err := monitoring.SetupTemplarMonitoring("")
+	if err != nil {
+		log.Printf("Warning: Failed to initialize monitoring: %v", err)
+		// Continue without monitoring - non-fatal
+	} else {
+		log.Printf("Monitoring system initialized")
+		defer func() {
+			if shutdownErr := monitor.GracefulShutdown(context.Background()); shutdownErr != nil {
+				log.Printf("Error during monitoring shutdown: %v", shutdownErr)
+			}
+		}()
+	}
+
 	srv, err := server.New(cfg)
 	if err != nil {
 		// Check for server creation errors
@@ -89,6 +104,12 @@ func runServe(cmd *cobra.Command, args []string) error {
 	go func() {
 		<-sigChan
 		log.Println("Shutting down server...")
+
+		// Shutdown server gracefully
+		if shutdownErr := srv.Shutdown(ctx); shutdownErr != nil {
+			log.Printf("Error during server shutdown: %v", shutdownErr)
+		}
+
 		cancel()
 	}()
 
@@ -96,6 +117,11 @@ func runServe(cmd *cobra.Command, args []string) error {
 		fmt.Printf("Starting Templar server for %v at http://%s:%d\n", args, cfg.Server.Host, cfg.Server.Port)
 	} else {
 		fmt.Printf("Starting Templar server at http://%s:%d\n", cfg.Server.Host, cfg.Server.Port)
+	}
+
+	// Add monitoring information if available
+	if monitor != nil {
+		fmt.Printf("Monitoring dashboard: http://localhost:8081\n")
 	}
 
 	if err := srv.Start(ctx); err != nil {

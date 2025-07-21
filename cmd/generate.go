@@ -10,6 +10,7 @@ import (
 	"github.com/conneroisu/templar/internal/config"
 	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/scanner"
+	"github.com/conneroisu/templar/internal/types"
 	"github.com/spf13/cobra"
 )
 
@@ -94,12 +95,12 @@ func runGenerateCommand(cmd *cobra.Command, args []string) error {
 	}
 
 	// Determine which components to generate for
-	var componentsToGenerate []*registry.ComponentInfo
+	var componentsToGenerate []*types.ComponentInfo
 	if len(args) == 0 || generateAll {
 		componentsToGenerate = allComponents
 	} else {
 		// Generate for specific components
-		componentMap := make(map[string]*registry.ComponentInfo)
+		componentMap := make(map[string]*types.ComponentInfo)
 		for _, comp := range allComponents {
 			componentMap[comp.Name] = comp
 		}
@@ -150,7 +151,7 @@ func runGenerateCommand(cmd *cobra.Command, args []string) error {
 	return outputGenerateResults(summary)
 }
 
-func generateComponentCode(component *registry.ComponentInfo, outputDir, format string) GenerateResult {
+func generateComponentCode(component *types.ComponentInfo, outputDir, format string) GenerateResult {
 	result := GenerateResult{
 		Component: component.Name,
 		Files:     make([]string, 0),
@@ -186,7 +187,7 @@ func generateComponentCode(component *registry.ComponentInfo, outputDir, format 
 	return result
 }
 
-func generateGoCode(component *registry.ComponentInfo, outputDir string, result *GenerateResult) error {
+func generateGoCode(component *types.ComponentInfo, outputDir string, result *GenerateResult) error {
 	// For now, just create a placeholder Go file
 	fileName := fmt.Sprintf("%s_generated.go", strings.ToLower(component.Name))
 	filePath := filepath.Join(outputDir, fileName)
@@ -225,7 +226,7 @@ func Render%s(ctx context.Context, props %sProps) error {
 	return nil
 }
 
-func generateTypeDefinitions(component *registry.ComponentInfo, outputDir string, result *GenerateResult) error {
+func generateTypeDefinitions(component *types.ComponentInfo, outputDir string, result *GenerateResult) error {
 	fileName := fmt.Sprintf("%s_types.ts", strings.ToLower(component.Name))
 	filePath := filepath.Join(outputDir, fileName)
 
@@ -251,7 +252,7 @@ func generateTypeDefinitions(component *registry.ComponentInfo, outputDir string
 	return nil
 }
 
-func generateMockDataFile(component *registry.ComponentInfo, outputDir string, result *GenerateResult) error {
+func generateMockDataFile(component *types.ComponentInfo, outputDir string, result *GenerateResult) error {
 	fileName := fmt.Sprintf("%s_mock.json", strings.ToLower(component.Name))
 	filePath := filepath.Join(outputDir, fileName)
 
@@ -273,7 +274,7 @@ func generateMockDataFile(component *registry.ComponentInfo, outputDir string, r
 	return nil
 }
 
-func generateDocumentation(component *registry.ComponentInfo, outputDir string, result *GenerateResult) error {
+func generateDocumentation(component *types.ComponentInfo, outputDir string, result *GenerateResult) error {
 	fileName := fmt.Sprintf("%s.md", strings.ToLower(component.Name))
 	filePath := filepath.Join(outputDir, fileName)
 

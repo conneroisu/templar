@@ -1,14 +1,12 @@
 package testing
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"go/ast"
 	"go/format"
 	"go/parser"
 	"go/token"
-	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -35,23 +33,23 @@ type MutationTestResult struct {
 
 // MutationTestSummary provides aggregate results of mutation testing
 type MutationTestSummary struct {
-	TotalMutations   int                   `json:"total_mutations"`
-	KilledMutations  int                   `json:"killed_mutations"`
+	TotalMutations    int                  `json:"total_mutations"`
+	KilledMutations   int                  `json:"killed_mutations"`
 	SurvivedMutations int                  `json:"survived_mutations"`
-	MutationScore    float64               `json:"mutation_score"`
-	Duration         time.Duration         `json:"duration"`
-	Results          []MutationTestResult  `json:"results"`
-	WeakSpots        []WeakSpot           `json:"weak_spots"`
+	MutationScore     float64              `json:"mutation_score"`
+	Duration          time.Duration        `json:"duration"`
+	Results           []MutationTestResult `json:"results"`
+	WeakSpots         []WeakSpot           `json:"weak_spots"`
 }
 
 // WeakSpot represents code that survived mutations (indicating weak tests)
 type WeakSpot struct {
-	File        string  `json:"file"`
-	Line        int     `json:"line"`
-	Function    string  `json:"function"`
-	Mutations   int     `json:"mutations"`
-	Survivors   int     `json:"survivors"`
-	WeakScore   float64 `json:"weak_score"`
+	File        string   `json:"file"`
+	Line        int      `json:"line"`
+	Function    string   `json:"function"`
+	Mutations   int      `json:"mutations"`
+	Survivors   int      `json:"survivors"`
+	WeakScore   float64  `json:"weak_score"`
 	Suggestions []string `json:"suggestions"`
 }
 
@@ -80,7 +78,7 @@ func NewMutationTester(projectRoot string, packages []string) *MutationTester {
 // RunMutationTests performs mutation testing on the specified packages
 func (mt *MutationTester) RunMutationTests() (*MutationTestSummary, error) {
 	start := time.Now()
-	
+
 	summary := &MutationTestSummary{
 		Results:   make([]MutationTestResult, 0),
 		WeakSpots: make([]WeakSpot, 0),
@@ -148,14 +146,14 @@ func (mt *MutationTester) RunMutationTests() (*MutationTestSummary, error) {
 
 // Mutation represents a code mutation
 type Mutation struct {
-	ID          string
-	File        string
-	Line        int
-	Column      int
+	ID           string
+	File         string
+	Line         int
+	Column       int
 	OriginalCode string
 	MutatedCode  string
-	Operator    string
-	Description string
+	Operator     string
+	Description  string
 }
 
 // discoverGoFiles finds all Go files in the specified packages
@@ -164,7 +162,7 @@ func (mt *MutationTester) discoverGoFiles() ([]string, error) {
 
 	for _, pkg := range mt.Packages {
 		pkgPath := filepath.Join(mt.ProjectRoot, pkg)
-		
+
 		err := filepath.Walk(pkgPath, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
@@ -298,16 +296,16 @@ func (mt *MutationTester) createOperatorMutations(filename string, position toke
 	mutations := make([]Mutation, 0)
 
 	operatorMutations := map[token.Token][]token.Token{
-		token.EQL: {token.NEQ, token.LSS, token.GTR},
-		token.NEQ: {token.EQL, token.LSS, token.GTR},
-		token.LSS: {token.LEQ, token.GTR, token.GEQ, token.EQL},
-		token.LEQ: {token.LSS, token.GTR, token.GEQ},
-		token.GTR: {token.GEQ, token.LSS, token.LEQ, token.EQL},
-		token.GEQ: {token.GTR, token.LSS, token.LEQ},
-		token.ADD: {token.SUB, token.MUL, token.QUO},
-		token.SUB: {token.ADD, token.MUL, token.QUO},
-		token.MUL: {token.QUO, token.ADD, token.SUB},
-		token.QUO: {token.MUL, token.REM},
+		token.EQL:  {token.NEQ, token.LSS, token.GTR},
+		token.NEQ:  {token.EQL, token.LSS, token.GTR},
+		token.LSS:  {token.LEQ, token.GTR, token.GEQ, token.EQL},
+		token.LEQ:  {token.LSS, token.GTR, token.GEQ},
+		token.GTR:  {token.GEQ, token.LSS, token.LEQ, token.EQL},
+		token.GEQ:  {token.GTR, token.LSS, token.LEQ},
+		token.ADD:  {token.SUB, token.MUL, token.QUO},
+		token.SUB:  {token.ADD, token.MUL, token.QUO},
+		token.MUL:  {token.QUO, token.ADD, token.SUB},
+		token.QUO:  {token.MUL, token.REM},
 		token.LAND: {token.LOR},
 		token.LOR:  {token.LAND},
 	}
@@ -315,12 +313,12 @@ func (mt *MutationTester) createOperatorMutations(filename string, position toke
 	if replacements, exists := operatorMutations[expr.Op]; exists {
 		for _, replacement := range replacements {
 			*mutationID++
-			
+
 			// Create mutated expression
 			var leftBuf, rightBuf bytes.Buffer
 			format.Node(&leftBuf, token.NewFileSet(), expr.X)
 			format.Node(&rightBuf, token.NewFileSet(), expr.Y)
-			
+
 			mutatedCode := leftBuf.String() + " " + replacement.String() + " " + rightBuf.String()
 
 			mutation := Mutation{
@@ -402,7 +400,7 @@ func (mt *MutationTester) createStringMutations(filename string, position token.
 func (mt *MutationTester) runBaselineTests() error {
 	cmd := exec.Command("go", "test", "./...")
 	cmd.Dir = mt.ProjectRoot
-	
+
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("baseline tests failed: %s", string(output))
@@ -492,13 +490,13 @@ func (mt *MutationTester) restoreMutation(mutation Mutation) error {
 func (mt *MutationTester) runTests() (bool, string) {
 	cmd := exec.Command("go", "test", "-short", "./...")
 	cmd.Dir = mt.ProjectRoot
-	
+
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
 	err := cmd.Run()
-	
+
 	output := stdout.String() + stderr.String()
 	passed := err == nil
 
@@ -509,7 +507,7 @@ func (mt *MutationTester) runTests() (bool, string) {
 func (mt *MutationTester) analyzeWeakSpots(results []MutationTestResult) []WeakSpot {
 	// Group mutations by file and line
 	locationMap := make(map[string]map[int][]MutationTestResult)
-	
+
 	for _, result := range results {
 		if locationMap[result.File] == nil {
 			locationMap[result.File] = make(map[int][]MutationTestResult)
@@ -561,7 +559,7 @@ func (mt *MutationTester) extractFunctionName(filename string, line int) string 
 	}
 
 	lines := strings.Split(string(content), "\n")
-	
+
 	// Look backwards from the target line to find function declaration
 	funcPattern := regexp.MustCompile(`^func\s+(\w+)`)
 	for i := line - 1; i >= 0 && i < len(lines); i-- {
@@ -576,7 +574,7 @@ func (mt *MutationTester) extractFunctionName(filename string, line int) string 
 // generateTestSuggestions provides suggestions for improving test coverage
 func (mt *MutationTester) generateTestSuggestions(mutations []MutationTestResult) []string {
 	suggestions := make([]string, 0)
-	
+
 	operatorCounts := make(map[string]int)
 	for _, mutation := range mutations {
 		if !mutation.Killed {
@@ -585,7 +583,7 @@ func (mt *MutationTester) generateTestSuggestions(mutations []MutationTestResult
 	}
 
 	// Generate suggestions based on surviving mutation types
-	for operator, count := range operatorCounts {
+	for operator, _ := range operatorCounts {
 		switch {
 		case strings.Contains(operator, "NEGATE_CONDITION"):
 			suggestions = append(suggestions, "Add tests for both true and false branches of conditional statements")
@@ -606,7 +604,7 @@ func (mt *MutationTester) generateTestSuggestions(mutations []MutationTestResult
 // GenerateReport creates a detailed mutation testing report
 func (mt *MutationTester) GenerateReport(summary *MutationTestSummary, outputPath string) error {
 	var report strings.Builder
-	
+
 	// Header
 	report.WriteString("# Mutation Testing Report\n\n")
 	report.WriteString(fmt.Sprintf("**Generated:** %s\n", time.Now().Format("2006-01-02 15:04:05")))
@@ -639,13 +637,13 @@ func (mt *MutationTester) GenerateReport(summary *MutationTestSummary, outputPat
 	if len(summary.WeakSpots) > 0 {
 		report.WriteString("## Weak Spots\n\n")
 		report.WriteString("These areas have poor test coverage based on surviving mutations:\n\n")
-		
+
 		for _, spot := range summary.WeakSpots {
 			report.WriteString(fmt.Sprintf("### %s:%d (%s)\n", filepath.Base(spot.File), spot.Line, spot.Function))
 			report.WriteString(fmt.Sprintf("- **Mutations:** %d\n", spot.Mutations))
 			report.WriteString(fmt.Sprintf("- **Survivors:** %d\n", spot.Survivors))
 			report.WriteString(fmt.Sprintf("- **Weak Score:** %.1f%%\n", spot.WeakScore))
-			
+
 			if len(spot.Suggestions) > 0 {
 				report.WriteString("- **Suggestions:**\n")
 				for _, suggestion := range spot.Suggestions {

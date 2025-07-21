@@ -1,0 +1,135 @@
+name: Performance Regression Detection
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  performance:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Need full history for baseline comparison
+        
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.24'
+        
+    - name: Cache performance baselines
+      uses: actions/cache@v3
+      with:
+        path: .performance-baselines
+        key: performance-baselines-${{ runner.os }}-${{ github.base_ref || github.ref_name }}
+        restore-keys: |
+          performance-baselines-${{ runner.os }}-
+          
+    - name: Install dependencies
+      run: go mod download
+      
+    - name: Create baseline directory
+      run: mkdir -p .performance-baselines
+      
+    - name: Initialize baselines if needed
+      run: |
+        if [ ! "$(ls -A .performance-baselines)" ]; then
+          echo "Creating initial performance baselines..."
+          go run ./cmd/templar performance baseline create \
+            --packages="./internal/scanner,./internal/build,./internal/registry" \
+            --baseline-dir=.performance-baselines
+        else
+          echo "Using existing performance baselines"
+        fi
+      
+    - name: Run performance benchmarks and check for regressions
+      run: |
+        go run ./cmd/templar performance check \
+          --packages="./internal/scanner,./internal/build,./internal/registry,./internal/performance" \
+          --format=github \
+          --fail-on-critical \
+          --baseline-dir=.performance-baselines \
+          --output=performance-report.txt \
+          --slowness-threshold=1.15 \
+          --memory-threshold=1.20 \
+          --alloc-threshold=1.25 \
+          --min-samples=3
+          
+    - name: Upload performance report
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: performance-report-${{ github.run_number }}
+        path: performance-report.txt
+        
+    - name: Generate performance trend report
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      run: |
+        go run ./cmd/templar performance report \
+          --packages="./internal/scanner,./internal/build,./internal/registry" \
+          --format=json \
+          --baseline-dir=.performance-baselines \
+          --output=performance-trend.json
+          
+    - name: Upload performance trend data
+      uses: actions/upload-artifact@v3
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      with:
+        name: performance-trend-${{ github.run_number }}
+        path: performance-trend.json
+        
+    - name: Comment PR with performance results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          if (fs.existsSync('performance-report.txt')) {
+            const report = fs.readFileSync('performance-report.txt', 'utf8');
+            
+            // Create performance comment
+            const body = `## 🚀 Performance Report
+            
+            ${report}
+            
+            <details>
+            <summary>📊 How to interpret this report</summary>
+            
+            ### Regression Severity Levels:
+            - 🔴 **Critical**: >50% degradation - immediate action required
+            - 🟠 **Major**: 20-50% degradation - review and optimize
+            - 🟡 **Minor**: <20% degradation - monitor trends
+            
+            ### Thresholds:
+            - Performance: 15% slower threshold
+            - Memory: 20% increase threshold  
+            - Allocations: 25% increase threshold
+            
+            ### Actions:
+            - Critical regressions will fail the CI build
+            - Review recent changes if regressions are detected
+            - Use \`go run ./cmd/templar performance report\` locally for detailed analysis
+            
+            </details>`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+          }
+          
+    - name: Performance regression summary
+      if: always()
+      run: |
+        echo "📊 Performance check completed"
+        if [ -f performance-report.txt ]; then
+          echo "Report generated successfully"
+          wc -l performance-report.txt
+        else
+          echo "No performance report generated"
+        fi

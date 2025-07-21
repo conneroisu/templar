@@ -237,7 +237,7 @@ func TestFileWatcherProperties(t *testing.T) {
 
 			// Should not panic on invalid paths
 			addErr := watcher.AddPath(invalidPath)
-			
+
 			// Property: Should return error for invalid paths, not panic
 			return addErr != nil
 		},
@@ -293,7 +293,7 @@ func TestFileWatcherProperties(t *testing.T) {
 			for i := 0; i < goroutineCount; i++ {
 				go func(dir string) {
 					defer func() { done <- true }()
-					
+
 					// Create a file to trigger events
 					testFile := filepath.Join(dir, "concurrent.templ")
 					os.WriteFile(testFile, []byte("concurrent content"), 0644)
@@ -347,7 +347,7 @@ func TestWatcherEventOrderingProperties(t *testing.T) {
 
 			lastEventTime := time.Time{}
 			orderViolations := 0
-			
+
 			watcher.AddHandler(func(events []ChangeEvent) error {
 				for _, event := range events {
 					currentTime := event.ModTime

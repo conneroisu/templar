@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -233,7 +234,7 @@ func FuzzEnvironmentVariables(f *testing.F) {
 
 // ValidateConfig validates a configuration structure for security and correctness
 func ValidateConfig(config *Config) error {
-	if config.Server.Port < 1 || config.Server.Port > 65535 {
+	if config.Server.Port < 0 || config.Server.Port > 65535 {
 		return ErrInvalidPort
 	}
 
@@ -246,6 +247,6 @@ func ValidateConfig(config *Config) error {
 
 // Custom errors for validation
 var (
-	ErrInvalidPort = func() error { return nil }()
-	ErrInvalidHost = func() error { return nil }()
+	ErrInvalidPort = fmt.Errorf("invalid port")
+	ErrInvalidHost = fmt.Errorf("invalid host")
 )

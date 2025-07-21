@@ -3,74 +3,45 @@ package build
 import (
 	"sync"
 
-	"github.com/conneroisu/templar/internal/registry"
+	"github.com/conneroisu/templar/internal/types"
 )
 
-// ObjectPools provides memory pools for frequently allocated objects
+// ObjectPools provides memory pools for large objects only
+// Small struct allocations are faster without pooling
 type ObjectPools struct {
-	buildResults   sync.Pool
-	buildTasks     sync.Pool
-	outputBuffers  sync.Pool
-	stringBuilders sync.Pool
+	outputBuffers sync.Pool // Only pool large buffers
 }
 
 // NewObjectPools creates a new set of object pools
 func NewObjectPools() *ObjectPools {
 	return &ObjectPools{
-		buildResults: sync.Pool{
-			New: func() interface{} {
-				return &BuildResult{}
-			},
-		},
-		buildTasks: sync.Pool{
-			New: func() interface{} {
-				return &BuildTask{}
-			},
-		},
 		outputBuffers: sync.Pool{
 			New: func() interface{} {
 				// Pre-allocate 64KB buffer for typical templ output
 				return make([]byte, 0, 64*1024)
 			},
 		},
-		stringBuilders: sync.Pool{
-			New: func() interface{} {
-				// Pre-allocate 4KB for string building operations
-				buffer := make([]byte, 0, 4*1024)
-				return &buffer
-			},
-		},
 	}
 }
 
-// GetBuildResult gets a BuildResult from the pool
+// GetBuildResult creates a new BuildResult (no pooling for small structs)
 func (p *ObjectPools) GetBuildResult() *BuildResult {
-	result := p.buildResults.Get().(*BuildResult)
-	result.Reset() // Ensure clean state
-	return result
+	return &BuildResult{}
 }
 
-// PutBuildResult returns a BuildResult to the pool
+// PutBuildResult is a no-op (no pooling for small structs)
 func (p *ObjectPools) PutBuildResult(result *BuildResult) {
-	if result != nil {
-		result.Reset() // Clean state before returning to pool
-		p.buildResults.Put(result)
-	}
+	// No-op: Small struct allocation is faster than pooling overhead
 }
 
-// GetBuildTask gets a BuildTask from the pool
+// GetBuildTask creates a new BuildTask (no pooling for small structs)
 func (p *ObjectPools) GetBuildTask() *BuildTask {
-	task := p.buildTasks.Get().(*BuildTask)
-	task.Reset() // Ensure clean state
-	return task
+	return &BuildTask{}
 }
 
-// PutBuildTask returns a BuildTask to the pool
+// PutBuildTask is a no-op (no pooling for small structs)
 func (p *ObjectPools) PutBuildTask(task *BuildTask) {
-	if task != nil {
-		task.Reset() // Clean state before returning to pool
-		p.buildTasks.Put(task)
-	}
+	// No-op: Small struct allocation is faster than pooling overhead
 }
 
 // GetOutputBuffer gets a byte slice from the pool
@@ -89,39 +60,19 @@ func (p *ObjectPools) PutOutputBuffer(buffer []byte) {
 	}
 }
 
-// GetStringBuilder gets a string builder buffer from the pool
+// GetStringBuilder creates a new string builder buffer (no pooling)
 func (p *ObjectPools) GetStringBuilder() *[]byte {
-	buffer := p.stringBuilders.Get().(*[]byte)
-	*buffer = (*buffer)[:0] // Reset length but keep capacity
-	return buffer
+	buffer := make([]byte, 0, 4*1024) // 4KB initial capacity
+	return &buffer
 }
 
-// PutStringBuilder returns a string builder buffer to the pool
+// PutStringBuilder is a no-op (no pooling for small buffers)
 func (p *ObjectPools) PutStringBuilder(buffer *[]byte) {
-	if buffer != nil && cap(*buffer) <= 64*1024 { // 64KB max
-		p.stringBuilders.Put(buffer)
-	}
+	// No-op: Small buffer allocation is faster than pooling overhead
 }
 
-// Reset methods for pooled objects
-
-// Reset clears a BuildResult for reuse
-func (br *BuildResult) Reset() {
-	br.Component = nil
-	br.Output = nil
-	br.Error = nil
-	br.ParsedErrors = nil
-	br.Duration = 0
-	br.CacheHit = false
-	br.Hash = ""
-}
-
-// Reset clears a BuildTask for reuse
-func (bt *BuildTask) Reset() {
-	bt.Component = nil
-	bt.Priority = 0
-	bt.Timestamp = bt.Timestamp.Truncate(0) // Zero time
-}
+// Note: Reset methods removed since we're no longer pooling small structs
+// Direct allocation is faster than pooling overhead for small objects
 
 // WorkerPool manages a pool of build workers with their contexts
 type WorkerPool struct {
@@ -246,7 +197,7 @@ func NewSlicePools() *SlicePools {
 		componentInfoSlices: sync.Pool{
 			New: func() interface{} {
 				// Pre-allocate slice for typical component count
-				return make([]*registry.ComponentInfo, 0, 50)
+				return make([]*types.ComponentInfo, 0, 50)
 			},
 		},
 		stringSlices: sync.Pool{
@@ -265,13 +216,13 @@ func NewSlicePools() *SlicePools {
 }
 
 // GetComponentInfoSlice gets a slice of ComponentInfo pointers from the pool
-func (sp *SlicePools) GetComponentInfoSlice() []*registry.ComponentInfo {
-	slice := sp.componentInfoSlices.Get().([]*registry.ComponentInfo)
+func (sp *SlicePools) GetComponentInfoSlice() []*types.ComponentInfo {
+	slice := sp.componentInfoSlices.Get().([]*types.ComponentInfo)
 	return slice[:0] // Reset length but keep capacity
 }
 
 // PutComponentInfoSlice returns a slice to the pool
-func (sp *SlicePools) PutComponentInfoSlice(slice []*registry.ComponentInfo) {
+func (sp *SlicePools) PutComponentInfoSlice(slice []*types.ComponentInfo) {
 	if slice != nil && cap(slice) <= 1000 { // Reasonable limit
 		sp.componentInfoSlices.Put(slice[:0])
 	}

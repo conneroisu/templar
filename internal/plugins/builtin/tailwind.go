@@ -3,13 +3,15 @@ package builtin
 import (
 	"context"
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/conneroisu/templar/internal/plugins"
-	"github.com/conneroisu/templar/internal/registry"
+	"github.com/conneroisu/templar/internal/types"
+	"github.com/conneroisu/templar/internal/validation"
 )
 
 // TailwindPlugin provides Tailwind CSS integration for Templar components
@@ -45,7 +47,7 @@ func (tp *TailwindPlugin) Description() string {
 // Initialize initializes the Tailwind plugin
 func (tp *TailwindPlugin) Initialize(ctx context.Context, config plugins.PluginConfig) error {
 	tp.config = config
-	
+
 	// Check if Tailwind CLI is available
 	tailwindPath, err := exec.LookPath("tailwindcss")
 	if err != nil {
@@ -58,7 +60,7 @@ func (tp *TailwindPlugin) Initialize(ctx context.Context, config plugins.PluginC
 	} else {
 		tp.tailwindPath = tailwindPath
 	}
-	
+
 	// Look for Tailwind config
 	configPaths := []string{
 		"tailwind.config.js",
@@ -66,14 +68,18 @@ func (tp *TailwindPlugin) Initialize(ctx context.Context, config plugins.PluginC
 		"tailwind.config.cjs",
 		"tailwind.config.mjs",
 	}
-	
+
 	for _, path := range configPaths {
-		if _, err := exec.Command("test", "-f", path).Output(); err == nil {
+		// Validate path before accessing
+		if err := validation.ValidatePath(path); err != nil {
+			continue // Skip invalid paths
+		}
+		if _, err := os.Stat(path); err == nil {
 			tp.configPath = path
 			break
 		}
 	}
-	
+
 	return nil
 }
 
@@ -87,7 +93,7 @@ func (tp *TailwindPlugin) Shutdown(ctx context.Context) error {
 func (tp *TailwindPlugin) Health() plugins.PluginHealth {
 	status := plugins.HealthStatusHealthy
 	var errorMsg string
-	
+
 	if !tp.enabled {
 		status = plugins.HealthStatusUnhealthy
 		errorMsg = "plugin disabled"
@@ -95,7 +101,7 @@ func (tp *TailwindPlugin) Health() plugins.PluginHealth {
 		status = plugins.HealthStatusUnhealthy
 		errorMsg = "tailwindcss not found"
 	}
-	
+
 	return plugins.PluginHealth{
 		Status:    status,
 		LastCheck: time.Now(),
@@ -108,25 +114,25 @@ func (tp *TailwindPlugin) Health() plugins.PluginHealth {
 }
 
 // HandleComponent processes components to extract Tailwind classes
-func (tp *TailwindPlugin) HandleComponent(ctx context.Context, component *registry.ComponentInfo) (*registry.ComponentInfo, error) {
+func (tp *TailwindPlugin) HandleComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error) {
 	if !tp.enabled {
 		return component, nil
 	}
-	
+
 	// Read component file to extract Tailwind classes
 	classes, err := tp.extractTailwindClasses(component.FilePath)
 	if err != nil {
 		return component, fmt.Errorf("failed to extract Tailwind classes: %w", err)
 	}
-	
+
 	// Add metadata about Tailwind classes
 	if component.Metadata == nil {
 		component.Metadata = make(map[string]interface{})
 	}
-	
+
 	component.Metadata["tailwind_classes"] = classes
 	component.Metadata["tailwind_processed"] = true
-	
+
 	return component, nil
 }
 
@@ -141,17 +147,17 @@ func (tp *TailwindPlugin) Priority() int {
 }
 
 // PreBuild is called before the build process starts
-func (tp *TailwindPlugin) PreBuild(ctx context.Context, components []*registry.ComponentInfo) error {
+func (tp *TailwindPlugin) PreBuild(ctx context.Context, components []*types.ComponentInfo) error {
 	// Nothing to do before build for Tailwind
 	return nil
 }
 
 // PostBuild generates CSS after components are built
-func (tp *TailwindPlugin) PostBuild(ctx context.Context, components []*registry.ComponentInfo, buildResult plugins.BuildResult) error {
+func (tp *TailwindPlugin) PostBuild(ctx context.Context, components []*types.ComponentInfo, buildResult plugins.BuildResult) error {
 	if !tp.enabled || !buildResult.Success {
 		return nil
 	}
-	
+
 	// Collect all Tailwind classes from processed components
 	allClasses := make(map[string]bool)
 	for _, component := range components {
@@ -161,11 +167,11 @@ func (tp *TailwindPlugin) PostBuild(ctx context.Context, components []*registry.
 			}
 		}
 	}
-	
+
 	if len(allClasses) == 0 {
 		return nil // No Tailwind classes found
 	}
-	
+
 	// Generate CSS using Tailwind CLI
 	return tp.generateCSS(ctx, allClasses)
 }
@@ -180,15 +186,20 @@ func (tp *TailwindPlugin) TransformBuildCommand(ctx context.Context, command []s
 func (tp *TailwindPlugin) extractTailwindClasses(filePath string) ([]string, error) {
 	// This is a simplified implementation
 	// In practice, you'd want a more sophisticated parser
-	
-	content, err := exec.Command("cat", filePath).Output()
+
+	// Validate file path for security
+	if err := validation.ValidatePath(filePath); err != nil {
+		return nil, fmt.Errorf("invalid file path: %w", err)
+	}
+
+	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var classes []string
 	lines := strings.Split(string(content), "\n")
-	
+
 	for _, line := range lines {
 		// Look for class attributes
 		if strings.Contains(line, "class=") {
@@ -201,7 +212,7 @@ func (tp *TailwindPlugin) extractTailwindClasses(filePath string) ([]string, err
 				if end != -1 {
 					classStr := line[start : start+end]
 					classNames := strings.Fields(classStr)
-					
+
 					// Filter for Tailwind-like classes
 					for _, className := range classNames {
 						if tp.isTailwindClass(className) {
@@ -212,7 +223,7 @@ func (tp *TailwindPlugin) extractTailwindClasses(filePath string) ([]string, err
 			}
 		}
 	}
-	
+
 	return tp.deduplicate(classes), nil
 }
 
@@ -229,13 +240,13 @@ func (tp *TailwindPlugin) isTailwindClass(className string) bool {
 		"brightness-", "contrast-", "grayscale", "hue-rotate-",
 		"invert", "saturate-", "sepia", "backdrop-",
 	}
-	
+
 	for _, prefix := range tailwindPrefixes {
 		if strings.HasPrefix(className, prefix) {
 			return true
 		}
 	}
-	
+
 	// Check for responsive prefixes
 	responsivePrefixes := []string{"sm:", "md:", "lg:", "xl:", "2xl:"}
 	for _, prefix := range responsivePrefixes {
@@ -245,7 +256,7 @@ func (tp *TailwindPlugin) isTailwindClass(className string) bool {
 			return tp.isTailwindClass(rest)
 		}
 	}
-	
+
 	// Check for state prefixes
 	statePrefixes := []string{"hover:", "focus:", "active:", "group-hover:", "group-focus:"}
 	for _, prefix := range statePrefixes {
@@ -254,48 +265,142 @@ func (tp *TailwindPlugin) isTailwindClass(className string) bool {
 			return tp.isTailwindClass(rest)
 		}
 	}
-	
+
 	return false
+}
+
+// Note: validatePath function has been replaced with centralized validation
+// in the validation package.
+
+// sanitizeInput ensures input content is safe for file operations
+func sanitizeInput(input string) string {
+	// Remove any shell metacharacters and dangerous sequences
+	dangerous := []string{";", "&", "|", "`", "$", "(", ")", "<", ">", "\\", "'", "\""}
+	sanitized := input
+	for _, char := range dangerous {
+		sanitized = strings.ReplaceAll(sanitized, char, "")
+	}
+
+	// Remove dangerous command patterns
+	dangerousPatterns := []string{
+		"rm -rf", "rm ", "cat ", "echo ", "ls ", "mkdir ", "rmdir ",
+		"/bin/", "/usr/bin/", "/sbin/", "/usr/sbin/", "/etc/", "/dev/",
+		"sudo ", "su ", "chmod ", "chown ", "wget ", "curl ", "nc ",
+		"netcat ", "bash ", "sh ", "/tmp/", "/var/", "passwd", "shadow",
+	}
+
+	for _, pattern := range dangerousPatterns {
+		sanitized = strings.ReplaceAll(sanitized, pattern, "")
+	}
+
+	return sanitized
 }
 
 // generateCSS generates CSS using Tailwind CLI
 func (tp *TailwindPlugin) generateCSS(ctx context.Context, classes map[string]bool) error {
-	// Create temporary input CSS file
-	inputCSS := "@tailwind base;\n@tailwind components;\n@tailwind utilities;\n"
-	
-	// Write temporary file
-	tempFile := filepath.Join("/tmp", "templar-tailwind-input.css")
-	if err := exec.Command("sh", "-c", fmt.Sprintf("echo '%s' > %s", inputCSS, tempFile)).Run(); err != nil {
+	// Create temporary input CSS file with sanitized content
+	baseCSS := "@tailwind base;\n@tailwind components;\n@tailwind utilities;\n"
+	inputCSS := sanitizeInput(baseCSS)
+
+	// Create secure temporary file using os.CreateTemp
+	tempFile, err := os.CreateTemp("", "templar-tailwind-input-*.css")
+	if err != nil {
 		return fmt.Errorf("failed to create temporary CSS file: %w", err)
 	}
-	
+	defer tempFile.Close()
+
+	tempFilePath := tempFile.Name()
+
+	// Write content to temporary file
+	if _, err := tempFile.Write([]byte(inputCSS)); err != nil {
+		os.Remove(tempFilePath) // Cleanup on error
+		return fmt.Errorf("failed to write to temporary CSS file: %w", err)
+	}
+
 	// Build Tailwind command
 	var cmd *exec.Cmd
 	outputFile := "dist/styles.css"
-	
+
+	// Validate output file path
+	if err := validation.ValidatePath(outputFile); err != nil {
+		return fmt.Errorf("invalid output file path: %w", err)
+	}
+
+	// Define allowed commands for security
+	allowedCommands := map[string]bool{
+		"npx":         true,
+		"tailwindcss": true,
+	}
+
+	// Validate temp file path
+	if err := validation.ValidatePath(tempFilePath); err != nil {
+		os.Remove(tempFilePath) // Cleanup temp file
+		return fmt.Errorf("invalid temp file path: %w", err)
+	}
+
 	if strings.Contains(tp.tailwindPath, "npx") {
-		args := []string{"npx", "tailwindcss", "-i", tempFile, "-o", outputFile}
+		// Validate commands
+		if err := validation.ValidateCommand("npx", allowedCommands); err != nil {
+			os.Remove(tempFilePath) // Cleanup temp file
+			return fmt.Errorf("command validation failed: %w", err)
+		}
+		if err := validation.ValidateCommand("tailwindcss", allowedCommands); err != nil {
+			os.Remove(tempFilePath) // Cleanup temp file
+			return fmt.Errorf("command validation failed: %w", err)
+		}
+
+		args := []string{"npx", "tailwindcss", "-i", tempFilePath, "-o", outputFile}
 		if tp.configPath != "" {
+			// Validate config path for security before use
+			if err := validation.ValidatePath(tp.configPath); err != nil {
+				os.Remove(tempFilePath) // Cleanup temp file
+				return fmt.Errorf("invalid config path: %w", err)
+			}
+			if err := validation.ValidateArgument(tp.configPath); err != nil {
+				os.Remove(tempFilePath) // Cleanup temp file
+				return fmt.Errorf("invalid config path argument: %w", err)
+			}
 			args = append(args, "--config", tp.configPath)
 		}
 		cmd = exec.CommandContext(ctx, args[0], args[1:]...)
 	} else {
-		args := []string{"-i", tempFile, "-o", outputFile}
+		// Validate tailwind command path
+		tailwindCmd := filepath.Base(tp.tailwindPath)
+		if err := validation.ValidateCommand(tailwindCmd, allowedCommands); err != nil {
+			os.Remove(tempFilePath) // Cleanup temp file
+			return fmt.Errorf("command validation failed: %w", err)
+		}
+
+		args := []string{"-i", tempFilePath, "-o", outputFile}
 		if tp.configPath != "" {
+			// Validate config path for security before use
+			if err := validation.ValidatePath(tp.configPath); err != nil {
+				os.Remove(tempFilePath) // Cleanup temp file
+				return fmt.Errorf("invalid config path: %w", err)
+			}
+			if err := validation.ValidateArgument(tp.configPath); err != nil {
+				os.Remove(tempFilePath) // Cleanup temp file
+				return fmt.Errorf("invalid config path argument: %w", err)
+			}
 			args = append(args, "--config", tp.configPath)
 		}
 		cmd = exec.CommandContext(ctx, tp.tailwindPath, args...)
 	}
-	
+
 	// Run Tailwind CSS generation
 	output, err := cmd.CombinedOutput()
 	if err != nil {
+		// Clean up temporary file on error
+		os.Remove(tempFilePath)
 		return fmt.Errorf("tailwind CSS generation failed: %w\nOutput: %s", err, string(output))
 	}
-	
-	// Clean up temporary file
-	exec.Command("rm", tempFile).Run()
-	
+
+	// Clean up temporary file securely using os.Remove
+	if err := os.Remove(tempFilePath); err != nil {
+		// Log but don't fail the operation for cleanup errors
+		fmt.Printf("Warning: failed to remove temporary file %s: %v\n", tempFilePath, err)
+	}
+
 	return nil
 }
 
@@ -303,14 +408,14 @@ func (tp *TailwindPlugin) generateCSS(ctx context.Context, classes map[string]bo
 func (tp *TailwindPlugin) deduplicate(slice []string) []string {
 	seen := make(map[string]bool)
 	var result []string
-	
+
 	for _, item := range slice {
 		if !seen[item] {
 			seen[item] = true
 			result = append(result, item)
 		}
 	}
-	
+
 	return result
 }
 

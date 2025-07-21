@@ -83,18 +83,18 @@ Available metric types:
 
 // Command flags
 var (
-	monitorInterval      time.Duration
-	monitorOutput        string
-	monitorSince         string
-	monitorFormat        string
-	monitorAutoOptimize  bool
-	monitorThreshold     float64
-	monitorFollowMode    bool
+	monitorInterval     time.Duration
+	monitorOutput       string
+	monitorSince        string
+	monitorFormat       string
+	monitorAutoOptimize bool
+	monitorThreshold    float64
+	monitorFollowMode   bool
 )
 
 func init() {
 	rootCmd.AddCommand(monitorCmd)
-	
+
 	monitorCmd.AddCommand(monitorStartCmd)
 	monitorCmd.AddCommand(monitorStatusCmd)
 	monitorCmd.AddCommand(monitorReportCmd)
@@ -102,31 +102,31 @@ func init() {
 	monitorCmd.AddCommand(monitorMetricsCmd)
 
 	// Start command flags
-	monitorStartCmd.Flags().DurationVar(&monitorInterval, "interval", 30*time.Second, 
+	monitorStartCmd.Flags().DurationVar(&monitorInterval, "interval", 30*time.Second,
 		"Monitoring interval")
-	monitorStartCmd.Flags().BoolVar(&monitorAutoOptimize, "auto-optimize", true, 
+	monitorStartCmd.Flags().BoolVar(&monitorAutoOptimize, "auto-optimize", true,
 		"Enable automatic optimization recommendations")
-	monitorStartCmd.Flags().BoolVar(&monitorFollowMode, "follow", false, 
+	monitorStartCmd.Flags().BoolVar(&monitorFollowMode, "follow", false,
 		"Follow mode - keep monitoring and displaying updates")
 
 	// Report command flags
-	monitorReportCmd.Flags().StringVar(&monitorSince, "since", "1h", 
+	monitorReportCmd.Flags().StringVar(&monitorSince, "since", "1h",
 		"Time period for report (e.g., 1h, 24h, 7d)")
-	monitorReportCmd.Flags().StringVar(&monitorOutput, "output", "", 
+	monitorReportCmd.Flags().StringVar(&monitorOutput, "output", "",
 		"Output file for report (default: stdout)")
-	monitorReportCmd.Flags().StringVar(&monitorFormat, "format", "table", 
+	monitorReportCmd.Flags().StringVar(&monitorFormat, "format", "table",
 		"Output format: table, json, yaml")
 
 	// Metrics command flags
-	monitorMetricsCmd.Flags().StringVar(&monitorSince, "since", "1h", 
+	monitorMetricsCmd.Flags().StringVar(&monitorSince, "since", "1h",
 		"Time period for metrics")
-	monitorMetricsCmd.Flags().StringVar(&monitorFormat, "format", "table", 
+	monitorMetricsCmd.Flags().StringVar(&monitorFormat, "format", "table",
 		"Output format: table, json, yaml")
-	
+
 	// Recommendations command flags
-	monitorRecommendationsCmd.Flags().StringVar(&monitorFormat, "format", "table", 
+	monitorRecommendationsCmd.Flags().StringVar(&monitorFormat, "format", "table",
 		"Output format: table, json, yaml")
-	monitorRecommendationsCmd.Flags().Float64Var(&monitorThreshold, "priority-threshold", 0, 
+	monitorRecommendationsCmd.Flags().Float64Var(&monitorThreshold, "priority-threshold", 0,
 		"Minimum priority threshold for recommendations")
 }
 
@@ -145,7 +145,7 @@ func runMonitorStart(cmd *cobra.Command, args []string) error {
 	defer monitor.Stop()
 
 	fmt.Printf("🔍 Performance monitoring started (interval: %v)\n", monitorInterval)
-	
+
 	if monitorAutoOptimize {
 		fmt.Println("✨ Auto-optimization enabled")
 	}
@@ -161,7 +161,7 @@ func runMonitorStart(cmd *cobra.Command, args []string) error {
 
 func runFollowMode(monitor *performance.PerformanceMonitor, integration *performance.PerformanceIntegration) error {
 	fmt.Println("📈 Following performance metrics (Ctrl+C to stop)...")
-	
+
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
@@ -188,13 +188,13 @@ func runFollowMode(monitor *performance.PerformanceMonitor, integration *perform
 func runMonitorStatus(cmd *cobra.Command, args []string) error {
 	// For this demo, we'll create a temporary monitor to show status
 	monitor := performance.NewPerformanceMonitor(time.Minute)
-	
+
 	fmt.Println("📊 Performance Monitor Status")
 	fmt.Println("==============================")
-	
+
 	// Show recent metrics
 	displayCurrentMetrics(monitor)
-	
+
 	return nil
 }
 
@@ -205,14 +205,14 @@ func runMonitorReport(cmd *cobra.Command, args []string) error {
 	}
 
 	since := time.Now().Add(-duration)
-	
+
 	// Create monitor and integration
 	monitor := performance.NewPerformanceMonitor(time.Minute)
 	integration := performance.NewPerformanceIntegration(monitor)
-	
+
 	// Generate report
 	report := integration.GetPerformanceReport(since)
-	
+
 	// Output report
 	switch monitorFormat {
 	case "json":
@@ -226,14 +226,14 @@ func runMonitorReport(cmd *cobra.Command, args []string) error {
 
 func runMonitorRecommendations(cmd *cobra.Command, args []string) error {
 	monitor := performance.NewPerformanceMonitor(time.Minute)
-	
+
 	fmt.Println("💡 Performance Recommendations")
 	fmt.Println("===============================")
-	
+
 	// Try to get recommendations (with timeout)
 	timeout := time.After(1 * time.Second)
 	recommendations := []performance.Recommendation{}
-	
+
 	for len(recommendations) < 10 {
 		select {
 		case rec := <-monitor.GetRecommendations():
@@ -281,7 +281,7 @@ func runMonitorMetrics(cmd *cobra.Command, args []string) error {
 	}
 
 	metrics := monitor.GetMetrics(metricType, since)
-	
+
 	switch monitorFormat {
 	case "json":
 		return outputJSON(metrics, monitorOutput)
@@ -295,23 +295,23 @@ func runMonitorMetrics(cmd *cobra.Command, args []string) error {
 // Display functions
 func displayCurrentMetrics(monitor *performance.PerformanceMonitor) {
 	fmt.Printf("\r📈 [%s] ", time.Now().Format("15:04:05"))
-	
+
 	// Get recent aggregates
 	memAgg := monitor.GetAggregate(performance.MetricTypeMemoryUsage)
 	if memAgg != nil {
 		fmt.Printf("Mem: %.1fMB ", memAgg.Avg/(1024*1024))
 	}
-	
+
 	goroutineAgg := monitor.GetAggregate(performance.MetricTypeGoroutines)
 	if goroutineAgg != nil {
 		fmt.Printf("Goroutines: %.0f ", goroutineAgg.Avg)
 	}
-	
+
 	buildAgg := monitor.GetAggregate(performance.MetricTypeBuildTime)
 	if buildAgg != nil {
 		fmt.Printf("Build: %.0fms ", buildAgg.Avg)
 	}
-	
+
 	fmt.Print("                    ") // Clear any remaining characters
 }
 
@@ -324,15 +324,15 @@ func displayRecommendation(rec performance.Recommendation) {
 func displayRecommendationsTable(recommendations []performance.Recommendation) error {
 	fmt.Printf("%-10s %-20s %-40s %-15s\n", "Priority", "Type", "Description", "Confidence")
 	fmt.Println(strings.Repeat("-", 90))
-	
+
 	for _, rec := range recommendations {
-		fmt.Printf("%-10d %-20s %-40s %-15.1f%%\n", 
-			rec.Priority, 
-			rec.Type, 
+		fmt.Printf("%-10d %-20s %-40s %-15.1f%%\n",
+			rec.Priority,
+			rec.Type,
 			truncateString(rec.Description, 40),
 			rec.Confidence*100)
 	}
-	
+
 	return nil
 }
 
@@ -345,7 +345,7 @@ func displayMetricsTable(metrics []performance.Metric, metricType performance.Me
 	fmt.Printf("Metrics for %s (showing last %d entries)\n", metricType, len(metrics))
 	fmt.Printf("%-20s %-15s %-10s %-30s\n", "Timestamp", "Value", "Unit", "Labels")
 	fmt.Println(strings.Repeat("-", 80))
-	
+
 	for _, metric := range metrics {
 		labels := ""
 		for k, v := range metric.Labels {
@@ -354,41 +354,41 @@ func displayMetricsTable(metrics []performance.Metric, metricType performance.Me
 			}
 			labels += fmt.Sprintf("%s=%s", k, v)
 		}
-		
-		fmt.Printf("%-20s %-15.2f %-10s %-30s\n", 
-			metric.Timestamp.Format("15:04:05"), 
-			metric.Value, 
+
+		fmt.Printf("%-20s %-15.2f %-10s %-30s\n",
+			metric.Timestamp.Format("15:04:05"),
+			metric.Value,
 			metric.Unit,
 			truncateString(labels, 30))
 	}
-	
+
 	return nil
 }
 
 func outputReportTable(report performance.PerformanceReport, output string) error {
 	content := fmt.Sprintf("Performance Report\n")
 	content += fmt.Sprintf("Generated: %s\n", report.GeneratedAt.Format(time.RFC3339))
-	content += fmt.Sprintf("Time Range: %s to %s\n\n", 
+	content += fmt.Sprintf("Time Range: %s to %s\n\n",
 		report.TimeRange.Start.Format(time.RFC3339),
 		report.TimeRange.End.Format(time.RFC3339))
-	
+
 	content += "Metrics Summary:\n"
-	content += fmt.Sprintf("%-20s %-10s %-15s %-15s %-15s %-15s\n", 
+	content += fmt.Sprintf("%-20s %-10s %-15s %-15s %-15s %-15s\n",
 		"Type", "Count", "Recent", "Average", "P95", "P99")
 	content += strings.Repeat("-", 100) + "\n"
-	
+
 	for metricType, summary := range report.Metrics {
 		content += fmt.Sprintf("%-20s %-10d %-15.2f %-15.2f %-15.2f %-15.2f\n",
-			metricType, summary.Count, summary.RecentValue, 
+			metricType, summary.Count, summary.RecentValue,
 			summary.Average, summary.P95, summary.P99)
 	}
-	
+
 	content += fmt.Sprintf("\nRecommendations: %d active\n", len(report.Recommendations))
-	
+
 	if output != "" {
 		return os.WriteFile(output, []byte(content), 0644)
 	}
-	
+
 	fmt.Print(content)
 	return nil
 }
@@ -398,11 +398,11 @@ func outputJSON(data interface{}, output string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	if output != "" {
 		return os.WriteFile(output, jsonData, 0644)
 	}
-	
+
 	fmt.Println(string(jsonData))
 	return nil
 }
@@ -419,15 +419,15 @@ func parseDuration(s string) (time.Duration, error) {
 	if len(s) < 2 {
 		return 0, fmt.Errorf("invalid duration format")
 	}
-	
+
 	unit := s[len(s)-1:]
 	value := s[:len(s)-1]
-	
+
 	v, err := strconv.Atoi(value)
 	if err != nil {
 		return time.ParseDuration(s) // Fall back to Go's parser
 	}
-	
+
 	switch unit {
 	case "s":
 		return time.Duration(v) * time.Second, nil
@@ -448,4 +448,3 @@ func truncateString(s string, maxLen int) string {
 	}
 	return s[:maxLen-3] + "..."
 }
-

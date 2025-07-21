@@ -1,0 +1,25 @@
+package components
+
+// Navigation renders a responsive navigation bar
+templ Navigation(brand string, links []NavLink) {
+	<nav class="navigation">
+		<div class="nav-container">
+			<div class="nav-brand">
+				<a href="/">{ brand }</a>
+			</div>
+			<div class="nav-menu">
+				for _, link := range links {
+					<a href={ link.URL } class={ "nav-link", templ.KV("nav-link-active", link.Active) }>
+						{ link.Text }
+					</a>
+				}
+			</div>
+		</div>
+	</nav>
+}
+
+type NavLink struct {
+	Text   string
+	URL    string
+	Active bool
+}

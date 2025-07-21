@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/conneroisu/templar/internal/registry"
+	"github.com/conneroisu/templar/internal/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -71,11 +72,11 @@ func TestBuildPipelineBuild(t *testing.T) {
 	bp.Start(ctx)
 
 	// Create a test component
-	component := &registry.ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:       "TestComponent",
 		FilePath:   "test.templ",
 		Package:    "test",
-		Parameters: []registry.ParameterInfo{},
+		Parameters: []types.ParameterInfo{},
 	}
 
 	// Build the component
@@ -110,11 +111,11 @@ func TestBuildPipelineCallback(t *testing.T) {
 	})
 
 	// Create a test component
-	component := &registry.ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:       "TestComponent",
 		FilePath:   "test.templ",
 		Package:    "test",
-		Parameters: []registry.ParameterInfo{},
+		Parameters: []types.ParameterInfo{},
 	}
 
 	// Build the component
@@ -234,7 +235,7 @@ func TestGenerateContentHash(t *testing.T) {
 	reg := registry.NewComponentRegistry()
 	bp := NewBuildPipeline(1, reg)
 
-	component := &registry.ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:     "TestComponent",
 		FilePath: testFile,
 		Package:  "test",
@@ -259,7 +260,7 @@ func TestGenerateContentHashFileNotFound(t *testing.T) {
 	reg := registry.NewComponentRegistry()
 	bp := NewBuildPipeline(1, reg)
 
-	component := &registry.ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:     "TestComponent",
 		FilePath: "nonexistent.templ",
 		Package:  "test",
@@ -282,13 +283,13 @@ func TestBuildMetrics(t *testing.T) {
 
 	// Simulate a successful build
 	result := BuildResult{
-		Component: &registry.ComponentInfo{Name: "Test"},
+		Component: &types.ComponentInfo{Name: "Test"},
 		Error:     nil,
 		Duration:  100 * time.Millisecond,
 		CacheHit:  false,
 	}
 
-	bp.updateMetrics(result)
+	bp.metrics.RecordBuild(result)
 
 	metrics = bp.GetMetrics()
 	assert.Equal(t, int64(1), metrics.TotalBuilds)
@@ -299,7 +300,7 @@ func TestBuildMetrics(t *testing.T) {
 
 	// Simulate a failed build
 	result.Error = errors.New("build failed")
-	bp.updateMetrics(result)
+	bp.metrics.RecordBuild(result)
 
 	metrics = bp.GetMetrics()
 	assert.Equal(t, int64(2), metrics.TotalBuilds)
@@ -310,7 +311,7 @@ func TestBuildMetrics(t *testing.T) {
 	// Simulate a cache hit
 	result.Error = nil
 	result.CacheHit = true
-	bp.updateMetrics(result)
+	bp.metrics.RecordBuild(result)
 
 	metrics = bp.GetMetrics()
 	assert.Equal(t, int64(3), metrics.TotalBuilds)
@@ -325,7 +326,7 @@ func TestTemplCompiler(t *testing.T) {
 		args:    []string{"version"},
 	}
 
-	component := &registry.ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:     "TestComponent",
 		FilePath: "test.templ",
 		Package:  "test",
@@ -342,7 +343,7 @@ func TestTemplCompilerFailure(t *testing.T) {
 		args:    []string{},
 	}
 
-	component := &registry.ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:     "TestComponent",
 		FilePath: "test.templ",
 		Package:  "test",
@@ -360,7 +361,7 @@ func TestTemplCompilerSecurity(t *testing.T) {
 		args:    []string{"test"},
 	}
 
-	component := &registry.ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:     "TestComponent",
 		FilePath: "test.templ",
 		Package:  "test",

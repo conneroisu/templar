@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/conneroisu/templar/internal/registry"
+	"github.com/conneroisu/templar/internal/types"
 )
 
 // Realistic benchmarks that simulate actual build pipeline usage
@@ -17,9 +18,9 @@ func BenchmarkRealisticBuildPipeline(b *testing.B) {
 	const numWorkers = 4
 
 	// Create test components
-	components := make([]*registry.ComponentInfo, numComponents)
+	components := make([]*types.ComponentInfo, numComponents)
 	for i := 0; i < numComponents; i++ {
-		components[i] = &registry.ComponentInfo{
+		components[i] = &types.ComponentInfo{
 			Name:     "Component",
 			Package:  "components",
 			FilePath: "component.templ",
@@ -175,9 +176,9 @@ func BenchmarkLargeSliceOperations(b *testing.B) {
 	const numComponents = 1000
 
 	// Create test data
-	components := make([]*registry.ComponentInfo, numComponents)
+	components := make([]*types.ComponentInfo, numComponents)
 	for i := 0; i < numComponents; i++ {
-		components[i] = &registry.ComponentInfo{
+		components[i] = &types.ComponentInfo{
 			Name:     "Component" + string(rune(i)),
 			Package:  "components",
 			FilePath: "component.templ",
@@ -190,8 +191,8 @@ func BenchmarkLargeSliceOperations(b *testing.B) {
 
 		for i := 0; i < b.N; i++ {
 			// Simulate component scanning without pools
-			scannedComponents := make([]*registry.ComponentInfo, 0, numComponents)
-			filteredComponents := make([]*registry.ComponentInfo, 0, numComponents/2)
+			scannedComponents := make([]*types.ComponentInfo, 0, numComponents)
+			filteredComponents := make([]*types.ComponentInfo, 0, numComponents/2)
 			errorMessages := make([]string, 0, 10)
 
 			// Simulate scanning
@@ -258,7 +259,7 @@ func BenchmarkMemoryPressure(b *testing.B) {
 			for j := 0; j < iterations; j++ {
 				// Simulate frequent allocations
 				result := &BuildResult{
-					Component: &registry.ComponentInfo{Name: "Test"},
+					Component: &types.ComponentInfo{Name: "Test"},
 					Output:    make([]byte, 1024), // 1KB
 					Duration:  time.Microsecond,
 				}
@@ -285,7 +286,7 @@ func BenchmarkMemoryPressure(b *testing.B) {
 			for j := 0; j < iterations; j++ {
 				// Use pools for allocations
 				result := pools.GetBuildResult()
-				result.Component = &registry.ComponentInfo{Name: "Test"}
+				result.Component = &types.ComponentInfo{Name: "Test"}
 				result.Output = make([]byte, 1024) // Still need to allocate this
 				result.Duration = time.Microsecond
 
@@ -321,7 +322,7 @@ func BenchmarkBuildPipelineRealistic(b *testing.B) {
 
 			// Simulate 10 build tasks
 			for j := 0; j < 10; j++ {
-				component := &registry.ComponentInfo{
+				component := &types.ComponentInfo{
 					Name:     "TestComponent",
 					Package:  "components",
 					FilePath: "test.templ",
@@ -357,7 +358,7 @@ func BenchmarkMemoryUsageComparison(b *testing.B) {
 			objects := make([]*BuildResult, numObjects)
 			for j := 0; j < numObjects; j++ {
 				objects[j] = &BuildResult{
-					Component: &registry.ComponentInfo{Name: "Test"},
+					Component: &types.ComponentInfo{Name: "Test"},
 					Output:    make([]byte, 512),
 					Duration:  time.Millisecond,
 				}
@@ -379,7 +380,7 @@ func BenchmarkMemoryUsageComparison(b *testing.B) {
 			objects := make([]*BuildResult, numObjects)
 			for j := 0; j < numObjects; j++ {
 				result := pools.GetBuildResult()
-				result.Component = &registry.ComponentInfo{Name: "Test"}
+				result.Component = &types.ComponentInfo{Name: "Test"}
 				result.Output = make([]byte, 512)
 				result.Duration = time.Millisecond
 				objects[j] = result

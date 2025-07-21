@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/conneroisu/templar/internal/types"
 )
 
 func BenchmarkComponentRegistry_Register(b *testing.B) {
@@ -11,11 +13,11 @@ func BenchmarkComponentRegistry_Register(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		component := &ComponentInfo{
+		component := &types.ComponentInfo{
 			Name:         fmt.Sprintf("Component%d", i),
 			Package:      "test",
 			FilePath:     fmt.Sprintf("/path/to/component%d.templ", i),
-			Parameters:   []ParameterInfo{{Name: "param", Type: "string", Optional: false}},
+			Parameters:   []types.ParameterInfo{{Name: "param", Type: "string", Optional: false}},
 			Imports:      []string{"context"},
 			LastMod:      time.Now(),
 			Hash:         fmt.Sprintf("hash%d", i),
@@ -30,11 +32,11 @@ func BenchmarkComponentRegistry_Get(b *testing.B) {
 
 	// Pre-populate with components
 	for i := 0; i < 1000; i++ {
-		component := &ComponentInfo{
+		component := &types.ComponentInfo{
 			Name:         fmt.Sprintf("Component%d", i),
 			Package:      "test",
 			FilePath:     fmt.Sprintf("/path/to/component%d.templ", i),
-			Parameters:   []ParameterInfo{{Name: "param", Type: "string", Optional: false}},
+			Parameters:   []types.ParameterInfo{{Name: "param", Type: "string", Optional: false}},
 			Imports:      []string{"context"},
 			LastMod:      time.Now(),
 			Hash:         fmt.Sprintf("hash%d", i),
@@ -55,11 +57,11 @@ func BenchmarkComponentRegistry_List(b *testing.B) {
 
 	// Pre-populate with components
 	for i := 0; i < 100; i++ {
-		component := &ComponentInfo{
+		component := &types.ComponentInfo{
 			Name:         fmt.Sprintf("Component%d", i),
 			Package:      "test",
 			FilePath:     fmt.Sprintf("/path/to/component%d.templ", i),
-			Parameters:   []ParameterInfo{{Name: "param", Type: "string", Optional: false}},
+			Parameters:   []types.ParameterInfo{{Name: "param", Type: "string", Optional: false}},
 			Imports:      []string{"context"},
 			LastMod:      time.Now(),
 			Hash:         fmt.Sprintf("hash%d", i),
@@ -90,11 +92,11 @@ func BenchmarkComponentRegistry_Concurrent(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		i := 0
 		for pb.Next() {
-			component := &ComponentInfo{
+			component := &types.ComponentInfo{
 				Name:         fmt.Sprintf("Component%d", i),
 				Package:      "test",
 				FilePath:     fmt.Sprintf("/path/to/component%d.templ", i),
-				Parameters:   []ParameterInfo{{Name: "param", Type: "string", Optional: false}},
+				Parameters:   []types.ParameterInfo{{Name: "param", Type: "string", Optional: false}},
 				Imports:      []string{"context"},
 				LastMod:      time.Now(),
 				Hash:         fmt.Sprintf("hash%d", i),
@@ -115,18 +117,18 @@ func BenchmarkComponentRegistry_EventBroadcast(b *testing.B) {
 	registry := NewComponentRegistry()
 
 	// Create multiple subscribers
-	subscribers := make([]<-chan ComponentEvent, 10)
+	subscribers := make([]<-chan types.ComponentEvent, 10)
 	for i := range subscribers {
 		subscribers[i] = registry.Watch()
 	}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		component := &ComponentInfo{
+		component := &types.ComponentInfo{
 			Name:         fmt.Sprintf("Component%d", i),
 			Package:      "test",
 			FilePath:     fmt.Sprintf("/path/to/component%d.templ", i),
-			Parameters:   []ParameterInfo{{Name: "param", Type: "string", Optional: false}},
+			Parameters:   []types.ParameterInfo{{Name: "param", Type: "string", Optional: false}},
 			Imports:      []string{"context"},
 			LastMod:      time.Now(),
 			Hash:         fmt.Sprintf("hash%d", i),
@@ -142,11 +144,11 @@ func BenchmarkComponentRegistry_EventBroadcast(b *testing.B) {
 }
 
 func BenchmarkComponentInfo_Access(b *testing.B) {
-	component := &ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:         "TestComponent",
 		Package:      "test",
 		FilePath:     "/path/to/component.templ",
-		Parameters:   []ParameterInfo{{Name: "param", Type: "string", Optional: false}},
+		Parameters:   []types.ParameterInfo{{Name: "param", Type: "string", Optional: false}},
 		Imports:      []string{"context"},
 		LastMod:      time.Now(),
 		Hash:         "originalhash",
@@ -168,11 +170,11 @@ func BenchmarkComponentRegistry_Memory(b *testing.B) {
 	registry := NewComponentRegistry()
 
 	for i := 0; i < b.N; i++ {
-		component := &ComponentInfo{
+		component := &types.ComponentInfo{
 			Name:         fmt.Sprintf("Component%d", i),
 			Package:      "test",
 			FilePath:     fmt.Sprintf("/path/to/component%d.templ", i),
-			Parameters:   []ParameterInfo{{Name: "param", Type: "string", Optional: false}},
+			Parameters:   []types.ParameterInfo{{Name: "param", Type: "string", Optional: false}},
 			Imports:      []string{"context"},
 			LastMod:      time.Now(),
 			Hash:         fmt.Sprintf("hash%d", i),

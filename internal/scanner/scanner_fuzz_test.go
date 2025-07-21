@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/conneroisu/templar/internal/registry"
+	"github.com/conneroisu/templar/internal/types"
 )
 
 // FuzzTemplateParser tests the template parser with various inputs
@@ -89,7 +90,7 @@ templ Valid() {
 		tempFile := filepath.Join(tempDir, "fuzz_test.templ")
 		os.WriteFile(tempFile, []byte(template), 0644)
 		defer os.Remove(tempFile)
-		
+
 		err := scanner.ScanFile(tempFile)
 		components := registry.GetAll()
 
@@ -163,11 +164,11 @@ func FuzzDirectoryScanning(f *testing.F) {
 		// If scanning succeeded, verify no suspicious behavior
 		if err == nil {
 			components := registry.GetAll()
-			
+
 			// Verify all components have reasonable file paths
 			for _, component := range components {
 				if strings.ContainsAny(component.FilePath, "\x00\n\r") {
-					t.Errorf("Component has suspicious file path: %q from scanning: %q", 
+					t.Errorf("Component has suspicious file path: %q from scanning: %q",
 						component.FilePath, dirPath)
 				}
 			}
@@ -192,8 +193,8 @@ func FuzzComponentValidation(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, name, pkg, filePath, paramName, paramType string) {
 		// Limit input sizes
-		if len(name) > 100 || len(pkg) > 100 || len(filePath) > 500 || 
-		   len(paramName) > 50 || len(paramType) > 50 {
+		if len(name) > 100 || len(pkg) > 100 || len(filePath) > 500 ||
+			len(paramName) > 50 || len(paramType) > 50 {
 			t.Skip("Input too large")
 		}
 
@@ -206,7 +207,7 @@ func FuzzComponentValidation(f *testing.F) {
 		}()
 
 		// Create component info
-		component := &registry.ComponentInfo{
+		component := &types.ComponentInfo{
 			Name:     name,
 			Package:  pkg,
 			FilePath: filePath,
@@ -214,7 +215,7 @@ func FuzzComponentValidation(f *testing.F) {
 
 		// Add parameter if provided
 		if paramName != "" && paramType != "" {
-			component.Parameters = []registry.ParameterInfo{
+			component.Parameters = []types.ParameterInfo{
 				{Name: paramName, Type: paramType},
 			}
 		}

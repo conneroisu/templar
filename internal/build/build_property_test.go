@@ -10,10 +10,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/conneroisu/templar/internal/registry"
+	"github.com/conneroisu/templar/internal/types"
 	"github.com/leanovate/gopter"
 	"github.com/leanovate/gopter/gen"
 	"github.com/leanovate/gopter/prop"
-	"github.com/conneroisu/templar/internal/registry"
 )
 
 // TestBuildPipelineProperties validates critical properties of the build pipeline
@@ -73,11 +74,11 @@ templ ` + name + `() {
 				}
 
 				// Register component with registry using actual API
-				component := &registry.ComponentInfo{
+				component := &types.ComponentInfo{
 					Name:         name,
 					FilePath:     filePath,
 					Package:      "components",
-					Parameters:   []registry.ParameterInfo{},
+					Parameters:   []types.ParameterInfo{},
 					Dependencies: []string{},
 				}
 				reg.Register(component)
@@ -88,7 +89,7 @@ templ ` + name + `() {
 
 			// Start the pipeline and build individual components
 			pipeline.Start(ctx)
-			
+
 			// Build each component individually since BuildComponents doesn't exist
 			for _, name := range componentNames {
 				if component, exists := reg.Get(name); exists {
@@ -129,11 +130,11 @@ templ TestComponent() {
 				return true
 			}
 
-			component := &registry.ComponentInfo{
+			component := &types.ComponentInfo{
 				Name:         componentName,
 				FilePath:     filePath,
 				Package:      "components",
-				Parameters:   []registry.ParameterInfo{},
+				Parameters:   []types.ParameterInfo{},
 				Dependencies: []string{},
 			}
 			reg.Register(component)
@@ -179,11 +180,11 @@ templ ` + componentName + `() {
 				return true
 			}
 
-			component := &registry.ComponentInfo{
+			component := &types.ComponentInfo{
 				Name:         componentName,
 				FilePath:     filePath,
 				Package:      "components",
-				Parameters:   []registry.ParameterInfo{},
+				Parameters:   []types.ParameterInfo{},
 				Dependencies: []string{},
 			}
 			reg.Register(component)
@@ -225,11 +226,11 @@ templ ` + componentName + `() {
 				if name == "" {
 					continue
 				}
-				component := &registry.ComponentInfo{
+				component := &types.ComponentInfo{
 					Name:         name,
 					FilePath:     "/nonexistent/" + name + ".templ",
 					Package:      "components",
-					Parameters:   []registry.ParameterInfo{},
+					Parameters:   []types.ParameterInfo{},
 					Dependencies: []string{},
 				}
 				reg.Register(component)
@@ -294,11 +295,11 @@ templ TestComponent` + fmt.Sprintf("%d", i) + `() {
 					continue
 				}
 
-				component := &registry.ComponentInfo{
+				component := &types.ComponentInfo{
 					Name:         name,
 					FilePath:     filePath,
 					Package:      "components",
-					Parameters:   []registry.ParameterInfo{},
+					Parameters:   []types.ParameterInfo{},
 					Dependencies: []string{},
 				}
 				reg.Register(component)
@@ -309,7 +310,7 @@ templ TestComponent` + fmt.Sprintf("%d", i) + `() {
 
 			start := time.Now()
 			pipeline.Start(ctx)
-			
+
 			// Build all components
 			for _, name := range componentNames {
 				if component, exists := reg.Get(name); exists {

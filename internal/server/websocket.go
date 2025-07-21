@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"net/url"
 	"time"
 
+	"github.com/conneroisu/templar/internal/validation"
 	"nhooyr.io/websocket"
 )
 
@@ -23,12 +23,32 @@ const (
 
 	// Maximum message size allowed from peer.
 	maxMessageSize = 512
+
+	// Maximum number of concurrent WebSocket connections
+	maxConnections = 100
+
+	// Connection timeout for idle connections
+	connectionTimeout = 5 * time.Minute
+
+	// Rate limit: maximum messages per client per minute
+	maxMessagesPerMinute = 60
 )
 
 func (s *PreviewServer) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	// Validate origin before accepting connection
 	if !s.checkOrigin(r) {
 		http.Error(w, "Origin not allowed", http.StatusForbidden)
+		return
+	}
+
+	// Check connection limit before accepting
+	s.clientsMutex.RLock()
+	currentConnections := len(s.clients)
+	s.clientsMutex.RUnlock()
+
+	if currentConnections >= maxConnections {
+		http.Error(w, "Too Many Connections", http.StatusTooManyRequests)
+		log.Printf("WebSocket connection rejected: limit exceeded (%d/%d)", currentConnections, maxConnections)
 		return
 	}
 
@@ -41,40 +61,27 @@ func (s *PreviewServer) handleWebSocket(w http.ResponseWriter, r *http.Request) 
 	}
 
 	client := &Client{
-		conn:   conn,
-		send:   make(chan []byte, 256),
-		server: s,
+		conn:         conn,
+		send:         make(chan []byte, 256),
+		server:       s,
+		lastActivity: time.Now(),
+		rateLimiter:  NewSlidingWindowRateLimiter(maxMessagesPerMinute, time.Minute),
 	}
 
-	// Start goroutines for this client first
+	// MEMORY LEAK FIX: Register client first to ensure proper cleanup if goroutines fail
+	s.register <- client
+
+	// Start goroutines after successful registration
 	go client.writePump()
 	go client.readPump()
-
-	// Register client after goroutines are started
-	s.register <- client
 }
 
 // checkOrigin validates the request origin for security
 func (s *PreviewServer) checkOrigin(r *http.Request) bool {
 	// Get the origin from the request
 	origin := r.Header.Get("Origin")
-	if origin == "" {
-		// Reject connections without origin header for security
-		return false
-	}
 
-	// Parse the origin URL
-	originURL, err := url.Parse(origin)
-	if err != nil {
-		return false
-	}
-
-	// First check scheme - only allow http/https
-	if originURL.Scheme != "http" && originURL.Scheme != "https" {
-		return false
-	}
-
-	// Strict origin validation - only allow specific origins
+	// Build allowed origins list
 	expectedHost := fmt.Sprintf("%s:%d", s.config.Server.Host, s.config.Server.Port)
 	allowedOrigins := []string{
 		expectedHost,
@@ -84,14 +91,9 @@ func (s *PreviewServer) checkOrigin(r *http.Request) bool {
 		"127.0.0.1:3000", // Common dev server
 	}
 
-	// Check if origin is in allowed list
-	for _, allowed := range allowedOrigins {
-		if originURL.Host == allowed {
-			return true
-		}
-	}
-
-	return false
+	// Use centralized validation
+	err := validation.ValidateOrigin(origin, allowedOrigins)
+	return err == nil
 }
 
 func (s *PreviewServer) runWebSocketHub(ctx context.Context) {
@@ -178,9 +180,15 @@ func (c *Client) readPump() {
 	defer cancel()
 
 	for {
-		// Set read timeout
+		// Check for connection timeout
+		if time.Since(c.lastActivity) > connectionTimeout {
+			log.Printf("WebSocket connection timed out due to inactivity")
+			break
+		}
+
+		// Set read timeout - DON'T check rate limit before reading
 		readCtx, readCancel := context.WithTimeout(ctx, pongWait)
-		_, _, err := c.conn.Read(readCtx)
+		_, message, err := c.conn.Read(readCtx)
 		readCancel()
 
 		if err != nil {
@@ -191,6 +199,19 @@ func (c *Client) readPump() {
 			}
 			break
 		}
+
+		// SECURITY FIX: Only check rate limiting AFTER successfully receiving a message
+		// This prevents attackers from triggering rate limits without sending data
+		if len(message) > 0 {
+			if !c.rateLimiter.IsAllowed() {
+				log.Printf("WebSocket rate limit exceeded for client (sliding window)")
+				c.conn.Close(websocket.StatusPolicyViolation, "Rate limit exceeded")
+				break
+			}
+		}
+
+		// Update activity tracking
+		c.lastActivity = time.Now()
 	}
 }
 

@@ -1,0 +1,51 @@
+package components
+
+// Layout renders the base page layout
+templ Layout(title string, description string) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>{ title }</title>
+			if description != "" {
+				<meta name="description" content={ description }/>
+			}
+			<link rel="stylesheet" href="/static/css/styles.css"/>
+		</head>
+		<body>
+			<div class="layout">
+				<header class="layout-header">
+					<nav class="layout-nav">
+						<div class="layout-nav-brand">
+							<h1>{ title }</h1>
+						</div>
+						<div class="layout-nav-links">
+							{ children... }
+						</div>
+					</nav>
+				</header>
+				
+				<main class="layout-main">
+					{ children... }
+				</main>
+				
+				<footer class="layout-footer">
+					<p>&copy; { fmt.Sprintf("%d", time.Now().Year()) } { title }. All rights reserved.</p>
+				</footer>
+			</div>
+		</body>
+	</html>
+}
+
+// LayoutContent renders just the content area without full HTML structure
+templ LayoutContent(title string) {
+	<div class="layout-content">
+		<header class="content-header">
+			<h1>{ title }</h1>
+		</header>
+		<div class="content-body">
+			{ children... }
+		</div>
+	</div>
+}

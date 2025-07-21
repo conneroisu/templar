@@ -1,5 +1,3 @@
-//go:build performance
-
 package performance
 
 import (
@@ -16,50 +14,50 @@ import (
 
 // AdaptiveOptimizer applies performance optimizations based on monitor recommendations
 type AdaptiveOptimizer struct {
-	monitor         *PerformanceMonitor
-	buildPipeline   *build.BuildPipeline
-	registry        *registry.ComponentRegistry
-	ctx             context.Context
-	cancel          context.CancelFunc
-	config          *OptimizerConfig
-	appliedActions  map[string]time.Time // Track when actions were last applied
-	mu              sync.RWMutex
-	metrics         *OptimizerMetrics
+	monitor        *PerformanceMonitor
+	buildPipeline  *build.BuildPipeline
+	registry       *registry.ComponentRegistry
+	ctx            context.Context
+	cancel         context.CancelFunc
+	config         *OptimizerConfig
+	appliedActions map[string]time.Time // Track when actions were last applied
+	mu             sync.RWMutex
+	metrics        *OptimizerMetrics
 }
 
 // OptimizerConfig contains configuration for the adaptive optimizer
 type OptimizerConfig struct {
-	EnableAutoApply         bool          `json:"enable_auto_apply"`
-	MaxActionsPerInterval   int           `json:"max_actions_per_interval"`
-	CooldownPeriod          time.Duration `json:"cooldown_period"`
-	ConfidenceThreshold     float64       `json:"confidence_threshold"`
-	DryRunMode              bool          `json:"dry_run_mode"`
-	NotificationWebhook     string        `json:"notification_webhook,omitempty"`
-	BackoffMultiplier       float64       `json:"backoff_multiplier"`
-	MaxBackoffDuration      time.Duration `json:"max_backoff_duration"`
+	EnableAutoApply       bool          `json:"enable_auto_apply"`
+	MaxActionsPerInterval int           `json:"max_actions_per_interval"`
+	CooldownPeriod        time.Duration `json:"cooldown_period"`
+	ConfidenceThreshold   float64       `json:"confidence_threshold"`
+	DryRunMode            bool          `json:"dry_run_mode"`
+	NotificationWebhook   string        `json:"notification_webhook,omitempty"`
+	BackoffMultiplier     float64       `json:"backoff_multiplier"`
+	MaxBackoffDuration    time.Duration `json:"max_backoff_duration"`
 }
 
 // OptimizerMetrics tracks optimizer performance
 type OptimizerMetrics struct {
-	ActionsApplied       int64     `json:"actions_applied"`
-	ActionsSkipped       int64     `json:"actions_skipped"`
-	ActionsSuccessful    int64     `json:"actions_successful"`
-	ActionsFailed        int64     `json:"actions_failed"`
-	AverageImpact        float64   `json:"average_impact"`
-	LastOptimization     time.Time `json:"last_optimization"`
+	ActionsApplied        int64         `json:"actions_applied"`
+	ActionsSkipped        int64         `json:"actions_skipped"`
+	ActionsSuccessful     int64         `json:"actions_successful"`
+	ActionsFailed         int64         `json:"actions_failed"`
+	AverageImpact         float64       `json:"average_impact"`
+	LastOptimization      time.Time     `json:"last_optimization"`
 	TotalOptimizationTime time.Duration `json:"total_optimization_time"`
 }
 
 // OptimizationResult represents the result of applying an optimization
 type OptimizationResult struct {
-	Success     bool          `json:"success"`
-	Action      Action        `json:"action"`
-	Impact      string        `json:"impact"`
-	Duration    time.Duration `json:"duration"`
-	Error       string        `json:"error,omitempty"`
+	Success       bool               `json:"success"`
+	Action        Action             `json:"action"`
+	Impact        string             `json:"impact"`
+	Duration      time.Duration      `json:"duration"`
+	Error         string             `json:"error,omitempty"`
 	MetricsBefore map[string]float64 `json:"metrics_before"`
 	MetricsAfter  map[string]float64 `json:"metrics_after"`
-	Timestamp   time.Time     `json:"timestamp"`
+	Timestamp     time.Time          `json:"timestamp"`
 }
 
 // WorkerScaler manages worker pool scaling
@@ -86,7 +84,7 @@ type CacheManager struct {
 // NewAdaptiveOptimizer creates a new adaptive optimizer
 func NewAdaptiveOptimizer(monitor *PerformanceMonitor, buildPipeline *build.BuildPipeline, registry *registry.ComponentRegistry) *AdaptiveOptimizer {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	optimizer := &AdaptiveOptimizer{
 		monitor:        monitor,
 		buildPipeline:  buildPipeline,
@@ -115,7 +113,7 @@ func (ao *AdaptiveOptimizer) Stop() {
 // processRecommendations processes recommendations from the performance monitor
 func (ao *AdaptiveOptimizer) processRecommendations() {
 	recommendations := ao.monitor.GetRecommendations()
-	
+
 	for {
 		select {
 		case <-ao.ctx.Done():
@@ -152,10 +150,10 @@ func (ao *AdaptiveOptimizer) handleRecommendation(recommendation Recommendation)
 		ao.metrics.ActionsSuccessful++
 		ao.metrics.LastOptimization = time.Now()
 		ao.metrics.TotalOptimizationTime += result.Duration
-		
+
 		// Record when this action was applied
 		ao.appliedActions[recommendation.Type] = time.Now()
-		
+
 		log.Printf("Applied optimization: %s (impact: %s)", recommendation.Type, result.Impact)
 	} else {
 		ao.metrics.ActionsFailed++
@@ -302,7 +300,7 @@ func (ao *AdaptiveOptimizer) optimizeGC(action Action) OptimizationResult {
 
 	// Trigger garbage collection
 	runtime.GC()
-	
+
 	// Optionally adjust GC target percentage
 	if targetPercent, ok := action.Parameters["gc_target_percent"].(int); ok {
 		if targetPercent > 0 && targetPercent <= 500 {
@@ -382,7 +380,7 @@ func (ao *AdaptiveOptimizer) calculateImpact(result OptimizationResult) {
 
 	// Calculate percentage improvements
 	improvements := make(map[string]float64)
-	
+
 	for metric, beforeValue := range result.MetricsBefore {
 		if afterValue, exists := result.MetricsAfter[metric]; exists && beforeValue > 0 {
 			improvement := ((beforeValue - afterValue) / beforeValue) * 100
@@ -402,7 +400,7 @@ func (ao *AdaptiveOptimizer) calculateImpact(result OptimizationResult) {
 
 	if count > 0 {
 		avgImprovement := totalImprovement / float64(count)
-		
+
 		// Update running average
 		ao.mu.Lock()
 		if ao.metrics.ActionsSuccessful == 1 {
@@ -440,9 +438,9 @@ func (ao *AdaptiveOptimizer) performPeriodicOptimization() {
 
 	if memUsageMB > 500 { // 500MB threshold
 		ao.monitor.Record(Metric{
-			Type:  MetricTypeMemoryUsage,
-			Value: memUsageMB,
-			Unit:  "MB",
+			Type:   MetricTypeMemoryUsage,
+			Value:  memUsageMB,
+			Unit:   "MB",
 			Labels: map[string]string{"trigger": "periodic_check"},
 		})
 
@@ -451,7 +449,7 @@ func (ao *AdaptiveOptimizer) performPeriodicOptimization() {
 			Type:       ActionOptimizeGC,
 			Parameters: map[string]interface{}{},
 		}
-		
+
 		result := ao.applyOptimization(action)
 		if result.Success {
 			log.Printf("Periodic optimization: %s", result.Impact)
@@ -516,8 +514,8 @@ func NewWorkerScaler(initialWorkers, maxWorkers int) *WorkerScaler {
 		targetWorkers:  initialWorkers,
 		maxWorkers:     maxWorkers,
 		minWorkers:     1,
-		scaleUpRate:    0.25,   // 25% increase
-		scaleDownRate:  0.15,   // 15% decrease
+		scaleUpRate:    0.25, // 25% increase
+		scaleDownRate:  0.15, // 15% decrease
 	}
 }
 

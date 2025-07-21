@@ -9,31 +9,169 @@
 package scanner
 
 import (
-	"crypto/md5"
 	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"hash/crc32"
+	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/conneroisu/templar/internal/registry"
+	"github.com/conneroisu/templar/internal/types"
 )
 
-// ComponentScanner discovers and parses templ components
-type ComponentScanner struct {
-	registry *registry.ComponentRegistry
-	fileSet  *token.FileSet
+// ScanJob represents a scanning job for the worker pool containing the file
+// path to scan and a result channel for asynchronous communication.
+type ScanJob struct {
+	// filePath is the absolute path to the .templ file to be scanned
+	filePath string
+	// result channel receives the scan result or error asynchronously
+	result chan<- ScanResult
 }
 
-// NewComponentScanner creates a new component scanner
+// ScanResult represents the result of a scanning operation, containing either
+// success status or error information for a specific file.
+type ScanResult struct {
+	// filePath is the path that was scanned
+	filePath string
+	// err contains any error that occurred during scanning, nil on success
+	err error
+}
+
+// WorkerPool manages persistent scanning workers for performance optimization
+// using a work-stealing approach to distribute scanning jobs across CPU cores.
+type WorkerPool struct {
+	// jobQueue buffers scanning jobs for worker distribution
+	jobQueue chan ScanJob
+	// workers holds references to all active worker goroutines
+	workers []*ScanWorker
+	// workerCount defines the number of concurrent workers (typically NumCPU)
+	workerCount int
+	// scanner is the shared component scanner instance
+	scanner *ComponentScanner
+	// stop signals all workers to terminate gracefully
+	stop chan struct{}
+	// stopped tracks pool shutdown state
+	stopped bool
+	// mu protects concurrent access to pool state
+	mu sync.RWMutex
+}
+
+// ScanWorker represents a persistent worker goroutine that processes scanning
+// jobs from the shared job queue. Each worker operates independently and
+// can handle multiple file types concurrently.
+type ScanWorker struct {
+	// id uniquely identifies this worker for debugging and metrics
+	id int
+	// jobQueue receives scanning jobs from the worker pool
+	jobQueue <-chan ScanJob
+	// scanner provides the component parsing functionality
+	scanner *ComponentScanner
+	// stop signals this worker to terminate gracefully
+	stop chan struct{}
+}
+
+// ComponentScanner discovers and parses templ components using Go's AST parser.
+//
+// The scanner provides:
+// - Recursive directory traversal with exclude patterns
+// - AST-based component metadata extraction
+// - Concurrent processing via worker pool
+// - Integration with component registry for event broadcasting
+// - File change detection using CRC32 hashing
+type ComponentScanner struct {
+	// registry receives discovered components and broadcasts change events
+	registry *registry.ComponentRegistry
+	// fileSet tracks file positions for AST parsing and error reporting
+	fileSet *token.FileSet
+	// workerPool manages concurrent scanning operations
+	workerPool *WorkerPool
+}
+
+// NewComponentScanner creates a new component scanner with optimized worker pool
 func NewComponentScanner(registry *registry.ComponentRegistry) *ComponentScanner {
-	return &ComponentScanner{
+	scanner := &ComponentScanner{
 		registry: registry,
 		fileSet:  token.NewFileSet(),
 	}
+
+	// Initialize worker pool with optimal worker count
+	workerCount := runtime.NumCPU()
+	if workerCount > 8 {
+		workerCount = 8 // Cap at 8 workers for diminishing returns
+	}
+
+	scanner.workerPool = NewWorkerPool(workerCount, scanner)
+	return scanner
+}
+
+// NewWorkerPool creates a new worker pool for scanning operations
+func NewWorkerPool(workerCount int, scanner *ComponentScanner) *WorkerPool {
+	pool := &WorkerPool{
+		jobQueue:    make(chan ScanJob, workerCount*2), // Buffer for work-stealing efficiency
+		workerCount: workerCount,
+		scanner:     scanner,
+		stop:        make(chan struct{}),
+	}
+
+	// Start persistent workers
+	pool.workers = make([]*ScanWorker, workerCount)
+	for i := 0; i < workerCount; i++ {
+		worker := &ScanWorker{
+			id:       i,
+			jobQueue: pool.jobQueue,
+			scanner:  scanner,
+			stop:     make(chan struct{}),
+		}
+		pool.workers[i] = worker
+		go worker.start()
+	}
+
+	return pool
+}
+
+// start begins the worker's processing loop
+func (w *ScanWorker) start() {
+	for {
+		select {
+		case job := <-w.jobQueue:
+			// Process the scanning job
+			err := w.scanner.scanFileInternal(job.filePath)
+			job.result <- ScanResult{
+				filePath: job.filePath,
+				err:      err,
+			}
+		case <-w.stop:
+			return
+		}
+	}
+}
+
+// Stop gracefully shuts down the worker pool
+func (p *WorkerPool) Stop() {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	if p.stopped {
+		return
+	}
+
+	p.stopped = true
+	close(p.stop)
+
+	// Stop all workers
+	for _, worker := range p.workers {
+		close(worker.stop)
+	}
+
+	// Close job queue
+	close(p.jobQueue)
 }
 
 // GetRegistry returns the component registry
@@ -41,61 +179,143 @@ func (s *ComponentScanner) GetRegistry() *registry.ComponentRegistry {
 	return s.registry
 }
 
-// ScanDirectory scans a directory for templ components
+// Close gracefully shuts down the scanner and its worker pool
+func (s *ComponentScanner) Close() error {
+	if s.workerPool != nil {
+		s.workerPool.Stop()
+	}
+	return nil
+}
+
+// ScanDirectory scans a directory for templ components using optimized worker pool
 func (s *ComponentScanner) ScanDirectory(dir string) error {
 	// Validate directory path to prevent path traversal
 	if _, err := s.validatePath(dir); err != nil {
 		return fmt.Errorf("invalid directory path: %w", err)
 	}
 
-	fmt.Printf("Scanning directory: %s\n", dir)
-	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+	// First, collect all .templ files efficiently
+	var files []string
+	err := filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
-			fmt.Printf("Error walking path %s: %v\n", path, err)
 			return err
 		}
 
-		if !strings.HasSuffix(path, ".templ") {
+		if d.IsDir() || !strings.HasSuffix(path, ".templ") {
 			return nil
 		}
 
 		// Validate each file path as we encounter it
 		if _, err := s.validatePath(path); err != nil {
-			fmt.Printf("Skipping invalid path %s: %v\n", path, err)
+			// Skip invalid paths silently for security
 			return nil
 		}
 
-		fmt.Printf("Found templ file: %s\n", path)
-		return s.scanFile(path)
+		files = append(files, path)
+		return nil
 	})
+
+	if err != nil {
+		return err
+	}
+
+	// Process files using persistent worker pool (no goroutine creation overhead)
+	return s.processBatchWithWorkerPool(files)
 }
 
-// ScanFile scans a single file for templ components
+// processBatchWithWorkerPool processes files using the persistent worker pool
+func (s *ComponentScanner) processBatchWithWorkerPool(files []string) error {
+	if len(files) == 0 {
+		return nil
+	}
+
+	// Create result channel for collecting results
+	resultChan := make(chan ScanResult, len(files))
+
+	// Submit jobs to persistent worker pool
+	for _, file := range files {
+		job := ScanJob{
+			filePath: file,
+			result:   resultChan,
+		}
+
+		select {
+		case s.workerPool.jobQueue <- job:
+			// Job submitted successfully
+		default:
+			// Worker pool is full, process synchronously as fallback
+			err := s.scanFileInternal(file)
+			resultChan <- ScanResult{filePath: file, err: err}
+		}
+	}
+
+	// Collect results
+	var errors []error
+	for i := 0; i < len(files); i++ {
+		result := <-resultChan
+		if result.err != nil {
+			errors = append(errors, fmt.Errorf("scanning %s: %w", result.filePath, result.err))
+		}
+	}
+
+	close(resultChan)
+
+	if len(errors) > 0 {
+		return fmt.Errorf("scan completed with %d errors: %v", len(errors), errors[0])
+	}
+
+	return nil
+}
+
+// ScanDirectoryParallel is deprecated in favor of the optimized ScanDirectory
+// Kept for backward compatibility
+func (s *ComponentScanner) ScanDirectoryParallel(dir string, workers int) error {
+	return s.ScanDirectory(dir) // Use optimized version
+}
+
+// ScanFile scans a single file for templ components (optimized)
 func (s *ComponentScanner) ScanFile(path string) error {
-	return s.scanFile(path)
+	return s.scanFileInternal(path)
 }
 
-func (s *ComponentScanner) scanFile(path string) error {
+// scanFileInternal is the optimized internal scanning method used by workers
+func (s *ComponentScanner) scanFileInternal(path string) error {
 	// Validate and clean the path to prevent directory traversal
 	cleanPath, err := s.validatePath(path)
 	if err != nil {
 		return fmt.Errorf("invalid path: %w", err)
 	}
 
-	// Read file content
-	content, err := os.ReadFile(cleanPath)
+	// Optimized single I/O operation: open file and get both content and info
+	file, err := os.Open(cleanPath)
 	if err != nil {
-		return fmt.Errorf("reading file %s: %w", cleanPath, err)
+		return fmt.Errorf("opening file %s: %w", cleanPath, err)
 	}
+	defer file.Close()
 
-	// Get file info
-	info, err := os.Stat(cleanPath)
+	// Get file info without separate Stat() call
+	info, err := file.Stat()
 	if err != nil {
 		return fmt.Errorf("getting file info for %s: %w", cleanPath, err)
 	}
 
-	// Calculate hash
-	hash := fmt.Sprintf("%x", md5.Sum(content))
+	// Read content efficiently based on file size
+	var content []byte
+	if info.Size() > 64*1024 {
+		// Use streaming read for large files to reduce memory pressure
+		content, err = s.readFileStreaming(file, info.Size())
+	} else {
+		// Regular read for small files
+		content = make([]byte, info.Size())
+		_, err = file.Read(content)
+	}
+
+	if err != nil {
+		return fmt.Errorf("reading file %s: %w", cleanPath, err)
+	}
+
+	// Calculate hash using CRC32 (faster for file change detection)
+	hash := fmt.Sprintf("%x", crc32.ChecksumIEEE(content))
 
 	// Parse the file as Go code (templ generates Go)
 	astFile, err := parser.ParseFile(s.fileSet, cleanPath, content, parser.ParseComments)
@@ -106,6 +326,36 @@ func (s *ComponentScanner) scanFile(path string) error {
 
 	// Extract components from AST
 	return s.extractFromAST(cleanPath, astFile, hash, info.ModTime())
+}
+
+// readFileStreaming reads large files in chunks to reduce memory pressure
+func (s *ComponentScanner) readFileStreaming(file *os.File, size int64) ([]byte, error) {
+	const chunkSize = 32 * 1024 // 32KB chunks
+	content := make([]byte, 0, size)
+	chunk := make([]byte, chunkSize)
+
+	for {
+		n, err := file.Read(chunk)
+		if n > 0 {
+			content = append(content, chunk[:n]...)
+		}
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, err
+		}
+		if n < chunkSize {
+			break
+		}
+	}
+
+	return content, nil
+}
+
+// Backward compatibility method
+func (s *ComponentScanner) scanFile(path string) error {
+	return s.scanFileInternal(path)
 }
 
 func (s *ComponentScanner) parseTemplFile(path string, content []byte, hash string, modTime time.Time) error {
@@ -119,7 +369,7 @@ func (s *ComponentScanner) parseTemplFile(path string, content []byte, hash stri
 		if strings.HasPrefix(line, "package ") {
 			parts := strings.Fields(line)
 			if len(parts) >= 2 {
-				packageName = parts[1]
+				packageName = sanitizeIdentifier(parts[1])
 			}
 		}
 
@@ -133,7 +383,10 @@ func (s *ComponentScanner) parseTemplFile(path string, content []byte, hash stri
 					name = name[:idx]
 				}
 
-				component := &registry.ComponentInfo{
+				// Sanitize component name to prevent injection
+				name = sanitizeIdentifier(name)
+
+				component := &types.ComponentInfo{
 					Name:         name,
 					Package:      packageName,
 					FilePath:     path,
@@ -160,7 +413,7 @@ func (s *ComponentScanner) extractFromAST(path string, astFile *ast.File, hash s
 			if node.Name != nil && node.Name.IsExported() {
 				// Check if this might be a templ component
 				if s.isTemplComponent(node) {
-					component := &registry.ComponentInfo{
+					component := &types.ComponentInfo{
 						Name:         node.Name.Name,
 						Package:      astFile.Name.Name,
 						FilePath:     path,
@@ -197,8 +450,8 @@ func (s *ComponentScanner) isTemplComponent(fn *ast.FuncDecl) bool {
 	return false
 }
 
-func (s *ComponentScanner) extractParametersFromFunc(fn *ast.FuncDecl) []registry.ParameterInfo {
-	var params []registry.ParameterInfo
+func (s *ComponentScanner) extractParametersFromFunc(fn *ast.FuncDecl) []types.ParameterInfo {
+	var params []types.ParameterInfo
 
 	if fn.Type.Params == nil {
 		return params
@@ -211,7 +464,7 @@ func (s *ComponentScanner) extractParametersFromFunc(fn *ast.FuncDecl) []registr
 		}
 
 		for _, name := range param.Names {
-			params = append(params, registry.ParameterInfo{
+			params = append(params, types.ParameterInfo{
 				Name:     name.Name,
 				Type:     paramType,
 				Optional: false,
@@ -250,27 +503,27 @@ func (s *ComponentScanner) typeToString(expr ast.Expr) string {
 	}
 }
 
-func extractParameters(line string) []registry.ParameterInfo {
+func extractParameters(line string) []types.ParameterInfo {
 	// Simple parameter extraction from templ declaration
 	// This is a basic implementation - real parser would be more robust
 	if !strings.Contains(line, "(") {
-		return []registry.ParameterInfo{}
+		return []types.ParameterInfo{}
 	}
 
 	start := strings.Index(line, "(")
 	end := strings.LastIndex(line, ")")
 	if start == -1 || end == -1 || start >= end {
-		return []registry.ParameterInfo{}
+		return []types.ParameterInfo{}
 	}
 
 	paramStr := line[start+1 : end]
 	if strings.TrimSpace(paramStr) == "" {
-		return []registry.ParameterInfo{}
+		return []types.ParameterInfo{}
 	}
 
 	// Basic parameter parsing - handle both "name type" and "name, name type" patterns
 	parts := strings.Split(paramStr, ",")
-	var params []registry.ParameterInfo
+	var params []types.ParameterInfo
 
 	for _, part := range parts {
 		part = strings.TrimSpace(part)
@@ -282,7 +535,7 @@ func extractParameters(line string) []registry.ParameterInfo {
 		fields := strings.Fields(part)
 		if len(fields) >= 2 {
 			// Handle "name type" format
-			params = append(params, registry.ParameterInfo{
+			params = append(params, types.ParameterInfo{
 				Name:     fields[0],
 				Type:     fields[1],
 				Optional: false,
@@ -290,7 +543,7 @@ func extractParameters(line string) []registry.ParameterInfo {
 			})
 		} else if len(fields) == 1 {
 			// Handle single parameter name (type might be from previous param)
-			params = append(params, registry.ParameterInfo{
+			params = append(params, types.ParameterInfo{
 				Name:     fields[0],
 				Type:     "string", // Default type
 				Optional: false,
@@ -300,6 +553,18 @@ func extractParameters(line string) []registry.ParameterInfo {
 	}
 
 	return params
+}
+
+// sanitizeIdentifier removes dangerous characters from identifiers
+func sanitizeIdentifier(identifier string) string {
+	// Only allow alphanumeric characters and underscores for identifiers
+	var cleaned strings.Builder
+	for _, r := range identifier {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_' {
+			cleaned.WriteRune(r)
+		}
+	}
+	return cleaned.String()
 }
 
 // validatePath validates and cleans a file path to prevent directory traversal

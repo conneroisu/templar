@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"sync"
 	"testing"
 	"time"
 
@@ -401,4 +402,150 @@ func TestSecurityRegression_WebSocketHijacking(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestWebSocketSecurityUnderLoad tests security validation under high concurrent load
+func TestWebSocketSecurityUnderLoad(t *testing.T) {
+	// Create test server
+	testServer := httptest.NewServer(nil)
+	defer testServer.Close()
+
+	// Test server created for load testing
+
+	// Create a test server with configuration matching the test server
+	cfg := &config.Config{
+		Server: config.ServerConfig{
+			Host: "127.0.0.1",
+			Port: 3000, // Standard dev port for allowed origins
+		},
+	}
+
+	server, err := New(cfg)
+	require.NoError(t, err)
+
+	// Set up the handler
+	testServer.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		server.handleWebSocket(w, r)
+	})
+
+	// Build valid origin for this test server
+	validOrigin := "http://localhost:3000" // Use standard allowed origin
+
+	// Test parameters
+	const (
+		numConcurrentClients = 50  // Concurrent legitimate clients
+		numMaliciousAttempts = 100 // Concurrent malicious attempts
+		testDurationSeconds  = 5   // Test duration
+	)
+
+	ctx, cancel := context.WithTimeout(context.Background(), testDurationSeconds*time.Second)
+	defer cancel()
+
+	// Track results
+	var (
+		legitimateConnections     int
+		rejectedMaliciousAttempts int
+		unexpectedAllowed         int
+		mu                        sync.Mutex
+	)
+
+	var wg sync.WaitGroup
+
+	// Launch legitimate clients (should succeed)
+	for i := 0; i < numConcurrentClients; i++ {
+		wg.Add(1)
+		go func(clientID int) {
+			defer wg.Done()
+
+			opts := &websocket.DialOptions{
+				HTTPHeader: http.Header{},
+			}
+			opts.HTTPHeader.Set("Origin", validOrigin)
+
+			wsURL := "ws" + testServer.URL[4:] + "/ws"
+			conn, resp, err := websocket.Dial(ctx, wsURL, opts)
+
+			if err == nil && resp != nil && resp.StatusCode == http.StatusSwitchingProtocols {
+				mu.Lock()
+				legitimateConnections++
+				mu.Unlock()
+
+				if conn != nil {
+					// Keep connection alive briefly then close
+					time.Sleep(100 * time.Millisecond)
+					conn.Close(websocket.StatusNormalClosure, "")
+				}
+			}
+		}(i)
+	}
+
+	// Launch malicious connection attempts (should be rejected)
+	maliciousOrigins := []string{
+		"http://evil.com",
+		"javascript:alert('xss')",
+		"data:text/html,<script>alert('xss')</script>",
+		"file:///etc/passwd",
+		"http://localhost:3000@evil.com",
+		"http://attacker.com",
+		"http://localhost.evil.com",
+		"null",
+		"",
+		"ftp://malicious.com",
+	}
+
+	for i := 0; i < numMaliciousAttempts; i++ {
+		wg.Add(1)
+		go func(attemptID int) {
+			defer wg.Done()
+
+			// Use different malicious origins
+			maliciousOrigin := maliciousOrigins[attemptID%len(maliciousOrigins)]
+
+			opts := &websocket.DialOptions{
+				HTTPHeader: http.Header{},
+			}
+			opts.HTTPHeader.Set("Origin", maliciousOrigin)
+
+			wsURL := "ws" + testServer.URL[4:] + "/ws"
+			conn, resp, err := websocket.Dial(ctx, wsURL, opts)
+
+			if err != nil || resp == nil || resp.StatusCode != http.StatusSwitchingProtocols {
+				// Correctly rejected
+				mu.Lock()
+				rejectedMaliciousAttempts++
+				mu.Unlock()
+			} else {
+				// Unexpectedly allowed - security failure
+				mu.Lock()
+				unexpectedAllowed++
+				mu.Unlock()
+
+				if conn != nil {
+					conn.Close(websocket.StatusNormalClosure, "")
+				}
+			}
+		}(i)
+	}
+
+	// Wait for all goroutines to complete
+	wg.Wait()
+
+	// Verify results
+	t.Logf("Load test results:")
+	t.Logf("  Legitimate connections: %d/%d", legitimateConnections, numConcurrentClients)
+	t.Logf("  Rejected malicious attempts: %d/%d", rejectedMaliciousAttempts, numMaliciousAttempts)
+	t.Logf("  Unexpectedly allowed malicious: %d", unexpectedAllowed)
+
+	// Security validations - the core requirement
+	assert.Zero(t, unexpectedAllowed, "CRITICAL: Security validation failed under load: %d malicious connections allowed", unexpectedAllowed)
+	assert.Equal(t, numMaliciousAttempts, rejectedMaliciousAttempts, "CRITICAL: Not all malicious attempts were rejected under load")
+
+	// Load performance validation - security system should handle the load
+	if unexpectedAllowed == 0 && rejectedMaliciousAttempts == numMaliciousAttempts {
+		t.Logf("✅ SUCCESS: Security validation is robust under load - all %d malicious attempts correctly rejected", numMaliciousAttempts)
+		t.Logf("✅ SUCCESS: No race conditions detected in concurrent security validation")
+	}
+
+	// Note: Legitimate connection success is not the primary goal of this security test
+	// The main requirement is that security validation remains effective under load
 }

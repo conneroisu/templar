@@ -90,7 +90,7 @@ type ServiceContainer struct {
 	instances   map[string]interface{}
 	singletons  map[string]interface{}
 	factories   map[string]FactoryFunc
-	creating    map[string]*sync.WaitGroup  // Track services being created
+	creating    map[string]*sync.WaitGroup // Track services being created
 	mu          sync.RWMutex
 	config      *config.Config
 	initialized bool
@@ -208,7 +208,7 @@ func (c *ServiceContainer) getWithResolver(name string, resolving map[string]boo
 			c.mu.RUnlock()
 			return instance, nil
 		}
-		
+
 		// Check if another goroutine is creating this singleton
 		if wg, creating := c.creating[name]; creating {
 			c.mu.RUnlock()
@@ -228,7 +228,7 @@ func (c *ServiceContainer) getWithResolver(name string, resolving map[string]boo
 			c.mu.Unlock()
 			return instance, nil
 		}
-		
+
 		// Check again if another goroutine is creating this singleton
 		if wg, creating := c.creating[name]; creating {
 			c.mu.Unlock()
@@ -243,17 +243,17 @@ func (c *ServiceContainer) getWithResolver(name string, resolving map[string]boo
 		wg := &sync.WaitGroup{}
 		wg.Add(1)
 		c.creating[name] = wg
-		
+
 		// Mark as being resolved to prevent circular dependencies
 		resolving[name] = true
 		c.mu.Unlock()
 
 		// Create the singleton instance without holding any locks
 		instance, err := c.createInstanceSafely(factory, resolving)
-		
+
 		// Remove from resolving map after factory completes
 		delete(resolving, name)
-		
+
 		// Store the created instance and notify waiters
 		c.mu.Lock()
 		if err != nil {
@@ -263,12 +263,12 @@ func (c *ServiceContainer) getWithResolver(name string, resolving map[string]boo
 			wg.Done()
 			return nil, fmt.Errorf("failed to create singleton service '%s': %w", name, err)
 		}
-		
+
 		c.singletons[name] = instance
 		delete(c.creating, name)
 		c.mu.Unlock()
 		wg.Done()
-		
+
 		return instance, nil
 	}
 
@@ -276,7 +276,7 @@ func (c *ServiceContainer) getWithResolver(name string, resolving map[string]boo
 	resolving[name] = true
 	instance, err := c.createInstanceSafely(factory, resolving)
 	delete(resolving, name)
-	
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to create service '%s': %w", name, err)
 	}

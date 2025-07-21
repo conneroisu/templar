@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/conneroisu/templar/internal/registry"
+	"github.com/conneroisu/templar/internal/types"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -319,11 +319,11 @@ templ TestComponent(title string) {
 }
 
 func TestGenerateMockData(t *testing.T) {
-	component := &registry.ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:     "TestComponent",
 		Package:  "components",
 		FilePath: "test.templ",
-		Parameters: []registry.ParameterInfo{
+		Parameters: []types.ParameterInfo{
 			{Name: "title", Type: "string"},
 			{Name: "count", Type: "int"},
 			{Name: "enabled", Type: "bool"},
@@ -333,10 +333,17 @@ func TestGenerateMockData(t *testing.T) {
 
 	mockData := generateMockData(component)
 
-	assert.Equal(t, "Mock Text", mockData["title"])
-	assert.Equal(t, 42, mockData["count"])
-	assert.Equal(t, true, mockData["enabled"])
-	assert.Equal(t, []string{"Item 1", "Item 2", "Item 3"}, mockData["items"])
+	// Verify that mock data is generated for all parameters
+	assert.Contains(t, mockData, "title")
+	assert.Contains(t, mockData, "count")
+	assert.Contains(t, mockData, "enabled")
+	assert.Contains(t, mockData, "items")
+
+	// Verify types are correct (intelligent mock data generates context-aware values)
+	assert.IsType(t, "", mockData["title"])
+	assert.IsType(t, 0, mockData["count"])
+	assert.IsType(t, false, mockData["enabled"])
+	assert.NotEmpty(t, mockData["items"]) // Should generate some kind of slice/array
 }
 
 func TestGenerateMockValue(t *testing.T) {
@@ -552,12 +559,8 @@ templ TestComponent(title string) {
 	err = os.WriteFile(filepath.Join(componentDir, "test.templ"), []byte(componentContent), 0644)
 	require.NoError(t, err)
 
-	// Reset preview flags
-	previewMock = ""
-	previewWrapper = ""
-	previewProps = ""
-	previewPort = 8080
-	previewNoOpen = true
+	// Preview flags are now handled via StandardFlags structure
+	// No need to reset global variables as they don't exist
 
 	// Test preview command with quick cancellation
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)

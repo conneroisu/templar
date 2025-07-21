@@ -108,29 +108,29 @@ func init() {
 	enhancedPluginsCmd.AddCommand(enhancedPluginsDiscoverCmd)
 
 	// List command flags
-	enhancedPluginsListCmd.Flags().StringVar(&enhancedPluginsOutputFormat, "format", "table", 
+	enhancedPluginsListCmd.Flags().StringVar(&enhancedPluginsOutputFormat, "format", "table",
 		"Output format: table, json, yaml")
-	enhancedPluginsListCmd.Flags().BoolVar(&enhancedPluginsShowDisabled, "show-disabled", false, 
+	enhancedPluginsListCmd.Flags().BoolVar(&enhancedPluginsShowDisabled, "show-disabled", false,
 		"Show disabled plugins")
-	enhancedPluginsListCmd.Flags().BoolVar(&enhancedPluginsVerbose, "verbose", false, 
+	enhancedPluginsListCmd.Flags().BoolVar(&enhancedPluginsVerbose, "verbose", false,
 		"Show verbose plugin information")
 
 	// Info command flags
-	enhancedPluginsInfoCmd.Flags().StringVar(&enhancedPluginsOutputFormat, "format", "table", 
+	enhancedPluginsInfoCmd.Flags().StringVar(&enhancedPluginsOutputFormat, "format", "table",
 		"Output format: table, json, yaml")
 
 	// Health command flags
-	enhancedPluginsHealthCmd.Flags().StringVar(&enhancedPluginsOutputFormat, "format", "table", 
+	enhancedPluginsHealthCmd.Flags().StringVar(&enhancedPluginsOutputFormat, "format", "table",
 		"Output format: table, json, yaml")
 
 	// Discover command flags
-	enhancedPluginsDiscoverCmd.Flags().StringVar(&enhancedPluginsOutputFormat, "format", "table", 
+	enhancedPluginsDiscoverCmd.Flags().StringVar(&enhancedPluginsOutputFormat, "format", "table",
 		"Output format: table, json, yaml")
 }
 
 func runEnhancedPluginsList(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
-	
+
 	// Create enhanced plugin manager
 	epm, err := createEnhancedPluginManager(ctx)
 	if err != nil {
@@ -187,9 +187,9 @@ func runEnhancedPluginsList(cmd *cobra.Command, args []string) error {
 func runEnhancedPluginsEnable(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 	pluginName := args[0]
-	
+
 	fmt.Printf("🔌 Enabling plugin: %s\n", pluginName)
-	
+
 	// Create enhanced plugin manager
 	epm, err := createEnhancedPluginManager(ctx)
 	if err != nil {
@@ -201,7 +201,7 @@ func runEnhancedPluginsEnable(cmd *cobra.Command, args []string) error {
 	if err := epm.EnablePlugin(ctx, pluginName); err != nil {
 		return fmt.Errorf("failed to enable plugin %s: %w", pluginName, err)
 	}
-	
+
 	fmt.Printf("✅ Plugin %s enabled successfully\n", pluginName)
 	return nil
 }
@@ -209,9 +209,9 @@ func runEnhancedPluginsEnable(cmd *cobra.Command, args []string) error {
 func runEnhancedPluginsDisable(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 	pluginName := args[0]
-	
+
 	fmt.Printf("🔌 Disabling plugin: %s\n", pluginName)
-	
+
 	// Create enhanced plugin manager
 	epm, err := createEnhancedPluginManager(ctx)
 	if err != nil {
@@ -223,7 +223,7 @@ func runEnhancedPluginsDisable(cmd *cobra.Command, args []string) error {
 	if err := epm.DisablePlugin(ctx, pluginName); err != nil {
 		return fmt.Errorf("failed to disable plugin %s: %w", pluginName, err)
 	}
-	
+
 	fmt.Printf("✅ Plugin %s disabled successfully\n", pluginName)
 	return nil
 }
@@ -231,7 +231,7 @@ func runEnhancedPluginsDisable(cmd *cobra.Command, args []string) error {
 func runEnhancedPluginsInfo(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 	pluginName := args[0]
-	
+
 	// Create enhanced plugin manager
 	epm, err := createEnhancedPluginManager(ctx)
 	if err != nil {
@@ -270,7 +270,7 @@ func runEnhancedPluginsInfo(cmd *cobra.Command, args []string) error {
 
 func runEnhancedPluginsHealth(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
-	
+
 	// Create enhanced plugin manager
 	epm, err := createEnhancedPluginManager(ctx)
 	if err != nil {
@@ -309,9 +309,9 @@ func runEnhancedPluginsHealth(cmd *cobra.Command, args []string) error {
 
 func runEnhancedPluginsDiscover(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
-	
+
 	fmt.Println("🔍 Discovering plugins...")
-	
+
 	// Create enhanced plugin manager
 	epm, err := createEnhancedPluginManager(ctx)
 	if err != nil {
@@ -381,15 +381,15 @@ func createEnhancedPluginManager(ctx context.Context) (*plugins.EnhancedPluginMa
 // Data structures for enhanced plugin information
 
 type EnhancedPluginListItem struct {
-	Name        string                  `json:"name"`
-	Version     string                  `json:"version"`
-	Description string                  `json:"description"`
-	Source      string                  `json:"source"`
-	Interfaces  []string                `json:"interfaces"`
-	State       string                  `json:"state"`
-	LoadedAt    *time.Time              `json:"loaded_at,omitempty"`
-	Health      *plugins.PluginHealth   `json:"health,omitempty"`
-	Priority    *int                    `json:"priority,omitempty"`
+	Name        string                `json:"name"`
+	Version     string                `json:"version"`
+	Description string                `json:"description"`
+	Source      string                `json:"source"`
+	Interfaces  []string              `json:"interfaces"`
+	State       string                `json:"state"`
+	LoadedAt    *time.Time            `json:"loaded_at,omitempty"`
+	Health      *plugins.PluginHealth `json:"health,omitempty"`
+	Priority    *int                  `json:"priority,omitempty"`
 }
 
 type EnhancedPluginDetailedInfo struct {
@@ -399,9 +399,9 @@ type EnhancedPluginDetailedInfo struct {
 }
 
 type EnhancedPluginHealthItem struct {
-	Name   string                `json:"name"`
-	Health plugins.PluginHealth  `json:"health"`
-	State  string                `json:"state"`
+	Name   string               `json:"name"`
+	Health plugins.PluginHealth `json:"health"`
+	State  string               `json:"state"`
 }
 
 // Display functions

@@ -12,6 +12,7 @@ import (
 	"github.com/conneroisu/templar/internal/config"
 	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/renderer"
+	"github.com/conneroisu/templar/internal/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -30,11 +31,11 @@ func setupTestServer(t *testing.T) *PreviewServer {
 	reg := registry.NewComponentRegistry()
 
 	// Add test components
-	testComponent := &registry.ComponentInfo{
+	testComponent := &types.ComponentInfo{
 		Name:     "TestButton",
 		FilePath: "/test/button.templ",
 		Package:  "main",
-		Parameters: []registry.ParameterInfo{
+		Parameters: []types.ParameterInfo{
 			{Name: "text", Type: "string"},
 			{Name: "variant", Type: "string"},
 		},
@@ -75,7 +76,7 @@ func TestHandleComponents(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, "application/json", w.Header().Get("Content-Type"))
 
-	var components []*registry.ComponentInfo
+	var components []*types.ComponentInfo
 	err := json.Unmarshal(w.Body.Bytes(), &components)
 	require.NoError(t, err)
 
@@ -97,7 +98,7 @@ func TestHandleComponent(t *testing.T) {
 		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Equal(t, "application/json", w.Header().Get("Content-Type"))
 
-		var component registry.ComponentInfo
+		var component types.ComponentInfo
 		err := json.Unmarshal(w.Body.Bytes(), &component)
 		require.NoError(t, err)
 
@@ -341,14 +342,14 @@ func TestValidateComponentName(t *testing.T) {
 func TestRenderComponentSelection(t *testing.T) {
 	server := setupTestServer(t)
 
-	components := []*registry.ComponentInfo{
+	components := []*types.ComponentInfo{
 		{
 			Name:       "Button",
-			Parameters: []registry.ParameterInfo{{Name: "text", Type: "string"}},
+			Parameters: []types.ParameterInfo{{Name: "text", Type: "string"}},
 		},
 		{
 			Name:       "Card",
-			Parameters: []registry.ParameterInfo{{Name: "title", Type: "string"}, {Name: "content", Type: "string"}},
+			Parameters: []types.ParameterInfo{{Name: "title", Type: "string"}, {Name: "content", Type: "string"}},
 		},
 	}
 
