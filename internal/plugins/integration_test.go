@@ -212,7 +212,7 @@ func TestPluginIsolationAndSecurity(t *testing.T) {
 		_, _ = manager.ProcessComponent(ctx, component)
 		// Should not panic and should handle errors gracefully
 
-		err = manager.Shutdown()
+		err := manager.Shutdown()
 		assert.NoError(t, err)
 	})
 }
