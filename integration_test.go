@@ -17,54 +17,7 @@ import (
 )
 
 func TestIntegration_ServerStartStop(t *testing.T) {
-	// Create a temporary directory for components
-	tempDir := t.TempDir()
-
-	// Create a test component file
-	componentFile := filepath.Join(tempDir, "test.templ")
-	err := os.WriteFile(componentFile, []byte(`
-package main
-
-templ TestComponent(title string) {
-	<h1>{ title }</h1>
-}
-`), 0644)
-	require.NoError(t, err)
-
-	// Set up configuration
-	viper.Reset()
-	viper.Set("server.port", 0) // Use random port
-	viper.Set("server.host", "localhost")
-	viper.Set("server.open", false)
-	viper.Set("components.scan_paths", []string{tempDir})
-
-	cfg, err := config.Load()
-	require.NoError(t, err)
-
-	// Create server
-	srv, err := server.New(cfg)
-	require.NoError(t, err)
-
-	// Start server
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	go func() {
-		err := srv.Start(ctx)
-		if err != nil && err != http.ErrServerClosed {
-			t.Errorf("Server start failed: %v", err)
-		}
-	}()
-
-	// Give server time to start
-	time.Sleep(100 * time.Millisecond)
-
-	// Test server shutdown
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer shutdownCancel()
-
-	err = srv.Shutdown(shutdownCtx)
-	assert.NoError(t, err)
+	testServerSetupAndShutdown(t, 0)
 }
 
 func TestIntegration_WebSocketConnection(t *testing.T) {
@@ -241,6 +194,11 @@ func TestIntegration_ErrorHandling(t *testing.T) {
 }
 
 func TestIntegration_ServerRoutes(t *testing.T) {
+	testServerSetupAndShutdown(t, 0)
+}
+
+// testServerSetupAndShutdown is a helper function to avoid code duplication
+func testServerSetupAndShutdown(t *testing.T, port int) {
 	// Create a temporary directory for components
 	tempDir := t.TempDir()
 
@@ -257,7 +215,7 @@ templ TestComponent(title string) {
 
 	// Set up configuration
 	viper.Reset()
-	viper.Set("server.port", 0)
+	viper.Set("server.port", port)
 	viper.Set("server.host", "localhost")
 	viper.Set("server.open", false)
 	viper.Set("components.scan_paths", []string{tempDir})

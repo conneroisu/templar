@@ -219,102 +219,70 @@ templ TestComponent(title string) {
 }
 
 func TestBuildCommand(t *testing.T) {
-	// Create a temporary directory
-	tempDir := t.TempDir()
-
-	// Change to temp directory
-	oldDir, err := os.Getwd()
-	require.NoError(t, err)
-	defer os.Chdir(oldDir)
-
-	err = os.Chdir(tempDir)
-	require.NoError(t, err)
-
-	// Create component files
-	componentDir := "components"
-	err = os.MkdirAll(componentDir, 0755)
-	require.NoError(t, err)
-
-	componentContent := `package components
-
-templ TestComponent(title string) {
-	<h1>{ title }</h1>
-}
-`
-
-	err = os.WriteFile(filepath.Join(componentDir, "test.templ"), []byte(componentContent), 0644)
-	require.NoError(t, err)
-
-	// Set up viper configuration
-	viper.Reset()
-	viper.Set("components.scan_paths", []string{componentDir})
-	viper.Set("build.command", "echo 'build command executed'")
-	viper.Set("server.port", 8080)
-	viper.Set("server.host", "localhost")
-
-	// Reset flags
-	buildOutput = ""
-	buildProduction = false
-	buildAnalyze = false
-	buildClean = false
-
-	// Test build command
-	err = runBuild(&cobra.Command{}, []string{})
-	// This might fail because templ is not available in test environment
-	// But it should at least scan the components
-	if err != nil {
-		// Check if it's a templ-related error
-		assert.Contains(t, err.Error(), "templ")
+	tests := []struct {
+		name        string
+		buildAnalyze bool
+	}{
+		{
+			name:        "basic_build",
+			buildAnalyze: false,
+		},
+		{
+			name:        "build_with_analysis",
+			buildAnalyze: true,
+		},
 	}
-}
 
-func TestBuildCommandWithAnalysis(t *testing.T) {
-	// Create a temporary directory
-	tempDir := t.TempDir()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create a temporary directory
+			tempDir := t.TempDir()
 
-	// Change to temp directory
-	oldDir, err := os.Getwd()
-	require.NoError(t, err)
-	defer os.Chdir(oldDir)
+			// Change to temp directory
+			oldDir, err := os.Getwd()
+			require.NoError(t, err)
+			defer os.Chdir(oldDir)
 
-	err = os.Chdir(tempDir)
-	require.NoError(t, err)
+			err = os.Chdir(tempDir)
+			require.NoError(t, err)
 
-	// Create component files
-	componentDir := "components"
-	err = os.MkdirAll(componentDir, 0755)
-	require.NoError(t, err)
+			// Create component files
+			componentDir := "components"
+			err = os.MkdirAll(componentDir, 0755)
+			require.NoError(t, err)
 
-	componentContent := `package components
+			componentContent := `package components
 
 templ TestComponent(title string) {
 	<h1>{ title }</h1>
 }
 `
 
-	err = os.WriteFile(filepath.Join(componentDir, "test.templ"), []byte(componentContent), 0644)
-	require.NoError(t, err)
+			err = os.WriteFile(filepath.Join(componentDir, "test.templ"), []byte(componentContent), 0644)
+			require.NoError(t, err)
 
-	// Set up viper configuration
-	viper.Reset()
-	viper.Set("components.scan_paths", []string{componentDir})
-	viper.Set("build.command", "echo 'build command executed'")
-	viper.Set("server.port", 8080)
-	viper.Set("server.host", "localhost")
+			// Set up viper configuration
+			viper.Reset()
+			viper.Set("components.scan_paths", []string{componentDir})
+			viper.Set("build.command", "echo 'build command executed'")
+			viper.Set("server.port", 8080)
+			viper.Set("server.host", "localhost")
 
-	// Set flags for analysis
-	buildOutput = ""
-	buildProduction = false
-	buildAnalyze = true
-	buildClean = false
+			// Set flags based on test case
+			buildOutput = ""
+			buildProduction = false
+			buildAnalyze = tt.buildAnalyze
+			buildClean = false
 
-	// Test build command
-	err = runBuild(&cobra.Command{}, []string{})
-	// This might fail because templ is not available in test environment
-	// But it should at least scan the components
-	if err != nil {
-		// Check if it's a templ-related error
-		assert.Contains(t, err.Error(), "templ")
+			// Test build command
+			err = runBuild(&cobra.Command{}, []string{})
+			// This might fail because templ is not available in test environment
+			// But it should at least scan the components
+			if err != nil {
+				// Check if it's a templ-related error
+				assert.Contains(t, err.Error(), "templ")
+			}
+		})
 	}
 }
 
