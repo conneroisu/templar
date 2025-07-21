@@ -6436,5 +6436,1044 @@
         }
       ]
     }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "git add .",
+      "description": "Stage all linting fixes"
+    },
+    "tool_response": {
+      "stdout": "",
+      "stderr": "",
+      "interrupted": false,
+      "isImage": false
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "git commit -m \"$(cat <<'EOF'\nfix: Resolve duplicate code and usestdlibvars linting issues\n\n- Refactor duplicate test functions into table-driven tests and helper functions:\n  - ErrorCollector tests consolidated with helper pattern\n  - Parser tests using shared verification helper\n  - Performance detector using shared regression detection helper\n  - Validation tests using common test runner helper\n\n- Replace string literals with http standard library constants:\n  - Replace \"GET\" with http.MethodGet\n  - Replace \"POST\" with http.MethodPost\n  - Replace \"OPTIONS\" with http.MethodOptions\n  - Replace \"101\" with http.StatusSwitchingProtocols\n\n- Improve code maintainability and reduce duplication across:\n  - internal/errors/ test files\n  - internal/performance/detector.go\n  - internal/validation/security_test.go\n  - All HTTP test files with request creation\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\"",
+      "description": "Commit duplicate code and usestdlibvars fixes"
+    },
+    "tool_response": {
+      "stdout": "[dev 779277e] fix: Resolve duplicate code and usestdlibvars linting issues\n 28 files changed, 18579 insertions(+), 24024 deletions(-)",
+      "stderr": "",
+      "interrupted": false,
+      "isImage": false
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Read",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/performance/detector.go",
+      "offset": 322,
+      "limit": 15
+    },
+    "tool_response": {
+      "type": "text",
+      "file": {
+        "filePath": "/home/connerohnesorge/Documents/001Repos/templar/internal/performance/detector.go",
+        "content": "// regressionParams holds parameters for regression detection\ntype regressionParams struct {\n\tmetricValue     int64\n\tsuffix          string\n\tmeanMultiplier  float64\n\tstdDevMultiplier float64\n\tsampleScaling   float64\n\tthreshold       float64\n\tregressionType  string\n\tgetRecommendation func(severity int, percentageChange float64) string\n}\n\n// detectRegressionWithStats is a helper function for memory and allocation regression detection\nfunc (pd *PerformanceDetector) detectRegressionWithStats(result BenchmarkResult, baseline *PerformanceBaseline, numComparisons int, params regressionParams) *RegressionDetection {\n\tif params.metricValue == 0 {",
+        "numLines": 15,
+        "startLine": 322,
+        "totalLines": 692
+      }
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Grep",
+    "tool_input": {
+      "pattern": "func.*getMemoryRecommendation",
+      "path": "/home/connerohnesorge/Documents/001Repos/templar/internal/performance/",
+      "output_mode": "content"
+    },
+    "tool_response": {
+      "mode": "content",
+      "numFiles": 0,
+      "filenames": [],
+      "content": "/home/connerohnesorge/Documents/001Repos/templar/internal/performance/detector.go:func (pd *PerformanceDetector) getMemoryRecommendation(severity string, percentageChange float64) string {",
+      "numLines": 1
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Grep",
+    "tool_input": {
+      "pattern": "func.*getAllocationRecommendation",
+      "path": "/home/connerohnesorge/Documents/001Repos/templar/internal/performance/",
+      "output_mode": "content"
+    },
+    "tool_response": {
+      "mode": "content",
+      "numFiles": 0,
+      "filenames": [],
+      "content": "/home/connerohnesorge/Documents/001Repos/templar/internal/performance/detector.go:func (pd *PerformanceDetector) getAllocationRecommendation(severity string, percentageChange float64) string {",
+      "numLines": 1
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Grep",
+    "tool_input": {
+      "pattern": "func.*calculateSeverity",
+      "path": "/home/connerohnesorge/Documents/001Repos/templar/internal/performance/",
+      "output_mode": "content"
+    },
+    "tool_response": {
+      "mode": "content",
+      "numFiles": 0,
+      "filenames": [],
+      "content": "/home/connerohnesorge/Documents/001Repos/templar/internal/performance/detector.go:func (pd *PerformanceDetector) calculateSeverity(ratio, threshold float64) string {",
+      "numLines": 1
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Edit",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/performance/detector.go",
+      "old_string": "type regressionParams struct {\n\tmetricValue     int64\n\tsuffix          string\n\tmeanMultiplier  float64\n\tstdDevMultiplier float64\n\tsampleScaling   float64\n\tthreshold       float64\n\tregressionType  string\n\tgetRecommendation func(severity int, percentageChange float64) string\n}",
+      "new_string": "type regressionParams struct {\n\tmetricValue     int64\n\tsuffix          string\n\tmeanMultiplier  float64\n\tstdDevMultiplier float64\n\tsampleScaling   float64\n\tthreshold       float64\n\tregressionType  string\n\tgetRecommendation func(severity string, percentageChange float64) string\n}"
+    },
+    "tool_response": {
+      "filePath": "/home/connerohnesorge/Documents/001Repos/templar/internal/performance/detector.go",
+      "oldString": "type regressionParams struct {\n\tmetricValue     int64\n\tsuffix          string\n\tmeanMultiplier  float64\n\tstdDevMultiplier float64\n\tsampleScaling   float64\n\tthreshold       float64\n\tregressionType  string\n\tgetRecommendation func(severity int, percentageChange float64) string\n}",
+      "newString": "type regressionParams struct {\n\tmetricValue     int64\n\tsuffix          string\n\tmeanMultiplier  float64\n\tstdDevMultiplier float64\n\tsampleScaling   float64\n\tthreshold       float64\n\tregressionType  string\n\tgetRecommendation func(severity string, percentageChange float64) string\n}",
+      "originalFile": "// Package performance provides performance monitoring and regression detection capabilities.\n//\n// The detector package implements automated performance baseline establishment,\n// metrics collection, regression detection with configurable thresholds, and\n// CI/CD integration for continuous performance monitoring. It supports various\n// benchmark formats and provides alerting for performance degradations.\npackage performance\n\nimport (\n\t\"bufio\"\n\t\"encoding/json\"\n\t\"fmt\"\n\t\"math\"\n\t\"os\"\n\t\"path/filepath\"\n\t\"regexp\"\n\t\"sort\"\n\t\"strconv\"\n\t\"strings\"\n\t\"time\"\n\n\t\"github.com/conneroisu/templar/internal/validation\"\n)\n\n// BenchmarkResult represents a single benchmark measurement\ntype BenchmarkResult struct {\n\tName        string    `json:\"name\"`\n\tIterations  int       `json:\"iterations\"`\n\tNsPerOp     float64   `json:\"ns_per_op\"`\n\tBytesPerOp  int64     `json:\"bytes_per_op\"`\n\tAllocsPerOp int64     `json:\"allocs_per_op\"`\n\tMBPerSec    float64   `json:\"mb_per_sec,omitempty\"`\n\tTimestamp   time.Time `json:\"timestamp\"`\n\tGitCommit   string    `json:\"git_commit,omitempty\"`\n\tGitBranch   string    `json:\"git_branch,omitempty\"`\n\tEnvironment string    `json:\"environment,omitempty\"`\n}\n\n// PerformanceBaseline represents historical performance data\ntype PerformanceBaseline struct {\n\tBenchmarkName string    `json:\"benchmark_name\"`\n\tSamples       []float64 `json:\"samples\"`\n\tMean          float64   `json:\"mean\"`\n\tMedian        float64   `json:\"median\"`\n\tStdDev        float64   `json:\"std_dev\"`\n\tMin           float64   `json:\"min\"`\n\tMax           float64   `json:\"max\"`\n\tLastUpdated   time.Time `json:\"last_updated\"`\n\tSampleCount   int       `json:\"sample_count\"`\n}\n\n// RegressionThresholds defines acceptable performance degradation limits\ntype RegressionThresholds struct {\n\t// Performance degradation threshold (e.g., 1.15 = 15% slower is acceptable)\n\tSlownessThreshold float64 `json:\"slowness_threshold\"`\n\t// Memory usage increase threshold (e.g., 1.20 = 20% more memory is acceptable)\n\tMemoryThreshold float64 `json:\"memory_threshold\"`\n\t// Allocation increase threshold (e.g., 1.25 = 25% more allocations is acceptable)\n\tAllocThreshold float64 `json:\"alloc_threshold\"`\n\t// Minimum samples required before regression detection\n\tMinSamples int `json:\"min_samples\"`\n\t// Statistical confidence level (e.g., 0.95 = 95% confidence)\n\tConfidenceLevel float64 `json:\"confidence_level\"`\n}\n\n// RegressionDetection contains regression analysis results\ntype RegressionDetection struct {\n\tBenchmarkName     string  `json:\"benchmark_name\"`\n\tIsRegression      bool    `json:\"is_regression\"`\n\tCurrentValue      float64 `json:\"current_value\"`\n\tBaselineValue     float64 `json:\"baseline_value\"`\n\tPercentageChange  float64 `json:\"percentage_change\"`\n\tThreshold         float64 `json:\"threshold\"`\n\tConfidence        float64 `json:\"confidence\"`\n\tRegressionType    string  `json:\"regression_type\"` // \"performance\", \"memory\", \"allocations\"\n\tSeverity          string  `json:\"severity\"`        // \"minor\", \"major\", \"critical\"\n\tRecommendedAction string  `json:\"recommended_action\"`\n}\n\n// PerformanceDetector handles performance regression detection\ntype PerformanceDetector struct {\n\tbaselineDir          string\n\tthresholds           RegressionThresholds\n\tgitCommit            string\n\tgitBranch            string\n\tenvironment          string\n\tstatisticalValidator *StatisticalValidator\n}\n\n// NewPerformanceDetector creates a new performance detector\nfunc NewPerformanceDetector(baselineDir string, thresholds RegressionThresholds) *PerformanceDetector {\n\t// Create statistical validator with 95% confidence level and minimum 3 samples\n\tstatisticalValidator := NewStatisticalValidator(thresholds.ConfidenceLevel, 3)\n\n\treturn &PerformanceDetector{\n\t\tbaselineDir:          baselineDir,\n\t\tthresholds:           thresholds,\n\t\tenvironment:          getEnvironment(),\n\t\tstatisticalValidator: statisticalValidator,\n\t}\n}\n\n// SetGitInfo sets git commit and branch information\nfunc (pd *PerformanceDetector) SetGitInfo(commit, branch string) {\n\tpd.gitCommit = commit\n\tpd.gitBranch = branch\n}\n\n// ParseBenchmarkOutput parses Go benchmark output and returns structured results\nfunc (pd *PerformanceDetector) ParseBenchmarkOutput(output string) ([]BenchmarkResult, error) {\n\tvar results []BenchmarkResult\n\n\t// Regex to match Go benchmark output lines\n\t// Example: BenchmarkComponentScanner_ScanDirectory/components-10-16         \t    2204\t    604432 ns/op\t  261857 B/op\t    5834 allocs/op\n\tbenchmarkRegex := regexp.MustCompile(`^Benchmark(\\S+)\\s+(\\d+)\\s+(\\d+(?:\\.\\d+)?)\\s+ns/op(?:\\s+(\\d+)\\s+B/op)?(?:\\s+(\\d+)\\s+allocs/op)?(?:\\s+(\\d+(?:\\.\\d+)?)\\s+MB/s)?`)\n\n\tscanner := bufio.NewScanner(strings.NewReader(output))\n\tfor scanner.Scan() {\n\t\tline := strings.TrimSpace(scanner.Text())\n\t\tif !strings.HasPrefix(line, \"Benchmark\") {\n\t\t\tcontinue\n\t\t}\n\n\t\tmatches := benchmarkRegex.FindStringSubmatch(line)\n\t\tif len(matches) < 4 {\n\t\t\tcontinue\n\t\t}\n\n\t\titerations, err := strconv.Atoi(matches[2])\n\t\tif err != nil {\n\t\t\tcontinue\n\t\t}\n\n\t\tnsPerOp, err := strconv.ParseFloat(matches[3], 64)\n\t\tif err != nil {\n\t\t\tcontinue\n\t\t}\n\n\t\tresult := BenchmarkResult{\n\t\t\tName:        matches[1],\n\t\t\tIterations:  iterations,\n\t\t\tNsPerOp:     nsPerOp,\n\t\t\tTimestamp:   time.Now(),\n\t\t\tGitCommit:   pd.gitCommit,\n\t\t\tGitBranch:   pd.gitBranch,\n\t\t\tEnvironment: pd.environment,\n\t\t}\n\n\t\t// Parse optional fields\n\t\tif len(matches) > 4 && matches[4] != \"\" {\n\t\t\tif bytesPerOp, err := strconv.ParseInt(matches[4], 10, 64); err == nil {\n\t\t\t\tresult.BytesPerOp = bytesPerOp\n\t\t\t}\n\t\t}\n\n\t\tif len(matches) > 5 && matches[5] != \"\" {\n\t\t\tif allocsPerOp, err := strconv.ParseInt(matches[5], 10, 64); err == nil {\n\t\t\t\tresult.AllocsPerOp = allocsPerOp\n\t\t\t}\n\t\t}\n\n\t\tif len(matches) > 6 && matches[6] != \"\" {\n\t\t\tif mbPerSec, err := strconv.ParseFloat(matches[6], 64); err == nil {\n\t\t\t\tresult.MBPerSec = mbPerSec\n\t\t\t}\n\t\t}\n\n\t\tresults = append(results, result)\n\t}\n\n\tif err := scanner.Err(); err != nil {\n\t\treturn nil, fmt.Errorf(\"scanning benchmark output: %w\", err)\n\t}\n\n\treturn results, nil\n}\n\n// UpdateBaselines updates performance baselines with new benchmark results\nfunc (pd *PerformanceDetector) UpdateBaselines(results []BenchmarkResult) error {\n\t// Validate baseline directory path to prevent path traversal attacks\n\tif err := pd.validateBaselineDirectory(); err != nil {\n\t\treturn fmt.Errorf(\"invalid baseline directory: %w\", err)\n\t}\n\n\tif err := os.MkdirAll(pd.baselineDir, 0700); err != nil { // More restrictive permissions\n\t\treturn fmt.Errorf(\"creating baseline directory: %w\", err)\n\t}\n\n\tfor _, result := range results {\n\t\tbaseline, err := pd.loadBaseline(result.Name)\n\t\tif err != nil {\n\t\t\t// Create new baseline if it doesn't exist\n\t\t\tbaseline = &PerformanceBaseline{\n\t\t\t\tBenchmarkName: result.Name,\n\t\t\t\tSamples:       []float64{},\n\t\t\t}\n\t\t}\n\n\t\t// Add new sample\n\t\tbaseline.Samples = append(baseline.Samples, result.NsPerOp)\n\n\t\t// Keep only the last 100 samples to prevent unlimited growth\n\t\tconst maxSamples = 100\n\t\tif len(baseline.Samples) > maxSamples {\n\t\t\tbaseline.Samples = baseline.Samples[len(baseline.Samples)-maxSamples:]\n\t\t}\n\n\t\t// Recalculate statistics\n\t\tpd.calculateStatistics(baseline)\n\t\tbaseline.LastUpdated = time.Now()\n\t\tbaseline.SampleCount = len(baseline.Samples)\n\n\t\tif err := pd.saveBaseline(baseline); err != nil {\n\t\t\treturn fmt.Errorf(\"saving baseline for %s: %w\", result.Name, err)\n\t\t}\n\t}\n\n\treturn nil\n}\n\n// DetectRegressions analyzes benchmark results against baselines for regressions\nfunc (pd *PerformanceDetector) DetectRegressions(results []BenchmarkResult) ([]RegressionDetection, error) {\n\tvar regressions []RegressionDetection\n\n\t// Calculate total number of statistical comparisons for multiple testing correction\n\t// We test 3 metrics per benchmark: performance, memory, allocations\n\tnumComparisons := len(results) * 3\n\n\tfor _, result := range results {\n\t\tbaseline, err := pd.loadBaseline(result.Name)\n\t\tif err != nil {\n\t\t\t// Skip if no baseline exists yet\n\t\t\tcontinue\n\t\t}\n\n\t\t// Need minimum samples for reliable detection\n\t\tif baseline.SampleCount < pd.thresholds.MinSamples {\n\t\t\tcontinue\n\t\t}\n\n\t\t// Detect performance regression\n\t\tif perfRegression := pd.detectPerformanceRegressionWithStats(result, baseline, numComparisons); perfRegression != nil {\n\t\t\tregressions = append(regressions, *perfRegression)\n\t\t}\n\n\t\t// Detect memory regression\n\t\tif memRegression := pd.detectMemoryRegressionWithStats(result, baseline, numComparisons); memRegression != nil {\n\t\t\tregressions = append(regressions, *memRegression)\n\t\t}\n\n\t\t// Detect allocation regression\n\t\tif allocRegression := pd.detectAllocationRegressionWithStats(result, baseline, numComparisons); allocRegression != nil {\n\t\t\tregressions = append(regressions, *allocRegression)\n\t\t}\n\t}\n\n\treturn regressions, nil\n}\n\n// detectPerformanceRegressionWithStats checks for execution time regressions with proper statistics\nfunc (pd *PerformanceDetector) detectPerformanceRegressionWithStats(result BenchmarkResult, baseline *PerformanceBaseline, numComparisons int) *RegressionDetection {\n\t// Perform rigorous statistical analysis\n\tstatResult := pd.statisticalValidator.CalculateStatisticalConfidence(\n\t\tresult.NsPerOp,\n\t\tbaseline,\n\t\tnumComparisons,\n\t)\n\n\t// Check if statistically significant\n\tif !pd.statisticalValidator.IsStatisticallySignificant(statResult) {\n\t\treturn nil // Not statistically significant\n\t}\n\n\tratio := result.NsPerOp / baseline.Mean\n\n\tif ratio > pd.thresholds.SlownessThreshold {\n\t\tpercentageChange := (ratio - 1.0) * 100\n\t\tseverity := pd.calculateSeverity(ratio, pd.thresholds.SlownessThreshold)\n\n\t\treturn &RegressionDetection{\n\t\t\tBenchmarkName:     result.Name,\n\t\t\tIsRegression:      true,\n\t\t\tCurrentValue:      result.NsPerOp,\n\t\t\tBaselineValue:     baseline.Mean,\n\t\t\tPercentageChange:  percentageChange,\n\t\t\tThreshold:         pd.thresholds.SlownessThreshold,\n\t\t\tConfidence:        statResult.Confidence,\n\t\t\tRegressionType:    \"performance\",\n\t\t\tSeverity:          severity,\n\t\t\tRecommendedAction: pd.getPerformanceRecommendation(severity, percentageChange),\n\t\t}\n\t}\n\n\treturn nil\n}\n\n// detectPerformanceRegression checks for execution time regressions (legacy function for backward compatibility)\nfunc (pd *PerformanceDetector) detectPerformanceRegression(result BenchmarkResult, baseline *PerformanceBaseline) *RegressionDetection {\n\tratio := result.NsPerOp / baseline.Mean\n\n\tif ratio > pd.thresholds.SlownessThreshold {\n\t\tpercentageChange := (ratio - 1.0) * 100\n\t\tseverity := pd.calculateSeverity(ratio, pd.thresholds.SlownessThreshold)\n\n\t\treturn &RegressionDetection{\n\t\t\tBenchmarkName:     result.Name,\n\t\t\tIsRegression:      true,\n\t\t\tCurrentValue:      result.NsPerOp,\n\t\t\tBaselineValue:     baseline.Mean,\n\t\t\tPercentageChange:  percentageChange,\n\t\t\tThreshold:         pd.thresholds.SlownessThreshold,\n\t\t\tConfidence:        pd.calculateConfidence(result.NsPerOp, baseline),\n\t\t\tRegressionType:    \"performance\",\n\t\t\tSeverity:          severity,\n\t\t\tRecommendedAction: pd.getPerformanceRecommendation(severity, percentageChange),\n\t\t}\n\t}\n\n\treturn nil\n}\n\n// regressionParams holds parameters for regression detection\ntype regressionParams struct {\n\tmetricValue     int64\n\tsuffix          string\n\tmeanMultiplier  float64\n\tstdDevMultiplier float64\n\tsampleScaling   float64\n\tthreshold       float64\n\tregressionType  string\n\tgetRecommendation func(severity int, percentageChange float64) string\n}\n\n// detectRegressionWithStats is a helper function for memory and allocation regression detection\nfunc (pd *PerformanceDetector) detectRegressionWithStats(result BenchmarkResult, baseline *PerformanceBaseline, numComparisons int, params regressionParams) *RegressionDetection {\n\tif params.metricValue == 0 {\n\t\treturn nil // No data available\n\t}\n\n\t// Create baseline from performance baseline samples\n\t// Convert ns/op samples to a rough baseline (this is a simplification)\n\t// In production, you'd maintain separate baselines for each metric type\n\tmetricBaseline := &PerformanceBaseline{\n\t\tBenchmarkName: baseline.BenchmarkName + params.suffix,\n\t\tSamples:       make([]float64, len(baseline.Samples)),\n\t\tMean:          float64(params.metricValue) * params.meanMultiplier,\n\t\tStdDev:        float64(params.metricValue) * params.stdDevMultiplier,\n\t\tSampleCount:   baseline.SampleCount,\n\t}\n\n\t// Copy samples with scaling (rough approximation)\n\tfor i, sample := range baseline.Samples {\n\t\tmetricBaseline.Samples[i] = sample * params.sampleScaling\n\t}\n\n\t// Perform statistical analysis\n\tstatResult := pd.statisticalValidator.CalculateStatisticalConfidence(\n\t\tfloat64(params.metricValue),\n\t\tmetricBaseline,\n\t\tnumComparisons,\n\t)\n\n\t// Check if statistically significant\n\tif !pd.statisticalValidator.IsStatisticallySignificant(statResult) {\n\t\treturn nil // Not statistically significant\n\t}\n\n\tratio := float64(params.metricValue) / metricBaseline.Mean\n\n\tif ratio > params.threshold {\n\t\tpercentageChange := (ratio - 1.0) * 100\n\t\tseverity := pd.calculateSeverity(ratio, params.threshold)\n\n\t\treturn &RegressionDetection{\n\t\t\tBenchmarkName:     result.Name,\n\t\t\tIsRegression:      true,\n\t\t\tCurrentValue:      float64(params.metricValue),\n\t\t\tBaselineValue:     metricBaseline.Mean,\n\t\t\tPercentageChange:  percentageChange,\n\t\t\tThreshold:         params.threshold,\n\t\t\tConfidence:        statResult.Confidence,\n\t\t\tRegressionType:    params.regressionType,\n\t\t\tSeverity:          severity,\n\t\t\tRecommendedAction: params.getRecommendation(severity, percentageChange),\n\t\t}\n\t}\n\n\treturn nil\n}\n\n// detectMemoryRegressionWithStats checks for memory usage regressions with proper statistics\nfunc (pd *PerformanceDetector) detectMemoryRegressionWithStats(result BenchmarkResult, baseline *PerformanceBaseline, numComparisons int) *RegressionDetection {\n\treturn pd.detectRegressionWithStats(result, baseline, numComparisons, regressionParams{\n\t\tmetricValue:       result.BytesPerOp,\n\t\tsuffix:            \"_memory\",\n\t\tmeanMultiplier:    0.8, // Conservative estimate\n\t\tstdDevMultiplier:  0.1, // Assume 10% variance\n\t\tsampleScaling:     0.1, // Scale performance to approximate memory\n\t\tthreshold:         pd.thresholds.MemoryThreshold,\n\t\tregressionType:    \"memory\",\n\t\tgetRecommendation: pd.getMemoryRecommendation,\n\t})\n}\n\n// detectMemoryRegression checks for memory usage regressions (legacy function for backward compatibility)\nfunc (pd *PerformanceDetector) detectMemoryRegression(result BenchmarkResult, baseline *PerformanceBaseline) *RegressionDetection {\n\tif result.BytesPerOp == 0 {\n\t\treturn nil // No memory data available\n\t}\n\n\t// For memory regression, we need historical memory data\n\t// This is a simplified implementation - in practice, you'd maintain separate baselines for memory\n\t// Use a conservative baseline that's 80% of current value to simulate historical data\n\tmemoryBaseline := float64(result.BytesPerOp) * 0.8\n\n\tratio := float64(result.BytesPerOp) / memoryBaseline\n\n\tif ratio > pd.thresholds.MemoryThreshold {\n\t\tpercentageChange := (ratio - 1.0) * 100\n\t\tseverity := pd.calculateSeverity(ratio, pd.thresholds.MemoryThreshold)\n\n\t\treturn &RegressionDetection{\n\t\t\tBenchmarkName:     result.Name,\n\t\t\tIsRegression:      true,\n\t\t\tCurrentValue:      float64(result.BytesPerOp),\n\t\t\tBaselineValue:     memoryBaseline,\n\t\t\tPercentageChange:  percentageChange,\n\t\t\tThreshold:         pd.thresholds.MemoryThreshold,\n\t\t\tConfidence:        0.8, // Simplified confidence for memory\n\t\t\tRegressionType:    \"memory\",\n\t\t\tSeverity:          severity,\n\t\t\tRecommendedAction: pd.getMemoryRecommendation(severity, percentageChange),\n\t\t}\n\t}\n\n\treturn nil\n}\n\n// detectAllocationRegressionWithStats checks for allocation count regressions with proper statistics\nfunc (pd *PerformanceDetector) detectAllocationRegressionWithStats(result BenchmarkResult, baseline *PerformanceBaseline, numComparisons int) *RegressionDetection {\n\treturn pd.detectRegressionWithStats(result, baseline, numComparisons, regressionParams{\n\t\tmetricValue:       result.AllocsPerOp,\n\t\tsuffix:            \"_allocs\",\n\t\tmeanMultiplier:    0.75, // Conservative estimate\n\t\tstdDevMultiplier:  0.05, // Assume 5% variance (allocations are typically more stable)\n\t\tsampleScaling:     0.001, // Scale performance to approximate allocations\n\t\tthreshold:         pd.thresholds.AllocThreshold,\n\t\tregressionType:    \"allocations\",\n\t\tgetRecommendation: pd.getAllocationRecommendation,\n\t})\n}\n\n// detectAllocationRegression checks for allocation count regressions (legacy function for backward compatibility)\nfunc (pd *PerformanceDetector) detectAllocationRegression(result BenchmarkResult, baseline *PerformanceBaseline) *RegressionDetection {\n\tif result.AllocsPerOp == 0 {\n\t\treturn nil // No allocation data available\n\t}\n\n\t// Simplified allocation baseline calculation\n\t// Use a conservative baseline that's 75% of current value to simulate historical data\n\tallocBaseline := float64(result.AllocsPerOp) * 0.75\n\n\tratio := float64(result.AllocsPerOp) / allocBaseline\n\n\tif ratio > pd.thresholds.AllocThreshold {\n\t\tpercentageChange := (ratio - 1.0) * 100\n\t\tseverity := pd.calculateSeverity(ratio, pd.thresholds.AllocThreshold)\n\n\t\treturn &RegressionDetection{\n\t\t\tBenchmarkName:     result.Name,\n\t\t\tIsRegression:      true,\n\t\t\tCurrentValue:      float64(result.AllocsPerOp),\n\t\t\tBaselineValue:     allocBaseline,\n\t\t\tPercentageChange:  percentageChange,\n\t\t\tThreshold:         pd.thresholds.AllocThreshold,\n\t\t\tConfidence:        0.8, // Simplified confidence for allocations\n\t\t\tRegressionType:    \"allocations\",\n\t\t\tSeverity:          severity,\n\t\t\tRecommendedAction: pd.getAllocationRecommendation(severity, percentageChange),\n\t\t}\n\t}\n\n\treturn nil\n}\n\n// calculateSeverity determines regression severity based on threshold ratio\nfunc (pd *PerformanceDetector) calculateSeverity(ratio, threshold float64) string {\n\tif ratio > threshold*2.0 {\n\t\treturn \"critical\"\n\t} else if ratio > threshold*1.15 {\n\t\treturn \"major\"\n\t}\n\treturn \"minor\"\n}\n\n// calculateConfidence calculates statistical confidence of regression detection (legacy function)\n// DEPRECATED: Use statisticalValidator.CalculateStatisticalConfidence for rigorous statistics\nfunc (pd *PerformanceDetector) calculateConfidence(currentValue float64, baseline *PerformanceBaseline) float64 {\n\t// For backward compatibility, use the new statistical validator with single comparison\n\tstatResult := pd.statisticalValidator.CalculateStatisticalConfidence(currentValue, baseline, 1)\n\treturn statResult.Confidence\n}\n\n// calculateStatistics computes statistical measures for baseline samples\nfunc (pd *PerformanceDetector) calculateStatistics(baseline *PerformanceBaseline) {\n\tif len(baseline.Samples) == 0 {\n\t\treturn\n\t}\n\n\t// Calculate mean\n\tvar sum float64\n\tfor _, sample := range baseline.Samples {\n\t\tsum += sample\n\t}\n\tbaseline.Mean = sum / float64(len(baseline.Samples))\n\n\t// Calculate median\n\tsorted := make([]float64, len(baseline.Samples))\n\tcopy(sorted, baseline.Samples)\n\tsort.Float64s(sorted)\n\n\tn := len(sorted)\n\tif n%2 == 0 {\n\t\tbaseline.Median = (sorted[n/2-1] + sorted[n/2]) / 2\n\t} else {\n\t\tbaseline.Median = sorted[n/2]\n\t}\n\n\t// Calculate standard deviation\n\tvar variance float64\n\tfor _, sample := range baseline.Samples {\n\t\tvariance += math.Pow(sample-baseline.Mean, 2)\n\t}\n\tvariance /= float64(len(baseline.Samples))\n\tbaseline.StdDev = math.Sqrt(variance)\n\n\t// Calculate min and max\n\tbaseline.Min = sorted[0]\n\tbaseline.Max = sorted[n-1]\n}\n\n// loadBaseline loads performance baseline from disk\nfunc (pd *PerformanceDetector) loadBaseline(benchmarkName string) (*PerformanceBaseline, error) {\n\tfilename := filepath.Join(pd.baselineDir, sanitizeFilename(benchmarkName)+\".json\")\n\n\tdata, err := os.ReadFile(filename)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\n\tvar baseline PerformanceBaseline\n\tif err := json.Unmarshal(data, &baseline); err != nil {\n\t\treturn nil, fmt.Errorf(\"unmarshaling baseline: %w\", err)\n\t}\n\n\treturn &baseline, nil\n}\n\n// validateBaselineDirectory validates baseline directory path to prevent path traversal attacks\nfunc (pd *PerformanceDetector) validateBaselineDirectory() error {\n\t// Validate the baseline directory path using the security validation package\n\tif err := validation.ValidatePath(pd.baselineDir); err != nil {\n\t\treturn fmt.Errorf(\"baseline directory validation failed: %w\", err)\n\t}\n\n\t// Ensure the baseline directory is within the current working directory\n\tabsBaselineDir, err := filepath.Abs(pd.baselineDir)\n\tif err != nil {\n\t\treturn fmt.Errorf(\"getting absolute baseline directory: %w\", err)\n\t}\n\n\tcwd, err := os.Getwd()\n\tif err != nil {\n\t\treturn fmt.Errorf(\"getting current working directory: %w\", err)\n\t}\n\n\tabsCwd, err := filepath.Abs(cwd)\n\tif err != nil {\n\t\treturn fmt.Errorf(\"getting absolute current directory: %w\", err)\n\t}\n\n\t// Ensure baseline directory is within current working directory or explicitly allowed subdirectories\n\tif !strings.HasPrefix(absBaselineDir, absCwd) {\n\t\treturn fmt.Errorf(\"baseline directory '%s' is outside current working directory '%s'\", pd.baselineDir, cwd)\n\t}\n\n\t// Additional security: prevent writing to parent directories\n\trelPath, err := filepath.Rel(absCwd, absBaselineDir)\n\tif err != nil {\n\t\treturn fmt.Errorf(\"calculating relative path: %w\", err)\n\t}\n\n\tif strings.HasPrefix(relPath, \"..\") {\n\t\treturn fmt.Errorf(\"baseline directory contains parent directory traversal: %s\", pd.baselineDir)\n\t}\n\n\treturn nil\n}\n\n// saveBaseline saves performance baseline to disk\nfunc (pd *PerformanceDetector) saveBaseline(baseline *PerformanceBaseline) error {\n\t// Sanitize and validate the benchmark name\n\tsanitizedName := sanitizeFilename(baseline.BenchmarkName)\n\tif sanitizedName == \"\" {\n\t\treturn fmt.Errorf(\"invalid benchmark name after sanitization: %s\", baseline.BenchmarkName)\n\t}\n\n\tfilename := filepath.Join(pd.baselineDir, sanitizedName+\".json\")\n\n\t// Validate the complete file path\n\tif err := validation.ValidatePath(filename); err != nil {\n\t\treturn fmt.Errorf(\"invalid baseline file path: %w\", err)\n\t}\n\n\tdata, err := json.MarshalIndent(baseline, \"\", \"  \")\n\tif err != nil {\n\t\treturn fmt.Errorf(\"marshaling baseline: %w\", err)\n\t}\n\n\t// Use more restrictive file permissions (0600 = read/write for owner only)\n\tif err := os.WriteFile(filename, data, 0600); err != nil {\n\t\treturn fmt.Errorf(\"writing baseline file: %w\", err)\n\t}\n\n\treturn nil\n}\n\n// getPerformanceRecommendation provides actionable recommendations for performance regressions\nfunc (pd *PerformanceDetector) getPerformanceRecommendation(severity string, percentageChange float64) string {\n\tswitch severity {\n\tcase \"critical\":\n\t\treturn fmt.Sprintf(\"CRITICAL: %.1f%% performance degradation. Immediate investigation required. Consider reverting recent changes.\", percentageChange)\n\tcase \"major\":\n\t\treturn fmt.Sprintf(\"MAJOR: %.1f%% performance degradation. Review recent commits for performance impact.\", percentageChange)\n\tdefault:\n\t\treturn fmt.Sprintf(\"MINOR: %.1f%% performance degradation. Monitor for trends.\", percentageChange)\n\t}\n}\n\n// getMemoryRecommendation provides actionable recommendations for memory regressions\nfunc (pd *PerformanceDetector) getMemoryRecommendation(severity string, percentageChange float64) string {\n\tswitch severity {\n\tcase \"critical\":\n\t\treturn fmt.Sprintf(\"CRITICAL: %.1f%% memory increase. Check for memory leaks and excessive allocations.\", percentageChange)\n\tcase \"major\":\n\t\treturn fmt.Sprintf(\"MAJOR: %.1f%% memory increase. Review data structures and caching strategies.\", percentageChange)\n\tdefault:\n\t\treturn fmt.Sprintf(\"MINOR: %.1f%% memory increase. Consider memory optimization opportunities.\", percentageChange)\n\t}\n}\n\n// getAllocationRecommendation provides actionable recommendations for allocation regressions\nfunc (pd *PerformanceDetector) getAllocationRecommendation(severity string, percentageChange float64) string {\n\tswitch severity {\n\tcase \"critical\":\n\t\treturn fmt.Sprintf(\"CRITICAL: %.1f%% allocation increase. Implement object pooling and reduce unnecessary allocations.\", percentageChange)\n\tcase \"major\":\n\t\treturn fmt.Sprintf(\"MAJOR: %.1f%% allocation increase. Review slice growth patterns and string concatenations.\", percentageChange)\n\tdefault:\n\t\treturn fmt.Sprintf(\"MINOR: %.1f%% allocation increase. Consider allocation reduction techniques.\", percentageChange)\n\t}\n}\n\n// sanitizeFilename creates a safe filename from benchmark name\nfunc sanitizeFilename(name string) string {\n\t// Replace unsafe characters with underscores\n\tsafe := regexp.MustCompile(`[^a-zA-Z0-9\\-_.]`).ReplaceAllString(name, \"_\")\n\treturn strings.TrimSuffix(safe, \"_\")\n}\n\n// getEnvironment detects the current environment\nfunc getEnvironment() string {\n\tif os.Getenv(\"CI\") != \"\" {\n\t\treturn \"ci\"\n\t}\n\tif os.Getenv(\"GITHUB_ACTIONS\") != \"\" {\n\t\treturn \"github-actions\"\n\t}\n\treturn \"local\"\n}\n\n// DefaultThresholds returns reasonable default regression thresholds\nfunc DefaultThresholds() RegressionThresholds {\n\treturn RegressionThresholds{\n\t\tSlownessThreshold: 1.15, // 15% performance degradation\n\t\tMemoryThreshold:   1.20, // 20% memory increase\n\t\tAllocThreshold:    1.25, // 25% allocation increase\n\t\tMinSamples:        5,    // Need at least 5 samples\n\t\tConfidenceLevel:   0.95, // 95% confidence\n\t}\n}\n",
+      "structuredPatch": [
+        {
+          "oldStart": 328,
+          "oldLines": 7,
+          "newStart": 328,
+          "newLines": 7,
+          "lines": [
+            "   sampleScaling   float64",
+            "   threshold       float64",
+            "   regressionType  string",
+            "-  getRecommendation func(severity int, percentageChange float64) string",
+            "+  getRecommendation func(severity string, percentageChange float64) string",
+            " }",
+            " ",
+            " // detectRegressionWithStats is a helper function for memory and allocation regression detection"
+          ]
+        }
+      ],
+      "userModified": false,
+      "replaceAll": false
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "go build ./internal/performance",
+      "description": "Check if performance package builds without errors"
+    },
+    "tool_response": {
+      "stdout": "",
+      "stderr": "",
+      "interrupted": false,
+      "isImage": false
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "go test ./internal/performance -short",
+      "description": "Test the performance package to ensure it compiles and runs"
+    },
+    "tool_response": {
+      "stdout": "ok  \tgithub.com/conneroisu/templar/internal/performance\t1.253s",
+      "stderr": "",
+      "interrupted": false,
+      "isImage": false
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "go build .",
+      "description": "Check if main project builds"
+    },
+    "tool_response": {
+      "stdout": "",
+      "stderr": "",
+      "interrupted": false,
+      "isImage": false
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "git add internal/performance/detector.go",
+      "description": "Stage performance detector type fix"
+    },
+    "tool_response": {
+      "stdout": "",
+      "stderr": "",
+      "interrupted": false,
+      "isImage": false
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "git commit -m \"fix: Correct type signature for regression parameters\n\n- Fix getRecommendation function parameter type from int to string\n- Resolves type mismatch in performance detector refactoring\n- Ensures proper compatibility with calculateSeverity return type\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\"",
+      "description": "Commit performance detector type fix"
+    },
+    "tool_response": {
+      "stdout": "[dev 9c762cb] fix: Correct type signature for regression parameters\n 1 file changed, 1 insertion(+), 1 deletion(-)",
+      "stderr": "",
+      "interrupted": false,
+      "isImage": false
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Read",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/plugins/integration_test.go",
+      "offset": 195,
+      "limit": 10
+    },
+    "tool_response": {
+      "type": "text",
+      "file": {
+        "filePath": "/home/connerohnesorge/Documents/001Repos/templar/internal/plugins/integration_test.go",
+        "content": "\n\t\tconfig := PluginConfig{Name: \"failing-plugin\", Enabled: true, Config: make(map[string]interface{})}\n\t\t// This should fail during RegisterPlugin since Initialize is called\n\t\terr := manager.RegisterPlugin(failingPlugin, config)\n\t\t// The manager should handle failures gracefully\n\t\t// (exact behavior depends on implementation)\n\n\t\tctx := context.Background()\n\n\t\t// System should still be functional even with failed plugins",
+        "numLines": 10,
+        "startLine": 195,
+        "totalLines": 384
+      }
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Read",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/plugins/integration_test.go",
+      "offset": 210,
+      "limit": 10
+    },
+    "tool_response": {
+      "type": "text",
+      "file": {
+        "filePath": "/home/connerohnesorge/Documents/001Repos/templar/internal/plugins/integration_test.go",
+        "content": "\n\t\t// Processing should continue even if one plugin fails\n\t\t_, err = manager.ProcessComponent(ctx, component)\n\t\t// Should not panic and should handle errors gracefully\n\n\t\terr = manager.Shutdown()\n\t\tassert.NoError(t, err)\n\t})\n}\n",
+        "numLines": 10,
+        "startLine": 210,
+        "totalLines": 384
+      }
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Edit",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/plugins/integration_test.go",
+      "old_string": "\t\tconfig := PluginConfig{Name: \"failing-plugin\", Enabled: true, Config: make(map[string]interface{})}\n\t\t// This should fail during RegisterPlugin since Initialize is called\n\t\terr := manager.RegisterPlugin(failingPlugin, config)\n\t\t// The manager should handle failures gracefully\n\t\t// (exact behavior depends on implementation)",
+      "new_string": "\t\tconfig := PluginConfig{Name: \"failing-plugin\", Enabled: true, Config: make(map[string]interface{})}\n\t\t// This should fail during RegisterPlugin since Initialize is called\n\t\t_ = manager.RegisterPlugin(failingPlugin, config)\n\t\t// The manager should handle failures gracefully\n\t\t// (exact behavior depends on implementation)"
+    },
+    "tool_response": {
+      "filePath": "/home/connerohnesorge/Documents/001Repos/templar/internal/plugins/integration_test.go",
+      "oldString": "\t\tconfig := PluginConfig{Name: \"failing-plugin\", Enabled: true, Config: make(map[string]interface{})}\n\t\t// This should fail during RegisterPlugin since Initialize is called\n\t\terr := manager.RegisterPlugin(failingPlugin, config)\n\t\t// The manager should handle failures gracefully\n\t\t// (exact behavior depends on implementation)",
+      "newString": "\t\tconfig := PluginConfig{Name: \"failing-plugin\", Enabled: true, Config: make(map[string]interface{})}\n\t\t// This should fail during RegisterPlugin since Initialize is called\n\t\t_ = manager.RegisterPlugin(failingPlugin, config)\n\t\t// The manager should handle failures gracefully\n\t\t// (exact behavior depends on implementation)",
+      "originalFile": "package plugins\n\nimport (\n\t\"context\"\n\t\"fmt\"\n\t\"os\"\n\t\"path/filepath\"\n\t\"sync\"\n\t\"testing\"\n\n\t\"github.com/conneroisu/templar/internal/registry\"\n\t\"github.com/conneroisu/templar/internal/types\"\n\t\"github.com/stretchr/testify/assert\"\n\t\"github.com/stretchr/testify/require\"\n)\n\n// TestPluginSystemIntegration tests the plugin system integration with the registry and build pipeline\nfunc TestPluginSystemIntegration(t *testing.T) {\n\tt.Run(\"registry integration\", func(t *testing.T) {\n\t\t// Setup registry and plugin manager\n\t\treg := registry.NewComponentRegistry()\n\t\tmanager := NewPluginManager()\n\n\t\t// Create a test component plugin\n\t\tcomponentPlugin := &MockComponentPlugin{\n\t\t\tMockPlugin: MockPlugin{\n\t\t\t\tname:    \"test-component-plugin\",\n\t\t\t\tversion: \"1.0.0\",\n\t\t\t\thealth: PluginHealth{\n\t\t\t\t\tStatus: HealthStatusHealthy,\n\t\t\t\t},\n\t\t\t},\n\t\t\tpriority: 1,\n\t\t}\n\n\t\t// Register the plugin with config\n\t\tconfig := PluginConfig{\n\t\t\tName:    \"test-component-plugin\",\n\t\t\tEnabled: true,\n\t\t\tConfig:  make(map[string]interface{}),\n\t\t}\n\t\terr := manager.RegisterPlugin(componentPlugin, config)\n\t\trequire.NoError(t, err)\n\n\t\tctx := context.Background()\n\n\t\t// Create test component\n\t\tcomponent := &types.ComponentInfo{\n\t\t\tName:     \"TestComponent\",\n\t\t\tFilePath: \"/test/component.templ\",\n\t\t\tPackage:  \"test\",\n\t\t\tMetadata: make(map[string]interface{}),\n\t\t}\n\n\t\t// Register component in registry\n\t\treg.Register(component)\n\n\t\t// Process component through plugin system\n\t\tprocessedComponent, err := manager.ProcessComponent(ctx, component)\n\t\trequire.NoError(t, err)\n\t\tassert.NotNil(t, processedComponent)\n\n\t\t// Verify plugin processed the component\n\t\tassert.Equal(t, \"test-component-plugin\", processedComponent.Metadata[\"processed_by\"])\n\n\t\t// Shutdown plugins\n\t\terr = manager.Shutdown()\n\t\tassert.NoError(t, err)\n\t})\n\n\tt.Run(\"build pipeline integration\", func(t *testing.T) {\n\t\tmanager := NewPluginManager()\n\n\t\t// Create test build plugin\n\t\tbuildPlugin := &MockBuildPlugin{\n\t\t\tMockPlugin: MockPlugin{\n\t\t\t\tname:    \"test-build-plugin\",\n\t\t\t\tversion: \"1.0.0\",\n\t\t\t\thealth: PluginHealth{\n\t\t\t\t\tStatus: HealthStatusHealthy,\n\t\t\t\t},\n\t\t\t},\n\t\t}\n\n\t\tconfig := PluginConfig{\n\t\t\tName:    \"test-build-plugin\",\n\t\t\tEnabled: true,\n\t\t\tConfig:  make(map[string]interface{}),\n\t\t}\n\t\terr := manager.RegisterPlugin(buildPlugin, config)\n\t\trequire.NoError(t, err)\n\n\t\tctx := context.Background()\n\n\t\t// Test build hooks\n\t\tcomponent := &types.ComponentInfo{\n\t\t\tName:     \"TestComponent\",\n\t\t\tFilePath: \"/test/component.templ\",\n\t\t\tPackage:  \"test\",\n\t\t}\n\n\t\t// Test pre-build hook\n\t\tcomponents := []*types.ComponentInfo{component}\n\t\tif len(manager.buildPlugins) > 0 {\n\t\t\terr = manager.buildPlugins[0].PreBuild(ctx, components)\n\t\t\tassert.NoError(t, err)\n\t\t\tassert.True(t, buildPlugin.preBuildCalled)\n\n\t\t\t// Test post-build hook\n\t\t\tbuildResult := BuildResult{\n\t\t\t\tSuccess: true,\n\t\t\t}\n\t\t\terr = manager.buildPlugins[0].PostBuild(ctx, components, buildResult)\n\t\t\tassert.NoError(t, err)\n\t\t\tassert.True(t, buildPlugin.postBuildCalled)\n\t\t}\n\n\t\terr = manager.Shutdown()\n\t\tassert.NoError(t, err)\n\t})\n}\n\nfunc TestEnhancedPluginManagerIntegration(t *testing.T) {\n\tt.Run(\"basic enhanced manager functionality\", func(t *testing.T) {\n\t\t// Skip this test for now as it has issues with logging setup\n\t\tt.Skip(\"Enhanced plugin manager has logging setup issues, focusing on basic plugin manager tests\")\n\t})\n}\n\nfunc TestPluginIsolationAndSecurity(t *testing.T) {\n\tt.Run(\"plugin isolation\", func(t *testing.T) {\n\t\tmanager := NewPluginManager()\n\n\t\t// Create plugins that might interfere with each other\n\t\tplugin1 := &MockComponentPlugin{\n\t\t\tMockPlugin: MockPlugin{\n\t\t\t\tname:    \"plugin1\",\n\t\t\t\tversion: \"1.0.0\",\n\t\t\t\thealth:  PluginHealth{Status: HealthStatusHealthy},\n\t\t\t},\n\t\t\tpriority: 1,\n\t\t}\n\n\t\tplugin2 := &MockComponentPlugin{\n\t\t\tMockPlugin: MockPlugin{\n\t\t\t\tname:    \"plugin2\",\n\t\t\t\tversion: \"1.0.0\",\n\t\t\t\thealth:  PluginHealth{Status: HealthStatusHealthy},\n\t\t\t},\n\t\t\tpriority: 2,\n\t\t}\n\n\t\t// Register both plugins\n\t\tconfig1 := PluginConfig{Name: \"plugin1\", Enabled: true, Config: make(map[string]interface{})}\n\t\tconfig2 := PluginConfig{Name: \"plugin2\", Enabled: true, Config: make(map[string]interface{})}\n\n\t\terr := manager.RegisterPlugin(plugin1, config1)\n\t\trequire.NoError(t, err)\n\t\terr = manager.RegisterPlugin(plugin2, config2)\n\t\trequire.NoError(t, err)\n\n\t\tctx := context.Background()\n\n\t\t// Test that plugins are isolated\n\t\tcomponent := &types.ComponentInfo{\n\t\t\tName:     \"TestComponent\",\n\t\t\tFilePath: \"/test/component.templ\",\n\t\t\tPackage:  \"test\",\n\t\t\tMetadata: make(map[string]interface{}),\n\t\t}\n\n\t\t// Process component - both plugins should process it\n\t\tprocessedComponent, err := manager.ProcessComponent(ctx, component)\n\t\trequire.NoError(t, err)\n\n\t\t// Since plugin1 has higher priority (lower number), it processes first\n\t\t// But both should have processed it\n\t\tassert.NotNil(t, processedComponent.Metadata[\"processed_by\"])\n\n\t\terr = manager.Shutdown()\n\t\tassert.NoError(t, err)\n\t})\n\n\tt.Run(\"error handling and recovery\", func(t *testing.T) {\n\t\tmanager := NewPluginManager()\n\n\t\t// Create a plugin that fails\n\t\tfailingPlugin := &MockFailingPlugin{\n\t\t\tMockPlugin: MockPlugin{\n\t\t\t\tname:    \"failing-plugin\",\n\t\t\t\tversion: \"1.0.0\",\n\t\t\t\thealth:  PluginHealth{Status: HealthStatusUnhealthy},\n\t\t\t},\n\t\t}\n\n\t\tconfig := PluginConfig{Name: \"failing-plugin\", Enabled: true, Config: make(map[string]interface{})}\n\t\t// This should fail during RegisterPlugin since Initialize is called\n\t\terr := manager.RegisterPlugin(failingPlugin, config)\n\t\t// The manager should handle failures gracefully\n\t\t// (exact behavior depends on implementation)\n\n\t\tctx := context.Background()\n\n\t\t// System should still be functional even with failed plugins\n\t\tcomponent := &types.ComponentInfo{\n\t\t\tName:     \"TestComponent\",\n\t\t\tFilePath: \"/test/component.templ\",\n\t\t\tPackage:  \"test\",\n\t\t}\n\n\t\t// Processing should continue even if one plugin fails\n\t\t_, err = manager.ProcessComponent(ctx, component)\n\t\t// Should not panic and should handle errors gracefully\n\n\t\terr = manager.Shutdown()\n\t\tassert.NoError(t, err)\n\t})\n}\n\nfunc TestConcurrentPluginOperations(t *testing.T) {\n\tt.Run(\"concurrent component processing\", func(t *testing.T) {\n\t\tmanager := NewPluginManager()\n\n\t\t// Register a component plugin\n\t\tplugin := &MockComponentPlugin{\n\t\t\tMockPlugin: MockPlugin{\n\t\t\t\tname:    \"concurrent-plugin\",\n\t\t\t\tversion: \"1.0.0\",\n\t\t\t\thealth:  PluginHealth{Status: HealthStatusHealthy},\n\t\t\t},\n\t\t\tpriority: 1,\n\t\t}\n\n\t\tconfig := PluginConfig{Name: \"concurrent-plugin\", Enabled: true, Config: make(map[string]interface{})}\n\t\terr := manager.RegisterPlugin(plugin, config)\n\t\trequire.NoError(t, err)\n\n\t\tctx := context.Background()\n\n\t\t// Process multiple components concurrently\n\t\tconst numComponents = 50\n\t\tvar wg sync.WaitGroup\n\n\t\tfor i := 0; i < numComponents; i++ {\n\t\t\twg.Add(1)\n\t\t\tgo func(id int) {\n\t\t\t\tdefer wg.Done()\n\n\t\t\t\tcomponent := &types.ComponentInfo{\n\t\t\t\t\tName:     fmt.Sprintf(\"TestComponent%d\", id),\n\t\t\t\t\tFilePath: fmt.Sprintf(\"/test/component%d.templ\", id),\n\t\t\t\t\tPackage:  \"test\",\n\t\t\t\t\tMetadata: make(map[string]interface{}),\n\t\t\t\t}\n\n\t\t\t\tprocessedComponent, err := manager.ProcessComponent(ctx, component)\n\t\t\t\tassert.NoError(t, err)\n\t\t\t\tassert.NotNil(t, processedComponent)\n\t\t\t\tassert.Equal(t, \"concurrent-plugin\", processedComponent.Metadata[\"processed_by\"])\n\t\t\t}(i)\n\t\t}\n\n\t\twg.Wait()\n\n\t\terr = manager.Shutdown()\n\t\tassert.NoError(t, err)\n\t})\n}\n\nfunc TestPluginLifecycleManagement(t *testing.T) {\n\tt.Run(\"plugin lifecycle events\", func(t *testing.T) {\n\t\tmanager := NewPluginManager()\n\n\t\tplugin := &MockLifecyclePlugin{\n\t\t\tMockPlugin: MockPlugin{\n\t\t\t\tname:    \"lifecycle-plugin\",\n\t\t\t\tversion: \"1.0.0\",\n\t\t\t\thealth:  PluginHealth{Status: HealthStatusHealthy},\n\t\t\t},\n\t\t}\n\n\t\tconfig := PluginConfig{Name: \"lifecycle-plugin\", Enabled: true, Config: make(map[string]interface{})}\n\t\terr := manager.RegisterPlugin(plugin, config)\n\t\trequire.NoError(t, err)\n\n\t\t// Test initialization (already called by RegisterPlugin)\n\t\tassert.True(t, plugin.initialized)\n\n\t\t// Test health monitoring\n\t\thealth := plugin.Health()\n\t\tassert.Equal(t, HealthStatusHealthy, health.Status)\n\n\t\t// Test shutdown\n\t\terr = manager.Shutdown()\n\t\tassert.NoError(t, err)\n\t\tassert.True(t, plugin.shutdownCalled)\n\t})\n}\n\nfunc TestPluginDiscoveryAndLoading(t *testing.T) {\n\tt.Run(\"builtin plugin discovery\", func(t *testing.T) {\n\t\t// Test that builtin plugins can be discovered\n\t\tmanager := NewPluginManager()\n\n\t\t// Test plugin management functionality\n\t\tplugins := manager.ListPlugins()\n\t\tinitialCount := len(plugins)\n\n\t\t// Should be able to handle empty plugin lists\n\t\tassert.GreaterOrEqual(t, initialCount, 0, \"Should handle empty plugin list\")\n\n\t\t// Test that we can add a mock plugin\n\t\tmockPlugin := &MockPlugin{\n\t\t\tname:    \"discovery-test\",\n\t\t\tversion: \"1.0.0\",\n\t\t\thealth:  PluginHealth{Status: HealthStatusHealthy},\n\t\t}\n\n\t\tconfig := PluginConfig{Name: \"discovery-test\", Enabled: true, Config: make(map[string]interface{})}\n\t\terr := manager.RegisterPlugin(mockPlugin, config)\n\t\tassert.NoError(t, err, \"Should be able to register discovered plugin\")\n\n\t\t// Verify plugin was added\n\t\tplugins = manager.ListPlugins()\n\t\tassert.Equal(t, initialCount+1, len(plugins), \"Plugin count should increase\")\n\t})\n}\n\n// Mock plugins for testing\n\ntype MockFailingPlugin struct {\n\tMockPlugin\n}\n\nfunc (mfp *MockFailingPlugin) Initialize(ctx context.Context, config PluginConfig) error {\n\treturn fmt.Errorf(\"intentional failure\")\n}\n\nfunc (mfp *MockFailingPlugin) HandleComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error) {\n\treturn nil, fmt.Errorf(\"component processing failed\")\n}\n\nfunc (mfp *MockFailingPlugin) SupportedExtensions() []string { return []string{\".templ\"} }\nfunc (mfp *MockFailingPlugin) Priority() int                 { return 1 }\n\ntype MockLifecyclePlugin struct {\n\tMockPlugin\n\tinitializeCalled bool\n\tshutdownCalled   bool\n}\n\nfunc (mlp *MockLifecyclePlugin) Initialize(ctx context.Context, config PluginConfig) error {\n\tmlp.initializeCalled = true\n\tmlp.initialized = true\n\treturn nil\n}\n\nfunc (mlp *MockLifecyclePlugin) Shutdown(ctx context.Context) error {\n\tmlp.shutdownCalled = true\n\treturn nil\n}\n\n// Additional types needed for testing\n\n// Integration test helpers\n\nfunc createTempPluginDir(t *testing.T) string {\n\tdir, err := os.MkdirTemp(\"\", \"plugin-test\")\n\trequire.NoError(t, err)\n\n\tt.Cleanup(func() {\n\t\tos.RemoveAll(dir)\n\t})\n\n\treturn dir\n}\n\nfunc createTestPluginFile(t *testing.T, dir, name, content string) string {\n\tfilename := filepath.Join(dir, name)\n\terr := os.WriteFile(filename, []byte(content), 0644)\n\trequire.NoError(t, err)\n\treturn filename\n}\n",
+      "structuredPatch": [
+        {
+          "oldStart": 195,
+          "oldLines": 7,
+          "newStart": 195,
+          "newLines": 7,
+          "lines": [
+            " ",
+            "     config := PluginConfig{Name: \"failing-plugin\", Enabled: true, Config: make(map[string]interface{})}",
+            "     // This should fail during RegisterPlugin since Initialize is called",
+            "-    err := manager.RegisterPlugin(failingPlugin, config)",
+            "+    _ = manager.RegisterPlugin(failingPlugin, config)",
+            "     // The manager should handle failures gracefully",
+            "     // (exact behavior depends on implementation)",
+            " "
+          ]
+        }
+      ],
+      "userModified": false,
+      "replaceAll": false
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Edit",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/plugins/integration_test.go",
+      "old_string": "\t\t// Processing should continue even if one plugin fails\n\t\t_, err = manager.ProcessComponent(ctx, component)\n\t\t// Should not panic and should handle errors gracefully",
+      "new_string": "\t\t// Processing should continue even if one plugin fails\n\t\t_, _ = manager.ProcessComponent(ctx, component)\n\t\t// Should not panic and should handle errors gracefully"
+    },
+    "tool_response": {
+      "filePath": "/home/connerohnesorge/Documents/001Repos/templar/internal/plugins/integration_test.go",
+      "oldString": "\t\t// Processing should continue even if one plugin fails\n\t\t_, err = manager.ProcessComponent(ctx, component)\n\t\t// Should not panic and should handle errors gracefully",
+      "newString": "\t\t// Processing should continue even if one plugin fails\n\t\t_, _ = manager.ProcessComponent(ctx, component)\n\t\t// Should not panic and should handle errors gracefully",
+      "originalFile": "package plugins\n\nimport (\n\t\"context\"\n\t\"fmt\"\n\t\"os\"\n\t\"path/filepath\"\n\t\"sync\"\n\t\"testing\"\n\n\t\"github.com/conneroisu/templar/internal/registry\"\n\t\"github.com/conneroisu/templar/internal/types\"\n\t\"github.com/stretchr/testify/assert\"\n\t\"github.com/stretchr/testify/require\"\n)\n\n// TestPluginSystemIntegration tests the plugin system integration with the registry and build pipeline\nfunc TestPluginSystemIntegration(t *testing.T) {\n\tt.Run(\"registry integration\", func(t *testing.T) {\n\t\t// Setup registry and plugin manager\n\t\treg := registry.NewComponentRegistry()\n\t\tmanager := NewPluginManager()\n\n\t\t// Create a test component plugin\n\t\tcomponentPlugin := &MockComponentPlugin{\n\t\t\tMockPlugin: MockPlugin{\n\t\t\t\tname:    \"test-component-plugin\",\n\t\t\t\tversion: \"1.0.0\",\n\t\t\t\thealth: PluginHealth{\n\t\t\t\t\tStatus: HealthStatusHealthy,\n\t\t\t\t},\n\t\t\t},\n\t\t\tpriority: 1,\n\t\t}\n\n\t\t// Register the plugin with config\n\t\tconfig := PluginConfig{\n\t\t\tName:    \"test-component-plugin\",\n\t\t\tEnabled: true,\n\t\t\tConfig:  make(map[string]interface{}),\n\t\t}\n\t\terr := manager.RegisterPlugin(componentPlugin, config)\n\t\trequire.NoError(t, err)\n\n\t\tctx := context.Background()\n\n\t\t// Create test component\n\t\tcomponent := &types.ComponentInfo{\n\t\t\tName:     \"TestComponent\",\n\t\t\tFilePath: \"/test/component.templ\",\n\t\t\tPackage:  \"test\",\n\t\t\tMetadata: make(map[string]interface{}),\n\t\t}\n\n\t\t// Register component in registry\n\t\treg.Register(component)\n\n\t\t// Process component through plugin system\n\t\tprocessedComponent, err := manager.ProcessComponent(ctx, component)\n\t\trequire.NoError(t, err)\n\t\tassert.NotNil(t, processedComponent)\n\n\t\t// Verify plugin processed the component\n\t\tassert.Equal(t, \"test-component-plugin\", processedComponent.Metadata[\"processed_by\"])\n\n\t\t// Shutdown plugins\n\t\terr = manager.Shutdown()\n\t\tassert.NoError(t, err)\n\t})\n\n\tt.Run(\"build pipeline integration\", func(t *testing.T) {\n\t\tmanager := NewPluginManager()\n\n\t\t// Create test build plugin\n\t\tbuildPlugin := &MockBuildPlugin{\n\t\t\tMockPlugin: MockPlugin{\n\t\t\t\tname:    \"test-build-plugin\",\n\t\t\t\tversion: \"1.0.0\",\n\t\t\t\thealth: PluginHealth{\n\t\t\t\t\tStatus: HealthStatusHealthy,\n\t\t\t\t},\n\t\t\t},\n\t\t}\n\n\t\tconfig := PluginConfig{\n\t\t\tName:    \"test-build-plugin\",\n\t\t\tEnabled: true,\n\t\t\tConfig:  make(map[string]interface{}),\n\t\t}\n\t\terr := manager.RegisterPlugin(buildPlugin, config)\n\t\trequire.NoError(t, err)\n\n\t\tctx := context.Background()\n\n\t\t// Test build hooks\n\t\tcomponent := &types.ComponentInfo{\n\t\t\tName:     \"TestComponent\",\n\t\t\tFilePath: \"/test/component.templ\",\n\t\t\tPackage:  \"test\",\n\t\t}\n\n\t\t// Test pre-build hook\n\t\tcomponents := []*types.ComponentInfo{component}\n\t\tif len(manager.buildPlugins) > 0 {\n\t\t\terr = manager.buildPlugins[0].PreBuild(ctx, components)\n\t\t\tassert.NoError(t, err)\n\t\t\tassert.True(t, buildPlugin.preBuildCalled)\n\n\t\t\t// Test post-build hook\n\t\t\tbuildResult := BuildResult{\n\t\t\t\tSuccess: true,\n\t\t\t}\n\t\t\terr = manager.buildPlugins[0].PostBuild(ctx, components, buildResult)\n\t\t\tassert.NoError(t, err)\n\t\t\tassert.True(t, buildPlugin.postBuildCalled)\n\t\t}\n\n\t\terr = manager.Shutdown()\n\t\tassert.NoError(t, err)\n\t})\n}\n\nfunc TestEnhancedPluginManagerIntegration(t *testing.T) {\n\tt.Run(\"basic enhanced manager functionality\", func(t *testing.T) {\n\t\t// Skip this test for now as it has issues with logging setup\n\t\tt.Skip(\"Enhanced plugin manager has logging setup issues, focusing on basic plugin manager tests\")\n\t})\n}\n\nfunc TestPluginIsolationAndSecurity(t *testing.T) {\n\tt.Run(\"plugin isolation\", func(t *testing.T) {\n\t\tmanager := NewPluginManager()\n\n\t\t// Create plugins that might interfere with each other\n\t\tplugin1 := &MockComponentPlugin{\n\t\t\tMockPlugin: MockPlugin{\n\t\t\t\tname:    \"plugin1\",\n\t\t\t\tversion: \"1.0.0\",\n\t\t\t\thealth:  PluginHealth{Status: HealthStatusHealthy},\n\t\t\t},\n\t\t\tpriority: 1,\n\t\t}\n\n\t\tplugin2 := &MockComponentPlugin{\n\t\t\tMockPlugin: MockPlugin{\n\t\t\t\tname:    \"plugin2\",\n\t\t\t\tversion: \"1.0.0\",\n\t\t\t\thealth:  PluginHealth{Status: HealthStatusHealthy},\n\t\t\t},\n\t\t\tpriority: 2,\n\t\t}\n\n\t\t// Register both plugins\n\t\tconfig1 := PluginConfig{Name: \"plugin1\", Enabled: true, Config: make(map[string]interface{})}\n\t\tconfig2 := PluginConfig{Name: \"plugin2\", Enabled: true, Config: make(map[string]interface{})}\n\n\t\terr := manager.RegisterPlugin(plugin1, config1)\n\t\trequire.NoError(t, err)\n\t\terr = manager.RegisterPlugin(plugin2, config2)\n\t\trequire.NoError(t, err)\n\n\t\tctx := context.Background()\n\n\t\t// Test that plugins are isolated\n\t\tcomponent := &types.ComponentInfo{\n\t\t\tName:     \"TestComponent\",\n\t\t\tFilePath: \"/test/component.templ\",\n\t\t\tPackage:  \"test\",\n\t\t\tMetadata: make(map[string]interface{}),\n\t\t}\n\n\t\t// Process component - both plugins should process it\n\t\tprocessedComponent, err := manager.ProcessComponent(ctx, component)\n\t\trequire.NoError(t, err)\n\n\t\t// Since plugin1 has higher priority (lower number), it processes first\n\t\t// But both should have processed it\n\t\tassert.NotNil(t, processedComponent.Metadata[\"processed_by\"])\n\n\t\terr = manager.Shutdown()\n\t\tassert.NoError(t, err)\n\t})\n\n\tt.Run(\"error handling and recovery\", func(t *testing.T) {\n\t\tmanager := NewPluginManager()\n\n\t\t// Create a plugin that fails\n\t\tfailingPlugin := &MockFailingPlugin{\n\t\t\tMockPlugin: MockPlugin{\n\t\t\t\tname:    \"failing-plugin\",\n\t\t\t\tversion: \"1.0.0\",\n\t\t\t\thealth:  PluginHealth{Status: HealthStatusUnhealthy},\n\t\t\t},\n\t\t}\n\n\t\tconfig := PluginConfig{Name: \"failing-plugin\", Enabled: true, Config: make(map[string]interface{})}\n\t\t// This should fail during RegisterPlugin since Initialize is called\n\t\t_ = manager.RegisterPlugin(failingPlugin, config)\n\t\t// The manager should handle failures gracefully\n\t\t// (exact behavior depends on implementation)\n\n\t\tctx := context.Background()\n\n\t\t// System should still be functional even with failed plugins\n\t\tcomponent := &types.ComponentInfo{\n\t\t\tName:     \"TestComponent\",\n\t\t\tFilePath: \"/test/component.templ\",\n\t\t\tPackage:  \"test\",\n\t\t}\n\n\t\t// Processing should continue even if one plugin fails\n\t\t_, err = manager.ProcessComponent(ctx, component)\n\t\t// Should not panic and should handle errors gracefully\n\n\t\terr = manager.Shutdown()\n\t\tassert.NoError(t, err)\n\t})\n}\n\nfunc TestConcurrentPluginOperations(t *testing.T) {\n\tt.Run(\"concurrent component processing\", func(t *testing.T) {\n\t\tmanager := NewPluginManager()\n\n\t\t// Register a component plugin\n\t\tplugin := &MockComponentPlugin{\n\t\t\tMockPlugin: MockPlugin{\n\t\t\t\tname:    \"concurrent-plugin\",\n\t\t\t\tversion: \"1.0.0\",\n\t\t\t\thealth:  PluginHealth{Status: HealthStatusHealthy},\n\t\t\t},\n\t\t\tpriority: 1,\n\t\t}\n\n\t\tconfig := PluginConfig{Name: \"concurrent-plugin\", Enabled: true, Config: make(map[string]interface{})}\n\t\terr := manager.RegisterPlugin(plugin, config)\n\t\trequire.NoError(t, err)\n\n\t\tctx := context.Background()\n\n\t\t// Process multiple components concurrently\n\t\tconst numComponents = 50\n\t\tvar wg sync.WaitGroup\n\n\t\tfor i := 0; i < numComponents; i++ {\n\t\t\twg.Add(1)\n\t\t\tgo func(id int) {\n\t\t\t\tdefer wg.Done()\n\n\t\t\t\tcomponent := &types.ComponentInfo{\n\t\t\t\t\tName:     fmt.Sprintf(\"TestComponent%d\", id),\n\t\t\t\t\tFilePath: fmt.Sprintf(\"/test/component%d.templ\", id),\n\t\t\t\t\tPackage:  \"test\",\n\t\t\t\t\tMetadata: make(map[string]interface{}),\n\t\t\t\t}\n\n\t\t\t\tprocessedComponent, err := manager.ProcessComponent(ctx, component)\n\t\t\t\tassert.NoError(t, err)\n\t\t\t\tassert.NotNil(t, processedComponent)\n\t\t\t\tassert.Equal(t, \"concurrent-plugin\", processedComponent.Metadata[\"processed_by\"])\n\t\t\t}(i)\n\t\t}\n\n\t\twg.Wait()\n\n\t\terr = manager.Shutdown()\n\t\tassert.NoError(t, err)\n\t})\n}\n\nfunc TestPluginLifecycleManagement(t *testing.T) {\n\tt.Run(\"plugin lifecycle events\", func(t *testing.T) {\n\t\tmanager := NewPluginManager()\n\n\t\tplugin := &MockLifecyclePlugin{\n\t\t\tMockPlugin: MockPlugin{\n\t\t\t\tname:    \"lifecycle-plugin\",\n\t\t\t\tversion: \"1.0.0\",\n\t\t\t\thealth:  PluginHealth{Status: HealthStatusHealthy},\n\t\t\t},\n\t\t}\n\n\t\tconfig := PluginConfig{Name: \"lifecycle-plugin\", Enabled: true, Config: make(map[string]interface{})}\n\t\terr := manager.RegisterPlugin(plugin, config)\n\t\trequire.NoError(t, err)\n\n\t\t// Test initialization (already called by RegisterPlugin)\n\t\tassert.True(t, plugin.initialized)\n\n\t\t// Test health monitoring\n\t\thealth := plugin.Health()\n\t\tassert.Equal(t, HealthStatusHealthy, health.Status)\n\n\t\t// Test shutdown\n\t\terr = manager.Shutdown()\n\t\tassert.NoError(t, err)\n\t\tassert.True(t, plugin.shutdownCalled)\n\t})\n}\n\nfunc TestPluginDiscoveryAndLoading(t *testing.T) {\n\tt.Run(\"builtin plugin discovery\", func(t *testing.T) {\n\t\t// Test that builtin plugins can be discovered\n\t\tmanager := NewPluginManager()\n\n\t\t// Test plugin management functionality\n\t\tplugins := manager.ListPlugins()\n\t\tinitialCount := len(plugins)\n\n\t\t// Should be able to handle empty plugin lists\n\t\tassert.GreaterOrEqual(t, initialCount, 0, \"Should handle empty plugin list\")\n\n\t\t// Test that we can add a mock plugin\n\t\tmockPlugin := &MockPlugin{\n\t\t\tname:    \"discovery-test\",\n\t\t\tversion: \"1.0.0\",\n\t\t\thealth:  PluginHealth{Status: HealthStatusHealthy},\n\t\t}\n\n\t\tconfig := PluginConfig{Name: \"discovery-test\", Enabled: true, Config: make(map[string]interface{})}\n\t\terr := manager.RegisterPlugin(mockPlugin, config)\n\t\tassert.NoError(t, err, \"Should be able to register discovered plugin\")\n\n\t\t// Verify plugin was added\n\t\tplugins = manager.ListPlugins()\n\t\tassert.Equal(t, initialCount+1, len(plugins), \"Plugin count should increase\")\n\t})\n}\n\n// Mock plugins for testing\n\ntype MockFailingPlugin struct {\n\tMockPlugin\n}\n\nfunc (mfp *MockFailingPlugin) Initialize(ctx context.Context, config PluginConfig) error {\n\treturn fmt.Errorf(\"intentional failure\")\n}\n\nfunc (mfp *MockFailingPlugin) HandleComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error) {\n\treturn nil, fmt.Errorf(\"component processing failed\")\n}\n\nfunc (mfp *MockFailingPlugin) SupportedExtensions() []string { return []string{\".templ\"} }\nfunc (mfp *MockFailingPlugin) Priority() int                 { return 1 }\n\ntype MockLifecyclePlugin struct {\n\tMockPlugin\n\tinitializeCalled bool\n\tshutdownCalled   bool\n}\n\nfunc (mlp *MockLifecyclePlugin) Initialize(ctx context.Context, config PluginConfig) error {\n\tmlp.initializeCalled = true\n\tmlp.initialized = true\n\treturn nil\n}\n\nfunc (mlp *MockLifecyclePlugin) Shutdown(ctx context.Context) error {\n\tmlp.shutdownCalled = true\n\treturn nil\n}\n\n// Additional types needed for testing\n\n// Integration test helpers\n\nfunc createTempPluginDir(t *testing.T) string {\n\tdir, err := os.MkdirTemp(\"\", \"plugin-test\")\n\trequire.NoError(t, err)\n\n\tt.Cleanup(func() {\n\t\tos.RemoveAll(dir)\n\t})\n\n\treturn dir\n}\n\nfunc createTestPluginFile(t *testing.T, dir, name, content string) string {\n\tfilename := filepath.Join(dir, name)\n\terr := os.WriteFile(filename, []byte(content), 0644)\n\trequire.NoError(t, err)\n\treturn filename\n}\n",
+      "structuredPatch": [
+        {
+          "oldStart": 209,
+          "oldLines": 7,
+          "newStart": 209,
+          "newLines": 7,
+          "lines": [
+            "     }",
+            " ",
+            "     // Processing should continue even if one plugin fails",
+            "-    _, err = manager.ProcessComponent(ctx, component)",
+            "+    _, _ = manager.ProcessComponent(ctx, component)",
+            "     // Should not panic and should handle errors gracefully",
+            " ",
+            "     err = manager.Shutdown()"
+          ]
+        }
+      ],
+      "userModified": false,
+      "replaceAll": false
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Read",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/registry/component.go",
+      "offset": 315,
+      "limit": 5
+    },
+    "tool_response": {
+      "type": "text",
+      "file": {
+        "filePath": "/home/connerohnesorge/Documents/001Repos/templar/internal/registry/component.go",
+        "content": "\t\tcleanedPath = strings.TrimPrefix(cleanedPath, \"/\")\n\t\tcleanedPath = strings.TrimPrefix(cleanedPath, \"\\\\\")\n\t\treturn \"safe_component.templ\"\n\t}\n",
+        "numLines": 5,
+        "startLine": 315,
+        "totalLines": 330
+      }
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Read",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/registry/component.go",
+      "offset": 310,
+      "limit": 10
+    },
+    "tool_response": {
+      "type": "text",
+      "file": {
+        "filePath": "/home/connerohnesorge/Documents/001Repos/templar/internal/registry/component.go",
+        "content": "\t// Only strip absolute path markers if they point to dangerous locations\n\tif strings.HasPrefix(cleanedPath, \"/\") &&\n\t\t(strings.Contains(lowerPath, \"etc\") || strings.Contains(lowerPath, \"system\") ||\n\t\t\tstrings.Contains(lowerPath, \"usr\") || strings.Contains(lowerPath, \"bin\") ||\n\t\t\tstrings.Contains(lowerPath, \"var\") || strings.Contains(lowerPath, \"tmp\")) {\n\t\tcleanedPath = strings.TrimPrefix(cleanedPath, \"/\")\n\t\tcleanedPath = strings.TrimPrefix(cleanedPath, \"\\\\\")\n\t\treturn \"safe_component.templ\"\n\t}\n",
+        "numLines": 10,
+        "startLine": 310,
+        "totalLines": 330
+      }
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Edit",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/registry/component.go",
+      "old_string": "\t\tcleanedPath = strings.TrimPrefix(cleanedPath, \"/\")\n\t\tcleanedPath = strings.TrimPrefix(cleanedPath, \"\\\\\")\n\t\treturn \"safe_component.templ\"",
+      "new_string": "\t\tcleanedPath = strings.TrimPrefix(cleanedPath, \"/\")\n\t\treturn \"safe_component.templ\""
+    },
+    "tool_response": {
+      "filePath": "/home/connerohnesorge/Documents/001Repos/templar/internal/registry/component.go",
+      "oldString": "\t\tcleanedPath = strings.TrimPrefix(cleanedPath, \"/\")\n\t\tcleanedPath = strings.TrimPrefix(cleanedPath, \"\\\\\")\n\t\treturn \"safe_component.templ\"",
+      "newString": "\t\tcleanedPath = strings.TrimPrefix(cleanedPath, \"/\")\n\t\treturn \"safe_component.templ\"",
+      "originalFile": "// Package registry provides a central component registry with event-driven\n// architecture for managing templ component metadata and change notifications.\n//\n// The registry maintains a thread-safe collection of discovered components,\n// broadcasts change events to subscribers, and provides component lookup\n// and enumeration capabilities. It supports real-time component management\n// with automatic registration, updates, and removal, integrating with\n// scanners for component discovery and servers for live reload functionality.\npackage registry\n\nimport (\n\t\"path/filepath\"\n\t\"strings\"\n\t\"sync\"\n\t\"time\"\n\n\t\"github.com/conneroisu/templar/internal/types\"\n)\n\n// ComponentRegistry manages all discovered components with thread-safe operations\n// and event-driven notifications.\n//\n// The registry provides:\n// - Thread-safe component registration, lookup, and removal\n// - Event broadcasting to subscribers for real-time updates\n// - Dependency analysis and circular dependency detection\n// - Security hardening through input sanitization\ntype ComponentRegistry struct {\n\t// components stores all registered component information indexed by component name\n\tcomponents map[string]*types.ComponentInfo\n\t// mutex protects concurrent access to components and watchers\n\tmutex sync.RWMutex\n\t// watchers holds channels that receive component change events\n\twatchers []chan types.ComponentEvent\n\t// dependencyAnalyzer analyzes component dependencies and detects circular references\n\tdependencyAnalyzer *DependencyAnalyzer\n}\n\n// NewComponentRegistry creates a new component registry with dependency analysis enabled.\n//\n// The registry is initialized with:\n// - Empty component storage\n// - No active watchers\n// - Dependency analyzer for automatic dependency resolution\nfunc NewComponentRegistry() *ComponentRegistry {\n\tregistry := &ComponentRegistry{\n\t\tcomponents: make(map[string]*types.ComponentInfo),\n\t\twatchers:   make([]chan types.ComponentEvent, 0),\n\t}\n\n\t// Initialize dependency analyzer\n\tregistry.dependencyAnalyzer = NewDependencyAnalyzer(registry)\n\n\treturn registry\n}\n\n// Register adds or updates a component in the registry with security sanitization.\n//\n// The method performs:\n// 1. Input sanitization to prevent security vulnerabilities\n// 2. Component registration or update based on existing state\n// 3. Dependency analysis for the registered component\n// 4. Event notification to all watchers\n//\n// The operation is thread-safe and non-blocking for event notifications.\nfunc (r *ComponentRegistry) Register(component *types.ComponentInfo) {\n\t// Validate and sanitize component data\n\tcomponent = r.sanitizeComponent(component)\n\n\tr.mutex.Lock()\n\n\teventType := types.EventTypeAdded\n\tif _, exists := r.components[component.Name]; exists {\n\t\teventType = types.EventTypeUpdated\n\t}\n\n\tr.components[component.Name] = component\n\tr.mutex.Unlock()\n\n\t// Analyze dependencies for the component\n\tif r.dependencyAnalyzer != nil {\n\t\tdeps, err := r.dependencyAnalyzer.AnalyzeComponent(component)\n\t\tif err == nil {\n\t\t\t// Sanitize dependencies to prevent path traversal\n\t\t\tsanitizedDeps := make([]string, len(deps))\n\t\t\tfor i, dep := range deps {\n\t\t\t\tsanitizedDeps[i] = sanitizeFilePath(dep)\n\t\t\t}\n\n\t\t\tr.mutex.Lock()\n\t\t\tcomponent.Dependencies = sanitizedDeps\n\t\t\tr.mutex.Unlock()\n\t\t}\n\t}\n\n\t// Notify watchers\n\tr.mutex.RLock()\n\tevent := types.ComponentEvent{\n\t\tType:      eventType,\n\t\tComponent: component,\n\t\tTimestamp: time.Now(),\n\t}\n\n\tfor _, watcher := range r.watchers {\n\t\tselect {\n\t\tcase watcher <- event:\n\t\tdefault:\n\t\t\t// Skip if channel is full\n\t\t}\n\t}\n\tr.mutex.RUnlock()\n}\n\n// Get retrieves a component by name\nfunc (r *ComponentRegistry) Get(name string) (*types.ComponentInfo, bool) {\n\tr.mutex.RLock()\n\tdefer r.mutex.RUnlock()\n\n\tcomponent, exists := r.components[name]\n\treturn component, exists\n}\n\n// GetAll returns all registered components\nfunc (r *ComponentRegistry) GetAll() []*types.ComponentInfo {\n\tr.mutex.RLock()\n\tdefer r.mutex.RUnlock()\n\n\tresult := make([]*types.ComponentInfo, 0, len(r.components))\n\tfor _, component := range r.components {\n\t\tresult = append(result, component)\n\t}\n\treturn result\n}\n\n// GetAllMap returns all registered components as a map\nfunc (r *ComponentRegistry) GetAllMap() map[string]*types.ComponentInfo {\n\tr.mutex.RLock()\n\tdefer r.mutex.RUnlock()\n\n\tresult := make(map[string]*types.ComponentInfo)\n\tfor name, component := range r.components {\n\t\tresult[name] = component\n\t}\n\treturn result\n}\n\n// Remove removes a component from the registry\nfunc (r *ComponentRegistry) Remove(name string) {\n\tr.mutex.Lock()\n\tdefer r.mutex.Unlock()\n\n\tcomponent, exists := r.components[name]\n\tif !exists {\n\t\treturn\n\t}\n\n\tdelete(r.components, name)\n\n\t// Notify watchers\n\tevent := types.ComponentEvent{\n\t\tType:      types.EventTypeRemoved,\n\t\tComponent: component,\n\t\tTimestamp: time.Now(),\n\t}\n\n\tfor _, watcher := range r.watchers {\n\t\tselect {\n\t\tcase watcher <- event:\n\t\tdefault:\n\t\t\t// Skip if channel is full\n\t\t}\n\t}\n}\n\n// Watch returns a channel that receives component events for real-time notifications.\n//\n// The returned channel receives events for:\n// - Component registration (EventTypeAdded)\n// - Component updates (EventTypeUpdated)\n// - Component removal (EventTypeRemoved)\n//\n// The channel has a buffer of 100 events to prevent blocking. If the consumer\n// cannot keep up, older events may be dropped. Callers should use UnWatch()\n// to properly clean up the returned channel.\nfunc (r *ComponentRegistry) Watch() <-chan types.ComponentEvent {\n\tr.mutex.Lock()\n\tdefer r.mutex.Unlock()\n\n\tch := make(chan types.ComponentEvent, 100)\n\tr.watchers = append(r.watchers, ch)\n\treturn ch\n}\n\n// UnWatch removes a watcher channel and closes it\nfunc (r *ComponentRegistry) UnWatch(ch <-chan types.ComponentEvent) {\n\tr.mutex.Lock()\n\tdefer r.mutex.Unlock()\n\n\tfor i, watcher := range r.watchers {\n\t\tif watcher == ch {\n\t\t\tclose(watcher)\n\t\t\tr.watchers = append(r.watchers[:i], r.watchers[i+1:]...)\n\t\t\tbreak\n\t\t}\n\t}\n}\n\n// Count returns the number of registered components\nfunc (r *ComponentRegistry) Count() int {\n\tr.mutex.RLock()\n\tdefer r.mutex.RUnlock()\n\n\treturn len(r.components)\n}\n\n// sanitizeComponent sanitizes component data to prevent security issues\nfunc (r *ComponentRegistry) sanitizeComponent(component *types.ComponentInfo) *types.ComponentInfo {\n\tif component == nil {\n\t\treturn component\n\t}\n\n\t// Create a copy to avoid modifying the original\n\tsanitized := *component\n\n\t// Sanitize name - only allow alphanumeric and underscores\n\tsanitized.Name = sanitizeIdentifier(sanitized.Name)\n\n\t// Sanitize package name\n\tsanitized.Package = sanitizeIdentifier(sanitized.Package)\n\n\t// Sanitize file path - remove control characters\n\tsanitized.FilePath = sanitizeFilePath(sanitized.FilePath)\n\n\t// Sanitize parameters\n\tfor i := range sanitized.Parameters {\n\t\tsanitized.Parameters[i].Name = sanitizeIdentifier(sanitized.Parameters[i].Name)\n\t\tsanitized.Parameters[i].Type = sanitizeIdentifier(sanitized.Parameters[i].Type)\n\t}\n\n\t// Sanitize dependencies to prevent path traversal\n\tif sanitized.Dependencies != nil {\n\t\tsanitizedDeps := make([]string, len(sanitized.Dependencies))\n\t\tfor i, dep := range sanitized.Dependencies {\n\t\t\tsanitizedDeps[i] = sanitizeFilePath(dep)\n\t\t}\n\t\tsanitized.Dependencies = sanitizedDeps\n\t}\n\n\treturn &sanitized\n}\n\n// sanitizeIdentifier removes dangerous characters from identifiers\nfunc sanitizeIdentifier(identifier string) string {\n\t// Only allow alphanumeric characters, underscores, and dots (for package names)\n\tvar cleaned []rune\n\tfor _, r := range identifier {\n\t\tif (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_' || r == '.' {\n\t\t\tcleaned = append(cleaned, r)\n\t\t}\n\t}\n\n\tcleanedId := string(cleaned)\n\n\t// Additional security check for dangerous system identifiers\n\tdangerousPatterns := []string{\"etc\", \"system32\", \"windows\", \"usr\", \"bin\", \"var\", \"tmp\", \"passwd\", \"shadow\"}\n\tlowerCleaned := strings.ToLower(cleanedId)\n\tfor _, pattern := range dangerousPatterns {\n\t\tif strings.Contains(lowerCleaned, pattern) {\n\t\t\t// Replace with safe alternative\n\t\t\tcleanedId = \"safe_component\"\n\t\t\tbreak\n\t\t}\n\t}\n\n\treturn cleanedId\n}\n\n// sanitizeFilePath removes control characters and prevents path traversal attacks\nfunc sanitizeFilePath(path string) string {\n\tvar cleaned []rune\n\tfor _, r := range path {\n\t\t// Remove null bytes, newlines, carriage returns, and other control characters\n\t\tif r >= 32 && r != 127 { // Printable ASCII characters\n\t\t\tcleaned = append(cleaned, r)\n\t\t}\n\t}\n\n\tcleanedPath := string(cleaned)\n\n\t// Prevent path traversal attacks\n\t// Remove any directory traversal sequences\n\tcleanedPath = strings.ReplaceAll(cleanedPath, \"../\", \"\")\n\tcleanedPath = strings.ReplaceAll(cleanedPath, \"..\\\\\", \"\") // Windows paths\n\tcleanedPath = strings.ReplaceAll(cleanedPath, \"..\", \"\")   // Any remaining double dots\n\n\t// Use filepath.Clean to normalize the path and prevent other traversal techniques\n\tcleanedPath = filepath.Clean(cleanedPath)\n\n\t// Check for dangerous system paths before preserving absolute paths\n\tdangerousPatterns := []string{\"etc\", \"system32\", \"windows\", \"usr\", \"bin\", \"var\", \"tmp\"}\n\tlowerPath := strings.ToLower(cleanedPath)\n\tfor _, pattern := range dangerousPatterns {\n\t\tif strings.Contains(lowerPath, pattern) {\n\t\t\t// Replace with safe alternative\n\t\t\treturn \"safe_component.templ\"\n\t\t}\n\t}\n\n\t// For legitimate component paths, preserve the original structure\n\t// Only strip absolute path markers if they point to dangerous locations\n\tif strings.HasPrefix(cleanedPath, \"/\") &&\n\t\t(strings.Contains(lowerPath, \"etc\") || strings.Contains(lowerPath, \"system\") ||\n\t\t\tstrings.Contains(lowerPath, \"usr\") || strings.Contains(lowerPath, \"bin\") ||\n\t\t\tstrings.Contains(lowerPath, \"var\") || strings.Contains(lowerPath, \"tmp\")) {\n\t\tcleanedPath = strings.TrimPrefix(cleanedPath, \"/\")\n\t\tcleanedPath = strings.TrimPrefix(cleanedPath, \"\\\\\")\n\t\treturn \"safe_component.templ\"\n\t}\n\n\treturn cleanedPath\n}\n\n// DetectCircularDependencies detects circular dependencies using the dependency analyzer\nfunc (r *ComponentRegistry) DetectCircularDependencies() [][]string {\n\tif r.dependencyAnalyzer == nil {\n\t\treturn nil\n\t}\n\treturn r.dependencyAnalyzer.DetectCircularDependencies()\n}\n",
+      "structuredPatch": [
+        {
+          "oldStart": 313,
+          "oldLines": 7,
+          "newStart": 313,
+          "newLines": 6,
+          "lines": [
+            "       strings.Contains(lowerPath, \"usr\") || strings.Contains(lowerPath, \"bin\") ||",
+            "       strings.Contains(lowerPath, \"var\") || strings.Contains(lowerPath, \"tmp\")) {",
+            "     cleanedPath = strings.TrimPrefix(cleanedPath, \"/\")",
+            "-    cleanedPath = strings.TrimPrefix(cleanedPath, \"\\\\\")",
+            "     return \"safe_component.templ\"",
+            "   }",
+            " "
+          ]
+        }
+      ],
+      "userModified": false,
+      "replaceAll": false
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Read",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/server/server.go",
+      "offset": 315,
+      "limit": 5
+    },
+    "tool_response": {
+      "type": "text",
+      "file": {
+        "filePath": "/home/connerohnesorge/Documents/001Repos/templar/internal/server/server.go",
+        "content": "\t\terr = exec.Command(\"open\", url).Start()\n\tdefault:\n\t\terr = fmt.Errorf(\"unsupported platform: %s\", runtime.GOOS)\n\t\tlog.Printf(\"Browser auto-open not supported on platform: %s\", runtime.GOOS)\n\t\treturn",
+        "numLines": 5,
+        "startLine": 315,
+        "totalLines": 692
+      }
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Read",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/server/server.go",
+      "offset": 310,
+      "limit": 10
+    },
+    "tool_response": {
+      "type": "text",
+      "file": {
+        "filePath": "/home/connerohnesorge/Documents/001Repos/templar/internal/server/server.go",
+        "content": "\tcase \"windows\":\n\t\t// Use rundll32 for Windows\n\t\terr = exec.Command(\"rundll32\", \"url.dll,FileProtocolHandler\", url).Start()\n\tcase \"darwin\":\n\t\t// Use open for macOS\n\t\terr = exec.Command(\"open\", url).Start()\n\tdefault:\n\t\terr = fmt.Errorf(\"unsupported platform: %s\", runtime.GOOS)\n\t\tlog.Printf(\"Browser auto-open not supported on platform: %s\", runtime.GOOS)\n\t\treturn",
+        "numLines": 10,
+        "startLine": 310,
+        "totalLines": 692
+      }
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Edit",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/server/server.go",
+      "old_string": "\tdefault:\n\t\terr = fmt.Errorf(\"unsupported platform: %s\", runtime.GOOS)\n\t\tlog.Printf(\"Browser auto-open not supported on platform: %s\", runtime.GOOS)\n\t\treturn",
+      "new_string": "\tdefault:\n\t\tlog.Printf(\"Browser auto-open not supported on platform: %s\", runtime.GOOS)\n\t\treturn"
+    },
+    "tool_response": {
+      "filePath": "/home/connerohnesorge/Documents/001Repos/templar/internal/server/server.go",
+      "oldString": "\tdefault:\n\t\terr = fmt.Errorf(\"unsupported platform: %s\", runtime.GOOS)\n\t\tlog.Printf(\"Browser auto-open not supported on platform: %s\", runtime.GOOS)\n\t\treturn",
+      "newString": "\tdefault:\n\t\tlog.Printf(\"Browser auto-open not supported on platform: %s\", runtime.GOOS)\n\t\treturn",
+      "originalFile": "// Package server provides an HTTP server with WebSocket support for real-time\n// component development and preview functionality.\n//\n// The server implements security-hardened HTTP handlers, WebSocket connections\n// for live reload, CORS middleware, and comprehensive health checking. It serves\n// component preview pages, provides REST APIs for component management, and\n// includes rate limiting and origin validation for WebSocket connections.\n// The server supports graceful shutdown and integrates with the component\n// registry for real-time updates.\npackage server\n\nimport (\n\t\"context\"\n\t\"encoding/json\"\n\t\"fmt\"\n\t\"log\"\n\t\"net/http\"\n\t\"os/exec\"\n\t\"runtime\"\n\t\"sync\"\n\t\"time\"\n\n\t\"github.com/conneroisu/templar/internal/adapters\"\n\t\"github.com/conneroisu/templar/internal/build\"\n\t\"github.com/conneroisu/templar/internal/config\"\n\t\"github.com/conneroisu/templar/internal/errors\"\n\t\"github.com/conneroisu/templar/internal/interfaces\"\n\t\"github.com/conneroisu/templar/internal/monitoring\"\n\t\"github.com/conneroisu/templar/internal/registry\"\n\t\"github.com/conneroisu/templar/internal/renderer\"\n\t\"github.com/conneroisu/templar/internal/scanner\"\n\t\"github.com/conneroisu/templar/internal/types\"\n\t\"github.com/conneroisu/templar/internal/validation\"\n\t\"github.com/conneroisu/templar/internal/version\"\n\t\"github.com/conneroisu/templar/internal/watcher\"\n\t\"nhooyr.io/websocket\"\n)\n\n// Client represents a WebSocket client\ntype Client struct {\n\tconn         *websocket.Conn\n\tsend         chan []byte\n\tserver       *PreviewServer\n\tlastActivity time.Time            // For connection timeout tracking\n\trateLimiter  WebSocketRateLimiter // WebSocket-specific rate limiter interface\n}\n\n// PreviewServer serves components with live reload capability\ntype PreviewServer struct {\n\tconfig          *config.Config\n\thttpServer      *http.Server\n\tserverMutex     sync.RWMutex // Protects httpServer and server state\n\tclients         map[*websocket.Conn]*Client\n\tclientsMutex    sync.RWMutex\n\tbroadcast       chan []byte\n\tregister        chan *Client\n\tunregister      chan *websocket.Conn\n\tregistry        interfaces.ComponentRegistry\n\twatcher         interfaces.FileWatcher\n\tscanner         interfaces.ComponentScanner\n\trenderer        *renderer.ComponentRenderer\n\tbuildPipeline   interfaces.BuildPipeline\n\tlastBuildErrors []*errors.ParsedError\n\tshutdownOnce    sync.Once\n\tisShutdown      bool\n\tshutdownMutex   sync.RWMutex\n\t// Enhanced WebSocket management\n\tenhancements *WebSocketEnhancements\n\t// Monitoring integration\n\tmonitor *monitoring.TemplarMonitor\n\t// Rate limiting\n\trateLimiter *TokenBucketManager\n}\n\n// UpdateMessage represents a message sent to the browser\ntype UpdateMessage struct {\n\tType      string    `json:\"type\"`\n\tTarget    string    `json:\"target,omitempty\"`\n\tContent   string    `json:\"content,omitempty\"`\n\tTimestamp time.Time `json:\"timestamp\"`\n}\n\n// New creates a new preview server\nfunc New(cfg *config.Config) (*PreviewServer, error) {\n\tregistry := registry.NewComponentRegistry()\n\n\tfileWatcherConcrete, err := watcher.NewFileWatcher(300 * time.Millisecond)\n\tif err != nil {\n\t\treturn nil, fmt.Errorf(\"failed to create file watcher: %w\", err)\n\t}\n\tfileWatcher := adapters.NewFileWatcherAdapter(fileWatcherConcrete)\n\n\tscannerConcrete := scanner.NewComponentScanner(registry)\n\tscannerAdapter := adapters.NewComponentScannerAdapter(scannerConcrete)\n\trenderer := renderer.NewComponentRenderer(registry)\n\n\t// Create build pipeline\n\tbuildPipelineConcrete := build.NewBuildPipeline(4, registry)\n\tbuildPipeline := adapters.NewBuildPipelineAdapter(buildPipelineConcrete)\n\n\t// Initialize monitoring if enabled\n\tvar templatorMonitor *monitoring.TemplarMonitor\n\tif cfg.Monitoring.Enabled {\n\t\tmonitor, err := monitoring.SetupTemplarMonitoring(\"\")\n\t\tif err != nil {\n\t\t\tlog.Printf(\"Warning: Failed to initialize monitoring: %v\", err)\n\t\t} else {\n\t\t\ttemplatorMonitor = monitor\n\t\t\tlog.Printf(\"Server monitoring initialized\")\n\t\t}\n\t}\n\n\treturn &PreviewServer{\n\t\tconfig:          cfg,\n\t\tclients:         make(map[*websocket.Conn]*Client),\n\t\tbroadcast:       make(chan []byte),\n\t\tregister:        make(chan *Client),\n\t\tunregister:      make(chan *websocket.Conn),\n\t\tregistry:        registry,\n\t\twatcher:         fileWatcher,\n\t\tscanner:         scannerAdapter,\n\t\trenderer:        renderer,\n\t\tbuildPipeline:   buildPipeline,\n\t\tlastBuildErrors: make([]*errors.ParsedError, 0),\n\t\tmonitor:         templatorMonitor,\n\t}, nil\n}\n\n// Start starts the preview server\nfunc (s *PreviewServer) Start(ctx context.Context) error {\n\t// Set up file watcher\n\ts.setupFileWatcher(ctx)\n\n\t// Start build pipeline\n\ts.buildPipeline.Start(ctx)\n\n\t// Add build callback to handle errors and updates\n\ts.buildPipeline.AddCallback(func(result interface{}) {\n\t\tif buildResult, ok := result.(build.BuildResult); ok {\n\t\t\ts.handleBuildResult(buildResult)\n\t\t}\n\t})\n\n\t// Initial scan\n\tif err := s.initialScan(); err != nil {\n\t\tlog.Printf(\"Initial scan failed: %v\", err)\n\t}\n\n\t// Start WebSocket hub\n\tgo s.runWebSocketHub(ctx)\n\n\t// Set up HTTP routes\n\tmux := http.NewServeMux()\n\tmux.HandleFunc(\"/ws\", s.handleWebSocket)\n\tmux.HandleFunc(\"/health\", s.handleHealth)\n\tmux.HandleFunc(\"/components\", s.handleComponents)\n\tmux.HandleFunc(\"/component/\", s.handleComponent)\n\tmux.HandleFunc(\"/render/\", s.handleRender)\n\tmux.HandleFunc(\"/static/\", s.handleStatic)\n\t\n\t// Interactive Playground routes\n\tmux.HandleFunc(\"/playground\", s.handlePlaygroundIndex)\n\tmux.HandleFunc(\"/playground/\", s.handlePlaygroundComponent)\n\tmux.HandleFunc(\"/api/playground/render\", s.handlePlaygroundRender)\n\t\n\t// Enhanced Web Interface routes\n\tmux.HandleFunc(\"/editor/\", s.handleComponentEditor)\n\tmux.HandleFunc(\"/api/inline-editor\", s.handleInlineEditor)\n\tmux.HandleFunc(\"/enhanced\", s.handleEnhancedIndex)\n\t\n\t// Build API routes\n\tmux.HandleFunc(\"/api/build/status\", s.handleBuildStatus)\n\tmux.HandleFunc(\"/api/build/metrics\", s.handleBuildMetrics)\n\tmux.HandleFunc(\"/api/build/errors\", s.handleBuildErrors)\n\tmux.HandleFunc(\"/api/build/cache\", s.handleBuildCache)\n\n\t// Root handler depends on whether specific files are targeted\n\tif len(s.config.TargetFiles) > 0 {\n\t\tmux.HandleFunc(\"/\", s.handleTargetFiles)\n\t} else {\n\t\tmux.HandleFunc(\"/\", s.handleIndex)\n\t}\n\n\t// Add middleware\n\thandler := s.addMiddleware(mux)\n\n\t// Create HTTP server\n\taddr := fmt.Sprintf(\"%s:%d\", s.config.Server.Host, s.config.Server.Port)\n\n\ts.serverMutex.Lock()\n\ts.httpServer = &http.Server{\n\t\tAddr:    addr,\n\t\tHandler: handler,\n\t}\n\tserver := s.httpServer // Get local copy for safe access\n\ts.serverMutex.Unlock()\n\n\t// Open browser if configured\n\tif s.config.Server.Open {\n\t\tgo s.openBrowser(fmt.Sprintf(\"http://%s\", addr))\n\t}\n\n\t// Start server\n\tif err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {\n\t\treturn fmt.Errorf(\"server error: %w\", err)\n\t}\n\n\treturn nil\n}\n\nfunc (s *PreviewServer) setupFileWatcher(ctx context.Context) {\n\t// Add filters (convert to interface types)\n\ts.watcher.AddFilter(interfaces.FileFilterFunc(watcher.TemplFilter))\n\ts.watcher.AddFilter(interfaces.FileFilterFunc(watcher.GoFilter))\n\ts.watcher.AddFilter(interfaces.FileFilterFunc(watcher.NoTestFilter))\n\ts.watcher.AddFilter(interfaces.FileFilterFunc(watcher.NoVendorFilter))\n\ts.watcher.AddFilter(interfaces.FileFilterFunc(watcher.NoGitFilter))\n\n\t// Add handler (convert to interface type)\n\ts.watcher.AddHandler(func(events []interface{}) error {\n\t\t// Convert interface events back to concrete events\n\t\tchangeEvents := make([]watcher.ChangeEvent, len(events))\n\t\tfor i, event := range events {\n\t\t\tif changeEvent, ok := event.(watcher.ChangeEvent); ok {\n\t\t\t\tchangeEvents[i] = changeEvent\n\t\t\t}\n\t\t}\n\t\treturn s.handleFileChange(changeEvents)\n\t})\n\n\t// Add watch paths\n\tfor _, path := range s.config.Components.ScanPaths {\n\t\tif err := s.watcher.AddRecursive(path); err != nil {\n\t\t\tlog.Printf(\"Failed to watch path %s: %v\", path, err)\n\t\t}\n\t}\n\n\t// Start watching\n\tif err := s.watcher.Start(ctx); err != nil {\n\t\tlog.Printf(\"Failed to start file watcher: %v\", err)\n\t}\n}\n\nfunc (s *PreviewServer) initialScan() error {\n\tlog.Printf(\"Starting initial scan with paths: %v\", s.config.Components.ScanPaths)\n\tfor _, path := range s.config.Components.ScanPaths {\n\t\tlog.Printf(\"Scanning path: %s\", path)\n\t\tif err := s.scanner.ScanDirectory(path); err != nil {\n\t\t\tlog.Printf(\"Error scanning %s: %v\", path, err)\n\t\t\t// Don't return error, just log and continue\n\t\t\tcontinue\n\t\t}\n\t}\n\n\tlog.Printf(\"Found %d components\", s.registry.Count())\n\treturn nil\n}\n\nfunc (s *PreviewServer) handleFileChange(events []watcher.ChangeEvent) error {\n\tcomponentsToRebuild := make(map[string]*types.ComponentInfo)\n\n\tfor _, event := range events {\n\t\tlog.Printf(\"File changed: %s (%s)\", event.Path, event.Type)\n\n\t\t// Rescan the file\n\t\tif err := s.scanner.ScanFile(event.Path); err != nil {\n\t\t\tlog.Printf(\"Failed to rescan file %s: %v\", event.Path, err)\n\t\t}\n\n\t\t// Find components in the changed file\n\t\tcomponents := s.registry.GetAll()\n\t\tfor _, component := range components {\n\t\t\tif component.FilePath == event.Path {\n\t\t\t\tcomponentsToRebuild[component.Name] = component\n\t\t\t}\n\t\t}\n\t}\n\n\t// Queue components for rebuild\n\tfor _, component := range componentsToRebuild {\n\t\ts.buildPipeline.BuildWithPriority(component)\n\t}\n\n\t// If no specific components to rebuild, do a full rebuild\n\tif len(componentsToRebuild) == 0 {\n\t\ts.triggerFullRebuild()\n\t}\n\n\treturn nil\n}\n\n// openBrowser safely opens the specified URL in the default browser.\n// This function implements security measures to prevent command injection\n// attacks by validating the URL before passing it to system commands.\nfunc (s *PreviewServer) openBrowser(url string) {\n\t// Brief delay to ensure server has started listening\n\ttime.Sleep(100 * time.Millisecond)\n\n\t// Critical security validation: prevent command injection attacks\n\tif err := validation.ValidateURL(url); err != nil {\n\t\tlog.Printf(\"Security: Browser open blocked due to invalid URL: %v\", err)\n\t\treturn\n\t}\n\n\tvar err error\n\tswitch runtime.GOOS {\n\tcase \"linux\":\n\t\t// Use xdg-open for Linux desktop environments\n\t\terr = exec.Command(\"xdg-open\", url).Start()\n\tcase \"windows\":\n\t\t// Use rundll32 for Windows\n\t\terr = exec.Command(\"rundll32\", \"url.dll,FileProtocolHandler\", url).Start()\n\tcase \"darwin\":\n\t\t// Use open for macOS\n\t\terr = exec.Command(\"open\", url).Start()\n\tdefault:\n\t\terr = fmt.Errorf(\"unsupported platform: %s\", runtime.GOOS)\n\t\tlog.Printf(\"Browser auto-open not supported on platform: %s\", runtime.GOOS)\n\t\treturn\n\t}\n\n\tif err != nil {\n\t\tlog.Printf(\"Failed to open browser for URL %s: %v\", url, err)\n\t} else {\n\t\tlog.Printf(\"Successfully opened browser for URL: %s\", url)\n\t}\n}\n\nfunc (s *PreviewServer) addMiddleware(handler http.Handler) http.Handler {\n\t// Create authentication middleware\n\tauthHandler := AuthMiddleware(&s.config.Server.Auth)(handler)\n\n\t// Create security middleware\n\tsecurityConfig := SecurityConfigFromAppConfig(s.config)\n\tsecurityHandler := SecurityMiddleware(securityConfig)(authHandler)\n\n\t// Create rate limiting middleware\n\trateLimitConfig := securityConfig.RateLimiting\n\tif rateLimitConfig != nil && rateLimitConfig.Enabled {\n\t\ts.rateLimiter = NewRateLimiter(rateLimitConfig, nil)\n\t\trateLimitHandler := RateLimitMiddleware(s.rateLimiter)(securityHandler)\n\t\tsecurityHandler = rateLimitHandler\n\t}\n\n\t// Add monitoring middleware if available\n\tif s.monitor != nil {\n\t\tmonitoringMiddleware := s.monitor.CreateTemplarMiddleware()\n\t\tsecurityHandler = monitoringMiddleware(securityHandler)\n\t}\n\n\t// Add CORS and logging middleware\n\treturn http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {\n\t\t// CORS headers based on environment\n\t\torigin := r.Header.Get(\"Origin\")\n\t\tif s.isAllowedOrigin(origin) {\n\t\t\tw.Header().Set(\"Access-Control-Allow-Origin\", origin)\n\t\t} else if s.config.Server.Environment == \"development\" {\n\t\t\t// Only allow wildcard in development\n\t\t\tw.Header().Set(\"Access-Control-Allow-Origin\", \"*\")\n\t\t}\n\t\t// Production default: no CORS header (blocks cross-origin requests)\n\n\t\tw.Header().Set(\"Access-Control-Allow-Methods\", \"GET, POST, OPTIONS\")\n\t\tw.Header().Set(\"Access-Control-Allow-Headers\", \"Content-Type\")\n\t\tw.Header().Set(\"Access-Control-Allow-Credentials\", \"true\")\n\n\t\t// Handle preflight requests\n\t\tif r.Method == http.MethodOptions {\n\t\t\tw.WriteHeader(http.StatusOK)\n\t\t\treturn\n\t\t}\n\n\t\t// Log requests with monitoring if available\n\t\tstart := time.Now()\n\t\tsecurityHandler.ServeHTTP(w, r)\n\t\tduration := time.Since(start)\n\n\t\t// Track request in monitoring system\n\t\tif s.monitor != nil {\n\t\t\ts.monitor.RecordWebSocketEvent(\"http_request\", 1)\n\t\t}\n\n\t\tlog.Printf(\"%s %s %v\", r.Method, r.URL.Path, duration)\n\t})\n}\n\n// isAllowedOrigin checks if the origin is in the allowed origins list\nfunc (s *PreviewServer) isAllowedOrigin(origin string) bool {\n\tif origin == \"\" {\n\t\treturn false\n\t}\n\n\t// Check configured allowed origins\n\tfor _, allowed := range s.config.Server.AllowedOrigins {\n\t\tif origin == allowed {\n\t\t\treturn true\n\t\t}\n\t}\n\n\treturn false\n}\n\nfunc (s *PreviewServer) broadcastMessage(msg UpdateMessage) {\n\t// Marshal message to JSON\n\tjsonData, err := json.Marshal(msg)\n\tif err != nil {\n\t\tlog.Printf(\"Failed to marshal message: %v\", err)\n\t\t// Fallback to simple reload message\n\t\ts.broadcast <- []byte(`{\"type\":\"full_reload\"}`)\n\t\treturn\n\t}\n\n\ts.broadcast <- jsonData\n}\n\n// handleBuildResult handles build results from the build pipeline\nfunc (s *PreviewServer) handleBuildResult(result build.BuildResult) {\n\tif result.Error != nil {\n\t\t// Store build errors\n\t\ts.lastBuildErrors = result.ParsedErrors\n\n\t\t// Broadcast error message\n\t\tmsg := UpdateMessage{\n\t\t\tType:      \"build_error\",\n\t\t\tContent:   errors.FormatErrorsForBrowser(result.ParsedErrors),\n\t\t\tTimestamp: time.Now(),\n\t\t}\n\t\ts.broadcastMessage(msg)\n\t} else {\n\t\t// Clear previous errors\n\t\ts.lastBuildErrors = make([]*errors.ParsedError, 0)\n\n\t\t// Broadcast success message\n\t\tmsg := UpdateMessage{\n\t\t\tType:      \"build_success\",\n\t\t\tTarget:    result.Component.Name,\n\t\t\tTimestamp: time.Now(),\n\t\t}\n\t\ts.broadcastMessage(msg)\n\t}\n}\n\n// triggerFullRebuild triggers a full rebuild of all components\nfunc (s *PreviewServer) triggerFullRebuild() {\n\tcomponents := s.registry.GetAll()\n\tfor _, component := range components {\n\t\ts.buildPipeline.Build(component)\n\t}\n}\n\n// GetBuildMetrics returns the current build metrics\nfunc (s *PreviewServer) GetBuildMetrics() build.BuildMetrics {\n\t// Get metrics from the pipeline interface\n\tmetricsInterface := s.buildPipeline.GetMetrics()\n\n\t// Type assert to concrete type and extract values to avoid lock copying\n\tif concreteMetrics, ok := metricsInterface.(*build.BuildMetrics); ok {\n\t\t// Call GetSnapshot to get a clean copy without the mutex\n\t\treturn concreteMetrics.GetSnapshot()\n\t}\n\n\t// Fallback: we can't safely type assert to value without copying the lock\n\t// so we return empty metrics as a safe fallback\n\n\t// Return empty metrics if conversion fails\n\treturn build.BuildMetrics{}\n}\n\n// GetLastBuildErrors returns the last build errors\nfunc (s *PreviewServer) GetLastBuildErrors() []*errors.ParsedError {\n\treturn s.lastBuildErrors\n}\n\n// Shutdown gracefully shuts down the server and cleans up resources\nfunc (s *PreviewServer) Shutdown(ctx context.Context) error {\n\tvar shutdownErr error\n\n\ts.shutdownOnce.Do(func() {\n\t\tlog.Println(\"Shutting down server...\")\n\n\t\t// Mark as shutdown to prevent new operations\n\t\ts.shutdownMutex.Lock()\n\t\ts.isShutdown = true\n\t\ts.shutdownMutex.Unlock()\n\n\t\t// Stop build pipeline first\n\t\tif s.buildPipeline != nil {\n\t\t\ts.buildPipeline.Stop()\n\t\t}\n\n\t\t// Stop file watcher\n\t\tif s.watcher != nil {\n\t\t\ts.watcher.Stop()\n\t\t}\n\n\t\t// MEMORY LEAK FIX: Stop rate limiter to clean up goroutines\n\t\tif s.rateLimiter != nil {\n\t\t\ts.rateLimiter.Stop()\n\t\t}\n\n\t\t// Close all WebSocket connections\n\t\ts.clientsMutex.Lock()\n\t\tfor conn, client := range s.clients {\n\t\t\tclose(client.send)\n\t\t\tconn.Close(websocket.StatusNormalClosure, \"\")\n\t\t}\n\t\ts.clients = make(map[*websocket.Conn]*Client)\n\t\ts.clientsMutex.Unlock()\n\n\t\t// Close channels safely\n\t\tselect {\n\t\tcase <-s.broadcast:\n\t\tdefault:\n\t\t\tclose(s.broadcast)\n\t\t}\n\n\t\tselect {\n\t\tcase <-s.register:\n\t\tdefault:\n\t\t\tclose(s.register)\n\t\t}\n\n\t\tselect {\n\t\tcase <-s.unregister:\n\t\tdefault:\n\t\t\tclose(s.unregister)\n\t\t}\n\n\t\t// Shutdown HTTP server\n\t\ts.serverMutex.RLock()\n\t\tserver := s.httpServer\n\t\ts.serverMutex.RUnlock()\n\n\t\tif server != nil {\n\t\t\tshutdownErr = server.Shutdown(ctx)\n\t\t}\n\t})\n\n\treturn shutdownErr\n}\n\n// handleHealth returns the server health status for health checks\nfunc (s *PreviewServer) handleHealth(w http.ResponseWriter, r *http.Request) {\n\tif r.Method != http.MethodGet {\n\t\thttp.Error(w, \"Method not allowed\", http.StatusMethodNotAllowed)\n\t\treturn\n\t}\n\n\thealth := map[string]interface{}{\n\t\t\"status\":     \"healthy\",\n\t\t\"timestamp\":  time.Now().UTC(),\n\t\t\"version\":    version.GetShortVersion(),\n\t\t\"build_info\": version.GetBuildInfo(),\n\t\t\"checks\": map[string]interface{}{\n\t\t\t\"server\":   map[string]interface{}{\"status\": \"healthy\", \"message\": \"HTTP server operational\"},\n\t\t\t\"registry\": map[string]interface{}{\"status\": \"healthy\", \"components\": len(s.registry.GetAll())},\n\t\t\t\"watcher\":  map[string]interface{}{\"status\": \"healthy\", \"message\": \"File watcher operational\"},\n\t\t\t\"build\":    map[string]interface{}{\"status\": \"healthy\", \"message\": \"Build pipeline operational\"},\n\t\t},\n\t}\n\n\tw.Header().Set(\"Content-Type\", \"application/json\")\n\tw.WriteHeader(http.StatusOK)\n\n\tif err := json.NewEncoder(w).Encode(health); err != nil {\n\t\tlog.Printf(\"Failed to encode health response: %v\", err)\n\t}\n}\n\n// handleBuildStatus returns the current build status\nfunc (s *PreviewServer) handleBuildStatus(w http.ResponseWriter, r *http.Request) {\n\tif r.Method != http.MethodGet {\n\t\thttp.Error(w, \"Method not allowed\", http.StatusMethodNotAllowed)\n\t\treturn\n\t}\n\n\t// Get build metrics without lock copying\n\tbuildMetrics := s.GetBuildMetrics() // Use our fixed method\n\terrors := s.GetLastBuildErrors()\n\n\tstatus := \"healthy\"\n\ttotalBuilds := uint64(buildMetrics.TotalBuilds)\n\tfailedBuilds := uint64(buildMetrics.FailedBuilds)\n\tcacheHits := uint64(buildMetrics.CacheHits)\n\n\tif len(errors) > 0 {\n\t\tstatus = \"error\"\n\t}\n\n\tresponse := map[string]interface{}{\n\t\t\"status\":        status,\n\t\t\"total_builds\":  totalBuilds,\n\t\t\"failed_builds\": failedBuilds,\n\t\t\"cache_hits\":    cacheHits,\n\t\t\"errors\":        len(errors),\n\t\t\"timestamp\":     time.Now().Unix(),\n\t}\n\n\tw.Header().Set(\"Content-Type\", \"application/json\")\n\tjson.NewEncoder(w).Encode(response)\n}\n\n// handleBuildMetrics returns detailed build metrics\nfunc (s *PreviewServer) handleBuildMetrics(w http.ResponseWriter, r *http.Request) {\n\tif r.Method != http.MethodGet {\n\t\thttp.Error(w, \"Method not allowed\", http.StatusMethodNotAllowed)\n\t\treturn\n\t}\n\n\t// Get build metrics without lock copying\n\tmetrics := s.GetBuildMetrics() // Use our fixed method\n\tcacheInterface := s.buildPipeline.GetCache()\n\n\tbuildMetrics := map[string]interface{}{\n\t\t\"total_builds\":      metrics.TotalBuilds,\n\t\t\"successful_builds\": metrics.SuccessfulBuilds,\n\t\t\"failed_builds\":     metrics.FailedBuilds,\n\t\t\"cache_hits\":        metrics.CacheHits,\n\t\t\"average_duration\":  metrics.AverageDuration.String(),\n\t\t\"total_duration\":    metrics.TotalDuration.String(),\n\t}\n\n\tcacheMetrics := map[string]interface{}{}\n\tif cache, ok := cacheInterface.(map[string]interface{}); ok {\n\t\tcacheMetrics = cache\n\t}\n\n\tresponse := map[string]interface{}{\n\t\t\"build_metrics\": buildMetrics,\n\t\t\"cache_metrics\": cacheMetrics,\n\t\t\"timestamp\":     time.Now().Unix(),\n\t}\n\n\tw.Header().Set(\"Content-Type\", \"application/json\")\n\tjson.NewEncoder(w).Encode(response)\n}\n\n// handleBuildErrors returns the last build errors\nfunc (s *PreviewServer) handleBuildErrors(w http.ResponseWriter, r *http.Request) {\n\tif r.Method != http.MethodGet {\n\t\thttp.Error(w, \"Method not allowed\", http.StatusMethodNotAllowed)\n\t\treturn\n\t}\n\n\terrors := s.GetLastBuildErrors()\n\n\tresponse := map[string]interface{}{\n\t\t\"errors\":    errors,\n\t\t\"count\":     len(errors),\n\t\t\"timestamp\": time.Now().Unix(),\n\t}\n\n\tw.Header().Set(\"Content-Type\", \"application/json\")\n\tjson.NewEncoder(w).Encode(response)\n}\n\n// handleBuildCache manages the build cache\nfunc (s *PreviewServer) handleBuildCache(w http.ResponseWriter, r *http.Request) {\n\tswitch r.Method {\n\tcase http.MethodGet:\n\t\t// Return cache statistics\n\t\tcacheInterface := s.buildPipeline.GetCache()\n\t\tresponse := map[string]interface{}{\n\t\t\t\"timestamp\": time.Now().Unix(),\n\t\t}\n\n\t\tif cache, ok := cacheInterface.(map[string]interface{}); ok {\n\t\t\tfor k, v := range cache {\n\t\t\t\tresponse[k] = v\n\t\t\t}\n\t\t}\n\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tjson.NewEncoder(w).Encode(response)\n\n\tcase http.MethodDelete:\n\t\t// Clear cache\n\t\ts.buildPipeline.ClearCache()\n\n\t\tresponse := map[string]interface{}{\n\t\t\t\"message\":   \"Cache cleared successfully\",\n\t\t\t\"timestamp\": time.Now().Unix(),\n\t\t}\n\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tjson.NewEncoder(w).Encode(response)\n\n\tdefault:\n\t\thttp.Error(w, \"Method not allowed\", http.StatusMethodNotAllowed)\n\t}\n}\n",
+      "structuredPatch": [
+        {
+          "oldStart": 314,
+          "oldLines": 7,
+          "newStart": 314,
+          "newLines": 6,
+          "lines": [
+            "     // Use open for macOS",
+            "     err = exec.Command(\"open\", url).Start()",
+            "   default:",
+            "-    err = fmt.Errorf(\"unsupported platform: %s\", runtime.GOOS)",
+            "     log.Printf(\"Browser auto-open not supported on platform: %s\", runtime.GOOS)",
+            "     return",
+            "   }"
+          ]
+        }
+      ],
+      "userModified": false,
+      "replaceAll": false
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Read",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/testing/resource_tracker_test.go",
+      "offset": 109,
+      "limit": 5
+    },
+    "tool_response": {
+      "type": "text",
+      "file": {
+        "filePath": "/home/connerohnesorge/Documents/001Repos/templar/internal/testing/resource_tracker_test.go",
+        "content": "\n\t// Clean up\n\tallocations = nil\n\truntime.GC()\n\truntime.GC()",
+        "numLines": 5,
+        "startLine": 109,
+        "totalLines": 370
+      }
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Read",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/testing/resource_tracker_test.go",
+      "offset": 105,
+      "limit": 10
+    },
+    "tool_response": {
+      "type": "text",
+      "file": {
+        "filePath": "/home/connerohnesorge/Documents/001Repos/templar/internal/testing/resource_tracker_test.go",
+        "content": "\n\tif usage.MemoryDiff <= 0 {\n\t\tt.Logf(\"Memory diff: %d (might be optimized away)\", usage.MemoryDiff)\n\t}\n\n\t// Clean up\n\tallocations = nil\n\truntime.GC()\n\truntime.GC()\n\ttime.Sleep(10 * time.Millisecond)",
+        "numLines": 10,
+        "startLine": 105,
+        "totalLines": 370
+      }
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Read",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/testing/resource_tracker_test.go",
+      "offset": 90,
+      "limit": 15
+    },
+    "tool_response": {
+      "type": "text",
+      "file": {
+        "filePath": "/home/connerohnesorge/Documents/001Repos/templar/internal/testing/resource_tracker_test.go",
+        "content": "\ttracker.CheckLeaks(t)\n}\n\nfunc TestResourceTracker_MemoryTracking(t *testing.T) {\n\ttracker := NewResourceTracker(\"memory_test\")\n\n\t// Allocate some memory\n\tvar allocations [][]byte\n\tfor i := 0; i < 100; i++ {\n\t\tallocation := make([]byte, 1024) // 1KB each\n\t\tallocations = append(allocations, allocation)\n\t}\n\n\t// Take sample after allocation\n\tusage := tracker.GetResourceUsage()",
+        "numLines": 15,
+        "startLine": 90,
+        "totalLines": 370
+      }
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Edit",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/testing/resource_tracker_test.go",
+      "old_string": "\t// Clean up\n\tallocations = nil",
+      "new_string": "\t// Clean up - explicitly nil the slice to aid garbage collection\n\t_ = allocations // prevent unused variable warning\n\tallocations = nil"
+    },
+    "tool_response": {
+      "filePath": "/home/connerohnesorge/Documents/001Repos/templar/internal/testing/resource_tracker_test.go",
+      "oldString": "\t// Clean up\n\tallocations = nil",
+      "newString": "\t// Clean up - explicitly nil the slice to aid garbage collection\n\t_ = allocations // prevent unused variable warning\n\tallocations = nil",
+      "originalFile": "package testing\n\nimport (\n\t\"fmt\"\n\t\"runtime\"\n\t\"sync\"\n\t\"testing\"\n\t\"time\"\n)\n\nfunc TestResourceTracker_BasicTracking(t *testing.T) {\n\ttracker := NewResourceTracker(\"basic_test\")\n\n\t// Get initial usage\n\tinitialUsage := tracker.GetResourceUsage()\n\tif initialUsage.GoroutineDiff != 0 {\n\t\tt.Errorf(\"Expected 0 goroutine diff initially, got %d\", initialUsage.GoroutineDiff)\n\t}\n\n\t// Take a sample\n\tsample := tracker.TakeSample()\n\tif sample.Goroutines <= 0 {\n\t\tt.Error(\"Expected positive goroutine count\")\n\t}\n\n\t// Generate report\n\treport := tracker.GenerateReport()\n\tif len(report) == 0 {\n\t\tt.Error(\"Expected non-empty report\")\n\t}\n\tt.Logf(\"Report:\\n%s\", report)\n}\n\nfunc TestResourceTracker_GoroutineLeak(t *testing.T) {\n\ttracker := NewResourceTracker(\"goroutine_leak_test\")\n\n\t// Create goroutine leaks\n\tvar wg sync.WaitGroup\n\tstopCh := make(chan struct{})\n\n\t// Start 5 goroutines that will leak\n\tfor i := 0; i < 5; i++ {\n\t\twg.Add(1)\n\t\tgo func() {\n\t\t\tdefer wg.Done()\n\t\t\t<-stopCh // Block until we close the channel\n\t\t}()\n\t}\n\n\t// Wait a bit for goroutines to start\n\ttime.Sleep(10 * time.Millisecond)\n\n\t// This should detect the leak (we expect failure here for testing)\n\t// We'll use a test helper to capture the error\n\ttestHelper := &TestHelper{}\n\ttracker.CheckLeaksWithLimits(testHelper, ResourceLimits{\n\t\tMaxGoroutineIncrease: 2, // Limit to 2, but we created 5\n\t\tMaxFileIncrease:      10,\n\t\tMaxMemoryIncrease:    10 * 1024 * 1024,\n\t\tMaxObjectIncrease:    1000,\n\t\tTolerancePercent:     0.1,\n\t})\n\n\tif !testHelper.HasError() {\n\t\tt.Error(\"Expected goroutine leak to be detected\")\n\t}\n\n\t// Clean up\n\tclose(stopCh)\n\twg.Wait()\n}\n\nfunc TestResourceTracker_NoLeakDetection(t *testing.T) {\n\ttracker := NewResourceTracker(\"no_leak_test\")\n\n\t// Do some work that shouldn't leak\n\tfor i := 0; i < 100; i++ {\n\t\tgo func() {\n\t\t\t// Do nothing and exit immediately\n\t\t}()\n\t}\n\n\t// Wait for goroutines to finish\n\ttime.Sleep(50 * time.Millisecond)\n\truntime.GC()\n\truntime.GC()\n\ttime.Sleep(10 * time.Millisecond)\n\n\t// This should not detect any leaks\n\ttracker.CheckLeaks(t)\n}\n\nfunc TestResourceTracker_MemoryTracking(t *testing.T) {\n\ttracker := NewResourceTracker(\"memory_test\")\n\n\t// Allocate some memory\n\tvar allocations [][]byte\n\tfor i := 0; i < 100; i++ {\n\t\tallocation := make([]byte, 1024) // 1KB each\n\t\tallocations = append(allocations, allocation)\n\t}\n\n\t// Take sample after allocation\n\tusage := tracker.GetResourceUsage()\n\n\tif usage.MemoryDiff <= 0 {\n\t\tt.Logf(\"Memory diff: %d (might be optimized away)\", usage.MemoryDiff)\n\t}\n\n\t// Clean up\n\tallocations = nil\n\truntime.GC()\n\truntime.GC()\n\ttime.Sleep(10 * time.Millisecond)\n\n\t// Check that memory was cleaned up\n\ttracker.CheckLeaks(t)\n}\n\nfunc TestResourceTracker_SamplingHistory(t *testing.T) {\n\ttracker := NewResourceTracker(\"sampling_test\")\n\n\t// Take several samples\n\tfor i := 0; i < 5; i++ {\n\t\ttracker.TakeSample()\n\t\ttime.Sleep(1 * time.Millisecond)\n\t}\n\n\tsamples := tracker.GetSamples()\n\tif len(samples) < 6 { // Initial + 5 manual samples\n\t\tt.Errorf(\"Expected at least 6 samples, got %d\", len(samples))\n\t}\n\n\t// Verify samples are in chronological order\n\tfor i := 1; i < len(samples); i++ {\n\t\tif samples[i].Timestamp.Before(samples[i-1].Timestamp) {\n\t\t\tt.Error(\"Samples are not in chronological order\")\n\t\t}\n\t}\n}\n\nfunc TestResourceMonitor_ContinuousMonitoring(t *testing.T) {\n\tmonitor := NewResourceMonitor(\"continuous_test\", 10*time.Millisecond)\n\n\t// Start monitoring\n\tmonitor.Start()\n\n\t// Let it run for a bit\n\ttime.Sleep(50 * time.Millisecond)\n\n\t// Stop monitoring\n\tmonitor.Stop()\n\n\t// Check that samples were collected\n\ttracker := monitor.GetTracker()\n\tsamples := tracker.GetSamples()\n\n\tif len(samples) < 3 { // Should have multiple samples\n\t\tt.Errorf(\"Expected multiple samples from continuous monitoring, got %d\", len(samples))\n\t}\n}\n\nfunc TestMemoryPressureTest_BasicPressure(t *testing.T) {\n\ttest := NewMemoryPressureTest(\"pressure_test\")\n\n\t// Apply memory pressure (10MB in 1MB chunks)\n\ttest.ApplyPressure(10, 1)\n\n\t// Check that memory usage increased\n\tusage := test.GetTracker().GetResourceUsage()\n\tif usage.MemoryDiff <= 0 {\n\t\tt.Logf(\"Memory diff: %d (allocation might be optimized)\", usage.MemoryDiff)\n\t}\n\n\t// Release pressure\n\ttest.ReleasePressure()\n\n\t// Check memory recovery\n\ttest.CheckMemoryRecovery(t)\n}\n\nfunc TestMemoryPressureTest_LargePressure(t *testing.T) {\n\tif testing.Short() {\n\t\tt.Skip(\"Skipping large memory pressure test in short mode\")\n\t}\n\n\ttest := NewMemoryPressureTest(\"large_pressure_test\")\n\n\t// Apply significant memory pressure (100MB in 10MB chunks)\n\ttest.ApplyPressure(100, 10)\n\n\t// Verify memory usage\n\tusage := test.GetTracker().GetResourceUsage()\n\tt.Logf(\"Memory usage after pressure: %d bytes\", usage.MemoryDiff)\n\n\t// Release and check recovery\n\ttest.ReleasePressure()\n\ttest.CheckMemoryRecovery(t)\n}\n\nfunc TestResourceLimits_CustomLimits(t *testing.T) {\n\ttracker := NewResourceTracker(\"custom_limits_test\")\n\n\t// Create a small goroutine leak\n\tdone := make(chan struct{})\n\tgo func() {\n\t\t<-done\n\t}()\n\n\t// Use very strict limits\n\tstrictLimits := ResourceLimits{\n\t\tMaxGoroutineIncrease: 0, // No goroutine increase allowed\n\t\tMaxFileIncrease:      0,\n\t\tMaxMemoryIncrease:    1024, // 1KB\n\t\tMaxObjectIncrease:    10,\n\t\tTolerancePercent:     0.01, // 1% tolerance\n\t}\n\n\ttestHelper := &TestHelper{}\n\ttracker.CheckLeaksWithLimits(testHelper, strictLimits)\n\n\tif !testHelper.HasError() {\n\t\tt.Error(\"Expected strict limits to detect the goroutine\")\n\t}\n\n\t// Clean up\n\tclose(done)\n}\n\nfunc TestResourceTracker_ConcurrentAccess(t *testing.T) {\n\ttracker := NewResourceTracker(\"concurrent_test\")\n\n\t// Multiple goroutines taking samples concurrently\n\tvar wg sync.WaitGroup\n\tconst numGoroutines = 10\n\tconst samplesPerGoroutine = 10\n\n\tfor i := 0; i < numGoroutines; i++ {\n\t\twg.Add(1)\n\t\tgo func() {\n\t\t\tdefer wg.Done()\n\t\t\tfor j := 0; j < samplesPerGoroutine; j++ {\n\t\t\t\ttracker.TakeSample()\n\t\t\t\ttime.Sleep(time.Millisecond)\n\t\t\t}\n\t\t}()\n\t}\n\n\twg.Wait()\n\n\t// Should have many samples without crashing\n\tsamples := tracker.GetSamples()\n\texpectedMinSamples := numGoroutines * samplesPerGoroutine\n\tif len(samples) < expectedMinSamples {\n\t\tt.Errorf(\"Expected at least %d samples, got %d\", expectedMinSamples, len(samples))\n\t}\n}\n\n// Test helper that captures testing.T calls for verification\ntype TestHelper struct {\n\terrors []string\n\tlogs   []string\n\tmu     sync.Mutex\n}\n\nfunc (th *TestHelper) Errorf(format string, args ...interface{}) {\n\tth.mu.Lock()\n\tdefer th.mu.Unlock()\n\tth.errors = append(th.errors, fmt.Sprintf(format, args...))\n}\n\nfunc (th *TestHelper) Logf(format string, args ...interface{}) {\n\tth.mu.Lock()\n\tdefer th.mu.Unlock()\n\tth.logs = append(th.logs, fmt.Sprintf(format, args...))\n}\n\nfunc (th *TestHelper) HasError() bool {\n\tth.mu.Lock()\n\tdefer th.mu.Unlock()\n\treturn len(th.errors) > 0\n}\n\nfunc (th *TestHelper) GetErrors() []string {\n\tth.mu.Lock()\n\tdefer th.mu.Unlock()\n\tresult := make([]string, len(th.errors))\n\tcopy(result, th.errors)\n\treturn result\n}\n\n// Benchmark tests\nfunc BenchmarkResourceTracker_TakeSample(b *testing.B) {\n\ttracker := NewResourceTracker(\"bench_test\")\n\n\tb.ResetTimer()\n\tfor i := 0; i < b.N; i++ {\n\t\ttracker.TakeSample()\n\t}\n}\n\nfunc BenchmarkResourceTracker_GetResourceUsage(b *testing.B) {\n\ttracker := NewResourceTracker(\"bench_usage_test\")\n\n\t// Take some samples first\n\tfor i := 0; i < 10; i++ {\n\t\ttracker.TakeSample()\n\t}\n\n\tb.ResetTimer()\n\tfor i := 0; i < b.N; i++ {\n\t\ttracker.GetResourceUsage()\n\t}\n}\n\nfunc BenchmarkResourceTracker_ConcurrentSampling(b *testing.B) {\n\ttracker := NewResourceTracker(\"bench_concurrent_test\")\n\n\tb.ResetTimer()\n\tb.RunParallel(func(pb *testing.PB) {\n\t\tfor pb.Next() {\n\t\t\ttracker.TakeSample()\n\t\t}\n\t})\n}\n\nfunc BenchmarkMemoryPressure_SmallAllocations(b *testing.B) {\n\tb.ResetTimer()\n\tfor i := 0; i < b.N; i++ {\n\t\ttest := NewMemoryPressureTest(\"bench_pressure\")\n\t\ttest.ApplyPressure(1, 1) // 1MB\n\t\ttest.ReleasePressure()\n\t}\n}\n\n// Integration test combining error injection and resource tracking\nfunc TestIntegration_ErrorInjectionWithResourceTracking(t *testing.T) {\n\ttracker := NewResourceTracker(\"integration_test\")\n\tinjector := NewErrorInjector()\n\n\t// Configure error injection for memory allocation\n\tinjector.InjectError(\"memory.alloc\", ErrOutOfMemory)\n\n\t// Simulate a function that allocates memory\n\tsimulateMemoryAllocation := func() error {\n\t\tif err := injector.ShouldFail(\"memory.alloc\"); err != nil {\n\t\t\treturn err\n\t\t}\n\n\t\t// Allocate memory if no error injection\n\t\tallocation := make([]byte, 1024*1024) // 1MB\n\t\t_ = allocation\n\t\treturn nil\n\t}\n\n\t// Try allocation (should fail due to injection)\n\tif err := simulateMemoryAllocation(); err == nil {\n\t\tt.Error(\"Expected memory allocation to fail due to error injection\")\n\t}\n\n\t// Disable injection and try again\n\tinjector.RemoveTarget(\"memory.alloc\")\n\tif err := simulateMemoryAllocation(); err != nil {\n\t\tt.Errorf(\"Expected memory allocation to succeed after disabling injection: %v\", err)\n\t}\n\n\t// Check for resource leaks\n\ttracker.CheckLeaks(t)\n}\n",
+      "structuredPatch": [
+        {
+          "oldStart": 107,
+          "oldLines": 7,
+          "newStart": 107,
+          "newLines": 8,
+          "lines": [
+            "     t.Logf(\"Memory diff: %d (might be optimized away)\", usage.MemoryDiff)",
+            "   }",
+            " ",
+            "-  // Clean up",
+            "+  // Clean up - explicitly nil the slice to aid garbage collection",
+            "+  _ = allocations // prevent unused variable warning",
+            "   allocations = nil",
+            "   runtime.GC()",
+            "   runtime.GC()"
+          ]
+        }
+      ],
+      "userModified": false,
+      "replaceAll": false
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Edit",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/testing/resource_tracker_test.go",
+      "old_string": "\t// Clean up - explicitly nil the slice to aid garbage collection\n\t_ = allocations // prevent unused variable warning\n\tallocations = nil",
+      "new_string": "\t// Clean up - force garbage collection (allocations will be GC'd when function exits)"
+    },
+    "tool_response": {
+      "filePath": "/home/connerohnesorge/Documents/001Repos/templar/internal/testing/resource_tracker_test.go",
+      "oldString": "\t// Clean up - explicitly nil the slice to aid garbage collection\n\t_ = allocations // prevent unused variable warning\n\tallocations = nil",
+      "newString": "\t// Clean up - force garbage collection (allocations will be GC'd when function exits)",
+      "originalFile": "package testing\n\nimport (\n\t\"fmt\"\n\t\"runtime\"\n\t\"sync\"\n\t\"testing\"\n\t\"time\"\n)\n\nfunc TestResourceTracker_BasicTracking(t *testing.T) {\n\ttracker := NewResourceTracker(\"basic_test\")\n\n\t// Get initial usage\n\tinitialUsage := tracker.GetResourceUsage()\n\tif initialUsage.GoroutineDiff != 0 {\n\t\tt.Errorf(\"Expected 0 goroutine diff initially, got %d\", initialUsage.GoroutineDiff)\n\t}\n\n\t// Take a sample\n\tsample := tracker.TakeSample()\n\tif sample.Goroutines <= 0 {\n\t\tt.Error(\"Expected positive goroutine count\")\n\t}\n\n\t// Generate report\n\treport := tracker.GenerateReport()\n\tif len(report) == 0 {\n\t\tt.Error(\"Expected non-empty report\")\n\t}\n\tt.Logf(\"Report:\\n%s\", report)\n}\n\nfunc TestResourceTracker_GoroutineLeak(t *testing.T) {\n\ttracker := NewResourceTracker(\"goroutine_leak_test\")\n\n\t// Create goroutine leaks\n\tvar wg sync.WaitGroup\n\tstopCh := make(chan struct{})\n\n\t// Start 5 goroutines that will leak\n\tfor i := 0; i < 5; i++ {\n\t\twg.Add(1)\n\t\tgo func() {\n\t\t\tdefer wg.Done()\n\t\t\t<-stopCh // Block until we close the channel\n\t\t}()\n\t}\n\n\t// Wait a bit for goroutines to start\n\ttime.Sleep(10 * time.Millisecond)\n\n\t// This should detect the leak (we expect failure here for testing)\n\t// We'll use a test helper to capture the error\n\ttestHelper := &TestHelper{}\n\ttracker.CheckLeaksWithLimits(testHelper, ResourceLimits{\n\t\tMaxGoroutineIncrease: 2, // Limit to 2, but we created 5\n\t\tMaxFileIncrease:      10,\n\t\tMaxMemoryIncrease:    10 * 1024 * 1024,\n\t\tMaxObjectIncrease:    1000,\n\t\tTolerancePercent:     0.1,\n\t})\n\n\tif !testHelper.HasError() {\n\t\tt.Error(\"Expected goroutine leak to be detected\")\n\t}\n\n\t// Clean up\n\tclose(stopCh)\n\twg.Wait()\n}\n\nfunc TestResourceTracker_NoLeakDetection(t *testing.T) {\n\ttracker := NewResourceTracker(\"no_leak_test\")\n\n\t// Do some work that shouldn't leak\n\tfor i := 0; i < 100; i++ {\n\t\tgo func() {\n\t\t\t// Do nothing and exit immediately\n\t\t}()\n\t}\n\n\t// Wait for goroutines to finish\n\ttime.Sleep(50 * time.Millisecond)\n\truntime.GC()\n\truntime.GC()\n\ttime.Sleep(10 * time.Millisecond)\n\n\t// This should not detect any leaks\n\ttracker.CheckLeaks(t)\n}\n\nfunc TestResourceTracker_MemoryTracking(t *testing.T) {\n\ttracker := NewResourceTracker(\"memory_test\")\n\n\t// Allocate some memory\n\tvar allocations [][]byte\n\tfor i := 0; i < 100; i++ {\n\t\tallocation := make([]byte, 1024) // 1KB each\n\t\tallocations = append(allocations, allocation)\n\t}\n\n\t// Take sample after allocation\n\tusage := tracker.GetResourceUsage()\n\n\tif usage.MemoryDiff <= 0 {\n\t\tt.Logf(\"Memory diff: %d (might be optimized away)\", usage.MemoryDiff)\n\t}\n\n\t// Clean up - explicitly nil the slice to aid garbage collection\n\t_ = allocations // prevent unused variable warning\n\tallocations = nil\n\truntime.GC()\n\truntime.GC()\n\ttime.Sleep(10 * time.Millisecond)\n\n\t// Check that memory was cleaned up\n\ttracker.CheckLeaks(t)\n}\n\nfunc TestResourceTracker_SamplingHistory(t *testing.T) {\n\ttracker := NewResourceTracker(\"sampling_test\")\n\n\t// Take several samples\n\tfor i := 0; i < 5; i++ {\n\t\ttracker.TakeSample()\n\t\ttime.Sleep(1 * time.Millisecond)\n\t}\n\n\tsamples := tracker.GetSamples()\n\tif len(samples) < 6 { // Initial + 5 manual samples\n\t\tt.Errorf(\"Expected at least 6 samples, got %d\", len(samples))\n\t}\n\n\t// Verify samples are in chronological order\n\tfor i := 1; i < len(samples); i++ {\n\t\tif samples[i].Timestamp.Before(samples[i-1].Timestamp) {\n\t\t\tt.Error(\"Samples are not in chronological order\")\n\t\t}\n\t}\n}\n\nfunc TestResourceMonitor_ContinuousMonitoring(t *testing.T) {\n\tmonitor := NewResourceMonitor(\"continuous_test\", 10*time.Millisecond)\n\n\t// Start monitoring\n\tmonitor.Start()\n\n\t// Let it run for a bit\n\ttime.Sleep(50 * time.Millisecond)\n\n\t// Stop monitoring\n\tmonitor.Stop()\n\n\t// Check that samples were collected\n\ttracker := monitor.GetTracker()\n\tsamples := tracker.GetSamples()\n\n\tif len(samples) < 3 { // Should have multiple samples\n\t\tt.Errorf(\"Expected multiple samples from continuous monitoring, got %d\", len(samples))\n\t}\n}\n\nfunc TestMemoryPressureTest_BasicPressure(t *testing.T) {\n\ttest := NewMemoryPressureTest(\"pressure_test\")\n\n\t// Apply memory pressure (10MB in 1MB chunks)\n\ttest.ApplyPressure(10, 1)\n\n\t// Check that memory usage increased\n\tusage := test.GetTracker().GetResourceUsage()\n\tif usage.MemoryDiff <= 0 {\n\t\tt.Logf(\"Memory diff: %d (allocation might be optimized)\", usage.MemoryDiff)\n\t}\n\n\t// Release pressure\n\ttest.ReleasePressure()\n\n\t// Check memory recovery\n\ttest.CheckMemoryRecovery(t)\n}\n\nfunc TestMemoryPressureTest_LargePressure(t *testing.T) {\n\tif testing.Short() {\n\t\tt.Skip(\"Skipping large memory pressure test in short mode\")\n\t}\n\n\ttest := NewMemoryPressureTest(\"large_pressure_test\")\n\n\t// Apply significant memory pressure (100MB in 10MB chunks)\n\ttest.ApplyPressure(100, 10)\n\n\t// Verify memory usage\n\tusage := test.GetTracker().GetResourceUsage()\n\tt.Logf(\"Memory usage after pressure: %d bytes\", usage.MemoryDiff)\n\n\t// Release and check recovery\n\ttest.ReleasePressure()\n\ttest.CheckMemoryRecovery(t)\n}\n\nfunc TestResourceLimits_CustomLimits(t *testing.T) {\n\ttracker := NewResourceTracker(\"custom_limits_test\")\n\n\t// Create a small goroutine leak\n\tdone := make(chan struct{})\n\tgo func() {\n\t\t<-done\n\t}()\n\n\t// Use very strict limits\n\tstrictLimits := ResourceLimits{\n\t\tMaxGoroutineIncrease: 0, // No goroutine increase allowed\n\t\tMaxFileIncrease:      0,\n\t\tMaxMemoryIncrease:    1024, // 1KB\n\t\tMaxObjectIncrease:    10,\n\t\tTolerancePercent:     0.01, // 1% tolerance\n\t}\n\n\ttestHelper := &TestHelper{}\n\ttracker.CheckLeaksWithLimits(testHelper, strictLimits)\n\n\tif !testHelper.HasError() {\n\t\tt.Error(\"Expected strict limits to detect the goroutine\")\n\t}\n\n\t// Clean up\n\tclose(done)\n}\n\nfunc TestResourceTracker_ConcurrentAccess(t *testing.T) {\n\ttracker := NewResourceTracker(\"concurrent_test\")\n\n\t// Multiple goroutines taking samples concurrently\n\tvar wg sync.WaitGroup\n\tconst numGoroutines = 10\n\tconst samplesPerGoroutine = 10\n\n\tfor i := 0; i < numGoroutines; i++ {\n\t\twg.Add(1)\n\t\tgo func() {\n\t\t\tdefer wg.Done()\n\t\t\tfor j := 0; j < samplesPerGoroutine; j++ {\n\t\t\t\ttracker.TakeSample()\n\t\t\t\ttime.Sleep(time.Millisecond)\n\t\t\t}\n\t\t}()\n\t}\n\n\twg.Wait()\n\n\t// Should have many samples without crashing\n\tsamples := tracker.GetSamples()\n\texpectedMinSamples := numGoroutines * samplesPerGoroutine\n\tif len(samples) < expectedMinSamples {\n\t\tt.Errorf(\"Expected at least %d samples, got %d\", expectedMinSamples, len(samples))\n\t}\n}\n\n// Test helper that captures testing.T calls for verification\ntype TestHelper struct {\n\terrors []string\n\tlogs   []string\n\tmu     sync.Mutex\n}\n\nfunc (th *TestHelper) Errorf(format string, args ...interface{}) {\n\tth.mu.Lock()\n\tdefer th.mu.Unlock()\n\tth.errors = append(th.errors, fmt.Sprintf(format, args...))\n}\n\nfunc (th *TestHelper) Logf(format string, args ...interface{}) {\n\tth.mu.Lock()\n\tdefer th.mu.Unlock()\n\tth.logs = append(th.logs, fmt.Sprintf(format, args...))\n}\n\nfunc (th *TestHelper) HasError() bool {\n\tth.mu.Lock()\n\tdefer th.mu.Unlock()\n\treturn len(th.errors) > 0\n}\n\nfunc (th *TestHelper) GetErrors() []string {\n\tth.mu.Lock()\n\tdefer th.mu.Unlock()\n\tresult := make([]string, len(th.errors))\n\tcopy(result, th.errors)\n\treturn result\n}\n\n// Benchmark tests\nfunc BenchmarkResourceTracker_TakeSample(b *testing.B) {\n\ttracker := NewResourceTracker(\"bench_test\")\n\n\tb.ResetTimer()\n\tfor i := 0; i < b.N; i++ {\n\t\ttracker.TakeSample()\n\t}\n}\n\nfunc BenchmarkResourceTracker_GetResourceUsage(b *testing.B) {\n\ttracker := NewResourceTracker(\"bench_usage_test\")\n\n\t// Take some samples first\n\tfor i := 0; i < 10; i++ {\n\t\ttracker.TakeSample()\n\t}\n\n\tb.ResetTimer()\n\tfor i := 0; i < b.N; i++ {\n\t\ttracker.GetResourceUsage()\n\t}\n}\n\nfunc BenchmarkResourceTracker_ConcurrentSampling(b *testing.B) {\n\ttracker := NewResourceTracker(\"bench_concurrent_test\")\n\n\tb.ResetTimer()\n\tb.RunParallel(func(pb *testing.PB) {\n\t\tfor pb.Next() {\n\t\t\ttracker.TakeSample()\n\t\t}\n\t})\n}\n\nfunc BenchmarkMemoryPressure_SmallAllocations(b *testing.B) {\n\tb.ResetTimer()\n\tfor i := 0; i < b.N; i++ {\n\t\ttest := NewMemoryPressureTest(\"bench_pressure\")\n\t\ttest.ApplyPressure(1, 1) // 1MB\n\t\ttest.ReleasePressure()\n\t}\n}\n\n// Integration test combining error injection and resource tracking\nfunc TestIntegration_ErrorInjectionWithResourceTracking(t *testing.T) {\n\ttracker := NewResourceTracker(\"integration_test\")\n\tinjector := NewErrorInjector()\n\n\t// Configure error injection for memory allocation\n\tinjector.InjectError(\"memory.alloc\", ErrOutOfMemory)\n\n\t// Simulate a function that allocates memory\n\tsimulateMemoryAllocation := func() error {\n\t\tif err := injector.ShouldFail(\"memory.alloc\"); err != nil {\n\t\t\treturn err\n\t\t}\n\n\t\t// Allocate memory if no error injection\n\t\tallocation := make([]byte, 1024*1024) // 1MB\n\t\t_ = allocation\n\t\treturn nil\n\t}\n\n\t// Try allocation (should fail due to injection)\n\tif err := simulateMemoryAllocation(); err == nil {\n\t\tt.Error(\"Expected memory allocation to fail due to error injection\")\n\t}\n\n\t// Disable injection and try again\n\tinjector.RemoveTarget(\"memory.alloc\")\n\tif err := simulateMemoryAllocation(); err != nil {\n\t\tt.Errorf(\"Expected memory allocation to succeed after disabling injection: %v\", err)\n\t}\n\n\t// Check for resource leaks\n\ttracker.CheckLeaks(t)\n}\n",
+      "structuredPatch": [
+        {
+          "oldStart": 107,
+          "oldLines": 9,
+          "newStart": 107,
+          "newLines": 7,
+          "lines": [
+            "     t.Logf(\"Memory diff: %d (might be optimized away)\", usage.MemoryDiff)",
+            "   }",
+            " ",
+            "-  // Clean up - explicitly nil the slice to aid garbage collection",
+            "-  _ = allocations // prevent unused variable warning",
+            "-  allocations = nil",
+            "+  // Clean up - force garbage collection (allocations will be GC'd when function exits)",
+            "   runtime.GC()",
+            "   runtime.GC()",
+            "   time.Sleep(10 * time.Millisecond)"
+          ]
+        }
+      ],
+      "userModified": false,
+      "replaceAll": false
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Read",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/registry/component.go",
+      "offset": 310,
+      "limit": 10
+    },
+    "tool_response": {
+      "type": "text",
+      "file": {
+        "filePath": "/home/connerohnesorge/Documents/001Repos/templar/internal/registry/component.go",
+        "content": "\t// Only strip absolute path markers if they point to dangerous locations\n\tif strings.HasPrefix(cleanedPath, \"/\") &&\n\t\t(strings.Contains(lowerPath, \"etc\") || strings.Contains(lowerPath, \"system\") ||\n\t\t\tstrings.Contains(lowerPath, \"usr\") || strings.Contains(lowerPath, \"bin\") ||\n\t\t\tstrings.Contains(lowerPath, \"var\") || strings.Contains(lowerPath, \"tmp\")) {\n\t\tcleanedPath = strings.TrimPrefix(cleanedPath, \"/\")\n\t\treturn \"safe_component.templ\"\n\t}\n\n\treturn cleanedPath",
+        "numLines": 10,
+        "startLine": 310,
+        "totalLines": 329
+      }
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Edit",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/registry/component.go",
+      "old_string": "\tif strings.HasPrefix(cleanedPath, \"/\") &&\n\t\t(strings.Contains(lowerPath, \"etc\") || strings.Contains(lowerPath, \"system\") ||\n\t\t\tstrings.Contains(lowerPath, \"usr\") || strings.Contains(lowerPath, \"bin\") ||\n\t\t\tstrings.Contains(lowerPath, \"var\") || strings.Contains(lowerPath, \"tmp\")) {\n\t\tcleanedPath = strings.TrimPrefix(cleanedPath, \"/\")\n\t\treturn \"safe_component.templ\"\n\t}",
+      "new_string": "\tif strings.HasPrefix(cleanedPath, \"/\") &&\n\t\t(strings.Contains(lowerPath, \"etc\") || strings.Contains(lowerPath, \"system\") ||\n\t\t\tstrings.Contains(lowerPath, \"usr\") || strings.Contains(lowerPath, \"bin\") ||\n\t\t\tstrings.Contains(lowerPath, \"var\") || strings.Contains(lowerPath, \"tmp\")) {\n\t\t// Path contains dangerous system directories, return safe default\n\t\treturn \"safe_component.templ\"\n\t}"
+    },
+    "tool_response": {
+      "filePath": "/home/connerohnesorge/Documents/001Repos/templar/internal/registry/component.go",
+      "oldString": "\tif strings.HasPrefix(cleanedPath, \"/\") &&\n\t\t(strings.Contains(lowerPath, \"etc\") || strings.Contains(lowerPath, \"system\") ||\n\t\t\tstrings.Contains(lowerPath, \"usr\") || strings.Contains(lowerPath, \"bin\") ||\n\t\t\tstrings.Contains(lowerPath, \"var\") || strings.Contains(lowerPath, \"tmp\")) {\n\t\tcleanedPath = strings.TrimPrefix(cleanedPath, \"/\")\n\t\treturn \"safe_component.templ\"\n\t}",
+      "newString": "\tif strings.HasPrefix(cleanedPath, \"/\") &&\n\t\t(strings.Contains(lowerPath, \"etc\") || strings.Contains(lowerPath, \"system\") ||\n\t\t\tstrings.Contains(lowerPath, \"usr\") || strings.Contains(lowerPath, \"bin\") ||\n\t\t\tstrings.Contains(lowerPath, \"var\") || strings.Contains(lowerPath, \"tmp\")) {\n\t\t// Path contains dangerous system directories, return safe default\n\t\treturn \"safe_component.templ\"\n\t}",
+      "originalFile": "// Package registry provides a central component registry with event-driven\n// architecture for managing templ component metadata and change notifications.\n//\n// The registry maintains a thread-safe collection of discovered components,\n// broadcasts change events to subscribers, and provides component lookup\n// and enumeration capabilities. It supports real-time component management\n// with automatic registration, updates, and removal, integrating with\n// scanners for component discovery and servers for live reload functionality.\npackage registry\n\nimport (\n\t\"path/filepath\"\n\t\"strings\"\n\t\"sync\"\n\t\"time\"\n\n\t\"github.com/conneroisu/templar/internal/types\"\n)\n\n// ComponentRegistry manages all discovered components with thread-safe operations\n// and event-driven notifications.\n//\n// The registry provides:\n// - Thread-safe component registration, lookup, and removal\n// - Event broadcasting to subscribers for real-time updates\n// - Dependency analysis and circular dependency detection\n// - Security hardening through input sanitization\ntype ComponentRegistry struct {\n\t// components stores all registered component information indexed by component name\n\tcomponents map[string]*types.ComponentInfo\n\t// mutex protects concurrent access to components and watchers\n\tmutex sync.RWMutex\n\t// watchers holds channels that receive component change events\n\twatchers []chan types.ComponentEvent\n\t// dependencyAnalyzer analyzes component dependencies and detects circular references\n\tdependencyAnalyzer *DependencyAnalyzer\n}\n\n// NewComponentRegistry creates a new component registry with dependency analysis enabled.\n//\n// The registry is initialized with:\n// - Empty component storage\n// - No active watchers\n// - Dependency analyzer for automatic dependency resolution\nfunc NewComponentRegistry() *ComponentRegistry {\n\tregistry := &ComponentRegistry{\n\t\tcomponents: make(map[string]*types.ComponentInfo),\n\t\twatchers:   make([]chan types.ComponentEvent, 0),\n\t}\n\n\t// Initialize dependency analyzer\n\tregistry.dependencyAnalyzer = NewDependencyAnalyzer(registry)\n\n\treturn registry\n}\n\n// Register adds or updates a component in the registry with security sanitization.\n//\n// The method performs:\n// 1. Input sanitization to prevent security vulnerabilities\n// 2. Component registration or update based on existing state\n// 3. Dependency analysis for the registered component\n// 4. Event notification to all watchers\n//\n// The operation is thread-safe and non-blocking for event notifications.\nfunc (r *ComponentRegistry) Register(component *types.ComponentInfo) {\n\t// Validate and sanitize component data\n\tcomponent = r.sanitizeComponent(component)\n\n\tr.mutex.Lock()\n\n\teventType := types.EventTypeAdded\n\tif _, exists := r.components[component.Name]; exists {\n\t\teventType = types.EventTypeUpdated\n\t}\n\n\tr.components[component.Name] = component\n\tr.mutex.Unlock()\n\n\t// Analyze dependencies for the component\n\tif r.dependencyAnalyzer != nil {\n\t\tdeps, err := r.dependencyAnalyzer.AnalyzeComponent(component)\n\t\tif err == nil {\n\t\t\t// Sanitize dependencies to prevent path traversal\n\t\t\tsanitizedDeps := make([]string, len(deps))\n\t\t\tfor i, dep := range deps {\n\t\t\t\tsanitizedDeps[i] = sanitizeFilePath(dep)\n\t\t\t}\n\n\t\t\tr.mutex.Lock()\n\t\t\tcomponent.Dependencies = sanitizedDeps\n\t\t\tr.mutex.Unlock()\n\t\t}\n\t}\n\n\t// Notify watchers\n\tr.mutex.RLock()\n\tevent := types.ComponentEvent{\n\t\tType:      eventType,\n\t\tComponent: component,\n\t\tTimestamp: time.Now(),\n\t}\n\n\tfor _, watcher := range r.watchers {\n\t\tselect {\n\t\tcase watcher <- event:\n\t\tdefault:\n\t\t\t// Skip if channel is full\n\t\t}\n\t}\n\tr.mutex.RUnlock()\n}\n\n// Get retrieves a component by name\nfunc (r *ComponentRegistry) Get(name string) (*types.ComponentInfo, bool) {\n\tr.mutex.RLock()\n\tdefer r.mutex.RUnlock()\n\n\tcomponent, exists := r.components[name]\n\treturn component, exists\n}\n\n// GetAll returns all registered components\nfunc (r *ComponentRegistry) GetAll() []*types.ComponentInfo {\n\tr.mutex.RLock()\n\tdefer r.mutex.RUnlock()\n\n\tresult := make([]*types.ComponentInfo, 0, len(r.components))\n\tfor _, component := range r.components {\n\t\tresult = append(result, component)\n\t}\n\treturn result\n}\n\n// GetAllMap returns all registered components as a map\nfunc (r *ComponentRegistry) GetAllMap() map[string]*types.ComponentInfo {\n\tr.mutex.RLock()\n\tdefer r.mutex.RUnlock()\n\n\tresult := make(map[string]*types.ComponentInfo)\n\tfor name, component := range r.components {\n\t\tresult[name] = component\n\t}\n\treturn result\n}\n\n// Remove removes a component from the registry\nfunc (r *ComponentRegistry) Remove(name string) {\n\tr.mutex.Lock()\n\tdefer r.mutex.Unlock()\n\n\tcomponent, exists := r.components[name]\n\tif !exists {\n\t\treturn\n\t}\n\n\tdelete(r.components, name)\n\n\t// Notify watchers\n\tevent := types.ComponentEvent{\n\t\tType:      types.EventTypeRemoved,\n\t\tComponent: component,\n\t\tTimestamp: time.Now(),\n\t}\n\n\tfor _, watcher := range r.watchers {\n\t\tselect {\n\t\tcase watcher <- event:\n\t\tdefault:\n\t\t\t// Skip if channel is full\n\t\t}\n\t}\n}\n\n// Watch returns a channel that receives component events for real-time notifications.\n//\n// The returned channel receives events for:\n// - Component registration (EventTypeAdded)\n// - Component updates (EventTypeUpdated)\n// - Component removal (EventTypeRemoved)\n//\n// The channel has a buffer of 100 events to prevent blocking. If the consumer\n// cannot keep up, older events may be dropped. Callers should use UnWatch()\n// to properly clean up the returned channel.\nfunc (r *ComponentRegistry) Watch() <-chan types.ComponentEvent {\n\tr.mutex.Lock()\n\tdefer r.mutex.Unlock()\n\n\tch := make(chan types.ComponentEvent, 100)\n\tr.watchers = append(r.watchers, ch)\n\treturn ch\n}\n\n// UnWatch removes a watcher channel and closes it\nfunc (r *ComponentRegistry) UnWatch(ch <-chan types.ComponentEvent) {\n\tr.mutex.Lock()\n\tdefer r.mutex.Unlock()\n\n\tfor i, watcher := range r.watchers {\n\t\tif watcher == ch {\n\t\t\tclose(watcher)\n\t\t\tr.watchers = append(r.watchers[:i], r.watchers[i+1:]...)\n\t\t\tbreak\n\t\t}\n\t}\n}\n\n// Count returns the number of registered components\nfunc (r *ComponentRegistry) Count() int {\n\tr.mutex.RLock()\n\tdefer r.mutex.RUnlock()\n\n\treturn len(r.components)\n}\n\n// sanitizeComponent sanitizes component data to prevent security issues\nfunc (r *ComponentRegistry) sanitizeComponent(component *types.ComponentInfo) *types.ComponentInfo {\n\tif component == nil {\n\t\treturn component\n\t}\n\n\t// Create a copy to avoid modifying the original\n\tsanitized := *component\n\n\t// Sanitize name - only allow alphanumeric and underscores\n\tsanitized.Name = sanitizeIdentifier(sanitized.Name)\n\n\t// Sanitize package name\n\tsanitized.Package = sanitizeIdentifier(sanitized.Package)\n\n\t// Sanitize file path - remove control characters\n\tsanitized.FilePath = sanitizeFilePath(sanitized.FilePath)\n\n\t// Sanitize parameters\n\tfor i := range sanitized.Parameters {\n\t\tsanitized.Parameters[i].Name = sanitizeIdentifier(sanitized.Parameters[i].Name)\n\t\tsanitized.Parameters[i].Type = sanitizeIdentifier(sanitized.Parameters[i].Type)\n\t}\n\n\t// Sanitize dependencies to prevent path traversal\n\tif sanitized.Dependencies != nil {\n\t\tsanitizedDeps := make([]string, len(sanitized.Dependencies))\n\t\tfor i, dep := range sanitized.Dependencies {\n\t\t\tsanitizedDeps[i] = sanitizeFilePath(dep)\n\t\t}\n\t\tsanitized.Dependencies = sanitizedDeps\n\t}\n\n\treturn &sanitized\n}\n\n// sanitizeIdentifier removes dangerous characters from identifiers\nfunc sanitizeIdentifier(identifier string) string {\n\t// Only allow alphanumeric characters, underscores, and dots (for package names)\n\tvar cleaned []rune\n\tfor _, r := range identifier {\n\t\tif (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_' || r == '.' {\n\t\t\tcleaned = append(cleaned, r)\n\t\t}\n\t}\n\n\tcleanedId := string(cleaned)\n\n\t// Additional security check for dangerous system identifiers\n\tdangerousPatterns := []string{\"etc\", \"system32\", \"windows\", \"usr\", \"bin\", \"var\", \"tmp\", \"passwd\", \"shadow\"}\n\tlowerCleaned := strings.ToLower(cleanedId)\n\tfor _, pattern := range dangerousPatterns {\n\t\tif strings.Contains(lowerCleaned, pattern) {\n\t\t\t// Replace with safe alternative\n\t\t\tcleanedId = \"safe_component\"\n\t\t\tbreak\n\t\t}\n\t}\n\n\treturn cleanedId\n}\n\n// sanitizeFilePath removes control characters and prevents path traversal attacks\nfunc sanitizeFilePath(path string) string {\n\tvar cleaned []rune\n\tfor _, r := range path {\n\t\t// Remove null bytes, newlines, carriage returns, and other control characters\n\t\tif r >= 32 && r != 127 { // Printable ASCII characters\n\t\t\tcleaned = append(cleaned, r)\n\t\t}\n\t}\n\n\tcleanedPath := string(cleaned)\n\n\t// Prevent path traversal attacks\n\t// Remove any directory traversal sequences\n\tcleanedPath = strings.ReplaceAll(cleanedPath, \"../\", \"\")\n\tcleanedPath = strings.ReplaceAll(cleanedPath, \"..\\\\\", \"\") // Windows paths\n\tcleanedPath = strings.ReplaceAll(cleanedPath, \"..\", \"\")   // Any remaining double dots\n\n\t// Use filepath.Clean to normalize the path and prevent other traversal techniques\n\tcleanedPath = filepath.Clean(cleanedPath)\n\n\t// Check for dangerous system paths before preserving absolute paths\n\tdangerousPatterns := []string{\"etc\", \"system32\", \"windows\", \"usr\", \"bin\", \"var\", \"tmp\"}\n\tlowerPath := strings.ToLower(cleanedPath)\n\tfor _, pattern := range dangerousPatterns {\n\t\tif strings.Contains(lowerPath, pattern) {\n\t\t\t// Replace with safe alternative\n\t\t\treturn \"safe_component.templ\"\n\t\t}\n\t}\n\n\t// For legitimate component paths, preserve the original structure\n\t// Only strip absolute path markers if they point to dangerous locations\n\tif strings.HasPrefix(cleanedPath, \"/\") &&\n\t\t(strings.Contains(lowerPath, \"etc\") || strings.Contains(lowerPath, \"system\") ||\n\t\t\tstrings.Contains(lowerPath, \"usr\") || strings.Contains(lowerPath, \"bin\") ||\n\t\t\tstrings.Contains(lowerPath, \"var\") || strings.Contains(lowerPath, \"tmp\")) {\n\t\tcleanedPath = strings.TrimPrefix(cleanedPath, \"/\")\n\t\treturn \"safe_component.templ\"\n\t}\n\n\treturn cleanedPath\n}\n\n// DetectCircularDependencies detects circular dependencies using the dependency analyzer\nfunc (r *ComponentRegistry) DetectCircularDependencies() [][]string {\n\tif r.dependencyAnalyzer == nil {\n\t\treturn nil\n\t}\n\treturn r.dependencyAnalyzer.DetectCircularDependencies()\n}\n",
+      "structuredPatch": [
+        {
+          "oldStart": 312,
+          "oldLines": 7,
+          "newStart": 312,
+          "newLines": 7,
+          "lines": [
+            "     (strings.Contains(lowerPath, \"etc\") || strings.Contains(lowerPath, \"system\") ||",
+            "       strings.Contains(lowerPath, \"usr\") || strings.Contains(lowerPath, \"bin\") ||",
+            "       strings.Contains(lowerPath, \"var\") || strings.Contains(lowerPath, \"tmp\")) {",
+            "-    cleanedPath = strings.TrimPrefix(cleanedPath, \"/\")",
+            "+    // Path contains dangerous system directories, return safe default",
+            "     return \"safe_component.templ\"",
+            "   }",
+            " "
+          ]
+        }
+      ],
+      "userModified": false,
+      "replaceAll": false
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "golangci-lint run --enable-only ineffassign",
+      "description": "Check if all ineffassign issues are resolved"
+    },
+    "tool_response": {
+      "stdout": "0 issues.",
+      "stderr": "",
+      "interrupted": false,
+      "isImage": false
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "TodoWrite",
+    "tool_input": {
+      "todos": [
+        {
+          "content": "Check current git status and recent commits",
+          "status": "completed",
+          "priority": "high",
+          "id": "1"
+        },
+        {
+          "content": "Identify failing CI checks",
+          "status": "completed",
+          "priority": "high",
+          "id": "2"
+        },
+        {
+          "content": "Fix identified CI failures",
+          "status": "completed",
+          "priority": "high",
+          "id": "3"
+        },
+        {
+          "content": "Fix import issues in test files",
+          "status": "completed",
+          "priority": "high",
+          "id": "5"
+        },
+        {
+          "content": "Fix test rendering method calls",
+          "status": "completed",
+          "priority": "high",
+          "id": "7"
+        },
+        {
+          "content": "Fix monitoring test failure",
+          "status": "completed",
+          "priority": "high",
+          "id": "8"
+        },
+        {
+          "content": "Fix remaining bodyclose linting issues",
+          "status": "completed",
+          "priority": "high",
+          "id": "9"
+        },
+        {
+          "content": "Remove duplicate test code",
+          "status": "completed",
+          "priority": "high",
+          "id": "10"
+        },
+        {
+          "content": "Commit the fixes",
+          "status": "completed",
+          "priority": "high",
+          "id": "11"
+        },
+        {
+          "content": "Run full test suite to identify remaining failures",
+          "status": "completed",
+          "priority": "high",
+          "id": "12"
+        },
+        {
+          "content": "Fix duplicate code linting errors",
+          "status": "completed",
+          "priority": "high",
+          "id": "13"
+        },
+        {
+          "content": "Run local tests to verify fixes",
+          "status": "completed",
+          "priority": "medium",
+          "id": "4"
+        },
+        {
+          "content": "Fix usestdlibvars linting errors",
+          "status": "completed",
+          "priority": "medium",
+          "id": "14"
+        },
+        {
+          "content": "Fix ineffassign linting errors",
+          "status": "completed",
+          "priority": "medium",
+          "id": "15"
+        },
+        {
+          "content": "Fix remaining linting issues",
+          "status": "in_progress",
+          "priority": "high",
+          "id": "6"
+        },
+        {
+          "content": "Push fixes to trigger CI validation",
+          "status": "pending",
+          "priority": "high",
+          "id": "16"
+        }
+      ]
+    },
+    "tool_response": {
+      "oldTodos": [
+        {
+          "content": "Check current git status and recent commits",
+          "status": "completed",
+          "priority": "high",
+          "id": "1"
+        },
+        {
+          "content": "Identify failing CI checks",
+          "status": "completed",
+          "priority": "high",
+          "id": "2"
+        },
+        {
+          "content": "Fix identified CI failures",
+          "status": "completed",
+          "priority": "high",
+          "id": "3"
+        },
+        {
+          "content": "Run local tests to verify fixes",
+          "status": "completed",
+          "priority": "medium",
+          "id": "4"
+        },
+        {
+          "content": "Fix import issues in test files",
+          "status": "completed",
+          "priority": "high",
+          "id": "5"
+        },
+        {
+          "content": "Fix remaining linting issues",
+          "status": "in_progress",
+          "priority": "high",
+          "id": "6"
+        },
+        {
+          "content": "Fix test rendering method calls",
+          "status": "completed",
+          "priority": "high",
+          "id": "7"
+        },
+        {
+          "content": "Fix monitoring test failure",
+          "status": "completed",
+          "priority": "high",
+          "id": "8"
+        },
+        {
+          "content": "Fix remaining bodyclose linting issues",
+          "status": "completed",
+          "priority": "high",
+          "id": "9"
+        },
+        {
+          "content": "Remove duplicate test code",
+          "status": "completed",
+          "priority": "high",
+          "id": "10"
+        },
+        {
+          "content": "Commit the fixes",
+          "status": "completed",
+          "priority": "high",
+          "id": "11"
+        },
+        {
+          "content": "Run full test suite to identify remaining failures",
+          "status": "completed",
+          "priority": "high",
+          "id": "12"
+        },
+        {
+          "content": "Fix duplicate code linting errors",
+          "status": "completed",
+          "priority": "high",
+          "id": "13"
+        },
+        {
+          "content": "Fix usestdlibvars linting errors",
+          "status": "completed",
+          "priority": "medium",
+          "id": "14"
+        },
+        {
+          "content": "Fix remaining high-priority linting issues",
+          "status": "in_progress",
+          "priority": "medium",
+          "id": "15"
+        }
+      ],
+      "newTodos": [
+        {
+          "content": "Check current git status and recent commits",
+          "status": "completed",
+          "priority": "high",
+          "id": "1"
+        },
+        {
+          "content": "Identify failing CI checks",
+          "status": "completed",
+          "priority": "high",
+          "id": "2"
+        },
+        {
+          "content": "Fix identified CI failures",
+          "status": "completed",
+          "priority": "high",
+          "id": "3"
+        },
+        {
+          "content": "Fix import issues in test files",
+          "status": "completed",
+          "priority": "high",
+          "id": "5"
+        },
+        {
+          "content": "Fix test rendering method calls",
+          "status": "completed",
+          "priority": "high",
+          "id": "7"
+        },
+        {
+          "content": "Fix monitoring test failure",
+          "status": "completed",
+          "priority": "high",
+          "id": "8"
+        },
+        {
+          "content": "Fix remaining bodyclose linting issues",
+          "status": "completed",
+          "priority": "high",
+          "id": "9"
+        },
+        {
+          "content": "Remove duplicate test code",
+          "status": "completed",
+          "priority": "high",
+          "id": "10"
+        },
+        {
+          "content": "Commit the fixes",
+          "status": "completed",
+          "priority": "high",
+          "id": "11"
+        },
+        {
+          "content": "Run full test suite to identify remaining failures",
+          "status": "completed",
+          "priority": "high",
+          "id": "12"
+        },
+        {
+          "content": "Fix duplicate code linting errors",
+          "status": "completed",
+          "priority": "high",
+          "id": "13"
+        },
+        {
+          "content": "Run local tests to verify fixes",
+          "status": "completed",
+          "priority": "medium",
+          "id": "4"
+        },
+        {
+          "content": "Fix usestdlibvars linting errors",
+          "status": "completed",
+          "priority": "medium",
+          "id": "14"
+        },
+        {
+          "content": "Fix ineffassign linting errors",
+          "status": "completed",
+          "priority": "medium",
+          "id": "15"
+        },
+        {
+          "content": "Fix remaining linting issues",
+          "status": "in_progress",
+          "priority": "high",
+          "id": "6"
+        },
+        {
+          "content": "Push fixes to trigger CI validation",
+          "status": "pending",
+          "priority": "high",
+          "id": "16"
+        }
+      ]
+    }
   }
 ]

@@ -195,7 +195,7 @@ func TestPluginIsolationAndSecurity(t *testing.T) {
 
 		config := PluginConfig{Name: "failing-plugin", Enabled: true, Config: make(map[string]interface{})}
 		// This should fail during RegisterPlugin since Initialize is called
-		err := manager.RegisterPlugin(failingPlugin, config)
+		_ = manager.RegisterPlugin(failingPlugin, config)
 		// The manager should handle failures gracefully
 		// (exact behavior depends on implementation)
 
@@ -209,7 +209,7 @@ func TestPluginIsolationAndSecurity(t *testing.T) {
 		}
 
 		// Processing should continue even if one plugin fails
-		_, err = manager.ProcessComponent(ctx, component)
+		_, _ = manager.ProcessComponent(ctx, component)
 		// Should not panic and should handle errors gracefully
 
 		err = manager.Shutdown()

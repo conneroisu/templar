@@ -3719,5 +3719,520 @@
       "command": "git add .",
       "description": "Stage all linting fixes"
     }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "git commit -m \"$(cat <<'EOF'\nfix: Resolve duplicate code and usestdlibvars linting issues\n\n- Refactor duplicate test functions into table-driven tests and helper functions:\n  - ErrorCollector tests consolidated with helper pattern\n  - Parser tests using shared verification helper\n  - Performance detector using shared regression detection helper\n  - Validation tests using common test runner helper\n\n- Replace string literals with http standard library constants:\n  - Replace \"GET\" with http.MethodGet\n  - Replace \"POST\" with http.MethodPost\n  - Replace \"OPTIONS\" with http.MethodOptions\n  - Replace \"101\" with http.StatusSwitchingProtocols\n\n- Improve code maintainability and reduce duplication across:\n  - internal/errors/ test files\n  - internal/performance/detector.go\n  - internal/validation/security_test.go\n  - All HTTP test files with request creation\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\"",
+      "description": "Commit duplicate code and usestdlibvars fixes"
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "golangci-lint run",
+      "timeout": 180000,
+      "description": "Check remaining linting issues"
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Read",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/performance/detector.go",
+      "offset": 322,
+      "limit": 15
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Grep",
+    "tool_input": {
+      "pattern": "func.*getMemoryRecommendation",
+      "path": "/home/connerohnesorge/Documents/001Repos/templar/internal/performance/",
+      "output_mode": "content"
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Grep",
+    "tool_input": {
+      "pattern": "func.*getAllocationRecommendation",
+      "path": "/home/connerohnesorge/Documents/001Repos/templar/internal/performance/",
+      "output_mode": "content"
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Grep",
+    "tool_input": {
+      "pattern": "func.*calculateSeverity",
+      "path": "/home/connerohnesorge/Documents/001Repos/templar/internal/performance/",
+      "output_mode": "content"
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Edit",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/performance/detector.go",
+      "old_string": "type regressionParams struct {\n\tmetricValue     int64\n\tsuffix          string\n\tmeanMultiplier  float64\n\tstdDevMultiplier float64\n\tsampleScaling   float64\n\tthreshold       float64\n\tregressionType  string\n\tgetRecommendation func(severity int, percentageChange float64) string\n}",
+      "new_string": "type regressionParams struct {\n\tmetricValue     int64\n\tsuffix          string\n\tmeanMultiplier  float64\n\tstdDevMultiplier float64\n\tsampleScaling   float64\n\tthreshold       float64\n\tregressionType  string\n\tgetRecommendation func(severity string, percentageChange float64) string\n}"
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "golangci-lint run --enable-only typecheck",
+      "description": "Check if typecheck errors are resolved"
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "go build ./internal/performance",
+      "description": "Check if performance package builds without errors"
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "go test ./internal/performance -short",
+      "description": "Test the performance package to ensure it compiles and runs"
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "go build .",
+      "description": "Check if main project builds"
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "golangci-lint run --disable typecheck --enable govet,staticcheck,unused,ineffassign",
+      "description": "Check specific high-priority linting issues excluding typecheck"
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "golangci-lint run --enable-only govet,staticcheck,unused,ineffassign",
+      "description": "Check high-priority linting issues"
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "git add internal/performance/detector.go",
+      "description": "Stage performance detector type fix"
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "git commit -m \"fix: Correct type signature for regression parameters\n\n- Fix getRecommendation function parameter type from int to string\n- Resolves type mismatch in performance detector refactoring\n- Ensures proper compatibility with calculateSeverity return type\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\"",
+      "description": "Commit performance detector type fix"
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Read",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/plugins/integration_test.go",
+      "offset": 195,
+      "limit": 10
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Read",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/plugins/integration_test.go",
+      "offset": 210,
+      "limit": 10
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Edit",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/plugins/integration_test.go",
+      "old_string": "\t\tconfig := PluginConfig{Name: \"failing-plugin\", Enabled: true, Config: make(map[string]interface{})}\n\t\t// This should fail during RegisterPlugin since Initialize is called\n\t\terr := manager.RegisterPlugin(failingPlugin, config)\n\t\t// The manager should handle failures gracefully\n\t\t// (exact behavior depends on implementation)",
+      "new_string": "\t\tconfig := PluginConfig{Name: \"failing-plugin\", Enabled: true, Config: make(map[string]interface{})}\n\t\t// This should fail during RegisterPlugin since Initialize is called\n\t\t_ = manager.RegisterPlugin(failingPlugin, config)\n\t\t// The manager should handle failures gracefully\n\t\t// (exact behavior depends on implementation)"
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Edit",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/plugins/integration_test.go",
+      "old_string": "\t\t// Processing should continue even if one plugin fails\n\t\t_, err = manager.ProcessComponent(ctx, component)\n\t\t// Should not panic and should handle errors gracefully",
+      "new_string": "\t\t// Processing should continue even if one plugin fails\n\t\t_, _ = manager.ProcessComponent(ctx, component)\n\t\t// Should not panic and should handle errors gracefully"
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Read",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/registry/component.go",
+      "offset": 315,
+      "limit": 5
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Read",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/registry/component.go",
+      "offset": 310,
+      "limit": 10
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Edit",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/registry/component.go",
+      "old_string": "\t\tcleanedPath = strings.TrimPrefix(cleanedPath, \"/\")\n\t\tcleanedPath = strings.TrimPrefix(cleanedPath, \"\\\\\")\n\t\treturn \"safe_component.templ\"",
+      "new_string": "\t\tcleanedPath = strings.TrimPrefix(cleanedPath, \"/\")\n\t\treturn \"safe_component.templ\""
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Read",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/server/server.go",
+      "offset": 315,
+      "limit": 5
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Read",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/server/server.go",
+      "offset": 310,
+      "limit": 10
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Edit",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/server/server.go",
+      "old_string": "\tdefault:\n\t\terr = fmt.Errorf(\"unsupported platform: %s\", runtime.GOOS)\n\t\tlog.Printf(\"Browser auto-open not supported on platform: %s\", runtime.GOOS)\n\t\treturn",
+      "new_string": "\tdefault:\n\t\tlog.Printf(\"Browser auto-open not supported on platform: %s\", runtime.GOOS)\n\t\treturn"
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Read",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/testing/resource_tracker_test.go",
+      "offset": 109,
+      "limit": 5
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Read",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/testing/resource_tracker_test.go",
+      "offset": 105,
+      "limit": 10
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Read",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/testing/resource_tracker_test.go",
+      "offset": 90,
+      "limit": 15
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Edit",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/testing/resource_tracker_test.go",
+      "old_string": "\t// Clean up\n\tallocations = nil",
+      "new_string": "\t// Clean up - explicitly nil the slice to aid garbage collection\n\t_ = allocations // prevent unused variable warning\n\tallocations = nil"
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Edit",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/testing/resource_tracker_test.go",
+      "old_string": "\t// Clean up - explicitly nil the slice to aid garbage collection\n\t_ = allocations // prevent unused variable warning\n\tallocations = nil",
+      "new_string": "\t// Clean up - force garbage collection (allocations will be GC'd when function exits)"
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "golangci-lint run --enable-only ineffassign",
+      "description": "Check if ineffassign issues are resolved"
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Read",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/registry/component.go",
+      "offset": 310,
+      "limit": 10
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Edit",
+    "tool_input": {
+      "file_path": "/home/connerohnesorge/Documents/001Repos/templar/internal/registry/component.go",
+      "old_string": "\tif strings.HasPrefix(cleanedPath, \"/\") &&\n\t\t(strings.Contains(lowerPath, \"etc\") || strings.Contains(lowerPath, \"system\") ||\n\t\t\tstrings.Contains(lowerPath, \"usr\") || strings.Contains(lowerPath, \"bin\") ||\n\t\t\tstrings.Contains(lowerPath, \"var\") || strings.Contains(lowerPath, \"tmp\")) {\n\t\tcleanedPath = strings.TrimPrefix(cleanedPath, \"/\")\n\t\treturn \"safe_component.templ\"\n\t}",
+      "new_string": "\tif strings.HasPrefix(cleanedPath, \"/\") &&\n\t\t(strings.Contains(lowerPath, \"etc\") || strings.Contains(lowerPath, \"system\") ||\n\t\t\tstrings.Contains(lowerPath, \"usr\") || strings.Contains(lowerPath, \"bin\") ||\n\t\t\tstrings.Contains(lowerPath, \"var\") || strings.Contains(lowerPath, \"tmp\")) {\n\t\t// Path contains dangerous system directories, return safe default\n\t\treturn \"safe_component.templ\"\n\t}"
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "golangci-lint run --enable-only ineffassign",
+      "description": "Check if all ineffassign issues are resolved"
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "TodoWrite",
+    "tool_input": {
+      "todos": [
+        {
+          "content": "Check current git status and recent commits",
+          "status": "completed",
+          "priority": "high",
+          "id": "1"
+        },
+        {
+          "content": "Identify failing CI checks",
+          "status": "completed",
+          "priority": "high",
+          "id": "2"
+        },
+        {
+          "content": "Fix identified CI failures",
+          "status": "completed",
+          "priority": "high",
+          "id": "3"
+        },
+        {
+          "content": "Run local tests to verify fixes",
+          "status": "completed",
+          "priority": "medium",
+          "id": "4"
+        },
+        {
+          "content": "Fix import issues in test files",
+          "status": "completed",
+          "priority": "high",
+          "id": "5"
+        },
+        {
+          "content": "Fix remaining linting issues",
+          "status": "in_progress",
+          "priority": "high",
+          "id": "6"
+        },
+        {
+          "content": "Fix test rendering method calls",
+          "status": "completed",
+          "priority": "high",
+          "id": "7"
+        },
+        {
+          "content": "Fix monitoring test failure",
+          "status": "completed",
+          "priority": "high",
+          "id": "8"
+        },
+        {
+          "content": "Fix remaining bodyclose linting issues",
+          "status": "completed",
+          "priority": "high",
+          "id": "9"
+        },
+        {
+          "content": "Remove duplicate test code",
+          "status": "completed",
+          "priority": "high",
+          "id": "10"
+        },
+        {
+          "content": "Commit the fixes",
+          "status": "completed",
+          "priority": "high",
+          "id": "11"
+        },
+        {
+          "content": "Run full test suite to identify remaining failures",
+          "status": "completed",
+          "priority": "high",
+          "id": "12"
+        },
+        {
+          "content": "Fix duplicate code linting errors",
+          "status": "completed",
+          "priority": "high",
+          "id": "13"
+        },
+        {
+          "content": "Fix usestdlibvars linting errors",
+          "status": "completed",
+          "priority": "medium",
+          "id": "14"
+        },
+        {
+          "content": "Fix ineffassign linting errors",
+          "status": "completed",
+          "priority": "medium",
+          "id": "15"
+        },
+        {
+          "content": "Push fixes to trigger CI validation",
+          "status": "pending",
+          "priority": "high",
+          "id": "16"
+        }
+      ]
+    }
+  },
+  {
+    "session_id": "5e052a87-9445-4114-b898-3ffd834321d7",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/5e052a87-9445-4114-b898-3ffd834321d7.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "git add .",
+      "description": "Stage ineffassign fixes"
+    }
   }
 ]

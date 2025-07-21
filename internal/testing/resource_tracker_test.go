@@ -107,8 +107,7 @@ func TestResourceTracker_MemoryTracking(t *testing.T) {
 		t.Logf("Memory diff: %d (might be optimized away)", usage.MemoryDiff)
 	}
 
-	// Clean up
-	allocations = nil
+	// Clean up - force garbage collection (allocations will be GC'd when function exits)
 	runtime.GC()
 	runtime.GC()
 	time.Sleep(10 * time.Millisecond)

@@ -314,7 +314,6 @@ func (s *PreviewServer) openBrowser(url string) {
 		// Use open for macOS
 		err = exec.Command("open", url).Start()
 	default:
-		err = fmt.Errorf("unsupported platform: %s", runtime.GOOS)
 		log.Printf("Browser auto-open not supported on platform: %s", runtime.GOOS)
 		return
 	}

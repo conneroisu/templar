@@ -312,8 +312,7 @@ func sanitizeFilePath(path string) string {
 		(strings.Contains(lowerPath, "etc") || strings.Contains(lowerPath, "system") ||
 			strings.Contains(lowerPath, "usr") || strings.Contains(lowerPath, "bin") ||
 			strings.Contains(lowerPath, "var") || strings.Contains(lowerPath, "tmp")) {
-		cleanedPath = strings.TrimPrefix(cleanedPath, "/")
-		cleanedPath = strings.TrimPrefix(cleanedPath, "\\")
+		// Path contains dangerous system directories, return safe default
 		return "safe_component.templ"
 	}
 
