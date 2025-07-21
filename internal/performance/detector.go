@@ -328,7 +328,7 @@ type regressionParams struct {
 	sampleScaling   float64
 	threshold       float64
 	regressionType  string
-	getRecommendation func(severity int, percentageChange float64) string
+	getRecommendation func(severity string, percentageChange float64) string
 }
 
 // detectRegressionWithStats is a helper function for memory and allocation regression detection
