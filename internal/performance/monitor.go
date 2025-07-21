@@ -84,7 +84,6 @@ type OptimizationRule struct {
 	Action      Action    `json:"action"`
 	Priority    int       `json:"priority"`
 	CooldownMin int       `json:"cooldown_minutes"`
-	lastApplied time.Time
 }
 
 // Condition defines when an optimization should be triggered

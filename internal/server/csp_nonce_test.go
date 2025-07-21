@@ -316,10 +316,3 @@ func TestGetNonceFromContextNew(t *testing.T) {
 	}
 }
 
-// min function for older Go versions
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}

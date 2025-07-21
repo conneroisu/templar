@@ -15,8 +15,7 @@ import (
 // OptimizedWebSocketHub manages WebSocket connections with high-performance optimizations
 type OptimizedWebSocketHub struct {
 	// Client management with efficient data structures
-	clients    *ClientPool
-	clientsMux sync.RWMutex
+	clients *ClientPool
 
 	// Pre-allocated broadcast structures to eliminate allocations
 	broadcastPool    *BroadcastPool
@@ -48,8 +47,7 @@ type OptimizedClient struct {
 	lastActivity time.Time
 
 	// High-performance buffering with ring buffer
-	sendRing    *RingBuffer
-	rateLimiter RateLimiter
+	sendRing *RingBuffer
 
 	// Backpressure tracking
 	missedMessages int64
@@ -82,8 +80,6 @@ type ClientPool struct {
 // RingBuffer provides lock-free message buffering for WebSocket clients
 type RingBuffer struct {
 	buffer [][]byte
-	head   uint64
-	tail   uint64
 	size   uint64
 	mask   uint64
 
@@ -113,7 +109,6 @@ type BackpressureManager struct {
 	maxQueueSize    int
 	dropThreshold   float64
 	priorityWeights map[ClientPriority]float64
-	droppedMessages int64
 }
 
 // BroadcastMessage represents a message to broadcast with metadata

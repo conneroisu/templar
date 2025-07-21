@@ -41,12 +41,6 @@ var (
 		},
 	}
 
-	// Pool for ChangeEvent structs to reduce allocations
-	changeEventPool = sync.Pool{
-		New: func() interface{} {
-			return &ChangeEvent{}
-		},
-	}
 
 	// Pool for event batches to reduce slice allocations
 	eventBatchPool = sync.Pool{
@@ -118,7 +112,6 @@ type Debouncer struct {
 	lastCleanup   time.Time
 	// Enhanced backpressure and batching controls
 	maxBatchSize  int
-	batchTimer    *time.Timer
 	droppedEvents int64  // Counter for monitoring dropped events
 	totalEvents   int64  // Counter for total events processed
 }

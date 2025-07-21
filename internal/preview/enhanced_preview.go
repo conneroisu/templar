@@ -74,32 +74,14 @@ type PreviewConfig struct {
 
 // TemplateManager handles preview templates and layouts
 type TemplateManager struct {
-	templates     map[string]*template.Template
-	templateMutex sync.RWMutex
-
-	baseTemplate     string
+	templates        map[string]*template.Template
 	layoutTemplates  map[string]string
 	partialTemplates map[string]string
-
-	// Template compilation cache
-	compiledTemplates sync.Map
-
-	// Template watching for hot reload
-	templateWatcher *TemplateWatcher
 }
 
 // AssetManager handles static assets and bundling
 type AssetManager struct {
-	assets     map[string]*Asset
-	assetMutex sync.RWMutex
-
-	// Asset bundling and optimization
-	bundler   *AssetBundler
-	optimizer *AssetOptimizer
-
-	// CDN and caching
-	cdnConfig    *CDNConfig
-	cacheManager *AssetCacheManager
+	assets map[string]*Asset
 }
 
 // Asset represents a static asset
@@ -116,15 +98,7 @@ type Asset struct {
 // LiveReloadManager handles live reload functionality
 type LiveReloadManager struct {
 	connections map[string]*LiveReloadConnection
-	connMutex   sync.RWMutex
-
 	broadcastCh chan LiveReloadEvent
-
-	// File watching
-	fileWatcher *FileWatcher
-
-	// WebSocket server for live reload
-	wsServer *WebSocketServer
 }
 
 // LiveReloadConnection represents a live reload WebSocket connection
@@ -190,9 +164,6 @@ type SessionManager struct {
 	// Session configuration
 	sessionTimeout time.Duration
 	maxSessions    int
-
-	// Session storage
-	storage SessionStorage
 }
 
 // PreviewSession represents a user's preview session
@@ -253,8 +224,6 @@ type PreviewPerformanceMonitor struct {
 	errorCounts map[string]int
 
 	// Resource utilization
-	memoryUsage   int64
-	cpuUsage      float64
 	requestCounts map[string]int64
 }
 

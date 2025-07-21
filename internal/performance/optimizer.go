@@ -72,14 +72,7 @@ type WorkerScaler struct {
 }
 
 // CacheManager manages adaptive cache sizing
-type CacheManager struct {
-	currentSizeMB int
-	targetSizeMB  int
-	maxSizeMB     int
-	minSizeMB     int
-	hitRate       float64
-	mu            sync.RWMutex
-}
+type CacheManager struct {}
 
 // NewAdaptiveOptimizer creates a new adaptive optimizer
 func NewAdaptiveOptimizer(monitor *PerformanceMonitor, buildPipeline *build.BuildPipeline, registry *registry.ComponentRegistry) *AdaptiveOptimizer {

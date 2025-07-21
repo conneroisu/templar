@@ -14,7 +14,6 @@ import (
 
 func BenchmarkRealisticBuildPipeline(b *testing.B) {
 	const numComponents = 100
-	const numWorkers = 4
 
 	// Create test components
 	components := make([]*types.ComponentInfo, numComponents)

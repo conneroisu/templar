@@ -55,8 +55,7 @@ type LockFreeRingBuffer struct {
 
 // MetricBatch represents a batch of metrics for efficient processing
 type MetricBatch struct {
-	metrics []Metric
-	count   int
+	// Note: metrics field removed as unused
 }
 
 // NewLockFreeMetricCollector creates a new lock-free metric collector
