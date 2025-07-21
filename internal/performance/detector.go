@@ -294,30 +294,6 @@ func (pd *PerformanceDetector) detectPerformanceRegressionWithStats(result Bench
 	return nil
 }
 
-// detectPerformanceRegression checks for execution time regressions (legacy function for backward compatibility)
-func (pd *PerformanceDetector) detectPerformanceRegression(result BenchmarkResult, baseline *PerformanceBaseline) *RegressionDetection {
-	ratio := result.NsPerOp / baseline.Mean
-
-	if ratio > pd.thresholds.SlownessThreshold {
-		percentageChange := (ratio - 1.0) * 100
-		severity := pd.calculateSeverity(ratio, pd.thresholds.SlownessThreshold)
-
-		return &RegressionDetection{
-			BenchmarkName:     result.Name,
-			IsRegression:      true,
-			CurrentValue:      result.NsPerOp,
-			BaselineValue:     baseline.Mean,
-			PercentageChange:  percentageChange,
-			Threshold:         pd.thresholds.SlownessThreshold,
-			Confidence:        pd.calculateConfidence(result.NsPerOp, baseline),
-			RegressionType:    "performance",
-			Severity:          severity,
-			RecommendedAction: pd.getPerformanceRecommendation(severity, percentageChange),
-		}
-	}
-
-	return nil
-}
 
 // regressionParams holds parameters for regression detection
 type regressionParams struct {
@@ -402,39 +378,6 @@ func (pd *PerformanceDetector) detectMemoryRegressionWithStats(result BenchmarkR
 	})
 }
 
-// detectMemoryRegression checks for memory usage regressions (legacy function for backward compatibility)
-func (pd *PerformanceDetector) detectMemoryRegression(result BenchmarkResult, baseline *PerformanceBaseline) *RegressionDetection {
-	if result.BytesPerOp == 0 {
-		return nil // No memory data available
-	}
-
-	// For memory regression, we need historical memory data
-	// This is a simplified implementation - in practice, you'd maintain separate baselines for memory
-	// Use a conservative baseline that's 80% of current value to simulate historical data
-	memoryBaseline := float64(result.BytesPerOp) * 0.8
-
-	ratio := float64(result.BytesPerOp) / memoryBaseline
-
-	if ratio > pd.thresholds.MemoryThreshold {
-		percentageChange := (ratio - 1.0) * 100
-		severity := pd.calculateSeverity(ratio, pd.thresholds.MemoryThreshold)
-
-		return &RegressionDetection{
-			BenchmarkName:     result.Name,
-			IsRegression:      true,
-			CurrentValue:      float64(result.BytesPerOp),
-			BaselineValue:     memoryBaseline,
-			PercentageChange:  percentageChange,
-			Threshold:         pd.thresholds.MemoryThreshold,
-			Confidence:        0.8, // Simplified confidence for memory
-			RegressionType:    "memory",
-			Severity:          severity,
-			RecommendedAction: pd.getMemoryRecommendation(severity, percentageChange),
-		}
-	}
-
-	return nil
-}
 
 // detectAllocationRegressionWithStats checks for allocation count regressions with proper statistics
 func (pd *PerformanceDetector) detectAllocationRegressionWithStats(result BenchmarkResult, baseline *PerformanceBaseline, numComparisons int) *RegressionDetection {
@@ -450,38 +393,6 @@ func (pd *PerformanceDetector) detectAllocationRegressionWithStats(result Benchm
 	})
 }
 
-// detectAllocationRegression checks for allocation count regressions (legacy function for backward compatibility)
-func (pd *PerformanceDetector) detectAllocationRegression(result BenchmarkResult, baseline *PerformanceBaseline) *RegressionDetection {
-	if result.AllocsPerOp == 0 {
-		return nil // No allocation data available
-	}
-
-	// Simplified allocation baseline calculation
-	// Use a conservative baseline that's 75% of current value to simulate historical data
-	allocBaseline := float64(result.AllocsPerOp) * 0.75
-
-	ratio := float64(result.AllocsPerOp) / allocBaseline
-
-	if ratio > pd.thresholds.AllocThreshold {
-		percentageChange := (ratio - 1.0) * 100
-		severity := pd.calculateSeverity(ratio, pd.thresholds.AllocThreshold)
-
-		return &RegressionDetection{
-			BenchmarkName:     result.Name,
-			IsRegression:      true,
-			CurrentValue:      float64(result.AllocsPerOp),
-			BaselineValue:     allocBaseline,
-			PercentageChange:  percentageChange,
-			Threshold:         pd.thresholds.AllocThreshold,
-			Confidence:        0.8, // Simplified confidence for allocations
-			RegressionType:    "allocations",
-			Severity:          severity,
-			RecommendedAction: pd.getAllocationRecommendation(severity, percentageChange),
-		}
-	}
-
-	return nil
-}
 
 // calculateSeverity determines regression severity based on threshold ratio
 func (pd *PerformanceDetector) calculateSeverity(ratio, threshold float64) string {
@@ -493,13 +404,6 @@ func (pd *PerformanceDetector) calculateSeverity(ratio, threshold float64) strin
 	return "minor"
 }
 
-// calculateConfidence calculates statistical confidence of regression detection (legacy function)
-// DEPRECATED: Use statisticalValidator.CalculateStatisticalConfidence for rigorous statistics
-func (pd *PerformanceDetector) calculateConfidence(currentValue float64, baseline *PerformanceBaseline) float64 {
-	// For backward compatibility, use the new statistical validator with single comparison
-	statResult := pd.statisticalValidator.CalculateStatisticalConfidence(currentValue, baseline, 1)
-	return statResult.Confidence
-}
 
 // calculateStatistics computes statistical measures for baseline samples
 func (pd *PerformanceDetector) calculateStatistics(baseline *PerformanceBaseline) {

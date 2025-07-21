@@ -978,5 +978,12 @@
     "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
     "hook_event_name": "Notification",
     "message": "Claude is waiting for your input"
+  },
+  {
+    "session_id": "c056cf62-eb8e-4604-b24d-fd2895f5ce1e",
+    "transcript_path": "/home/connerohnesorge/.claude/projects/-home-connerohnesorge-Documents-001Repos-templar/c056cf62-eb8e-4604-b24d-fd2895f5ce1e.jsonl",
+    "cwd": "/home/connerohnesorge/Documents/001Repos/templar",
+    "hook_event_name": "Notification",
+    "message": "Claude is waiting for your input"
   }
 ]
