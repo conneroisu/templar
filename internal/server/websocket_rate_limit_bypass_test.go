@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/conneroisu/templar/internal/config"
-	"nhooyr.io/websocket"
+	"github.com/coder/websocket"
 )
 
 // TestWebSocketRateLimitBypassVulnerability tests that rate limiting only applies to actual messages

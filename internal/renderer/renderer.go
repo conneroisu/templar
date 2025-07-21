@@ -19,6 +19,8 @@ import (
 
 	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/types"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // ComponentRenderer handles rendering of templ components
@@ -146,7 +148,7 @@ func (r *ComponentRenderer) generateMockString(paramName string) string {
 	case "size":
 		return "medium"
 	default:
-		return fmt.Sprintf("Sample %s", strings.Title(paramName))
+		return fmt.Sprintf("Sample %s", cases.Title(language.English).String(paramName))
 	}
 }
 

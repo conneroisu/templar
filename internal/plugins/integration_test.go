@@ -3,8 +3,6 @@ package plugins
 import (
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
 	"sync"
 	"testing"
 
@@ -362,22 +360,4 @@ func (mlp *MockLifecyclePlugin) Shutdown(ctx context.Context) error {
 
 // Additional types needed for testing
 
-// Integration test helpers
-
-func createTempPluginDir(t *testing.T) string {
-	dir, err := os.MkdirTemp("", "plugin-test")
-	require.NoError(t, err)
-
-	t.Cleanup(func() {
-		os.RemoveAll(dir)
-	})
-
-	return dir
-}
-
-func createTestPluginFile(t *testing.T, dir, name, content string) string {
-	filename := filepath.Join(dir, name)
-	err := os.WriteFile(filename, []byte(content), 0644)
-	require.NoError(t, err)
-	return filename
-}
+// Integration test helpers removed - unused

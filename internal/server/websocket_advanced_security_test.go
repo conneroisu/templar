@@ -14,7 +14,7 @@ import (
 	"github.com/conneroisu/templar/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"nhooyr.io/websocket"
+	"github.com/coder/websocket"
 )
 
 // TestWebSocketConnectionHijacking tests various connection hijacking attack scenarios

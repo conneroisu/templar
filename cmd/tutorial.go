@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -442,31 +441,4 @@ func (t *Tutorial) askChoice(prompt string, choices []string, defaultValue strin
 	}
 }
 
-func (t *Tutorial) askInt(prompt string, defaultValue, min, max int) (int, error) {
-	for {
-		fmt.Printf("%s [%d]: ", prompt, defaultValue)
-
-		input, err := t.reader.ReadString('\n')
-		if err != nil {
-			return defaultValue, nil
-		}
-
-		input = strings.TrimSpace(input)
-		if input == "" {
-			return defaultValue, nil
-		}
-
-		value, err := strconv.Atoi(input)
-		if err != nil {
-			fmt.Printf("❌ Invalid number. Please enter a number between %d and %d.\n", min, max)
-			continue
-		}
-
-		if value < min || value > max {
-			fmt.Printf("❌ Number out of range. Please enter a number between %d and %d.\n", min, max)
-			continue
-		}
-
-		return value, nil
-	}
-}
+// askInt removed - unused method (config wizard has identical functionality)

@@ -16,7 +16,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"nhooyr.io/websocket"
+	"github.com/coder/websocket"
 )
 
 // testWebSocketServer is a minimal WebSocket server for testing

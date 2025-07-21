@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/conneroisu/templar/internal/validation"
-	"nhooyr.io/websocket"
+	"github.com/coder/websocket"
 )
 
 const (

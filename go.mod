@@ -4,14 +4,15 @@ go 1.24.4
 
 require (
 	github.com/a-h/templ v0.3.906
+	github.com/coder/websocket v1.8.13
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/leanovate/gopter v0.2.11
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/pflag v1.0.6
 	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.10.0
+	golang.org/x/text v0.21.0
 	gopkg.in/yaml.v3 v3.0.1
-	nhooyr.io/websocket v1.8.17
 )
 
 require (
@@ -28,5 +29,4 @@ require (
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
 	golang.org/x/sys v0.32.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
 )

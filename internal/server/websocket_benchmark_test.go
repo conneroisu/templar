@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"nhooyr.io/websocket"
+	"github.com/coder/websocket"
 )
 
 // BenchmarkWebSocketBroadcasting compares original vs optimized broadcasting performance

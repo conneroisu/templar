@@ -13,7 +13,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"nhooyr.io/websocket"
+	"github.com/coder/websocket"
 )
 
 // WebSocketEnhancements provides performance improvements for WebSocket management

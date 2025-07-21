@@ -12,6 +12,8 @@ import (
 	"github.com/conneroisu/templar/internal/scanner"
 	"github.com/conneroisu/templar/internal/types"
 	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 var (
@@ -206,7 +208,7 @@ type %sProps struct {
 
 	for _, param := range component.Parameters {
 		content += fmt.Sprintf("\t%s %s `json:\"%s\"`\n",
-			strings.Title(param.Name), param.Type, param.Name)
+			cases.Title(language.English).String(param.Name), param.Type, param.Name)
 	}
 
 	content += "}\n\n"

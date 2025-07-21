@@ -33,7 +33,7 @@ import (
 	"github.com/conneroisu/templar/internal/validation"
 	"github.com/conneroisu/templar/internal/version"
 	"github.com/conneroisu/templar/internal/watcher"
-	"nhooyr.io/websocket"
+	"github.com/coder/websocket"
 )
 
 // Client represents a WebSocket client

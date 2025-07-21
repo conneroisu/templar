@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/conneroisu/templar/internal/config"
-	"nhooyr.io/websocket"
+	"github.com/coder/websocket"
 )
 
 func TestWebSocketEnhancements_BasicFunctionality(t *testing.T) {

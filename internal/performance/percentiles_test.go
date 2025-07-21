@@ -141,10 +141,10 @@ func TestPercentileCalculator_AccuracyVsStandardSort(t *testing.T) {
 	pc := NewPercentileCalculator(1000)
 
 	// Generate test data
-	rand.Seed(42) // Deterministic test
+	rng := rand.New(rand.NewSource(42)) // Deterministic test
 	values := make([]float64, 500)
 	for i := range values {
-		values[i] = rand.Float64() * 1000
+		values[i] = rng.Float64() * 1000
 		pc.AddValue(values[i])
 	}
 
@@ -213,9 +213,9 @@ func BenchmarkPercentileCalculator_OldVsNew(t *testing.B) {
 
 	// Test data
 	values := make([]float64, 1000)
-	rand.Seed(42)
+	rng := rand.New(rand.NewSource(42))
 	for i := range values {
-		values[i] = rand.Float64() * 1000
+		values[i] = rng.Float64() * 1000
 	}
 
 	t.Run("Old_O(n²)_Single_Calculation", func(b *testing.B) {
@@ -241,11 +241,12 @@ func BenchmarkPercentileCalculator_OldVsNew(t *testing.B) {
 	t.Run("Old_O(n²)_Incremental_Simulation", func(b *testing.B) {
 		// Simulate the old method with incremental updates
 		var allValues []float64
+		rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			// Add a new value
-			allValues = append(allValues, rand.Float64()*1000)
+			allValues = append(allValues, rng.Float64()*1000)
 
 			// Recalculate percentiles every 10 additions (like the real usage)
 			if i%10 == 0 {
@@ -256,11 +257,12 @@ func BenchmarkPercentileCalculator_OldVsNew(t *testing.B) {
 
 	t.Run("New_SkipList_Incremental", func(b *testing.B) {
 		pc := NewPercentileCalculator(10000)
+		rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			// Add a new value
-			pc.AddValue(rand.Float64() * 1000)
+			pc.AddValue(rng.Float64() * 1000)
 
 			// Calculate percentiles every 10 additions (like the real usage)
 			if i%10 == 0 {
@@ -277,9 +279,9 @@ func BenchmarkPercentileCalculator_ScalingPerformance(t *testing.B) {
 
 	for _, size := range sizes {
 		values := make([]float64, size)
-		rand.Seed(42)
+		rng := rand.New(rand.NewSource(42))
 		for i := range values {
-			values[i] = rand.Float64() * 1000
+			values[i] = rng.Float64() * 1000
 		}
 
 		t.Run(fmt.Sprintf("Size_%d", size), func(b *testing.B) {
@@ -300,14 +302,14 @@ func BenchmarkPercentileCalculator_IncrementalUpdates(t *testing.B) {
 	pc := NewPercentileCalculator(10000)
 
 	// Pre-populate with some data
-	rand.Seed(42)
+	rng := rand.New(rand.NewSource(42))
 	for i := 0; i < 1000; i++ {
-		pc.AddValue(rand.Float64() * 1000)
+		pc.AddValue(rng.Float64() * 1000)
 	}
 
 	t.ResetTimer()
 	for i := 0; i < t.N; i++ {
-		pc.AddValue(rand.Float64() * 1000)
+		pc.AddValue(rng.Float64() * 1000)
 		if i%100 == 0 { // Calculate percentiles periodically
 			pc.GetP95()
 			pc.GetP99()
@@ -374,12 +376,4 @@ func TestPercentileCalculator_MemoryEfficiency(t *testing.T) {
 	}
 }
 
-// Helper function to verify percentile accuracy with tolerance
-func verifyPercentile(t *testing.T, pc *PercentileCalculator, percentile float64, expected float64, tolerance float64) {
-	result := pc.GetPercentile(percentile)
-	diff := math.Abs(result - expected)
-	if diff > tolerance {
-		t.Errorf("Percentile %.0f: expected %.2f±%.2f, got %.2f (diff: %.2f)",
-			percentile, expected, tolerance, result, diff)
-	}
-}
+// Unused test helper removed

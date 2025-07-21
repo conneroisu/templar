@@ -12,7 +12,7 @@ import (
 	"github.com/conneroisu/templar/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"nhooyr.io/websocket"
+	"github.com/coder/websocket"
 )
 
 // TestWebSocketOriginValidation_Security tests WebSocket origin validation security

@@ -10,7 +10,7 @@ import (
 	"github.com/conneroisu/templar/internal/config"
 	"github.com/conneroisu/templar/internal/registry"
 	"github.com/stretchr/testify/assert"
-	"nhooyr.io/websocket"
+	"github.com/coder/websocket"
 )
 
 func setupTestWebSocketServer(t *testing.T) *PreviewServer {
@@ -254,7 +254,7 @@ func TestBroadcastMessage(t *testing.T) {
 	}
 }
 
-// Note: WebSocket connection mocking is complex due to the nhooyr.io/websocket
+// Note: WebSocket connection mocking is complex due to the github.com/coder/websocket
 // interface. The WebSocket functionality is adequately tested through origin
 // validation, hub management, and broadcast message tests. Full WebSocket
 // communication testing would be better suited for integration tests.

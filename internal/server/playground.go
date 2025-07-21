@@ -9,6 +9,8 @@ import (
 
 	"github.com/conneroisu/templar/internal/renderer"
 	"github.com/conneroisu/templar/internal/types"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // PlaygroundRequest represents a request to the interactive playground
@@ -231,7 +233,7 @@ func (s *PreviewServer) generateMockString(paramName string) string {
 		return "https://via.placeholder.com/300x200"
 	}
 
-	return fmt.Sprintf("Sample %s", strings.Title(paramName))
+	return fmt.Sprintf("Sample %s", cases.Title(language.English).String(paramName))
 }
 
 // generateMockInt creates appropriate integer values

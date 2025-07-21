@@ -7,6 +7,9 @@ import (
 	"time"
 )
 
+// Global generator for benchmark tests (non-deterministic)
+var benchRng = rand.New(rand.NewSource(time.Now().UnixNano()))
+
 // TestLockFreeRingBuffer tests basic ring buffer operations
 func TestLockFreeRingBuffer(t *testing.T) {
 	buffer := NewLockFreeRingBuffer(8) // Power of 2
@@ -264,7 +267,7 @@ func BenchmarkLockFreeCollector_ConcurrentRecord(t *testing.B) {
 	t.RunParallel(func(pb *testing.PB) {
 		metric := Metric{
 			Type:  MetricTypeBuildTime,
-			Value: rand.Float64() * 1000,
+			Value: benchRng.Float64() * 1000,
 		}
 
 		for pb.Next() {

@@ -440,30 +440,7 @@ func (s *ComponentScanner) scanFileInternal(path string) error {
 	return s.extractFromAST(cleanPath, astFile, hash, info.ModTime())
 }
 
-// readFileStreaming reads large files in chunks to reduce memory pressure
-func (s *ComponentScanner) readFileStreaming(file *os.File, size int64) ([]byte, error) {
-	const chunkSize = 32 * 1024 // 32KB chunks
-	content := make([]byte, 0, size)
-	chunk := make([]byte, chunkSize)
-
-	for {
-		n, err := file.Read(chunk)
-		if n > 0 {
-			content = append(content, chunk[:n]...)
-		}
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			return nil, err
-		}
-		if n < chunkSize {
-			break
-		}
-	}
-
-	return content, nil
-}
+// readFileStreaming removed - replaced by readFileStreamingOptimized
 
 // readFileStreamingOptimized reads large files using pooled buffers for better memory efficiency
 func (s *ComponentScanner) readFileStreamingOptimized(file *os.File, size int64, pooledBuffer []byte) ([]byte, error) {
@@ -499,10 +476,7 @@ func (s *ComponentScanner) readFileStreamingOptimized(file *os.File, size int64,
 	return content, nil
 }
 
-// Backward compatibility method
-func (s *ComponentScanner) scanFile(path string) error {
-	return s.scanFileInternal(path)
-}
+// Backward compatibility method removed - unused
 
 func (s *ComponentScanner) parseTemplFile(path string, content []byte, hash string, modTime time.Time) error {
 	lines := strings.Split(string(content), "\n")

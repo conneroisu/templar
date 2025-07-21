@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/conneroisu/templar/internal/config"
-	"nhooyr.io/websocket"
+	"github.com/coder/websocket"
 )
 
 // FuzzWebSocketOriginValidation tests origin validation with various malicious inputs
