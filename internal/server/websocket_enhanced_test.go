@@ -101,11 +101,14 @@ func TestEnhancedWebSocket_Integration(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	conn, _, err := websocket.Dial(ctx, wsURL, &websocket.DialOptions{
+	conn, resp, err := websocket.Dial(ctx, wsURL, &websocket.DialOptions{
 		HTTPHeader: http.Header{
 			"Origin": []string{"http://localhost"},
 		},
 	})
+	if resp != nil && resp.Body != nil {
+		defer resp.Body.Close()
+	}
 
 	if err != nil {
 		t.Fatalf("Failed to connect to enhanced WebSocket: %v", err)
@@ -162,11 +165,14 @@ func TestEnhancedWebSocket_RateLimiting(t *testing.T) {
 	for i := 0; i < 2; i++ {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 
-		conn, _, err := websocket.Dial(ctx, wsURL, &websocket.DialOptions{
+		conn, resp, err := websocket.Dial(ctx, wsURL, &websocket.DialOptions{
 			HTTPHeader: http.Header{
 				"Origin": []string{"http://localhost"},
 			},
 		})
+		if resp != nil && resp.Body != nil {
+			resp.Body.Close()
+		}
 		cancel()
 
 		if err != nil {
@@ -184,6 +190,9 @@ func TestEnhancedWebSocket_RateLimiting(t *testing.T) {
 			"Origin": []string{"http://localhost"},
 		},
 	})
+	if resp != nil && resp.Body != nil {
+		defer resp.Body.Close()
+	}
 
 	if err == nil {
 		t.Error("Third connection should fail due to IP limit")
@@ -231,11 +240,14 @@ func TestEnhancedWebSocket_Broadcasting(t *testing.T) {
 	for i := 0; i < numClients; i++ {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 
-		conn, _, err := websocket.Dial(ctx, wsURL, &websocket.DialOptions{
+		conn, resp, err := websocket.Dial(ctx, wsURL, &websocket.DialOptions{
 			HTTPHeader: http.Header{
 				"Origin": []string{"http://localhost"},
 			},
 		})
+		if resp != nil && resp.Body != nil {
+			resp.Body.Close()
+		}
 		cancel()
 
 		if err != nil {
@@ -322,11 +334,14 @@ func benchmarkEnhancedWebSocket(b *testing.B, numClients int) {
 				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 				defer cancel()
 
-				conn, _, err := websocket.Dial(ctx, wsURL, &websocket.DialOptions{
+				conn, resp, err := websocket.Dial(ctx, wsURL, &websocket.DialOptions{
 					HTTPHeader: http.Header{
 						"Origin": []string{"http://localhost"},
 					},
 				})
+				if resp != nil && resp.Body != nil {
+					resp.Body.Close()
+				}
 				if err != nil {
 					b.Errorf("Failed to connect client %d: %v", index, err)
 					return
@@ -423,11 +438,14 @@ func benchmarkOriginalWebSocket(b *testing.B, numClients int) {
 				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 				defer cancel()
 
-				conn, _, err := websocket.Dial(ctx, wsURL, &websocket.DialOptions{
+				conn, resp, err := websocket.Dial(ctx, wsURL, &websocket.DialOptions{
 					HTTPHeader: http.Header{
 						"Origin": []string{"http://localhost"},
 					},
 				})
+				if resp != nil && resp.Body != nil {
+					resp.Body.Close()
+				}
 				if err != nil {
 					b.Errorf("Failed to connect client %d: %v", index, err)
 					return

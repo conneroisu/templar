@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"TestApp/components"
+	components "github.com/conneroisu/templar/test-scaffold/components/ui"
 )
 
 func TestButton(t *testing.T) {
@@ -37,12 +37,13 @@ func TestButton(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			html, err := components.Button(tt.text, tt.variant, tt.size, tt.disabled, "").Render(context.Background())
+			var buf strings.Builder
+			err := components.Button(tt.text, tt.variant, tt.size, tt.disabled, "").Render(context.Background(), &buf)
 			if err != nil {
 				t.Fatalf("failed to render component: %v", err)
 			}
 
-			htmlStr := html.String()
+			htmlStr := buf.String()
 			for _, want := range tt.want {
 				if !strings.Contains(htmlStr, want) {
 					t.Errorf("expected HTML to contain %q, got: %s", want, htmlStr)

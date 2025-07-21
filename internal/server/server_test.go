@@ -189,8 +189,11 @@ func TestClient_String(t *testing.T) {
 	// Connect to the test server
 	wsURL := "ws" + server.URL[4:] // Replace http with ws
 	ctx := context.Background()
-	conn, _, err := websocket.Dial(ctx, wsURL, nil)
+	conn, resp, err := websocket.Dial(ctx, wsURL, nil)
 	require.NoError(t, err)
+	if resp != nil && resp.Body != nil {
+		defer resp.Body.Close()
+	}
 	defer conn.Close(websocket.StatusNormalClosure, "")
 
 	cfg := &config.Config{

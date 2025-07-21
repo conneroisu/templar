@@ -147,7 +147,10 @@ func FuzzWebSocketMessage(f *testing.F) {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
-		conn, _, err := websocket.Dial(ctx, wsURL, nil)
+		conn, resp, err := websocket.Dial(ctx, wsURL, nil)
+		if resp != nil && resp.Body != nil {
+			defer resp.Body.Close()
+		}
 		if err != nil {
 			t.Skip("Could not connect to test server")
 		}

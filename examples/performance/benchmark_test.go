@@ -3,8 +3,9 @@ package performance
 import (
 	"context"
 	"strings"
-	"templar/examples/basic/components"
 	"testing"
+
+	"github.com/conneroisu/templar/examples/basic/components"
 )
 
 func BenchmarkButtonRender(b *testing.B) {

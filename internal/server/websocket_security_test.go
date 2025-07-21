@@ -145,6 +145,9 @@ func TestWebSocketOriginValidation_Security(t *testing.T) {
 
 			// Attempt WebSocket connection
 			conn, resp, err := websocket.Dial(ctx, wsURL, opts)
+			if resp != nil && resp.Body != nil {
+				defer resp.Body.Close()
+			}
 
 			if tt.expectUpgrade {
 				// Should successfully upgrade to WebSocket
@@ -234,6 +237,9 @@ func TestWebSocketSecurity_CSRF(t *testing.T) {
 
 			wsURL := "ws" + testServer.URL[4:] + "/ws"
 			conn, resp, err := websocket.Dial(ctx, wsURL, opts)
+			if resp != nil && resp.Body != nil {
+				defer resp.Body.Close()
+			}
 
 			// Should fail to connect
 			if err == nil && resp != nil {
