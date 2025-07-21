@@ -290,7 +290,10 @@ func TestWebSocketSecurity_MessageValidation(t *testing.T) {
 	opts.HTTPHeader.Set("Origin", "http://localhost:3000")
 
 	wsURL := "ws" + testServer.URL[4:] + "/ws"
-	conn, _, err := websocket.Dial(ctx, wsURL, opts)
+	conn, resp, err := websocket.Dial(ctx, wsURL, opts)
+	if resp != nil && resp.Body != nil {
+		defer resp.Body.Close()
+	}
 	require.NoError(t, err)
 	defer conn.Close(websocket.StatusNormalClosure, "")
 
@@ -394,6 +397,9 @@ func TestSecurityRegression_WebSocketHijacking(t *testing.T) {
 
 			wsURL := "ws" + testServer.URL[4:] + "/ws"
 			conn, resp, err := websocket.Dial(ctx, wsURL, opts)
+			if resp != nil && resp.Body != nil {
+				defer resp.Body.Close()
+			}
 
 			// Should fail to establish connection
 			if err == nil && resp != nil {
@@ -470,6 +476,9 @@ func TestWebSocketSecurityUnderLoad(t *testing.T) {
 
 			wsURL := "ws" + testServer.URL[4:] + "/ws"
 			conn, resp, err := websocket.Dial(ctx, wsURL, opts)
+			if resp != nil && resp.Body != nil {
+				resp.Body.Close()
+			}
 
 			if err == nil && resp != nil && resp.StatusCode == http.StatusSwitchingProtocols {
 				mu.Lock()
@@ -514,6 +523,9 @@ func TestWebSocketSecurityUnderLoad(t *testing.T) {
 
 			wsURL := "ws" + testServer.URL[4:] + "/ws"
 			conn, resp, err := websocket.Dial(ctx, wsURL, opts)
+			if resp != nil && resp.Body != nil {
+				resp.Body.Close()
+			}
 
 			if err != nil || resp == nil || resp.StatusCode != http.StatusSwitchingProtocols {
 				// Correctly rejected
