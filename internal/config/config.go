@@ -23,6 +23,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/spf13/viper"
 )
@@ -37,6 +38,7 @@ type Config struct {
 	Plugins     PluginsConfig     `yaml:"plugins"`
 	CSS         *CSSConfig        `yaml:"css,omitempty"`
 	Monitoring  MonitoringConfig  `yaml:"monitoring"`
+	Timeouts    TimeoutConfig     `yaml:"timeouts"`
 	TargetFiles []string          `yaml:"-"` // CLI arguments, not from config file
 }
 
@@ -412,6 +414,39 @@ type ThemingConfig struct {
 	StyleGuide       bool `yaml:"style_guide"`
 }
 
+// TimeoutConfig defines timeout settings for various operations
+type TimeoutConfig struct {
+	// Build and compilation timeouts
+	Build        time.Duration `yaml:"build"`         // Build operation timeout (templ generate, etc.)
+	External     time.Duration `yaml:"external"`      // External command timeout (npm, sass, etc.)
+	Plugin       time.Duration `yaml:"plugin"`        // Plugin execution timeout
+	Render       time.Duration `yaml:"render"`        // Template rendering timeout
+	
+	// File system operations
+	FileIO       time.Duration `yaml:"file_io"`       // File I/O operation timeout
+	FileScan     time.Duration `yaml:"file_scan"`     // File scanning operation timeout
+	FileWatch    time.Duration `yaml:"file_watch"`    // File watching operation timeout
+	
+	// Network operations
+	Network      time.Duration `yaml:"network"`       // Network operation timeout
+	HTTP         time.Duration `yaml:"http"`          // HTTP request timeout
+	WebSocket    time.Duration `yaml:"websocket"`     // WebSocket operation timeout
+	HealthCheck  time.Duration `yaml:"health_check"`  // Health check timeout
+	
+	// Server operations
+	Startup      time.Duration `yaml:"startup"`       // Server startup timeout
+	Shutdown     time.Duration `yaml:"shutdown"`      // Server shutdown timeout
+	Context      time.Duration `yaml:"context"`       // Default context timeout
+	
+	// Development and testing
+	Development  time.Duration `yaml:"development"`   // Development operations timeout
+	Testing      time.Duration `yaml:"testing"`       // Test execution timeout
+	
+	// Background operations
+	Background   time.Duration `yaml:"background"`    // Background task timeout
+	Cleanup      time.Duration `yaml:"cleanup"`       // Cleanup operation timeout
+}
+
 // loadDefaults applies default values to all configuration sections when not explicitly set.
 // This function handles the application of sensible defaults across all configuration structs.
 func loadDefaults(config *Config) {
@@ -500,6 +535,9 @@ func loadDefaults(config *Config) {
 
 	// Apply default values for ProductionConfig if not set
 	loadProductionDefaults(&config.Production)
+	
+	// Apply default values for TimeoutConfig if not set
+	loadTimeoutDefaults(&config.Timeouts)
 }
 
 // loadProductionDefaults applies default values for production configuration
@@ -711,6 +749,75 @@ func loadProductionDefaults(prod *ProductionConfig) {
 				},
 			},
 		}
+	}
+}
+
+// loadTimeoutDefaults applies default values for timeout configuration
+func loadTimeoutDefaults(timeouts *TimeoutConfig) {
+	// Build and compilation timeouts
+	if timeouts.Build == 0 {
+		timeouts.Build = 5 * time.Minute // Build operations: 5 minutes
+	}
+	if timeouts.External == 0 {
+		timeouts.External = 3 * time.Minute // External commands (npm, sass): 3 minutes
+	}
+	if timeouts.Plugin == 0 {
+		timeouts.Plugin = 2 * time.Minute // Plugin execution: 2 minutes
+	}
+	if timeouts.Render == 0 {
+		timeouts.Render = 30 * time.Second // Template rendering: 30 seconds
+	}
+	
+	// File system operations
+	if timeouts.FileIO == 0 {
+		timeouts.FileIO = 30 * time.Second // File I/O operations: 30 seconds
+	}
+	if timeouts.FileScan == 0 {
+		timeouts.FileScan = 2 * time.Minute // File scanning: 2 minutes
+	}
+	if timeouts.FileWatch == 0 {
+		timeouts.FileWatch = 10 * time.Second // File watching: 10 seconds
+	}
+	
+	// Network operations
+	if timeouts.Network == 0 {
+		timeouts.Network = 30 * time.Second // Network operations: 30 seconds
+	}
+	if timeouts.HTTP == 0 {
+		timeouts.HTTP = 30 * time.Second // HTTP requests: 30 seconds
+	}
+	if timeouts.WebSocket == 0 {
+		timeouts.WebSocket = 60 * time.Second // WebSocket operations: 1 minute
+	}
+	if timeouts.HealthCheck == 0 {
+		timeouts.HealthCheck = 10 * time.Second // Health checks: 10 seconds
+	}
+	
+	// Server operations
+	if timeouts.Startup == 0 {
+		timeouts.Startup = 30 * time.Second // Server startup: 30 seconds
+	}
+	if timeouts.Shutdown == 0 {
+		timeouts.Shutdown = 30 * time.Second // Server shutdown: 30 seconds
+	}
+	if timeouts.Context == 0 {
+		timeouts.Context = 30 * time.Second // Default context: 30 seconds
+	}
+	
+	// Development and testing
+	if timeouts.Development == 0 {
+		timeouts.Development = 10 * time.Minute // Development operations: 10 minutes
+	}
+	if timeouts.Testing == 0 {
+		timeouts.Testing = 5 * time.Minute // Test execution: 5 minutes
+	}
+	
+	// Background operations
+	if timeouts.Background == 0 {
+		timeouts.Background = 15 * time.Minute // Background tasks: 15 minutes
+	}
+	if timeouts.Cleanup == 0 {
+		timeouts.Cleanup = 1 * time.Minute // Cleanup operations: 1 minute
 	}
 }
 

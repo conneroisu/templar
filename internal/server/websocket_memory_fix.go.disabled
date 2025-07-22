@@ -1,0 +1,502 @@
+package server
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"net/http"
+	"sync"
+	"sync/atomic"
+	"time"
+
+	"github.com/coder/websocket"
+	"github.com/conneroisu/templar/internal/config"
+)
+
+// MemoryLeakPreventionManager provides comprehensive memory leak prevention for WebSocket connections
+// 
+// This manager addresses common WebSocket memory leak sources:
+// 1. Goroutine leaks from improperly terminated read/write pumps
+// 2. Channel leaks from unclosed send channels
+// 3. Connection leaks from abandoned WebSocket connections
+// 4. Client map unbounded growth from stale connections
+// 5. Race conditions in concurrent client management
+//
+// Key Features:
+// - Automatic stale connection cleanup with configurable intervals
+// - Goroutine lifecycle tracking and termination guarantees
+// - Channel resource management with proper cleanup
+// - Connection timeout enforcement with activity monitoring
+// - Resource limit enforcement to prevent unbounded growth
+// - Comprehensive metrics for memory leak detection
+type MemoryLeakPreventionManager struct {
+	// Resource tracking
+	activeConnections int64                    // Atomic counter for active connections
+	totalConnections  int64                    // Atomic counter for total connections created
+	cleanupCount      int64                    // Atomic counter for cleanup operations
+	
+	// Connection lifecycle management
+	connectionRegistry map[string]*ConnectionInfo  // Registry of all connections with metadata
+	registryMutex     sync.RWMutex                 // Protects connection registry
+	
+	// Resource limits and configuration
+	maxConnections    int                          // Maximum allowed concurrent connections
+	cleanupInterval   time.Duration               // Interval for periodic cleanup operations
+	connectionTimeout time.Duration               // Timeout for idle connections
+	
+	// Cleanup coordination
+	cleanupTimer      *time.Timer                 // Timer for periodic cleanup
+	stopCleanup       chan struct{}               // Channel to stop cleanup goroutine
+	cleanupWg         sync.WaitGroup              // Ensures cleanup goroutine termination
+	
+	// Metrics and monitoring
+	metrics           *WebSocketMemoryMetrics     // Detailed memory and resource metrics
+	
+	// Configuration
+	config            *config.Config              // Configuration for timeout values
+	
+	// Lifecycle management
+	ctx               context.Context             // Context for coordinated cancellation
+	cancel            context.CancelFunc          // Cancellation function
+	shutdownOnce      sync.Once                   // Ensures shutdown happens exactly once
+	isShutdown        bool                        // Shutdown state indicator
+}
+
+// ConnectionInfo tracks metadata for each WebSocket connection to prevent leaks
+type ConnectionInfo struct {
+	ID            string              // Unique connection identifier
+	RemoteAddr    string              // Client remote address
+	CreatedAt     time.Time           // Connection creation timestamp
+	LastActivity  time.Time           // Last activity timestamp for timeout detection
+	Conn          *websocket.Conn     // WebSocket connection reference
+	Send          chan []byte         // Send channel reference for cleanup
+	Context       context.Context     // Connection-specific context
+	Cancel        context.CancelFunc  // Connection cancellation function
+	GoroutineIDs  []string           // Track associated goroutines for leak detection
+	IsActive      bool               // Active state flag
+	mutex         sync.RWMutex       // Protects connection info fields
+}
+
+// WebSocketMemoryMetrics provides comprehensive metrics for memory leak detection
+type WebSocketMemoryMetrics struct {
+	// Connection metrics
+	ActiveConnections    int64    // Current active connections
+	TotalConnections     int64    // Total connections created
+	CleanedConnections   int64    // Connections cleaned up
+	FailedConnections    int64    // Failed connection attempts
+	TimeoutConnections   int64    // Connections closed due to timeout
+	
+	// Resource metrics
+	ActiveGoroutines     int64    // Active goroutines count
+	ActiveChannels       int64    // Active send channels count
+	MemoryUsageBytes     int64    // Estimated memory usage
+	
+	// Performance metrics
+	AverageConnectionAge time.Duration  // Average connection lifetime
+	CleanupOperations    int64          // Total cleanup operations performed
+	LastCleanupTime      time.Time      // Last cleanup operation timestamp
+	
+	// Error metrics
+	LeakPrevented        int64          // Number of potential leaks prevented
+	ForceCleanups        int64          // Number of forced cleanups performed
+	
+	mutex                sync.RWMutex   // Protects metrics updates
+}
+
+// NewMemoryLeakPreventionManager creates a comprehensive memory leak prevention system
+func NewMemoryLeakPreventionManager(cfg ...*config.Config) *MemoryLeakPreventionManager {
+	// Create cancellable context
+	ctx, cancel := context.WithCancel(context.Background())
+	
+	// Use first config if provided, otherwise use defaults
+	var config *config.Config
+	if len(cfg) > 0 {
+		config = cfg[0]
+	}
+	
+	manager := &MemoryLeakPreventionManager{
+		connectionRegistry: make(map[string]*ConnectionInfo),
+		maxConnections:     getMaxConnections(config),
+		cleanupInterval:    getCleanupInterval(config),
+		connectionTimeout:  getConnectionTimeout(config),
+		stopCleanup:        make(chan struct{}),
+		metrics:           &WebSocketMemoryMetrics{},
+		config:            config,
+		ctx:               ctx,
+		cancel:            cancel,
+		isShutdown:        false,
+	}
+	
+	// Start periodic cleanup goroutine
+	manager.startCleanupRoutine()
+	
+	return manager
+}
+
+// RegisterConnection registers a new WebSocket connection for memory leak prevention
+func (m *MemoryLeakPreventionManager) RegisterConnection(
+	conn *websocket.Conn,
+	remoteAddr string,
+) (*ConnectionInfo, error) {
+	// Check if shutdown
+	if m.isShutdown {
+		return nil, fmt.Errorf("manager is shutting down")
+	}
+	
+	// Check connection limit
+	currentCount := atomic.LoadInt64(&m.activeConnections)
+	if currentCount >= int64(m.maxConnections) {
+		atomic.AddInt64(&m.metrics.FailedConnections, 1)
+		return nil, fmt.Errorf("connection limit exceeded: %d/%d", currentCount, m.maxConnections)
+	}
+	
+	// Create connection-specific context
+	connCtx, connCancel := context.WithCancel(m.ctx)
+	
+	// Generate unique connection ID
+	connID := m.generateConnectionID(remoteAddr)
+	
+	// Create connection info with comprehensive tracking
+	connInfo := &ConnectionInfo{
+		ID:           connID,
+		RemoteAddr:   remoteAddr,
+		CreatedAt:    time.Now(),
+		LastActivity: time.Now(),
+		Conn:         conn,
+		Send:         make(chan []byte, 256), // Buffered channel
+		Context:      connCtx,
+		Cancel:       connCancel,
+		GoroutineIDs: make([]string, 0, 2),  // Expect read and write goroutines
+		IsActive:     true,
+	}
+	
+	// Register connection in thread-safe manner
+	m.registryMutex.Lock()
+	m.connectionRegistry[connID] = connInfo
+	m.registryMutex.Unlock()
+	
+	// Update metrics atomically
+	atomic.AddInt64(&m.activeConnections, 1)
+	atomic.AddInt64(&m.totalConnections, 1)
+	m.updateConnectionMetrics()
+	
+	log.Printf("WebSocket connection registered: %s (total: %d)", connID, atomic.LoadInt64(&m.activeConnections))
+	
+	return connInfo, nil
+}
+
+// UnregisterConnection safely removes a connection and prevents memory leaks
+func (m *MemoryLeakPreventionManager) UnregisterConnection(connID string) error {
+	m.registryMutex.Lock()
+	connInfo, exists := m.connectionRegistry[connID]
+	if exists {
+		delete(m.connectionRegistry, connID)
+	}
+	m.registryMutex.Unlock()
+	
+	if !exists {
+		log.Printf("Warning: Attempted to unregister unknown connection: %s", connID)
+		return fmt.Errorf("connection not found: %s", connID)
+	}
+	
+	// Perform comprehensive cleanup
+	m.cleanupConnection(connInfo)
+	
+	// Update metrics
+	atomic.AddInt64(&m.activeConnections, -1)
+	atomic.AddInt64(&m.metrics.CleanedConnections, 1)
+	m.updateConnectionMetrics()
+	
+	log.Printf("WebSocket connection unregistered: %s (remaining: %d)", 
+		connID, atomic.LoadInt64(&m.activeConnections))
+	
+	return nil
+}
+
+// UpdateConnectionActivity updates the last activity timestamp for a connection
+func (m *MemoryLeakPreventionManager) UpdateConnectionActivity(connID string) {
+	m.registryMutex.RLock()
+	connInfo, exists := m.connectionRegistry[connID]
+	m.registryMutex.RUnlock()
+	
+	if exists {
+		connInfo.mutex.Lock()
+		connInfo.LastActivity = time.Now()
+		connInfo.mutex.Unlock()
+	}
+}
+
+// startCleanupRoutine starts the periodic cleanup goroutine for stale connections
+func (m *MemoryLeakPreventionManager) startCleanupRoutine() {
+	m.cleanupWg.Add(1)
+	go func() {
+		defer m.cleanupWg.Done()
+		
+		ticker := time.NewTicker(m.cleanupInterval)
+		defer ticker.Stop()
+		
+		for {
+			select {
+			case <-ticker.C:
+				m.performCleanup()
+				
+			case <-m.stopCleanup:
+				return
+				
+			case <-m.ctx.Done():
+				return
+			}
+		}
+	}()
+}
+
+// performCleanup identifies and removes stale connections to prevent memory leaks
+func (m *MemoryLeakPreventionManager) performCleanup() {
+	now := time.Now()
+	var staleConnections []string
+	
+	// Identify stale connections
+	m.registryMutex.RLock()
+	for connID, connInfo := range m.connectionRegistry {
+		connInfo.mutex.RLock()
+		isStale := now.Sub(connInfo.LastActivity) > m.connectionTimeout
+		isInactive := !connInfo.IsActive
+		connInfo.mutex.RUnlock()
+		
+		if isStale || isInactive {
+			staleConnections = append(staleConnections, connID)
+		}
+	}
+	m.registryMutex.RUnlock()
+	
+	// Clean up stale connections
+	cleanedCount := 0
+	for _, connID := range staleConnections {
+		if err := m.UnregisterConnection(connID); err == nil {
+			cleanedCount++
+			atomic.AddInt64(&m.metrics.TimeoutConnections, 1)
+		}
+	}
+	
+	if cleanedCount > 0 {
+		log.Printf("Cleanup completed: removed %d stale connections", cleanedCount)
+		atomic.AddInt64(&m.metrics.CleanupOperations, 1)
+	}
+	
+	// Update cleanup metrics
+	m.metrics.mutex.Lock()
+	m.metrics.LastCleanupTime = now
+	m.metrics.mutex.Unlock()
+	
+	atomic.AddInt64(&m.cleanupCount, 1)
+}
+
+// cleanupConnection performs comprehensive cleanup for a single connection
+func (m *MemoryLeakPreventionManager) cleanupConnection(connInfo *ConnectionInfo) {
+	if connInfo == nil {
+		return
+	}
+	
+	// Mark as inactive to prevent further use
+	connInfo.mutex.Lock()
+	connInfo.IsActive = false
+	connInfo.mutex.Unlock()
+	
+	// Cancel connection context to terminate associated goroutines
+	if connInfo.Cancel != nil {
+		connInfo.Cancel()
+	}
+	
+	// Close send channel safely
+	if connInfo.Send != nil {
+		select {
+		case <-connInfo.Send: // Drain any pending messages
+		default:
+		}
+		close(connInfo.Send)
+		atomic.AddInt64(&m.metrics.ActiveChannels, -1)
+	}
+	
+	// Close WebSocket connection
+	if connInfo.Conn != nil {
+		connInfo.Conn.Close(websocket.StatusNormalClosure, "Cleanup")
+	}
+	
+	log.Printf("Connection cleanup completed for: %s", connInfo.ID)
+}
+
+// ForceCleanupStaleConnections immediately cleans up all stale connections
+func (m *MemoryLeakPreventionManager) ForceCleanupStaleConnections() int {
+	m.performCleanup()
+	atomic.AddInt64(&m.metrics.ForceCleanups, 1)
+	return int(atomic.LoadInt64(&m.metrics.TimeoutConnections))
+}
+
+// GetMemoryMetrics returns current memory and resource metrics
+func (m *MemoryLeakPreventionManager) GetMemoryMetrics() WebSocketMemoryMetrics {
+	m.updateConnectionMetrics()
+	
+	m.metrics.mutex.RLock()
+	defer m.metrics.mutex.RUnlock()
+	
+	return WebSocketMemoryMetrics{
+		ActiveConnections:    atomic.LoadInt64(&m.activeConnections),
+		TotalConnections:     atomic.LoadInt64(&m.totalConnections),
+		CleanedConnections:   atomic.LoadInt64(&m.metrics.CleanedConnections),
+		FailedConnections:    atomic.LoadInt64(&m.metrics.FailedConnections),
+		TimeoutConnections:   atomic.LoadInt64(&m.metrics.TimeoutConnections),
+		ActiveGoroutines:     atomic.LoadInt64(&m.metrics.ActiveGoroutines),
+		ActiveChannels:       atomic.LoadInt64(&m.metrics.ActiveChannels),
+		MemoryUsageBytes:     atomic.LoadInt64(&m.metrics.MemoryUsageBytes),
+		AverageConnectionAge: m.metrics.AverageConnectionAge,
+		CleanupOperations:    atomic.LoadInt64(&m.metrics.CleanupOperations),
+		LastCleanupTime:      m.metrics.LastCleanupTime,
+		LeakPrevented:        atomic.LoadInt64(&m.metrics.LeakPrevented),
+		ForceCleanups:        atomic.LoadInt64(&m.metrics.ForceCleanups),
+	}
+}
+
+// updateConnectionMetrics calculates and updates connection-related metrics
+func (m *MemoryLeakPreventionManager) updateConnectionMetrics() {
+	now := time.Now()
+	var totalAge time.Duration
+	activeCount := int64(0)
+	
+	m.registryMutex.RLock()
+	for _, connInfo := range m.connectionRegistry {
+		connInfo.mutex.RLock()
+		if connInfo.IsActive {
+			totalAge += now.Sub(connInfo.CreatedAt)
+			activeCount++
+		}
+		connInfo.mutex.RUnlock()
+	}
+	m.registryMutex.RUnlock()
+	
+	// Calculate average connection age
+	var avgAge time.Duration
+	if activeCount > 0 {
+		avgAge = totalAge / time.Duration(activeCount)
+	}
+	
+	// Update metrics
+	m.metrics.mutex.Lock()
+	m.metrics.ActiveConnections = activeCount
+	m.metrics.AverageConnectionAge = avgAge
+	m.metrics.ActiveGoroutines = activeCount * 2 // Assume read + write goroutines per connection
+	m.metrics.MemoryUsageBytes = m.estimateMemoryUsage()
+	m.metrics.mutex.Unlock()
+}
+
+// estimateMemoryUsage provides rough memory usage estimation
+func (m *MemoryLeakPreventionManager) estimateMemoryUsage() int64 {
+	// Rough estimation: connection struct + channels + buffers
+	connectionSize := int64(1024)  // Approximate size per connection
+	channelSize := int64(256 * 8)  // 256 buffer * 8 bytes per message pointer
+	
+	activeConnections := atomic.LoadInt64(&m.activeConnections)
+	return activeConnections * (connectionSize + channelSize)
+}
+
+// generateConnectionID creates a unique identifier for connections
+func (m *MemoryLeakPreventionManager) generateConnectionID(remoteAddr string) string {
+	timestamp := time.Now().UnixNano()
+	return fmt.Sprintf("conn-%d-%s", timestamp, remoteAddr)
+}
+
+// Shutdown gracefully shuts down the memory leak prevention manager
+func (m *MemoryLeakPreventionManager) Shutdown(ctx context.Context) error {
+	var shutdownErr error
+	
+	m.shutdownOnce.Do(func() {
+		m.isShutdown = true
+		
+		log.Printf("Shutting down WebSocket memory leak prevention manager...")
+		
+		// Stop cleanup routine
+		close(m.stopCleanup)
+		m.cleanupWg.Wait()
+		
+		// Cancel all connections
+		m.cancel()
+		
+		// Clean up all remaining connections
+		m.registryMutex.Lock()
+		connectionCount := len(m.connectionRegistry)
+		for connID, connInfo := range m.connectionRegistry {
+			m.cleanupConnection(connInfo)
+			delete(m.connectionRegistry, connID)
+		}
+		m.registryMutex.Unlock()
+		
+		// Reset counters
+		atomic.StoreInt64(&m.activeConnections, 0)
+		
+		log.Printf("WebSocket memory leak prevention manager shutdown completed. Cleaned up %d connections.", connectionCount)
+	})
+	
+	return shutdownErr
+}
+
+// IsHealthy returns whether the manager is operating within healthy parameters
+func (m *MemoryLeakPreventionManager) IsHealthy() bool {
+	metrics := m.GetMemoryMetrics()
+	
+	// Check various health indicators
+	connectionRatio := float64(metrics.ActiveConnections) / float64(m.maxConnections)
+	hasRecentCleanup := time.Since(metrics.LastCleanupTime) < m.cleanupInterval*2
+	
+	return !m.isShutdown && 
+		connectionRatio < 0.9 && // Less than 90% of max connections
+		hasRecentCleanup &&      // Recent cleanup activity
+		metrics.FailedConnections < 100 // Reasonable failure count
+}
+
+// GetConnectionInfo returns information about a specific connection
+func (m *MemoryLeakPreventionManager) GetConnectionInfo(connID string) (*ConnectionInfo, bool) {
+	m.registryMutex.RLock()
+	defer m.registryMutex.RUnlock()
+	
+	connInfo, exists := m.connectionRegistry[connID]
+	return connInfo, exists
+}
+
+// ListActiveConnections returns a list of all active connection IDs
+func (m *MemoryLeakPreventionManager) ListActiveConnections() []string {
+	m.registryMutex.RLock()
+	defer m.registryMutex.RUnlock()
+	
+	connections := make([]string, 0, len(m.connectionRegistry))
+	for connID, connInfo := range m.connectionRegistry {
+		connInfo.mutex.RLock()
+		if connInfo.IsActive {
+			connections = append(connections, connID)
+		}
+		connInfo.mutex.RUnlock()
+	}
+	
+	return connections
+}
+
+// Configuration helper functions
+
+func getMaxConnections(cfg *config.Config) int {
+	if cfg != nil && cfg.Server.MaxWebSocketConnections > 0 {
+		return cfg.Server.MaxWebSocketConnections
+	}
+	return 100 // Default maximum connections
+}
+
+func getCleanupInterval(cfg *config.Config) time.Duration {
+	if cfg != nil && cfg.Timeouts.WebSocketCleanup > 0 {
+		return cfg.Timeouts.WebSocketCleanup
+	}
+	return 5 * time.Minute // Default cleanup interval
+}
+
+func getConnectionTimeout(cfg *config.Config) time.Duration {
+	if cfg != nil && cfg.Timeouts.WebSocket > 0 {
+		return cfg.Timeouts.WebSocket
+	}
+	return 10 * time.Minute // Default connection timeout
+}

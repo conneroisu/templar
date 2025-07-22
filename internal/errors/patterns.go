@@ -20,8 +20,24 @@ import (
 // ServiceError creates a standardized service error with component context
 func ServiceError(service, operation, message string, cause error) *TemplarError {
 	code := fmt.Sprintf("ERR_%s_%s", service, operation)
-	return WrapInternal(cause, code, fmt.Sprintf("%s service %s failed: %s", service, operation, message)).
-		WithComponent(service)
+	var err *TemplarError
+	if cause != nil {
+		err = &TemplarError{
+			Type:        ErrorTypeInternal,
+			Code:        code,
+			Message:     fmt.Sprintf("%s service %s failed: %s", service, operation, message),
+			Cause:       cause,
+			Recoverable: false,
+		}
+	} else {
+		err = &TemplarError{
+			Type:        ErrorTypeInternal,
+			Code:        code,
+			Message:     fmt.Sprintf("%s service %s failed: %s", service, operation, message),
+			Recoverable: false,
+		}
+	}
+	return err.WithComponent(service)
 }
 
 // InitError creates initialization-related errors
@@ -206,10 +222,21 @@ func WithOperationContext(err error, operation string, context map[string]interf
 		return te
 	}
 	
-	// Wrap non-TemplarError with context
-	return WrapWithContext(err, ErrorTypeInternal, ErrCodeInternalError, err.Error(), map[string]interface{}{
-		"operation": operation,
-	})
+	// Create a new TemplarError for non-TemplarError types
+	newContext := make(map[string]interface{})
+	newContext["operation"] = operation
+	for k, v := range context {
+		newContext[k] = v
+	}
+	
+	return &TemplarError{
+		Type:        ErrorTypeInternal,
+		Code:        "ERR_ENHANCED",
+		Message:     err.Error(),
+		Cause:       err,
+		Context:     newContext,
+		Recoverable: false,
+	}
 }
 
 // Error Chain Utilities

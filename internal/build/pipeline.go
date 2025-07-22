@@ -22,6 +22,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/conneroisu/templar/internal/config"
 	"github.com/conneroisu/templar/internal/errors"
 	"github.com/conneroisu/templar/internal/interfaces"
 	"github.com/conneroisu/templar/internal/types"
@@ -40,6 +41,7 @@ var crcTable = crc32.MakeTable(crc32.Castagnoli)
 // - Real-time build metrics and status callbacks
 // - Memory optimization through object pooling
 // - Security-hardened command execution
+// - Comprehensive timeout management
 type BuildPipeline struct {
 	// compiler handles templ compilation with security validation
 	compiler *TemplCompiler
@@ -69,6 +71,8 @@ type BuildPipeline struct {
 	slicePools *SlicePools
 	// workerPool manages the lifecycle of build workers
 	workerPool *WorkerPool
+	// config provides timeout configuration for build operations
+	config *config.Config
 }
 
 // BuildTask represents a build task in the priority queue with metadata
@@ -103,8 +107,8 @@ type BuildQueue struct {
 	priority chan BuildTask
 }
 
-// NewBuildPipeline creates a new build pipeline
-func NewBuildPipeline(workers int, registry interfaces.ComponentRegistry) *BuildPipeline {
+// NewBuildPipeline creates a new build pipeline with optional timeout configuration
+func NewBuildPipeline(workers int, registry interfaces.ComponentRegistry, cfg ...*config.Config) *BuildPipeline {
 	compiler := NewTemplCompiler()
 	cache := NewBuildCache(100*1024*1024, time.Hour) // 100MB, 1 hour TTL
 
@@ -115,6 +119,12 @@ func NewBuildPipeline(workers int, registry interfaces.ComponentRegistry) *Build
 	}
 
 	metrics := NewBuildMetrics()
+
+	// Use first config if provided, otherwise nil
+	var config *config.Config
+	if len(cfg) > 0 {
+		config = cfg[0]
+	}
 
 	return &BuildPipeline{
 		compiler:    compiler,
@@ -129,6 +139,7 @@ func NewBuildPipeline(workers int, registry interfaces.ComponentRegistry) *Build
 		objectPools: NewObjectPools(),
 		slicePools:  NewSlicePools(),
 		workerPool:  NewWorkerPool(),
+		config:      config,
 	}
 }
 
@@ -161,8 +172,40 @@ func (bp *BuildPipeline) Stop() {
 	bp.resultWg.Wait()
 }
 
+// StopWithTimeout stops the build pipeline with a timeout for graceful shutdown
+func (bp *BuildPipeline) StopWithTimeout(timeout time.Duration) error {
+	if bp.cancel != nil {
+		bp.cancel()
+	}
+
+	// Use a channel to signal completion
+	done := make(chan struct{})
+	go func() {
+		// Wait for all workers to finish
+		bp.workerWg.Wait()
+		// Wait for result processor to finish
+		bp.resultWg.Wait()
+		close(done)
+	}()
+
+	// Wait for completion or timeout
+	select {
+	case <-done:
+		return nil
+	case <-time.After(timeout):
+		return fmt.Errorf("build pipeline shutdown timed out after %v", timeout)
+	}
+}
+
 // Build queues a component for building
 func (bp *BuildPipeline) Build(component *types.ComponentInfo) {
+	// Check if pipeline is shut down
+	if bp.cancel == nil {
+		fmt.Printf("Error: Build pipeline not started, dropping task for component %s\n", component.Name)
+		bp.metrics.RecordDroppedTask(component.Name, "pipeline_not_started")
+		return
+	}
+
 	task := BuildTask{
 		Component: component,
 		Priority:  1,
@@ -191,6 +234,13 @@ func (bp *BuildPipeline) Build(component *types.ComponentInfo) {
 
 // BuildWithPriority queues a component for building with high priority
 func (bp *BuildPipeline) BuildWithPriority(component *types.ComponentInfo) {
+	// Check if pipeline is shut down
+	if bp.cancel == nil {
+		fmt.Printf("Error: Build pipeline not started, dropping priority task for component %s\n", component.Name)
+		bp.metrics.RecordDroppedTask(component.Name, "pipeline_not_started")
+		return
+	}
+
 	task := BuildTask{
 		Component: component,
 		Priority:  10,
@@ -230,6 +280,15 @@ func (bp *BuildPipeline) GetCacheStats() (int, int64, int64) {
 	return bp.cache.GetStats()
 }
 
+// getBuildTimeout returns the configured timeout for build operations
+func (bp *BuildPipeline) getBuildTimeout() time.Duration {
+	if bp.config != nil && bp.config.Timeouts.Build > 0 {
+		return bp.config.Timeouts.Build
+	}
+	// Default fallback timeout if no configuration is available
+	return 5 * time.Minute
+}
+
 // worker processes build tasks
 func (bp *BuildPipeline) worker(ctx context.Context) {
 	defer bp.workerWg.Done()
@@ -239,18 +298,42 @@ func (bp *BuildPipeline) worker(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case task := <-bp.queue.priority:
-			bp.processBuildTask(task)
+			bp.processBuildTask(ctx, task)
 		case task := <-bp.queue.tasks:
-			bp.processBuildTask(task)
+			bp.processBuildTask(ctx, task)
 		}
 	}
 }
 
-func (bp *BuildPipeline) processBuildTask(task BuildTask) {
+func (bp *BuildPipeline) processBuildTask(ctx context.Context, task BuildTask) {
 	start := time.Now()
 
 	// Generate content hash for caching
 	contentHash := bp.generateContentHash(task.Component)
+
+	// Check if context is cancelled before starting work
+	select {
+	case <-ctx.Done():
+		// Context cancelled, return error
+		buildResult := bp.objectPools.GetBuildResult()
+		buildResult.Component = task.Component
+		buildResult.Output = nil
+		buildResult.Error = ctx.Err()
+		buildResult.ParsedErrors = nil
+		buildResult.Duration = time.Since(start)
+		buildResult.CacheHit = false
+		buildResult.Hash = contentHash
+
+		// Non-blocking send to results channel
+		select {
+		case bp.queue.results <- *buildResult:
+		default:
+			bp.metrics.RecordDroppedResult(task.Component.Name, "results_queue_full_cancelled")
+		}
+		bp.objectPools.PutBuildResult(buildResult)
+		return
+	default:
+	}
 
 	// Check cache first
 	if result, found := bp.cache.Get(contentHash); found {
@@ -268,6 +351,11 @@ func (bp *BuildPipeline) processBuildTask(task BuildTask) {
 		select {
 		case bp.queue.results <- *buildResult:
 			// Cache hit result successfully queued
+		case <-ctx.Done():
+			// Context cancelled while sending result
+			buildResult.Error = ctx.Err()
+			bp.objectPools.PutBuildResult(buildResult)
+			return
 		default:
 			// Results queue full - this could cause result loss
 			fmt.Printf("Warning: Results queue full, dropping cache hit result for component %s\n", buildResult.Component.Name)
@@ -277,8 +365,13 @@ func (bp *BuildPipeline) processBuildTask(task BuildTask) {
 		return
 	}
 
-	// Execute build with pooled output buffer
-	output, err := bp.compiler.CompileWithPools(task.Component, bp.objectPools)
+	// Create timeout context for build operation based on configuration
+	buildTimeout := bp.getBuildTimeout()
+	buildCtx, cancel := context.WithTimeout(ctx, buildTimeout)
+	defer cancel()
+
+	// Execute build with pooled output buffer and context-based timeout
+	output, err := bp.compiler.CompileWithPools(buildCtx, task.Component, bp.objectPools)
 
 	// Parse errors if build failed
 	var parsedErrors []*errors.ParsedError
@@ -305,10 +398,16 @@ func (bp *BuildPipeline) processBuildTask(task BuildTask) {
 		bp.cache.Set(contentHash, output)
 	}
 
-	// Non-blocking send to results channel to prevent worker hangs
+	// Non-blocking send to results channel to prevent worker hangs with cancellation support
 	select {
 	case bp.queue.results <- *buildResult:
 		// Result successfully queued
+	case <-ctx.Done():
+		// Context cancelled while sending result
+		buildResult.Error = ctx.Err()
+		bp.metrics.RecordDroppedResult(buildResult.Component.Name, "cancelled_during_send")
+		bp.objectPools.PutBuildResult(buildResult)
+		return
 	default:
 		// Results queue full - this could cause result loss
 		fmt.Printf("Warning: Results queue full, dropping result for component %s\n", buildResult.Component.Name)

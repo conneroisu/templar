@@ -1,9 +1,11 @@
 ---
 id: task-90
 title: Add Comprehensive Timeout Management System
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - mad-cabbage
 created_date: '2025-07-20'
+updated_date: '2025-07-22'
 labels: []
 dependencies: []
 ---

@@ -1,0 +1,17 @@
+package components
+
+import (
+	"fmt"
+	"strings"
+	"time"
+)
+
+templ Table6(props map[string]interface{}, classes []string) {
+	<div class="table">
+		if title != "" {
+			<h2>{ title }</h2>
+		}
+		<p>This is Table component 6</p>
+	</div>
+}
+

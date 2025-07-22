@@ -40,7 +40,7 @@ import (
 // - Apply() is safe for concurrent access (read-only operation)
 type MiddlewareChain struct {
 	config          *config.Config             // Application configuration for middleware behavior
-	rateLimiter     *TokenBucketManager       // Global rate limiter (optional)
+	rateLimiter     *RateLimiter              // Global rate limiter (optional)
 	monitor         *monitoring.TemplarMonitor // Monitoring system (optional)
 	originValidator OriginValidator           // Origin validation for CORS
 	middlewares     []Middleware              // Ordered list of middleware functions
@@ -52,7 +52,7 @@ type Middleware func(http.Handler) http.Handler
 // MiddlewareDependencies contains all dependencies needed for middleware construction
 type MiddlewareDependencies struct {
 	Config          *config.Config
-	RateLimiter     *TokenBucketManager
+	RateLimiter     *RateLimiter
 	Monitor         *monitoring.TemplarMonitor
 	OriginValidator OriginValidator
 }
@@ -274,7 +274,7 @@ func (mc *MiddlewareChain) createCORSMiddleware() Middleware {
 			// CORS headers based on environment
 			origin := r.Header.Get("Origin")
 			
-			if mc.originValidator.IsAllowedOrigin(origin) {
+			if mc.originValidator.ValidateOrigin(origin) {
 				w.Header().Set("Access-Control-Allow-Origin", origin)
 			} else if mc.config.Server.Environment == "development" {
 				// Only allow wildcard in development
@@ -306,9 +306,13 @@ func (mc *MiddlewareChain) shouldEnableRateLimit() bool {
 }
 
 // createRateLimiter creates a new rate limiter instance
-func (mc *MiddlewareChain) createRateLimiter() *TokenBucketManager {
-	securityConfig := SecurityConfigFromAppConfig(mc.config)
-	return NewRateLimiter(securityConfig.RateLimiting, nil)
+func (mc *MiddlewareChain) createRateLimiter() *RateLimiter {
+	// Create a basic rate limit config
+	rateConfig := RateLimit{
+		RequestsPerMinute: 60,
+		BurstLimit:        10,
+	}
+	return NewRateLimiter(rateConfig)
 }
 
 // GetMiddlewareCount returns the number of middlewares in the chain

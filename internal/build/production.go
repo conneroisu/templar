@@ -264,7 +264,7 @@ func (p *ProductionBuildPipeline) generateTemplates(ctx context.Context, compone
 	compiler := NewTemplCompiler()
 	
 	for _, component := range components {
-		if _, err := compiler.Compile(component); err != nil {
+		if _, err := compiler.Compile(ctx, component); err != nil {
 			return fmt.Errorf("failed to compile component %s: %w", component.Name, err)
 		}
 		p.buildMetrics.ComponentsBuilt++

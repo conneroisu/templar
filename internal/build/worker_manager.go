@@ -117,7 +117,7 @@ func (wm *WorkerManager) worker(ctx context.Context, queue interfaces.TaskQueue)
 			}
 			
 			// Process the build task
-			result := wm.processBuildTask(buildTask)
+			result := wm.processBuildTask(ctx, buildTask)
 			
 			// Publish the result
 			if err := queue.PublishResult(result); err != nil {
@@ -128,7 +128,7 @@ func (wm *WorkerManager) worker(ctx context.Context, queue interfaces.TaskQueue)
 }
 
 // processBuildTask processes a single build task and returns the result.
-func (wm *WorkerManager) processBuildTask(task BuildTask) BuildResult {
+func (wm *WorkerManager) processBuildTask(ctx context.Context, task BuildTask) BuildResult {
 	startTime := time.Now()
 	
 	// Use object pool for build result
@@ -145,7 +145,7 @@ func (wm *WorkerManager) processBuildTask(task BuildTask) BuildResult {
 	// For now, we'll proceed with compilation
 	
 	// Execute build with pooled output buffer
-	output, err := wm.compiler.CompileWithPools(task.Component, wm.objectPools)
+	output, err := wm.compiler.CompileWithPools(ctx, task.Component, wm.objectPools)
 	
 	// Parse errors if build failed
 	var parsedErrors []*errors.ParsedError

@@ -331,7 +331,7 @@ func TestTemplCompiler(t *testing.T) {
 		Package:  "test",
 	}
 
-	output, err := compiler.Compile(component)
+	output, err := compiler.Compile(context.Background(), component)
 	require.NoError(t, err)
 	assert.Contains(t, string(output), "go version")
 }
@@ -348,7 +348,7 @@ func TestTemplCompilerFailure(t *testing.T) {
 		Package:  "test",
 	}
 
-	_, err := compiler.Compile(component)
+	_, err := compiler.Compile(context.Background(), component)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "command validation failed")
 }
@@ -366,7 +366,7 @@ func TestTemplCompilerSecurity(t *testing.T) {
 		Package:  "test",
 	}
 
-	_, err := compiler.Compile(component)
+	_, err := compiler.Compile(context.Background(), component)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "command 'echo' is not allowed")
 
@@ -376,7 +376,7 @@ func TestTemplCompilerSecurity(t *testing.T) {
 		args:    []string{"version; rm -rf /"},
 	}
 
-	_, err = compiler.Compile(component)
+	_, err = compiler.Compile(context.Background(), component)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "contains dangerous character")
 }

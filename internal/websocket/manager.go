@@ -85,7 +85,7 @@ type OriginValidator interface {
 // - If originValidator is nil (required for security)
 func NewWebSocketManager(
 	originValidator OriginValidator,
-	rateLimiter *TokenBucketManager,
+	rateLimiter RateLimiter,
 ) *WebSocketManager {
 	// Critical security assertion - origin validation is required
 	if originValidator == nil {
@@ -205,7 +205,6 @@ func (wm *WebSocketManager) HandleWebSocket(w http.ResponseWriter, r *http.Reque
 	client := &Client{
 		conn:         conn,                            // WebSocket connection
 		send:         make(chan []byte, 256),          // Buffered send channel
-		server:       nil,                             // Legacy field for backward compatibility
 		lastActivity: time.Now(),                      // Track connection activity
 		rateLimiter:  wm.createClientRateLimiter(clientIP), // Per-client rate limiting
 	}
@@ -515,26 +514,26 @@ func (wm *WebSocketManager) checkRateLimit(clientIP string) bool {
 }
 
 // createClientRateLimiter creates a rate limiter for a specific client
-func (wm *WebSocketManager) createClientRateLimiter(clientIP string) WebSocketRateLimiter {
+func (wm *WebSocketManager) createClientRateLimiter(clientIP string) RateLimiter {
 	// Return a simple rate limiter implementation
-	return &SimpleWebSocketRateLimiter{}
+	return &SimpleRateLimiter{}
 }
 
 // checkClientRateLimit checks if a client's rate limiter allows the request
-func (wm *WebSocketManager) checkClientRateLimit(limiter WebSocketRateLimiter) bool {
+func (wm *WebSocketManager) checkClientRateLimit(limiter RateLimiter) bool {
 	// Simple implementation - always allow for now
+	return limiter.Allow()
+}
+
+// SimpleRateLimiter provides a basic rate limiter implementation
+type SimpleRateLimiter struct{}
+
+// Allow implements the RateLimiter interface
+func (s *SimpleRateLimiter) Allow() bool {
 	return true
 }
 
-// SimpleWebSocketRateLimiter provides a basic rate limiter implementation
-type SimpleWebSocketRateLimiter struct{}
-
-// IsAllowed implements the WebSocketRateLimiter interface
-func (s *SimpleWebSocketRateLimiter) IsAllowed() bool {
-	return true
-}
-
-// Reset implements the WebSocketRateLimiter interface
-func (s *SimpleWebSocketRateLimiter) Reset() {
+// Reset implements the RateLimiter interface
+func (s *SimpleRateLimiter) Reset() {
 	// No state to reset in the simple implementation
 }

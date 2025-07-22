@@ -265,14 +265,119 @@ templ Card(title string, content string) {
 `
 
 	cssPath := filepath.Join(projectDir, "static", "css", "styles.css")
-	return os.WriteFile(cssPath, []byte(cssContent), 0644)
+	if err := os.WriteFile(cssPath, []byte(cssContent), 0644); err != nil {
+		return errors.FileOperationError("CREATE_CSS", cssPath, "failed to create CSS file", err)
+	}
+
+	// Create layout view
+	layoutContent := `package views
+
+templ Layout(title string) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>{ title }</title>
+			<link rel="stylesheet" href="/static/css/styles.css"/>
+		</head>
+		<body>
+			{ children... }
+		</body>
+	</html>
+}
+`
+
+	layoutPath := filepath.Join(projectDir, "views", "layout.templ")
+	if err := os.WriteFile(layoutPath, []byte(layoutContent), 0644); err != nil {
+		return errors.FileOperationError("CREATE_LAYOUT", layoutPath, "failed to create layout view", err)
+	}
+
+	// Create demo example
+	demoContent := `package examples
+
+import "templar/components"
+import "templar/views"
+
+templ Demo() {
+	@views.Layout("Demo Page") {
+		<div class="container">
+			<h1>Welcome to Templar</h1>
+			<p>This is a demo page showing how components work together.</p>
+			
+			@components.Button("Primary Button", "primary")
+			@components.Button("Secondary Button", "secondary")
+			
+			@components.Card("Sample Card", "This card shows how to compose components.")
+		</div>
+	}
+}
+`
+
+	demoPath := filepath.Join(projectDir, "examples", "demo.templ")
+	if err := os.WriteFile(demoPath, []byte(demoContent), 0644); err != nil {
+		return errors.FileOperationError("CREATE_DEMO", demoPath, "failed to create demo example", err)
+	}
+
+	// Create preview wrapper
+	wrapperContent := `package preview
+
+templ Wrapper() {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>Component Preview</title>
+			<link rel="stylesheet" href="/static/css/styles.css"/>
+			<style>
+				.preview-container {
+					padding: 2rem;
+					max-width: 1200px;
+					margin: 0 auto;
+				}
+				.preview-header {
+					border-bottom: 1px solid #dee2e6;
+					margin-bottom: 2rem;
+					padding-bottom: 1rem;
+				}
+			</style>
+		</head>
+		<body>
+			<div class="preview-container">
+				<div class="preview-header">
+					<h1>Component Preview</h1>
+					<p>Live preview of your Templar components</p>
+				</div>
+				<div class="preview-content">
+					{ children... }
+				</div>
+			</div>
+		</body>
+	</html>
+}
+`
+
+	wrapperPath := filepath.Join(projectDir, "preview", "wrapper.templ")
+	return os.WriteFile(wrapperPath, []byte(wrapperContent), 0644)
 }
 
 // createFromTemplate creates files from the specified template
 func (s *InitService) createFromTemplate(projectDir, template string) error {
 	switch template {
 	case "minimal":
-		return nil // Already handled by not creating examples
+		// Create minimal hello component
+		helloContent := `package components
+
+templ Hello(name string) {
+	<div class="hello">
+		<h1>Hello, { name }!</h1>
+		<p>This is a minimal Templar component.</p>
+	</div>
+}
+`
+		helloPath := filepath.Join(projectDir, "components", "hello.templ")
+		return os.WriteFile(helloPath, []byte(helloContent), 0644)
 	case "blog", "dashboard", "landing", "ecommerce", "documentation":
 		// For now, just create basic structure - full templates would be implemented here
 		return s.createExampleComponents(projectDir)

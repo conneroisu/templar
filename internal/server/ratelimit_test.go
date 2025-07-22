@@ -318,6 +318,11 @@ func TestAdaptiveRateLimiter(t *testing.T) {
 		limiter.Check(fmt.Sprintf("192.168.1.%d", i))
 	}
 
+	// Force adjustment by manipulating lastCheck to bypass time interval check
+	limiter.adjustmentMutex.Lock()
+	limiter.lastCheck = time.Now().Add(-time.Hour) // Make it seem like we haven't checked in an hour
+	limiter.adjustmentMutex.Unlock()
+
 	// Force adjustment check
 	limiter.adjustLimitsIfNeeded()
 

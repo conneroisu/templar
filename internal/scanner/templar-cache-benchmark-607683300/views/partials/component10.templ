@@ -1,0 +1,27 @@
+package components
+
+import (
+	"fmt"
+	"strings"
+)
+
+templ Button10(props map[string]interface{}, classes []string) {
+	<div class="button">
+		if title != "" {
+			<h2>{ title }</h2>
+		}
+		<p>This is Button component 10</p>
+		@Icon1("check")
+	</div>
+}
+
+templ Button110(props map[string]interface{}, classes []string) {
+	<div class="button">
+		if title != "" {
+			<h2>{ title }</h2>
+		}
+		<p>This is Button component 10</p>
+		@Icon1("check")
+	</div>
+}
+

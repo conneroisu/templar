@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
+	"github.com/conneroisu/templar/internal/config"
 )
 
 // WebSocketManager handles all WebSocket connection management and broadcasting
@@ -50,6 +51,9 @@ type WebSocketManager struct {
 	// Enhanced WebSocket functionality
 	enhancements *WebSocketEnhancements   // Additional WebSocket features and metrics
 	
+	// Configuration - provides timeout values
+	config       *config.Config           // Configuration for timeout management
+	
 	// Lifecycle management - coordinates shutdown across goroutines
 	ctx          context.Context          // Context for coordinated cancellation
 	cancel       context.CancelFunc       // Function to trigger shutdown
@@ -86,6 +90,7 @@ type OriginValidator interface {
 func NewWebSocketManager(
 	originValidator OriginValidator,
 	rateLimiter *TokenBucketManager,
+	cfg ...*config.Config,
 ) *WebSocketManager {
 	// Critical security assertion - origin validation is required
 	if originValidator == nil {
@@ -95,6 +100,12 @@ func NewWebSocketManager(
 	// Create cancellable context for coordinated shutdown
 	ctx, cancel := context.WithCancel(context.Background())
 	
+	// Use first config if provided, otherwise nil
+	var config *config.Config
+	if len(cfg) > 0 {
+		config = cfg[0]
+	}
+
 	// Initialize manager with validated dependencies
 	manager := &WebSocketManager{
 		clients:         make(map[*websocket.Conn]*Client),  // Empty client map
@@ -103,6 +114,7 @@ func NewWebSocketManager(
 		unregister:      make(chan *websocket.Conn, 32),     // Buffered unregistration channel
 		originValidator: originValidator,                     // Required security component
 		rateLimiter:     rateLimiter,                        // Optional rate limiter
+		config:          config,                             // Configuration for timeouts
 		ctx:             ctx,                                // Cancellation context
 		cancel:          cancel,                             // Cancellation function
 		isShutdown:      false,                              // Manager starts active
@@ -275,13 +287,22 @@ func (wm *WebSocketManager) runHub() {
 	for {
 		select {
 		case client := <-wm.register:
-			wm.registerClient(client)
+			// Check for nil client (can happen when channel is closed)
+			if client != nil {
+				wm.registerClient(client)
+			}
 			
 		case conn := <-wm.unregister:
-			wm.unregisterClient(conn)
+			// Check for nil connection (can happen when channel is closed)
+			if conn != nil {
+				wm.unregisterClient(conn)
+			}
 			
 		case message := <-wm.broadcast:
-			wm.broadcastToClients(message)
+			// Check for non-empty message (zero value when channel is closed)
+			if len(message) > 0 {
+				wm.broadcastToClients(message)
+			}
 			
 		case <-wm.ctx.Done():
 			return
@@ -291,11 +312,18 @@ func (wm *WebSocketManager) runHub() {
 
 // registerClient adds a new client to the manager
 func (wm *WebSocketManager) registerClient(client *Client) {
+	// Safety check - should not happen due to runHub checks, but defensive programming
+	if client == nil || client.conn == nil {
+		log.Printf("Warning: Attempted to register nil client or connection")
+		return
+	}
+	
 	wm.clientsMutex.Lock()
 	wm.clients[client.conn] = client
+	clientCount := len(wm.clients)
 	wm.clientsMutex.Unlock()
 	
-	log.Printf("WebSocket client connected. Total clients: %d", len(wm.clients))
+	log.Printf("WebSocket client connected. Total clients: %d", clientCount)
 }
 
 // unregisterClient removes a client from the manager
@@ -354,8 +382,9 @@ func (wm *WebSocketManager) readFromClient(client *Client) {
 	defer client.conn.Close(websocket.StatusNormalClosure, "")
 	
 	for {
-		// Set read deadline
-		ctx, cancel := context.WithTimeout(wm.ctx, 60*time.Second)
+		// Set read deadline using configured timeout
+		readTimeout := wm.getWebSocketTimeout()
+		ctx, cancel := context.WithTimeout(wm.ctx, readTimeout)
 		_, message, err := client.conn.Read(ctx)
 		cancel()
 		
@@ -395,7 +424,8 @@ func (wm *WebSocketManager) writeToClient(client *Client) {
 				return
 			}
 			
-			ctx, cancel := context.WithTimeout(wm.ctx, 10*time.Second)
+			writeTimeout := wm.getNetworkTimeout()
+			ctx, cancel := context.WithTimeout(wm.ctx, writeTimeout)
 			err := client.conn.Write(ctx, websocket.MessageText, message)
 			cancel()
 			
@@ -405,8 +435,9 @@ func (wm *WebSocketManager) writeToClient(client *Client) {
 			}
 			
 		case <-ticker.C:
-			// Send ping message
-			ctx, cancel := context.WithTimeout(wm.ctx, 10*time.Second)
+			// Send ping message using configured timeout
+			pingTimeout := wm.getNetworkTimeout()
+			ctx, cancel := context.WithTimeout(wm.ctx, pingTimeout)
 			err := client.conn.Ping(ctx)
 			cancel()
 			
@@ -506,6 +537,24 @@ func (wm *WebSocketManager) Shutdown(ctx context.Context) error {
 // IsShutdown returns whether the WebSocket manager has been shut down
 func (wm *WebSocketManager) IsShutdown() bool {
 	return wm.isShutdown
+}
+
+// getWebSocketTimeout returns the configured timeout for WebSocket operations
+func (wm *WebSocketManager) getWebSocketTimeout() time.Duration {
+	if wm.config != nil && wm.config.Timeouts.WebSocket > 0 {
+		return wm.config.Timeouts.WebSocket
+	}
+	// Default fallback timeout if no configuration is available
+	return 60 * time.Second
+}
+
+// getNetworkTimeout returns the configured timeout for network operations
+func (wm *WebSocketManager) getNetworkTimeout() time.Duration {
+	if wm.config != nil && wm.config.Timeouts.Network > 0 {
+		return wm.config.Timeouts.Network
+	}
+	// Default fallback timeout if no configuration is available
+	return 10 * time.Second
 }
 
 // checkRateLimit checks if the client IP is within rate limits

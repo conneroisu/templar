@@ -2,6 +2,7 @@
 package build
 
 import (
+	"context"
 	"fmt"
 	"os/exec"
 
@@ -23,27 +24,31 @@ func NewTemplCompiler() *TemplCompiler {
 	}
 }
 
-// Compile compiles a component using templ generate
-func (tc *TemplCompiler) Compile(component *types.ComponentInfo) ([]byte, error) {
+// Compile compiles a component using templ generate with context-based timeout
+func (tc *TemplCompiler) Compile(ctx context.Context, component *types.ComponentInfo) ([]byte, error) {
 	// Validate command and arguments to prevent command injection
 	if err := tc.validateCommand(); err != nil {
 		return nil, fmt.Errorf("command validation failed: %w", err)
 	}
 
-	// Run templ generate command
-	cmd := exec.Command(tc.command, tc.args...)
+	// Run templ generate command with context for timeout handling
+	cmd := exec.CommandContext(ctx, tc.command, tc.args...)
 	cmd.Dir = "." // Run in current directory
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
+		// Check if error is due to context cancellation (timeout)
+		if ctx.Err() != nil {
+			return nil, fmt.Errorf("templ generate timed out: %w", ctx.Err())
+		}
 		return nil, fmt.Errorf("templ generate failed: %w\nOutput: %s", err, output)
 	}
 
 	return output, nil
 }
 
-// CompileWithPools performs compilation using object pools for memory efficiency
-func (tc *TemplCompiler) CompileWithPools(component *types.ComponentInfo, pools *ObjectPools) ([]byte, error) {
+// CompileWithPools performs compilation using object pools for memory efficiency with context-based timeout
+func (tc *TemplCompiler) CompileWithPools(ctx context.Context, component *types.ComponentInfo, pools *ObjectPools) ([]byte, error) {
 	// Validate command and arguments to prevent command injection
 	if err := tc.validateCommand(); err != nil {
 		return nil, fmt.Errorf("command validation failed: %w", err)
@@ -53,14 +58,18 @@ func (tc *TemplCompiler) CompileWithPools(component *types.ComponentInfo, pools 
 	outputBuffer := pools.GetOutputBuffer()
 	defer pools.PutOutputBuffer(outputBuffer)
 
-	// Run templ generate command
-	cmd := exec.Command(tc.command, tc.args...)
+	// Run templ generate command with context for timeout handling
+	cmd := exec.CommandContext(ctx, tc.command, tc.args...)
 	cmd.Dir = "." // Run in current directory
 
 	// Use pooled buffers for command output
 	var err error
 
 	if output, cmdErr := cmd.CombinedOutput(); cmdErr != nil {
+		// Check if error is due to context cancellation (timeout)
+		if ctx.Err() != nil {
+			return nil, fmt.Errorf("templ generate timed out: %w", ctx.Err())
+		}
 		// Copy output to our buffer to avoid keeping the original allocation
 		outputBuffer = append(outputBuffer, output...)
 		err = fmt.Errorf("templ generate failed: %w\nOutput: %s", cmdErr, outputBuffer)

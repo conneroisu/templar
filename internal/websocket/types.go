@@ -6,6 +6,12 @@ import (
 	"github.com/coder/websocket"
 )
 
+// WebSocketRateLimiter defines rate limiting for WebSocket connections
+type WebSocketRateLimiter interface {
+	IsAllowed() bool
+	Reset()
+}
+
 // Client represents a WebSocket client connection
 type Client struct {
 	conn         *websocket.Conn
@@ -22,13 +28,15 @@ type UpdateMessage struct {
 	Timestamp time.Time `json:"timestamp"`
 }
 
-// RateLimiter interface for WebSocket rate limiting
+// RateLimiter interface for WebSocket rate limiting  
 type RateLimiter interface {
 	Allow() bool
 	Reset()
 }
 
-// OriginValidator interface for validating WebSocket origins
-type OriginValidator interface {
-	ValidateOrigin(origin string) bool
+// WebSocketEnhancements provides additional WebSocket features and metrics
+type WebSocketEnhancements struct {
+	// Placeholder for enhanced WebSocket functionality
+	// This will be implemented as part of performance optimizations
 }
+

@@ -12,6 +12,7 @@ import (
 	"github.com/conneroisu/templar/internal/config"
 	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/renderer"
+	"github.com/conneroisu/templar/internal/scanner"
 	"github.com/conneroisu/templar/internal/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -225,9 +226,24 @@ func TestHandleTargetFiles(t *testing.T) {
 			TargetFiles: []string{"test1.templ", "test2.templ"},
 		}
 
+		// Create registry and scanner
+		reg := registry.NewComponentRegistry()
+		componentScanner := scanner.NewComponentScanner(reg)
+
+		// Add mock components to make the test more predictable
+		reg.Register(&types.ComponentInfo{
+			Name:     "TestComponent1",
+			FilePath: "test1.templ",
+		})
+		reg.Register(&types.ComponentInfo{
+			Name:     "TestComponent2", 
+			FilePath: "test2.templ",
+		})
+
 		server := &PreviewServer{
 			config:   cfg,
-			registry: registry.NewComponentRegistry(),
+			registry: reg,
+			scanner:  componentScanner,
 		}
 
 		req := httptest.NewRequest(http.MethodGet, "/", nil)

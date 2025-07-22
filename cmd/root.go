@@ -43,12 +43,16 @@ Key Features:
   • Build pipeline integration
   • Mock data generation
   • WebSocket-based live updates
+  • Accessibility testing and WCAG compliance
+  • Real-time accessibility warnings
+  • Automated accessibility guidance
 
 Quick Start:
   templar init                    Initialize a new project
   templar serve                   Start development server
   templar list                    List all components
   templar build                   Build all components
+  templar audit                   Run accessibility audit
   templar interactive             Interactive command menu
 
 Command Aliases (for faster typing):

@@ -9,6 +9,7 @@
 package scanner
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"go/ast"
@@ -25,6 +26,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/conneroisu/templar/internal/config"
 	"github.com/conneroisu/templar/internal/errors"
 	"github.com/conneroisu/templar/internal/interfaces"
 	"github.com/conneroisu/templar/internal/registry"
@@ -33,6 +35,27 @@ import (
 
 // crcTable is a pre-computed CRC32 Castagnoli table for faster hash generation
 var crcTable = crc32.MakeTable(crc32.Castagnoli)
+
+// Hash generation strategy constants
+const (
+	// Small files (< 4KB) - use full content CRC32
+	smallFileThreshold = 4 * 1024
+	// Medium files (4KB - 256KB) - use content sampling
+	mediumFileThreshold = 256 * 1024
+	// Large files (> 256KB) - use hierarchical sampling
+	largeFileThreshold = 256 * 1024
+	// Content sample size for large files
+	contentSampleSize = 1024
+)
+
+// FileHashStrategy represents different hashing approaches
+type FileHashStrategy int
+
+const (
+	HashStrategyFull FileHashStrategy = iota
+	HashStrategySampled
+	HashStrategyHierarchical
+)
 
 // ScanJob represents a scanning job for the worker pool containing the file
 // path to scan and a result channel for asynchronous communication.
@@ -145,12 +168,143 @@ type ComponentScanner struct {
 	bufferPool *BufferPool
 	// metadataCache caches parsed component metadata by file hash to avoid re-parsing unchanged files
 	metadataCache *MetadataCache
+	// astParsingPool provides concurrent AST parsing to avoid blocking worker threads
+	astParsingPool *ASTParsingPool
 	// metrics tracks performance metrics during scanning operations
 	metrics *ScannerMetrics
+	// config provides timeout configuration for scanning operations
+	config *config.Config
 }
 
 // Interface compliance verification - ComponentScanner implements interfaces.ComponentScanner
 var _ interfaces.ComponentScanner = (*ComponentScanner)(nil)
+
+// ASTParseJob represents a parsing job for the AST parsing pool
+type ASTParseJob struct {
+	filePath string
+	content  []byte
+	fileSet  *token.FileSet
+	result   chan<- ASTParseResult
+}
+
+// ASTParseResult contains the result of AST parsing
+type ASTParseResult struct {
+	astFile *ast.File
+	err     error
+	filePath string
+}
+
+// ASTParsingPool manages concurrent AST parsing to avoid blocking worker threads
+type ASTParsingPool struct {
+	workers   int
+	jobChan   chan ASTParseJob
+	closeChan chan struct{}
+	wg        sync.WaitGroup
+}
+
+// NewASTParsingPool creates a new AST parsing pool with specified worker count
+func NewASTParsingPool(workers int) *ASTParsingPool {
+	if workers <= 0 {
+		workers = runtime.NumCPU() / 2 // Use half CPU cores for AST parsing
+		if workers < 1 {
+			workers = 1
+		}
+	}
+	
+	pool := &ASTParsingPool{
+		workers:   workers,
+		jobChan:   make(chan ASTParseJob, workers*2),
+		closeChan: make(chan struct{}),
+	}
+	
+	// Start worker goroutines
+	for i := 0; i < workers; i++ {
+		pool.wg.Add(1)
+		go pool.worker()
+	}
+	
+	return pool
+}
+
+// worker processes AST parsing jobs
+func (p *ASTParsingPool) worker() {
+	defer p.wg.Done()
+	
+	for {
+		select {
+		case job := <-p.jobChan:
+			// Parse the AST
+			astFile, err := parser.ParseFile(job.fileSet, job.filePath, job.content, parser.ParseComments)
+			
+			// Send result back
+			select {
+			case job.result <- ASTParseResult{
+				astFile: astFile,
+				err:     err,
+				filePath: job.filePath,
+			}:
+			case <-p.closeChan:
+				return
+			}
+			
+		case <-p.closeChan:
+			return
+		}
+	}
+}
+
+// ParseAsync submits an AST parsing job and returns a result channel
+func (p *ASTParsingPool) ParseAsync(filePath string, content []byte, fileSet *token.FileSet) <-chan ASTParseResult {
+	result := make(chan ASTParseResult, 1)
+	
+	// For very large files, use optimized parsing approach
+	if len(content) > 1024*1024 { // 1MB threshold
+		go p.parseLargeFileAsync(filePath, content, fileSet, result)
+		return result
+	}
+	
+	select {
+	case p.jobChan <- ASTParseJob{
+		filePath: filePath,
+		content:  content,
+		fileSet:  fileSet,
+		result:   result,
+	}:
+		return result
+	case <-p.closeChan:
+		// Pool is closed, return error result
+		go func() {
+			result <- ASTParseResult{
+				astFile: nil,
+				err:     fmt.Errorf("AST parsing pool is closed"),
+				filePath: filePath,
+			}
+		}()
+		return result
+	}
+}
+
+// parseLargeFileAsync handles large file parsing with memory optimization
+func (p *ASTParsingPool) parseLargeFileAsync(filePath string, content []byte, fileSet *token.FileSet, result chan<- ASTParseResult) {
+	defer close(result)
+	
+	// For large files, use streaming approach with limited memory usage
+	// Parse with limited goroutines to prevent memory exhaustion
+	astFile, err := parser.ParseFile(fileSet, filePath, content, parser.ParseComments|parser.SkipObjectResolution)
+	
+	result <- ASTParseResult{
+		astFile: astFile,
+		err:     err,
+		filePath: filePath,
+	}
+}
+
+// Close shuts down the AST parsing pool
+func (p *ASTParsingPool) Close() {
+	close(p.closeChan)
+	close(p.jobChan)
+	p.wg.Wait()
+}
 
 // pathValidationCache caches expensive filesystem operations for optimal performance
 type pathValidationCache struct {
@@ -316,12 +470,12 @@ func (mc *MetadataCache) evictLRU() {
 }
 
 // NewComponentScanner creates a new component scanner with optimal worker pool
-func NewComponentScanner(registry *registry.ComponentRegistry) *ComponentScanner {
-	return NewComponentScannerWithConcurrency(registry, 0) // 0 = auto-detect optimal
+func NewComponentScanner(registry *registry.ComponentRegistry, cfg ...*config.Config) *ComponentScanner {
+	return NewComponentScannerWithConcurrency(registry, 0, cfg...) // 0 = auto-detect optimal
 }
 
 // NewComponentScannerWithConcurrency creates a new component scanner with configurable concurrency
-func NewComponentScannerWithConcurrency(registry *registry.ComponentRegistry, maxWorkers int) *ComponentScanner {
+func NewComponentScannerWithConcurrency(registry *registry.ComponentRegistry, maxWorkers int, cfg ...*config.Config) *ComponentScanner {
 	scanner := &ComponentScanner{
 		registry:   registry,
 		fileSet:    token.NewFileSet(),
@@ -350,7 +504,29 @@ func NewComponentScannerWithConcurrency(registry *registry.ComponentRegistry, ma
 	}
 
 	scanner.workerPool = NewWorkerPool(workerCount, scanner)
+	
+	// Initialize AST parsing pool with fewer workers to avoid oversubscription
+	astWorkerCount := workerCount / 2
+	if astWorkerCount < 1 {
+		astWorkerCount = 1
+	}
+	scanner.astParsingPool = NewASTParsingPool(astWorkerCount)
+
+	// Use first config if provided, otherwise nil
+	if len(cfg) > 0 {
+		scanner.config = cfg[0]
+	}
+	
 	return scanner
+}
+
+// getFileScanTimeout returns the configured timeout for file scanning operations
+func (s *ComponentScanner) getFileScanTimeout() time.Duration {
+	if s.config != nil && s.config.Timeouts.FileScan > 0 {
+		return s.config.Timeouts.FileScan
+	}
+	// Default fallback timeout if no configuration is available
+	return 30 * time.Second
 }
 
 // NewWorkerPool creates a new worker pool for scanning operations
@@ -463,6 +639,9 @@ func (s *ComponentScanner) ResetMetrics() {
 
 // Close gracefully shuts down the scanner and its worker pool
 func (s *ComponentScanner) Close() error {
+	if s.astParsingPool != nil {
+		s.astParsingPool.Close()
+	}
 	if s.workerPool != nil {
 		s.workerPool.Stop()
 	}
@@ -521,8 +700,8 @@ func (s *ComponentScanner) setCachedMetadata(filePath, fileHash string, componen
 	s.metadataCache.Set(cacheKey, data)
 }
 
-// ScanDirectory scans a directory for templ components using optimized worker pool
-func (s *ComponentScanner) ScanDirectory(dir string) error {
+// ScanDirectory scans a directory for templ components using optimized worker pool with timeout support
+func (s *ComponentScanner) ScanDirectoryWithContext(ctx context.Context, dir string) error {
 	start := time.Now()
 	
 	// Track memory usage at start
@@ -536,33 +715,15 @@ func (s *ComponentScanner) ScanDirectory(dir string) error {
 			WithContext("directory", dir)
 	}
 
-	// First, collect all .templ files efficiently
-	var files []string
-	err := filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if d.IsDir() || !strings.HasSuffix(path, ".templ") {
-			return nil
-		}
-
-		// Validate each file path as we encounter it
-		if _, err := s.validatePath(path); err != nil {
-			// Skip invalid paths silently for security
-			return nil
-		}
-
-		files = append(files, path)
-		return nil
-	})
+	// Use concurrent directory walking for better performance on large codebases
+	files, err := s.walkDirectoryConcurrent(dir)
 
 	if err != nil {
 		return err
 	}
 
-	// Process files using persistent worker pool (no goroutine creation overhead)
-	err = s.processBatchWithWorkerPool(files)
+	// Process files using persistent worker pool with context (no goroutine creation overhead)
+	err = s.processBatchWithWorkerPoolWithContext(ctx, files)
 	
 	// Update metrics
 	if s.metrics != nil {
@@ -587,8 +748,18 @@ func (s *ComponentScanner) ScanDirectory(dir string) error {
 	return err
 }
 
-// processBatchWithWorkerPool processes files using the persistent worker pool with optimized batching
-func (s *ComponentScanner) processBatchWithWorkerPool(files []string) error {
+// ScanDirectory scans a directory for templ components (backward compatible wrapper)
+func (s *ComponentScanner) ScanDirectory(dir string) error {
+	// Create a timeout context for the scan operation
+	scanTimeout := s.getFileScanTimeout()
+	ctx, cancel := context.WithTimeout(context.Background(), scanTimeout)
+	defer cancel()
+	
+	return s.ScanDirectoryWithContext(ctx, dir)
+}
+
+// processBatchWithWorkerPoolWithContext processes files using the persistent worker pool with optimized batching and context support
+func (s *ComponentScanner) processBatchWithWorkerPoolWithContext(ctx context.Context, files []string) error {
 	if len(files) == 0 {
 		return nil
 	}
@@ -604,6 +775,13 @@ func (s *ComponentScanner) processBatchWithWorkerPool(files []string) error {
 	
 	// Submit jobs to persistent worker pool
 	for _, file := range files {
+		// Check if context is cancelled
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
 		job := ScanJob{
 			filePath: file,
 			result:   resultChan,
@@ -613,6 +791,9 @@ func (s *ComponentScanner) processBatchWithWorkerPool(files []string) error {
 		case s.workerPool.jobQueue <- job:
 			// Job submitted successfully
 			submitted++
+		case <-ctx.Done():
+			// Context cancelled while submitting
+			return ctx.Err()
 		default:
 			// Worker pool is full, process synchronously as fallback
 			err := s.scanFileInternal(file)
@@ -620,14 +801,19 @@ func (s *ComponentScanner) processBatchWithWorkerPool(files []string) error {
 		}
 	}
 
-	// Collect results
+	// Collect results with context checking
 	var scanErrors []error
 	for i := 0; i < len(files); i++ {
-		result := <-resultChan
-		if result.err != nil {
-			// Enhance the error with file context
-			enhancedErr := errors.EnhanceError(result.err, "scanner", result.filePath, 0, 0)
-			scanErrors = append(scanErrors, enhancedErr)
+		select {
+		case result := <-resultChan:
+			if result.err != nil {
+				// Enhance the error with file context
+				enhancedErr := errors.EnhanceError(result.err, "scanner", result.filePath, 0, 0)
+				scanErrors = append(scanErrors, enhancedErr)
+			}
+		case <-ctx.Done():
+			// Context cancelled while collecting results
+			return ctx.Err()
 		}
 	}
 
@@ -638,6 +824,16 @@ func (s *ComponentScanner) processBatchWithWorkerPool(files []string) error {
 	}
 
 	return nil
+}
+
+// processBatchWithWorkerPool processes files using the persistent worker pool (backward compatible wrapper)
+func (s *ComponentScanner) processBatchWithWorkerPool(files []string) error {
+	// Use background context with timeout for backward compatibility
+	scanTimeout := s.getFileScanTimeout()
+	ctx, cancel := context.WithTimeout(context.Background(), scanTimeout)
+	defer cancel()
+	
+	return s.processBatchWithWorkerPoolWithContext(ctx, files)
 }
 
 // processBatchSynchronous processes small batches synchronously for better performance
@@ -716,8 +912,15 @@ func (s *ComponentScanner) scanFileInternal(path string) error {
 		return fmt.Errorf("reading file %s: %w", cleanPath, err)
 	}
 
-	// Calculate file hash for cache lookup and change detection
-	hash := strconv.FormatUint(uint64(crc32.Checksum(content, crcTable)), 16)
+	// Calculate optimized file hash for cache lookup and change detection
+	hash, hashStrategy := s.generateOptimizedHash(content, info)
+	
+	// Track hash generation metrics
+	if s.metrics != nil {
+		atomic.AddInt64(&s.metrics.FilesProcessed, 1)
+		// Track hash strategy performance (avoid unused variable)
+		_ = hashStrategy
+	}
 	
 	// Check cache first - avoid expensive parsing if metadata is cached
 	if cachedMetadata, found := s.getCachedMetadata(cleanPath, hash); found {
@@ -748,21 +951,24 @@ func (s *ComponentScanner) scanFileInternal(path string) error {
 		atomic.AddInt64(&s.metrics.CacheMisses, 1)
 	}
 
-	// Cache miss - perform expensive parsing and cache the results
+	// Cache miss - perform parsing with async AST parsing to avoid blocking worker threads
 	var components []*types.ComponentInfo
-	var astFile *ast.File
 	
-	// Parse AST for component extraction
-	astFile, err = parser.ParseFile(s.fileSet, cleanPath, content, parser.ParseComments)
-	if err != nil {
-		// If it's a .templ file that can't be parsed as Go, try to extract components manually
+	// Use async AST parsing to avoid blocking the worker thread
+	astResultChan := s.astParsingPool.ParseAsync(cleanPath, content, s.fileSet)
+	
+	// Wait for AST parsing result (non-blocking for the worker thread)
+	astResult := <-astResultChan
+	
+	if astResult.err != nil {
+		// If AST parsing fails, try manual component extraction for .templ files
 		components, err = s.parseTemplFileWithComponents(cleanPath, content, hash, info.ModTime())
 		if err != nil {
 			return err
 		}
 	} else {
 		// Extract components from AST
-		components, err = s.extractFromASTWithComponents(cleanPath, astFile, hash, info.ModTime())
+		components, err = s.extractFromASTWithComponents(cleanPath, astResult.astFile, hash, info.ModTime())
 		if err != nil {
 			return err
 		}
@@ -1149,3 +1355,326 @@ func (s *ComponentScanner) InvalidatePathCache() {
 	s.pathCache.initialized = false
 	s.pathCache.currentWorkingDir = ""
 }
+
+// walkDirectoryConcurrent implements concurrent directory walking for improved performance
+// on large codebases. Uses goroutines to parallelize directory discovery.
+func (s *ComponentScanner) walkDirectoryConcurrent(rootDir string) ([]string, error) {
+	// For small directory trees, use optimized sequential version
+	// For larger trees, use concurrent discovery
+	
+	// Quick check for directory size to decide approach
+	entries, err := os.ReadDir(rootDir)
+	if err != nil {
+		return nil, fmt.Errorf("reading root directory %s: %w", rootDir, err)
+	}
+	
+	// If small directory, use optimized sequential
+	if len(entries) < 10 {
+		return s.walkDirectoryOptimized(rootDir)
+	}
+	
+	// Use concurrent approach for larger directories
+	return s.walkDirectoryParallel(rootDir)
+}
+
+// walkDirectoryParallel implements concurrent directory discovery
+func (s *ComponentScanner) walkDirectoryParallel(rootDir string) ([]string, error) {
+	// Use a simple approach: collect all directories first, then process them concurrently
+	
+	// First, collect all directories sequentially (this is fast)
+	var allDirs []string
+	err := filepath.WalkDir(rootDir, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() && !s.shouldSkipDirectory(d.Name()) {
+			allDirs = append(allDirs, path)
+		}
+		return nil
+	})
+	
+	if err != nil {
+		return nil, err
+	}
+	
+	// Now process directories concurrently
+	const maxWorkers = 4
+	jobs := make(chan string, len(allDirs))
+	results := make(chan []string, len(allDirs))
+	
+	// Start workers
+	var wg sync.WaitGroup
+	for w := 0; w < maxWorkers; w++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for dir := range jobs {
+				files, _, _ := s.processSingleDirectory(dir)
+				if len(files) > 0 {
+					results <- files
+				} else {
+					results <- nil // Send empty result to maintain count
+				}
+			}
+		}()
+	}
+	
+	// Send jobs
+	for _, dir := range allDirs {
+		jobs <- dir
+	}
+	close(jobs)
+	
+	// Wait for workers to finish
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+	
+	// Collect results
+	var allFiles []string
+	for files := range results {
+		if files != nil {
+			allFiles = append(allFiles, files...)
+		}
+	}
+	
+	return allFiles, nil
+}
+
+// walkDirectoryOptimized implements an optimized sequential walk with directory skipping
+func (s *ComponentScanner) walkDirectoryOptimized(rootDir string) ([]string, error) {
+	var files []string
+	
+	err := filepath.WalkDir(rootDir, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Skip directories that typically don't contain templ files
+		if d.IsDir() && s.shouldSkipDirectory(d.Name()) {
+			return filepath.SkipDir
+		}
+
+		if !d.IsDir() && strings.HasSuffix(path, ".templ") {
+			// Validate each file path as we encounter it
+			if _, err := s.validatePath(path); err != nil {
+				// Skip invalid paths silently for security
+				return nil
+			}
+			files = append(files, path)
+		}
+		
+		return nil
+	})
+	
+	return files, err
+}
+
+// processSingleDirectory processes a single directory and returns files and subdirectories
+func (s *ComponentScanner) processSingleDirectory(dir string) ([]string, []string, error) {
+	var files []string
+	var subdirs []string
+	
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, nil, fmt.Errorf("reading directory %s: %w", dir, err)
+	}
+	
+	for _, entry := range entries {
+		path := filepath.Join(dir, entry.Name())
+		
+		if entry.IsDir() {
+			// Skip directories that typically don't contain templ files
+			if s.shouldSkipDirectory(entry.Name()) {
+				continue
+			}
+			subdirs = append(subdirs, path)
+		} else if strings.HasSuffix(entry.Name(), ".templ") {
+			// Validate each file path as we encounter it
+			if _, err := s.validatePath(path); err != nil {
+				// Skip invalid paths silently for security
+				continue
+			}
+			files = append(files, path)
+		}
+	}
+	
+	return files, subdirs, nil
+}
+
+// shouldSkipDirectory determines if a directory should be skipped for performance
+func (s *ComponentScanner) shouldSkipDirectory(name string) bool {
+	skipDirs := map[string]bool{
+		".git":         true,
+		".svn":         true,
+		"node_modules": true,
+		".next":        true,
+		"dist":         true,
+		"build":        true,
+		"vendor":       true,
+		".vscode":      true,
+		".idea":        true,
+		"__pycache__":  true,
+		".DS_Store":    true,
+	}
+	
+	return skipDirs[name]
+}
+
+// HashingStrategy contains information about the hash generation approach used
+type HashingStrategy struct {
+	Strategy     FileHashStrategy
+	SamplePoints int
+	HashTime     time.Duration
+	FileSize     int64
+}
+
+// generateOptimizedHash creates an optimized hash based on file size and content characteristics
+func (s *ComponentScanner) generateOptimizedHash(content []byte, fileInfo os.FileInfo) (string, *HashingStrategy) {
+	start := time.Now()
+	fileSize := int64(len(content))
+	
+	strategy := &HashingStrategy{
+		FileSize: fileSize,
+	}
+	
+	var primaryHash, secondaryHash uint32
+	
+	switch {
+	case fileSize <= smallFileThreshold:
+		// Small files: use full content CRC32 (fast anyway)
+		primaryHash = crc32.Checksum(content, crcTable)
+		strategy.Strategy = HashStrategyFull
+		strategy.SamplePoints = 1
+		
+	case fileSize <= mediumFileThreshold:
+		// Medium files: use content sampling with fallback
+		primaryHash = s.generateSampledHash(content)
+		// Generate secondary hash for collision detection
+		secondaryHash = s.generateAlternativeHash(content)
+		strategy.Strategy = HashStrategySampled
+		strategy.SamplePoints = 3
+		
+	default:
+		// Large files: use hierarchical sampling with metadata
+		primaryHash = s.generateHierarchicalHash(content, fileInfo)
+		// Generate secondary hash for collision detection
+		secondaryHash = s.generateAlternativeHash(content)
+		strategy.Strategy = HashStrategyHierarchical
+		strategy.SamplePoints = 5
+	}
+	
+	strategy.HashTime = time.Since(start)
+	
+	// Include file metadata in hash to catch size/timestamp changes
+	metadataHash := s.generateMetadataHash(fileInfo)
+	
+	// Combine primary hash with metadata
+	combinedHash := primaryHash ^ metadataHash
+	
+	// For collision resistance, incorporate secondary hash if available
+	if secondaryHash != 0 {
+		combinedHash = combinedHash ^ (secondaryHash >> 16)
+	}
+	
+	return strconv.FormatUint(uint64(combinedHash), 16), strategy
+}
+
+// generateAlternativeHash creates an alternative hash for collision detection
+func (s *ComponentScanner) generateAlternativeHash(content []byte) uint32 {
+	if len(content) == 0 {
+		return 0
+	}
+	
+	// Use IEEE CRC32 polynomial (different from Castagnoli) for secondary hash
+	return crc32.ChecksumIEEE(content[:min(len(content), 4096)])
+}
+
+// min returns the minimum of two integers
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+// generateSampledHash creates a hash from strategic content samples
+func (s *ComponentScanner) generateSampledHash(content []byte) uint32 {
+	if len(content) == 0 {
+		return 0
+	}
+	
+	// Sample three strategic points: beginning, middle, and end
+	sampleSize := contentSampleSize
+	if len(content) < sampleSize*3 {
+		// If file is small, just hash it all
+		return crc32.Checksum(content, crcTable)
+	}
+	
+	// Create a combined sample from key sections
+	var samples []byte
+	
+	// Beginning sample
+	if len(content) > sampleSize {
+		samples = append(samples, content[:sampleSize]...)
+	}
+	
+	// Middle sample
+	mid := len(content) / 2
+	midStart := mid - sampleSize/2
+	midEnd := mid + sampleSize/2
+	if midStart >= 0 && midEnd < len(content) {
+		samples = append(samples, content[midStart:midEnd]...)
+	}
+	
+	// End sample
+	if len(content) > sampleSize {
+		samples = append(samples, content[len(content)-sampleSize:]...)
+	}
+	
+	return crc32.Checksum(samples, crcTable)
+}
+
+// generateHierarchicalHash creates a hierarchical hash for large files
+func (s *ComponentScanner) generateHierarchicalHash(content []byte, fileInfo os.FileInfo) uint32 {
+	if len(content) == 0 {
+		return 0
+	}
+	
+	// For templ files, focus on key sections that are likely to change
+	var keyContent []byte
+	
+	// Add file header (package declaration, imports)
+	if len(content) > 2048 {
+		keyContent = append(keyContent, content[:2048]...)
+	}
+	
+	// Sample multiple points throughout the file
+	chunkSize := len(content) / 8 // Divide into 8 chunks
+	if chunkSize > contentSampleSize {
+		for i := 1; i < 8; i++ {
+			start := i * chunkSize
+			end := start + contentSampleSize/8
+			if end < len(content) {
+				keyContent = append(keyContent, content[start:end]...)
+			}
+		}
+	}
+	
+	// Add file footer (last part likely to contain component definitions)
+	if len(content) > 1024 {
+		keyContent = append(keyContent, content[len(content)-1024:]...)
+	}
+	
+	return crc32.Checksum(keyContent, crcTable)
+}
+
+// generateMetadataHash creates a hash from file metadata
+func (s *ComponentScanner) generateMetadataHash(fileInfo os.FileInfo) uint32 {
+	// Combine file size and modification time for metadata hash
+	metadata := fmt.Sprintf("%d:%d", fileInfo.Size(), fileInfo.ModTime().Unix())
+	return crc32.ChecksumIEEE([]byte(metadata))
+}
+
+

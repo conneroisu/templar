@@ -1,6 +1,7 @@
 package build
 
 import (
+	"context"
 	"os"
 	"os/exec"
 	"testing"
@@ -156,7 +157,7 @@ func TestTemplCompiler_Compile(t *testing.T) {
 				args:    tt.args,
 			}
 
-			output, err := compiler.Compile(tt.component)
+			output, err := compiler.Compile(context.Background(), tt.component)
 
 			if tt.expectError {
 				assert.Error(t, err, tt.description)
@@ -226,7 +227,7 @@ func TestTemplCompiler_CompileWithPools(t *testing.T) {
 			// Create object pools for testing
 			pools := NewObjectPools()
 
-			output, err := compiler.CompileWithPools(tt.component, pools)
+			output, err := compiler.CompileWithPools(context.Background(), tt.component, pools)
 
 			if tt.expectError {
 				assert.Error(t, err, tt.description)
@@ -329,7 +330,7 @@ templ TestComponent(title string) {
 			Package:  "test",
 		}
 
-		output, err := compiler.Compile(component)
+		output, err := compiler.Compile(context.Background(), component)
 
 		// The command might fail if not in a proper Go module, but it should not panic
 		// and should return proper error handling
@@ -368,7 +369,7 @@ func BenchmarkTemplCompiler_Compile(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = compiler.Compile(component)
+		_, _ = compiler.Compile(context.Background(), component)
 	}
 }
 
@@ -385,6 +386,6 @@ func BenchmarkTemplCompiler_CompileWithPools(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = compiler.CompileWithPools(component, pools)
+		_, _ = compiler.CompileWithPools(context.Background(), component, pools)
 	}
 }

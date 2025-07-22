@@ -1,9 +1,11 @@
 ---
 id: task-135
 title: Fix WebSocket memory leaks and resource management
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@claude'
 created_date: '2025-07-20'
+updated_date: '2025-07-22'
 labels:
   - medium
   - performance

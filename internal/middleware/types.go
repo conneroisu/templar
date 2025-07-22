@@ -13,7 +13,7 @@ type TokenBucketManager = security.TokenBucketManager
 type OriginValidator = security.OriginValidator
 
 // RateLimitMiddleware creates rate limiting middleware
-func RateLimitMiddleware(rateLimiter *TokenBucketManager) func(http.Handler) http.Handler {
+func RateLimitMiddleware(rateLimiter *RateLimiter) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Rate limiting logic here
@@ -22,10 +22,24 @@ func RateLimitMiddleware(rateLimiter *TokenBucketManager) func(http.Handler) htt
 	}
 }
 
+// SecurityConfig represents security configuration
+type SecurityConfig struct {
+	RateLimiting *RateLimitConfig
+}
+
+// RateLimitConfig represents rate limiting configuration
+type RateLimitConfig struct {
+	Enabled bool
+}
+
 // SecurityConfigFromAppConfig extracts security config from app config
-func SecurityConfigFromAppConfig(config interface{}) interface{} {
-	// Config extraction logic here
-	return nil
+func SecurityConfigFromAppConfig(config interface{}) *SecurityConfig {
+	// For now, return a basic security config
+	return &SecurityConfig{
+		RateLimiting: &RateLimitConfig{
+			Enabled: false, // Disabled by default for now
+		},
+	}
 }
 
 // SecurityMiddleware creates security middleware
