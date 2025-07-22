@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/conneroisu/templar/internal/interfaces"
 	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/scanner"
 	"github.com/conneroisu/templar/internal/watcher"
@@ -49,7 +50,7 @@ templ Button(text string) {
 	})
 
 	// Add filters for templ files
-	fileWatcher.AddFilter(watcher.TemplFilter)
+	fileWatcher.AddFilter(interfaces.FileFilterFunc(watcher.TemplFilter))
 
 	// Start watching
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -135,7 +136,7 @@ templ Modal(title string) {
 		return componentScanner.ScanDirectory(testDir)
 	})
 
-	fileWatcher.AddFilter(watcher.TemplFilter)
+	fileWatcher.AddFilter(interfaces.FileFilterFunc(watcher.TemplFilter))
 
 	// Start watching
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
@@ -249,7 +250,7 @@ func TestIntegration_WatcherScanner_NewFileCreation(t *testing.T) {
 		return nil
 	})
 
-	fileWatcher.AddFilter(watcher.TemplFilter)
+	fileWatcher.AddFilter(interfaces.FileFilterFunc(watcher.TemplFilter))
 
 	// Start watching
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -336,7 +337,7 @@ templ Card(title string) {
 		return componentScanner.ScanDirectory(testDir)
 	})
 
-	fileWatcher.AddFilter(watcher.TemplFilter)
+	fileWatcher.AddFilter(interfaces.FileFilterFunc(watcher.TemplFilter))
 
 	// Start watching
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -411,7 +412,7 @@ templ Component() {
 	})
 
 	// Add filter for only templ files
-	fileWatcher.AddFilter(watcher.TemplFilter)
+	fileWatcher.AddFilter(interfaces.FileFilterFunc(watcher.TemplFilter))
 
 	// Start watching
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -490,7 +491,7 @@ func TestIntegration_WatcherScanner_ErrorResilience(t *testing.T) {
 		return nil // Don't propagate errors to prevent watcher from stopping
 	})
 
-	fileWatcher.AddFilter(watcher.TemplFilter)
+	fileWatcher.AddFilter(interfaces.FileFilterFunc(watcher.TemplFilter))
 
 	// Start watching
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -581,7 +582,7 @@ func TestIntegration_WatcherScanner_PerformanceUnderLoad(t *testing.T) {
 		return err
 	})
 
-	fileWatcher.AddFilter(watcher.TemplFilter)
+	fileWatcher.AddFilter(interfaces.FileFilterFunc(watcher.TemplFilter))
 
 	// Start watching
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)

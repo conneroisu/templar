@@ -335,66 +335,7 @@ func TestGenerateMockValue(t *testing.T) {
 	}
 }
 
-func TestCreateDirectoryStructure(t *testing.T) {
-	tempDir := t.TempDir()
-
-	err := createDirectoryStructure(tempDir)
-	require.NoError(t, err)
-
-	expectedDirs := []string{
-		"components",
-		"views",
-		"examples",
-		"static",
-		"static/css",
-		"static/js",
-		"static/images",
-		"mocks",
-		"preview",
-		".templar",
-		".templar/cache",
-	}
-
-	for _, dir := range expectedDirs {
-		assert.DirExists(t, filepath.Join(tempDir, dir))
-	}
-}
-
-func TestCreateConfigFile(t *testing.T) {
-	tempDir := t.TempDir()
-
-	err := createConfigFile(tempDir)
-	require.NoError(t, err)
-
-	configPath := filepath.Join(tempDir, ".templar.yml")
-	assert.FileExists(t, configPath)
-
-	// Check content
-	content, err := os.ReadFile(configPath)
-	require.NoError(t, err)
-
-	assert.Contains(t, string(content), "server:")
-	assert.Contains(t, string(content), "port: 8080")
-	assert.Contains(t, string(content), "components:")
-}
-
-func TestCreateGoModule(t *testing.T) {
-	tempDir := t.TempDir()
-
-	err := createGoModule(tempDir)
-	require.NoError(t, err)
-
-	goModPath := filepath.Join(tempDir, "go.mod")
-	assert.FileExists(t, goModPath)
-
-	// Check content
-	content, err := os.ReadFile(goModPath)
-	require.NoError(t, err)
-
-	assert.Contains(t, string(content), "module")
-	assert.Contains(t, string(content), "go 1.24")
-	assert.Contains(t, string(content), "github.com/a-h/templ")
-}
+// CLI-focused tests are below. Business logic tests are in internal/services/
 
 func TestServeCommand(t *testing.T) {
 	// Create a temporary directory
@@ -408,8 +349,13 @@ func TestServeCommand(t *testing.T) {
 	err = os.Chdir(tempDir)
 	require.NoError(t, err)
 
-	// Create a basic config file
-	err = createConfigFile(tempDir)
+	// Create a basic config file using the InitService
+	configContent := `server:
+  port: 8080
+  host: localhost
+components:
+  scan_paths: ["components"]`
+	err = os.WriteFile(filepath.Join(tempDir, ".templar.yml"), []byte(configContent), 0644)
 	require.NoError(t, err)
 
 	// Create component files
@@ -457,8 +403,13 @@ func TestWatchCommand(t *testing.T) {
 	err = os.Chdir(tempDir)
 	require.NoError(t, err)
 
-	// Create a basic config file
-	err = createConfigFile(tempDir)
+	// Create a basic config file using the InitService
+	configContent := `server:
+  port: 8080
+  host: localhost
+components:
+  scan_paths: ["components"]`
+	err = os.WriteFile(filepath.Join(tempDir, ".templar.yml"), []byte(configContent), 0644)
 	require.NoError(t, err)
 
 	// Create component files
@@ -508,8 +459,13 @@ func TestPreviewCommand(t *testing.T) {
 	err = os.Chdir(tempDir)
 	require.NoError(t, err)
 
-	// Create a basic config file
-	err = createConfigFile(tempDir)
+	// Create a basic config file using the InitService
+	configContent := `server:
+  port: 8080
+  host: localhost
+components:
+  scan_paths: ["components"]`
+	err = os.WriteFile(filepath.Join(tempDir, ".templar.yml"), []byte(configContent), 0644)
 	require.NoError(t, err)
 
 	// Create component files

@@ -179,7 +179,7 @@ func (v *InterfaceValidator) ValidateFileWatcher(watcher FileWatcher) Validation
 			}
 		}()
 
-		testHandler := func([]interface{}) error { return nil }
+		testHandler := func([]ChangeEvent) error { return nil }
 		watcher.AddHandler(testHandler)
 	}()
 

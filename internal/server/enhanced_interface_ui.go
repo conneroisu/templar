@@ -937,6 +937,76 @@ func (s *PreviewServer) generateEnhancedIndexHTML() string {
             opacity: 0.6;
             pointer-events: none;
         }
+        
+        .category-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: white;
+        }
+        
+        .category-badge.ui { background: #3b82f6; }
+        .category-badge.layout { background: #8b5cf6; }
+        .category-badge.form { background: #10b981; }
+        .category-badge.data { background: #f59e0b; }
+        .category-badge.navigation { background: #06b6d4; }
+        .category-badge.feedback { background: #ef4444; }
+        .category-badge.other { background: #6b7280; }
+        
+        .prop-controls {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .prop-combination-select,
+        .state-select {
+            flex: 1;
+            min-width: 120px;
+            padding: 0.25rem 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 0.25rem;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 0.75rem;
+        }
+        
+        .mini-btn {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            border: 1px solid var(--border);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .mini-btn:hover {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .state-indicator {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .state-indicator.loading { background: #fbbf24; color: #92400e; }
+        .state-indicator.error { background: #fca5a5; color: #dc2626; }
+        .state-indicator.disabled { background: #d1d5db; color: #6b7280; }
+        .state-indicator.success { background: #86efac; color: #166534; }
     </style>
 </head>
 <body>
@@ -960,6 +1030,20 @@ func (s *PreviewServer) generateEnhancedIndexHTML() string {
             </div>
             
             <div class="flex items-center gap-4">
+                <input type="text" id="searchInput" placeholder="Search components..." 
+                       class="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                       onkeyup="filterComponents()">
+                <select id="categoryFilter" class="px-3 py-2 border border-gray-300 rounded-md text-sm" 
+                        onchange="filterComponents()">
+                    <option value="">All Categories</option>
+                    <option value="ui">UI Components</option>
+                    <option value="layout">Layout</option>
+                    <option value="form">Forms</option>
+                    <option value="data">Data Display</option>
+                    <option value="navigation">Navigation</option>
+                    <option value="feedback">Feedback</option>
+                    <option value="other">Other</option>
+                </select>
                 <button class="toggle-btn" onclick="toggleTheme()">
                     🌓 Theme
                 </button>
@@ -990,11 +1074,15 @@ func (s *PreviewServer) generateEnhancedIndexHTML() string {
         let reconnectInterval;
         let components = {};
         let componentProps = {}; // Store props for each component
+        let propCombinations = {}; // Store saved prop combinations
+        let filteredComponents = {}; // Currently filtered components
+        let componentStates = {}; // Component states (loading, error, etc.)
         
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             connect();
             loadComponents();
+            loadSavedPropCombinations();
         });
         
         function connect() {
@@ -1035,6 +1123,7 @@ func (s *PreviewServer) generateEnhancedIndexHTML() string {
                 .then(response => response.json())
                 .then(data => {
                     components = data;
+                    filteredComponents = components; // Initially show all components
                     renderComponents();
                 })
                 .catch(error => {
@@ -1042,15 +1131,88 @@ func (s *PreviewServer) generateEnhancedIndexHTML() string {
                 });
         }
         
+        // Component categorization based on name patterns
+        function categorizeComponent(component) {
+            const name = component.name.toLowerCase();
+            const params = component.parameters || [];
+            
+            // UI Components
+            if (['button', 'link', 'icon', 'badge', 'avatar', 'chip'].some(term => name.includes(term))) {
+                return 'ui';
+            }
+            
+            // Layout Components
+            if (['container', 'grid', 'flex', 'layout', 'column', 'row', 'section'].some(term => name.includes(term))) {
+                return 'layout';
+            }
+            
+            // Form Components
+            if (['input', 'form', 'field', 'select', 'checkbox', 'radio', 'textarea'].some(term => name.includes(term))) {
+                return 'form';
+            }
+            
+            // Data Display
+            if (['table', 'list', 'card', 'panel', 'display', 'chart', 'graph'].some(term => name.includes(term))) {
+                return 'data';
+            }
+            
+            // Navigation
+            if (['nav', 'menu', 'breadcrumb', 'tab', 'stepper', 'pagination'].some(term => name.includes(term))) {
+                return 'navigation';
+            }
+            
+            // Feedback
+            if (['alert', 'toast', 'modal', 'dialog', 'notification', 'progress', 'loader', 'spinner'].some(term => name.includes(term))) {
+                return 'feedback';
+            }
+            
+            // Check parameters for additional hints
+            const hasErrorProps = params.some(p => p.name.toLowerCase().includes('error'));
+            const hasLoadingProps = params.some(p => p.name.toLowerCase().includes('loading'));
+            if (hasErrorProps || hasLoadingProps) {
+                return 'feedback';
+            }
+            
+            return 'other';
+        }
+        
+        // Filter components based on search and category
+        function filterComponents() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const selectedCategory = document.getElementById('categoryFilter').value;
+            
+            filteredComponents = {};
+            
+            Object.values(components).forEach(component => {
+                const matchesSearch = !searchTerm || 
+                    component.name.toLowerCase().includes(searchTerm) ||
+                    (component.package && component.package.toLowerCase().includes(searchTerm)) ||
+                    component.parameters.some(p => p.name.toLowerCase().includes(searchTerm));
+                
+                const componentCategory = categorizeComponent(component);
+                const matchesCategory = !selectedCategory || componentCategory === selectedCategory;
+                
+                if (matchesSearch && matchesCategory) {
+                    filteredComponents[component.name] = component;
+                }
+            });
+            
+            renderComponents();
+        }
+        
         function renderComponents() {
             const container = document.getElementById('components');
             
-            if (Object.keys(components).length === 0) {
+            if (Object.keys(filteredComponents).length === 0) {
+                const hasComponents = Object.keys(components).length > 0;
+                const message = hasComponents ? 'No components match your filters' : 'No components found';
+                const submessage = hasComponents ? 'Try adjusting your search or category filter' : 'Create a .templ file to get started';
+                
                 container.innerHTML = 
                     '<div class="component-card">' +
                     '<div class="card-header">' +
-                    '<div class="card-title">No components found</div>' +
-                    '<div class="card-meta">Create a .templ file to get started</div>' +
+                    '<div class="card-title">' + message + '</div>' +
+                    '<div class="card-meta">' + submessage + '</div>' +
                     '</div>' +
                     '</div>';
                 return;
@@ -1058,7 +1220,7 @@ func (s *PreviewServer) generateEnhancedIndexHTML() string {
             
             container.innerHTML = '';
             
-            Object.values(components).forEach(component => {
+            Object.values(filteredComponents).forEach(component => {
                 const card = createComponentCard(component);
                 container.appendChild(card);
                 
@@ -1066,6 +1228,22 @@ func (s *PreviewServer) generateEnhancedIndexHTML() string {
                 if (!componentProps[component.name]) {
                     componentProps[component.name] = generateDefaultProps(component);
                 }
+                
+                // Initialize prop combinations storage
+                if (!propCombinations[component.name]) {
+                    propCombinations[component.name] = {
+                        default: componentProps[component.name],
+                        saved: {}
+                    };
+                }
+                
+                // Initialize component state
+                if (!componentStates[component.name]) {
+                    componentStates[component.name] = 'normal';
+                }
+                
+                // Set up prop combination dropdown after DOM is ready
+                setTimeout(() => updatePropCombinationOptions(component.name), 0);
             });
         }
         
@@ -1075,14 +1253,34 @@ func (s *PreviewServer) generateEnhancedIndexHTML() string {
             
             const params = component.parameters || [];
             const quickParams = params.slice(0, 3); // Show first 3 params for quick editing
+            const category = categorizeComponent(component);
+            const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1);
             
             card.innerHTML = 
                 '<div class="card-header">' +
                 '<div class="card-title">' + component.name + '</div>' +
                 '<div class="card-meta">' + component.filePath + '</div>' +
-                '<div class="card-params">Package: ' + (component.package || 'unknown') + ' • ' + params.length + ' parameters</div>' +
+                '<div class="card-params">' +
+                    '<span class="category-badge ' + category + '">' + categoryLabel + '</span> • ' +
+                    'Package: ' + (component.package || 'unknown') + ' • ' + params.length + ' parameters' +
+                '</div>' +
                 '</div>' +
                 '<div class="card-body">' +
+                '<div class="prop-controls">' +
+                    '<select class="prop-combination-select" id="combo-' + component.name + '" ' +
+                    'onchange="loadPropCombination(\\\'' + component.name + '\\\', this.value)">' +
+                        '<option value="default">Default Props</option>' +
+                    '</select>' +
+                    '<button class="mini-btn" onclick="savePropCombination(\\\'' + component.name + '\\\')">💾 Save</button>' +
+                    '<select class="state-select" id="state-' + component.name + '" ' +
+                    'onchange="changeComponentState(\\\'' + component.name + '\\\', this.value)">' +
+                        '<option value="normal">Normal</option>' +
+                        '<option value="loading">Loading</option>' +
+                        '<option value="error">Error</option>' +
+                        '<option value="disabled">Disabled</option>' +
+                        '<option value="success">Success</option>' +
+                    '</select>' +
+                '</div>' +
                 '<div class="quick-props">' + createQuickProps(component, quickParams) + '</div>' +
                 '</div>' +
                 '<div class="card-actions">' +
@@ -1263,6 +1461,197 @@ func (s *PreviewServer) generateEnhancedIndexHTML() string {
         
         function refreshComponents() {
             loadComponents();
+        }
+        
+        // Prop combination management
+        function savePropCombination(componentName) {
+            const combinationName = prompt('Enter a name for this prop combination:');
+            if (!combinationName) return;
+            
+            const currentProps = Object.assign({}, componentProps[componentName]);
+            
+            if (!propCombinations[componentName]) {
+                propCombinations[componentName] = { default: {}, saved: {} };
+            }
+            
+            propCombinations[componentName].saved[combinationName] = currentProps;
+            
+            // Update the select dropdown
+            updatePropCombinationOptions(componentName);
+            
+            // Save to localStorage for persistence
+            localStorage.setItem('templar_prop_combinations', JSON.stringify(propCombinations));
+        }
+        
+        function loadPropCombination(componentName, combinationName) {
+            let propsToLoad;
+            
+            if (combinationName === 'default') {
+                propsToLoad = propCombinations[componentName].default;
+            } else {
+                propsToLoad = propCombinations[componentName].saved[combinationName];
+            }
+            
+            if (propsToLoad) {
+                componentProps[componentName] = Object.assign({}, propsToLoad);
+                
+                // Update the input fields in the quick props section
+                updateQuickPropsInputs(componentName);
+                
+                // If preview is open, update it
+                const preview = document.getElementById('preview-' + componentName);
+                if (preview && preview.classList.contains('show')) {
+                    renderInlinePreview(componentName);
+                }
+            }
+        }
+        
+        function updatePropCombinationOptions(componentName) {
+            const select = document.getElementById('combo-' + componentName);
+            if (!select) return;
+            
+            const combinations = propCombinations[componentName];
+            if (!combinations) return;
+            
+            // Clear existing options except default
+            select.innerHTML = '<option value="default">Default Props</option>';
+            
+            // Add saved combinations
+            Object.keys(combinations.saved).forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                select.appendChild(option);
+            });
+        }
+        
+        function updateQuickPropsInputs(componentName) {
+            const component = components[componentName];
+            if (!component) return;
+            
+            const quickParams = component.parameters.slice(0, 3);
+            
+            quickParams.forEach(param => {
+                const input = document.querySelector('input[onchange*="' + componentName + '"][onchange*="' + param.name + '"]');
+                if (input && componentProps[componentName][param.name] !== undefined) {
+                    const value = componentProps[componentName][param.name];
+                    
+                    if (param.type === 'bool') {
+                        input.checked = Boolean(value);
+                    } else {
+                        input.value = value;
+                    }
+                }
+            });
+        }
+        
+        // Component state management
+        function changeComponentState(componentName, newState) {
+            componentStates[componentName] = newState;
+            
+            // Apply state-specific props
+            const stateProps = getStateSpecificProps(componentName, newState);
+            Object.assign(componentProps[componentName], stateProps);
+            
+            // Update component visually
+            const card = document.querySelector('[onclick*="' + componentName + '"]').closest('.component-card');
+            updateComponentStateIndicator(card, componentName, newState);
+            
+            // Update quick props inputs
+            updateQuickPropsInputs(componentName);
+            
+            // If preview is open, update it
+            const preview = document.getElementById('preview-' + componentName);
+            if (preview && preview.classList.contains('show')) {
+                renderInlinePreview(componentName);
+            }
+        }
+        
+        function getStateSpecificProps(componentName, state) {
+            const component = components[componentName];
+            const stateProps = {};
+            
+            switch (state) {
+                case 'loading':
+                    // Set loading-related props
+                    component.parameters.forEach(param => {
+                        if (param.name.toLowerCase().includes('loading')) {
+                            stateProps[param.name] = true;
+                        }
+                        if (param.name.toLowerCase().includes('disabled')) {
+                            stateProps[param.name] = true;
+                        }
+                    });
+                    break;
+                    
+                case 'error':
+                    component.parameters.forEach(param => {
+                        if (param.name.toLowerCase().includes('error')) {
+                            stateProps[param.name] = 'Something went wrong';
+                        }
+                        if (param.name.toLowerCase().includes('variant')) {
+                            stateProps[param.name] = 'error';
+                        }
+                    });
+                    break;
+                    
+                case 'disabled':
+                    component.parameters.forEach(param => {
+                        if (param.name.toLowerCase().includes('disabled')) {
+                            stateProps[param.name] = true;
+                        }
+                    });
+                    break;
+                    
+                case 'success':
+                    component.parameters.forEach(param => {
+                        if (param.name.toLowerCase().includes('success')) {
+                            stateProps[param.name] = true;
+                        }
+                        if (param.name.toLowerCase().includes('variant')) {
+                            stateProps[param.name] = 'success';
+                        }
+                    });
+                    break;
+            }
+            
+            return stateProps;
+        }
+        
+        function updateComponentStateIndicator(card, componentName, state) {
+            // Remove existing state indicator
+            const existingIndicator = card.querySelector('.state-indicator');
+            if (existingIndicator) {
+                existingIndicator.remove();
+            }
+            
+            // Add new state indicator if not normal
+            if (state !== 'normal') {
+                const indicator = document.createElement('div');
+                indicator.className = 'state-indicator ' + state;
+                indicator.textContent = state;
+                
+                const cardHeader = card.querySelector('.card-header');
+                cardHeader.style.position = 'relative';
+                cardHeader.appendChild(indicator);
+            }
+        }
+        
+        // Load saved prop combinations from localStorage
+        function loadSavedPropCombinations() {
+            try {
+                const saved = localStorage.getItem('templar_prop_combinations');
+                if (saved) {
+                    propCombinations = JSON.parse(saved);
+                    
+                    // Update all dropdowns
+                    Object.keys(components).forEach(componentName => {
+                        updatePropCombinationOptions(componentName);
+                    });
+                }
+            } catch (error) {
+                console.warn('Failed to load saved prop combinations:', error);
+            }
         }
     </script>
 </body>

@@ -46,3 +46,24 @@ func validateArguments(args []string) error {
 	}
 	return nil
 }
+
+// validateBuildCommand validates the command and arguments to prevent command injection
+func validateBuildCommand(command string, args []string) error {
+	// Allowlist of permitted commands
+	allowedCommands := map[string]bool{
+		"templ": true,
+		"go":    true,
+	}
+
+	// Check if command is in allowlist
+	if err := validateCommand(command, allowedCommands); err != nil {
+		return fmt.Errorf("build command validation failed: %w", err)
+	}
+
+	// Validate arguments - prevent shell metacharacters and path traversal
+	if err := validateArguments(args); err != nil {
+		return fmt.Errorf("argument validation failed: %w", err)
+	}
+
+	return nil
+}

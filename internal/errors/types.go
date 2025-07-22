@@ -326,6 +326,14 @@ func (fve *FieldValidationError) Suggestions() []string {
 	return fve.HelpText
 }
 
+// ToTemplarError converts the field validation error to a TemplarError
+func (fve *FieldValidationError) ToTemplarError() *TemplarError {
+	return NewValidationError(
+		fmt.Sprintf("ERR_FIELD_%s", strings.ToUpper(fve.FieldName)),
+		fve.ErrorMessage,
+	).WithContext("field", fve.FieldName).WithContext("value", fve.FieldValue)
+}
+
 // NewFieldValidationError creates a new field validation error
 func NewFieldValidationError(field string, value interface{}, message string, suggestions ...string) *FieldValidationError {
 	return &FieldValidationError{

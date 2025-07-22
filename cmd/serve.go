@@ -3,16 +3,10 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"log"
-	"os"
-	"os/signal"
-	"strings"
-	"syscall"
 
 	"github.com/conneroisu/templar/internal/config"
-	"github.com/conneroisu/templar/internal/di"
 	"github.com/conneroisu/templar/internal/errors"
-	"github.com/conneroisu/templar/internal/monitoring"
+	"github.com/conneroisu/templar/internal/services"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -64,13 +58,14 @@ func runServe(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("flag validation failed: %w", err)
 	}
 
+	// Load configuration
 	cfg, err := config.Load()
 	if err != nil {
 		// Enhanced error for configuration issues
 		ctx := &errors.SuggestionContext{
 			ConfigPath: ".templar.yml",
 		}
-		suggestions := errors.ConfigurationError(err.Error(), ".templar.yml", ctx)
+		suggestions := errors.ConfigurationErrorSuggestions(err.Error(), ".templar.yml", ctx)
 		enhancedErr := errors.NewEnhancedError(
 			"Failed to load configuration",
 			err,
@@ -79,83 +74,38 @@ func runServe(cmd *cobra.Command, args []string) error {
 		return enhancedErr
 	}
 
-	// Set target files if specified
-	cfg.TargetFiles = args
+	// Create serve service
+	serveService := services.NewServeService(cfg)
 
-	// Initialize monitoring system
-	monitor, err := monitoring.SetupTemplarMonitoring("")
-	if err != nil {
-		log.Printf("Warning: Failed to initialize monitoring: %v", err)
-		// Continue without monitoring - non-fatal
-	} else {
-		log.Printf("Monitoring system initialized")
-		defer func() {
-			if shutdownErr := monitor.GracefulShutdown(context.Background()); shutdownErr != nil {
-				log.Printf("Error during monitoring shutdown: %v", shutdownErr)
-			}
-		}()
-	}
+	// Get server info for display
+	serverInfo := serveService.GetServerInfo(args)
 
-	// Initialize dependency injection container
-	container := di.NewServiceContainer(cfg)
-	if err := container.Initialize(); err != nil {
-		return fmt.Errorf("failed to initialize service container: %w", err)
-	}
-	defer func() {
-		if shutdownErr := container.Shutdown(context.Background()); shutdownErr != nil {
-			log.Printf("Error during container shutdown: %v", shutdownErr)
-		}
-	}()
-
-	srv, err := container.GetServer()
-	if err != nil {
-		// Check for server creation errors
-		if strings.Contains(err.Error(), "address already in use") || strings.Contains(err.Error(), "bind") {
-			ctx := &errors.SuggestionContext{}
-			suggestions := errors.ServerStartError(err, cfg.Server.Port, ctx)
-			enhancedErr := errors.NewEnhancedError(
-				fmt.Sprintf("Failed to start server on port %d", cfg.Server.Port),
-				err,
-				suggestions,
-			)
-			return enhancedErr
-		}
-		return fmt.Errorf("failed to create server: %w", err)
-	}
-
-	// Create context that cancels on interrupt
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	// Handle graceful shutdown
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-
-	go func() {
-		<-sigChan
-		log.Println("Shutting down server...")
-
-		// Shutdown server gracefully
-		if shutdownErr := srv.Shutdown(ctx); shutdownErr != nil {
-			log.Printf("Error during server shutdown: %v", shutdownErr)
-		}
-
-		cancel()
-	}()
-
+	// Display startup information
 	if len(args) > 0 {
-		fmt.Printf("Starting Templar server for %v at http://%s:%d\n", args, cfg.Server.Host, cfg.Server.Port)
+		fmt.Printf("Starting Templar server for %v at %s\n", args, serverInfo.ServerURL)
 	} else {
-		fmt.Printf("Starting Templar server at http://%s:%d\n", cfg.Server.Host, cfg.Server.Port)
+		fmt.Printf("Starting Templar server at %s\n", serverInfo.ServerURL)
 	}
 
-	// Add monitoring information if available
-	if monitor != nil {
-		fmt.Printf("Monitoring dashboard: http://localhost:8081\n")
+	// Configure serve options
+	opts := services.ServeOptions{
+		TargetFiles: args,
 	}
 
-	if err := srv.Start(ctx); err != nil {
-		return fmt.Errorf("server error: %w", err)
+	// Start the server
+	ctx := context.Background()
+	result, err := serveService.Serve(ctx, opts)
+	if err != nil {
+		return err
+	}
+
+	// Display additional information
+	if result.MonitorURL != "" {
+		fmt.Printf("Monitoring dashboard: %s\n", result.MonitorURL)
+	}
+
+	if !result.Success {
+		return result.Error
 	}
 
 	return nil

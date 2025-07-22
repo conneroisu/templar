@@ -89,7 +89,7 @@ func TestFileWatcherInterface(t *testing.T) {
 	iface.AddFilter(testFilter)
 
 	// Test handler addition
-	testHandler := func(events []interface{}) error {
+	testHandler := func(events []interfaces.ChangeEvent) error {
 		return nil
 	}
 	iface.AddHandler(testHandler)
@@ -296,7 +296,7 @@ func TestInterfaceWorkflow(t *testing.T) {
 	})
 	fileWatcher.AddFilter(testFilter)
 
-	testHandler := func(events []interface{}) error {
+	testHandler := func(events []interfaces.ChangeEvent) error {
 		return nil
 	}
 	fileWatcher.AddHandler(testHandler)

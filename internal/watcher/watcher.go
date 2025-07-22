@@ -61,45 +61,17 @@ type FileWatcher struct {
 	stopped   bool
 }
 
-// ChangeEvent represents a file change event
-type ChangeEvent struct {
-	Type    EventType
-	Path    string
-	ModTime time.Time
-	Size    int64
-}
+// Type aliases for convenience and backward compatibility
+type ChangeEvent = interfaces.ChangeEvent
+type EventType = interfaces.EventType
 
-// EventType represents the type of file change
-type EventType int
-
+// Event type constants for convenience
 const (
-	EventTypeCreated EventType = iota
-	EventTypeModified
-	EventTypeDeleted
-	EventTypeRenamed
+	EventTypeCreated  = interfaces.EventTypeCreated
+	EventTypeModified = interfaces.EventTypeModified
+	EventTypeDeleted  = interfaces.EventTypeDeleted
+	EventTypeRenamed  = interfaces.EventTypeRenamed
 )
-
-// String returns the string representation of the EventType
-func (e EventType) String() string {
-	switch e {
-	case EventTypeCreated:
-		return "created"
-	case EventTypeModified:
-		return "modified"
-	case EventTypeDeleted:
-		return "deleted"
-	case EventTypeRenamed:
-		return "renamed"
-	default:
-		return "unknown"
-	}
-}
-
-// FileFilter determines if a file should be watched
-type FileFilter func(path string) bool
-
-// ChangeHandler handles file change events
-type ChangeHandler func(events []ChangeEvent) error
 
 // Interface compliance verification - FileWatcher implements interfaces.FileWatcher
 var _ interfaces.FileWatcher = (*FileWatcher)(nil)
@@ -355,14 +327,8 @@ func (fw *FileWatcher) processEvents(ctx context.Context) {
 			handlers := fw.handlers
 			fw.mutex.RUnlock()
 
-			// Convert ChangeEvent slice to interface{} slice for interface compatibility
-			interfaceEvents := make([]interface{}, len(events))
-			for i, event := range events {
-				interfaceEvents[i] = event
-			}
-
 			for _, handler := range handlers {
-				if err := handler(interfaceEvents); err != nil {
+				if err := handler(events); err != nil {
 					// Log error but continue processing
 					log.Printf("File watcher handler error: %v", err)
 				}

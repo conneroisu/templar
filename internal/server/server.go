@@ -122,7 +122,8 @@ func New(cfg *config.Config) (*PreviewServer, error) {
 	}, nil
 }
 
-// NewWithDependencies creates a new preview server with injected dependencies
+// NewWithDependencies creates a new preview server with injected dependencies (LEGACY)
+// Deprecated: Use NewRefactoredWithDependencies for new implementations
 func NewWithDependencies(
 	cfg *config.Config,
 	componentRegistry interfaces.ComponentRegistry,
@@ -147,6 +148,26 @@ func NewWithDependencies(
 		lastBuildErrors: make([]*errors.ParsedError, 0),
 		monitor:         monitor,
 	}
+}
+
+// NewRefactoredWithDependencies creates a new refactored preview server with proper SRP
+// This is the recommended constructor that uses the new architecture
+func NewRefactoredWithDependencies(
+	cfg *config.Config,
+	componentRegistry interfaces.ComponentRegistry,
+	watcher interfaces.FileWatcher,
+	scanner interfaces.ComponentScanner,
+	buildPipeline interfaces.BuildPipeline,
+	monitor *monitoring.TemplarMonitor,
+) (*RefactoredPreviewServer, error) {
+	return NewRefactoredPreviewServer(
+		cfg,
+		componentRegistry,
+		watcher,
+		scanner,
+		buildPipeline,
+		monitor,
+	)
 }
 
 // Start starts the preview server
@@ -244,14 +265,12 @@ func (s *PreviewServer) setupFileWatcher(ctx context.Context) {
 	s.watcher.AddFilter(interfaces.FileFilterFunc(watcher.NoVendorFilter))
 	s.watcher.AddFilter(interfaces.FileFilterFunc(watcher.NoGitFilter))
 
-	// Add handler (convert to interface type)
-	s.watcher.AddHandler(func(events []interface{}) error {
-		// Convert interface events back to concrete events
+	// Add handler 
+	s.watcher.AddHandler(func(events []interfaces.ChangeEvent) error {
+		// Convert to local watcher events
 		changeEvents := make([]watcher.ChangeEvent, len(events))
 		for i, event := range events {
-			if changeEvent, ok := event.(watcher.ChangeEvent); ok {
-				changeEvents[i] = changeEvent
-			}
+			changeEvents[i] = watcher.ChangeEvent(event)
 		}
 		return s.handleFileChange(changeEvents)
 	})

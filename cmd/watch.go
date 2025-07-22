@@ -72,11 +72,10 @@ func runWatch(cmd *cobra.Command, args []string) error {
 	fileWatcher.AddFilter(interfaces.FileFilterFunc(watcher.NoGitFilter))
 
 	// Add change handler
-	fileWatcher.AddHandler(func(events []interface{}) error {
+	fileWatcher.AddHandler(func(events []interfaces.ChangeEvent) error {
 		if watchVerbose {
 			fmt.Printf("📁 File changes detected:\n")
-			for _, eventInterface := range events {
-				event := eventInterface.(watcher.ChangeEvent)
+			for _, event := range events {
 				fmt.Printf("   %s: %s\n", event.Type, event.Path)
 			}
 		} else {

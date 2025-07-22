@@ -26,8 +26,42 @@ func (f FileFilterFunc) ShouldInclude(path string) bool {
 	return f(path)
 }
 
+// EventType represents the type of file system change
+type EventType int
+
+const (
+	EventTypeCreated EventType = iota
+	EventTypeModified
+	EventTypeDeleted
+	EventTypeRenamed
+)
+
+// String returns the string representation of the EventType
+func (e EventType) String() string {
+	switch e {
+	case EventTypeCreated:
+		return "created"
+	case EventTypeModified:
+		return "modified"
+	case EventTypeDeleted:
+		return "deleted"
+	case EventTypeRenamed:
+		return "renamed"
+	default:
+		return "unknown"
+	}
+}
+
+// ChangeEvent represents a file change event
+type ChangeEvent struct {
+	Type    EventType
+	Path    string
+	ModTime time.Time
+	Size    int64
+}
+
 // ChangeHandlerFunc is the concrete change handler function type
-type ChangeHandlerFunc func(events []interface{}) error
+type ChangeHandlerFunc func(events []ChangeEvent) error
 
 // BuildCallbackFunc is the concrete build callback function type
 type BuildCallbackFunc func(result interface{})

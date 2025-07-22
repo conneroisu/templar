@@ -141,7 +141,7 @@ func TestScanFileWithInvalidPath(t *testing.T) {
 	// Test with directory traversal attempt
 	err := scanner.ScanFile("../../../etc/passwd")
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "outside current working directory")
+	assert.Contains(t, err.Error(), "path traversal attempt")
 }
 
 func TestScanFileWithNonExistentFile(t *testing.T) {
@@ -165,7 +165,7 @@ func TestValidatePath(t *testing.T) {
 	// Test path with directory traversal
 	_, err = scanner.validatePath("../../../etc/passwd")
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "outside current working directory")
+	assert.Contains(t, err.Error(), "path traversal attempt")
 
 	// Test path with .. in name
 	_, err = scanner.validatePath("test/../file.templ")

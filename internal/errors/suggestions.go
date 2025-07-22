@@ -171,8 +171,8 @@ func ServerStartError(err error, port int, ctx *SuggestionContext) []ErrorSugges
 	return suggestions
 }
 
-// ConfigurationError generates suggestions for configuration issues
-func ConfigurationError(configError string, configPath string, ctx *SuggestionContext) []ErrorSuggestion {
+// ConfigurationErrorSuggestions generates suggestions for configuration issues
+func ConfigurationErrorSuggestions(configError string, configPath string, ctx *SuggestionContext) []ErrorSuggestion {
 	suggestions := []ErrorSuggestion{
 		{
 			Title:       "Check configuration file",
@@ -205,8 +205,8 @@ func ConfigurationError(configError string, configPath string, ctx *SuggestionCo
 	return suggestions
 }
 
-// WebSocketError generates suggestions for WebSocket connection issues
-func WebSocketError(err error, ctx *SuggestionContext) []ErrorSuggestion {
+// WebSocketErrorSuggestions generates suggestions for WebSocket connection issues
+func WebSocketErrorSuggestions(err error, ctx *SuggestionContext) []ErrorSuggestion {
 	suggestions := []ErrorSuggestion{
 		{
 			Title:       "Check browser console",

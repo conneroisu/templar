@@ -11,6 +11,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/conneroisu/templar/internal/interfaces"
 )
 
 func TestEventTypeString(t *testing.T) {
@@ -48,11 +49,11 @@ func TestFileWatcherAddFilter(t *testing.T) {
 	defer watcher.Stop()
 
 	// Add templ filter
-	watcher.AddFilter(TemplFilter)
+	watcher.AddFilter(interfaces.FileFilterFunc(TemplFilter))
 	assert.Len(t, watcher.filters, 1)
 
 	// Add go filter
-	watcher.AddFilter(GoFilter)
+	watcher.AddFilter(interfaces.FileFilterFunc(GoFilter))
 	assert.Len(t, watcher.filters, 2)
 }
 

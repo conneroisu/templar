@@ -7,6 +7,8 @@ import (
 	"runtime"
 	"testing"
 	"time"
+
+	"github.com/conneroisu/templar/internal/interfaces"
 )
 
 // TestMemoryGrowthUnderHighLoad tests memory behavior under sustained high load
@@ -37,7 +39,7 @@ func TestMemoryGrowthUnderHighLoad(t *testing.T) {
 		return nil
 	})
 
-	fw.AddFilter(TemplFilter)
+	fw.AddFilter(interfaces.FileFilterFunc(TemplFilter))
 
 	if err := fw.AddRecursive(tempDir); err != nil {
 		t.Fatalf("Failed to add path: %v", err)
