@@ -5,6 +5,7 @@ package interfaces
 
 import (
 	"context"
+	"time"
 
 	"github.com/conneroisu/templar/internal/types"
 )
@@ -30,6 +31,48 @@ type ChangeHandlerFunc func(events []interface{}) error
 
 // BuildCallbackFunc is the concrete build callback function type
 type BuildCallbackFunc func(result interface{})
+
+// ServiceFactory is a function that creates a service instance
+type ServiceFactory func() (interface{}, error)
+
+// BuildMetrics represents build performance metrics
+type BuildMetrics interface {
+	GetBuildCount() int64
+	GetSuccessCount() int64
+	GetFailureCount() int64
+	GetAverageDuration() time.Duration
+	GetCacheHitRate() float64
+	GetSuccessRate() float64
+	Reset()
+}
+
+// CacheStats represents cache performance statistics
+type CacheStats interface {
+	GetSize() int64
+	GetHits() int64
+	GetMisses() int64
+	GetHitRate() float64
+	GetEvictions() int64
+	Clear()
+}
+
+// Config represents application configuration
+type Config interface {
+	GetString(key string) string
+	GetInt(key string) int
+	GetBool(key string) bool
+	GetDuration(key string) time.Duration
+	Set(key string, value interface{}) error
+	Validate() error
+}
+
+// ConfigEvent represents a configuration change event
+type ConfigEvent struct {
+	Key      string
+	OldValue interface{}
+	NewValue interface{}
+	Timestamp time.Time
+}
 
 // ComponentRegistry defines the interface for managing component information
 type ComponentRegistry interface {
@@ -70,6 +113,60 @@ type ComponentScanner interface {
 	GetRegistry() ComponentRegistry
 }
 
+// TaskQueue defines the interface for managing build task queues
+type TaskQueue interface {
+	// Enqueue adds a regular priority task to the queue
+	Enqueue(task interface{}) error
+	
+	// EnqueuePriority adds a high priority task to the queue
+	EnqueuePriority(task interface{}) error
+	
+	// GetNextTask returns a channel for receiving tasks
+	GetNextTask() <-chan interface{}
+	
+	// PublishResult publishes a build result
+	PublishResult(result interface{}) error
+	
+	// GetResults returns a channel for receiving results
+	GetResults() <-chan interface{}
+	
+	// Close shuts down the queue
+	Close()
+}
+
+// HashProvider defines the interface for content hash generation
+type HashProvider interface {
+	// GenerateContentHash generates a hash for a single component
+	GenerateContentHash(component *types.ComponentInfo) string
+	
+	// GenerateHashBatch generates hashes for multiple components
+	GenerateHashBatch(components []*types.ComponentInfo) map[string]string
+}
+
+// WorkerManager defines the interface for managing build workers
+type WorkerManager interface {
+	// StartWorkers begins worker goroutines with the given context and queue
+	StartWorkers(ctx context.Context, queue TaskQueue)
+	
+	// StopWorkers gracefully shuts down all workers
+	StopWorkers()
+	
+	// SetWorkerCount adjusts the number of active workers
+	SetWorkerCount(count int)
+}
+
+// ResultProcessor defines the interface for processing build results
+type ResultProcessor interface {
+	// ProcessResults processes results from the given channel
+	ProcessResults(ctx context.Context, results <-chan interface{})
+	
+	// AddCallback registers a callback for build completion events
+	AddCallback(callback BuildCallbackFunc)
+	
+	// Stop gracefully shuts down result processing
+	Stop()
+}
+
 // BuildPipeline defines the interface for building components
 type BuildPipeline interface {
 	// Build processes a single component
@@ -88,10 +185,10 @@ type BuildPipeline interface {
 	BuildWithPriority(component *types.ComponentInfo)
 
 	// GetMetrics returns build metrics
-	GetMetrics() interface{}
+	GetMetrics() BuildMetrics
 
 	// GetCache returns cache statistics
-	GetCache() interface{}
+	GetCache() CacheStats
 
 	// ClearCache clears the build cache
 	ClearCache()
@@ -148,13 +245,19 @@ type TemplCompiler interface {
 // ConfigManager defines the interface for configuration management
 type ConfigManager interface {
 	// Load loads configuration from files and environment
-	Load() (interface{}, error)
+	Load() (*Config, error)
 
 	// Validate validates configuration values
-	Validate(config interface{}) error
+	Validate(config *Config) error
 
 	// GetDefaults returns default configuration values
-	GetDefaults() interface{}
+	GetDefaults() *Config
+
+	// Save saves configuration to file
+	Save(config *Config) error
+
+	// Watch returns a channel for configuration changes
+	Watch() <-chan ConfigEvent
 }
 
 // Plugin defines the interface for extensibility plugins
@@ -216,10 +319,13 @@ type ErrorCollector interface {
 
 // ServiceContainer defines the interface for dependency injection
 type ServiceContainer interface {
-	// Register registers a service with the container
-	Register(name string, service interface{}) error
+	// Register registers a service factory with the container
+	Register(name string, factory ServiceFactory) error
 
-	// Get retrieves a service by name
+	// RegisterSingleton registers a singleton service
+	RegisterSingleton(name string, service interface{}) error
+
+	// Get retrieves a service by name, creating it if needed
 	Get(name string) (interface{}, error)
 
 	// GetRequired retrieves a service and panics if not found
@@ -228,6 +334,6 @@ type ServiceContainer interface {
 	// Has checks if a service is registered
 	Has(name string) bool
 
-	// GetAll returns all registered services
-	GetAll() map[string]interface{}
+	// Shutdown gracefully shuts down all services
+	Shutdown(ctx context.Context) error
 }

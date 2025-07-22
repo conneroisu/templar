@@ -1,0 +1,249 @@
+# Production Configuration Example for Templar
+# This file demonstrates comprehensive production-specific settings and environment management
+
+# Standard Templar configuration
+server:
+  port: 8080
+  host: "localhost"
+  environment: "production"
+
+components:
+  scan_paths:
+    - "./components"
+    - "./views"
+    - "./pages"
+
+# Production-specific configuration
+production:
+  # Output configuration
+  output_dir: "dist"
+  static_dir: "static"
+  assets_dir: "assets"
+
+  # Build optimization settings
+  minification:
+    css: true
+    javascript: true
+    html: true
+    json: true
+    remove_comments: true
+    strip_debug: true
+
+  compression:
+    enabled: true
+    algorithms: ["gzip", "brotli"]
+    level: 6
+    extensions: [".html", ".css", ".js", ".json", ".xml", ".svg"]
+
+  # Asset optimization
+  asset_optimization:
+    critical_css: true
+    tree_shaking: true
+    dead_code_elimination: true
+    images:
+      enabled: true
+      quality: 85
+      progressive: true
+      formats: ["webp", "avif"]
+      responsive: true
+    fonts:
+      enabled: true
+      subsetting: true
+      formats: ["woff2", "woff"]
+      preload: true
+    icons:
+      enabled: true
+      sprite: true
+      svg_optimization: true
+      format: "svg"
+
+  # Bundling and code splitting
+  bundling:
+    enabled: true
+    strategy: "adaptive"
+    chunk_size_limit: 250000
+    splitting: true
+  
+  code_splitting:
+    enabled: true
+    vendor_split: true
+    async_chunks: true
+    common_chunks: true
+
+  # Deployment configuration
+  deployment:
+    target: "static"
+    environment: "production"
+    base_url: "https://example.com"
+    asset_prefix: "/assets"
+    headers:
+      X-Content-Type-Options: "nosniff"
+      X-Frame-Options: "DENY"
+      X-XSS-Protection: "1; mode=block"
+      Strict-Transport-Security: "max-age=31536000; includeSubDomains"
+
+  # CDN integration
+  cdn:
+    enabled: true
+    provider: "cloudflare"
+    base_path: "https://cdn.example.com"
+    cache_ttl: 31536000
+    invalidation: true
+
+  # Performance settings
+  performance:
+    budget_limits:
+      bundle_size: 500000
+      image_size: 1000000
+      css_size: 100000
+      js_size: 300000
+    preconnect:
+      - "https://fonts.googleapis.com"
+      - "https://api.example.com"
+    prefetch:
+      - "/api/user"
+      - "/css/critical.css"
+    preload:
+      - "/fonts/main.woff2"
+      - "/js/app.js"
+    lazy_loading: true
+    service_worker: true
+    manifest_file: true
+
+  # Security configuration
+  security:
+    hsts: true
+    x_frame_options: "DENY"
+    x_content_type_options: true
+    csp:
+      enabled: true
+      directives:
+        default-src: "'self'"
+        script-src: "'self' 'unsafe-inline'"
+        style-src: "'self' 'unsafe-inline'"
+        img-src: "'self' data: https:"
+        font-src: "'self' https://fonts.gstatic.com"
+      report_uri: "/csp-report"
+    scan:
+      enabled: true
+      dependencies: true
+      secrets: true
+      static_analysis: true
+      allowed_risks: ["low"]
+    secrets:
+      detection: true
+      validation: true
+      patterns: ["api[_-]?key", "secret[_-]?key", "password"]
+      exclusions: [".git", "node_modules"]
+
+  # Validation settings
+  validation:
+    enabled: true
+    accessibility:
+      enabled: true
+      level: "AA"
+      rules: ["wcag2a", "wcag2aa"]
+    performance:
+      enabled: true
+      bundle_size: 500000
+      load_time: 3000
+      lighthouse: true
+    seo:
+      enabled: true
+      meta_tags: true
+      sitemap: true
+      robots: true
+      schema: true
+      open_graph: true
+    links:
+      enabled: true
+      internal: true
+      external: false
+      timeout: 30
+    standards:
+      enabled: true
+      html: true
+      css: true
+      javascript: true
+      w3c: true
+
+  # Monitoring and analytics
+  monitoring:
+    analytics:
+      enabled: true
+      provider: "plausible"
+      privacy: true
+    error_tracking:
+      enabled: true
+      provider: "sentry"
+      environment: "production"
+      sample_rate: 0.1
+    performance:
+      enabled: true
+      real_user_data: true
+      vitals: true
+      metrics: ["FCP", "LCP", "CLS", "FID"]
+    uptime:
+      enabled: true
+      endpoints: ["/", "/api/health"]
+      interval: 300
+      alerts: true
+
+  # Environment-specific overrides
+  environments:
+    staging:
+      variables:
+        NODE_ENV: "staging"
+        API_URL: "https://api-staging.example.com"
+      features:
+        debug_mode: true
+        analytics: false
+        source_maps: true
+      deployment:
+        environment: "staging"
+        base_url: "https://staging.example.com"
+        asset_prefix: "/staging/assets"
+      cdn:
+        enabled: false
+      monitoring:
+        analytics:
+          enabled: false
+        error_tracking:
+          enabled: true
+          sample_rate: 1.0
+
+    preview:
+      variables:
+        NODE_ENV: "development"
+        API_URL: "https://api-preview.example.com"
+      features:
+        debug_mode: true
+        analytics: false
+        hot_reload: true
+        source_maps: true
+      deployment:
+        environment: "preview"
+        base_url: "https://preview.example.com"
+      monitoring:
+        analytics:
+          enabled: false
+
+    production:
+      variables:
+        NODE_ENV: "production"
+        API_URL: "https://api.example.com"
+      features:
+        debug_mode: false
+        analytics: true
+        hot_reload: false
+        source_maps: false
+      deployment:
+        environment: "production"
+        base_url: "https://example.com"
+      monitoring:
+        analytics:
+          enabled: true
+          provider: "plausible"
+        performance:
+          enabled: true
+          vitals: true

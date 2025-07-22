@@ -80,7 +80,7 @@ type UpdateMessage struct {
 	Timestamp time.Time `json:"timestamp"`
 }
 
-// New creates a new preview server
+// New creates a new preview server (deprecated: use NewWithDependencies)
 func New(cfg *config.Config) (*PreviewServer, error) {
 	registry := registry.NewComponentRegistry()
 
@@ -95,7 +95,7 @@ func New(cfg *config.Config) (*PreviewServer, error) {
 	renderer := renderer.NewComponentRenderer(registry)
 
 	// Create build pipeline
-	buildPipelineConcrete := build.NewBuildPipeline(4, registry)
+	buildPipelineConcrete := build.NewRefactoredBuildPipeline(4, registry)
 	buildPipeline := adapters.NewBuildPipelineAdapter(buildPipelineConcrete)
 
 	// Initialize monitoring if enabled
@@ -124,6 +124,33 @@ func New(cfg *config.Config) (*PreviewServer, error) {
 		lastBuildErrors: make([]*errors.ParsedError, 0),
 		monitor:         templatorMonitor,
 	}, nil
+}
+
+// NewWithDependencies creates a new preview server with injected dependencies
+func NewWithDependencies(
+	cfg *config.Config,
+	componentRegistry interfaces.ComponentRegistry,
+	watcher interfaces.FileWatcher,
+	scanner interfaces.ComponentScanner,
+	buildPipeline interfaces.BuildPipeline,
+	monitor *monitoring.TemplarMonitor,
+) *PreviewServer {
+	renderer := renderer.NewComponentRenderer(componentRegistry)
+
+	return &PreviewServer{
+		config:          cfg,
+		clients:         make(map[*websocket.Conn]*Client),
+		broadcast:       make(chan []byte),
+		register:        make(chan *Client),
+		unregister:      make(chan *websocket.Conn),
+		registry:        componentRegistry,
+		watcher:         watcher,
+		scanner:         scanner,
+		renderer:        renderer,
+		buildPipeline:   buildPipeline,
+		lastBuildErrors: make([]*errors.ParsedError, 0),
+		monitor:         monitor,
+	}
 }
 
 // Start starts the preview server
@@ -164,9 +191,14 @@ func (s *PreviewServer) Start(ctx context.Context) error {
 	mux.HandleFunc("/api/playground/render", s.handlePlaygroundRender)
 	
 	// Enhanced Web Interface routes
-	mux.HandleFunc("/editor/", s.handleComponentEditor)
-	mux.HandleFunc("/api/inline-editor", s.handleInlineEditor)
 	mux.HandleFunc("/enhanced", s.handleEnhancedIndex)
+	
+	// Interactive Editor routes
+	mux.HandleFunc("/editor", s.handleEditorIndex)
+	mux.HandleFunc("/editor/", s.handleEditorIndex)
+	mux.HandleFunc("/api/editor", s.handleEditorAPI)
+	mux.HandleFunc("/api/files", s.handleFileAPI)
+	mux.HandleFunc("/api/inline-editor", s.handleInlineEditor)
 	
 	// Build API routes
 	mux.HandleFunc("/api/build/status", s.handleBuildStatus)
@@ -620,8 +652,14 @@ func (s *PreviewServer) handleBuildMetrics(w http.ResponseWriter, r *http.Reques
 	}
 
 	cacheMetrics := map[string]interface{}{}
-	if cache, ok := cacheInterface.(map[string]interface{}); ok {
-		cacheMetrics = cache
+	if cache, ok := cacheInterface.(interfaces.CacheStats); ok {
+		cacheMetrics = map[string]interface{}{
+			"size":      cache.GetSize(),
+			"hits":      cache.GetHits(),
+			"misses":    cache.GetMisses(),
+			"hit_rate":  cache.GetHitRate(),
+			"evictions": cache.GetEvictions(),
+		}
 	}
 
 	response := map[string]interface{}{
@@ -663,10 +701,12 @@ func (s *PreviewServer) handleBuildCache(w http.ResponseWriter, r *http.Request)
 			"timestamp": time.Now().Unix(),
 		}
 
-		if cache, ok := cacheInterface.(map[string]interface{}); ok {
-			for k, v := range cache {
-				response[k] = v
-			}
+		if cache, ok := cacheInterface.(interfaces.CacheStats); ok {
+			response["size"] = cache.GetSize()
+			response["hits"] = cache.GetHits()
+			response["misses"] = cache.GetMisses()
+			response["hit_rate"] = cache.GetHitRate()
+			response["evictions"] = cache.GetEvictions()
 		}
 
 		w.Header().Set("Content-Type", "application/json")

@@ -171,11 +171,83 @@ jobs:
           file: ./coverage.out
           flags: unit-tests
 
-  # Phase 4: Performance Benchmarks
+  # Phase 4: Visual Regression Tests
+  visual-regression-tests:
+    name: Visual Regression Tests
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    if: github.event_name == 'push' || github.event.pull_request.draft == false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Generate Go code (templ)
+        run: |
+          go install github.com/a-h/templ/cmd/templ@v0.3.819
+          go generate ./...
+
+      - name: Install Chrome for screenshot testing
+        run: |
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+
+      - name: Cache visual regression baselines
+        uses: actions/cache@v4
+        with:
+          path: |
+            internal/testing/golden/screenshots/baselines
+          key: visual-baselines-${{ runner.os }}-${{ hashFiles('**/*.templ') }}
+          restore-keys: |
+            visual-baselines-${{ runner.os }}-
+
+      - name: Run visual regression tests
+        run: |
+          go test -v -tags=visual ./internal/testing \
+            -timeout=10m \
+            -test.run="TestVisualRegression"
+
+      - name: Upload visual test artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-regression-artifacts-${{ github.sha }}
+          path: |
+            internal/testing/golden/screenshots/
+            !internal/testing/golden/screenshots/baselines/
+          retention-days: 7
+
+      - name: Upload baseline updates on main branch
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          # Update baselines on main branch pushes if tests fail due to intentional changes
+          UPDATE_GOLDEN=true go test -v -tags=visual ./internal/testing \
+            -timeout=10m \
+            -test.run="TestVisualRegression" || true
+
+  # Phase 5: Performance Benchmarks
   performance-tests:
     name: Performance Benchmarks
     runs-on: ubuntu-latest
-    needs: unit-tests
+    needs: [unit-tests, visual-regression-tests]
     if: github.event_name == 'push' || github.event.pull_request.draft == false
     steps:
       - uses: actions/checkout@v4
@@ -242,11 +314,11 @@ jobs:
           path: |
             *-bench.txt
 
-  # Phase 5: Integration Tests
+  # Phase 6: Integration Tests
   integration-tests:
     name: Integration Tests
     runs-on: ubuntu-latest
-    needs: unit-tests
+    needs: [unit-tests, visual-regression-tests]
     services:
       postgres:
         image: postgres:15
@@ -310,11 +382,11 @@ jobs:
             -run "TestE2E" \
             -timeout=30m
 
-  # Phase 6: Build and Docker
+  # Phase 7: Build and Docker
   build-and-docker:
     name: Build and Docker
     runs-on: ubuntu-latest
-    needs: [security-tests, unit-tests]
+    needs: [security-tests, unit-tests, visual-regression-tests]
     outputs:
       image-digest: ${{ steps.build.outputs.digest }}
     steps:
@@ -388,7 +460,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # Phase 7: End-to-End System Tests
+  # Phase 8: End-to-End System Tests
   e2e-system-tests:
     name: E2E System Tests
     runs-on: ubuntu-latest
@@ -453,7 +525,7 @@ jobs:
             -run "TestE2E_MultiComponentInteractions" \
             -timeout=30m
 
-  # Phase 8: Security Scanning
+  # Phase 9: Security Scanning
   security-scan:
     name: Security Scanning
     runs-on: ubuntu-latest
@@ -485,11 +557,11 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
 
-  # Phase 9: Deployment Readiness Check
+  # Phase 10: Deployment Readiness Check
   deployment-check:
     name: Deployment Readiness
     runs-on: ubuntu-latest
-    needs: [integration-tests, performance-tests, e2e-system-tests, security-scan]
+    needs: [integration-tests, performance-tests, visual-regression-tests, e2e-system-tests, security-scan]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
@@ -511,12 +583,14 @@ jobs:
           echo "- Code quality and linting" >> $GITHUB_STEP_SUMMARY
           echo "- Security tests and vulnerability scanning" >> $GITHUB_STEP_SUMMARY
           echo "- Unit tests across multiple Go versions and platforms" >> $GITHUB_STEP_SUMMARY
+          echo "- Visual regression tests for UI consistency" >> $GITHUB_STEP_SUMMARY
           echo "- Performance benchmarks within acceptable thresholds" >> $GITHUB_STEP_SUMMARY
           echo "- Integration tests for all major components" >> $GITHUB_STEP_SUMMARY
           echo "- End-to-end system tests" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📊 Test Coverage" >> $GITHUB_STEP_SUMMARY
           echo "- Security: ✅ Command injection, path traversal, WebSocket security" >> $GITHUB_STEP_SUMMARY
+          echo "- Visual: ✅ Component screenshot comparison and regression detection" >> $GITHUB_STEP_SUMMARY
           echo "- Performance: ✅ Scanner, build pipeline, WebSocket, watcher benchmarks" >> $GITHUB_STEP_SUMMARY
           echo "- Integration: ✅ Scanner-registry, watcher-scanner, server-WebSocket, E2E" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -527,7 +601,7 @@ jobs:
   notify-on-failure:
     name: Notify on Failure
     runs-on: ubuntu-latest
-    needs: [lint-and-format, security-tests, unit-tests, integration-tests, build-and-docker]
+    needs: [lint-and-format, security-tests, unit-tests, visual-regression-tests, integration-tests, build-and-docker]
     if: failure()
     steps:
       - name: Create failure summary

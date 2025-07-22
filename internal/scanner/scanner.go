@@ -9,6 +9,7 @@
 package scanner
 
 import (
+	"encoding/json"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -18,13 +19,19 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
+	"github.com/conneroisu/templar/internal/errors"
 	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/types"
 )
+
+// crcTable is a pre-computed CRC32 Castagnoli table for faster hash generation
+var crcTable = crc32.MakeTable(crc32.Castagnoli)
 
 // ScanJob represents a scanning job for the worker pool containing the file
 // path to scan and a result channel for asynchronous communication.
@@ -123,6 +130,7 @@ type ScanWorker struct {
 // - File change detection using CRC32 hashing
 // - Optimized path validation with cached working directory
 // - Buffer pooling for memory optimization in large codebases
+// - Component metadata caching with LRU eviction for performance
 type ComponentScanner struct {
 	// registry receives discovered components and broadcasts change events
 	registry *registry.ComponentRegistry
@@ -134,6 +142,10 @@ type ComponentScanner struct {
 	pathCache *pathValidationCache
 	// bufferPool provides reusable byte buffers for file reading optimization
 	bufferPool *BufferPool
+	// metadataCache caches parsed component metadata by file hash to avoid re-parsing unchanged files
+	metadataCache *MetadataCache
+	// metrics tracks performance metrics during scanning operations
+	metrics *ScannerMetrics
 }
 
 // pathValidationCache caches expensive filesystem operations for optimal performance
@@ -146,19 +158,191 @@ type pathValidationCache struct {
 	initialized bool
 }
 
-// NewComponentScanner creates a new component scanner with optimized worker pool
+// CachedComponentMetadata stores pre-parsed component information for cache optimization
+type CachedComponentMetadata struct {
+	// Components is a slice of all components found in the file
+	Components []*types.ComponentInfo
+	// FileHash is the CRC32 hash of the file content when cached
+	FileHash string
+	// ParsedAt records when the metadata was cached
+	ParsedAt time.Time
+}
+
+// ScannerMetrics tracks performance metrics during scanning operations
+type ScannerMetrics struct {
+	// FilesProcessed is the total number of files processed
+	FilesProcessed int64
+	// ComponentsFound is the total number of components discovered
+	ComponentsFound int64
+	// CacheHits tracks how many files were served from cache
+	CacheHits int64
+	// CacheMisses tracks how many files required parsing
+	CacheMisses int64
+	// TotalScanTime tracks time spent in scanning operations
+	TotalScanTime time.Duration
+	// PeakMemoryUsage tracks the peak memory usage during scanning
+	PeakMemoryUsage uint64
+	// ConcurrentJobs tracks the peak number of concurrent jobs
+	ConcurrentJobs int64
+}
+
+// MetadataCache implements a simple LRU cache for component metadata
+type MetadataCache struct {
+	mu       sync.RWMutex
+	entries  map[string]*MetadataCacheEntry
+	maxSize  int
+	ttl      time.Duration
+	// LRU doubly-linked list
+	head *MetadataCacheEntry
+	tail *MetadataCacheEntry
+}
+
+// MetadataCacheEntry represents a cached metadata entry with LRU pointers
+type MetadataCacheEntry struct {
+	Key       string
+	Data      []byte
+	CreatedAt time.Time
+	// LRU pointers
+	prev *MetadataCacheEntry
+	next *MetadataCacheEntry
+}
+
+// NewMetadataCache creates a new metadata cache
+func NewMetadataCache(maxSize int, ttl time.Duration) *MetadataCache {
+	cache := &MetadataCache{
+		entries: make(map[string]*MetadataCacheEntry),
+		maxSize: maxSize,
+		ttl:     ttl,
+	}
+	
+	// Initialize dummy head and tail for LRU
+	cache.head = &MetadataCacheEntry{}
+	cache.tail = &MetadataCacheEntry{}
+	cache.head.next = cache.tail
+	cache.tail.prev = cache.head
+	
+	return cache
+}
+
+// Get retrieves data from cache
+func (mc *MetadataCache) Get(key string) ([]byte, bool) {
+	mc.mu.Lock()
+	defer mc.mu.Unlock()
+	
+	entry, exists := mc.entries[key]
+	if !exists {
+		return nil, false
+	}
+	
+	// Check TTL
+	if time.Since(entry.CreatedAt) > mc.ttl {
+		mc.removeFromList(entry)
+		delete(mc.entries, key)
+		return nil, false
+	}
+	
+	// Move to front (most recently used)
+	mc.moveToFront(entry)
+	return entry.Data, true
+}
+
+// Set stores data in cache
+func (mc *MetadataCache) Set(key string, data []byte) {
+	mc.mu.Lock()
+	defer mc.mu.Unlock()
+	
+	// Check if entry exists
+	if existingEntry, exists := mc.entries[key]; exists {
+		existingEntry.Data = data
+		existingEntry.CreatedAt = time.Now()
+		mc.moveToFront(existingEntry)
+		return
+	}
+	
+	// Evict if needed
+	if len(mc.entries) >= mc.maxSize {
+		mc.evictLRU()
+	}
+	
+	// Create new entry
+	entry := &MetadataCacheEntry{
+		Key:       key,
+		Data:      data,
+		CreatedAt: time.Now(),
+	}
+	
+	mc.entries[key] = entry
+	mc.addToFront(entry)
+}
+
+// Clear removes all entries
+func (mc *MetadataCache) Clear() {
+	mc.mu.Lock()
+	defer mc.mu.Unlock()
+	
+	mc.entries = make(map[string]*MetadataCacheEntry)
+	mc.head.next = mc.tail
+	mc.tail.prev = mc.head
+}
+
+// LRU operations
+func (mc *MetadataCache) addToFront(entry *MetadataCacheEntry) {
+	entry.prev = mc.head
+	entry.next = mc.head.next
+	mc.head.next.prev = entry
+	mc.head.next = entry
+}
+
+func (mc *MetadataCache) removeFromList(entry *MetadataCacheEntry) {
+	entry.prev.next = entry.next
+	entry.next.prev = entry.prev
+}
+
+func (mc *MetadataCache) moveToFront(entry *MetadataCacheEntry) {
+	mc.removeFromList(entry)
+	mc.addToFront(entry)
+}
+
+func (mc *MetadataCache) evictLRU() {
+	if mc.tail.prev != mc.head {
+		lru := mc.tail.prev
+		mc.removeFromList(lru)
+		delete(mc.entries, lru.Key)
+	}
+}
+
+// NewComponentScanner creates a new component scanner with optimal worker pool
 func NewComponentScanner(registry *registry.ComponentRegistry) *ComponentScanner {
+	return NewComponentScannerWithConcurrency(registry, 0) // 0 = auto-detect optimal
+}
+
+// NewComponentScannerWithConcurrency creates a new component scanner with configurable concurrency
+func NewComponentScannerWithConcurrency(registry *registry.ComponentRegistry, maxWorkers int) *ComponentScanner {
 	scanner := &ComponentScanner{
 		registry:   registry,
 		fileSet:    token.NewFileSet(),
 		pathCache:  &pathValidationCache{},
 		bufferPool: NewBufferPool(),
+		// Initialize metadata cache: 1000 entries max, 1 hour TTL
+		// This caches ~1000-2000 component metadata entries typically
+		metadataCache: NewMetadataCache(1000, time.Hour),
+		// Initialize performance metrics tracking
+		metrics: &ScannerMetrics{},
 	}
 
-	// Initialize worker pool with optimal worker count
-	workerCount := runtime.NumCPU()
-	if workerCount > 8 {
-		workerCount = 8 // Cap at 8 workers for diminishing returns
+	// Initialize worker pool with configurable or optimal worker count
+	workerCount := maxWorkers
+	if workerCount <= 0 {
+		// Auto-detect optimal worker count
+		workerCount = runtime.NumCPU()
+		if workerCount > 8 {
+			workerCount = 8 // Cap at 8 workers for diminishing returns
+		}
+	} else {
+		// User-specified count, but enforce reasonable limits
+		if workerCount > 64 {
+			workerCount = 64 // Maximum safety limit
+		}
 	}
 
 	scanner.workerPool = NewWorkerPool(workerCount, scanner)
@@ -233,19 +417,119 @@ func (s *ComponentScanner) GetRegistry() *registry.ComponentRegistry {
 	return s.registry
 }
 
+// GetWorkerCount returns the number of active workers in the pool
+func (s *ComponentScanner) GetWorkerCount() int {
+	if s.workerPool == nil {
+		return 0
+	}
+	s.workerPool.mu.RLock()
+	defer s.workerPool.mu.RUnlock()
+	return s.workerPool.workerCount
+}
+
+// GetMetrics returns a copy of the current scanner metrics
+func (s *ComponentScanner) GetMetrics() ScannerMetrics {
+	if s.metrics == nil {
+		return ScannerMetrics{}
+	}
+	return ScannerMetrics{
+		FilesProcessed:  atomic.LoadInt64(&s.metrics.FilesProcessed),
+		ComponentsFound: atomic.LoadInt64(&s.metrics.ComponentsFound),
+		CacheHits:       atomic.LoadInt64(&s.metrics.CacheHits),
+		CacheMisses:     atomic.LoadInt64(&s.metrics.CacheMisses),
+		TotalScanTime:   s.metrics.TotalScanTime,
+		PeakMemoryUsage: atomic.LoadUint64(&s.metrics.PeakMemoryUsage),
+		ConcurrentJobs:  atomic.LoadInt64(&s.metrics.ConcurrentJobs),
+	}
+}
+
+// ResetMetrics clears all scanner metrics
+func (s *ComponentScanner) ResetMetrics() {
+	if s.metrics == nil {
+		return
+	}
+	atomic.StoreInt64(&s.metrics.FilesProcessed, 0)
+	atomic.StoreInt64(&s.metrics.ComponentsFound, 0)
+	atomic.StoreInt64(&s.metrics.CacheHits, 0)
+	atomic.StoreInt64(&s.metrics.CacheMisses, 0)
+	atomic.StoreUint64(&s.metrics.PeakMemoryUsage, 0)
+	atomic.StoreInt64(&s.metrics.ConcurrentJobs, 0)
+	s.metrics.TotalScanTime = 0
+}
+
 // Close gracefully shuts down the scanner and its worker pool
 func (s *ComponentScanner) Close() error {
 	if s.workerPool != nil {
 		s.workerPool.Stop()
 	}
+	if s.metadataCache != nil {
+		s.metadataCache.Clear()
+	}
 	return nil
+}
+
+// getCachedMetadata attempts to retrieve cached component metadata for a file
+func (s *ComponentScanner) getCachedMetadata(filePath, fileHash string) (*CachedComponentMetadata, bool) {
+	if s.metadataCache == nil {
+		return nil, false
+	}
+
+	cacheKey := fmt.Sprintf("%s:%s", filePath, fileHash)
+	cachedData, found := s.metadataCache.Get(cacheKey)
+	if !found {
+		return nil, false
+	}
+
+	var metadata CachedComponentMetadata
+	if err := json.Unmarshal(cachedData, &metadata); err != nil {
+		// Cache corruption - remove invalid entry
+		s.metadataCache.Set(cacheKey, nil)
+		return nil, false
+	}
+
+	// Verify the cached hash matches current file hash (additional safety check)
+	if metadata.FileHash != fileHash {
+		return nil, false
+	}
+
+	return &metadata, true
+}
+
+// setCachedMetadata stores component metadata in the cache
+func (s *ComponentScanner) setCachedMetadata(filePath, fileHash string, components []*types.ComponentInfo) {
+	if s.metadataCache == nil {
+		return
+	}
+
+	metadata := CachedComponentMetadata{
+		Components: components,
+		FileHash:   fileHash,
+		ParsedAt:   time.Now(),
+	}
+
+	data, err := json.Marshal(metadata)
+	if err != nil {
+		// Skip caching if marshaling fails
+		return
+	}
+
+	cacheKey := fmt.Sprintf("%s:%s", filePath, fileHash)
+	s.metadataCache.Set(cacheKey, data)
 }
 
 // ScanDirectory scans a directory for templ components using optimized worker pool
 func (s *ComponentScanner) ScanDirectory(dir string) error {
+	start := time.Now()
+	
+	// Track memory usage at start
+	var startMem runtime.MemStats
+	runtime.ReadMemStats(&startMem)
+	
 	// Validate directory path to prevent path traversal
 	if _, err := s.validatePath(dir); err != nil {
-		return fmt.Errorf("invalid directory path: %w", err)
+		return errors.WrapValidation(err, errors.ErrCodeInvalidPath, 
+			"directory path validation failed").
+			WithContext("directory", dir)
 	}
 
 	// First, collect all .templ files efficiently
@@ -274,7 +558,29 @@ func (s *ComponentScanner) ScanDirectory(dir string) error {
 	}
 
 	// Process files using persistent worker pool (no goroutine creation overhead)
-	return s.processBatchWithWorkerPool(files)
+	err = s.processBatchWithWorkerPool(files)
+	
+	// Update metrics
+	if s.metrics != nil {
+		elapsed := time.Since(start)
+		s.metrics.TotalScanTime += elapsed
+		atomic.AddInt64(&s.metrics.FilesProcessed, int64(len(files)))
+		
+		// Track memory usage
+		var endMem runtime.MemStats
+		runtime.ReadMemStats(&endMem)
+		memUsed := endMem.Alloc - startMem.Alloc
+		
+		// Update peak memory if this scan used more
+		for {
+			current := atomic.LoadUint64(&s.metrics.PeakMemoryUsage)
+			if memUsed <= current || atomic.CompareAndSwapUint64(&s.metrics.PeakMemoryUsage, current, memUsed) {
+				break
+			}
+		}
+	}
+	
+	return err
 }
 
 // processBatchWithWorkerPool processes files using the persistent worker pool with optimized batching
@@ -311,18 +617,20 @@ func (s *ComponentScanner) processBatchWithWorkerPool(files []string) error {
 	}
 
 	// Collect results
-	var errors []error
+	var scanErrors []error
 	for i := 0; i < len(files); i++ {
 		result := <-resultChan
 		if result.err != nil {
-			errors = append(errors, fmt.Errorf("scanning %s: %w", result.filePath, result.err))
+			// Enhance the error with file context
+			enhancedErr := errors.EnhanceError(result.err, "scanner", result.filePath, 0, 0)
+			scanErrors = append(scanErrors, enhancedErr)
 		}
 	}
 
 	close(resultChan)
 
-	if len(errors) > 0 {
-		return fmt.Errorf("scan completed with %d errors: %v", len(errors), errors[0])
+	if len(scanErrors) > 0 {
+		return errors.CombineErrors(scanErrors...)
 	}
 
 	return nil
@@ -330,16 +638,17 @@ func (s *ComponentScanner) processBatchWithWorkerPool(files []string) error {
 
 // processBatchSynchronous processes small batches synchronously for better performance
 func (s *ComponentScanner) processBatchSynchronous(files []string) error {
-	var errors []error
+	var scanErrors []error
 	
 	for _, file := range files {
 		if err := s.scanFileInternal(file); err != nil {
-			errors = append(errors, fmt.Errorf("scanning %s: %w", file, err))
+			enhancedErr := errors.EnhanceError(err, "scanner", file, 0, 0)
+			scanErrors = append(scanErrors, enhancedErr)
 		}
 	}
 
-	if len(errors) > 0 {
-		return fmt.Errorf("scan completed with %d errors: %v", len(errors), errors[0])
+	if len(scanErrors) > 0 {
+		return errors.CombineErrors(scanErrors...)
 	}
 
 	return nil
@@ -403,41 +712,72 @@ func (s *ComponentScanner) scanFileInternal(path string) error {
 		return fmt.Errorf("reading file %s: %w", cleanPath, err)
 	}
 
-	// For large files, calculate hash asynchronously while parsing
-	// For small files, do it synchronously to avoid goroutine overhead
-	var hash string
+	// Calculate file hash for cache lookup and change detection
+	hash := strconv.FormatUint(uint64(crc32.Checksum(content, crcTable)), 16)
+	
+	// Check cache first - avoid expensive parsing if metadata is cached
+	if cachedMetadata, found := s.getCachedMetadata(cleanPath, hash); found {
+		// Track cache hit
+		if s.metrics != nil {
+			atomic.AddInt64(&s.metrics.CacheHits, 1)
+		}
+		
+		// Register all cached components with the registry
+		for _, component := range cachedMetadata.Components {
+			// Update file modification time to current scan time
+			updatedComponent := *component
+			updatedComponent.LastMod = info.ModTime()
+			updatedComponent.Hash = hash
+			s.registry.Register(&updatedComponent)
+		}
+		
+		// Track components found
+		if s.metrics != nil {
+			atomic.AddInt64(&s.metrics.ComponentsFound, int64(len(cachedMetadata.Components)))
+		}
+		
+		return nil
+	}
+
+	// Track cache miss
+	if s.metrics != nil {
+		atomic.AddInt64(&s.metrics.CacheMisses, 1)
+	}
+
+	// Cache miss - perform expensive parsing and cache the results
+	var components []*types.ComponentInfo
 	var astFile *ast.File
 	
-	if info.Size() > 64*1024 {
-		// Large files: async hash calculation during AST parsing
-		hashChan := make(chan HashResult, 1)
-		go func() {
-			hash := fmt.Sprintf("%x", crc32.ChecksumIEEE(content))
-			hashChan <- HashResult{hash: hash, err: nil}
-		}()
-		
-		// Parse AST while hash calculates
-		astFile, err = parser.ParseFile(s.fileSet, cleanPath, content, parser.ParseComments)
-		
-		// Wait for hash calculation
-		hashResult := <-hashChan
-		if hashResult.err != nil {
-			return fmt.Errorf("calculating file hash for %s: %w", cleanPath, hashResult.err)
-		}
-		hash = hashResult.hash
-	} else {
-		// Small files: synchronous processing (faster for small files)
-		hash = fmt.Sprintf("%x", crc32.ChecksumIEEE(content))
-		astFile, err = parser.ParseFile(s.fileSet, cleanPath, content, parser.ParseComments)
-	}
-
+	// Parse AST for component extraction
+	astFile, err = parser.ParseFile(s.fileSet, cleanPath, content, parser.ParseComments)
 	if err != nil {
 		// If it's a .templ file that can't be parsed as Go, try to extract components manually
-		return s.parseTemplFile(cleanPath, content, hash, info.ModTime())
+		components, err = s.parseTemplFileWithComponents(cleanPath, content, hash, info.ModTime())
+		if err != nil {
+			return err
+		}
+	} else {
+		// Extract components from AST
+		components, err = s.extractFromASTWithComponents(cleanPath, astFile, hash, info.ModTime())
+		if err != nil {
+			return err
+		}
 	}
 
-	// Extract components from AST
-	return s.extractFromAST(cleanPath, astFile, hash, info.ModTime())
+	// Cache the parsed components for future scans
+	s.setCachedMetadata(cleanPath, hash, components)
+
+	// Register all components with the registry
+	for _, component := range components {
+		s.registry.Register(component)
+	}
+	
+	// Track components found
+	if s.metrics != nil {
+		atomic.AddInt64(&s.metrics.ComponentsFound, int64(len(components)))
+	}
+
+	return nil
 }
 
 // readFileStreaming removed - replaced by readFileStreamingOptimized
@@ -478,7 +818,9 @@ func (s *ComponentScanner) readFileStreamingOptimized(file *os.File, size int64,
 
 // Backward compatibility method removed - unused
 
-func (s *ComponentScanner) parseTemplFile(path string, content []byte, hash string, modTime time.Time) error {
+// parseTemplFileWithComponents extracts components from templ files and returns them
+func (s *ComponentScanner) parseTemplFileWithComponents(path string, content []byte, hash string, modTime time.Time) ([]*types.ComponentInfo, error) {
+	var components []*types.ComponentInfo
 	lines := strings.Split(string(content), "\n")
 	packageName := ""
 
@@ -517,15 +859,33 @@ func (s *ComponentScanner) parseTemplFile(path string, content []byte, hash stri
 					Dependencies: []string{},
 				}
 
-				s.registry.Register(component)
+				components = append(components, component)
 			}
 		}
 	}
 
+	return components, nil
+}
+
+// parseTemplFile provides backward compatibility - delegates to the new component-returning version
+func (s *ComponentScanner) parseTemplFile(path string, content []byte, hash string, modTime time.Time) error {
+	components, err := s.parseTemplFileWithComponents(path, content, hash, modTime)
+	if err != nil {
+		return err
+	}
+	
+	// Register all components
+	for _, component := range components {
+		s.registry.Register(component)
+	}
+	
 	return nil
 }
 
-func (s *ComponentScanner) extractFromAST(path string, astFile *ast.File, hash string, modTime time.Time) error {
+// extractFromASTWithComponents extracts components from AST and returns them
+func (s *ComponentScanner) extractFromASTWithComponents(path string, astFile *ast.File, hash string, modTime time.Time) ([]*types.ComponentInfo, error) {
+	var components []*types.ComponentInfo
+	
 	// Walk the AST to find function declarations that might be templ components
 	ast.Inspect(astFile, func(n ast.Node) bool {
 		switch node := n.(type) {
@@ -544,13 +904,28 @@ func (s *ComponentScanner) extractFromAST(path string, astFile *ast.File, hash s
 						Dependencies: []string{},
 					}
 
-					s.registry.Register(component)
+					components = append(components, component)
 				}
 			}
 		}
 		return true
 	})
 
+	return components, nil
+}
+
+// extractFromAST provides backward compatibility - delegates to the new component-returning version
+func (s *ComponentScanner) extractFromAST(path string, astFile *ast.File, hash string, modTime time.Time) error {
+	components, err := s.extractFromASTWithComponents(path, astFile, hash, modTime)
+	if err != nil {
+		return err
+	}
+	
+	// Register all components
+	for _, component := range components {
+		s.registry.Register(component)
+	}
+	
 	return nil
 }
 
@@ -709,13 +1084,14 @@ func (s *ComponentScanner) validatePath(path string) (string, error) {
 	// Primary security check: ensure the path is within the current working directory
 	// This prevents directory traversal attacks that escape the working directory
 	if !strings.HasPrefix(absPath, cwd) {
-		return "", fmt.Errorf("path %s is outside current working directory", path)
+		return "", errors.ErrPathTraversal(path).WithContext("working_directory", cwd)
 	}
 
 	// Secondary security check: reject paths with suspicious patterns
 	// This catches directory traversal attempts that stay within the working directory
 	if strings.Contains(cleanPath, "..") {
-		return "", fmt.Errorf("path contains directory traversal: %s", path)
+		return "", errors.ErrPathTraversal(path).
+			WithContext("pattern", "contains '..' traversal")
 	}
 
 	return cleanPath, nil

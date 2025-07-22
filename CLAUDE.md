@@ -12,11 +12,12 @@ Templar is a rapid prototyping CLI tool for Go templ that provides browser previ
 
 - **CLI Commands (`cmd/`)**: Cobra-based commands (init, serve, list, build, watch, preview) that orchestrate the core functionality
 - **Component Registry (`internal/registry/`)**: Central registry for component discovery, metadata management, and event broadcasting
-- **Component Scanner (`internal/scanner/`)**: File system scanner that discovers and analyzes templ components, extracting metadata and dependencies
-- **Build Pipeline (`internal/build/`)**: Multi-worker build system with LRU caching, goroutine lifecycle management, and error collection
+- **Component Scanner (`internal/scanner/`)**: File system scanner that discovers and analyzes templ components, extracting metadata and dependencies with CRC32 hash-based change detection
+- **Build Pipeline (`internal/build/`)**: Multi-worker build system with LRU caching, object pooling, and comprehensive error collection
 - **Development Server (`internal/server/`)**: HTTP server with middleware, WebSocket support, and security-hardened origin validation
 - **File Watcher (`internal/watcher/`)**: Real-time file system monitoring with debouncing and recursive directory watching
 - **Configuration System (`internal/config/`)**: Viper-based configuration with validation and security checks
+- **Error Handling Framework (`internal/errors/`)**: Standardized error types with categorization, context information, and debugging utilities
 
 ### Data Flow
 
@@ -34,6 +35,7 @@ The codebase implements defense-in-depth security:
 - **WebSocket origin validation** with scheme/host checking and CSRF protection
 - **Input validation** across all user-facing interfaces
 - **Race condition protection** with proper mutex usage and goroutine lifecycle management
+- **Standardized error handling** with security-focused error types and context preservation
 
 ## Development Environment
 
@@ -238,12 +240,22 @@ examples/                # Generated template examples
 
 - **Cobra CLI structure**: Each command in separate file with comprehensive validation
 - **Event-driven architecture**: Registry broadcasts changes, components subscribe
+- **Interface-based architecture**: Clean abstractions in `internal/interfaces/` for dependency injection and testing
 - **Worker pool pattern**: Build pipeline uses configurable worker pools with resource limits
 - **LRU caching**: O(1) cache eviction with doubly-linked lists and memory mapping for large files
 - **Object pooling**: Memory optimization with BuildResult, BuildTask, and buffer pools
 - **Security-first design**: Defense-in-depth with input validation, allowlisting, and origin checking
+- **Standardized error handling**: Consistent error types with categorization and context enhancement
 - **Property-based testing**: Thread safety validation with gopter framework (100+ test cases)
 - **Performance optimization**: 30M+ operations/second with concurrent processing
+
+### Core Interfaces
+
+The system uses well-defined interfaces for major components:
+- **ComponentRegistry**: Manages component information with thread-safe operations and change notifications
+- **ComponentScanner**: Discovers and analyzes templ components with parallel processing capabilities
+- **BuildPipeline**: Processes components through configurable worker pools with caching
+- **FileFilter**: Provides flexible file filtering for scanning and watching operations
 
 ## CI/CD Pipeline
 
@@ -281,12 +293,21 @@ make ci                  # Full CI workflow locally
 
 ## Error Handling and Debugging
 
+### Standardized Error Framework
+
+- **TemplarError**: Structured error type with categorization (Validation, Security, I/O, Network, Build, Config, Internal)
+- **ValidationError interface**: Field-specific validation errors with suggestions and context
+- **Error codes**: Standardized error identification across packages (e.g., `ERR_PATH_TRAVERSAL`, `ERR_BUILD_FAILED`)
+- **Context enhancement**: Component, file path, line/column information for debugging
+- **Error wrapping utilities**: Type-specific wrappers (`WrapBuild`, `WrapSecurity`, `WrapValidation`)
+
 ### Error Collection System
 
-- **Structured error collection**: Component, file, line, column, severity
-- **HTML error overlay**: Development-friendly error display
+- **Enhanced ErrorCollector**: Supports both build errors and general errors with thread-safe operations
+- **HTML error overlay**: Development-friendly error display with severity-based coloring
 - **Build error parsing**: Integration with templ compiler error output
 - **Race-safe error collection**: Mutex-protected error aggregation
+- **Error enhancement**: Automatic context addition with component and file information
 
 ### Debugging Tools
 
@@ -306,15 +327,26 @@ go test -v -tags=property ./internal/errors  # Property-based tests
 ### Performance Characteristics
 
 The codebase achieves high performance through:
-- **BuildPipeline**: 30M+ operations/second
+- **BuildPipeline**: 30M+ operations/second with concurrent worker pools
 - **Cache performance**: 100x improvement (4.7ms → 61µs with caching)
 - **Worker pools**: 5.9M operations/second with proper resource management
-- **Memory mapping**: Optimized file I/O for components >64KB
-- **Object pooling**: Reduced memory allocations in hot paths
+- **Memory mapping**: Optimized file I/O for components >64KB using `syscall.Mmap`
+- **Object pooling**: Reduced memory allocations in hot paths (BuildResult, BuildTask, buffer pools)
+- **CRC32 hashing**: Castagnoli algorithm for fast file change detection
+- **Async processing**: Parallel hash calculation and AST parsing for large files
 
 The development environment includes pprof and graphviz for performance analysis and profiling.
 
 ## Recent Development Context
+
+### Error Handling Standardization (2025-07-21)
+
+Recently completed comprehensive error handling framework standardization:
+- **TemplarError interface**: Structured error types with categorization, error codes, and context information
+- **ValidationError interface**: Field-specific validation errors with suggestions and debugging context
+- **Error utility package**: Comprehensive wrapper functions and error enhancement utilities
+- **Enhanced ErrorCollector**: Thread-safe collection supporting both build and general errors
+- **Standardized error patterns**: Applied across build pipeline, scanner, and core packages
 
 ### Test Coverage Status (2025-01-21)
 

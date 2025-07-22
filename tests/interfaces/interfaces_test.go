@@ -139,7 +139,7 @@ func TestBuildPipelineInterface(t *testing.T) {
 	reg := registry.NewComponentRegistry()
 
 	// Create concrete build pipeline
-	concretePipeline := build.NewBuildPipeline(2, reg)
+	concretePipeline := build.NewRefactoredBuildPipeline(2, reg)
 
 	// Create adapter and verify interface implementation
 	var iface interfaces.BuildPipeline = adapters.NewBuildPipelineAdapter(concretePipeline)
@@ -195,7 +195,7 @@ func TestFullInterfaceIntegration(t *testing.T) {
 	defer concreteWatcher.Stop()
 
 	concreteScanner := scanner.NewComponentScanner(reg)
-	concretePipeline := build.NewBuildPipeline(2, reg)
+	concretePipeline := build.NewRefactoredBuildPipeline(2, reg)
 
 	// Create adapters
 	watcherAdapter := adapters.NewFileWatcherAdapter(concreteWatcher)
@@ -242,7 +242,7 @@ func TestInterfaceWorkflow(t *testing.T) {
 	}
 	defer concreteWatcher.Stop()
 
-	concretePipeline := build.NewBuildPipeline(2, reg)
+	concretePipeline := build.NewRefactoredBuildPipeline(2, reg)
 
 	// Use only interfaces from this point forward
 	var registry interfaces.ComponentRegistry = reg
@@ -317,7 +317,7 @@ func TestInterfaceWorkflow(t *testing.T) {
 // TestConcurrentInterfaceAccess tests concurrent access to interfaces
 func TestConcurrentInterfaceAccess(t *testing.T) {
 	reg := registry.NewComponentRegistry()
-	concretePipeline := build.NewBuildPipeline(4, reg)
+	concretePipeline := build.NewRefactoredBuildPipeline(4, reg)
 	pipelineAdapter := adapters.NewBuildPipelineAdapter(concretePipeline)
 
 	ctx := context.Background()

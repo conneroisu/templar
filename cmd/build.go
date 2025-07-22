@@ -12,9 +12,8 @@ import (
 	"time"
 
 	"github.com/conneroisu/templar/internal/config"
+	"github.com/conneroisu/templar/internal/di"
 	"github.com/conneroisu/templar/internal/monitoring"
-	"github.com/conneroisu/templar/internal/registry"
-	"github.com/conneroisu/templar/internal/scanner"
 	"github.com/conneroisu/templar/internal/types"
 	"github.com/spf13/cobra"
 )
@@ -84,13 +83,31 @@ func runBuild(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		// Create component registry and scanner
-		componentRegistry := registry.NewComponentRegistry()
-		componentScanner := scanner.NewComponentScanner(componentRegistry)
+		// Initialize dependency injection container
+		container := di.NewServiceContainer(cfg)
+		if err := container.Initialize(); err != nil {
+			return fmt.Errorf("failed to initialize service container: %w", err)
+		}
+		defer func() {
+			if shutdownErr := container.Shutdown(ctx); shutdownErr != nil {
+				fmt.Printf("Warning: Error during container shutdown: %v\n", shutdownErr)
+			}
+		}()
+
+		// Get services from container
+		componentRegistry, err := container.GetRegistry()
+		if err != nil {
+			return fmt.Errorf("failed to get component registry: %w", err)
+		}
+
+		componentScanner, err := container.GetScanner()
+		if err != nil {
+			return fmt.Errorf("failed to get component scanner: %w", err)
+		}
 
 		// Scan all configured paths
 		fmt.Println("📁 Scanning for components...")
-		err := monitoring.TrackOperation(ctx, "build", "scan_components", func(ctx context.Context) error {
+		err = monitoring.TrackOperation(ctx, "build", "scan_components", func(ctx context.Context) error {
 			for _, scanPath := range cfg.Components.ScanPaths {
 				if err := componentScanner.ScanDirectory(scanPath); err != nil {
 					fmt.Fprintf(os.Stderr, "Warning: failed to scan directory %s: %v\n", scanPath, err)

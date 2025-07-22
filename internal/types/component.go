@@ -26,6 +26,14 @@ type ComponentInfo struct {
 	Dependencies []string
 	// Metadata stores plugin-specific or custom component information
 	Metadata map[string]interface{}
+	// IsExported indicates if the component function is exported (public)
+	IsExported bool
+	// IsRenderable indicates if the component can be rendered independently
+	IsRenderable bool
+	// Description provides human-readable documentation for the component
+	Description string
+	// Examples contains sample usage scenarios for the component
+	Examples []ComponentExample
 }
 
 // ParameterInfo describes a component parameter extracted from the templ
@@ -39,6 +47,20 @@ type ParameterInfo struct {
 	Optional bool
 	// Default stores the default value if one is specified (may be nil)
 	Default interface{}
+	// Description provides documentation for the parameter
+	Description string
+}
+
+// ComponentExample represents a usage example for a component
+type ComponentExample struct {
+	// Name is the example identifier
+	Name string
+	// Description explains what this example demonstrates
+	Description string
+	// Props contains the example parameter values
+	Props map[string]interface{}
+	// Code contains the example templ code
+	Code string
 }
 
 // EventType represents the type of component change event

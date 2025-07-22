@@ -210,3 +210,217 @@ func TestLoadWithEnvironment(t *testing.T) {
 	// For now, we'll just verify the config loads successfully
 	assert.NotNil(t, config)
 }
+
+// TestLoadDefaults tests the loadDefaults function
+func TestLoadDefaults(t *testing.T) {
+	tests := []struct {
+		name     string
+		config   Config
+		expected Config
+	}{
+		{
+			name:   "empty config gets defaults",
+			config: Config{},
+			expected: Config{
+				Build: BuildConfig{
+					Command:  "templ generate",
+					Watch:    []string{"**/*.templ"},
+					Ignore:   []string{"node_modules", ".git"},
+					CacheDir: ".templar/cache",
+				},
+				Server: ServerConfig{
+					Auth: AuthConfig{
+						Mode:            "none",
+						Enabled:         false,
+						LocalhostBypass: true,
+						RequireAuth:     false,
+					},
+				},
+				Preview: PreviewConfig{
+					MockData:  "auto",
+					Wrapper:   "layout.templ",
+					AutoProps: true,
+				},
+				Components: ComponentsConfig{
+					ExcludePatterns: []string{"*_test.templ", "*.bak"},
+				},
+				Development: DevelopmentConfig{
+					HotReload:    true,
+					CSSInjection: true,
+					ErrorOverlay: true,
+				},
+				Plugins: PluginsConfig{
+					DiscoveryPaths:   []string{"./plugins", "~/.templar/plugins"},
+					Configurations:   make(map[string]PluginConfigMap),
+				},
+				Monitoring: MonitoringConfig{
+					Enabled:       true,
+					LogLevel:      "info",
+					LogFormat:     "json",
+					MetricsPath:   "./logs/metrics.json",
+					HTTPPort:      8081,
+					AlertsEnabled: false,
+				},
+			},
+		},
+		{
+			name: "partially filled config preserves existing values",
+			config: Config{
+				Build: BuildConfig{
+					Command: "custom build command",
+				},
+				Preview: PreviewConfig{
+					MockData: "custom",
+				},
+			},
+			expected: Config{
+				Build: BuildConfig{
+					Command:  "custom build command", // Preserved
+					Watch:    []string{"**/*.templ"},
+					Ignore:   []string{"node_modules", ".git"},
+					CacheDir: ".templar/cache",
+				},
+				Server: ServerConfig{
+					Auth: AuthConfig{
+						Mode:            "none",
+						Enabled:         false,
+						LocalhostBypass: true,
+						RequireAuth:     false,
+					},
+				},
+				Preview: PreviewConfig{
+					MockData:  "custom", // Preserved
+					Wrapper:   "layout.templ",
+					AutoProps: true,
+				},
+				Components: ComponentsConfig{
+					ExcludePatterns: []string{"*_test.templ", "*.bak"},
+				},
+				Development: DevelopmentConfig{
+					HotReload:    true,
+					CSSInjection: true,
+					ErrorOverlay: true,
+				},
+				Plugins: PluginsConfig{
+					DiscoveryPaths:   []string{"./plugins", "~/.templar/plugins"},
+					Configurations:   make(map[string]PluginConfigMap),
+				},
+				Monitoring: MonitoringConfig{
+					Enabled:       true,
+					LogLevel:      "info",
+					LogFormat:     "json",
+					MetricsPath:   "./logs/metrics.json",
+					HTTPPort:      8081,
+					AlertsEnabled: false,
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Reset viper state
+			viper.Reset()
+			
+			loadDefaults(&tt.config)
+			
+			assert.Equal(t, tt.expected.Build, tt.config.Build)
+			assert.Equal(t, tt.expected.Server.Auth, tt.config.Server.Auth)
+			assert.Equal(t, tt.expected.Preview, tt.config.Preview)
+			assert.Equal(t, tt.expected.Components, tt.config.Components)
+			assert.Equal(t, tt.expected.Development, tt.config.Development)
+			assert.Equal(t, tt.expected.Plugins.DiscoveryPaths, tt.config.Plugins.DiscoveryPaths)
+			assert.NotNil(t, tt.config.Plugins.Configurations)
+			assert.Equal(t, tt.expected.Monitoring, tt.config.Monitoring)
+		})
+	}
+}
+
+// TestApplyOverrides tests the applyOverrides function
+func TestApplyOverrides(t *testing.T) {
+	tests := []struct {
+		name        string
+		viperSetup  func()
+		inputConfig Config
+		expected    func(*Config)
+	}{
+		{
+			name: "scan paths override via viper",
+			viperSetup: func() {
+				viper.Reset()
+				viper.Set("components.scan_paths", []string{"./custom", "./override"})
+			},
+			inputConfig: Config{},
+			expected: func(c *Config) {
+				assert.Equal(t, []string{"./custom", "./override"}, c.Components.ScanPaths)
+			},
+		},
+		{
+			name: "development settings override via viper",
+			viperSetup: func() {
+				viper.Reset()
+				viper.Set("development.hot_reload", false)
+				viper.Set("development.css_injection", false)
+				viper.Set("development.error_overlay", false)
+			},
+			inputConfig: Config{},
+			expected: func(c *Config) {
+				assert.False(t, c.Development.HotReload)
+				assert.False(t, c.Development.CSSInjection)
+				assert.False(t, c.Development.ErrorOverlay)
+			},
+		},
+		{
+			name: "no-open flag override",
+			viperSetup: func() {
+				viper.Reset()
+				viper.Set("server.no-open", true)
+			},
+			inputConfig: Config{
+				Server: ServerConfig{Open: true},
+			},
+			expected: func(c *Config) {
+				assert.False(t, c.Server.Open)
+			},
+		},
+		{
+			name: "monitoring config override via viper",
+			viperSetup: func() {
+				viper.Reset()
+				viper.Set("monitoring.enabled", false)
+				viper.Set("monitoring.log_level", "debug")
+				viper.Set("monitoring.http_port", 9000)
+			},
+			inputConfig: Config{},
+			expected: func(c *Config) {
+				assert.False(t, c.Monitoring.Enabled)
+				assert.Equal(t, "debug", c.Monitoring.LogLevel)
+				assert.Equal(t, 9000, c.Monitoring.HTTPPort)
+			},
+		},
+		{
+			name: "plugin config override via viper",
+			viperSetup: func() {
+				viper.Reset()
+				viper.Set("plugins.enabled", []string{"plugin1", "plugin2"})
+				viper.Set("plugins.disabled", []string{"plugin3"})
+			},
+			inputConfig: Config{},
+			expected: func(c *Config) {
+				assert.Equal(t, []string{"plugin1", "plugin2"}, c.Plugins.Enabled)
+				assert.Equal(t, []string{"plugin3"}, c.Plugins.Disabled)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.viperSetup()
+			
+			config := tt.inputConfig
+			applyOverrides(&config)
+			
+			tt.expected(&config)
+		})
+	}
+}

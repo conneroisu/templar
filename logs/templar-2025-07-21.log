@@ -1158,3 +1158,119 @@
 {"time":"2025-07-21T16:05:34.032390665-05:00","level":"INFO","msg":"HTTP server started","component":"monitor","addr":"localhost:8081"}
 {"time":"2025-07-21T16:05:34.032393905-05:00","level":"INFO","msg":"Monitor started successfully","component":"monitor"}
 {"time":"2025-07-21T16:05:34.036472354-05:00","level":"ERROR","msg":"HTTP server error","component":"monitor","error":"listen tcp 127.0.0.1:8081: bind: address already in use","error_type":"*net.OpError"}
+{"time":"2025-07-21T16:16:26.016379203-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"component_registry","critical":true}
+{"time":"2025-07-21T16:16:26.01663429-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"templ_binary","critical":true}
+{"time":"2025-07-21T16:16:26.016642096-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"cache_directory","critical":false}
+{"time":"2025-07-21T16:16:26.01664556-05:00","level":"INFO","msg":"Starting monitor","component":"monitor","metrics_enabled":true,"health_enabled":true,"http_enabled":true}
+{"time":"2025-07-21T16:16:26.016652135-05:00","level":"INFO","msg":"Metrics collector started","component":"monitor"}
+{"time":"2025-07-21T16:16:26.016655995-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"filesystem","critical":true}
+{"time":"2025-07-21T16:16:26.016659184-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"memory","critical":true}
+{"time":"2025-07-21T16:16:26.016662292-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"goroutines","critical":false}
+{"time":"2025-07-21T16:16:26.016666462-05:00","level":"INFO","msg":"Health monitor started","component":"health_monitor","interval":30000000000}
+{"time":"2025-07-21T16:16:26.016669996-05:00","level":"INFO","msg":"Health monitor started","component":"monitor"}
+{"time":"2025-07-21T16:16:26.016695714-05:00","level":"INFO","msg":"HTTP server started","component":"monitor","addr":"localhost:8081"}
+{"time":"2025-07-21T16:16:26.016698592-05:00","level":"INFO","msg":"Monitor started successfully","component":"monitor"}
+{"time":"2025-07-21T16:16:26.118609167-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"component_registry","critical":true}
+{"time":"2025-07-21T16:16:26.118635509-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"templ_binary","critical":true}
+{"time":"2025-07-21T16:16:26.118638718-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"cache_directory","critical":false}
+{"time":"2025-07-21T16:16:26.118641261-05:00","level":"INFO","msg":"Starting monitor","component":"monitor","metrics_enabled":true,"health_enabled":true,"http_enabled":true}
+{"time":"2025-07-21T16:16:26.118653122-05:00","level":"INFO","msg":"Metrics collector started","component":"monitor"}
+{"time":"2025-07-21T16:16:26.118655871-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"filesystem","critical":true}
+{"time":"2025-07-21T16:16:26.118662605-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"memory","critical":true}
+{"time":"2025-07-21T16:16:26.118666157-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"goroutines","critical":false}
+{"time":"2025-07-21T16:16:26.118688329-05:00","level":"INFO","msg":"Health monitor started","component":"health_monitor","interval":30000000000}
+{"time":"2025-07-21T16:16:26.118692474-05:00","level":"INFO","msg":"Health monitor started","component":"monitor"}
+{"time":"2025-07-21T16:16:26.118697631-05:00","level":"INFO","msg":"HTTP server started","component":"monitor","addr":"localhost:8081"}
+{"time":"2025-07-21T16:16:26.11870037-05:00","level":"INFO","msg":"Monitor started successfully","component":"monitor"}
+{"time":"2025-07-21T16:16:26.119272662-05:00","level":"ERROR","msg":"HTTP server error","component":"monitor","error":"listen tcp 127.0.0.1:8081: bind: address already in use","error_type":"*net.OpError"}
+{"time":"2025-07-21T16:16:26.220024294-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"component_registry","critical":true}
+{"time":"2025-07-21T16:16:26.220051011-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"templ_binary","critical":true}
+{"time":"2025-07-21T16:16:26.220056134-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"cache_directory","critical":false}
+{"time":"2025-07-21T16:16:26.220067785-05:00","level":"INFO","msg":"Starting monitor","component":"monitor","metrics_enabled":true,"health_enabled":true,"http_enabled":true}
+{"time":"2025-07-21T16:16:26.220077809-05:00","level":"INFO","msg":"Metrics collector started","component":"monitor"}
+{"time":"2025-07-21T16:16:26.220082288-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"filesystem","critical":true}
+{"time":"2025-07-21T16:16:26.220086414-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"memory","critical":true}
+{"time":"2025-07-21T16:16:26.220090207-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"goroutines","critical":false}
+{"time":"2025-07-21T16:16:26.220096878-05:00","level":"INFO","msg":"Health monitor started","component":"health_monitor","interval":30000000000}
+{"time":"2025-07-21T16:16:26.220101293-05:00","level":"INFO","msg":"Health monitor started","component":"monitor"}
+{"time":"2025-07-21T16:16:26.220106587-05:00","level":"INFO","msg":"HTTP server started","component":"monitor","addr":"localhost:8081"}
+{"time":"2025-07-21T16:16:26.220109877-05:00","level":"INFO","msg":"Monitor started successfully","component":"monitor"}
+{"time":"2025-07-21T16:16:26.220623465-05:00","level":"ERROR","msg":"HTTP server error","component":"monitor","error":"listen tcp 127.0.0.1:8081: bind: address already in use","error_type":"*net.OpError"}
+{"time":"2025-07-21T16:16:26.522413133-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"component_registry","critical":true}
+{"time":"2025-07-21T16:16:26.52243861-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"templ_binary","critical":true}
+{"time":"2025-07-21T16:16:26.522441826-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"cache_directory","critical":false}
+{"time":"2025-07-21T16:16:26.522444277-05:00","level":"INFO","msg":"Starting monitor","component":"monitor","metrics_enabled":true,"health_enabled":true,"http_enabled":true}
+{"time":"2025-07-21T16:16:26.522449107-05:00","level":"INFO","msg":"Metrics collector started","component":"monitor"}
+{"time":"2025-07-21T16:16:26.522451756-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"filesystem","critical":true}
+{"time":"2025-07-21T16:16:26.522454151-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"memory","critical":true}
+{"time":"2025-07-21T16:16:26.52245647-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"goroutines","critical":false}
+{"time":"2025-07-21T16:16:26.522459369-05:00","level":"INFO","msg":"Health monitor started","component":"health_monitor","interval":30000000000}
+{"time":"2025-07-21T16:16:26.522462121-05:00","level":"INFO","msg":"Health monitor started","component":"monitor"}
+{"time":"2025-07-21T16:16:26.522465155-05:00","level":"INFO","msg":"HTTP server started","component":"monitor","addr":"localhost:8081"}
+{"time":"2025-07-21T16:16:26.522467121-05:00","level":"INFO","msg":"Monitor started successfully","component":"monitor"}
+{"time":"2025-07-21T16:16:26.523117693-05:00","level":"ERROR","msg":"HTTP server error","component":"monitor","error":"listen tcp 127.0.0.1:8081: bind: address already in use","error_type":"*net.OpError"}
+{"time":"2025-07-21T16:16:26.624436967-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"component_registry","critical":true}
+{"time":"2025-07-21T16:16:26.62446638-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"templ_binary","critical":true}
+{"time":"2025-07-21T16:16:26.624471464-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"cache_directory","critical":false}
+{"time":"2025-07-21T16:16:26.624481819-05:00","level":"INFO","msg":"Starting monitor","component":"monitor","metrics_enabled":true,"health_enabled":true,"http_enabled":true}
+{"time":"2025-07-21T16:16:26.624504298-05:00","level":"INFO","msg":"Metrics collector started","component":"monitor"}
+{"time":"2025-07-21T16:16:26.624509388-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"filesystem","critical":true}
+{"time":"2025-07-21T16:16:26.624515567-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"memory","critical":true}
+{"time":"2025-07-21T16:16:26.624519836-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"goroutines","critical":false}
+{"time":"2025-07-21T16:16:26.624524733-05:00","level":"INFO","msg":"Health monitor started","component":"health_monitor","interval":30000000000}
+{"time":"2025-07-21T16:16:26.624529298-05:00","level":"INFO","msg":"Health monitor started","component":"monitor"}
+{"time":"2025-07-21T16:16:26.624534223-05:00","level":"INFO","msg":"HTTP server started","component":"monitor","addr":"localhost:8081"}
+{"time":"2025-07-21T16:16:26.624537629-05:00","level":"INFO","msg":"Monitor started successfully","component":"monitor"}
+{"time":"2025-07-21T16:16:26.625728766-05:00","level":"ERROR","msg":"HTTP server error","component":"monitor","error":"listen tcp 127.0.0.1:8081: bind: address already in use","error_type":"*net.OpError"}
+{"time":"2025-07-21T16:16:26.827435815-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"component_registry","critical":true}
+{"time":"2025-07-21T16:16:26.827469241-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"templ_binary","critical":true}
+{"time":"2025-07-21T16:16:26.827474613-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"cache_directory","critical":false}
+{"time":"2025-07-21T16:16:26.827479453-05:00","level":"INFO","msg":"Starting monitor","component":"monitor","metrics_enabled":true,"health_enabled":true,"http_enabled":true}
+{"time":"2025-07-21T16:16:26.827492149-05:00","level":"INFO","msg":"Metrics collector started","component":"monitor"}
+{"time":"2025-07-21T16:16:26.827496611-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"filesystem","critical":true}
+{"time":"2025-07-21T16:16:26.827500229-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"memory","critical":true}
+{"time":"2025-07-21T16:16:26.827504217-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"goroutines","critical":false}
+{"time":"2025-07-21T16:16:26.827517395-05:00","level":"INFO","msg":"Health monitor started","component":"health_monitor","interval":30000000000}
+{"time":"2025-07-21T16:16:26.827523646-05:00","level":"INFO","msg":"Health monitor started","component":"monitor"}
+{"time":"2025-07-21T16:16:26.82752893-05:00","level":"INFO","msg":"HTTP server started","component":"monitor","addr":"localhost:8081"}
+{"time":"2025-07-21T16:16:26.827532241-05:00","level":"INFO","msg":"Monitor started successfully","component":"monitor"}
+{"time":"2025-07-21T16:16:26.828245229-05:00","level":"ERROR","msg":"HTTP server error","component":"monitor","error":"listen tcp 127.0.0.1:8081: bind: address already in use","error_type":"*net.OpError"}
+{"time":"2025-07-21T16:16:26.878806049-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"component_registry","critical":true}
+{"time":"2025-07-21T16:16:26.878835401-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"templ_binary","critical":true}
+{"time":"2025-07-21T16:16:26.878840469-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"cache_directory","critical":false}
+{"time":"2025-07-21T16:16:26.878844629-05:00","level":"INFO","msg":"Starting monitor","component":"monitor","metrics_enabled":true,"health_enabled":true,"http_enabled":true}
+{"time":"2025-07-21T16:16:26.878857397-05:00","level":"INFO","msg":"Metrics collector started","component":"monitor"}
+{"time":"2025-07-21T16:16:26.878862655-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"filesystem","critical":true}
+{"time":"2025-07-21T16:16:26.878867007-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"memory","critical":true}
+{"time":"2025-07-21T16:16:26.878870948-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"goroutines","critical":false}
+{"time":"2025-07-21T16:16:26.878875831-05:00","level":"INFO","msg":"Health monitor started","component":"health_monitor","interval":30000000000}
+{"time":"2025-07-21T16:16:26.878880073-05:00","level":"INFO","msg":"Health monitor started","component":"monitor"}
+{"time":"2025-07-21T16:16:26.878893171-05:00","level":"INFO","msg":"HTTP server started","component":"monitor","addr":"localhost:8081"}
+{"time":"2025-07-21T16:16:26.878898057-05:00","level":"INFO","msg":"Monitor started successfully","component":"monitor"}
+{"time":"2025-07-21T16:16:26.879936477-05:00","level":"ERROR","msg":"HTTP server error","component":"monitor","error":"listen tcp 127.0.0.1:8081: bind: address already in use","error_type":"*net.OpError"}
+{"time":"2025-07-21T16:16:26.930262114-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"component_registry","critical":true}
+{"time":"2025-07-21T16:16:26.930291735-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"templ_binary","critical":true}
+{"time":"2025-07-21T16:16:26.930294813-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"cache_directory","critical":false}
+{"time":"2025-07-21T16:16:26.930297346-05:00","level":"INFO","msg":"Starting monitor","component":"monitor","metrics_enabled":true,"health_enabled":true,"http_enabled":true}
+{"time":"2025-07-21T16:16:26.930305171-05:00","level":"INFO","msg":"Metrics collector started","component":"monitor"}
+{"time":"2025-07-21T16:16:26.930307966-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"filesystem","critical":true}
+{"time":"2025-07-21T16:16:26.930310339-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"memory","critical":true}
+{"time":"2025-07-21T16:16:26.930312604-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"goroutines","critical":false}
+{"time":"2025-07-21T16:16:26.930315381-05:00","level":"INFO","msg":"Health monitor started","component":"health_monitor","interval":30000000000}
+{"time":"2025-07-21T16:16:26.930317905-05:00","level":"INFO","msg":"Health monitor started","component":"monitor"}
+{"time":"2025-07-21T16:16:26.930322154-05:00","level":"INFO","msg":"HTTP server started","component":"monitor","addr":"localhost:8081"}
+{"time":"2025-07-21T16:16:26.930324252-05:00","level":"INFO","msg":"Monitor started successfully","component":"monitor"}
+{"time":"2025-07-21T16:16:26.930946615-05:00","level":"ERROR","msg":"HTTP server error","component":"monitor","error":"listen tcp 127.0.0.1:8081: bind: address already in use","error_type":"*net.OpError"}
+{"time":"2025-07-21T16:16:26.981944601-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"component_registry","critical":true}
+{"time":"2025-07-21T16:16:26.98197089-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"templ_binary","critical":true}
+{"time":"2025-07-21T16:16:26.981975772-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"cache_directory","critical":false}
+{"time":"2025-07-21T16:16:26.981979735-05:00","level":"INFO","msg":"Starting monitor","component":"monitor","metrics_enabled":true,"health_enabled":true,"http_enabled":true}
+{"time":"2025-07-21T16:16:26.981988334-05:00","level":"INFO","msg":"Metrics collector started","component":"monitor"}
+{"time":"2025-07-21T16:16:26.9819991-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"filesystem","critical":true}
+{"time":"2025-07-21T16:16:26.982003249-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"memory","critical":true}
+{"time":"2025-07-21T16:16:26.982007497-05:00","level":"INFO","msg":"Registered health check","component":"health_monitor","name":"goroutines","critical":false}
+{"time":"2025-07-21T16:16:26.982013617-05:00","level":"INFO","msg":"Health monitor started","component":"health_monitor","interval":30000000000}
+{"time":"2025-07-21T16:16:26.982018193-05:00","level":"INFO","msg":"Health monitor started","component":"monitor"}
+{"time":"2025-07-21T16:16:26.982022931-05:00","level":"INFO","msg":"HTTP server started","component":"monitor","addr":"localhost:8081"}
+{"time":"2025-07-21T16:16:26.982026631-05:00","level":"INFO","msg":"Monitor started successfully","component":"monitor"}
+{"time":"2025-07-21T16:16:26.982634417-05:00","level":"ERROR","msg":"HTTP server error","component":"monitor","error":"listen tcp 127.0.0.1:8081: bind: address already in use","error_type":"*net.OpError"}

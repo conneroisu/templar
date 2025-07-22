@@ -2,6 +2,7 @@ package build
 
 import (
 	"sync"
+	"time"
 
 	"github.com/conneroisu/templar/internal/types"
 )
@@ -11,6 +12,8 @@ import (
 type ObjectPools struct {
 	buildResults  sync.Pool // Pool BuildResults - they're reused frequently
 	outputBuffers sync.Pool // Pool for output buffers with right-sized capacity
+	cacheEntries  sync.Pool // Pool for cache entries to reduce GC pressure
+	astResults    sync.Pool // Pool for AST parsing results
 }
 
 // NewObjectPools creates optimized object pools
@@ -25,6 +28,16 @@ func NewObjectPools() *ObjectPools {
 			New: func() interface{} {
 				// Right-size for typical templ output (2KB typical, with room to grow)
 				return make([]byte, 0, 4*1024)
+			},
+		},
+		cacheEntries: sync.Pool{
+			New: func() interface{} {
+				return &CacheEntry{}
+			},
+		},
+		astResults: sync.Pool{
+			New: func() interface{} {
+				return &ASTParseResult{}
 			},
 		},
 	}
@@ -87,6 +100,49 @@ func (p *ObjectPools) GetStringBuilder() *[]byte {
 // PutStringBuilder is a no-op (no pooling for small buffers)
 func (p *ObjectPools) PutStringBuilder(buffer *[]byte) {
 	// No-op: Small buffer allocation is faster than pooling overhead
+}
+
+// GetCacheEntry gets a CacheEntry from the pool
+func (p *ObjectPools) GetCacheEntry() *CacheEntry {
+	entry := p.cacheEntries.Get().(*CacheEntry)
+	// Reset all fields
+	entry.Key = ""
+	entry.Value = nil
+	entry.Hash = ""
+	entry.CreatedAt = time.Time{}
+	entry.AccessedAt = time.Time{}
+	entry.Size = 0
+	entry.ASTData = nil
+	entry.Metadata = nil
+	entry.prev = nil
+	entry.next = nil
+	return entry
+}
+
+// PutCacheEntry returns a CacheEntry to the pool
+func (p *ObjectPools) PutCacheEntry(entry *CacheEntry) {
+	if entry != nil {
+		p.cacheEntries.Put(entry)
+	}
+}
+
+// GetASTResult gets an ASTParseResult from the pool
+func (p *ObjectPools) GetASTResult() *ASTParseResult {
+	result := p.astResults.Get().(*ASTParseResult)
+	// Reset all fields
+	result.Component = nil
+	result.Parameters = result.Parameters[:0] // Keep capacity
+	result.Dependencies = result.Dependencies[:0] // Keep capacity
+	result.ParseTime = 0
+	result.CachedAt = time.Time{}
+	return result
+}
+
+// PutASTResult returns an ASTParseResult to the pool
+func (p *ObjectPools) PutASTResult(result *ASTParseResult) {
+	if result != nil {
+		p.astResults.Put(result)
+	}
 }
 
 // Note: Reset methods removed since we're no longer pooling small structs

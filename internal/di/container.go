@@ -3,12 +3,15 @@ package di
 import (
 	"context"
 	"fmt"
+	"log"
 	"reflect"
 	"sync"
 	"time"
 
+	"github.com/conneroisu/templar/internal/adapters"
 	"github.com/conneroisu/templar/internal/build"
 	"github.com/conneroisu/templar/internal/config"
+	"github.com/conneroisu/templar/internal/monitoring"
 	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/scanner"
 	"github.com/conneroisu/templar/internal/server"
@@ -108,6 +111,9 @@ type ServiceDefinition struct {
 
 // FactoryFunc creates a service instance using the dependency resolver
 type FactoryFunc func(resolver DependencyResolver) (interface{}, error)
+
+// TODO: Update ServiceContainer to fully implement interfaces.ServiceContainer interface
+// var _ interfaces.ServiceContainer = (*ServiceContainer)(nil)
 
 // DependencyResolver provides safe dependency resolution that prevents circular dependencies
 type DependencyResolver interface {
@@ -308,6 +314,11 @@ func (c *ServiceContainer) MustGet(name string) interface{} {
 	return instance
 }
 
+// GetRequired retrieves a service and panics if not found (interface compliance)
+func (c *ServiceContainer) GetRequired(name string) interface{} {
+	return c.MustGet(name)
+}
+
 // Has checks if a service is registered
 func (c *ServiceContainer) Has(name string) bool {
 	c.mu.RLock()
@@ -396,14 +407,14 @@ func (c *ServiceContainer) registerCoreServices() error {
 		return scanner.NewComponentScanner(reg.(*registry.ComponentRegistry)), nil
 	}).DependsOn("registry").WithTag("core")
 
-	// Register BuildPipeline
+	// Register BuildPipeline (using RefactoredBuildPipeline for interface compliance)
 	c.RegisterSingleton("buildPipeline", func(resolver DependencyResolver) (interface{}, error) {
 		reg, err := resolver.Get("registry")
 		if err != nil {
 			return nil, err
 		}
 		workers := 4 // Default worker count
-		return build.NewBuildPipeline(workers, reg.(*registry.ComponentRegistry)), nil
+		return build.NewRefactoredBuildPipeline(workers, reg.(*registry.ComponentRegistry)), nil
 	}).DependsOn("registry").WithTag("core")
 
 	// Register FileWatcher
@@ -411,10 +422,54 @@ func (c *ServiceContainer) registerCoreServices() error {
 		return watcher.NewFileWatcher(300 * time.Millisecond)
 	}).WithTag("core")
 
-	// Register PreviewServer
+	// Register PreviewServer with dependency injection
 	c.RegisterSingleton("server", func(resolver DependencyResolver) (interface{}, error) {
-		return server.New(c.config)
-	}).WithTag("core")
+		// Get required dependencies
+		reg, err := resolver.Get("registry")
+		if err != nil {
+			return nil, err
+		}
+		
+		watcherService, err := resolver.Get("watcher")
+		if err != nil {
+			return nil, err
+		}
+		
+		scannerService, err := resolver.Get("scanner")
+		if err != nil {
+			return nil, err
+		}
+		
+		buildPipelineService, err := resolver.Get("buildPipeline")
+		if err != nil {
+			return nil, err
+		}
+
+		// Initialize monitoring if enabled
+		var monitor *monitoring.TemplarMonitor
+		if c.config.Monitoring.Enabled {
+			templatorMonitor, err := monitoring.SetupTemplarMonitoring("")
+			if err != nil {
+				log.Printf("Warning: Failed to initialize monitoring: %v", err)
+			} else {
+				monitor = templatorMonitor
+			}
+		}
+
+		// Use adapters to convert concrete types to interfaces
+		fileWatcherInterface := adapters.NewFileWatcherAdapter(watcherService.(*watcher.FileWatcher))
+		scannerInterface := adapters.NewComponentScannerAdapter(scannerService.(*scanner.ComponentScanner))
+		buildPipelineInterface := adapters.NewBuildPipelineAdapter(buildPipelineService.(*build.RefactoredBuildPipeline))
+
+		return server.NewWithDependencies(
+			c.config,
+			reg.(*registry.ComponentRegistry),
+			fileWatcherInterface,
+			scannerInterface,
+			buildPipelineInterface,
+			monitor,
+		), nil
+	}).DependsOn("registry", "watcher", "scanner", "buildPipeline").WithTag("core")
 
 	return nil
 }
@@ -508,12 +563,12 @@ func (c *ServiceContainer) GetScanner() (*scanner.ComponentScanner, error) {
 }
 
 // GetBuildPipeline retrieves the build pipeline
-func (c *ServiceContainer) GetBuildPipeline() (*build.BuildPipeline, error) {
+func (c *ServiceContainer) GetBuildPipeline() (*build.RefactoredBuildPipeline, error) {
 	service, err := c.Get("buildPipeline")
 	if err != nil {
 		return nil, err
 	}
-	return service.(*build.BuildPipeline), nil
+	return service.(*build.RefactoredBuildPipeline), nil
 }
 
 // GetFileWatcher retrieves the file watcher

@@ -8,14 +8,13 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/conneroisu/templar/internal/registry"
+	"github.com/conneroisu/templar/internal/types"
 )
 
 // TestVisualRegressionSuite runs the comprehensive visual regression test suite
 func TestVisualRegressionSuite(t *testing.T) {
-	// Setup test environment
-	tempDir := t.TempDir()
-	goldenDir := filepath.Join(tempDir, "golden")
+	// Setup test environment with permanent golden directory
+	goldenDir := filepath.Join(".", "golden")
 
 	// Check if we're in update mode
 	updateMode := os.Getenv("UPDATE_GOLDEN") == "true"
@@ -24,12 +23,12 @@ func TestVisualRegressionSuite(t *testing.T) {
 	vrt := NewVisualRegressionTester(goldenDir, updateMode)
 
 	// Register test components
-	testComponents := []*registry.ComponentInfo{
+	testComponents := []*types.ComponentInfo{
 		{
 			Name:     "Button",
 			Package:  "components",
 			FilePath: "button.templ",
-			Parameters: []registry.ComponentParameter{
+			Parameters: []types.ParameterInfo{
 				{Name: "text", Type: "string"},
 				{Name: "variant", Type: "string"},
 				{Name: "disabled", Type: "bool"},
@@ -39,7 +38,7 @@ func TestVisualRegressionSuite(t *testing.T) {
 			Name:     "Card",
 			Package:  "components",
 			FilePath: "card.templ",
-			Parameters: []registry.ComponentParameter{
+			Parameters: []types.ParameterInfo{
 				{Name: "title", Type: "string"},
 				{Name: "content", Type: "string"},
 				{Name: "showBorder", Type: "bool"},
@@ -49,7 +48,7 @@ func TestVisualRegressionSuite(t *testing.T) {
 			Name:     "Layout",
 			Package:  "layouts",
 			FilePath: "layout.templ",
-			Parameters: []registry.ComponentParameter{
+			Parameters: []types.ParameterInfo{
 				{Name: "title", Type: "string"},
 			},
 		},
@@ -131,25 +130,24 @@ func TestVisualRegressionSuite(t *testing.T) {
 
 // TestVisualRegressionButtonVariants tests button component variants
 func TestVisualRegressionButtonVariants(t *testing.T) {
-	tempDir := t.TempDir()
-	goldenDir := filepath.Join(tempDir, "golden")
+	goldenDir := filepath.Join(".", "golden")
 	updateMode := os.Getenv("UPDATE_GOLDEN") == "true"
 
 	vrt := NewVisualRegressionTester(goldenDir, updateMode)
 
 	// Register button component
-	buttonComponent := &registry.ComponentInfo{
+	buttonComponent := &types.ComponentInfo{
 		Name:     "Button",
 		Package:  "components",
 		FilePath: "button.templ",
-		Parameters: []registry.ComponentParameter{
+		Parameters: []types.ParameterInfo{
 			{Name: "text", Type: "string"},
 			{Name: "variant", Type: "string"},
 			{Name: "size", Type: "string"},
 			{Name: "disabled", Type: "bool"},
 		},
 	}
-	vrt.RegisterComponents([]*registry.ComponentInfo{buttonComponent})
+	vrt.RegisterComponents([]*types.ComponentInfo{buttonComponent})
 
 	// Test different button variants
 	variants := []struct {
@@ -190,22 +188,21 @@ func TestVisualRegressionButtonVariants(t *testing.T) {
 
 // TestVisualRegressionEdgeCases tests edge cases in visual regression
 func TestVisualRegressionEdgeCases(t *testing.T) {
-	tempDir := t.TempDir()
-	goldenDir := filepath.Join(tempDir, "golden")
+	goldenDir := filepath.Join(".", "golden")
 	updateMode := os.Getenv("UPDATE_GOLDEN") == "true"
 
 	vrt := NewVisualRegressionTester(goldenDir, updateMode)
 
 	// Register test component
-	testComponent := &registry.ComponentInfo{
+	testComponent := &types.ComponentInfo{
 		Name:     "TestComponent",
 		Package:  "test",
 		FilePath: "test.templ",
-		Parameters: []registry.ComponentParameter{
+		Parameters: []types.ParameterInfo{
 			{Name: "content", Type: "string"},
 		},
 	}
-	vrt.RegisterComponents([]*registry.ComponentInfo{testComponent})
+	vrt.RegisterComponents([]*types.ComponentInfo{testComponent})
 
 	// Test edge cases
 	edgeCases := []TestCase{
@@ -252,8 +249,7 @@ func TestVisualRegressionEdgeCases(t *testing.T) {
 
 // TestVisualRegressionComponentNotFound tests behavior when component doesn't exist
 func TestVisualRegressionComponentNotFound(t *testing.T) {
-	tempDir := t.TempDir()
-	goldenDir := filepath.Join(tempDir, "golden")
+	goldenDir := filepath.Join(".", "golden")
 
 	vrt := NewVisualRegressionTester(goldenDir, false)
 
@@ -279,21 +275,20 @@ func TestVisualRegressionComponentNotFound(t *testing.T) {
 
 // BenchmarkVisualRegressionPerformance benchmarks visual regression testing performance
 func BenchmarkVisualRegressionPerformance(b *testing.B) {
-	tempDir := b.TempDir()
-	goldenDir := filepath.Join(tempDir, "golden")
+	goldenDir := filepath.Join(".", "golden")
 
 	vrt := NewVisualRegressionTester(goldenDir, true) // Update mode for benchmark
 
 	// Register test component
-	component := &registry.ComponentInfo{
+	component := &types.ComponentInfo{
 		Name:     "BenchComponent",
 		Package:  "bench",
 		FilePath: "bench.templ",
-		Parameters: []registry.ComponentParameter{
+		Parameters: []types.ParameterInfo{
 			{Name: "text", Type: "string"},
 		},
 	}
-	vrt.RegisterComponents([]*registry.ComponentInfo{component})
+	vrt.RegisterComponents([]*types.ComponentInfo{component})
 
 	testCase := TestCase{
 		Name:        "BenchTest",

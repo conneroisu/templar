@@ -48,48 +48,79 @@ func (be *BuildError) Error() string {
 	return fmt.Sprintf("%s:%d:%d: %s: %s", be.File, be.Line, be.Column, be.Severity, be.Message)
 }
 
-// ErrorCollector collects and manages build errors
+// ErrorCollector collects and manages build errors and general errors
 type ErrorCollector struct {
-	errors []BuildError
-	mutex  sync.RWMutex
+	buildErrors []BuildError
+	errors      []error
+	mutex       sync.RWMutex
 }
 
 // NewErrorCollector creates a new error collector
 func NewErrorCollector() *ErrorCollector {
 	return &ErrorCollector{
-		errors: make([]BuildError, 0),
+		buildErrors: make([]BuildError, 0),
+		errors:      make([]error, 0),
 	}
 }
 
-// Add adds an error to the collector
+// Add adds a build error to the collector
 func (ec *ErrorCollector) Add(err BuildError) {
 	ec.mutex.Lock()
 	defer ec.mutex.Unlock()
 	err.Timestamp = time.Now()
+	ec.buildErrors = append(ec.buildErrors, err)
+}
+
+// AddError adds a general error to the collector
+func (ec *ErrorCollector) AddError(err error) {
+	if err == nil {
+		return
+	}
+	ec.mutex.Lock()
+	defer ec.mutex.Unlock()
 	ec.errors = append(ec.errors, err)
 }
 
-// GetErrors returns all collected errors
+// GetErrors returns all collected build errors
 func (ec *ErrorCollector) GetErrors() []BuildError {
 	ec.mutex.RLock()
 	defer ec.mutex.RUnlock()
 	// Return a copy to avoid race conditions
-	result := make([]BuildError, len(ec.errors))
-	copy(result, ec.errors)
+	result := make([]BuildError, len(ec.buildErrors))
+	copy(result, ec.buildErrors)
 	return result
+}
+
+// GetAllErrors returns all collected errors (build and general)
+func (ec *ErrorCollector) GetAllErrors() []error {
+	ec.mutex.RLock()
+	defer ec.mutex.RUnlock()
+	
+	allErrors := make([]error, 0, len(ec.buildErrors)+len(ec.errors))
+	
+	// Convert build errors to general errors
+	for _, buildErr := range ec.buildErrors {
+		allErrors = append(allErrors, &buildErr)
+	}
+	
+	// Add general errors
+	allErrors = append(allErrors, ec.errors...)
+	
+	return allErrors
 }
 
 // HasErrors returns true if there are any errors
 func (ec *ErrorCollector) HasErrors() bool {
 	ec.mutex.RLock()
 	defer ec.mutex.RUnlock()
-	return len(ec.errors) > 0
+	return len(ec.buildErrors) > 0 || len(ec.errors) > 0
 }
 
 // Clear clears all errors
 func (ec *ErrorCollector) Clear() {
 	ec.mutex.Lock()
 	defer ec.mutex.Unlock()
+	ec.buildErrors = ec.buildErrors[:0]
 	ec.errors = ec.errors[:0]
 }
 
@@ -98,7 +129,7 @@ func (ec *ErrorCollector) GetErrorsByFile(file string) []BuildError {
 	ec.mutex.RLock()
 	defer ec.mutex.RUnlock()
 	var fileErrors []BuildError
-	for _, err := range ec.errors {
+	for _, err := range ec.buildErrors {
 		if err.File == file {
 			fileErrors = append(fileErrors, err)
 		}
@@ -111,7 +142,7 @@ func (ec *ErrorCollector) GetErrorsByComponent(component string) []BuildError {
 	ec.mutex.RLock()
 	defer ec.mutex.RUnlock()
 	var componentErrors []BuildError
-	for _, err := range ec.errors {
+	for _, err := range ec.buildErrors {
 		if err.Component == component {
 			componentErrors = append(componentErrors, err)
 		}
@@ -152,7 +183,7 @@ func (ec *ErrorCollector) ErrorOverlay() string {
 		<div>`
 
 	ec.mutex.RLock()
-	for _, err := range ec.errors {
+	for _, err := range ec.buildErrors {
 		severityColor := "#ff6b6b"
 		switch err.Severity {
 		case ErrorSeverityWarning:

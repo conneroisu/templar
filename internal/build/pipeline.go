@@ -14,7 +14,11 @@ import (
 	"hash/crc32"
 	"io"
 	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -22,6 +26,9 @@ import (
 	"github.com/conneroisu/templar/internal/interfaces"
 	"github.com/conneroisu/templar/internal/types"
 )
+
+// crcTable is a pre-computed CRC32 Castagnoli table for faster hash generation
+var crcTable = crc32.MakeTable(crc32.Castagnoli)
 
 // BuildPipeline manages the build process for templ components with concurrent
 // execution, intelligent caching, and comprehensive error handling.
@@ -276,6 +283,10 @@ func (bp *BuildPipeline) processBuildTask(task BuildTask) {
 	// Parse errors if build failed
 	var parsedErrors []*errors.ParsedError
 	if err != nil {
+		// Wrap the error with build context for better debugging
+		err = errors.WrapBuild(err, errors.ErrCodeBuildFailed, 
+			"component compilation failed", task.Component.Name).
+			WithLocation(task.Component.FilePath, 0, 0)
 		parsedErrors = bp.errorParser.ParseError(string(output))
 	}
 
@@ -352,6 +363,8 @@ func (bp *BuildPipeline) generateContentHash(component *types.ComponentInfo) str
 	// This reduces file I/O operations by 70-90% for cached files
 	stat, err := os.Stat(component.FilePath)
 	if err != nil {
+		// File not accessible, return fallback hash
+		// Note: We don't need to wrap this error as it's an internal optimization
 		return component.FilePath
 	}
 
@@ -391,9 +404,9 @@ func (bp *BuildPipeline) generateContentHash(component *types.ComponentInfo) str
 		return fmt.Sprintf("%s:%d", component.FilePath, stat.ModTime().Unix())
 	}
 
-	// Generate content hash using CRC32 for faster file change detection
-	crcHash := crc32.ChecksumIEEE(content)
-	contentHash := fmt.Sprintf("%x", crcHash)
+	// Generate content hash using CRC32 Castagnoli for faster file change detection
+	crcHash := crc32.Checksum(content, crcTable)
+	contentHash := strconv.FormatUint(uint64(crcHash), 16)
 
 	// Cache the hash with metadata key for future lookups
 	bp.cache.SetHash(metadataKey, contentHash)
@@ -469,4 +482,291 @@ func (bp *BuildPipeline) batchReadAndHash(components []*types.ComponentInfo) map
 	}
 
 	return results
+}
+
+// FileDiscoveryResult represents the result of discovering files in a directory
+type FileDiscoveryResult struct {
+	Files       []*types.ComponentInfo
+	Errors      []error
+	Duration    time.Duration
+	Discovered  int64
+	Skipped     int64
+}
+
+// FileDiscoveryStats tracks file discovery performance metrics
+type FileDiscoveryStats struct {
+	TotalFiles     int64
+	ProcessedFiles int64
+	SkippedFiles   int64
+	Errors         int64
+	Duration       time.Duration
+	WorkerCount    int
+}
+
+// ParallelFileProcessor provides parallel file processing capabilities
+type ParallelFileProcessor struct {
+	workerCount int
+	maxDepth    int
+	filters     []string
+	stats       *FileDiscoveryStats
+}
+
+// NewParallelFileProcessor creates a new parallel file processor
+func NewParallelFileProcessor(workerCount int) *ParallelFileProcessor {
+	return &ParallelFileProcessor{
+		workerCount: workerCount,
+		maxDepth:    10, // Default max depth
+		filters:     []string{".templ"},
+		stats:       &FileDiscoveryStats{},
+	}
+}
+
+// DiscoverFiles discovers component files in parallel using filepath.WalkDir
+func (pfp *ParallelFileProcessor) DiscoverFiles(ctx context.Context, rootPaths []string) (*FileDiscoveryResult, error) {
+	start := time.Now()
+	defer func() {
+		pfp.stats.Duration = time.Since(start)
+	}()
+
+	// Create channels for work distribution
+	pathCh := make(chan string, len(rootPaths))
+	resultCh := make(chan *types.ComponentInfo, 100)
+	errorCh := make(chan error, 100)
+
+	// Start workers
+	var wg sync.WaitGroup
+	for i := 0; i < pfp.workerCount; i++ {
+		wg.Add(1)
+		go pfp.worker(ctx, pathCh, resultCh, errorCh, &wg)
+	}
+
+	// Send root paths to workers
+	go func() {
+		defer close(pathCh)
+		for _, path := range rootPaths {
+			select {
+			case pathCh <- path:
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
+	// Collect results
+	var files []*types.ComponentInfo
+	var errors []error
+	var discovered, skipped int64
+
+	// Result collection goroutine
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		for {
+			select {
+			case component, ok := <-resultCh:
+				if !ok {
+					return
+				}
+				files = append(files, component)
+				atomic.AddInt64(&discovered, 1)
+			case err, ok := <-errorCh:
+				if !ok {
+					return
+				}
+				errors = append(errors, err)
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
+	// Wait for workers to complete
+	wg.Wait()
+	close(resultCh)
+	close(errorCh)
+
+	// Wait for result collection to complete
+	<-done
+
+	// Update stats
+	atomic.StoreInt64(&pfp.stats.ProcessedFiles, discovered)
+	atomic.StoreInt64(&pfp.stats.SkippedFiles, skipped)
+	atomic.StoreInt64(&pfp.stats.Errors, int64(len(errors)))
+	pfp.stats.WorkerCount = pfp.workerCount
+
+	return &FileDiscoveryResult{
+		Files:      files,
+		Errors:     errors,
+		Duration:   time.Since(start),
+		Discovered: discovered,
+		Skipped:    skipped,
+	}, nil
+}
+
+// worker processes file discovery work
+func (pfp *ParallelFileProcessor) worker(ctx context.Context, pathCh <-chan string, resultCh chan<- *types.ComponentInfo, errorCh chan<- error, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case rootPath, ok := <-pathCh:
+			if !ok {
+				return
+			}
+
+			// Walk directory tree using filepath.WalkDir for better performance
+			err := filepath.WalkDir(rootPath, func(path string, d os.DirEntry, err error) error {
+				if err != nil {
+					return err
+				}
+
+				// Skip directories
+				if d.IsDir() {
+					return nil
+				}
+
+				// Check if file matches our filters
+				if !pfp.matchesFilter(path) {
+					return nil
+				}
+
+				// Create component info
+				component := &types.ComponentInfo{
+					Name:       pfp.extractComponentName(path),
+					FilePath:   path,
+					Package:    pfp.extractPackage(path),
+					Parameters: []types.ParameterInfo{},
+				}
+
+				// Send result non-blocking
+				select {
+				case resultCh <- component:
+				case <-ctx.Done():
+					return ctx.Err()
+				default:
+					// Channel full, skip this component
+					atomic.AddInt64(&pfp.stats.SkippedFiles, 1)
+				}
+
+				return nil
+			})
+
+			if err != nil {
+				select {
+				case errorCh <- err:
+				case <-ctx.Done():
+					return
+				default:
+					// Error channel full, skip error
+				}
+			}
+		}
+	}
+}
+
+// matchesFilter checks if a file path matches the processor's filters
+func (pfp *ParallelFileProcessor) matchesFilter(path string) bool {
+	for _, filter := range pfp.filters {
+		if strings.HasSuffix(path, filter) {
+			return true
+		}
+	}
+	return false
+}
+
+// extractComponentName extracts component name from file path
+func (pfp *ParallelFileProcessor) extractComponentName(path string) string {
+	base := filepath.Base(path)
+	ext := filepath.Ext(base)
+	return strings.TrimSuffix(base, ext)
+}
+
+// extractPackage extracts package name from file path
+func (pfp *ParallelFileProcessor) extractPackage(path string) string {
+	dir := filepath.Dir(path)
+	return filepath.Base(dir)
+}
+
+// ProcessFilesBatch processes multiple files in parallel batches
+func (bp *BuildPipeline) ProcessFilesBatch(ctx context.Context, components []*types.ComponentInfo, batchSize int) (*FileDiscoveryResult, error) {
+	start := time.Now()
+	var totalDiscovered, totalSkipped int64
+	var allErrors []error
+	var allResults []*types.ComponentInfo
+
+	// Process components in batches
+	for i := 0; i < len(components); i += batchSize {
+		end := i + batchSize
+		if end > len(components) {
+			end = len(components)
+		}
+
+		batch := components[i:end]
+		hashes := bp.generateContentHashesBatch(batch)
+
+		// Process batch with caching
+		for _, component := range batch {
+			hash, exists := hashes[component.FilePath]
+			if !exists {
+				atomic.AddInt64(&totalSkipped, 1)
+				continue
+			}
+
+			// Check cache first
+			if _, found := bp.cache.Get(hash); found {
+				// Cache hit, no processing needed
+				allResults = append(allResults, component)
+				atomic.AddInt64(&totalDiscovered, 1)
+				continue
+			}
+
+			// Process component
+			allResults = append(allResults, component)
+			atomic.AddInt64(&totalDiscovered, 1)
+		}
+	}
+
+	return &FileDiscoveryResult{
+		Files:      allResults,
+		Errors:     allErrors,
+		Duration:   time.Since(start),
+		Discovered: totalDiscovered,
+		Skipped:    totalSkipped,
+	}, nil
+}
+
+// BuildDirectory builds all components in a directory using parallel processing
+func (bp *BuildPipeline) BuildDirectory(ctx context.Context, rootPath string) error {
+	// Create parallel file processor
+	processor := NewParallelFileProcessor(bp.workers)
+
+	// Discover files
+	result, err := processor.DiscoverFiles(ctx, []string{rootPath})
+	if err != nil {
+		return fmt.Errorf("failed to discover files: %w", err)
+	}
+
+	// Queue all discovered components for building
+	for _, component := range result.Files {
+		bp.Build(component)
+	}
+
+	fmt.Printf("Directory build queued: %d components discovered in %v\n", 
+		result.Discovered, result.Duration)
+
+	return nil
+}
+
+// GetFileDiscoveryStats returns file discovery performance statistics
+func (pfp *ParallelFileProcessor) GetFileDiscoveryStats() FileDiscoveryStats {
+	return FileDiscoveryStats{
+		TotalFiles:     atomic.LoadInt64(&pfp.stats.TotalFiles),
+		ProcessedFiles: atomic.LoadInt64(&pfp.stats.ProcessedFiles),
+		SkippedFiles:   atomic.LoadInt64(&pfp.stats.SkippedFiles),
+		Errors:         atomic.LoadInt64(&pfp.stats.Errors),
+		Duration:       pfp.stats.Duration,
+		WorkerCount:    pfp.stats.WorkerCount,
+	}
 }

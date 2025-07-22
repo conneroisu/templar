@@ -101,6 +101,14 @@ func (w *ConfigWizard) Run() (*Config, error) {
 		return nil, fmt.Errorf("plugins configuration failed: %w", err)
 	}
 
+	// Monitoring configuration  
+	if err := w.configureMonitoring(); err != nil {
+		return nil, fmt.Errorf("monitoring configuration failed: %w", err)
+	}
+
+	// Apply full defaults to ensure all required fields are set
+	loadDefaults(w.config)
+
 	// Validate the final configuration
 	if err := validateConfig(w.config); err != nil {
 		return nil, fmt.Errorf("configuration validation failed: %w", err)
@@ -177,8 +185,10 @@ func (w *ConfigWizard) configureComponents() error {
 			break
 		}
 		customPath := w.askString("Custom scan path", "")
-		if customPath != "" {
+		if customPath != "" && customPath != "y" && customPath != "n" {
 			scanPaths = append(scanPaths, customPath)
+		} else if customPath == "" || customPath == "n" || customPath == "no" {
+			break // Exit loop if user enters nothing or no
 		}
 	}
 
@@ -201,8 +211,10 @@ func (w *ConfigWizard) configureComponents() error {
 			break
 		}
 		customPattern := w.askString("Custom exclusion pattern", "")
-		if customPattern != "" {
+		if customPattern != "" && customPattern != "y" && customPattern != "n" {
 			excludePatterns = append(excludePatterns, customPattern)
+		} else if customPattern == "" || customPattern == "n" || customPattern == "no" {
+			break // Exit loop if user enters nothing or no
 		}
 	}
 
@@ -336,6 +348,31 @@ func (w *ConfigWizard) configurePlugins() error {
 	return nil
 }
 
+func (w *ConfigWizard) configureMonitoring() error {
+	fmt.Println("📊 Monitoring Configuration")
+	fmt.Println("---------------------------")
+
+	w.config.Monitoring.Enabled = w.askBool("Enable application monitoring", true)
+	w.config.Monitoring.LogLevel = w.askChoice("Log level", []string{"debug", "info", "warn", "error", "fatal"}, "info")
+	w.config.Monitoring.LogFormat = w.askChoice("Log format", []string{"json", "text"}, "json")
+	w.config.Monitoring.AlertsEnabled = w.askBool("Enable alerts", false)
+
+	if w.config.Monitoring.Enabled {
+		w.config.Monitoring.MetricsPath = w.askString("Metrics file path", "./logs/metrics.json")
+		w.config.Monitoring.HTTPPort = 8081 // Use default
+		if w.askBool("Custom monitoring port", false) {
+			port, err := w.askInt("Monitoring HTTP port", 8081, 1024, 65535)
+			if err != nil {
+				return err
+			}
+			w.config.Monitoring.HTTPPort = port
+		}
+	}
+
+	fmt.Println()
+	return nil
+}
+
 // Helper methods for user interaction
 
 func (w *ConfigWizard) askString(prompt, defaultValue string) string {
@@ -353,6 +390,13 @@ func (w *ConfigWizard) askString(prompt, defaultValue string) string {
 	input = strings.TrimSpace(input)
 	if input == "" {
 		return defaultValue
+	}
+
+	// Handle common false inputs that should use defaults
+	if input == "y" || input == "yes" || input == "n" || input == "no" {
+		if defaultValue != "" {
+			return defaultValue
+		}
 	}
 
 	return input
@@ -541,6 +585,25 @@ func (w *ConfigWizard) generateYAMLConfig() string {
 				builder.WriteString(fmt.Sprintf("    - \"%s\"\n", path))
 			}
 		}
+	}
+
+	// Monitoring configuration
+	if w.config.Monitoring.Enabled || w.config.Monitoring.LogLevel != "" || w.config.Monitoring.LogFormat != "" {
+		builder.WriteString("\nmonitoring:\n")
+		builder.WriteString(fmt.Sprintf("  enabled: %t\n", w.config.Monitoring.Enabled))
+		if w.config.Monitoring.LogLevel != "" {
+			builder.WriteString(fmt.Sprintf("  log_level: %s\n", w.config.Monitoring.LogLevel))
+		}
+		if w.config.Monitoring.LogFormat != "" {
+			builder.WriteString(fmt.Sprintf("  log_format: %s\n", w.config.Monitoring.LogFormat))
+		}
+		if w.config.Monitoring.MetricsPath != "" {
+			builder.WriteString(fmt.Sprintf("  metrics_path: \"%s\"\n", w.config.Monitoring.MetricsPath))
+		}
+		if w.config.Monitoring.HTTPPort != 0 && w.config.Monitoring.HTTPPort != 8081 {
+			builder.WriteString(fmt.Sprintf("  http_port: %d\n", w.config.Monitoring.HTTPPort))
+		}
+		builder.WriteString(fmt.Sprintf("  alerts_enabled: %t\n", w.config.Monitoring.AlertsEnabled))
 	}
 
 	return builder.String()

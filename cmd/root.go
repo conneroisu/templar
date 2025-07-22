@@ -21,6 +21,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -105,7 +106,9 @@ func initConfig() {
 
 	// Enable automatic environment variable binding with TEMPLAR_ prefix
 	// Examples: TEMPLAR_SERVER_PORT, TEMPLAR_SERVER_HOST, TEMPLAR_DEVELOPMENT_HOT_RELOAD
+	viper.SetEnvPrefix("TEMPLAR")
 	viper.AutomaticEnv()
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	// Attempt to read the configuration file
 	// If file doesn't exist or has errors, Viper will use defaults without failing

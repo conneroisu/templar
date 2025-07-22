@@ -10,9 +10,9 @@ import (
 	"syscall"
 
 	"github.com/conneroisu/templar/internal/config"
+	"github.com/conneroisu/templar/internal/di"
 	"github.com/conneroisu/templar/internal/errors"
 	"github.com/conneroisu/templar/internal/monitoring"
-	"github.com/conneroisu/templar/internal/server"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -96,7 +96,18 @@ func runServe(cmd *cobra.Command, args []string) error {
 		}()
 	}
 
-	srv, err := server.New(cfg)
+	// Initialize dependency injection container
+	container := di.NewServiceContainer(cfg)
+	if err := container.Initialize(); err != nil {
+		return fmt.Errorf("failed to initialize service container: %w", err)
+	}
+	defer func() {
+		if shutdownErr := container.Shutdown(context.Background()); shutdownErr != nil {
+			log.Printf("Error during container shutdown: %v", shutdownErr)
+		}
+	}()
+
+	srv, err := container.GetServer()
 	if err != nil {
 		// Check for server creation errors
 		if strings.Contains(err.Error(), "address already in use") || strings.Contains(err.Error(), "bind") {

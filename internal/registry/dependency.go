@@ -155,7 +155,7 @@ func (da *DependencyAnalyzer) GetDependencyGraph() map[string][]string {
 
 // DetectCircularDependencies detects circular dependencies in the graph
 func (da *DependencyAnalyzer) DetectCircularDependencies() [][]string {
-	var cycles [][]string
+	cycles := make([][]string, 0)
 	graph := da.GetDependencyGraph()
 
 	visited := make(map[string]bool)

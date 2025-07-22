@@ -86,55 +86,44 @@ func (a *ComponentScannerAdapter) GetRegistry() interfaces.ComponentRegistry {
 
 // BuildPipelineAdapter wraps a concrete BuildPipeline to implement the interface
 type BuildPipelineAdapter struct {
-	bp *build.BuildPipeline
+	bp *build.RefactoredBuildPipeline
 }
 
 // NewBuildPipelineAdapter creates a new adapter for BuildPipeline
-func NewBuildPipelineAdapter(bp *build.BuildPipeline) interfaces.BuildPipeline {
+func NewBuildPipelineAdapter(bp *build.RefactoredBuildPipeline) interfaces.BuildPipeline {
 	return &BuildPipelineAdapter{bp: bp}
 }
 
 func (a *BuildPipelineAdapter) Build(component *types.ComponentInfo) error {
-	// Convert to the concrete method call
-	a.bp.Build(component)
-	return nil // The concrete method doesn't return an error
+	return a.bp.Build(component)
 }
 
 func (a *BuildPipelineAdapter) Start(ctx context.Context) error {
-	a.bp.Start(ctx)
-	return nil // The concrete method doesn't return an error
+	return a.bp.Start(ctx)
 }
 
 func (a *BuildPipelineAdapter) Stop() error {
-	a.bp.Stop()
-	return nil // The concrete method doesn't return an error
+	return a.bp.Stop()
 }
 
 func (a *BuildPipelineAdapter) AddCallback(callback interfaces.BuildCallbackFunc) {
-	// Convert interface callback to concrete callback
-	a.bp.AddCallback(func(result build.BuildResult) {
-		callback(result)
-	})
+	a.bp.AddCallback(callback)
 }
 
 func (a *BuildPipelineAdapter) BuildWithPriority(component *types.ComponentInfo) {
 	a.bp.BuildWithPriority(component)
 }
 
-func (a *BuildPipelineAdapter) GetMetrics() interface{} {
+func (a *BuildPipelineAdapter) GetMetrics() interfaces.BuildMetrics {
 	return a.bp.GetMetrics()
 }
 
-func (a *BuildPipelineAdapter) GetCache() interface{} {
-	// Return cache information from the pipeline
-	hits, size, entries := a.bp.GetCacheStats()
-	return map[string]interface{}{
-		"hits":    hits,
-		"size":    size,
-		"entries": entries,
-	}
+func (a *BuildPipelineAdapter) GetCache() interfaces.CacheStats {
+	return a.bp.GetCache()
 }
 
 func (a *BuildPipelineAdapter) ClearCache() {
-	a.bp.ClearCache()
+	// RefactoredBuildPipeline doesn't have ClearCache, use cache directly
+	cache := a.bp.GetCache()
+	cache.Clear()
 }

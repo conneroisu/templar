@@ -17,7 +17,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/conneroisu/templar/internal/registry"
+	"github.com/conneroisu/templar/internal/interfaces"
 	"github.com/conneroisu/templar/internal/types"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -25,12 +25,12 @@ import (
 
 // ComponentRenderer handles rendering of templ components
 type ComponentRenderer struct {
-	registry *registry.ComponentRegistry
+	registry interfaces.ComponentRegistry
 	workDir  string
 }
 
 // NewComponentRenderer creates a new component renderer
-func NewComponentRenderer(registry *registry.ComponentRegistry) *ComponentRenderer {
+func NewComponentRenderer(registry interfaces.ComponentRegistry) *ComponentRenderer {
 	workDir := ".templar/render"
 	if err := os.MkdirAll(workDir, 0750); err != nil {
 		log.Printf("Failed to create work directory %s: %v", workDir, err)

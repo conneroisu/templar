@@ -287,7 +287,111 @@ const (
 	ErrCodeFileNotFound      = "ERR_FILE_NOT_FOUND"
 	ErrCodePermissionDenied  = "ERR_PERMISSION_DENIED"
 	ErrCodeInternalError     = "ERR_INTERNAL"
+	ErrCodeValidationFailed  = "ERR_VALIDATION_FAILED"
 )
+
+// ValidationError interface for field-specific validation errors
+type ValidationError interface {
+	error
+	Field() string
+	Value() interface{}
+	Suggestions() []string
+}
+
+// FieldValidationError implements ValidationError for specific field errors
+type FieldValidationError struct {
+	FieldName    string
+	FieldValue   interface{}
+	ErrorMessage string
+	HelpText     []string
+}
+
+// Error implements the error interface
+func (fve *FieldValidationError) Error() string {
+	return fmt.Sprintf("validation error in field '%s': %s", fve.FieldName, fve.ErrorMessage)
+}
+
+// Field returns the field name that failed validation
+func (fve *FieldValidationError) Field() string {
+	return fve.FieldName
+}
+
+// Value returns the invalid value
+func (fve *FieldValidationError) Value() interface{} {
+	return fve.FieldValue
+}
+
+// Suggestions returns helpful suggestions for fixing the error
+func (fve *FieldValidationError) Suggestions() []string {
+	return fve.HelpText
+}
+
+// NewFieldValidationError creates a new field validation error
+func NewFieldValidationError(field string, value interface{}, message string, suggestions ...string) *FieldValidationError {
+	return &FieldValidationError{
+		FieldName:    field,
+		FieldValue:   value,
+		ErrorMessage: message,
+		HelpText:     suggestions,
+	}
+}
+
+// ValidationErrorCollection represents a collection of validation errors
+type ValidationErrorCollection struct {
+	Errors []ValidationError
+}
+
+// Error implements the error interface
+func (vec *ValidationErrorCollection) Error() string {
+	if len(vec.Errors) == 0 {
+		return "no validation errors"
+	}
+	if len(vec.Errors) == 1 {
+		return vec.Errors[0].Error()
+	}
+	return fmt.Sprintf("validation failed with %d errors", len(vec.Errors))
+}
+
+// Add adds a validation error to the collection
+func (vec *ValidationErrorCollection) Add(err ValidationError) {
+	vec.Errors = append(vec.Errors, err)
+}
+
+// AddField adds a field validation error to the collection
+func (vec *ValidationErrorCollection) AddField(field string, value interface{}, message string, suggestions ...string) {
+	vec.Add(NewFieldValidationError(field, value, message, suggestions...))
+}
+
+// HasErrors returns true if there are any validation errors
+func (vec *ValidationErrorCollection) HasErrors() bool {
+	return len(vec.Errors) > 0
+}
+
+// ToTemplarError converts the validation collection to a TemplarError
+func (vec *ValidationErrorCollection) ToTemplarError() *TemplarError {
+	if !vec.HasErrors() {
+		return nil
+	}
+	
+	var messages []string
+	context := make(map[string]interface{})
+	
+	for _, err := range vec.Errors {
+		messages = append(messages, err.Error())
+		context[err.Field()] = map[string]interface{}{
+			"value":       err.Value(),
+			"suggestions": err.Suggestions(),
+		}
+	}
+	
+	return &TemplarError{
+		Type:        ErrorTypeValidation,
+		Code:        ErrCodeValidationFailed,
+		Message:     strings.Join(messages, "; "),
+		Context:     context,
+		Recoverable: true,
+	}
+}
 
 // Helper functions for common errors
 

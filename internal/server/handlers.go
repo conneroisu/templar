@@ -117,6 +117,9 @@ const indexHTML = `<!DOCTYPE html>
                 <a href="/playground" class="bg-secondary-500 text-white px-4 py-2 rounded-lg hover:bg-secondary-600 transition-colors font-medium">
                     🎮 Component Playground
                 </a>
+                <a href="/editor" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors font-medium">
+                    ✏️ Interactive Editor
+                </a>
             </div>
             <div id="status" class="status disconnected fixed top-4 right-4 px-4 py-2 rounded-lg text-white font-semibold z-50">
                 Disconnected

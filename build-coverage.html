@@ -1,0 +1,1371 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>build: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/conneroisu/templar/internal/build/cache.go (95.6%)</option>
+				
+				<option value="file1">github.com/conneroisu/templar/internal/build/compiler.go (87.1%)</option>
+				
+				<option value="file2">github.com/conneroisu/templar/internal/build/metrics.go (79.2%)</option>
+				
+				<option value="file3">github.com/conneroisu/templar/internal/build/pipeline.go (90.5%)</option>
+				
+				<option value="file4">github.com/conneroisu/templar/internal/build/pools.go (90.1%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">// Package build provides build cache functionality with LRU eviction and TTL support.
+package build
+
+import (
+        "sync"
+        "time"
+)
+
+// BuildCache caches build results with LRU eviction and TTL
+type BuildCache struct {
+        entries     map[string]*CacheEntry
+        mutex       sync.RWMutex
+        maxSize     int64
+        currentSize int64 // Track current size for O(1) access
+        ttl         time.Duration
+        // LRU implementation
+        head *CacheEntry
+        tail *CacheEntry
+}
+
+// CacheEntry represents a cached build result
+type CacheEntry struct {
+        Key        string
+        Value      []byte
+        Hash       string
+        CreatedAt  time.Time
+        AccessedAt time.Time
+        Size       int64
+        // LRU doubly-linked list pointers
+        prev *CacheEntry
+        next *CacheEntry
+}
+
+// NewBuildCache creates a new build cache
+func NewBuildCache(maxSize int64, ttl time.Duration) *BuildCache <span class="cov8" title="1">{
+        cache := &amp;BuildCache{
+                entries: make(map[string]*CacheEntry),
+                maxSize: maxSize,
+                ttl:     ttl,
+        }
+
+        // Initialize LRU doubly-linked list with dummy head and tail
+        cache.head = &amp;CacheEntry{}
+        cache.tail = &amp;CacheEntry{}
+        cache.head.next = cache.tail
+        cache.tail.prev = cache.head
+
+        return cache
+}</span>
+
+// Get retrieves a value from the cache
+func (bc *BuildCache) Get(key string) ([]byte, bool) <span class="cov8" title="1">{
+        bc.mutex.Lock()
+        defer bc.mutex.Unlock()
+
+        entry, exists := bc.entries[key]
+        if !exists </span><span class="cov8" title="1">{
+                return nil, false
+        }</span>
+
+        // Check TTL
+        <span class="cov8" title="1">if time.Since(entry.CreatedAt) &gt; bc.ttl </span><span class="cov8" title="1">{
+                bc.removeFromList(entry)
+                delete(bc.entries, key)
+                bc.currentSize -= entry.Size
+                return nil, false
+        }</span>
+
+        // Move to front (mark as recently used)
+        <span class="cov8" title="1">bc.moveToFront(entry)
+        entry.AccessedAt = time.Now()
+        return entry.Value, true</span>
+}
+
+// Set stores a value in the cache
+func (bc *BuildCache) Set(key string, value []byte) <span class="cov8" title="1">{
+        bc.mutex.Lock()
+        defer bc.mutex.Unlock()
+
+        // Check if entry already exists
+        if existingEntry, exists := bc.entries[key]; exists </span><span class="cov8" title="1">{
+                // Update existing entry - adjust current size
+                sizeDiff := int64(len(value)) - existingEntry.Size
+                existingEntry.Value = value
+                existingEntry.AccessedAt = time.Now()
+                existingEntry.Size = int64(len(value))
+                bc.currentSize += sizeDiff
+                bc.moveToFront(existingEntry)
+                return
+        }</span>
+
+        // Check if we need to evict old entries
+        <span class="cov8" title="1">bc.evictIfNeeded(int64(len(value)))
+
+        entry := &amp;CacheEntry{
+                Key:        key,
+                Value:      value,
+                Hash:       key,
+                CreatedAt:  time.Now(),
+                AccessedAt: time.Now(),
+                Size:       int64(len(value)),
+        }
+
+        bc.entries[key] = entry
+        bc.currentSize += entry.Size
+        bc.addToFront(entry)</span>
+}
+
+// evictIfNeeded evicts entries if cache would exceed max size
+func (bc *BuildCache) evictIfNeeded(newSize int64) <span class="cov8" title="1">{
+        if bc.currentSize+newSize &lt;= bc.maxSize </span><span class="cov8" title="1">{
+                return
+        }</span>
+
+        // Efficient LRU eviction - remove from tail (least recently used)
+        <span class="cov8" title="1">for bc.currentSize+newSize &gt; bc.maxSize &amp;&amp; bc.tail.prev != bc.head </span><span class="cov8" title="1">{
+                // Remove the least recently used entry (tail.prev)
+                lru := bc.tail.prev
+                bc.removeFromList(lru)
+                delete(bc.entries, lru.Key)
+                bc.currentSize -= lru.Size
+        }</span>
+}
+
+// getCurrentSize returns the current cache size
+func (bc *BuildCache) getCurrentSize() int64 <span class="cov8" title="1">{
+        return bc.currentSize
+}</span>
+
+// Clear clears all cache entries
+func (bc *BuildCache) Clear() <span class="cov8" title="1">{
+        bc.mutex.Lock()
+        defer bc.mutex.Unlock()
+        bc.entries = make(map[string]*CacheEntry)
+        bc.currentSize = 0
+        // Reset LRU list
+        bc.head.next = bc.tail
+        bc.tail.prev = bc.head
+}</span>
+
+// GetStats returns cache statistics
+func (bc *BuildCache) GetStats() (int, int64, int64) <span class="cov8" title="1">{
+        bc.mutex.RLock()
+        defer bc.mutex.RUnlock()
+
+        count := len(bc.entries)
+        size := bc.getCurrentSize()
+        maxSize := bc.maxSize
+
+        return count, size, maxSize
+}</span>
+
+// LRU doubly-linked list operations
+func (bc *BuildCache) addToFront(entry *CacheEntry) <span class="cov8" title="1">{
+        entry.prev = bc.head
+        entry.next = bc.head.next
+        bc.head.next.prev = entry
+        bc.head.next = entry
+}</span>
+
+func (bc *BuildCache) removeFromList(entry *CacheEntry) <span class="cov8" title="1">{
+        entry.prev.next = entry.next
+        entry.next.prev = entry.prev
+}</span>
+
+func (bc *BuildCache) moveToFront(entry *CacheEntry) <span class="cov8" title="1">{
+        bc.removeFromList(entry)
+        bc.addToFront(entry)
+}</span>
+
+// GetHash retrieves a cached hash for a metadata key
+// This method is thread-safe and properly handles LRU updates
+func (bc *BuildCache) GetHash(key string) (string, bool) <span class="cov8" title="1">{
+        bc.mutex.Lock()
+        defer bc.mutex.Unlock()
+
+        entry, exists := bc.entries[key]
+        if !exists </span><span class="cov8" title="1">{
+                return "", false
+        }</span>
+
+        // Check TTL
+        <span class="cov8" title="1">if time.Since(entry.CreatedAt) &gt; bc.ttl </span><span class="cov0" title="0">{
+                bc.removeFromList(entry)
+                delete(bc.entries, key)
+                bc.currentSize -= entry.Size
+                return "", false
+        }</span>
+
+        // Move to front (mark as recently used) and update access time
+        <span class="cov8" title="1">bc.moveToFront(entry)
+        entry.AccessedAt = time.Now()
+        return entry.Hash, true</span>
+}
+
+// SetHash stores a hash in the cache with a metadata key
+// This method is thread-safe and handles eviction properly
+func (bc *BuildCache) SetHash(key string, hash string) <span class="cov8" title="1">{
+        bc.mutex.Lock()
+        defer bc.mutex.Unlock()
+
+        // Calculate entry size (key + hash + minimal overhead)
+        entrySize := int64(len(key) + len(hash))
+
+        // Check if entry already exists
+        if existingEntry, exists := bc.entries[key]; exists </span><span class="cov8" title="1">{
+                // Update existing entry - adjust current size
+                sizeDiff := entrySize - existingEntry.Size
+                existingEntry.Hash = hash
+                existingEntry.AccessedAt = time.Now()
+                existingEntry.Size = entrySize
+                bc.currentSize += sizeDiff
+                bc.moveToFront(existingEntry)
+                return
+        }</span>
+
+        // Check if we need to evict old entries before adding new one
+        <span class="cov8" title="1">bc.evictIfNeeded(entrySize)
+
+        // Create new entry for hash storage
+        entry := &amp;CacheEntry{
+                Key:        key,
+                Value:      nil, // Only cache the hash, not the content
+                Hash:       hash,
+                CreatedAt:  time.Now(),
+                AccessedAt: time.Now(),
+                Size:       entrySize,
+        }
+
+        // Add to cache with proper size tracking
+        bc.entries[key] = entry
+        bc.addToFront(entry)
+        bc.currentSize += entry.Size</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">// Package build provides templ compilation functionality with security validation.
+package build
+
+import (
+        "fmt"
+        "os/exec"
+
+        "github.com/conneroisu/templar/internal/types"
+        "github.com/conneroisu/templar/internal/validation"
+)
+
+// TemplCompiler handles templ compilation
+type TemplCompiler struct {
+        command string
+        args    []string
+}
+
+// NewTemplCompiler creates a new templ compiler
+func NewTemplCompiler() *TemplCompiler <span class="cov8" title="1">{
+        return &amp;TemplCompiler{
+                command: "templ",
+                args:    []string{"generate"},
+        }
+}</span>
+
+// Compile compiles a component using templ generate
+func (tc *TemplCompiler) Compile(component *types.ComponentInfo) ([]byte, error) <span class="cov8" title="1">{
+        // Validate command and arguments to prevent command injection
+        if err := tc.validateCommand(); err != nil </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf("command validation failed: %w", err)
+        }</span>
+
+        // Run templ generate command
+        <span class="cov8" title="1">cmd := exec.Command(tc.command, tc.args...)
+        cmd.Dir = "." // Run in current directory
+
+        output, err := cmd.CombinedOutput()
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("templ generate failed: %w\nOutput: %s", err, output)
+        }</span>
+
+        <span class="cov8" title="1">return output, nil</span>
+}
+
+// CompileWithPools performs compilation using object pools for memory efficiency
+func (tc *TemplCompiler) CompileWithPools(component *types.ComponentInfo, pools *ObjectPools) ([]byte, error) <span class="cov8" title="1">{
+        // Validate command and arguments to prevent command injection
+        if err := tc.validateCommand(); err != nil </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf("command validation failed: %w", err)
+        }</span>
+
+        // Get pooled buffer for output
+        <span class="cov8" title="1">outputBuffer := pools.GetOutputBuffer()
+        defer pools.PutOutputBuffer(outputBuffer)
+
+        // Run templ generate command
+        cmd := exec.Command(tc.command, tc.args...)
+        cmd.Dir = "." // Run in current directory
+
+        // Use pooled buffers for command output
+        var err error
+
+        if output, cmdErr := cmd.CombinedOutput(); cmdErr != nil </span><span class="cov0" title="0">{
+                // Copy output to our buffer to avoid keeping the original allocation
+                outputBuffer = append(outputBuffer, output...)
+                err = fmt.Errorf("templ generate failed: %w\nOutput: %s", cmdErr, outputBuffer)
+                return nil, err
+        }</span> else<span class="cov8" title="1"> {
+                // Copy successful output to our buffer
+                outputBuffer = append(outputBuffer, output...)
+        }</span>
+
+        // Return a copy of the buffer content (caller owns this memory)
+        <span class="cov8" title="1">result := make([]byte, len(outputBuffer))
+        copy(result, outputBuffer)
+        return result, nil</span>
+}
+
+// validateCommand validates the command and arguments to prevent command injection
+func (tc *TemplCompiler) validateCommand() error <span class="cov8" title="1">{
+        // Allowlist of permitted commands
+        allowedCommands := map[string]bool{
+                "templ": true,
+                "go":    true,
+        }
+
+        // Use centralized validation for command
+        if err := validation.ValidateCommand(tc.command, allowedCommands); err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+
+        // Validate arguments using centralized validation
+        <span class="cov8" title="1">for _, arg := range tc.args </span><span class="cov8" title="1">{
+                if err := validation.ValidateArgument(arg); err != nil </span><span class="cov8" title="1">{
+                        return fmt.Errorf("invalid argument '%s': %w", arg, err)
+                }</span>
+        }
+
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">// Package build provides build metrics tracking and performance monitoring.
+package build
+
+import (
+        "sync"
+        "time"
+)
+
+// BuildMetrics tracks build performance and queue health
+type BuildMetrics struct {
+        TotalBuilds      int64
+        SuccessfulBuilds int64
+        FailedBuilds     int64
+        CacheHits        int64
+        AverageDuration  time.Duration
+        TotalDuration    time.Duration
+
+        // Queue monitoring for reliability
+        DroppedTasks   int64            // Count of tasks dropped due to queue full
+        DroppedResults int64            // Count of results dropped due to queue full
+        DropReasons    map[string]int64 // Track reasons for drops
+
+        mutex sync.RWMutex
+}
+
+// NewBuildMetrics creates a new build metrics tracker
+func NewBuildMetrics() *BuildMetrics <span class="cov8" title="1">{
+        return &amp;BuildMetrics{
+                DropReasons: make(map[string]int64),
+        }
+}</span>
+
+// RecordBuild records a build result in the metrics
+func (bm *BuildMetrics) RecordBuild(result BuildResult) <span class="cov8" title="1">{
+        bm.mutex.Lock()
+        defer bm.mutex.Unlock()
+
+        bm.TotalBuilds++
+        bm.TotalDuration += result.Duration
+
+        if result.CacheHit </span><span class="cov8" title="1">{
+                bm.CacheHits++
+        }</span>
+
+        <span class="cov8" title="1">if result.Error != nil </span><span class="cov8" title="1">{
+                bm.FailedBuilds++
+        }</span> else<span class="cov8" title="1"> {
+                bm.SuccessfulBuilds++
+        }</span>
+
+        // Update average duration
+        <span class="cov8" title="1">if bm.TotalBuilds &gt; 0 </span><span class="cov8" title="1">{
+                bm.AverageDuration = bm.TotalDuration / time.Duration(bm.TotalBuilds)
+        }</span>
+}
+
+// GetSnapshot returns a snapshot of current metrics
+func (bm *BuildMetrics) GetSnapshot() BuildMetrics <span class="cov8" title="1">{
+        bm.mutex.RLock()
+        defer bm.mutex.RUnlock()
+
+        // Copy the drop reasons map
+        reasonsCopy := make(map[string]int64, len(bm.DropReasons))
+        for k, v := range bm.DropReasons </span><span class="cov0" title="0">{
+                reasonsCopy[k] = v
+        }</span>
+
+        // Return a copy without the mutex to avoid lock copying issues
+        <span class="cov8" title="1">return BuildMetrics{
+                TotalBuilds:      bm.TotalBuilds,
+                SuccessfulBuilds: bm.SuccessfulBuilds,
+                FailedBuilds:     bm.FailedBuilds,
+                CacheHits:        bm.CacheHits,
+                AverageDuration:  bm.AverageDuration,
+                TotalDuration:    bm.TotalDuration,
+                DroppedTasks:     bm.DroppedTasks,
+                DroppedResults:   bm.DroppedResults,
+                DropReasons:      reasonsCopy,
+                // mutex is intentionally omitted to prevent lock copying
+        }</span>
+}
+
+// Reset resets all metrics
+func (bm *BuildMetrics) Reset() <span class="cov8" title="1">{
+        bm.mutex.Lock()
+        defer bm.mutex.Unlock()
+
+        bm.TotalBuilds = 0
+        bm.SuccessfulBuilds = 0
+        bm.FailedBuilds = 0
+        bm.CacheHits = 0
+        bm.AverageDuration = 0
+        bm.TotalDuration = 0
+        bm.DroppedTasks = 0
+        bm.DroppedResults = 0
+        bm.DropReasons = make(map[string]int64)
+}</span>
+
+// GetCacheHitRate returns the cache hit rate as a percentage
+func (bm *BuildMetrics) GetCacheHitRate() float64 <span class="cov0" title="0">{
+        bm.mutex.RLock()
+        defer bm.mutex.RUnlock()
+
+        if bm.TotalBuilds == 0 </span><span class="cov0" title="0">{
+                return 0.0
+        }</span>
+
+        <span class="cov0" title="0">return float64(bm.CacheHits) / float64(bm.TotalBuilds) * 100.0</span>
+}
+
+// GetSuccessRate returns the success rate as a percentage
+func (bm *BuildMetrics) GetSuccessRate() float64 <span class="cov0" title="0">{
+        bm.mutex.RLock()
+        defer bm.mutex.RUnlock()
+
+        if bm.TotalBuilds == 0 </span><span class="cov0" title="0">{
+                return 0.0
+        }</span>
+
+        <span class="cov0" title="0">return float64(bm.SuccessfulBuilds) / float64(bm.TotalBuilds) * 100.0</span>
+}
+
+// RecordDroppedTask records when a task is dropped due to queue full
+func (bm *BuildMetrics) RecordDroppedTask(componentName, reason string) <span class="cov8" title="1">{
+        bm.mutex.Lock()
+        defer bm.mutex.Unlock()
+
+        bm.DroppedTasks++
+        bm.DropReasons[reason]++
+}</span>
+
+// RecordDroppedResult records when a result is dropped due to queue full
+func (bm *BuildMetrics) RecordDroppedResult(componentName, reason string) <span class="cov8" title="1">{
+        bm.mutex.Lock()
+        defer bm.mutex.Unlock()
+
+        bm.DroppedResults++
+        bm.DropReasons[reason]++
+}</span>
+
+// GetQueueHealthStatus returns queue health information
+func (bm *BuildMetrics) GetQueueHealthStatus() (droppedTasks, droppedResults int64, dropReasons map[string]int64) <span class="cov8" title="1">{
+        bm.mutex.RLock()
+        defer bm.mutex.RUnlock()
+
+        // Copy the map to avoid race conditions
+        reasonsCopy := make(map[string]int64, len(bm.DropReasons))
+        for k, v := range bm.DropReasons </span><span class="cov8" title="1">{
+                reasonsCopy[k] = v
+        }</span>
+
+        <span class="cov8" title="1">return bm.DroppedTasks, bm.DroppedResults, reasonsCopy</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">// Package build provides a concurrent build pipeline for templ components
+// with caching, error collection, and performance metrics.
+//
+// The build pipeline processes components through worker pools, maintains
+// an LRU cache for build results, and provides real-time build status
+// through callbacks and metrics. It supports parallel execution with
+// configurable worker counts and implements security-hardened command
+// execution with proper validation.
+package build
+
+import (
+        "context"
+        "fmt"
+        "hash/crc32"
+        "io"
+        "os"
+        "strconv"
+        "sync"
+        "syscall"
+        "time"
+
+        "github.com/conneroisu/templar/internal/errors"
+        "github.com/conneroisu/templar/internal/interfaces"
+        "github.com/conneroisu/templar/internal/types"
+)
+
+// crcTable is a pre-computed CRC32 Castagnoli table for faster hash generation
+var crcTable = crc32.MakeTable(crc32.Castagnoli)
+
+// BuildPipeline manages the build process for templ components with concurrent
+// execution, intelligent caching, and comprehensive error handling.
+//
+// The pipeline provides:
+// - Concurrent build execution with configurable worker pools
+// - LRU caching with CRC32-based change detection
+// - Priority-based build queue management
+// - Real-time build metrics and status callbacks
+// - Memory optimization through object pooling
+// - Security-hardened command execution
+type BuildPipeline struct {
+        // compiler handles templ compilation with security validation
+        compiler *TemplCompiler
+        // cache provides LRU-based build result caching
+        cache *BuildCache
+        // queue manages build tasks with priority ordering
+        queue *BuildQueue
+        // workers defines the number of concurrent build workers
+        workers int
+        // registry provides component information and change notifications
+        registry interfaces.ComponentRegistry
+        // errorParser processes build errors and provides detailed diagnostics
+        errorParser *errors.ErrorParser
+        // metrics tracks build performance and success rates
+        metrics *BuildMetrics
+        // callbacks receive build status updates for UI integration
+        callbacks []BuildCallback
+        // workerWg synchronizes worker goroutine lifecycle
+        workerWg sync.WaitGroup
+        // resultWg synchronizes result processing
+        resultWg sync.WaitGroup
+        // cancel terminates all pipeline operations gracefully
+        cancel context.CancelFunc
+        // objectPools optimize memory allocation for frequently used objects
+        objectPools *ObjectPools
+        // slicePools reduce slice allocation overhead
+        slicePools *SlicePools
+        // workerPool manages the lifecycle of build workers
+        workerPool *WorkerPool
+}
+
+// BuildTask represents a build task in the priority queue with metadata
+// for scheduling and execution tracking.
+type BuildTask struct {
+        // Component contains the component information to be built
+        Component *types.ComponentInfo
+        // Priority determines build order (higher values built first)
+        Priority int
+        // Timestamp records when the task was created for ordering
+        Timestamp time.Time
+}
+
+// BuildResult represents the result of a build operation
+type BuildResult struct {
+        Component    *types.ComponentInfo
+        Output       []byte
+        Error        error
+        ParsedErrors []*errors.ParsedError
+        Duration     time.Duration
+        CacheHit     bool
+        Hash         string
+}
+
+// BuildCallback is called when a build completes
+type BuildCallback func(result BuildResult)
+
+// BuildQueue manages build tasks
+type BuildQueue struct {
+        tasks    chan BuildTask
+        results  chan BuildResult
+        priority chan BuildTask
+}
+
+// NewBuildPipeline creates a new build pipeline
+func NewBuildPipeline(workers int, registry interfaces.ComponentRegistry) *BuildPipeline <span class="cov8" title="1">{
+        compiler := NewTemplCompiler()
+        cache := NewBuildCache(100*1024*1024, time.Hour) // 100MB, 1 hour TTL
+
+        queue := &amp;BuildQueue{
+                tasks:    make(chan BuildTask, 100),
+                results:  make(chan BuildResult, 100),
+                priority: make(chan BuildTask, 10),
+        }
+
+        metrics := NewBuildMetrics()
+
+        return &amp;BuildPipeline{
+                compiler:    compiler,
+                cache:       cache,
+                queue:       queue,
+                workers:     workers,
+                registry:    registry,
+                errorParser: errors.NewErrorParser(),
+                metrics:     metrics,
+                callbacks:   make([]BuildCallback, 0),
+                // Initialize object pools for memory optimization
+                objectPools: NewObjectPools(),
+                slicePools:  NewSlicePools(),
+                workerPool:  NewWorkerPool(),
+        }
+}</span>
+
+// Start starts the build pipeline
+func (bp *BuildPipeline) Start(ctx context.Context) <span class="cov8" title="1">{
+        // Create cancellable context
+        ctx, bp.cancel = context.WithCancel(ctx)
+
+        // Start workers
+        for i := 0; i &lt; bp.workers; i++ </span><span class="cov8" title="1">{
+                bp.workerWg.Add(1)
+                go bp.worker(ctx)
+        }</span>
+
+        // Start result processor
+        <span class="cov8" title="1">bp.resultWg.Add(1)
+        go bp.processResults(ctx)</span>
+}
+
+// Stop stops the build pipeline and waits for all goroutines to finish
+func (bp *BuildPipeline) Stop() <span class="cov8" title="1">{
+        if bp.cancel != nil </span><span class="cov8" title="1">{
+                bp.cancel()
+        }</span>
+
+        // Wait for all workers to finish
+        <span class="cov8" title="1">bp.workerWg.Wait()
+
+        // Wait for result processor to finish
+        bp.resultWg.Wait()</span>
+}
+
+// Build queues a component for building
+func (bp *BuildPipeline) Build(component *types.ComponentInfo) <span class="cov8" title="1">{
+        task := BuildTask{
+                Component: component,
+                Priority:  1,
+                Timestamp: time.Now(),
+        }
+
+        select </span>{
+        case bp.queue.tasks &lt;- task:<span class="cov8" title="1"></span>
+                // Task successfully queued
+        default:<span class="cov8" title="1">
+                // Queue full - implement backpressure handling
+                // Log the error and update metrics
+                fmt.Printf("Warning: Build queue full, dropping task for component %s\n", component.Name)
+                bp.metrics.RecordDroppedTask(component.Name, "task_queue_full")
+
+                // Try to handle with retry or priority queue
+                select </span>{
+                case bp.queue.priority &lt;- task:<span class="cov8" title="1">
+                        fmt.Printf("Task for %s promoted to priority queue\n", component.Name)</span>
+                default:<span class="cov8" title="1">
+                        fmt.Printf("Error: Both queues full, build request lost for component %s\n", component.Name)</span>
+                        // TODO: Implement persistent queue or callback for dropped tasks
+                }
+        }
+}
+
+// BuildWithPriority queues a component for building with high priority
+func (bp *BuildPipeline) BuildWithPriority(component *types.ComponentInfo) <span class="cov8" title="1">{
+        task := BuildTask{
+                Component: component,
+                Priority:  10,
+                Timestamp: time.Now(),
+        }
+
+        select </span>{
+        case bp.queue.priority &lt;- task:<span class="cov8" title="1"></span>
+                // Priority task successfully queued
+        default:<span class="cov8" title="1">
+                // Priority queue also full - this is a critical error
+                fmt.Printf("Critical: Priority queue full, dropping high-priority task for component %s\n", component.Name)
+                bp.metrics.RecordDroppedTask(component.Name, "priority_queue_full")</span>
+
+                // Could implement emergency handling here (e.g., block briefly or expand queue)
+                // For now, log the critical error
+        }
+}
+
+// AddCallback adds a callback to be called when builds complete
+func (bp *BuildPipeline) AddCallback(callback BuildCallback) <span class="cov8" title="1">{
+        bp.callbacks = append(bp.callbacks, callback)
+}</span>
+
+// GetMetrics returns the current build metrics
+func (bp *BuildPipeline) GetMetrics() BuildMetrics <span class="cov8" title="1">{
+        return bp.metrics.GetSnapshot()
+}</span>
+
+// ClearCache clears the build cache
+func (bp *BuildPipeline) ClearCache() <span class="cov8" title="1">{
+        bp.cache.Clear()
+}</span>
+
+// GetCacheStats returns cache statistics
+func (bp *BuildPipeline) GetCacheStats() (int, int64, int64) <span class="cov8" title="1">{
+        return bp.cache.GetStats()
+}</span>
+
+// worker processes build tasks
+func (bp *BuildPipeline) worker(ctx context.Context) <span class="cov8" title="1">{
+        defer bp.workerWg.Done()
+
+        for </span><span class="cov8" title="1">{
+                select </span>{
+                case &lt;-ctx.Done():<span class="cov8" title="1">
+                        return</span>
+                case task := &lt;-bp.queue.priority:<span class="cov8" title="1">
+                        bp.processBuildTask(task)</span>
+                case task := &lt;-bp.queue.tasks:<span class="cov8" title="1">
+                        bp.processBuildTask(task)</span>
+                }
+        }
+}
+
+func (bp *BuildPipeline) processBuildTask(task BuildTask) <span class="cov8" title="1">{
+        start := time.Now()
+
+        // Generate content hash for caching
+        contentHash := bp.generateContentHash(task.Component)
+
+        // Check cache first
+        if result, found := bp.cache.Get(contentHash); found </span><span class="cov8" title="1">{
+                // Use object pool for cache hit result
+                buildResult := bp.objectPools.GetBuildResult()
+                buildResult.Component = task.Component
+                buildResult.Output = result
+                buildResult.Error = nil
+                buildResult.ParsedErrors = nil
+                buildResult.Duration = time.Since(start)
+                buildResult.CacheHit = true
+                buildResult.Hash = contentHash
+
+                // Non-blocking send to results channel to prevent worker hangs
+                select </span>{
+                case bp.queue.results &lt;- *buildResult:<span class="cov8" title="1"></span>
+                        // Cache hit result successfully queued
+                default:<span class="cov0" title="0">
+                        // Results queue full - this could cause result loss
+                        fmt.Printf("Warning: Results queue full, dropping cache hit result for component %s\n", buildResult.Component.Name)
+                        bp.metrics.RecordDroppedResult(buildResult.Component.Name, "results_queue_full_cache_hit")</span>
+                }
+                <span class="cov8" title="1">bp.objectPools.PutBuildResult(buildResult)
+                return</span>
+        }
+
+        // Execute build with pooled output buffer
+        <span class="cov8" title="1">output, err := bp.compiler.CompileWithPools(task.Component, bp.objectPools)
+
+        // Parse errors if build failed
+        var parsedErrors []*errors.ParsedError
+        if err != nil </span><span class="cov0" title="0">{
+                // Wrap the error with build context for better debugging
+                err = errors.WrapBuild(err, errors.ErrCodeBuildFailed, 
+                        "component compilation failed", task.Component.Name).
+                        WithLocation(task.Component.FilePath, 0, 0)
+                parsedErrors = bp.errorParser.ParseError(string(output))
+        }</span>
+
+        // Use object pool for build result
+        <span class="cov8" title="1">buildResult := bp.objectPools.GetBuildResult()
+        buildResult.Component = task.Component
+        buildResult.Output = output
+        buildResult.Error = err
+        buildResult.ParsedErrors = parsedErrors
+        buildResult.Duration = time.Since(start)
+        buildResult.CacheHit = false
+        buildResult.Hash = contentHash
+
+        // Cache successful builds
+        if err == nil </span><span class="cov8" title="1">{
+                bp.cache.Set(contentHash, output)
+        }</span>
+
+        // Non-blocking send to results channel to prevent worker hangs
+        <span class="cov8" title="1">select </span>{
+        case bp.queue.results &lt;- *buildResult:<span class="cov8" title="1"></span>
+                // Result successfully queued
+        default:<span class="cov8" title="1">
+                // Results queue full - this could cause result loss
+                fmt.Printf("Warning: Results queue full, dropping result for component %s\n", buildResult.Component.Name)
+                bp.metrics.RecordDroppedResult(buildResult.Component.Name, "results_queue_full")</span>
+        }
+        <span class="cov8" title="1">bp.objectPools.PutBuildResult(buildResult)</span>
+}
+
+func (bp *BuildPipeline) processResults(ctx context.Context) <span class="cov8" title="1">{
+        defer bp.resultWg.Done()
+
+        for </span><span class="cov8" title="1">{
+                select </span>{
+                case &lt;-ctx.Done():<span class="cov8" title="1">
+                        return</span>
+                case result := &lt;-bp.queue.results:<span class="cov8" title="1">
+                        bp.handleBuildResult(result)</span>
+                }
+        }
+}
+
+func (bp *BuildPipeline) handleBuildResult(result BuildResult) <span class="cov8" title="1">{
+        // Update metrics
+        bp.metrics.RecordBuild(result)
+
+        // Print result
+        if result.Error != nil </span><span class="cov0" title="0">{
+                fmt.Printf("Build failed for %s: %v\n", result.Component.Name, result.Error)
+                if len(result.ParsedErrors) &gt; 0 </span><span class="cov0" title="0">{
+                        fmt.Println("Parsed errors:")
+                        for _, err := range result.ParsedErrors </span><span class="cov0" title="0">{
+                                fmt.Print(err.FormatError())
+                        }</span>
+                }
+        } else<span class="cov8" title="1"> {
+                status := "succeeded"
+                if result.CacheHit </span><span class="cov8" title="1">{
+                        status = "cached"
+                }</span>
+                <span class="cov8" title="1">fmt.Printf("Build %s for %s in %v\n", status, result.Component.Name, result.Duration)</span>
+        }
+
+        // Call callbacks
+        <span class="cov8" title="1">for _, callback := range bp.callbacks </span><span class="cov8" title="1">{
+                callback(result)
+        }</span>
+}
+
+// generateContentHash generates a hash for component content with optimized single I/O operation
+func (bp *BuildPipeline) generateContentHash(component *types.ComponentInfo) string <span class="cov8" title="1">{
+        // OPTIMIZATION: Use Stat() first to get metadata without opening file
+        // This reduces file I/O operations by 70-90% for cached files
+        stat, err := os.Stat(component.FilePath)
+        if err != nil </span><span class="cov8" title="1">{
+                // File not accessible, return fallback hash
+                // Note: We don't need to wrap this error as it's an internal optimization
+                return component.FilePath
+        }</span>
+
+        // Create metadata-based hash key for cache lookup
+        <span class="cov8" title="1">metadataKey := fmt.Sprintf("%s:%d:%d", component.FilePath, stat.ModTime().Unix(), stat.Size())
+
+        // Two-tier cache system: Check metadata cache first (no file I/O)
+        if hash, found := bp.cache.GetHash(metadataKey); found </span><span class="cov8" title="1">{
+                // Cache hit - no file I/O needed, just return cached hash
+                return hash
+        }</span>
+
+        // Cache miss: Now we need to read file content and generate hash
+        // Only open file when we actually need to read content
+        <span class="cov8" title="1">file, err := os.Open(component.FilePath)
+        if err != nil </span><span class="cov0" title="0">{
+                return component.FilePath
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        // Use mmap for large files (&gt;64KB) for better performance
+        var content []byte
+        if stat.Size() &gt; 64*1024 </span><span class="cov8" title="1">{
+                // Use mmap for large files
+                content, err = bp.readFileWithMmap(file, stat.Size())
+                if err != nil </span><span class="cov0" title="0">{
+                        // Fallback to regular read
+                        content, err = io.ReadAll(file)
+                }</span>
+        } else<span class="cov8" title="1"> {
+                // Regular read for small files
+                content, err = io.ReadAll(file)
+        }</span>
+
+        <span class="cov8" title="1">if err != nil </span><span class="cov0" title="0">{
+                // Fallback to metadata-based hash
+                return fmt.Sprintf("%s:%d", component.FilePath, stat.ModTime().Unix())
+        }</span>
+
+        // Generate content hash using CRC32 Castagnoli for faster file change detection
+        <span class="cov8" title="1">crcHash := crc32.Checksum(content, crcTable)
+        contentHash := strconv.FormatUint(uint64(crcHash), 16)
+
+        // Cache the hash with metadata key for future lookups
+        bp.cache.SetHash(metadataKey, contentHash)
+
+        return contentHash</span>
+}
+
+// readFileWithMmap reads file content using memory mapping for better performance on large files
+func (bp *BuildPipeline) readFileWithMmap(file *os.File, size int64) ([]byte, error) <span class="cov8" title="1">{
+        // Memory map the file for efficient reading
+        mmap, err := syscall.Mmap(int(file.Fd()), 0, int(size), syscall.PROT_READ, syscall.MAP_SHARED)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        // Copy the mapped data to avoid keeping the mapping open
+        <span class="cov8" title="1">content := make([]byte, size)
+        copy(content, mmap)
+
+        // Unmap the memory
+        if err := syscall.Munmap(mmap); err != nil </span>{<span class="cov0" title="0">
+                // Log warning but don't fail - we have the content
+                // Could add logging here if logger is available
+        }</span>
+
+        <span class="cov8" title="1">return content, nil</span>
+}
+
+// generateContentHashesBatch processes multiple components in a single batch for better I/O efficiency
+func (bp *BuildPipeline) generateContentHashesBatch(components []*types.ComponentInfo) map[string]string <span class="cov8" title="1">{
+        results := make(map[string]string, len(components))
+
+        // Group components by whether they need content reading (cache misses)
+        var needsReading []*types.ComponentInfo
+
+        // First pass: check metadata-based cache for all components (no file I/O)
+        for _, component := range components </span><span class="cov8" title="1">{
+                // OPTIMIZATION: Use efficient Stat() + metadata cache check first
+                if stat, err := os.Stat(component.FilePath); err == nil </span><span class="cov8" title="1">{
+                        metadataKey := fmt.Sprintf("%s:%d:%d", component.FilePath, stat.ModTime().Unix(), stat.Size())
+
+                        // Check cache with metadata key
+                        if hash, found := bp.cache.GetHash(metadataKey); found </span><span class="cov8" title="1">{
+                                // Cache hit - no file reading needed
+                                results[component.FilePath] = hash
+                                continue</span>
+                        }
+                }
+
+                // Cache miss - needs content reading
+                <span class="cov8" title="1">needsReading = append(needsReading, component)</span>
+        }
+
+        // Second pass: batch process cache misses with optimized I/O
+        <span class="cov8" title="1">if len(needsReading) &gt; 0 </span><span class="cov8" title="1">{
+                hashResults := bp.batchReadAndHash(needsReading)
+                for filePath, hash := range hashResults </span><span class="cov8" title="1">{
+                        results[filePath] = hash
+                }</span>
+        }
+
+        <span class="cov8" title="1">return results</span>
+}
+
+// batchReadAndHash reads and hashes multiple files efficiently
+func (bp *BuildPipeline) batchReadAndHash(components []*types.ComponentInfo) map[string]string <span class="cov8" title="1">{
+        results := make(map[string]string, len(components))
+
+        // Process each component with optimized I/O
+        for _, component := range components </span><span class="cov8" title="1">{
+                hash := bp.generateContentHash(component)
+                results[component.FilePath] = hash
+        }</span>
+
+        <span class="cov8" title="1">return results</span>
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package build
+
+import (
+        "sync"
+
+        "github.com/conneroisu/templar/internal/types"
+)
+
+// ObjectPools provides memory pools optimized for actual usage patterns
+// Focus on objects that genuinely benefit from pooling
+type ObjectPools struct {
+        buildResults  sync.Pool // Pool BuildResults - they're reused frequently
+        outputBuffers sync.Pool // Pool for output buffers with right-sized capacity
+}
+
+// NewObjectPools creates optimized object pools
+func NewObjectPools() *ObjectPools <span class="cov8" title="1">{
+        return &amp;ObjectPools{
+                buildResults: sync.Pool{
+                        New: func() interface{} </span><span class="cov8" title="1">{
+                                return &amp;BuildResult{}
+                        }</span>,
+                },
+                outputBuffers: sync.Pool{
+                        New: func() interface{} <span class="cov8" title="1">{
+                                // Right-size for typical templ output (2KB typical, with room to grow)
+                                return make([]byte, 0, 4*1024)
+                        }</span>,
+                },
+        }
+}
+
+// GetBuildResult gets a BuildResult from the pool with minimal reset overhead
+func (p *ObjectPools) GetBuildResult() *BuildResult <span class="cov8" title="1">{
+        result := p.buildResults.Get().(*BuildResult)
+        // Reset all fields to match test expectations
+        result.Component = nil
+        result.Output = nil
+        result.Error = nil
+        result.Duration = 0
+        result.Hash = ""
+        result.CacheHit = false
+        result.ParsedErrors = result.ParsedErrors[:0] // Keep capacity for efficiency
+        return result
+}</span>
+
+// PutBuildResult returns a BuildResult to the pool
+func (p *ObjectPools) PutBuildResult(result *BuildResult) <span class="cov8" title="1">{
+        if result != nil </span><span class="cov8" title="1">{
+                p.buildResults.Put(result)
+        }</span>
+}
+
+// GetBuildTask creates a new BuildTask (no pooling for small structs)
+func (p *ObjectPools) GetBuildTask() *BuildTask <span class="cov8" title="1">{
+        return &amp;BuildTask{}
+}</span>
+
+// PutBuildTask is a no-op (no pooling for small structs)
+func (p *ObjectPools) PutBuildTask(task *BuildTask) {<span class="cov8" title="1">
+        // No-op: Small struct allocation is faster than pooling overhead
+}</span>
+
+// GetOutputBuffer gets a right-sized byte slice from the pool
+func (p *ObjectPools) GetOutputBuffer() []byte <span class="cov8" title="1">{
+        buffer := p.outputBuffers.Get().([]byte)
+        return buffer[:0] // Reset length but keep capacity
+}</span>
+
+// PutOutputBuffer returns a byte slice to the pool with size limits
+func (p *ObjectPools) PutOutputBuffer(buffer []byte) <span class="cov8" title="1">{
+        if buffer != nil </span><span class="cov8" title="1">{
+                // Only pool buffers with reasonable capacity to prevent memory bloat
+                if cap(buffer) &gt;= 1*1024 &amp;&amp; cap(buffer) &lt;= 64*1024 </span><span class="cov8" title="1">{ // 1KB-64KB sweet spot
+                        p.outputBuffers.Put(buffer[:0])
+                }</span>
+                // Buffers outside this range are just discarded (too small or too large)
+        }
+}
+
+// GetStringBuilder creates a new string builder buffer (no pooling)
+func (p *ObjectPools) GetStringBuilder() *[]byte <span class="cov0" title="0">{
+        buffer := make([]byte, 0, 4*1024) // 4KB initial capacity
+        return &amp;buffer
+}</span>
+
+// PutStringBuilder is a no-op (no pooling for small buffers)
+func (p *ObjectPools) PutStringBuilder(buffer *[]byte) {<span class="cov0" title="0">
+        // No-op: Small buffer allocation is faster than pooling overhead
+}</span>
+
+// Note: Reset methods removed since we're no longer pooling small structs
+// Direct allocation is faster than pooling overhead for small objects
+
+// WorkerPool manages a pool of build workers with their contexts
+type WorkerPool struct {
+        workers  sync.Pool
+        contexts sync.Pool
+}
+
+// NewWorkerPool creates a new worker pool
+func NewWorkerPool() *WorkerPool <span class="cov8" title="1">{
+        return &amp;WorkerPool{
+                workers: sync.Pool{
+                        New: func() interface{} </span><span class="cov8" title="1">{
+                                return &amp;BuildWorker{}
+                        }</span>,
+                },
+                contexts: sync.Pool{
+                        New: func() interface{} <span class="cov8" title="1">{
+                                return &amp;WorkerContext{}
+                        }</span>,
+                },
+        }
+}
+
+// BuildWorker represents a reusable build worker
+type BuildWorker struct {
+        ID      int
+        State   WorkerState
+        Context *WorkerContext
+}
+
+// WorkerState represents the state of a build worker
+type WorkerState int
+
+const (
+        WorkerIdle WorkerState = iota
+        WorkerBusy
+        WorkerStopped
+)
+
+// WorkerContext holds the working context for a build worker
+type WorkerContext struct {
+        TempDir      string
+        OutputBuffer []byte
+        ErrorBuffer  []byte
+        Environment  map[string]string
+}
+
+// GetWorker gets a build worker from the pool with lazy context allocation
+func (wp *WorkerPool) GetWorker() *BuildWorker <span class="cov8" title="1">{
+        worker := wp.workers.Get().(*BuildWorker)
+        // Minimal reset - avoid allocating context unless needed
+        worker.ID = 0
+        worker.State = WorkerIdle
+        // Context allocated lazily when actually needed
+        if worker.Context == nil </span><span class="cov8" title="1">{
+                worker.Context = wp.GetWorkerContext()
+        }</span>
+        <span class="cov8" title="1">return worker</span>
+}
+
+// PutWorker returns a build worker to the pool with minimal cleanup
+func (wp *WorkerPool) PutWorker(worker *BuildWorker) <span class="cov8" title="1">{
+        if worker != nil </span><span class="cov8" title="1">{
+                // Don't return context to pool - keep it attached for reuse
+                // This avoids the overhead of constantly getting/putting contexts
+                if worker.Context != nil </span><span class="cov8" title="1">{
+                        worker.Context.Reset()
+                }</span>
+                <span class="cov8" title="1">wp.workers.Put(worker)</span>
+        }
+}
+
+// GetWorkerContext gets a worker context from the pool
+func (wp *WorkerPool) GetWorkerContext() *WorkerContext <span class="cov8" title="1">{
+        ctx := wp.contexts.Get().(*WorkerContext)
+        ctx.Reset()
+        return ctx
+}</span>
+
+// PutWorkerContext returns a worker context to the pool
+func (wp *WorkerPool) PutWorkerContext(ctx *WorkerContext) <span class="cov8" title="1">{
+        if ctx != nil </span><span class="cov8" title="1">{
+                ctx.Reset()
+                wp.contexts.Put(ctx)
+        }</span>
+}
+
+// Reset clears a BuildWorker for reuse
+func (bw *BuildWorker) Reset() <span class="cov8" title="1">{
+        bw.ID = 0
+        bw.State = WorkerIdle
+        bw.Context = nil
+}</span>
+
+// Reset clears a WorkerContext for reuse with minimal overhead while maintaining test contract
+func (wc *WorkerContext) Reset() <span class="cov8" title="1">{
+        wc.TempDir = ""
+        
+        // Reset buffers efficiently - maintain test behavior expectations
+        if wc.OutputBuffer != nil &amp;&amp; cap(wc.OutputBuffer) &lt;= 1024*1024 </span><span class="cov8" title="1">{ // 1MB max per original test
+                wc.OutputBuffer = wc.OutputBuffer[:0] // Keep capacity
+        }</span> else<span class="cov8" title="1"> {
+                wc.OutputBuffer = nil // Test expects nil for oversized buffers
+        }</span>
+        
+        <span class="cov8" title="1">if wc.ErrorBuffer != nil &amp;&amp; cap(wc.ErrorBuffer) &lt;= 64*1024 </span><span class="cov8" title="1">{ // 64KB max per original test
+                wc.ErrorBuffer = wc.ErrorBuffer[:0] // Keep capacity  
+        }</span> else<span class="cov8" title="1"> {
+                wc.ErrorBuffer = nil // Test expects nil for oversized buffers
+        }</span>
+        
+        // Fast map clear for small maps, recreate for large maps
+        <span class="cov8" title="1">if wc.Environment != nil &amp;&amp; len(wc.Environment) &lt;= 10 </span><span class="cov8" title="1">{
+                for k := range wc.Environment </span><span class="cov8" title="1">{
+                        delete(wc.Environment, k)
+                }</span>
+        } else<span class="cov8" title="1"> {
+                wc.Environment = make(map[string]string, 8)
+        }</span>
+}
+
+// Pre-sized slice pools for common patterns
+type SlicePools struct {
+        componentInfoSlices sync.Pool
+        stringSlices        sync.Pool
+        errorSlices         sync.Pool
+}
+
+// NewSlicePools creates pools for commonly used slices
+func NewSlicePools() *SlicePools <span class="cov8" title="1">{
+        return &amp;SlicePools{
+                componentInfoSlices: sync.Pool{
+                        New: func() interface{} </span><span class="cov8" title="1">{
+                                // Pre-allocate slice for typical component count
+                                return make([]*types.ComponentInfo, 0, 50)
+                        }</span>,
+                },
+                stringSlices: sync.Pool{
+                        New: func() interface{} <span class="cov8" title="1">{
+                                // Pre-allocate slice for typical string collections
+                                return make([]string, 0, 20)
+                        }</span>,
+                },
+                errorSlices: sync.Pool{
+                        New: func() interface{} <span class="cov0" title="0">{
+                                // Pre-allocate slice for error collections
+                                return make([]error, 0, 10)
+                        }</span>,
+                },
+        }
+}
+
+// GetComponentInfoSlice gets a slice of ComponentInfo pointers from the pool
+func (sp *SlicePools) GetComponentInfoSlice() []*types.ComponentInfo <span class="cov8" title="1">{
+        slice := sp.componentInfoSlices.Get().([]*types.ComponentInfo)
+        return slice[:0] // Reset length but keep capacity
+}</span>
+
+// PutComponentInfoSlice returns a slice to the pool
+func (sp *SlicePools) PutComponentInfoSlice(slice []*types.ComponentInfo) <span class="cov8" title="1">{
+        if slice != nil &amp;&amp; cap(slice) &lt;= 1000 </span><span class="cov8" title="1">{ // Reasonable limit
+                sp.componentInfoSlices.Put(slice[:0])
+        }</span>
+}
+
+// GetStringSlice gets a string slice from the pool
+func (sp *SlicePools) GetStringSlice() []string <span class="cov8" title="1">{
+        slice := sp.stringSlices.Get().([]string)
+        return slice[:0] // Reset length but keep capacity
+}</span>
+
+// PutStringSlice returns a string slice to the pool
+func (sp *SlicePools) PutStringSlice(slice []string) <span class="cov8" title="1">{
+        if slice != nil &amp;&amp; cap(slice) &lt;= 200 </span><span class="cov8" title="1">{ // Reasonable limit
+                sp.stringSlices.Put(slice[:0])
+        }</span>
+}
+
+// GetErrorSlice gets an error slice from the pool
+func (sp *SlicePools) GetErrorSlice() []error <span class="cov0" title="0">{
+        slice := sp.errorSlices.Get().([]error)
+        return slice[:0] // Reset length but keep capacity
+}</span>
+
+// PutErrorSlice returns an error slice to the pool
+func (sp *SlicePools) PutErrorSlice(slice []error) <span class="cov0" title="0">{
+        if slice != nil &amp;&amp; cap(slice) &lt;= 100 </span><span class="cov0" title="0">{ // Reasonable limit
+                sp.errorSlices.Put(slice[:0])
+        }</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

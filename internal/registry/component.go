@@ -322,7 +322,7 @@ func sanitizeFilePath(path string) string {
 // DetectCircularDependencies detects circular dependencies using the dependency analyzer
 func (r *ComponentRegistry) DetectCircularDependencies() [][]string {
 	if r.dependencyAnalyzer == nil {
-		return nil
+		return make([][]string, 0)
 	}
 	return r.dependencyAnalyzer.DetectCircularDependencies()
 }
