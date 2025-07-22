@@ -24,14 +24,16 @@ Shows component names, file paths, and optionally parameters and dependencies.
 
 Examples:
   templar list                    # List all components in table format
-  templar list --format json     # Output as JSON
-  templar list --with-props       # Include component properties
-  templar list --with-deps        # Include dependencies`,
+  templar list -f json            # Output as JSON (short flag)
+  templar list --format csv       # Output as CSV
+  templar list -p                 # Include component properties (short flag)
+  templar list -d                 # Include dependencies (short flag)
+  templar list -pd -f yaml        # Include properties and deps, output as YAML`,
 	RunE: runList,
 }
 
 var (
-	listFormat    string
+	listFlags     *StandardFlags
 	listWithDeps  bool
 	listWithProps bool
 )
@@ -39,9 +41,17 @@ var (
 func init() {
 	rootCmd.AddCommand(listCmd)
 
-	listCmd.Flags().StringVarP(&listFormat, "format", "f", "table", "Output format (table, json, yaml)")
-	listCmd.Flags().BoolVar(&listWithDeps, "with-deps", false, "Include dependencies")
-	listCmd.Flags().BoolVar(&listWithProps, "with-props", false, "Include component properties")
+	// Use standardized flags
+	listFlags = AddStandardFlags(listCmd, "output")
+	
+	// Add list-specific flags with short aliases
+	listCmd.Flags().BoolVarP(&listWithDeps, "with-deps", "d", false, "Include component dependencies")
+	listCmd.Flags().BoolVarP(&listWithProps, "with-props", "p", false, "Include component properties/parameters")
+	
+	// Add format validation
+	AddFlagValidation(listCmd, "format", func(format string) error {
+		return ValidateFormatWithSuggestion(format, []string{"table", "json", "yaml", "csv"})
+	})
 }
 
 func runList(cmd *cobra.Command, args []string) error {
@@ -95,16 +105,23 @@ func runList(cmd *cobra.Command, args []string) error {
 		componentSlice = append(componentSlice, comp)
 	}
 
+	// Validate flags
+	if err := listFlags.ValidateFlags(); err != nil {
+		return fmt.Errorf("invalid flags: %w", err)
+	}
+
 	// Output in requested format
-	switch strings.ToLower(listFormat) {
+	switch strings.ToLower(listFlags.Format) {
 	case "json":
 		return outputListJSON(componentSlice)
 	case "yaml":
 		return outputYAML(componentSlice)
 	case "table":
 		return outputTable(componentSlice)
+	case "csv":
+		return outputListCSV(componentSlice)
 	default:
-		return fmt.Errorf("unsupported format: %s", listFormat)
+		return fmt.Errorf("unsupported format: %s", listFlags.Format)
 	}
 }
 
@@ -226,6 +243,44 @@ func outputTable(components []*types.ComponentInfo) error {
 
 	// Write summary
 	fmt.Fprintf(w, "\nTotal: %d components\n", len(components))
+
+	return nil
+}
+
+func outputListCSV(components []*types.ComponentInfo) error {
+	// Write header
+	header := "name,package,file_path,function"
+	if listWithProps {
+		header += ",parameters"
+	}
+	if listWithDeps {
+		header += ",dependencies"
+	}
+	fmt.Println(header)
+
+	// Write components
+	for _, component := range components {
+		row := fmt.Sprintf("%s,%s,%s,%s",
+			component.Name,
+			component.Package,
+			component.FilePath,
+			component.Name,
+		)
+
+		if listWithProps {
+			var params []string
+			for _, param := range component.Parameters {
+				params = append(params, fmt.Sprintf("%s:%s", param.Name, param.Type))
+			}
+			row += "," + strings.Join(params, ";")
+		}
+
+		if listWithDeps {
+			row += "," // Empty for now
+		}
+
+		fmt.Println(row)
+	}
 
 	return nil
 }

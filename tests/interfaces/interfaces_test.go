@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/conneroisu/templar/internal/adapters"
 	"github.com/conneroisu/templar/internal/build"
 	"github.com/conneroisu/templar/internal/interfaces"
 	"github.com/conneroisu/templar/internal/registry"
@@ -77,8 +76,8 @@ func TestFileWatcherInterface(t *testing.T) {
 	}
 	defer concreteWatcher.Stop()
 
-	// Create adapter and verify interface implementation
-	var iface interfaces.FileWatcher = adapters.NewFileWatcherAdapter(concreteWatcher)
+	// Use concrete type directly and verify interface implementation
+	var iface interfaces.FileWatcher = concreteWatcher
 	if iface == nil {
 		t.Fatal("Watcher does not implement FileWatcher interface")
 	}
@@ -112,8 +111,8 @@ func TestComponentScannerInterface(t *testing.T) {
 	// Create concrete scanner
 	concreteScanner := scanner.NewComponentScanner(reg)
 
-	// Create adapter and verify interface implementation
-	var iface interfaces.ComponentScanner = adapters.NewComponentScannerAdapter(concreteScanner)
+	// Use concrete type directly and verify interface implementation
+	var iface interfaces.ComponentScanner = concreteScanner
 	if iface == nil {
 		t.Fatal("Scanner does not implement ComponentScanner interface")
 	}
@@ -141,8 +140,8 @@ func TestBuildPipelineInterface(t *testing.T) {
 	// Create concrete build pipeline
 	concretePipeline := build.NewRefactoredBuildPipeline(2, reg)
 
-	// Create adapter and verify interface implementation
-	var iface interfaces.BuildPipeline = adapters.NewBuildPipelineAdapter(concretePipeline)
+	// Use concrete type directly and verify interface implementation
+	var iface interfaces.BuildPipeline = concretePipeline
 	if iface == nil {
 		t.Fatal("Build pipeline does not implement BuildPipeline interface")
 	}
@@ -197,10 +196,10 @@ func TestFullInterfaceIntegration(t *testing.T) {
 	concreteScanner := scanner.NewComponentScanner(reg)
 	concretePipeline := build.NewRefactoredBuildPipeline(2, reg)
 
-	// Create adapters
-	watcherAdapter := adapters.NewFileWatcherAdapter(concreteWatcher)
-	scannerAdapter := adapters.NewComponentScannerAdapter(concreteScanner)
-	pipelineAdapter := adapters.NewBuildPipelineAdapter(concretePipeline)
+	// Use concrete types directly
+	watcherAdapter := concreteWatcher
+	scannerAdapter := concreteScanner
+	pipelineAdapter := concretePipeline
 
 	// Validate all interfaces
 	summary := interfaces.ValidateAllInterfaces(reg, watcherAdapter, scannerAdapter, pipelineAdapter)
@@ -246,8 +245,8 @@ func TestInterfaceWorkflow(t *testing.T) {
 
 	// Use only interfaces from this point forward
 	var registry interfaces.ComponentRegistry = reg
-	var fileWatcher interfaces.FileWatcher = adapters.NewFileWatcherAdapter(concreteWatcher)
-	var buildPipeline interfaces.BuildPipeline = adapters.NewBuildPipelineAdapter(concretePipeline)
+	var fileWatcher interfaces.FileWatcher = concreteWatcher
+	var buildPipeline interfaces.BuildPipeline = concretePipeline
 
 	// Test workflow
 	ctx := context.Background()
@@ -318,7 +317,7 @@ func TestInterfaceWorkflow(t *testing.T) {
 func TestConcurrentInterfaceAccess(t *testing.T) {
 	reg := registry.NewComponentRegistry()
 	concretePipeline := build.NewRefactoredBuildPipeline(4, reg)
-	pipelineAdapter := adapters.NewBuildPipelineAdapter(concretePipeline)
+	pipelineAdapter := concretePipeline
 
 	ctx := context.Background()
 	pipelineAdapter.Start(ctx)

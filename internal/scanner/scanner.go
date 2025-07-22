@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/conneroisu/templar/internal/errors"
+	"github.com/conneroisu/templar/internal/interfaces"
 	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/types"
 )
@@ -147,6 +148,9 @@ type ComponentScanner struct {
 	// metrics tracks performance metrics during scanning operations
 	metrics *ScannerMetrics
 }
+
+// Interface compliance verification - ComponentScanner implements interfaces.ComponentScanner
+var _ interfaces.ComponentScanner = (*ComponentScanner)(nil)
 
 // pathValidationCache caches expensive filesystem operations for optimal performance
 type pathValidationCache struct {
@@ -413,7 +417,7 @@ func (p *WorkerPool) Stop() {
 }
 
 // GetRegistry returns the component registry
-func (s *ComponentScanner) GetRegistry() *registry.ComponentRegistry {
+func (s *ComponentScanner) GetRegistry() interfaces.ComponentRegistry {
 	return s.registry
 }
 

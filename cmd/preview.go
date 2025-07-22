@@ -34,7 +34,7 @@ Examples:
   templar preview Button --props @props.json         # Preview with props from file (alternative)
   templar preview Card --mock ./mocks/card.json      # Preview with mock data
   templar preview Button --wrapper ./layout.templ    # Preview with custom wrapper
-  templar preview Card --port 3000 --disable-browser # Preview on port 3000 without opening browser`,
+  templar preview Card --port 3000 --no-open         # Preview on port 3000 without opening browser`,
 	Args: cobra.ExactArgs(1),
 	RunE: runPreview,
 }

@@ -8,7 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/conneroisu/templar/internal/adapters"
 	"github.com/conneroisu/templar/internal/build"
 	"github.com/conneroisu/templar/internal/config"
 	"github.com/conneroisu/templar/internal/monitoring"
@@ -456,17 +455,13 @@ func (c *ServiceContainer) registerCoreServices() error {
 			}
 		}
 
-		// Use adapters to convert concrete types to interfaces
-		fileWatcherInterface := adapters.NewFileWatcherAdapter(watcherService.(*watcher.FileWatcher))
-		scannerInterface := adapters.NewComponentScannerAdapter(scannerService.(*scanner.ComponentScanner))
-		buildPipelineInterface := adapters.NewBuildPipelineAdapter(buildPipelineService.(*build.RefactoredBuildPipeline))
-
+		// Use concrete types directly - they now implement interfaces natively
 		return server.NewWithDependencies(
 			c.config,
 			reg.(*registry.ComponentRegistry),
-			fileWatcherInterface,
-			scannerInterface,
-			buildPipelineInterface,
+			watcherService.(*watcher.FileWatcher),
+			scannerService.(*scanner.ComponentScanner),
+			buildPipelineService.(*build.RefactoredBuildPipeline),
 			monitor,
 		), nil
 	}).DependsOn("registry", "watcher", "scanner", "buildPipeline").WithTag("core")

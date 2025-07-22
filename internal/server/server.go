@@ -20,7 +20,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/conneroisu/templar/internal/adapters"
 	"github.com/conneroisu/templar/internal/build"
 	"github.com/conneroisu/templar/internal/config"
 	"github.com/conneroisu/templar/internal/errors"
@@ -84,19 +83,16 @@ type UpdateMessage struct {
 func New(cfg *config.Config) (*PreviewServer, error) {
 	registry := registry.NewComponentRegistry()
 
-	fileWatcherConcrete, err := watcher.NewFileWatcher(300 * time.Millisecond)
+	fileWatcher, err := watcher.NewFileWatcher(300 * time.Millisecond)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create file watcher: %w", err)
 	}
-	fileWatcher := adapters.NewFileWatcherAdapter(fileWatcherConcrete)
 
-	scannerConcrete := scanner.NewComponentScanner(registry)
-	scannerAdapter := adapters.NewComponentScannerAdapter(scannerConcrete)
+	scanner := scanner.NewComponentScanner(registry)
 	renderer := renderer.NewComponentRenderer(registry)
 
 	// Create build pipeline
-	buildPipelineConcrete := build.NewRefactoredBuildPipeline(4, registry)
-	buildPipeline := adapters.NewBuildPipelineAdapter(buildPipelineConcrete)
+	buildPipeline := build.NewRefactoredBuildPipeline(4, registry)
 
 	// Initialize monitoring if enabled
 	var templatorMonitor *monitoring.TemplarMonitor
@@ -118,7 +114,7 @@ func New(cfg *config.Config) (*PreviewServer, error) {
 		unregister:      make(chan *websocket.Conn),
 		registry:        registry,
 		watcher:         fileWatcher,
-		scanner:         scannerAdapter,
+		scanner:         scanner,
 		renderer:        renderer,
 		buildPipeline:   buildPipeline,
 		lastBuildErrors: make([]*errors.ParsedError, 0),

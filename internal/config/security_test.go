@@ -151,7 +151,7 @@ func TestValidateBuildConfig_Security(t *testing.T) {
 				Command:  "templ generate",
 			},
 			expectError: true,
-			errorType:   "path traversal",
+			errorType:   "contains traversal",
 		},
 		{
 			name: "absolute path in cache dir",
@@ -160,7 +160,7 @@ func TestValidateBuildConfig_Security(t *testing.T) {
 				Command:  "templ generate",
 			},
 			expectError: true,
-			errorType:   "relative path",
+			errorType:   "should be relative",
 		},
 		{
 			name: "valid relative cache dir",
@@ -209,7 +209,8 @@ func TestValidateComponentsConfig_Security(t *testing.T) {
 			config: ComponentsConfig{
 				ScanPaths: []string{},
 			},
-			expectError: false,
+			expectError: true,
+			errorType:   "at least one scan path",
 		},
 		{
 			name: "path traversal in scan path",

@@ -174,7 +174,7 @@ templ TestComponent(title string) {
 	viper.Set("server.host", "localhost")
 
 	// Reset flags
-	listFormat = "table"
+	listFlags.Format = "table"
 	listWithDeps = false
 	listWithProps = false
 
@@ -209,7 +209,7 @@ templ TestComponent(title string) {
 	viper.Set("server.host", "localhost")
 
 	// Set flags
-	listFormat = "json"
+	listFlags.Format = "json"
 	listWithDeps = true
 	listWithProps = true
 
@@ -596,4 +596,34 @@ func TestValidateArgumentFunction_Security(t *testing.T) {
 			assert.Equal(t, test.expected, result, "Argument: %s", test.arg)
 		})
 	}
+}
+
+func TestDoctorCommand(t *testing.T) {
+	// Create a temporary directory with templar configuration
+	tempDir := t.TempDir()
+
+	// Change to temp directory
+	oldDir, err := os.Getwd()
+	require.NoError(t, err)
+	defer os.Chdir(oldDir)
+
+	err = os.Chdir(tempDir)
+	require.NoError(t, err)
+
+	// Create a basic .templar.yml configuration
+	config := `
+components:
+  scan_paths: ["./components"]
+server:
+  port: 8080
+  host: "localhost"
+development:
+  hot_reload: true
+`
+	err = os.WriteFile(".templar.yml", []byte(config), 0644)
+	require.NoError(t, err)
+
+	// Test doctor command execution
+	err = runDoctor(&cobra.Command{}, []string{})
+	require.NoError(t, err)
 }

@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
+	"github.com/conneroisu/templar/internal/interfaces"
 )
 
 // Constants for memory management
@@ -54,8 +55,8 @@ var (
 type FileWatcher struct {
 	watcher   *fsnotify.Watcher
 	debouncer *Debouncer
-	filters   []FileFilter
-	handlers  []ChangeHandler
+	filters   []interfaces.FileFilter
+	handlers  []interfaces.ChangeHandlerFunc
 	mutex     sync.RWMutex
 	stopped   bool
 }
@@ -100,6 +101,9 @@ type FileFilter func(path string) bool
 // ChangeHandler handles file change events
 type ChangeHandler func(events []ChangeEvent) error
 
+// Interface compliance verification - FileWatcher implements interfaces.FileWatcher
+var _ interfaces.FileWatcher = (*FileWatcher)(nil)
+
 // Debouncer groups rapid file changes together with enhanced memory management
 type Debouncer struct {
 	delay         time.Duration
@@ -135,22 +139,22 @@ func NewFileWatcher(debounceDelay time.Duration) (*FileWatcher, error) {
 	fw := &FileWatcher{
 		watcher:   watcher,
 		debouncer: debouncer,
-		filters:   make([]FileFilter, 0),
-		handlers:  make([]ChangeHandler, 0),
+		filters:   make([]interfaces.FileFilter, 0),
+		handlers:  make([]interfaces.ChangeHandlerFunc, 0),
 	}
 
 	return fw, nil
 }
 
 // AddFilter adds a file filter
-func (fw *FileWatcher) AddFilter(filter FileFilter) {
+func (fw *FileWatcher) AddFilter(filter interfaces.FileFilter) {
 	fw.mutex.Lock()
 	defer fw.mutex.Unlock()
 	fw.filters = append(fw.filters, filter)
 }
 
 // AddHandler adds a change handler
-func (fw *FileWatcher) AddHandler(handler ChangeHandler) {
+func (fw *FileWatcher) AddHandler(handler interfaces.ChangeHandlerFunc) {
 	fw.mutex.Lock()
 	defer fw.mutex.Unlock()
 	fw.handlers = append(fw.handlers, handler)
@@ -291,7 +295,7 @@ func (fw *FileWatcher) handleFsnotifyEvent(event fsnotify.Event) {
 	fw.mutex.RUnlock()
 
 	for _, filter := range filters {
-		if !filter(event.Name) {
+		if !filter.ShouldInclude(event.Name) {
 			return
 		}
 	}
@@ -351,8 +355,14 @@ func (fw *FileWatcher) processEvents(ctx context.Context) {
 			handlers := fw.handlers
 			fw.mutex.RUnlock()
 
+			// Convert ChangeEvent slice to interface{} slice for interface compatibility
+			interfaceEvents := make([]interface{}, len(events))
+			for i, event := range events {
+				interfaceEvents[i] = event
+			}
+
 			for _, handler := range handlers {
-				if err := handler(events); err != nil {
+				if err := handler(interfaceEvents); err != nil {
 					// Log error but continue processing
 					log.Printf("File watcher handler error: %v", err)
 				}

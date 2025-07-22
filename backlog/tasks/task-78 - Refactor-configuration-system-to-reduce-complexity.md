@@ -1,9 +1,11 @@
 ---
 id: task-78
 title: Refactor configuration system to reduce complexity
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@patient-tramstopper'
 created_date: '2025-07-20'
+updated_date: '2025-07-22'
 labels: []
 dependencies: []
 ---

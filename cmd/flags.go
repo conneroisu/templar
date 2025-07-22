@@ -13,25 +13,27 @@ import (
 
 // StandardFlags provides consistent flag definitions across commands
 type StandardFlags struct {
-	// Server flags
+	// Server flags (consistent across serve, preview commands)
 	Port           int    `flag:"port,p" desc:"Port to serve on" default:"8080"`
-	Host           string `flag:"host" desc:"Host to bind to" default:"localhost"`
-	DisableBrowser bool   `flag:"disable-browser" desc:"Don't open browser automatically" default:"false"`
+	Host           string `flag:"host,h" desc:"Host to bind to" default:"localhost"`
+	NoOpen         bool   `flag:"no-open,n" desc:"Don't automatically open browser" default:"false"`
 
-	// Component flags
+	// Component flags (consistent property handling)
 	Props     string `flag:"props" desc:"Component properties (JSON or @file.json)" default:""`
-	PropsFile string `flag:"props-file,f" desc:"Properties file (JSON)" default:""`
-	MockData  string `flag:"mock,m" desc:"Mock data file or pattern" default:""`
-	Wrapper   string `flag:"wrapper,w" desc:"Wrapper template" default:""`
+	PropsFile string `flag:"props-file,P" desc:"Properties file path (JSON)" default:""`
+	MockData  string `flag:"mock,m" desc:"Mock data file, pattern, or 'auto'" default:""`
+	Wrapper   string `flag:"wrapper,w" desc:"Wrapper template path" default:""`
 
-	// Build flags
-	WatchPattern string `flag:"watch" desc:"File watch pattern" default:"**/*.templ"`
-	BuildCmd     string `flag:"build-cmd" desc:"Build command to run" default:"templ generate"`
+	// Build flags (consistent build configuration)
+	WatchPattern string `flag:"watch,W" desc:"File watch pattern for auto-rebuild" default:"**/*.templ"`
+	BuildCmd     string `flag:"build-cmd,B" desc:"Build command to execute" default:"templ generate"`
+	Clean        bool   `flag:"clean,c" desc:"Clean build artifacts before building" default:"false"`
 
-	// Output flags
-	OutputFormat string `flag:"output,o" desc:"Output format (table|json|yaml)" default:"table"`
-	Verbose      bool   `flag:"verbose,v" desc:"Enable verbose output" default:"false"`
-	Quiet        bool   `flag:"quiet,q" desc:"Suppress output" default:"false"`
+	// Output flags (consistent across all commands)
+	Format  string `flag:"format,f" desc:"Output format (table|json|yaml|csv)" default:"table"`
+	Output  string `flag:"output,o" desc:"Output directory or file" default:""`
+	Verbose bool   `flag:"verbose,v" desc:"Enable verbose/detailed output" default:"false"`
+	Quiet   bool   `flag:"quiet,q" desc:"Suppress non-essential output" default:"false"`
 }
 
 // AddStandardFlags adds standard flags to a command
@@ -56,26 +58,28 @@ func AddStandardFlags(cmd *cobra.Command, flagTypes ...string) *StandardFlags {
 
 func addServerFlags(cmd *cobra.Command, flags *StandardFlags) {
 	cmd.Flags().IntVarP(&flags.Port, "port", "p", 8080, "Port to serve on")
-	cmd.Flags().StringVar(&flags.Host, "host", "localhost", "Host to bind to")
-	cmd.Flags().BoolVar(&flags.DisableBrowser, "disable-browser", false, "Don't open browser automatically")
+	cmd.Flags().StringVar(&flags.Host, "host", "localhost", "Host to bind to (use 0.0.0.0 for all interfaces)")
+	cmd.Flags().BoolVarP(&flags.NoOpen, "no-open", "n", false, "Don't automatically open browser")
 }
 
 func addComponentFlags(cmd *cobra.Command, flags *StandardFlags) {
-	cmd.Flags().StringVar(&flags.Props, "props", "", "Component properties (JSON or @file.json)")
-	cmd.Flags().StringVarP(&flags.PropsFile, "props-file", "f", "", "Properties file (JSON)")
-	cmd.Flags().StringVarP(&flags.MockData, "mock", "m", "", "Mock data file or pattern")
-	cmd.Flags().StringVarP(&flags.Wrapper, "wrapper", "w", "", "Wrapper template")
+	cmd.Flags().StringVar(&flags.Props, "props", "", "Component properties (JSON string or @file.json)")
+	cmd.Flags().StringVarP(&flags.PropsFile, "props-file", "P", "", "Properties file path (JSON)")
+	cmd.Flags().StringVarP(&flags.MockData, "mock", "m", "", "Mock data file, pattern, or 'auto' for generation")
+	cmd.Flags().StringVarP(&flags.Wrapper, "wrapper", "w", "", "Wrapper template path")
 }
 
 func addBuildFlags(cmd *cobra.Command, flags *StandardFlags) {
-	cmd.Flags().StringVar(&flags.WatchPattern, "watch", "**/*.templ", "File watch pattern")
-	cmd.Flags().StringVar(&flags.BuildCmd, "build-cmd", "templ generate", "Build command to run")
+	cmd.Flags().StringVarP(&flags.WatchPattern, "watch", "W", "**/*.templ", "File watch pattern for auto-rebuild")
+	cmd.Flags().StringVarP(&flags.BuildCmd, "build-cmd", "B", "templ generate", "Build command to execute")
+	cmd.Flags().BoolVarP(&flags.Clean, "clean", "c", false, "Clean build artifacts before building")
 }
 
 func addOutputFlags(cmd *cobra.Command, flags *StandardFlags) {
-	cmd.Flags().StringVarP(&flags.OutputFormat, "output", "o", "table", "Output format (table|json|yaml)")
-	cmd.Flags().BoolVarP(&flags.Verbose, "verbose", "v", false, "Enable verbose output")
-	cmd.Flags().BoolVarP(&flags.Quiet, "quiet", "q", false, "Suppress output")
+	cmd.Flags().StringVarP(&flags.Format, "format", "f", "table", "Output format (table|json|yaml|csv)")
+	cmd.Flags().StringVarP(&flags.Output, "output", "o", "", "Output directory or file")
+	cmd.Flags().BoolVarP(&flags.Verbose, "verbose", "v", false, "Enable verbose/detailed output")
+	cmd.Flags().BoolVarP(&flags.Quiet, "quiet", "q", false, "Suppress non-essential output")
 }
 
 // ParseProps parses component properties with support for file references
@@ -125,7 +129,7 @@ func (f *StandardFlags) ParseProps() (map[string]interface{}, error) {
 
 // ShouldOpenBrowser returns whether to open browser based on flags
 func (f *StandardFlags) ShouldOpenBrowser() bool {
-	return !f.DisableBrowser
+	return !f.NoOpen
 }
 
 // ValidateFlags validates flag combinations and values
@@ -146,18 +150,18 @@ func (f *StandardFlags) ValidateFlags() error {
 	}
 
 	// Output format validation
-	validFormats := []string{"table", "json", "yaml"}
-	if f.OutputFormat != "" {
+	validFormats := []string{"table", "json", "yaml", "csv"}
+	if f.Format != "" {
 		valid := false
 		for _, format := range validFormats {
-			if f.OutputFormat == format {
+			if f.Format == format {
 				valid = true
 				break
 			}
 		}
 		if !valid {
 			return fmt.Errorf("invalid output format %s, must be one of: %s",
-				f.OutputFormat, strings.Join(validFormats, ", "))
+				f.Format, strings.Join(validFormats, ", "))
 		}
 	}
 
@@ -423,8 +427,7 @@ func AddEnhancedFlags(cmd *cobra.Command, flagTypes ...string) *EnhancedStandard
 func addEnhancedServerFlags(cmd *cobra.Command, flags *EnhancedStandardFlags) {
 	cmd.Flags().IntVarP(&flags.Port, "port", "p", 8080, "Port to serve on")
 	cmd.Flags().StringVar(&flags.Host, "host", "localhost", "Host to bind to (use 0.0.0.0 for all interfaces)")
-	// Standardize on --no-open for consistency across all commands
-	cmd.Flags().BoolVar(&flags.DisableBrowser, "no-open", false, "Don't automatically open browser")
+	cmd.Flags().BoolVarP(&flags.NoOpen, "no-open", "n", false, "Don't automatically open browser")
 	
 	// Add validation
 	AddFlagValidation(cmd, "port", ValidatePort)
@@ -447,7 +450,7 @@ func addEnhancedBuildFlags(cmd *cobra.Command, flags *EnhancedStandardFlags) {
 }
 
 func addEnhancedOutputFlags(cmd *cobra.Command, flags *EnhancedStandardFlags) {
-	cmd.Flags().StringVarP(&flags.OutputFormat, "format", "f", "table", "Output format (table|json|yaml)")
+	cmd.Flags().StringVarP(&flags.Format, "format", "f", "table", "Output format (table|json|yaml|csv)")
 	cmd.Flags().StringVarP(&flags.Output, "output", "o", "", "Output directory or file")
 	cmd.Flags().BoolVarP(&flags.Verbose, "verbose", "v", false, "Enable verbose/detailed output")
 	cmd.Flags().BoolVarP(&flags.Quiet, "quiet", "q", false, "Suppress non-essential output")

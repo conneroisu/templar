@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/conneroisu/templar/internal/config"
+	"github.com/conneroisu/templar/internal/interfaces"
 	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/scanner"
 	"github.com/conneroisu/templar/internal/watcher"
@@ -56,25 +57,26 @@ func runWatch(cmd *cobra.Command, args []string) error {
 	componentRegistry := registry.NewComponentRegistry()
 	componentScanner := scanner.NewComponentScanner(componentRegistry)
 
-	// Create file watcher
+	// Create file watcher directly - no adapter needed
 	fileWatcher, err := watcher.NewFileWatcher(300 * time.Millisecond)
 	if err != nil {
 		return fmt.Errorf("failed to create file watcher: %w", err)
 	}
 	defer fileWatcher.Stop()
 
-	// Add filters
-	fileWatcher.AddFilter(watcher.TemplFilter)
-	fileWatcher.AddFilter(watcher.GoFilter)
-	fileWatcher.AddFilter(watcher.NoTestFilter)
-	fileWatcher.AddFilter(watcher.NoVendorFilter)
-	fileWatcher.AddFilter(watcher.NoGitFilter)
+	// Add filters using interface adapter
+	fileWatcher.AddFilter(interfaces.FileFilterFunc(watcher.TemplFilter))
+	fileWatcher.AddFilter(interfaces.FileFilterFunc(watcher.GoFilter))
+	fileWatcher.AddFilter(interfaces.FileFilterFunc(watcher.NoTestFilter))
+	fileWatcher.AddFilter(interfaces.FileFilterFunc(watcher.NoVendorFilter))
+	fileWatcher.AddFilter(interfaces.FileFilterFunc(watcher.NoGitFilter))
 
 	// Add change handler
-	fileWatcher.AddHandler(func(events []watcher.ChangeEvent) error {
+	fileWatcher.AddHandler(func(events []interface{}) error {
 		if watchVerbose {
 			fmt.Printf("📁 File changes detected:\n")
-			for _, event := range events {
+			for _, eventInterface := range events {
+				event := eventInterface.(watcher.ChangeEvent)
 				fmt.Printf("   %s: %s\n", event.Type, event.Path)
 			}
 		} else {
