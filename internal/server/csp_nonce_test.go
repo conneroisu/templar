@@ -315,4 +315,3 @@ func TestGetNonceFromContextNew(t *testing.T) {
 		t.Errorf("Expected empty nonce for wrong type but got '%s'", retrievedNonce)
 	}
 }
-

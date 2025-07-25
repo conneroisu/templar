@@ -135,11 +135,11 @@ func TestInlineEditor(t *testing.T) {
 
 		assert.Contains(t, response, "html")
 		assert.Contains(t, response, "generated_code")
-		
+
 		html := response["html"].(string)
 		assert.Contains(t, html, "TestCard")
 		assert.Contains(t, html, "Test Title")
-		
+
 		code := response["generated_code"].(string)
 		assert.Contains(t, code, "@TestCard(")
 		assert.Contains(t, code, "Test Title")
@@ -171,10 +171,10 @@ func TestInlineEditor(t *testing.T) {
 
 		assert.Contains(t, response, "valid")
 		assert.Contains(t, response, "errors")
-		
+
 		valid := response["valid"].(bool)
 		assert.False(t, valid)
-		
+
 		errors := response["errors"].([]interface{})
 		assert.Greater(t, len(errors), 0)
 	})
@@ -203,7 +203,7 @@ func TestInlineEditor(t *testing.T) {
 		assert.NoError(t, err)
 
 		assert.Contains(t, response, "suggestions")
-		
+
 		suggestions := response["suggestions"].(map[string]interface{})
 		// Should suggest missing props (content, visible, count)
 		assert.Contains(t, suggestions, "content")
@@ -331,7 +331,7 @@ func TestPropValidation(t *testing.T) {
 
 		errors := server.validateComponentProps(component, props)
 		assert.Len(t, errors, 2)
-		
+
 		// Check that both required fields are flagged
 		requiredErrors := make(map[string]bool)
 		for _, err := range errors {
@@ -339,7 +339,7 @@ func TestPropValidation(t *testing.T) {
 				requiredErrors[err.Property] = true
 			}
 		}
-		
+
 		assert.True(t, requiredErrors["required_string"])
 		assert.True(t, requiredErrors["bool_field"])
 	})
@@ -353,7 +353,7 @@ func TestPropValidation(t *testing.T) {
 
 		errors := server.validateComponentProps(component, props)
 		assert.Greater(t, len(errors), 0)
-		
+
 		// Check for type mismatch errors
 		typeErrors := make(map[string]bool)
 		for _, err := range errors {
@@ -361,7 +361,7 @@ func TestPropValidation(t *testing.T) {
 				typeErrors[err.Property] = true
 			}
 		}
-		
+
 		assert.True(t, typeErrors["optional_int"])
 	})
 
@@ -374,7 +374,7 @@ func TestPropValidation(t *testing.T) {
 
 		errors := server.validateComponentProps(component, props)
 		assert.Greater(t, len(errors), 0)
-		
+
 		// Check for unknown prop warning
 		unknownWarning := false
 		for _, err := range errors {
@@ -383,7 +383,7 @@ func TestPropValidation(t *testing.T) {
 				break
 			}
 		}
-		
+
 		assert.True(t, unknownWarning)
 	})
 }
@@ -444,7 +444,7 @@ func TestPropSuggestions(t *testing.T) {
 		assert.Contains(t, suggestions, "count")
 		assert.Contains(t, suggestions, "visible")
 		assert.Contains(t, suggestions, "tags")
-		
+
 		// Should not suggest existing props
 		assert.NotContains(t, suggestions, "title")
 	})

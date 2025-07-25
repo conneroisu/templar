@@ -42,7 +42,7 @@ func (p *TailwindPlugin) GetVersion() string {
 // Initialize initializes the Tailwind plugin
 func (p *TailwindPlugin) Initialize(ctx context.Context, config map[string]interface{}) error {
 	p.config = config
-	
+
 	// Check if Tailwind CLI is available
 	tailwindPath, err := exec.LookPath("tailwindcss")
 	if err != nil {
@@ -55,7 +55,7 @@ func (p *TailwindPlugin) Initialize(ctx context.Context, config map[string]inter
 	} else {
 		p.tailwindPath = tailwindPath
 	}
-	
+
 	return nil
 }
 
@@ -77,16 +77,16 @@ func (p *TailwindPlugin) GetSupportedVersions() []string {
 // GetDefaultConfig returns default configuration for Tailwind
 func (p *TailwindPlugin) GetDefaultConfig() FrameworkConfig {
 	return FrameworkConfig{
-		Name:         "tailwind",
-		Version:      "3.4.0",
+		Name:          "tailwind",
+		Version:       "3.4.0",
 		InstallMethod: "npm",
-		ConfigFile:   "tailwind.config.js",
-		EntryPoint:   "src/input.css",
-		OutputPath:   "dist/styles.css",
-		SourcePaths:  []string{"src/**/*.{templ,html,js,ts}"},
-		
+		ConfigFile:    "tailwind.config.js",
+		EntryPoint:    "src/input.css",
+		OutputPath:    "dist/styles.css",
+		SourcePaths:   []string{"src/**/*.{templ,html,js,ts}"},
+
 		Preprocessing: []string{"postcss"},
-		
+
 		Optimization: OptimizationConfig{
 			Enabled:      true,
 			Purge:        true,
@@ -95,7 +95,7 @@ func (p *TailwindPlugin) GetDefaultConfig() FrameworkConfig {
 			Compress:     true,
 			RemoveUnused: true,
 		},
-		
+
 		Theming: ThemingConfig{
 			Enabled:          true,
 			ExtractVariables: true,
@@ -104,7 +104,7 @@ func (p *TailwindPlugin) GetDefaultConfig() FrameworkConfig {
 			OutputFormat:     "css",
 			OutputFile:       "src/theme.css",
 		},
-		
+
 		Variables: map[string]string{
 			// Default Tailwind theme colors
 			"primary":   "#3b82f6",
@@ -117,14 +117,14 @@ func (p *TailwindPlugin) GetDefaultConfig() FrameworkConfig {
 			"warning":   "#f59e0b",
 			"error":     "#ef4444",
 		},
-		
+
 		Options: map[string]interface{}{
-			"jit":            true,
-			"purge_enabled":  true,
-			"dark_mode":      "class",
-			"important":      false,
-			"prefix":         "",
-			"separator":      ":",
+			"jit":           true,
+			"purge_enabled": true,
+			"dark_mode":     "class",
+			"important":     false,
+			"prefix":        "",
+			"separator":     ":",
 		},
 	}
 }
@@ -135,12 +135,12 @@ func (p *TailwindPlugin) IsInstalled() bool {
 	if _, err := os.Stat("node_modules/tailwindcss"); err == nil {
 		return true
 	}
-	
+
 	// Check for standalone binary
 	if _, err := exec.LookPath("tailwindcss"); err == nil {
 		return true
 	}
-	
+
 	// Check for config file
 	configPaths := []string{
 		"tailwind.config.js",
@@ -148,13 +148,13 @@ func (p *TailwindPlugin) IsInstalled() bool {
 		"tailwind.config.cjs",
 		"tailwind.config.mjs",
 	}
-	
+
 	for _, path := range configPaths {
 		if _, err := os.Stat(path); err == nil {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -179,7 +179,7 @@ func (p *TailwindPlugin) setupWithNPM(ctx context.Context, config FrameworkConfi
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to install Tailwind via npm: %w", err)
 	}
-	
+
 	// Install PostCSS and autoprefixer if needed
 	if contains(config.Preprocessing, "postcss") {
 		cmd = exec.CommandContext(ctx, "npm", "install", "-D", "postcss", "autoprefixer")
@@ -187,18 +187,18 @@ func (p *TailwindPlugin) setupWithNPM(ctx context.Context, config FrameworkConfi
 			return fmt.Errorf("failed to install PostCSS: %w", err)
 		}
 	}
-	
+
 	// Create entry point CSS file
 	if err := p.createEntryPoint(config); err != nil {
 		return fmt.Errorf("failed to create entry point: %w", err)
 	}
-	
+
 	// Initialize Tailwind config
 	cmd = exec.CommandContext(ctx, "npx", "tailwindcss", "init")
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to initialize Tailwind config: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -208,21 +208,21 @@ func (p *TailwindPlugin) setupWithCDN(ctx context.Context, config FrameworkConfi
 	if cdnUrl == "" {
 		cdnUrl = fmt.Sprintf("https://cdn.tailwindcss.com/%s", config.Version)
 	}
-	
+
 	// Create a simple CSS file that imports from CDN
 	cssContent := fmt.Sprintf("@import url('%s');\n", cdnUrl)
-	
+
 	// Ensure output directory exists
 	outputDir := filepath.Dir(config.OutputPath)
 	if err := os.MkdirAll(outputDir, 0755); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
-	
+
 	// Write CSS file
 	if err := os.WriteFile(config.OutputPath, []byte(cssContent), 0644); err != nil {
 		return fmt.Errorf("failed to write CSS file: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -233,13 +233,13 @@ func (p *TailwindPlugin) setupStandalone(ctx context.Context, config FrameworkCo
 	if err := os.MkdirAll(outputDir, 0755); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
-	
+
 	// Create basic Tailwind CSS (simplified)
 	basicCSS := p.generateBasicTailwindCSS(config)
 	if err := os.WriteFile(config.OutputPath, []byte(basicCSS), 0644); err != nil {
 		return fmt.Errorf("failed to write CSS file: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -249,26 +249,26 @@ func (p *TailwindPlugin) createEntryPoint(config FrameworkConfig) error {
 	if err := os.MkdirAll(entryDir, 0755); err != nil {
 		return fmt.Errorf("failed to create entry point directory: %w", err)
 	}
-	
+
 	// Generate CSS content
 	cssContent := p.generateTailwindCSS(config)
-	
+
 	if err := os.WriteFile(config.EntryPoint, []byte(cssContent), 0644); err != nil {
 		return fmt.Errorf("failed to write entry point file: %w", err)
 	}
-	
+
 	return nil
 }
 
 // generateTailwindCSS generates the main Tailwind CSS file
 func (p *TailwindPlugin) generateTailwindCSS(config FrameworkConfig) string {
 	var css strings.Builder
-	
+
 	// Add Tailwind directives
 	css.WriteString("@tailwind base;\n")
 	css.WriteString("@tailwind components;\n")
 	css.WriteString("@tailwind utilities;\n\n")
-	
+
 	// Add custom CSS layer if variables are defined
 	if len(config.Variables) > 0 {
 		css.WriteString("@layer base {\n")
@@ -279,17 +279,17 @@ func (p *TailwindPlugin) generateTailwindCSS(config FrameworkConfig) string {
 		css.WriteString("  }\n")
 		css.WriteString("}\n\n")
 	}
-	
+
 	// Add custom components layer
 	css.WriteString("@layer components {\n")
 	css.WriteString("  /* Custom component styles */\n")
 	css.WriteString("}\n\n")
-	
+
 	// Add custom utilities layer
 	css.WriteString("@layer utilities {\n")
 	css.WriteString("  /* Custom utility styles */\n")
 	css.WriteString("}\n")
-	
+
 	return css.String()
 }
 
@@ -416,13 +416,13 @@ html {
 .fixed { position: fixed; }
 .sticky { position: sticky; }
 `
-	
+
 	// Apply custom variables to CSS if they exist
 	for key, value := range config.Variables {
 		// Replace CSS custom properties with actual values
 		css = strings.ReplaceAll(css, fmt.Sprintf("var(--%s)", key), value)
 	}
-	
+
 	return css
 }
 
@@ -459,7 +459,7 @@ module.exports = {
 		config.Options["prefix"].(string),
 		config.Options["separator"].(string),
 	)
-	
+
 	return []byte(configContent), nil
 }
 
@@ -468,18 +468,18 @@ func (p *TailwindPlugin) ValidateConfig(configPath string) error {
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		return fmt.Errorf("config file does not exist: %s", configPath)
 	}
-	
+
 	// Read and validate config file content
 	content, err := os.ReadFile(configPath)
 	if err != nil {
 		return fmt.Errorf("failed to read config file: %w", err)
 	}
-	
+
 	// Basic validation - check for required exports
 	if !strings.Contains(string(content), "module.exports") && !strings.Contains(string(content), "export default") {
 		return fmt.Errorf("config file must export a configuration object")
 	}
-	
+
 	return nil
 }
 
@@ -489,13 +489,13 @@ func (p *TailwindPlugin) ProcessCSS(ctx context.Context, input []byte, options P
 	tmpDir := os.TempDir()
 	inputFile := filepath.Join(tmpDir, "input.css")
 	outputFile := filepath.Join(tmpDir, "output.css")
-	
+
 	if err := os.WriteFile(inputFile, input, 0644); err != nil {
 		return nil, fmt.Errorf("failed to write temporary input file: %w", err)
 	}
 	defer os.Remove(inputFile)
 	defer os.Remove(outputFile)
-	
+
 	// Build Tailwind command
 	var cmd *exec.Cmd
 	if strings.Contains(p.tailwindPath, "npx") {
@@ -511,29 +511,29 @@ func (p *TailwindPlugin) ProcessCSS(ctx context.Context, input []byte, options P
 		}
 		cmd = exec.CommandContext(ctx, p.tailwindPath, args...)
 	}
-	
+
 	// Run Tailwind CSS generation
 	if err := cmd.Run(); err != nil {
 		return nil, fmt.Errorf("tailwind CSS generation failed: %w", err)
 	}
-	
+
 	// Read output
 	output, err := os.ReadFile(outputFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read compiled CSS: %w", err)
 	}
-	
+
 	return output, nil
 }
 
 // ExtractClasses extracts Tailwind classes from content
 func (p *TailwindPlugin) ExtractClasses(content string) ([]string, error) {
 	var classes []string
-	
+
 	// Extract from class attributes
 	classRegex := regexp.MustCompile(`class="([^"]*)"`)
 	matches := classRegex.FindAllStringSubmatch(content, -1)
-	
+
 	for _, match := range matches {
 		if len(match) > 1 {
 			classNames := strings.Fields(match[1])
@@ -544,11 +544,11 @@ func (p *TailwindPlugin) ExtractClasses(content string) ([]string, error) {
 			}
 		}
 	}
-	
+
 	// Extract from class={ } expressions (templ syntax)
 	templClassRegex := regexp.MustCompile(`class=\{[^}]*"([^"]*)"[^}]*\}`)
 	templMatches := templClassRegex.FindAllStringSubmatch(content, -1)
-	
+
 	for _, match := range templMatches {
 		if len(match) > 1 {
 			classNames := strings.Fields(match[1])
@@ -559,7 +559,7 @@ func (p *TailwindPlugin) ExtractClasses(content string) ([]string, error) {
 			}
 		}
 	}
-	
+
 	return removeDuplicates(classes), nil
 }
 
@@ -580,13 +580,13 @@ func (p *TailwindPlugin) isTailwindClass(className string) bool {
 		"accent-", "appearance-", "pointer-", "resize", "scroll-", "snap-", "touch-",
 		"user-", "will-", "content-",
 	}
-	
+
 	for _, prefix := range tailwindPrefixes {
 		if strings.HasPrefix(className, prefix) {
 			return true
 		}
 	}
-	
+
 	// Check for responsive prefixes
 	responsivePrefixes := []string{"sm:", "md:", "lg:", "xl:", "2xl:"}
 	for _, prefix := range responsivePrefixes {
@@ -595,7 +595,7 @@ func (p *TailwindPlugin) isTailwindClass(className string) bool {
 			return p.isTailwindClass(rest)
 		}
 	}
-	
+
 	// Check for state prefixes
 	statePrefixes := []string{
 		"hover:", "focus:", "active:", "visited:", "target:", "first:", "last:",
@@ -607,25 +607,25 @@ func (p *TailwindPlugin) isTailwindClass(className string) bool {
 		"motion-safe:", "motion-reduce:", "dark:", "portrait:", "landscape:", "contrast-more:",
 		"contrast-less:", "print:",
 	}
-	
+
 	for _, prefix := range statePrefixes {
 		if strings.HasPrefix(className, prefix) {
 			rest := className[len(prefix):]
 			return p.isTailwindClass(rest)
 		}
 	}
-	
+
 	// Check for exact utility matches
 	utilities := []string{
 		"container", "prose", "not-prose", "sr-only", "not-sr-only",
 	}
-	
+
 	for _, utility := range utilities {
 		if className == utility {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -633,32 +633,32 @@ func (p *TailwindPlugin) isTailwindClass(className string) bool {
 func (p *TailwindPlugin) OptimizeCSS(ctx context.Context, css []byte, usedClasses []string) ([]byte, error) {
 	// For Tailwind, optimization is typically done during the build process
 	// We can implement purging here if needed
-	
+
 	if len(usedClasses) == 0 {
 		return css, nil
 	}
-	
+
 	// Simple purging implementation
 	cssStr := string(css)
-	
+
 	// Remove comments
 	cssStr = regexp.MustCompile(`/\*.*?\*/`).ReplaceAllString(cssStr, "")
-	
+
 	// Remove extra whitespace
 	cssStr = regexp.MustCompile(`\s+`).ReplaceAllString(cssStr, " ")
 	cssStr = strings.TrimSpace(cssStr)
-	
+
 	return []byte(cssStr), nil
 }
 
 // ExtractVariables extracts CSS variables from Tailwind CSS
 func (p *TailwindPlugin) ExtractVariables(css []byte) (map[string]string, error) {
 	variables := make(map[string]string)
-	
+
 	// Extract CSS custom properties
 	varRegex := regexp.MustCompile(`--([a-zA-Z][a-zA-Z0-9_-]*)\s*:\s*([^;]+);`)
 	matches := varRegex.FindAllStringSubmatch(string(css), -1)
-	
+
 	for _, match := range matches {
 		if len(match) > 2 {
 			name := match[1]
@@ -666,29 +666,29 @@ func (p *TailwindPlugin) ExtractVariables(css []byte) (map[string]string, error)
 			variables[name] = value
 		}
 	}
-	
+
 	return variables, nil
 }
 
 // GenerateTheme generates a Tailwind theme with custom variables
 func (p *TailwindPlugin) GenerateTheme(variables map[string]string) ([]byte, error) {
 	var theme strings.Builder
-	
+
 	theme.WriteString("@tailwind base;\n")
 	theme.WriteString("@tailwind components;\n")
 	theme.WriteString("@tailwind utilities;\n\n")
-	
+
 	theme.WriteString("@layer base {\n")
 	theme.WriteString("  :root {\n")
-	
+
 	// Add custom variables
 	for name, value := range variables {
 		theme.WriteString(fmt.Sprintf("    --%s: %s;\n", name, value))
 	}
-	
+
 	theme.WriteString("  }\n")
 	theme.WriteString("}\n")
-	
+
 	return []byte(theme.String()), nil
 }
 
@@ -705,9 +705,9 @@ func (p *TailwindPlugin) GetDevServerConfig() DevServerConfig {
 		LiveValidation: true,
 		DevMode:        true,
 		DevOptions: map[string]interface{}{
-			"watch_mode":       true,
-			"jit_mode":         true,
-			"purge_enabled":    false, // Disable purging in dev mode
+			"watch_mode":    true,
+			"jit_mode":      true,
+			"purge_enabled": false, // Disable purging in dev mode
 		},
 	}
 }
@@ -824,7 +824,7 @@ func (p *TailwindPlugin) GenerateStyleGuide(ctx context.Context) ([]byte, error)
     </div>
 </body>
 </html>`
-	
+
 	return []byte(styleGuide), nil
 }
 

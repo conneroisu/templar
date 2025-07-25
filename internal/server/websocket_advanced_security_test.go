@@ -11,10 +11,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/coder/websocket"
 	"github.com/conneroisu/templar/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/coder/websocket"
 )
 
 // TestWebSocketConnectionHijacking tests various connection hijacking attack scenarios
@@ -356,7 +356,7 @@ func TestWebSocketRateLimitingEdgeCases(t *testing.T) {
 				blocked := 0
 				for i := 0; i < 50; i++ {
 					ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-					
+
 					conn, resp, err := websocket.Dial(ctx, strings.Replace(testServer.URL, "http://", "ws://", 1), &websocket.DialOptions{
 						HTTPHeader: http.Header{
 							"Origin": []string{"http://localhost:3000"},
@@ -662,7 +662,7 @@ func TestWebSocketSecurityHeaders(t *testing.T) {
 	// Check that security headers are present (these should be set by middleware)
 	expectedHeaders := []string{
 		"X-Content-Type-Options",
-		"X-Frame-Options", 
+		"X-Frame-Options",
 		"X-XSS-Protection",
 		"Referrer-Policy",
 	}

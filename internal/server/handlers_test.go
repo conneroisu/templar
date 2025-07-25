@@ -236,7 +236,7 @@ func TestHandleTargetFiles(t *testing.T) {
 			FilePath: "test1.templ",
 		})
 		reg.Register(&types.ComponentInfo{
-			Name:     "TestComponent2", 
+			Name:     "TestComponent2",
 			FilePath: "test2.templ",
 		})
 

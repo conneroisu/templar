@@ -250,8 +250,8 @@ func TestLoadDefaults(t *testing.T) {
 					ErrorOverlay: true,
 				},
 				Plugins: PluginsConfig{
-					DiscoveryPaths:   []string{"./plugins", "~/.templar/plugins"},
-					Configurations:   make(map[string]PluginConfigMap),
+					DiscoveryPaths: []string{"./plugins", "~/.templar/plugins"},
+					Configurations: make(map[string]PluginConfigMap),
 				},
 				Monitoring: MonitoringConfig{
 					Enabled:       true,
@@ -302,8 +302,8 @@ func TestLoadDefaults(t *testing.T) {
 					ErrorOverlay: true,
 				},
 				Plugins: PluginsConfig{
-					DiscoveryPaths:   []string{"./plugins", "~/.templar/plugins"},
-					Configurations:   make(map[string]PluginConfigMap),
+					DiscoveryPaths: []string{"./plugins", "~/.templar/plugins"},
+					Configurations: make(map[string]PluginConfigMap),
 				},
 				Monitoring: MonitoringConfig{
 					Enabled:       true,
@@ -321,9 +321,9 @@ func TestLoadDefaults(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Reset viper state
 			viper.Reset()
-			
+
 			loadDefaults(&tt.config)
-			
+
 			assert.Equal(t, tt.expected.Build, tt.config.Build)
 			assert.Equal(t, tt.expected.Server.Auth, tt.config.Server.Auth)
 			assert.Equal(t, tt.expected.Preview, tt.config.Preview)
@@ -416,10 +416,10 @@ func TestApplyOverrides(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.viperSetup()
-			
+
 			config := tt.inputConfig
 			applyOverrides(&config)
-			
+
 			tt.expected(&config)
 		})
 	}

@@ -19,8 +19,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fsnotify/fsnotify"
 	"github.com/conneroisu/templar/internal/interfaces"
+	"github.com/fsnotify/fsnotify"
 )
 
 // Constants for memory management
@@ -42,7 +42,6 @@ var (
 			return make(map[string]ChangeEvent, 100)
 		},
 	}
-
 
 	// Pool for event batches to reduce slice allocations
 	eventBatchPool = sync.Pool{
@@ -79,18 +78,18 @@ var _ interfaces.FileWatcher = (*FileWatcher)(nil)
 
 // Debouncer groups rapid file changes together with enhanced memory management
 type Debouncer struct {
-	delay         time.Duration
-	events        chan ChangeEvent
-	output        chan []ChangeEvent
-	timer         *time.Timer
-	pending       []ChangeEvent
-	mutex         sync.Mutex
-	cleanupTimer  *time.Timer
-	lastCleanup   time.Time
+	delay        time.Duration
+	events       chan ChangeEvent
+	output       chan []ChangeEvent
+	timer        *time.Timer
+	pending      []ChangeEvent
+	mutex        sync.Mutex
+	cleanupTimer *time.Timer
+	lastCleanup  time.Time
 	// Enhanced backpressure and batching controls
 	maxBatchSize  int
-	droppedEvents int64  // Counter for monitoring dropped events
-	totalEvents   int64  // Counter for total events processed
+	droppedEvents int64 // Counter for monitoring dropped events
+	totalEvents   int64 // Counter for total events processed
 }
 
 // NewFileWatcher creates a new file watcher
@@ -106,7 +105,7 @@ func NewFileWatcher(debounceDelay time.Duration) (*FileWatcher, error) {
 		output:       make(chan []ChangeEvent, 10),
 		pending:      make([]ChangeEvent, 0, 100),
 		lastCleanup:  time.Now(),
-		maxBatchSize: 50,  // Process events in batches for efficiency
+		maxBatchSize: 50, // Process events in batches for efficiency
 	}
 
 	fw := &FileWatcher{
@@ -175,21 +174,21 @@ func isInTestMode() bool {
 	// Get the call stack
 	pc := make([]uintptr, 10)
 	n := runtime.Callers(1, pc)
-	
+
 	// Check each frame in the call stack
 	for i := 0; i < n; i++ {
 		fn := runtime.FuncForPC(pc[i])
 		if fn == nil {
 			continue
 		}
-		
+
 		name := fn.Name()
 		// Check if any caller is from the testing package or contains "test"
 		if strings.Contains(name, "testing.") || strings.Contains(name, "_test.") || strings.Contains(name, ".Test") {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -350,7 +349,7 @@ func (fw *FileWatcher) handleFsnotifyEvent(event fsnotify.Event) {
 	default:
 		// Channel full - implement backpressure by dropping events
 		fw.debouncer.droppedEvents++
-		log.Printf("Warning: Dropping file event for %s due to backpressure (dropped: %d, total: %d)", 
+		log.Printf("Warning: Dropping file event for %s due to backpressure (dropped: %d, total: %d)",
 			event.Name, fw.debouncer.droppedEvents, fw.debouncer.totalEvents)
 	}
 }
@@ -479,7 +478,7 @@ func (d *Debouncer) flushLocked() {
 		log.Printf("Warning: Dropping event batch of %d events due to output channel backpressure", len(eventsCopy))
 	}
 
-	// Clear pending events - reuse underlying array if capacity is reasonable  
+	// Clear pending events - reuse underlying array if capacity is reasonable
 	if cap(d.pending) <= MaxPendingEvents*2 {
 		d.pending = d.pending[:0]
 	} else {
@@ -534,14 +533,14 @@ func NoGitFilter(path string) bool {
 func (fw *FileWatcher) GetStats() map[string]interface{} {
 	fw.debouncer.mutex.Lock()
 	defer fw.debouncer.mutex.Unlock()
-	
+
 	return map[string]interface{}{
-		"pending_events":    len(fw.debouncer.pending),
-		"dropped_events":    fw.debouncer.droppedEvents,
-		"total_events":      fw.debouncer.totalEvents,
-		"max_pending":       MaxPendingEvents,
-		"max_batch_size":    fw.debouncer.maxBatchSize,
-		"pending_capacity":  cap(fw.debouncer.pending),
-		"last_cleanup":      fw.debouncer.lastCleanup,
+		"pending_events":   len(fw.debouncer.pending),
+		"dropped_events":   fw.debouncer.droppedEvents,
+		"total_events":     fw.debouncer.totalEvents,
+		"max_pending":      MaxPendingEvents,
+		"max_batch_size":   fw.debouncer.maxBatchSize,
+		"pending_capacity": cap(fw.debouncer.pending),
+		"last_cleanup":     fw.debouncer.lastCleanup,
 	}
 }

@@ -670,13 +670,13 @@ func (s *PreviewServer) wrapInPlaygroundLayout(componentName, html, theme string
 func (s *PreviewServer) generatePlaygroundHTML(component *types.ComponentInfo) string {
 	// Generate initial mock data
 	mockData := s.generateIntelligentMockData(component)
-	
+
 	// Render component with mock data
 	html, err := s.renderComponentWithProps(component.Name, mockData)
 	if err != nil {
 		html = fmt.Sprintf(`<div class="error">Error rendering component: %s</div>`, err.Error())
 	}
-	
+
 	// Wrap in playground layout
 	viewport := ViewportSize{Width: 1200, Height: 800, Name: "Desktop"}
 	return s.wrapInPlaygroundLayout(component.Name, html, "light", viewport)
@@ -685,7 +685,7 @@ func (s *PreviewServer) generatePlaygroundHTML(component *types.ComponentInfo) s
 // generatePlaygroundIndexHTML creates the index page showing all components
 func (s *PreviewServer) generatePlaygroundIndexHTML(components []*types.ComponentInfo) string {
 	var componentCards strings.Builder
-	
+
 	for _, component := range components {
 		componentCards.WriteString(fmt.Sprintf(`
 			<div class="component-card" onclick="window.location.href='/playground/%s'">
@@ -698,7 +698,7 @@ func (s *PreviewServer) generatePlaygroundIndexHTML(components []*types.Componen
 			</div>
 		`, component.Name, component.Name, component.Package, len(component.Parameters)))
 	}
-	
+
 	return fmt.Sprintf(`<!DOCTYPE html>
 <html>
 <head>

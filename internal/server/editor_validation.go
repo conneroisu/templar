@@ -77,7 +77,7 @@ func (s *PreviewServer) validateTemplSyntax(content string) []EditorError {
 		// Track brace counting in templ functions
 		if inTemplFunc {
 			braceCount += strings.Count(line, "{") - strings.Count(line, "}")
-			
+
 			// Check for templ function end
 			if braceCount == 0 && templEndRegex.MatchString(trimmed) {
 				inTemplFunc = false
@@ -116,7 +116,7 @@ func (s *PreviewServer) validateTemplExpressions(line string, lineNum int) []Edi
 
 	for _, match := range matches {
 		expr := strings.Trim(match, "{}")
-		
+
 		// Skip empty expressions
 		if strings.TrimSpace(expr) == "" {
 			continue
@@ -142,7 +142,7 @@ func (s *PreviewServer) validateTemplExpressions(line string, lineNum int) []Edi
 func (s *PreviewServer) isValidGoExpression(expr string) bool {
 	// Simple heuristic validation
 	expr = strings.TrimSpace(expr)
-	
+
 	// Empty expression
 	if expr == "" {
 		return false
@@ -166,7 +166,7 @@ func (s *PreviewServer) validateGoSyntax(content string) []EditorError {
 	// Parse Go code
 	fset := token.NewFileSet()
 	_, err := parser.ParseFile(fset, "temp.go", goCode, parser.ParseComments)
-	
+
 	if err != nil {
 		// Convert Go parser errors to editor errors
 		errors = append(errors, EditorError{
@@ -189,7 +189,7 @@ func (s *PreviewServer) extractGoCode(content string) string {
 
 	for _, line := range lines {
 		trimmed := strings.TrimSpace(line)
-		
+
 		// Include package declaration and imports
 		if strings.HasPrefix(trimmed, "package ") || strings.HasPrefix(trimmed, "import ") {
 			goLines = append(goLines, line)
@@ -206,8 +206,8 @@ func (s *PreviewServer) extractGoCode(content string) string {
 		}
 
 		// Skip content inside templ functions (HTML/template content)
-		if inTemplFunc && strings.Contains(line, "}") && 
-		   strings.Count(line, "}") >= strings.Count(line, "{") {
+		if inTemplFunc && strings.Contains(line, "}") &&
+			strings.Count(line, "}") >= strings.Count(line, "{") {
 			inTemplFunc = false
 			goLines = append(goLines, "}")
 			continue
@@ -227,14 +227,14 @@ func (s *PreviewServer) convertTemplFuncToGo(line string) string {
 	// Extract function name and parameters
 	templFuncRegex := regexp.MustCompile(`templ\s+(\w+)\s*\(([^)]*)\)`)
 	matches := templFuncRegex.FindStringSubmatch(line)
-	
+
 	if len(matches) < 3 {
 		return "func tempFunc() {"
 	}
 
 	funcName := matches[1]
 	params := matches[2]
-	
+
 	// Convert to Go function
 	return fmt.Sprintf("func %s(%s) {", funcName, params)
 }
@@ -245,18 +245,18 @@ func (s *PreviewServer) validateTemplStructure(content string) ([]EditorError, [
 	var warnings []EditorWarning
 
 	lines := strings.Split(content, "\n")
-	
+
 	// Check for package declaration
 	hasPackage := false
 	templFuncCount := 0
-	
+
 	for _, line := range lines {
 		trimmed := strings.TrimSpace(line)
-		
+
 		if strings.HasPrefix(trimmed, "package ") {
 			hasPackage = true
 		}
-		
+
 		if strings.HasPrefix(trimmed, "templ ") {
 			templFuncCount++
 		}
@@ -292,11 +292,11 @@ func (s *PreviewServer) validateHTMLContent(content string) []EditorWarning {
 
 	for i, line := range lines {
 		lineNum := i + 1
-		
+
 		// Check for unclosed HTML tags (basic check)
 		htmlWarnings := s.validateHTMLTags(line, lineNum)
 		warnings = append(warnings, htmlWarnings...)
-		
+
 		// Check for accessibility issues
 		a11yWarnings := s.validateAccessibility(line, lineNum)
 		warnings = append(warnings, a11yWarnings...)
@@ -327,8 +327,8 @@ func (s *PreviewServer) validateAccessibility(line string, lineNum int) []Editor
 	var warnings []EditorWarning
 
 	// Check for buttons without accessible text
-	if strings.Contains(line, "<button") && !strings.Contains(line, "aria-label") && 
-	   !strings.Contains(line, ">") {
+	if strings.Contains(line, "<button") && !strings.Contains(line, "aria-label") &&
+		!strings.Contains(line, ">") {
 		warnings = append(warnings, EditorWarning{
 			Line:    lineNum,
 			Column:  strings.Index(line, "<button") + 1,
@@ -343,48 +343,48 @@ func (s *PreviewServer) validateAccessibility(line string, lineNum int) []Editor
 // parseTemplParameters extracts component parameters from templ content
 func (s *PreviewServer) parseTemplParameters(content string) ([]types.ParameterInfo, error) {
 	var parameters []types.ParameterInfo
-	
+
 	// Find templ function declarations
 	templFuncRegex := regexp.MustCompile(`templ\s+(\w+)\s*\(([^)]*)\)`)
 	matches := templFuncRegex.FindAllStringSubmatch(content, -1)
-	
+
 	for _, match := range matches {
 		if len(match) < 3 {
 			continue
 		}
-		
+
 		paramStr := strings.TrimSpace(match[2])
 		if paramStr == "" {
 			continue
 		}
-		
+
 		// Parse parameters
 		params := s.parseGoParameters(paramStr)
 		parameters = append(parameters, params...)
 	}
-	
+
 	return parameters, nil
 }
 
 // parseGoParameters parses Go function parameters
 func (s *PreviewServer) parseGoParameters(paramStr string) []types.ParameterInfo {
 	var parameters []types.ParameterInfo
-	
+
 	// Split parameters by comma (simple parsing)
 	params := strings.Split(paramStr, ",")
-	
+
 	for _, param := range params {
 		param = strings.TrimSpace(param)
 		if param == "" {
 			continue
 		}
-		
+
 		// Parse parameter (name type format)
 		parts := strings.Fields(param)
 		if len(parts) >= 2 {
 			name := parts[0]
 			paramType := strings.Join(parts[1:], " ")
-			
+
 			parameters = append(parameters, types.ParameterInfo{
 				Name:     name,
 				Type:     paramType,
@@ -392,7 +392,7 @@ func (s *PreviewServer) parseGoParameters(paramStr string) []types.ParameterInfo
 			})
 		}
 	}
-	
+
 	return parameters
 }
 
@@ -401,38 +401,38 @@ func (s *PreviewServer) formatTemplContent(content string) string {
 	lines := strings.Split(content, "\n")
 	var formatted []string
 	indentLevel := 0
-	
+
 	for _, line := range lines {
 		trimmed := strings.TrimSpace(line)
-		
+
 		// Skip empty lines
 		if trimmed == "" {
 			formatted = append(formatted, "")
 			continue
 		}
-		
+
 		// Decrease indent for closing braces
 		if strings.HasPrefix(trimmed, "}") {
 			indentLevel--
 		}
-		
+
 		// Apply indentation
 		indent := strings.Repeat("\t", indentLevel)
 		formatted = append(formatted, indent+trimmed)
-		
+
 		// Increase indent for opening braces
 		if strings.HasSuffix(trimmed, "{") {
 			indentLevel++
 		}
 	}
-	
+
 	return strings.Join(formatted, "\n")
 }
 
 // generateEditorSuggestions generates code suggestions for editor
 func (s *PreviewServer) generateEditorSuggestions(content string) []EditorSuggestion {
 	var suggestions []EditorSuggestion
-	
+
 	// HTML tag suggestions
 	suggestions = append(suggestions, EditorSuggestion{
 		Label:      "div",
@@ -440,14 +440,14 @@ func (s *PreviewServer) generateEditorSuggestions(content string) []EditorSugges
 		InsertText: "<div>\n\t$0\n</div>",
 		Detail:     "HTML div element",
 	})
-	
+
 	suggestions = append(suggestions, EditorSuggestion{
 		Label:      "button",
 		Kind:       "snippet",
 		InsertText: "<button type=\"button\" onclick=\"{$1}\">\n\t$0\n</button>",
 		Detail:     "HTML button element",
 	})
-	
+
 	// Templ-specific suggestions
 	suggestions = append(suggestions, EditorSuggestion{
 		Label:      "templ",
@@ -455,21 +455,21 @@ func (s *PreviewServer) generateEditorSuggestions(content string) []EditorSugges
 		InsertText: "templ ${1:ComponentName}($2) {\n\t$0\n}",
 		Detail:     "Templ component function",
 	})
-	
+
 	suggestions = append(suggestions, EditorSuggestion{
 		Label:      "if",
 		Kind:       "snippet",
 		InsertText: "if ${1:condition} {\n\t$0\n}",
 		Detail:     "Conditional rendering",
 	})
-	
+
 	suggestions = append(suggestions, EditorSuggestion{
 		Label:      "for",
 		Kind:       "snippet",
 		InsertText: "for ${1:item} := range ${2:items} {\n\t$0\n}",
 		Detail:     "Loop rendering",
 	})
-	
+
 	return suggestions
 }
 
@@ -477,7 +477,7 @@ func (s *PreviewServer) generateEditorSuggestions(content string) []EditorSugges
 func (s *PreviewServer) renderTemplContentWithProps(content string, props map[string]interface{}) (string, error) {
 	// This is a simplified implementation
 	// In a real implementation, you would need to compile and execute the templ
-	
+
 	// For now, return the content wrapped in a preview container
 	html := fmt.Sprintf(`
 	<div class="templ-preview">
@@ -491,7 +491,7 @@ func (s *PreviewServer) renderTemplContentWithProps(content string, props map[st
 		</div>
 	</div>
 	`, content, s.formatPropsForDisplay(props))
-	
+
 	return html, nil
 }
 
@@ -500,13 +500,13 @@ func (s *PreviewServer) formatPropsForDisplay(props map[string]interface{}) stri
 	if len(props) == 0 {
 		return "{}"
 	}
-	
+
 	var lines []string
 	lines = append(lines, "{")
 	for key, value := range props {
 		lines = append(lines, fmt.Sprintf("  %s: %v,", key, value))
 	}
 	lines = append(lines, "}")
-	
+
 	return strings.Join(lines, "\n")
 }

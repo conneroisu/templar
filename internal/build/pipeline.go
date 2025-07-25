@@ -377,7 +377,7 @@ func (bp *BuildPipeline) processBuildTask(ctx context.Context, task BuildTask) {
 	var parsedErrors []*errors.ParsedError
 	if err != nil {
 		// Wrap the error with build context for better debugging
-		err = errors.WrapBuild(err, errors.ErrCodeBuildFailed, 
+		err = errors.WrapBuild(err, errors.ErrCodeBuildFailed,
 			"component compilation failed", task.Component.Name).
 			WithLocation(task.Component.FilePath, 0, 0)
 		parsedErrors = bp.errorParser.ParseError(string(output))
@@ -585,11 +585,11 @@ func (bp *BuildPipeline) batchReadAndHash(components []*types.ComponentInfo) map
 
 // FileDiscoveryResult represents the result of discovering files in a directory
 type FileDiscoveryResult struct {
-	Files       []*types.ComponentInfo
-	Errors      []error
-	Duration    time.Duration
-	Discovered  int64
-	Skipped     int64
+	Files      []*types.ComponentInfo
+	Errors     []error
+	Duration   time.Duration
+	Discovered int64
+	Skipped    int64
 }
 
 // FileDiscoveryStats tracks file discovery performance metrics
@@ -852,7 +852,7 @@ func (bp *BuildPipeline) BuildDirectory(ctx context.Context, rootPath string) er
 		bp.Build(component)
 	}
 
-	fmt.Printf("Directory build queued: %d components discovered in %v\n", 
+	fmt.Printf("Directory build queued: %d components discovered in %v\n",
 		result.Discovered, result.Duration)
 
 	return nil

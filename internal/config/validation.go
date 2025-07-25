@@ -42,7 +42,7 @@ func (r *ValidationResult) String() string {
 	if r.Valid {
 		return "Configuration is valid"
 	}
-	
+
 	var messages []string
 	for _, err := range r.Errors {
 		messages = append(messages, err.Error())
@@ -50,7 +50,7 @@ func (r *ValidationResult) String() string {
 	for _, warn := range r.Warnings {
 		messages = append(messages, fmt.Sprintf("Warning: %s", warn.Error()))
 	}
-	
+
 	return strings.Join(messages, "\n")
 }
 
@@ -372,7 +372,7 @@ func (cv *ConfigValidator) validateIPAddress(ip string) error {
 	if ip == "" {
 		return fmt.Errorf("empty IP address")
 	}
-	
+
 	// Check for dangerous characters
 	dangerousChars := []string{";", "&", "|", "$", "`", "(", ")", "<", ">"}
 	for _, char := range dangerousChars {
@@ -380,7 +380,7 @@ func (cv *ConfigValidator) validateIPAddress(ip string) error {
 			return fmt.Errorf("IP address contains dangerous character: %s", char)
 		}
 	}
-	
+
 	return nil
 }
 

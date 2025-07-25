@@ -13,28 +13,28 @@ import (
 
 // DashboardData represents data for the health dashboard
 type DashboardData struct {
-	Health          HealthResponse           `json:"health"`
+	Health          HealthResponse              `json:"health"`
 	RecoveryHistory map[string]*RecoveryHistory `json:"recovery_history"`
-	SystemMetrics   SystemMetrics            `json:"system_metrics"`
-	Timestamp       time.Time                `json:"timestamp"`
+	SystemMetrics   SystemMetrics               `json:"system_metrics"`
+	Timestamp       time.Time                   `json:"timestamp"`
 }
 
 // SystemMetrics provides additional system metrics for the dashboard
 type SystemMetrics struct {
-	CPUUsage         float64 `json:"cpu_usage"`
-	MemoryUsage      float64 `json:"memory_usage"`
-	DiskUsage        float64 `json:"disk_usage"`
-	GoroutineCount   int     `json:"goroutine_count"`
-	HeapSize         uint64  `json:"heap_size"`
-	GCCount          uint32  `json:"gc_count"`
-	Uptime           time.Duration `json:"uptime"`
+	CPUUsage       float64       `json:"cpu_usage"`
+	MemoryUsage    float64       `json:"memory_usage"`
+	DiskUsage      float64       `json:"disk_usage"`
+	GoroutineCount int           `json:"goroutine_count"`
+	HeapSize       uint64        `json:"heap_size"`
+	GCCount        uint32        `json:"gc_count"`
+	Uptime         time.Duration `json:"uptime"`
 }
 
 // HealthDashboard provides a web interface for monitoring system health
 type HealthDashboard struct {
 	healthMonitor     *HealthMonitor
 	selfHealingSystem *SelfHealingSystem
-	logger           logging.Logger
+	logger            logging.Logger
 }
 
 // NewHealthDashboard creates a new health dashboard
@@ -42,7 +42,7 @@ func NewHealthDashboard(healthMonitor *HealthMonitor, selfHealingSystem *SelfHea
 	return &HealthDashboard{
 		healthMonitor:     healthMonitor,
 		selfHealingSystem: selfHealingSystem,
-		logger:           logger.WithComponent("health_dashboard"),
+		logger:            logger.WithComponent("health_dashboard"),
 	}
 }
 
@@ -286,7 +286,7 @@ func (hd *HealthDashboard) handleRecoveryAPI(w http.ResponseWriter, r *http.Requ
 // getDashboardData collects all data for the dashboard
 func (hd *HealthDashboard) getDashboardData() DashboardData {
 	health := hd.healthMonitor.GetHealth()
-	
+
 	var recoveryHistory map[string]*RecoveryHistory
 	if hd.selfHealingSystem != nil {
 		recoveryHistory = hd.selfHealingSystem.GetRecoveryHistory()

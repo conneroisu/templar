@@ -2,7 +2,7 @@ package websocket
 
 import (
 	"time"
-	
+
 	"github.com/coder/websocket"
 )
 
@@ -28,7 +28,7 @@ type UpdateMessage struct {
 	Timestamp time.Time `json:"timestamp"`
 }
 
-// RateLimiter interface for WebSocket rate limiting  
+// RateLimiter interface for WebSocket rate limiting
 type RateLimiter interface {
 	Allow() bool
 	Reset()
@@ -39,4 +39,3 @@ type WebSocketEnhancements struct {
 	// Placeholder for enhanced WebSocket functionality
 	// This will be implemented as part of performance optimizations
 }
-

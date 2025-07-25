@@ -145,7 +145,7 @@ func TestHandleBuildResult_Coverage(t *testing.T) {
 		bp := NewBuildPipeline(1, reg)
 
 		component := &types.ComponentInfo{
-			Name:     "CachedComponent", 
+			Name:     "CachedComponent",
 			FilePath: "/test/cached.templ",
 			Package:  "test",
 		}
@@ -181,7 +181,7 @@ func TestHandleBuildResult_Coverage(t *testing.T) {
 
 		component := &types.ComponentInfo{
 			Name:     "MultiCallbackComponent",
-			FilePath: "/test/multi.templ", 
+			FilePath: "/test/multi.templ",
 			Package:  "test",
 		}
 
@@ -237,7 +237,7 @@ func TestUntestedMetricsFunctions(t *testing.T) {
 
 		// Record some builds with mix of cache hits and misses
 		component := &types.ComponentInfo{Name: "TestComponent"}
-		
+
 		// Cache miss
 		metrics.RecordBuild(BuildResult{
 			Component: component,

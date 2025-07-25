@@ -14,9 +14,9 @@ import (
 // StandardFlags provides consistent flag definitions across commands
 type StandardFlags struct {
 	// Server flags (consistent across serve, preview commands)
-	Port           int    `flag:"port,p" desc:"Port to serve on" default:"8080"`
-	Host           string `flag:"host,h" desc:"Host to bind to" default:"localhost"`
-	NoOpen         bool   `flag:"no-open,n" desc:"Don't automatically open browser" default:"false"`
+	Port   int    `flag:"port,p" desc:"Port to serve on" default:"8080"`
+	Host   string `flag:"host,h" desc:"Host to bind to" default:"localhost"`
+	NoOpen bool   `flag:"no-open,n" desc:"Don't automatically open browser" default:"false"`
 
 	// Component flags (consistent property handling)
 	Props     string `flag:"props" desc:"Component properties (JSON or @file.json)" default:""`
@@ -385,14 +385,14 @@ func ValidateTemplateWithSuggestion(template string, validTemplates []string) er
 // EnhancedStandardFlags extends StandardFlags with better validation and consistency
 type EnhancedStandardFlags struct {
 	*StandardFlags
-	
+
 	// Additional common flags for consistency
-	Template     string `flag:"template,t" desc:"Template to use" default:""`
-	Output       string `flag:"output,o" desc:"Output directory or file" default:""`
-	Clean        bool   `flag:"clean" desc:"Clean before operation" default:"false"`
-	DryRun       bool   `flag:"dry-run,n" desc:"Show what would be done without executing" default:"false"`
-	Force        bool   `flag:"force,f" desc:"Force operation, skip confirmations" default:"false"`
-	Help         bool   `flag:"help,h" desc:"Show help information" default:"false"`
+	Template string `flag:"template,t" desc:"Template to use" default:""`
+	Output   string `flag:"output,o" desc:"Output directory or file" default:""`
+	Clean    bool   `flag:"clean" desc:"Clean before operation" default:"false"`
+	DryRun   bool   `flag:"dry-run,n" desc:"Show what would be done without executing" default:"false"`
+	Force    bool   `flag:"force,f" desc:"Force operation, skip confirmations" default:"false"`
+	Help     bool   `flag:"help,h" desc:"Show help information" default:"false"`
 }
 
 // NewEnhancedStandardFlags creates enhanced standard flags
@@ -428,7 +428,7 @@ func addEnhancedServerFlags(cmd *cobra.Command, flags *EnhancedStandardFlags) {
 	cmd.Flags().IntVarP(&flags.Port, "port", "p", 8080, "Port to serve on")
 	cmd.Flags().StringVar(&flags.Host, "host", "localhost", "Host to bind to (use 0.0.0.0 for all interfaces)")
 	cmd.Flags().BoolVarP(&flags.NoOpen, "no-open", "n", false, "Don't automatically open browser")
-	
+
 	// Add validation
 	AddFlagValidation(cmd, "port", ValidatePort)
 }
@@ -438,7 +438,7 @@ func addEnhancedComponentFlags(cmd *cobra.Command, flags *EnhancedStandardFlags)
 	cmd.Flags().StringVarP(&flags.PropsFile, "props-file", "P", "", "Properties file path (JSON)")
 	cmd.Flags().StringVarP(&flags.MockData, "mock", "m", "", "Mock data file, pattern, or 'auto' for generation")
 	cmd.Flags().StringVarP(&flags.Wrapper, "wrapper", "w", "", "Wrapper template path")
-	
+
 	// Add validation for JSON props
 	AddFlagValidation(cmd, "props", ValidateJSON)
 }
@@ -454,7 +454,7 @@ func addEnhancedOutputFlags(cmd *cobra.Command, flags *EnhancedStandardFlags) {
 	cmd.Flags().StringVarP(&flags.Output, "output", "o", "", "Output directory or file")
 	cmd.Flags().BoolVarP(&flags.Verbose, "verbose", "v", false, "Enable verbose/detailed output")
 	cmd.Flags().BoolVarP(&flags.Quiet, "quiet", "q", false, "Suppress non-essential output")
-	
+
 	// Add format validation with suggestions
 	AddFlagValidation(cmd, "format", func(format string) error {
 		return ValidateFormatWithSuggestion(format, []string{"table", "json", "yaml", "csv"})
@@ -473,7 +473,7 @@ func (f *EnhancedStandardFlags) ValidateEnhancedFlags() error {
 	if err := f.StandardFlags.ValidateFlags(); err != nil {
 		return err
 	}
-	
+
 	// Additional validations
 	if f.Output != "" {
 		// Validate output path is reasonable
@@ -481,10 +481,10 @@ func (f *EnhancedStandardFlags) ValidateEnhancedFlags() error {
 			return fmt.Errorf("output path cannot contain '..' for security reasons: %s", f.Output)
 		}
 	}
-	
+
 	if f.DryRun && f.Force {
 		return fmt.Errorf("cannot use --dry-run and --force together")
 	}
-	
+
 	return nil
 }

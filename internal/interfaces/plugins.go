@@ -16,8 +16,9 @@ import (
 // building, or rendering phases.
 //
 // Performance:
-//   HandleComponent should complete within 100ms for typical components
-//   to avoid blocking the build pipeline.
+//
+//	HandleComponent should complete within 100ms for typical components
+//	to avoid blocking the build pipeline.
 type ComponentPlugin interface {
 	Plugin
 
@@ -132,19 +133,19 @@ type BuildResult struct {
 type HTTPRouter interface {
 	// GET registers a GET route handler
 	GET(path string, handler HTTPHandlerFunc)
-	
+
 	// POST registers a POST route handler
 	POST(path string, handler HTTPHandlerFunc)
-	
+
 	// PUT registers a PUT route handler
 	PUT(path string, handler HTTPHandlerFunc)
-	
+
 	// DELETE registers a DELETE route handler
 	DELETE(path string, handler HTTPHandlerFunc)
-	
+
 	// Use registers middleware for all routes
 	Use(middleware HTTPMiddlewareFunc)
-	
+
 	// Group creates a route group with common prefix/middleware
 	Group(prefix string) HTTPRouter
 }
@@ -230,12 +231,12 @@ type ValidationRule struct {
 
 // ProcessingOptions represents options for CSS processing
 type ProcessingOptions struct {
-	InputPath    string
-	OutputPath   string
-	Optimize     bool
-	Minify       bool
-	SourceMaps   bool
-	CustomVars   map[string]string
+	InputPath  string
+	OutputPath string
+	Optimize   bool
+	Minify     bool
+	SourceMaps bool
+	CustomVars map[string]string
 }
 
 // ValidationError represents a CSS validation error
@@ -257,19 +258,19 @@ const (
 
 // ParsedError represents a parsed build error with enhanced information
 type ParsedError struct {
-	Message   string
-	File      string
-	Line      int
-	Column    int
-	Severity  string
-	Code      string
-	Context   map[string]interface{}
+	Message  string
+	File     string
+	Line     int
+	Column   int
+	Severity string
+	Code     string
+	Context  map[string]interface{}
 }
 
 // FormatError formats the error for display
 func (pe *ParsedError) FormatError() string {
 	if pe.File != "" && pe.Line > 0 {
-		return fmt.Sprintf("[%s] %s in %s:%d:%d\n  %s\n", 
+		return fmt.Sprintf("[%s] %s in %s:%d:%d\n  %s\n",
 			pe.Severity, pe.Code, pe.File, pe.Line, pe.Column, pe.Message)
 	}
 	return fmt.Sprintf("[%s] %s: %s\n", pe.Severity, pe.Code, pe.Message)

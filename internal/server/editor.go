@@ -23,15 +23,15 @@ type EditorRequest struct {
 
 // EditorResponse represents a response from the interactive editor
 type EditorResponse struct {
-	Success           bool                   `json:"success"`
-	Content           string                 `json:"content,omitempty"`
-	PreviewHTML       string                 `json:"preview_html,omitempty"`
-	Errors            []EditorError          `json:"errors,omitempty"`
-	Warnings          []EditorWarning        `json:"warnings,omitempty"`
-	Suggestions       []EditorSuggestion     `json:"suggestions,omitempty"`
-	ComponentMetadata *ComponentMetadata     `json:"metadata,omitempty"`
-	ParsedParameters  []types.ParameterInfo  `json:"parsed_parameters,omitempty"`
-	Message           string                 `json:"message,omitempty"`
+	Success           bool                  `json:"success"`
+	Content           string                `json:"content,omitempty"`
+	PreviewHTML       string                `json:"preview_html,omitempty"`
+	Errors            []EditorError         `json:"errors,omitempty"`
+	Warnings          []EditorWarning       `json:"warnings,omitempty"`
+	Suggestions       []EditorSuggestion    `json:"suggestions,omitempty"`
+	ComponentMetadata *ComponentMetadata    `json:"metadata,omitempty"`
+	ParsedParameters  []types.ParameterInfo `json:"parsed_parameters,omitempty"`
+	Message           string                `json:"message,omitempty"`
 }
 
 // EditorError represents an error in the editor
@@ -70,11 +70,11 @@ type FileRequest struct {
 
 // FileResponse represents a file operation response
 type FileResponse struct {
-	Success bool        `json:"success"`
-	Content string      `json:"content,omitempty"`
-	Files   []FileInfo  `json:"files,omitempty"`
-	Error   string      `json:"error,omitempty"`
-	Message string      `json:"message,omitempty"`
+	Success bool       `json:"success"`
+	Content string     `json:"content,omitempty"`
+	Files   []FileInfo `json:"files,omitempty"`
+	Error   string     `json:"error,omitempty"`
+	Message string     `json:"message,omitempty"`
 }
 
 // FileInfo represents file information
@@ -252,7 +252,7 @@ func (s *PreviewServer) handleEditorSave(w http.ResponseWriter, req EditorReques
 		}}
 	} else {
 		response.Message = "File saved successfully"
-		
+
 		// Trigger component scan to update registry
 		go func() {
 			time.Sleep(100 * time.Millisecond) // Small delay to ensure file is written

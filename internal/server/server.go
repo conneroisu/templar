@@ -20,6 +20,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/coder/websocket"
 	"github.com/conneroisu/templar/internal/build"
 	"github.com/conneroisu/templar/internal/config"
 	"github.com/conneroisu/templar/internal/errors"
@@ -32,7 +33,6 @@ import (
 	"github.com/conneroisu/templar/internal/validation"
 	"github.com/conneroisu/templar/internal/version"
 	"github.com/conneroisu/templar/internal/watcher"
-	"github.com/coder/websocket"
 )
 
 // Client represents a WebSocket client
@@ -201,22 +201,22 @@ func (s *PreviewServer) Start(ctx context.Context) error {
 	mux.HandleFunc("/component/", s.handleComponent)
 	mux.HandleFunc("/render/", s.handleRender)
 	mux.HandleFunc("/static/", s.handleStatic)
-	
+
 	// Interactive Playground routes
 	mux.HandleFunc("/playground", s.handlePlaygroundIndex)
 	mux.HandleFunc("/playground/", s.handlePlaygroundComponent)
 	mux.HandleFunc("/api/playground/render", s.handlePlaygroundRender)
-	
+
 	// Enhanced Web Interface routes
 	mux.HandleFunc("/enhanced", s.handleEnhancedIndex)
-	
+
 	// Interactive Editor routes
 	mux.HandleFunc("/editor", s.handleEditorIndex)
 	mux.HandleFunc("/editor/", s.handleEditorIndex)
 	mux.HandleFunc("/api/editor", s.handleEditorAPI)
 	mux.HandleFunc("/api/files", s.handleFileAPI)
 	mux.HandleFunc("/api/inline-editor", s.handleInlineEditor)
-	
+
 	// Build API routes
 	mux.HandleFunc("/api/build/status", s.handleBuildStatus)
 	mux.HandleFunc("/api/build/metrics", s.handleBuildMetrics)
@@ -265,7 +265,7 @@ func (s *PreviewServer) setupFileWatcher(ctx context.Context) {
 	s.watcher.AddFilter(interfaces.FileFilterFunc(watcher.NoVendorFilter))
 	s.watcher.AddFilter(interfaces.FileFilterFunc(watcher.NoGitFilter))
 
-	// Add handler 
+	// Add handler
 	s.watcher.AddHandler(func(events []interfaces.ChangeEvent) error {
 		// Convert to local watcher events
 		changeEvents := make([]watcher.ChangeEvent, len(events))

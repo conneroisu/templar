@@ -220,15 +220,15 @@ templ TestComponent(title string) {
 
 func TestBuildCommand(t *testing.T) {
 	tests := []struct {
-		name        string
+		name         string
 		buildAnalyze bool
 	}{
 		{
-			name:        "basic_build",
+			name:         "basic_build",
 			buildAnalyze: false,
 		},
 		{
-			name:        "build_with_analysis",
+			name:         "build_with_analysis",
 			buildAnalyze: true,
 		},
 	}

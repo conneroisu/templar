@@ -22,11 +22,11 @@ type BuildCache struct {
 	head *CacheEntry
 	tail *CacheEntry
 	// Statistics tracking (atomic for thread safety)
-	hits       int64
-	misses     int64
-	sets       int64
-	deletes    int64
-	evictions  int64
+	hits      int64
+	misses    int64
+	sets      int64
+	deletes   int64
+	evictions int64
 }
 
 // Ensure BuildCache implements the interfaces.CacheStats interface
@@ -41,8 +41,8 @@ type CacheEntry struct {
 	AccessedAt time.Time
 	Size       int64
 	// AST caching support
-	ASTData     []byte // Cached AST parsing results
-	Metadata    *CacheMetadata
+	ASTData  []byte // Cached AST parsing results
+	Metadata *CacheMetadata
 	// LRU doubly-linked list pointers
 	prev *CacheEntry
 	next *CacheEntry
@@ -175,15 +175,15 @@ func (bc *BuildCache) getCurrentSize() int64 {
 func (bc *BuildCache) Clear() {
 	bc.mutex.Lock()
 	defer bc.mutex.Unlock()
-	
+
 	// Clear all entries
 	bc.entries = make(map[string]*CacheEntry)
 	bc.currentSize = 0
-	
+
 	// Reset LRU list
 	bc.head.next = bc.tail
 	bc.tail.prev = bc.head
-	
+
 	// Reset statistics
 	atomic.StoreInt64(&bc.hits, 0)
 	atomic.StoreInt64(&bc.misses, 0)

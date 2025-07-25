@@ -21,20 +21,20 @@ func BenchmarkHashGeneration(b *testing.B) {
 		{"XLarge_1MB", 1024 * 1024},
 		{"XXLarge_4MB", 4 * 1024 * 1024},
 	}
-	
+
 	for _, testSize := range testSizes {
 		content := make([]byte, testSize.size)
 		// Fill with realistic data (simulate templ file content)
 		for i := range content {
 			content[i] = byte(i % 256)
 		}
-		
+
 		// Create mock file info
 		fileInfo := &mockFileInfo{
 			size:    int64(testSize.size),
 			modTime: time.Now(),
 		}
-		
+
 		// Test original hash generation
 		b.Run("Original_"+testSize.name, func(b *testing.B) {
 			b.ResetTimer()
@@ -43,7 +43,7 @@ func BenchmarkHashGeneration(b *testing.B) {
 				_ = strconv.FormatUint(uint64(crc32.Checksum(content, crcTable)), 16)
 			}
 		})
-		
+
 		// Test optimized hash generation
 		scanner := &ComponentScanner{}
 		b.Run("Optimized_"+testSize.name, func(b *testing.B) {
@@ -62,22 +62,22 @@ func BenchmarkHashStrategies(b *testing.B) {
 	for i := range content {
 		content[i] = byte(i % 256)
 	}
-	
+
 	scanner := &ComponentScanner{}
 	fileInfo := &mockFileInfo{size: int64(len(content)), modTime: time.Now()}
-	
+
 	b.Run("FullContent", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			_ = crc32.Checksum(content, crcTable)
 		}
 	})
-	
+
 	b.Run("SampledHash", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			_ = scanner.generateSampledHash(content)
 		}
 	})
-	
+
 	b.Run("HierarchicalHash", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			_ = scanner.generateHierarchicalHash(content, fileInfo)

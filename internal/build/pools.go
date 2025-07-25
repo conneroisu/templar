@@ -131,7 +131,7 @@ func (p *ObjectPools) GetASTResult() *ASTParseResult {
 	result := p.astResults.Get().(*ASTParseResult)
 	// Reset all fields
 	result.Component = nil
-	result.Parameters = result.Parameters[:0] // Keep capacity
+	result.Parameters = result.Parameters[:0]     // Keep capacity
 	result.Dependencies = result.Dependencies[:0] // Keep capacity
 	result.ParseTime = 0
 	result.CachedAt = time.Time{}
@@ -244,20 +244,20 @@ func (bw *BuildWorker) Reset() {
 // Reset clears a WorkerContext for reuse with minimal overhead while maintaining test contract
 func (wc *WorkerContext) Reset() {
 	wc.TempDir = ""
-	
+
 	// Reset buffers efficiently - maintain test behavior expectations
 	if wc.OutputBuffer != nil && cap(wc.OutputBuffer) <= 1024*1024 { // 1MB max per original test
 		wc.OutputBuffer = wc.OutputBuffer[:0] // Keep capacity
 	} else {
 		wc.OutputBuffer = nil // Test expects nil for oversized buffers
 	}
-	
+
 	if wc.ErrorBuffer != nil && cap(wc.ErrorBuffer) <= 64*1024 { // 64KB max per original test
-		wc.ErrorBuffer = wc.ErrorBuffer[:0] // Keep capacity  
+		wc.ErrorBuffer = wc.ErrorBuffer[:0] // Keep capacity
 	} else {
 		wc.ErrorBuffer = nil // Test expects nil for oversized buffers
 	}
-	
+
 	// Fast map clear for small maps, recreate for large maps
 	if wc.Environment != nil && len(wc.Environment) <= 10 {
 		for k := range wc.Environment {

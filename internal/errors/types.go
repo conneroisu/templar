@@ -380,10 +380,10 @@ func (vec *ValidationErrorCollection) ToTemplarError() *TemplarError {
 	if !vec.HasErrors() {
 		return nil
 	}
-	
+
 	var messages []string
 	context := make(map[string]interface{})
-	
+
 	for _, err := range vec.Errors {
 		messages = append(messages, err.Error())
 		context[err.Field()] = map[string]interface{}{
@@ -391,7 +391,7 @@ func (vec *ValidationErrorCollection) ToTemplarError() *TemplarError {
 			"suggestions": err.Suggestions(),
 		}
 	}
-	
+
 	return &TemplarError{
 		Type:        ErrorTypeValidation,
 		Code:        ErrCodeValidationFailed,

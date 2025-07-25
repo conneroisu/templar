@@ -24,7 +24,7 @@ func TestMemoryGrowthUnderHighLoad(t *testing.T) {
 		t.Fatalf("Failed to create test directory: %v", err)
 	}
 	defer os.RemoveAll(tempDir)
-	
+
 	// Create watcher with very short debounce to maximize event processing
 	fw, err := NewFileWatcher(1 * time.Millisecond)
 	if err != nil {
@@ -60,7 +60,7 @@ func TestMemoryGrowthUnderHighLoad(t *testing.T) {
 	// Create sustained file activity to stress memory management
 	for cycle := 0; cycle < 5; cycle++ {
 		t.Logf("Memory stress cycle %d/5", cycle+1)
-		
+
 		// Create many files rapidly
 		for i := 0; i < 200; i++ {
 			fileName := filepath.Join(tempDir, "stress_test_"+string(rune(cycle))+"_"+string(rune(i))+".templ")
@@ -68,52 +68,52 @@ func TestMemoryGrowthUnderHighLoad(t *testing.T) {
 			for j := range content {
 				content[j] = byte(i % 256)
 			}
-			
+
 			if err := os.WriteFile(fileName, content, 0644); err != nil {
 				continue
 			}
-			
+
 			// Small delay to allow event processing
 			if i%10 == 0 {
 				time.Sleep(1 * time.Millisecond)
 			}
 		}
-		
+
 		// Wait for event processing
 		time.Sleep(50 * time.Millisecond)
-		
-		// Delete files to create more events  
+
+		// Delete files to create more events
 		for i := 0; i < 200; i++ {
 			fileName := filepath.Join(tempDir, "stress_test_"+string(rune(cycle))+"_"+string(rune(i))+".templ")
 			os.Remove(fileName)
 		}
-		
+
 		// Wait for deletion events
 		time.Sleep(50 * time.Millisecond)
-		
+
 		// Force GC and measure memory growth
 		runtime.GC()
 		var m runtime.MemStats
 		runtime.ReadMemStats(&m)
-		
+
 		memGrowth := int64(0)
 		if m.Alloc > m1.Alloc {
 			memGrowth = int64(m.Alloc - m1.Alloc)
 		}
-		
+
 		t.Logf("Cycle %d: Memory growth: %d bytes, Events processed: %d", cycle+1, memGrowth, eventCount)
-		
+
 		// Check for excessive growth (should be sub-linear)
 		expectedMaxGrowth := int64((cycle + 1) * 100 * 1024) // 100KB per cycle max
 		if memGrowth > expectedMaxGrowth {
-			t.Logf("Warning: Memory growth %d bytes exceeds expected %d bytes for cycle %d", 
+			t.Logf("Warning: Memory growth %d bytes exceeds expected %d bytes for cycle %d",
 				memGrowth, expectedMaxGrowth, cycle+1)
 		}
 	}
 
 	// Final memory measurement
 	runtime.GC()
-	var m2 runtime.MemStats  
+	var m2 runtime.MemStats
 	runtime.ReadMemStats(&m2)
 
 	finalGrowth := int64(0)
@@ -156,7 +156,7 @@ func TestChannelBufferOverflow(t *testing.T) {
 	// Overflow the event channel
 	eventsToSend := 150 // More than channel capacity (100)
 	sentEvents := 0
-	
+
 	for i := 0; i < eventsToSend; i++ {
 		event := ChangeEvent{
 			Type:    EventTypeModified,
@@ -164,7 +164,7 @@ func TestChannelBufferOverflow(t *testing.T) {
 			ModTime: time.Now(),
 			Size:    1024,
 		}
-		
+
 		select {
 		case fw.debouncer.events <- event:
 			sentEvents++
@@ -213,7 +213,7 @@ func BenchmarkMemoryEfficiency(b *testing.B) {
 
 		// Simulate the full event flow through debouncer
 		fw.debouncer.addEvent(event)
-		
+
 		// Occasionally flush to test pooling
 		if i%50 == 0 {
 			fw.debouncer.flush()

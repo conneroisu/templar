@@ -66,10 +66,10 @@ func (m *MockComponentRegistry) DetectCircularDependencies() [][]string {
 
 // MockFileWatcher provides mock file watcher for testing
 type MockFileWatcher struct {
-	started   bool
-	stopped   bool
-	filters   []interfaces.FileFilter
-	handlers  []interfaces.ChangeHandlerFunc
+	started    bool
+	stopped    bool
+	filters    []interfaces.FileFilter
+	handlers   []interfaces.ChangeHandlerFunc
 	watchPaths []string
 }
 
@@ -104,8 +104,8 @@ func (m *MockFileWatcher) Stop() error {
 // MockComponentScanner provides mock component scanner for testing
 type MockComponentScanner struct {
 	scannedDirectories []string
-	scannedFiles      []string
-	registry          interfaces.ComponentRegistry
+	scannedFiles       []string
+	registry           interfaces.ComponentRegistry
 }
 
 func (m *MockComponentScanner) ScanDirectory(path string) error {
@@ -174,13 +174,13 @@ func (m *MockBuildPipeline) ClearCache() {
 // MockBuildMetrics provides mock build metrics for testing
 type MockBuildMetrics struct{}
 
-func (m *MockBuildMetrics) GetBuildCount() int64     { return 10 }
-func (m *MockBuildMetrics) GetSuccessCount() int64   { return 8 }
-func (m *MockBuildMetrics) GetFailureCount() int64   { return 2 }
+func (m *MockBuildMetrics) GetBuildCount() int64              { return 10 }
+func (m *MockBuildMetrics) GetSuccessCount() int64            { return 8 }
+func (m *MockBuildMetrics) GetFailureCount() int64            { return 2 }
 func (m *MockBuildMetrics) GetAverageDuration() time.Duration { return 100 * time.Millisecond }
-func (m *MockBuildMetrics) GetCacheHitRate() float64 { return 0.75 }
-func (m *MockBuildMetrics) GetSuccessRate() float64  { return 0.8 }
-func (m *MockBuildMetrics) Reset()                   {}
+func (m *MockBuildMetrics) GetCacheHitRate() float64          { return 0.75 }
+func (m *MockBuildMetrics) GetSuccessRate() float64           { return 0.8 }
+func (m *MockBuildMetrics) Reset()                            {}
 
 // MockCacheStats provides mock cache stats for testing
 type MockCacheStats struct{}
@@ -210,7 +210,7 @@ func (m *MockWebSocketManager) GetConnectedClients() int {
 func createTestServiceDependencies() ServiceDependencies {
 	registry := &MockComponentRegistry{}
 	scanner := &MockComponentScanner{registry: registry}
-	
+
 	return ServiceDependencies{
 		Config: &config.Config{
 			Components: config.ComponentsConfig{
@@ -305,7 +305,7 @@ func TestNewServiceOrchestrator_EmptyScanPaths(t *testing.T) {
 // TestNewServiceOrchestrator_OptionalDependencies tests construction with optional dependencies
 func TestNewServiceOrchestrator_OptionalDependencies(t *testing.T) {
 	deps := createTestServiceDependencies()
-	
+
 	// Make some dependencies nil to test optional handling
 	deps.Monitor = nil
 	deps.Renderer = nil
@@ -482,7 +482,7 @@ func TestServiceOrchestrator_GetServiceStatus(t *testing.T) {
 	// Verify all expected fields are present
 	expectedFields := []string{
 		"registry_available",
-		"scanner_available", 
+		"scanner_available",
 		"build_pipeline_available",
 		"file_watcher_available",
 		"websocket_manager_available",
@@ -548,7 +548,7 @@ func TestServiceOrchestrator_Shutdown(t *testing.T) {
 // TestServiceOrchestrator_OpenBrowser tests browser opening functionality
 func TestServiceOrchestrator_OpenBrowser(t *testing.T) {
 	deps := createTestServiceDependencies()
-	
+
 	// Test with browser opening disabled
 	deps.Config.Server.Open = false
 	orchestrator := NewServiceOrchestrator(deps)

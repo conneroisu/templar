@@ -296,7 +296,7 @@ func TestErrorContext(t *testing.T) {
 	}
 
 	context := GetErrorContext(err)
-	
+
 	expectedKeys := []string{"component", "file", "line", "column", "type", "code", "recoverable", "custom"}
 	for _, key := range expectedKeys {
 		if _, exists := context[key]; !exists {
@@ -344,7 +344,7 @@ func TestTemporaryAndFatalErrors(t *testing.T) {
 
 func TestExtractCause(t *testing.T) {
 	rootErr := errors.New("root cause")
-	
+
 	wrappedErr := &TemplarError{
 		Type:    ErrorTypeBuild,
 		Code:    "BUILD_FAILED",

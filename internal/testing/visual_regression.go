@@ -33,15 +33,15 @@ type VisualRegressionTester struct {
 
 // TestCase represents a visual regression test case
 type TestCase struct {
-	Name         string                 `json:"name"`
-	Component    string                 `json:"component"`
-	Props        map[string]interface{} `json:"props"`
-	GoldenFile   string                 `json:"golden_file"`
-	Description  string                 `json:"description"`
-	Tags         []string               `json:"tags,omitempty"`
-	Viewport     Viewport               `json:"viewport,omitempty"`
-	WaitFor      string                 `json:"wait_for,omitempty"`
-	Screenshot   bool                   `json:"screenshot,omitempty"`
+	Name        string                 `json:"name"`
+	Component   string                 `json:"component"`
+	Props       map[string]interface{} `json:"props"`
+	GoldenFile  string                 `json:"golden_file"`
+	Description string                 `json:"description"`
+	Tags        []string               `json:"tags,omitempty"`
+	Viewport    Viewport               `json:"viewport,omitempty"`
+	WaitFor     string                 `json:"wait_for,omitempty"`
+	Screenshot  bool                   `json:"screenshot,omitempty"`
 }
 
 // Viewport defines the browser viewport size for screenshot tests
@@ -52,20 +52,20 @@ type Viewport struct {
 
 // RegressionResult contains the results of a visual regression test
 type RegressionResult struct {
-	TestCase        TestCase `json:"test_case"`
-	Passed          bool     `json:"passed"`
-	Expected        string   `json:"expected,omitempty"`
-	Actual          string   `json:"actual,omitempty"`
-	Diff            string   `json:"diff,omitempty"`
-	Error           error    `json:"error,omitempty"`
-	OutputHash      string   `json:"output_hash"`
-	ExpectedHash    string   `json:"expected_hash"`
-	ScreenshotPath  string   `json:"screenshot_path,omitempty"`
-	BaselinePath    string   `json:"baseline_path,omitempty"`
-	DiffImagePath   string   `json:"diff_image_path,omitempty"`
-	VisualDiff      bool     `json:"visual_diff"`
-	PixelDiff       int      `json:"pixel_diff"`
-	PercentDiff     float64  `json:"percent_diff"`
+	TestCase       TestCase `json:"test_case"`
+	Passed         bool     `json:"passed"`
+	Expected       string   `json:"expected,omitempty"`
+	Actual         string   `json:"actual,omitempty"`
+	Diff           string   `json:"diff,omitempty"`
+	Error          error    `json:"error,omitempty"`
+	OutputHash     string   `json:"output_hash"`
+	ExpectedHash   string   `json:"expected_hash"`
+	ScreenshotPath string   `json:"screenshot_path,omitempty"`
+	BaselinePath   string   `json:"baseline_path,omitempty"`
+	DiffImagePath  string   `json:"diff_image_path,omitempty"`
+	VisualDiff     bool     `json:"visual_diff"`
+	PixelDiff      int      `json:"pixel_diff"`
+	PercentDiff    float64  `json:"percent_diff"`
 }
 
 // NewVisualRegressionTester creates a new visual regression tester
@@ -87,7 +87,7 @@ func NewVisualRegressionTester(goldenDir string, updateMode bool) *VisualRegress
 // NewVisualRegressionTesterWithOptions creates a tester with custom options
 func NewVisualRegressionTesterWithOptions(goldenDir string, updateMode bool, options VisualTestOptions) *VisualRegressionTester {
 	vrt := NewVisualRegressionTester(goldenDir, updateMode)
-	
+
 	if options.ScreenshotDir != "" {
 		vrt.screenshotDir = options.ScreenshotDir
 	}
@@ -95,7 +95,7 @@ func NewVisualRegressionTesterWithOptions(goldenDir string, updateMode bool, opt
 		vrt.serverPort = options.ServerPort
 	}
 	vrt.enablePuppeteer = options.EnablePuppeteer
-	
+
 	return vrt
 }
 
@@ -152,7 +152,7 @@ func (vrt *VisualRegressionTester) RunTest(t *testing.T, testCase TestCase) *Reg
 			result.Error = fmt.Errorf("screenshot test failed: %w", err)
 			return result
 		}
-		
+
 		// Merge screenshot results
 		result.ScreenshotPath = screenshotResult.ScreenshotPath
 		result.BaselinePath = screenshotResult.BaselinePath
@@ -160,7 +160,7 @@ func (vrt *VisualRegressionTester) RunTest(t *testing.T, testCase TestCase) *Reg
 		result.VisualDiff = screenshotResult.VisualDiff
 		result.PixelDiff = screenshotResult.PixelDiff
 		result.PercentDiff = screenshotResult.PercentDiff
-		
+
 		if !screenshotResult.Passed {
 			result.Passed = false
 			return result
@@ -445,7 +445,7 @@ func (vrt *VisualRegressionTester) runScreenshotTest(t *testing.T, testCase Test
 	// Create a temporary HTML file for the component
 	tempFile := filepath.Join(vrt.screenshotDir, fmt.Sprintf("%s_temp.html", testCase.Name))
 	fullHTML := vrt.createFullHTMLPage(htmlContent, testCase)
-	
+
 	if err := ioutil.WriteFile(tempFile, []byte(fullHTML), 0644); err != nil {
 		return result, fmt.Errorf("failed to write temporary HTML file: %w", err)
 	}
@@ -585,7 +585,7 @@ func (vrt *VisualRegressionTester) takeScreenshot(htmlFile, outputPath string, v
 	// Try different Chrome/Chromium binaries
 	chromeBinaries := []string{"google-chrome", "chromium", "chrome"}
 	var chromeCmd string
-	
+
 	for _, binary := range chromeBinaries {
 		if _, err := exec.LookPath(binary); err == nil {
 			chromeCmd = binary
@@ -659,7 +659,7 @@ func (vrt *VisualRegressionTester) updateBaseline(screenshotPath, baselinePath s
 func (vrt *VisualRegressionTester) compareImages(baselinePath, screenshotPath, diffPath string) (int, float64, error) {
 	// For now, use a simple file size comparison as a basic difference metric
 	// In a production system, you would use an image comparison library like ImageMagick or a Go image library
-	
+
 	baselineInfo, err := os.Stat(baselinePath)
 	if err != nil {
 		return 0, 0, err
@@ -682,11 +682,11 @@ func (vrt *VisualRegressionTester) compareImages(baselinePath, screenshotPath, d
 	if percentDiff > 0.1 {
 		diffInfo := fmt.Sprintf("Baseline: %d bytes\nScreenshot: %d bytes\nDifference: %d bytes (%.2f%%)",
 			baselineInfo.Size(), screenshotInfo.Size(), sizeDiff, percentDiff)
-		
+
 		if err := os.MkdirAll(filepath.Dir(diffPath), 0755); err != nil {
 			return sizeDiff, percentDiff, err
 		}
-		
+
 		if err := ioutil.WriteFile(diffPath+".txt", []byte(diffInfo), 0644); err != nil {
 			return sizeDiff, percentDiff, err
 		}
@@ -698,7 +698,7 @@ func (vrt *VisualRegressionTester) compareImages(baselinePath, screenshotPath, d
 // StartTestServer starts a test server for component preview testing
 func (vrt *VisualRegressionTester) StartTestServer(ctx context.Context) (*http.Server, error) {
 	mux := http.NewServeMux()
-	
+
 	// Serve test components
 	mux.HandleFunc("/component/", vrt.handleComponentPreview)
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {

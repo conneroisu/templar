@@ -13,12 +13,12 @@ import (
 func main() {
 	packages := []string{"internal/build", "internal/registry", "internal/server"}
 	deps := make(map[string][]string)
-	
+
 	for _, pkg := range packages {
 		imports := analyzePackage(pkg)
 		deps[pkg] = imports
 	}
-	
+
 	fmt.Println("=== DEPENDENCY ANALYSIS ===")
 	for pkg, imports := range deps {
 		fmt.Printf("\n%s imports:\n", pkg)
@@ -28,29 +28,29 @@ func main() {
 			}
 		}
 	}
-	
+
 	fmt.Println("\n=== CIRCULAR DEPENDENCY ANALYSIS ===")
 	findCircularDeps(deps)
 }
 
 func analyzePackage(pkgPath string) []string {
 	var imports []string
-	
+
 	err := filepath.Walk(pkgPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		
+
 		if !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") {
 			return nil
 		}
-		
+
 		fset := token.NewFileSet()
 		node, err := parser.ParseFile(fset, path, nil, parser.ImportsOnly)
 		if err != nil {
 			return err
 		}
-		
+
 		for _, imp := range node.Imports {
 			importPath := strings.Trim(imp.Path.Value, "\"")
 			if !contains(imports, importPath) {
@@ -59,11 +59,11 @@ func analyzePackage(pkgPath string) []string {
 		}
 		return nil
 	})
-	
+
 	if err != nil {
 		log.Printf("Error analyzing package %s: %v", pkgPath, err)
 	}
-	
+
 	return imports
 }
 
@@ -83,15 +83,15 @@ func findCircularDeps(deps map[string][]string) {
 			if !strings.Contains(imp1, "templar/internal") {
 				continue
 			}
-			
+
 			// Convert import path to local package name
 			localPkg1 := strings.TrimPrefix(imp1, "github.com/conneroisu/templar/")
-			
+
 			for pkg2, imports2 := range deps {
 				if pkg1 == pkg2 {
 					continue
 				}
-				
+
 				// Check if pkg1 imports pkg2 and pkg2 imports pkg1
 				if localPkg1 == pkg2 {
 					for _, imp2 := range imports2 {
@@ -107,7 +107,7 @@ func findCircularDeps(deps map[string][]string) {
 			}
 		}
 	}
-	
+
 	// Check for indirect circular dependencies (A -> B -> C -> A)
 	fmt.Println("\nChecking for indirect circular dependencies...")
 	checkIndirectCircular(deps, "internal/build", []string{}, make(map[string]bool))
@@ -133,10 +133,10 @@ func checkIndirectCircular(deps map[string][]string, currentPkg string, path []s
 		}
 		return
 	}
-	
+
 	visited[currentPkg] = true
 	newPath := append(path, currentPkg)
-	
+
 	if imports, ok := deps[currentPkg]; ok {
 		for _, imp := range imports {
 			if strings.Contains(imp, "templar/internal") {
@@ -147,6 +147,6 @@ func checkIndirectCircular(deps map[string][]string, currentPkg string, path []s
 			}
 		}
 	}
-	
+
 	visited[currentPkg] = false
 }

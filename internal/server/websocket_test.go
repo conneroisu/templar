@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/coder/websocket"
 	"github.com/conneroisu/templar/internal/config"
 	"github.com/conneroisu/templar/internal/registry"
 	"github.com/stretchr/testify/assert"
-	"github.com/coder/websocket"
 )
 
 func setupTestWebSocketServer(t *testing.T) *PreviewServer {

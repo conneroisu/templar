@@ -11,9 +11,9 @@ import (
 
 // ConfigWizard provides an interactive setup experience for new projects
 type ConfigWizard struct {
-	reader *bufio.Reader
-	config *Config
-	projectDir string
+	reader            *bufio.Reader
+	config            *Config
+	projectDir        string
 	detectedStructure *ProjectStructure
 }
 
@@ -52,23 +52,23 @@ func (w *ConfigWizard) Run() (*Config, error) {
 	fmt.Println("🧙 Templar Configuration Wizard")
 	fmt.Println("================================")
 	fmt.Println("This wizard will help you set up your Templar project configuration.")
-	
+
 	// Show detected project structure if available
 	if w.detectedStructure != nil {
 		fmt.Println()
 		fmt.Printf("🔍 Detected project type: %s\n", w.detectedStructure.ProjectType)
-		
+
 		if len(w.detectedStructure.ComponentDirs) > 0 {
 			fmt.Printf("📁 Found existing directories: %s\n", strings.Join(w.detectedStructure.ComponentDirs, ", "))
 		}
-		
+
 		if w.detectedStructure.HasExistingTempl {
 			fmt.Println("✨ Found existing .templ files")
 		}
-		
+
 		fmt.Println("💡 Smart defaults will be applied based on your project structure.")
 	}
-	
+
 	fmt.Println()
 
 	// Server configuration
@@ -101,7 +101,7 @@ func (w *ConfigWizard) Run() (*Config, error) {
 		return nil, fmt.Errorf("plugins configuration failed: %w", err)
 	}
 
-	// Monitoring configuration  
+	// Monitoring configuration
 	if err := w.configureMonitoring(); err != nil {
 		return nil, fmt.Errorf("monitoring configuration failed: %w", err)
 	}
@@ -655,7 +655,7 @@ func (w *ConfigWizard) hasTemplFiles() bool {
 	if w.projectDir == "" {
 		return false
 	}
-	
+
 	found := false
 	filepath.Walk(w.projectDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -667,7 +667,7 @@ func (w *ConfigWizard) hasTemplFiles() bool {
 		}
 		return nil
 	})
-	
+
 	return found
 }
 

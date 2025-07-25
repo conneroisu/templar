@@ -53,14 +53,14 @@ type ViewportSize struct {
 
 // ComponentMetadata provides additional information about the component
 type ComponentMetadata struct {
-	Name           string              `json:"name"`
-	Package        string              `json:"package"`
-	FilePath       string              `json:"file_path"`
-	Dependencies   []string            `json:"dependencies"`
-	LastModified   string              `json:"last_modified"`
-	DocComments    string              `json:"doc_comments,omitempty"`
-	RenderTime     string              `json:"render_time,omitempty"`
-	ViewportPreset string              `json:"viewport_preset,omitempty"`
+	Name           string   `json:"name"`
+	Package        string   `json:"package"`
+	FilePath       string   `json:"file_path"`
+	Dependencies   []string `json:"dependencies"`
+	LastModified   string   `json:"last_modified"`
+	DocComments    string   `json:"doc_comments,omitempty"`
+	RenderTime     string   `json:"render_time,omitempty"`
+	ViewportPreset string   `json:"viewport_preset,omitempty"`
 }
 
 // handlePlaygroundRender handles interactive component playground rendering
@@ -169,18 +169,18 @@ func (s *PreviewServer) renderComponentWithProps(componentName string, props map
 // generateIntelligentMockData creates contextually appropriate mock data
 func (s *PreviewServer) generateIntelligentMockData(component *types.ComponentInfo) map[string]interface{} {
 	mockData := make(map[string]interface{})
-	
+
 	for _, param := range component.Parameters {
 		mockData[param.Name] = s.generateMockValueForType(param.Name, param.Type)
 	}
-	
+
 	return mockData
 }
 
 // generateMockValueForType generates appropriate mock values based on parameter name and type
 func (s *PreviewServer) generateMockValueForType(paramName, paramType string) interface{} {
 	paramLower := strings.ToLower(paramName)
-	
+
 	switch paramType {
 	case "string":
 		return s.generateMockString(paramLower)
@@ -270,7 +270,7 @@ func (s *PreviewServer) generateMockBool(paramName string) bool {
 		"enabled", "visible", "active", "open", "expanded",
 		"selected", "checked", "valid", "success", "available",
 	}
-	
+
 	for _, positive := range positiveDefaults {
 		if strings.Contains(paramName, positive) {
 			return true
@@ -282,7 +282,7 @@ func (s *PreviewServer) generateMockBool(paramName string) bool {
 		"disabled", "hidden", "collapsed", "closed", "error",
 		"invalid", "loading", "readonly", "required",
 	}
-	
+
 	for _, negative := range negativeDefaults {
 		if strings.Contains(paramName, negative) {
 			return false
@@ -295,18 +295,18 @@ func (s *PreviewServer) generateMockBool(paramName string) bool {
 // generateMockStringSlice creates arrays of contextual strings
 func (s *PreviewServer) generateMockStringSlice(paramName string) []string {
 	contextualValues := map[string][]string{
-		"tags":        {"React", "TypeScript", "CSS", "JavaScript"},
-		"categories":  {"Frontend", "Backend", "DevOps", "Design"},
-		"items":       {"Item 1", "Item 2", "Item 3"},
-		"options":     {"Option A", "Option B", "Option C"},
-		"choices":     {"Choice 1", "Choice 2", "Choice 3"},
-		"values":      {"Value 1", "Value 2", "Value 3"},
-		"names":       {"Alice", "Bob", "Charlie"},
-		"colors":      {"red", "green", "blue"},
-		"sizes":       {"small", "medium", "large"},
-		"types":       {"primary", "secondary", "tertiary"},
-		"statuses":    {"active", "inactive", "pending"},
-		"priorities":  {"high", "medium", "low"},
+		"tags":       {"React", "TypeScript", "CSS", "JavaScript"},
+		"categories": {"Frontend", "Backend", "DevOps", "Design"},
+		"items":      {"Item 1", "Item 2", "Item 3"},
+		"options":    {"Option A", "Option B", "Option C"},
+		"choices":    {"Choice 1", "Choice 2", "Choice 3"},
+		"values":     {"Value 1", "Value 2", "Value 3"},
+		"names":      {"Alice", "Bob", "Charlie"},
+		"colors":     {"red", "green", "blue"},
+		"sizes":      {"small", "medium", "large"},
+		"types":      {"primary", "secondary", "tertiary"},
+		"statuses":   {"active", "inactive", "pending"},
+		"priorities": {"high", "medium", "low"},
 	}
 
 	if values, exists := contextualValues[paramName]; exists {
@@ -340,7 +340,7 @@ func (s *PreviewServer) generateMockFloat(paramName string) float64 {
 // extractPropDefinitions extracts property definitions from component
 func (s *PreviewServer) extractPropDefinitions(component *types.ComponentInfo) []PropDefinition {
 	props := make([]PropDefinition, 0, len(component.Parameters))
-	
+
 	for _, param := range component.Parameters {
 		propDef := PropDefinition{
 			Name:        param.Name,
@@ -352,7 +352,7 @@ func (s *PreviewServer) extractPropDefinitions(component *types.ComponentInfo) [
 		}
 		props = append(props, propDef)
 	}
-	
+
 	return props
 }
 
@@ -432,11 +432,11 @@ func (s *PreviewServer) getIntExamples(name string) []string {
 // generateMockDataSuggestions creates suggestions for mock data
 func (s *PreviewServer) generateMockDataSuggestions(component *types.ComponentInfo) map[string]interface{} {
 	suggestions := make(map[string]interface{})
-	
+
 	for _, param := range component.Parameters {
 		suggestions[param.Name] = s.generateMultipleMockValues(param.Name, param.Type)
 	}
-	
+
 	return suggestions
 }
 
@@ -495,21 +495,21 @@ func (s *PreviewServer) extractDocComments(component *types.ComponentInfo) strin
 // generateComponentCode creates code showing current component usage
 func (s *PreviewServer) generateComponentCode(componentName string, props map[string]interface{}) string {
 	var code strings.Builder
-	
+
 	code.WriteString(fmt.Sprintf("@%s(", componentName))
-	
+
 	propStrings := make([]string, 0, len(props))
 	for key, value := range props {
 		propStr := s.formatPropForCode(key, value)
 		propStrings = append(propStrings, propStr)
 	}
-	
+
 	if len(propStrings) > 0 {
 		code.WriteString(strings.Join(propStrings, ", "))
 	}
-	
+
 	code.WriteString(")")
-	
+
 	return code.String()
 }
 
@@ -559,28 +559,28 @@ func (cmr *CustomMockRenderer) RenderComponent(componentName string) (string, er
 // generateMockHTML creates mock HTML representation of a component
 func (cmr *CustomMockRenderer) generateMockHTML(componentName string, props map[string]interface{}) (string, error) {
 	var html strings.Builder
-	
+
 	// Create a representative HTML structure based on component name
-	html.WriteString(fmt.Sprintf(`<div class="component %s-component" data-component="%s">`, 
+	html.WriteString(fmt.Sprintf(`<div class="component %s-component" data-component="%s">`,
 		strings.ToLower(componentName), componentName))
-	
+
 	// Add component name as header
 	html.WriteString(fmt.Sprintf(`<h3 class="component-title">%s</h3>`, componentName))
-	
+
 	// Render props as content
 	if len(props) > 0 {
 		html.WriteString(`<div class="component-props">`)
-		
+
 		for key, value := range props {
 			html.WriteString(fmt.Sprintf(`<div class="prop-item">
 				<strong class="prop-name">%s:</strong> 
 				<span class="prop-value">%v</span>
 			</div>`, key, value))
 		}
-		
+
 		html.WriteString(`</div>`)
 	}
-	
+
 	// Add mock content based on component type
 	switch strings.ToLower(componentName) {
 	case "button":
@@ -589,7 +589,7 @@ func (cmr *CustomMockRenderer) generateMockHTML(componentName string, props map[
 			text = fmt.Sprintf("%v", textProp)
 		}
 		html.WriteString(fmt.Sprintf(`<button class="btn mock-button">%s</button>`, text))
-		
+
 	case "card":
 		title := "Card Title"
 		if titleProp, exists := props["title"]; exists {
@@ -604,14 +604,14 @@ func (cmr *CustomMockRenderer) generateMockHTML(componentName string, props map[
 				<div class="card-header">%s</div>
 				<div class="card-body">%s</div>
 			</div>`, title, content))
-			
+
 	case "input":
 		placeholder := "Enter text..."
 		if placeholderProp, exists := props["placeholder"]; exists {
 			placeholder = fmt.Sprintf("%v", placeholderProp)
 		}
 		html.WriteString(fmt.Sprintf(`<input type="text" class="form-input mock-input" placeholder="%s">`, placeholder))
-		
+
 	default:
 		// Generic component representation
 		html.WriteString(fmt.Sprintf(`
@@ -620,9 +620,9 @@ func (cmr *CustomMockRenderer) generateMockHTML(componentName string, props map[
 				<p>In a real implementation, this would render the actual templ component.</p>
 			</div>`, componentName))
 	}
-	
+
 	html.WriteString(`</div>`)
-	
+
 	// Add basic styling
 	html.WriteString(`
 		<style>
@@ -639,7 +639,7 @@ func (cmr *CustomMockRenderer) generateMockHTML(componentName string, props map[
 			.mock-input { border: 1px solid #d1d5db; padding: 8px; border-radius: 4px; width: 200px; }
 			.mock-component-content { background: #fef3c7; padding: 15px; border-radius: 6px; color: #92400e; }
 		</style>`)
-	
+
 	return html.String(), nil
 }
 

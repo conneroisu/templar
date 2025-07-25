@@ -102,11 +102,11 @@ func TestBuildService_Build(t *testing.T) {
 				// Common expected errors in test environment
 				expectedErrors := []string{
 					"failed to initialize service container",
-					"failed to get component registry", 
+					"failed to get component registry",
 					"failed to get component scanner",
 					"failed to get build pipeline",
 				}
-				
+
 				foundExpected := false
 				for _, expectedErr := range expectedErrors {
 					if assert.Contains(t, err.Error(), expectedErr) {
@@ -114,7 +114,7 @@ func TestBuildService_Build(t *testing.T) {
 						break
 					}
 				}
-				
+
 				if !foundExpected {
 					t.Errorf("Unexpected error: %v", err)
 				}
@@ -134,7 +134,7 @@ func TestBuildService_cleanBuildArtifacts(t *testing.T) {
 	cfg.Build.CacheDir = filepath.Join(tempDir, ".templar/cache")
 	// Add tempDir to scan paths so generated files there can be cleaned
 	cfg.Components.ScanPaths = append(cfg.Components.ScanPaths, tempDir)
-	
+
 	service := NewBuildService(cfg)
 
 	// Create cache directory with some files
@@ -175,11 +175,11 @@ func TestBuildService_cleanGeneratedFiles(t *testing.T) {
 
 	// Create various test files
 	files := map[string]bool{
-		"component.templ":      false, // Should not be deleted
-		"component_templ.go":   true,  // Should be deleted  
-		"other.go":             false, // Should not be deleted
-		"test_templ.go":        true,  // Should be deleted
-		"regular.txt":          false, // Should not be deleted
+		"component.templ":    false, // Should not be deleted
+		"component_templ.go": true,  // Should be deleted
+		"other.go":           false, // Should not be deleted
+		"test_templ.go":      true,  // Should be deleted
+		"regular.txt":        false, // Should not be deleted
 	}
 
 	for filename := range files {
@@ -207,7 +207,7 @@ func TestBuildService_scanComponents(t *testing.T) {
 	tempDir := t.TempDir()
 	cfg := createTestConfig(tempDir)
 	cfg.Components.ScanPaths = []string{filepath.Join(tempDir, "components")}
-	
+
 	service := NewBuildService(cfg)
 
 	// Create component directory
@@ -221,15 +221,15 @@ func TestBuildService_scanComponents(t *testing.T) {
 templ TestComponent(title string) {
 	<h1>{ title }</h1>
 }`
-	
+
 	scanErr := os.WriteFile(filepath.Join(componentDir, "test.templ"), []byte(componentContent), 0644)
 	require.NoError(t, scanErr)
 
 	ctx := context.Background()
-	
+
 	// Create a mock scanner (interface{} for now since we have simplified implementation)
 	scanner := struct{}{} // Placeholder
-	
+
 	scanCompErr := service.scanComponents(ctx, scanner)
 	assert.NoError(t, scanCompErr) // Should not error with simplified implementation
 }
@@ -240,11 +240,11 @@ func TestBuildService_buildComponents(t *testing.T) {
 	service := NewBuildService(cfg)
 
 	ctx := context.Background()
-	
+
 	// Create mock pipeline and components (interface{} for simplified implementation)
 	pipeline := struct{}{}
 	components := struct{}{}
-	
+
 	err := service.buildComponents(ctx, pipeline, components)
 	assert.NoError(t, err) // Should not error with simplified implementation
 }
@@ -266,7 +266,7 @@ func TestBuildService_applyProductionOptimizations(t *testing.T) {
 
 	ctx := context.Background()
 	outputDir := filepath.Join(tempDir, "dist")
-	
+
 	mkdirErr := os.MkdirAll(outputDir, 0755)
 	require.NoError(t, mkdirErr)
 

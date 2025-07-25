@@ -12,14 +12,14 @@ type AccessibilityGuide struct {
 
 // GuidanceItem represents a single piece of accessibility guidance
 type GuidanceItem struct {
-	Title       string              `json:"title"`
-	Description string              `json:"description"`
-	Examples    []GuidanceExample   `json:"examples"`
-	Resources   []Resource          `json:"resources"`
-	WCAG        WCAG                `json:"wcag"`
-	Severity    ViolationSeverity   `json:"severity"`
-	Priority    int                 `json:"priority"`
-	Tags        []string            `json:"tags"`
+	Title       string            `json:"title"`
+	Description string            `json:"description"`
+	Examples    []GuidanceExample `json:"examples"`
+	Resources   []Resource        `json:"resources"`
+	WCAG        WCAG              `json:"wcag"`
+	Severity    ViolationSeverity `json:"severity"`
+	Priority    int               `json:"priority"`
+	Tags        []string          `json:"tags"`
 }
 
 // GuidanceExample shows before/after code examples
@@ -36,7 +36,7 @@ func NewAccessibilityGuide() *AccessibilityGuide {
 	guide := &AccessibilityGuide{
 		guidelines: make(map[string][]GuidanceItem),
 	}
-	
+
 	guide.loadDefaultGuidelines()
 	return guide
 }
@@ -52,9 +52,9 @@ func (guide *AccessibilityGuide) GetGuidanceForRule(rule string) []GuidanceItem 
 // GetGuidanceForComponent returns general accessibility guidance for component development
 func (guide *AccessibilityGuide) GetGuidanceForComponent(componentName string) []GuidanceItem {
 	componentType := strings.ToLower(componentName)
-	
+
 	var relevantGuidance []GuidanceItem
-	
+
 	// Add component-specific guidance based on component type
 	switch {
 	case strings.Contains(componentType, "button"):
@@ -70,10 +70,10 @@ func (guide *AccessibilityGuide) GetGuidanceForComponent(componentName string) [
 	case strings.Contains(componentType, "table"):
 		relevantGuidance = append(relevantGuidance, guide.getTableGuidance()...)
 	}
-	
+
 	// Add general guidance
 	relevantGuidance = append(relevantGuidance, guide.getGeneralGuidance()...)
-	
+
 	return relevantGuidance
 }
 
@@ -321,7 +321,7 @@ func (guide *AccessibilityGuide) getButtonGuidance() []GuidanceItem {
 			Priority:    1,
 			Examples: []GuidanceExample{
 				{
-					Title:       "Complete button example",
+					Title: "Complete button example",
 					GoodCode: `<button type="button" 
        aria-describedby="help-text"
        disabled={isLoading}>
@@ -344,7 +344,7 @@ func (guide *AccessibilityGuide) getFormGuidance() []GuidanceItem {
 			Priority:    1,
 			Examples: []GuidanceExample{
 				{
-					Title:       "Accessible form field",
+					Title: "Accessible form field",
 					GoodCode: `<div class="form-field">
   <label for="email">
     Email Address
@@ -379,7 +379,7 @@ func (guide *AccessibilityGuide) getImageGuidance() []GuidanceItem {
 			Priority:    1,
 			Examples: []GuidanceExample{
 				{
-					Title:       "Complex image with description",
+					Title: "Complex image with description",
 					GoodCode: `<figure>
   <img src="complex-chart.png" 
        alt="Monthly sales trends" 
@@ -405,7 +405,7 @@ func (guide *AccessibilityGuide) getNavigationGuidance() []GuidanceItem {
 			Priority:    2,
 			Examples: []GuidanceExample{
 				{
-					Title:       "Accessible navigation",
+					Title: "Accessible navigation",
 					GoodCode: `<nav role="navigation" aria-label="Main navigation">
   <a href="#main" class="skip-link">Skip to main content</a>
   <ul>
@@ -430,7 +430,7 @@ func (guide *AccessibilityGuide) getModalGuidance() []GuidanceItem {
 			Priority:    3,
 			Examples: []GuidanceExample{
 				{
-					Title:       "Accessible modal structure",
+					Title: "Accessible modal structure",
 					GoodCode: `<div role="dialog" 
      aria-modal="true" 
      aria-labelledby="modal-title"
@@ -456,7 +456,7 @@ func (guide *AccessibilityGuide) getTableGuidance() []GuidanceItem {
 			Priority:    2,
 			Examples: []GuidanceExample{
 				{
-					Title:       "Accessible data table",
+					Title: "Accessible data table",
 					GoodCode: `<table>
   <caption>Quarterly Sales Report</caption>
   <thead>
@@ -505,7 +505,7 @@ func (guide *AccessibilityGuide) getGeneralGuidance() []GuidanceItem {
 			Priority:    5,
 			Examples: []GuidanceExample{
 				{
-					Title:       "Respect motion preferences",
+					Title: "Respect motion preferences",
 					GoodCode: `@media (prefers-reduced-motion: reduce) {
   .animated {
     animation: none;
@@ -528,15 +528,15 @@ func (guide *AccessibilityGuide) GetGuidanceText(rule string) string {
 	}
 
 	var text strings.Builder
-	
+
 	for i, item := range items {
 		if i > 0 {
 			text.WriteString("\n" + strings.Repeat("-", 50) + "\n")
 		}
-		
+
 		text.WriteString(fmt.Sprintf("📋 %s\n\n", item.Title))
 		text.WriteString(fmt.Sprintf("%s\n\n", item.Description))
-		
+
 		if len(item.Examples) > 0 {
 			text.WriteString("💡 Examples:\n")
 			for _, example := range item.Examples {
@@ -553,7 +553,7 @@ func (guide *AccessibilityGuide) GetGuidanceText(rule string) string {
 			}
 			text.WriteString("\n")
 		}
-		
+
 		if len(item.Resources) > 0 {
 			text.WriteString("📚 Resources:\n")
 			for _, resource := range item.Resources {
@@ -562,7 +562,7 @@ func (guide *AccessibilityGuide) GetGuidanceText(rule string) string {
 			text.WriteString("\n")
 		}
 	}
-	
+
 	return text.String()
 }
 
@@ -575,13 +575,13 @@ func (guide *AccessibilityGuide) GetComponentGuidanceText(componentName string) 
 
 	var text strings.Builder
 	text.WriteString(fmt.Sprintf("🎯 Accessibility Guidance for %s Component\n\n", componentName))
-	
+
 	// Group by priority and show most important first
 	priorityGroups := make(map[int][]GuidanceItem)
 	for _, item := range items {
 		priorityGroups[item.Priority] = append(priorityGroups[item.Priority], item)
 	}
-	
+
 	for priority := 1; priority <= 5; priority++ {
 		if items, exists := priorityGroups[priority]; exists {
 			for _, item := range items {
@@ -589,13 +589,13 @@ func (guide *AccessibilityGuide) GetComponentGuidanceText(componentName string) 
 				if item.Description != "" {
 					text.WriteString(fmt.Sprintf("%s\n\n", item.Description))
 				}
-				
+
 				if len(item.Examples) > 0 && len(item.Examples[0].GoodCode) > 0 {
 					text.WriteString(fmt.Sprintf("Example:\n%s\n\n", item.Examples[0].GoodCode))
 				}
 			}
 		}
 	}
-	
+
 	return text.String()
 }

@@ -50,12 +50,12 @@ func NewRecoveryActionFunc(name, description string, actionFn func(ctx context.C
 
 // RecoveryRule defines when and how to recover from health check failures
 type RecoveryRule struct {
-	CheckName          string          // Name of health check this applies to
-	MinFailureCount    int             // Minimum consecutive failures before triggering recovery
-	RecoveryTimeout    time.Duration   // Maximum time to wait for recovery
-	CooldownPeriod     time.Duration   // Time to wait before attempting recovery again
-	MaxRecoveryAttempts int             // Maximum recovery attempts before giving up
-	Actions            []RecoveryAction // Recovery actions to execute in order
+	CheckName           string           // Name of health check this applies to
+	MinFailureCount     int              // Minimum consecutive failures before triggering recovery
+	RecoveryTimeout     time.Duration    // Maximum time to wait for recovery
+	CooldownPeriod      time.Duration    // Time to wait before attempting recovery again
+	MaxRecoveryAttempts int              // Maximum recovery attempts before giving up
+	Actions             []RecoveryAction // Recovery actions to execute in order
 }
 
 // SelfHealingSystem manages automated recovery from component failures
@@ -71,13 +71,13 @@ type SelfHealingSystem struct {
 
 // RecoveryHistory tracks recovery attempts for a specific check
 type RecoveryHistory struct {
-	CheckName         string
+	CheckName           string
 	ConsecutiveFailures int
-	LastFailureTime   time.Time
-	LastRecoveryTime  time.Time
-	RecoveryAttempts  int
-	RecoverySuccessful bool
-	LastError         error
+	LastFailureTime     time.Time
+	LastRecoveryTime    time.Time
+	RecoveryAttempts    int
+	RecoverySuccessful  bool
+	LastError           error
 }
 
 // RecoveryEvent represents a recovery attempt

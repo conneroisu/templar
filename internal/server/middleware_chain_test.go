@@ -47,7 +47,7 @@ func createTestMiddlewareDependencies() MiddlewareDependencies {
 	return MiddlewareDependencies{
 		Config: &config.Config{
 			Server: config.ServerConfig{
-				Environment: "test",
+				Environment:    "test",
 				AllowedOrigins: []string{"https://example.com"},
 			},
 		},
@@ -293,33 +293,33 @@ func TestMiddlewareChain_CORSMiddleware(t *testing.T) {
 		expectCORSWildcard bool
 	}{
 		{
-			name:           "development_no_origin",
-			environment:    "development",
-			origin:         "",
-			expectedCORS:   "*",
+			name:               "development_no_origin",
+			environment:        "development",
+			origin:             "",
+			expectedCORS:       "*",
 			expectCORSWildcard: true,
 		},
 		{
-			name:           "development_with_origin",
-			environment:    "development",
-			origin:         "https://example.com",
-			expectedCORS:   "*", // Development allows wildcard
+			name:               "development_with_origin",
+			environment:        "development",
+			origin:             "https://example.com",
+			expectedCORS:       "*", // Development allows wildcard
 			expectCORSWildcard: true,
 		},
 		{
-			name:           "production_allowed_origin",
-			environment:    "production",
-			origin:         "https://example.com",
-			allowedOrigins: []string{"https://example.com"},
-			expectedCORS:   "https://example.com",
+			name:               "production_allowed_origin",
+			environment:        "production",
+			origin:             "https://example.com",
+			allowedOrigins:     []string{"https://example.com"},
+			expectedCORS:       "https://example.com",
 			expectCORSWildcard: false,
 		},
 		{
-			name:           "production_forbidden_origin",
-			environment:    "production",
-			origin:         "https://malicious.com",
-			allowedOrigins: []string{"https://example.com"},
-			expectedCORS:   "", // No CORS header for forbidden origins
+			name:               "production_forbidden_origin",
+			environment:        "production",
+			origin:             "https://malicious.com",
+			allowedOrigins:     []string{"https://example.com"},
+			expectedCORS:       "", // No CORS header for forbidden origins
 			expectCORSWildcard: false,
 		},
 	}
@@ -404,7 +404,7 @@ func TestMiddlewareChain_OptionsRequest(t *testing.T) {
 // TestNewCustomMiddlewareChain tests custom middleware chain creation
 func TestNewCustomMiddlewareChain(t *testing.T) {
 	deps := createTestMiddlewareDependencies()
-	
+
 	config := MiddlewareConfig{
 		EnableLogging:    true,
 		EnableCORS:       true,
@@ -431,7 +431,7 @@ func TestNewCustomMiddlewareChain(t *testing.T) {
 // TestMiddlewareChain_WithMonitoring tests middleware chain with monitoring
 func TestMiddlewareChain_WithMonitoring(t *testing.T) {
 	deps := createTestMiddlewareDependencies()
-	
+
 	// Create mock monitor (would need actual implementation for real test)
 	// For now, test without monitor
 	deps.Monitor = nil

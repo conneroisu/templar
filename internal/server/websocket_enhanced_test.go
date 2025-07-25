@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/conneroisu/templar/internal/config"
 	"github.com/coder/websocket"
+	"github.com/conneroisu/templar/internal/config"
 )
 
 func TestWebSocketEnhancements_BasicFunctionality(t *testing.T) {

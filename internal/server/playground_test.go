@@ -318,7 +318,7 @@ func TestMockValueGeneration(t *testing.T) {
 	server := &PreviewServer{}
 
 	tests := []struct {
-		name     string
+		name      string
 		paramName string
 		paramType string
 		validate  func(interface{}) bool
@@ -393,7 +393,7 @@ func TestViewportSizeHandling(t *testing.T) {
 
 	// Test with default viewport
 	html := server.wrapInPlaygroundLayout("TestComponent", "<div>Test</div>", "light", ViewportSize{})
-	assert.Contains(t, html, "1200") // Should default to 1200px width
+	assert.Contains(t, html, "1200")    // Should default to 1200px width
 	assert.Contains(t, html, "Desktop") // Should default to Desktop
 
 	// Test with custom viewport

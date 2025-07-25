@@ -294,16 +294,15 @@ func (pd *PerformanceDetector) detectPerformanceRegressionWithStats(result Bench
 	return nil
 }
 
-
 // regressionParams holds parameters for regression detection
 type regressionParams struct {
-	metricValue     int64
-	suffix          string
-	meanMultiplier  float64
-	stdDevMultiplier float64
-	sampleScaling   float64
-	threshold       float64
-	regressionType  string
+	metricValue       int64
+	suffix            string
+	meanMultiplier    float64
+	stdDevMultiplier  float64
+	sampleScaling     float64
+	threshold         float64
+	regressionType    string
 	getRecommendation func(severity string, percentageChange float64) string
 }
 
@@ -378,21 +377,19 @@ func (pd *PerformanceDetector) detectMemoryRegressionWithStats(result BenchmarkR
 	})
 }
 
-
 // detectAllocationRegressionWithStats checks for allocation count regressions with proper statistics
 func (pd *PerformanceDetector) detectAllocationRegressionWithStats(result BenchmarkResult, baseline *PerformanceBaseline, numComparisons int) *RegressionDetection {
 	return pd.detectRegressionWithStats(result, baseline, numComparisons, regressionParams{
 		metricValue:       result.AllocsPerOp,
 		suffix:            "_allocs",
-		meanMultiplier:    0.75, // Conservative estimate
-		stdDevMultiplier:  0.05, // Assume 5% variance (allocations are typically more stable)
+		meanMultiplier:    0.75,  // Conservative estimate
+		stdDevMultiplier:  0.05,  // Assume 5% variance (allocations are typically more stable)
 		sampleScaling:     0.001, // Scale performance to approximate allocations
 		threshold:         pd.thresholds.AllocThreshold,
 		regressionType:    "allocations",
 		getRecommendation: pd.getAllocationRecommendation,
 	})
 }
-
 
 // calculateSeverity determines regression severity based on threshold ratio
 func (pd *PerformanceDetector) calculateSeverity(ratio, threshold float64) string {
@@ -403,7 +400,6 @@ func (pd *PerformanceDetector) calculateSeverity(ratio, threshold float64) strin
 	}
 	return "minor"
 }
-
 
 // calculateStatistics computes statistical measures for baseline samples
 func (pd *PerformanceDetector) calculateStatistics(baseline *PerformanceBaseline) {

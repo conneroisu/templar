@@ -88,9 +88,9 @@ func (chs *ComprehensiveHealthSystem) HTTPHandler() http.HandlerFunc {
 		case r.URL.Path == "/health":
 			// Standard health endpoint
 			chs.HealthMonitor.HTTPHandler()(w, r)
-		case r.URL.Path == "/health-dashboard" || 
-			 r.URL.Path == "/health-dashboard/api/data" ||
-			 r.URL.Path == "/health-dashboard/api/recovery":
+		case r.URL.Path == "/health-dashboard" ||
+			r.URL.Path == "/health-dashboard/api/data" ||
+			r.URL.Path == "/health-dashboard/api/recovery":
 			// Dashboard endpoints
 			chs.Dashboard.ServeHTTP(w, r)
 		default:
@@ -103,11 +103,11 @@ func (chs *ComprehensiveHealthSystem) HTTPHandler() http.HandlerFunc {
 func (chs *ComprehensiveHealthSystem) AddToServerMux(mux *http.ServeMux) {
 	// Standard health endpoint (existing endpoint, enhanced)
 	mux.HandleFunc("/health", chs.HealthMonitor.HTTPHandler())
-	
+
 	// Dashboard endpoints (new)
 	mux.HandleFunc("/health-dashboard", chs.Dashboard.ServeHTTP)
 	mux.HandleFunc("/health-dashboard/", chs.Dashboard.ServeHTTP)
-	
+
 	// API endpoints (new)
 	mux.HandleFunc("/api/health/status", chs.HealthMonitor.HTTPHandler())
 	mux.HandleFunc("/api/health/recovery", chs.Dashboard.ServeHTTP)
@@ -138,7 +138,7 @@ func (chs *ComprehensiveHealthSystem) IsDegraded() bool {
 // GetSystemSummary returns a human-readable summary of system health
 func (chs *ComprehensiveHealthSystem) GetSystemSummary() string {
 	health := chs.HealthMonitor.GetHealth()
-	
+
 	switch health.Status {
 	case HealthStatusHealthy:
 		return "✅ All systems operational"

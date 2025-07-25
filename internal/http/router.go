@@ -22,21 +22,21 @@ import (
 //
 // Invariants:
 // - config must never be nil after construction
-// - mux must never be nil after construction  
+// - mux must never be nil after construction
 // - handlers must never be nil after construction
 // - httpServer is nil only before Start() or after Shutdown()
 // - isShutdown is write-protected by serverMutex
 type Router struct {
-	config     *config.Config    // Configuration for server binding and behavior
-	httpServer *http.Server      // Underlying HTTP server instance (nil until Start())
-	mux        *http.ServeMux    // Route multiplexer for handling HTTP requests
-	
+	config     *config.Config // Configuration for server binding and behavior
+	httpServer *http.Server   // Underlying HTTP server instance (nil until Start())
+	mux        *http.ServeMux // Route multiplexer for handling HTTP requests
+
 	// Server state management - all access must be protected by serverMutex
-	serverMutex sync.RWMutex     // Protects httpServer and isShutdown fields
-	isShutdown  bool             // Indicates if server has been shut down
-	
+	serverMutex sync.RWMutex // Protects httpServer and isShutdown fields
+	isShutdown  bool         // Indicates if server has been shut down
+
 	// Handler dependencies - injected via constructor to maintain testability
-	handlers Handlers        // Interface providing all HTTP handler implementations
+	handlers Handlers // Interface providing all HTTP handler implementations
 }
 
 // Handlers interface defines all HTTP handler dependencies
@@ -44,34 +44,34 @@ type Router struct {
 type Handlers interface {
 	// WebSocket handlers
 	HandleWebSocket(w http.ResponseWriter, r *http.Request)
-	
+
 	// API handlers
 	HandleHealth(w http.ResponseWriter, r *http.Request)
 	HandleComponents(w http.ResponseWriter, r *http.Request)
 	HandleComponent(w http.ResponseWriter, r *http.Request)
 	HandleRender(w http.ResponseWriter, r *http.Request)
 	HandleStatic(w http.ResponseWriter, r *http.Request)
-	
+
 	// Playground handlers
 	HandlePlaygroundIndex(w http.ResponseWriter, r *http.Request)
 	HandlePlaygroundComponent(w http.ResponseWriter, r *http.Request)
 	HandlePlaygroundRender(w http.ResponseWriter, r *http.Request)
-	
+
 	// Enhanced interface handlers
 	HandleEnhancedIndex(w http.ResponseWriter, r *http.Request)
-	
+
 	// Editor handlers
 	HandleEditorIndex(w http.ResponseWriter, r *http.Request)
 	HandleEditorAPI(w http.ResponseWriter, r *http.Request)
 	HandleFileAPI(w http.ResponseWriter, r *http.Request)
 	HandleInlineEditor(w http.ResponseWriter, r *http.Request)
-	
+
 	// Build API handlers
 	HandleBuildStatus(w http.ResponseWriter, r *http.Request)
 	HandleBuildMetrics(w http.ResponseWriter, r *http.Request)
 	HandleBuildErrors(w http.ResponseWriter, r *http.Request)
 	HandleBuildCache(w http.ResponseWriter, r *http.Request)
-	
+
 	// Index handlers
 	HandleIndex(w http.ResponseWriter, r *http.Request)
 	HandleTargetFiles(w http.ResponseWriter, r *http.Request)
@@ -83,7 +83,7 @@ type MiddlewareProvider interface {
 }
 
 // NewRouter creates a new HTTP router with dependency injection
-// 
+//
 // This constructor follows the dependency injection pattern to ensure:
 // - All dependencies are explicitly provided and validated
 // - The router is fully initialized and ready for use
@@ -91,7 +91,7 @@ type MiddlewareProvider interface {
 //
 // Parameters:
 // - config: Server configuration (host, port, target files)
-// - handlers: Implementation of all HTTP handlers  
+// - handlers: Implementation of all HTTP handlers
 // - middlewareProvider: Middleware chain to apply to all routes
 //
 // Returns:
@@ -110,12 +110,12 @@ func NewRouter(
 		panic("Router: config cannot be nil")
 	}
 	if handlers == nil {
-		panic("Router: handlers cannot be nil") 
+		panic("Router: handlers cannot be nil")
 	}
 	if middlewareProvider == nil {
 		panic("Router: middlewareProvider cannot be nil")
 	}
-	
+
 	// Validate configuration values
 	if config.Server.Port <= 0 || config.Server.Port > 65535 {
 		panic(fmt.Sprintf("Router: invalid port %d, must be 1-65535", config.Server.Port))
@@ -123,32 +123,32 @@ func NewRouter(
 	if config.Server.Host == "" {
 		panic("Router: host cannot be empty")
 	}
-	
+
 	// Initialize router with validated dependencies
 	router := &Router{
-		config:   config,        // Store configuration reference
-		mux:      http.NewServeMux(), // Create new request multiplexer
-		handlers: handlers,      // Store handler interface
-		isShutdown: false,       // Router starts in active state
+		config:     config,             // Store configuration reference
+		mux:        http.NewServeMux(), // Create new request multiplexer
+		handlers:   handlers,           // Store handler interface
+		isShutdown: false,              // Router starts in active state
 	}
-	
+
 	// Register all routes using centralized registration
 	// This must happen before server creation to ensure all routes are available
 	router.registerRoutes()
-	
+
 	// Create HTTP server with complete middleware chain applied
 	// The middleware provider handles security, logging, CORS, rate limiting, etc.
 	handler := middlewareProvider.Apply(router.mux)
 	addr := fmt.Sprintf("%s:%d", config.Server.Host, config.Server.Port)
-	
+
 	// Thread-safe server initialization
 	router.serverMutex.Lock()
 	router.httpServer = &http.Server{
-		Addr:    addr,          // Bind address from configuration
-		Handler: handler,       // Handler with complete middleware stack
+		Addr:    addr,    // Bind address from configuration
+		Handler: handler, // Handler with complete middleware stack
 	}
 	router.serverMutex.Unlock()
-	
+
 	// Post-construction invariant checks
 	if router.mux == nil {
 		panic("Router: mux initialization failed")
@@ -156,7 +156,7 @@ func NewRouter(
 	if router.httpServer == nil {
 		panic("Router: httpServer initialization failed")
 	}
-	
+
 	return router
 }
 
@@ -165,37 +165,37 @@ func NewRouter(
 func (r *Router) registerRoutes() {
 	// WebSocket endpoint
 	r.mux.HandleFunc("/ws", r.handlers.HandleWebSocket)
-	
+
 	// Health check endpoint
 	r.mux.HandleFunc("/health", r.handlers.HandleHealth)
-	
+
 	// Component API endpoints
 	r.mux.HandleFunc("/components", r.handlers.HandleComponents)
 	r.mux.HandleFunc("/component/", r.handlers.HandleComponent)
 	r.mux.HandleFunc("/render/", r.handlers.HandleRender)
 	r.mux.HandleFunc("/static/", r.handlers.HandleStatic)
-	
+
 	// Playground endpoints
 	r.mux.HandleFunc("/playground", r.handlers.HandlePlaygroundIndex)
 	r.mux.HandleFunc("/playground/", r.handlers.HandlePlaygroundComponent)
 	r.mux.HandleFunc("/api/playground/render", r.handlers.HandlePlaygroundRender)
-	
+
 	// Enhanced Web Interface endpoints
 	r.mux.HandleFunc("/enhanced", r.handlers.HandleEnhancedIndex)
-	
+
 	// Interactive Editor endpoints
 	r.mux.HandleFunc("/editor", r.handlers.HandleEditorIndex)
 	r.mux.HandleFunc("/editor/", r.handlers.HandleEditorIndex)
 	r.mux.HandleFunc("/api/editor", r.handlers.HandleEditorAPI)
 	r.mux.HandleFunc("/api/files", r.handlers.HandleFileAPI)
 	r.mux.HandleFunc("/api/inline-editor", r.handlers.HandleInlineEditor)
-	
+
 	// Build API endpoints
 	r.mux.HandleFunc("/api/build/status", r.handlers.HandleBuildStatus)
 	r.mux.HandleFunc("/api/build/metrics", r.handlers.HandleBuildMetrics)
 	r.mux.HandleFunc("/api/build/errors", r.handlers.HandleBuildErrors)
 	r.mux.HandleFunc("/api/build/cache", r.handlers.HandleBuildCache)
-	
+
 	// Root handler - depends on configuration
 	if len(r.config.TargetFiles) > 0 {
 		r.mux.HandleFunc("/", r.handlers.HandleTargetFiles)
@@ -227,23 +227,23 @@ func (r *Router) Start(ctx context.Context) error {
 	if ctx == nil {
 		return fmt.Errorf("Router.Start: context cannot be nil")
 	}
-	
+
 	// Thread-safe access to server instance
 	r.serverMutex.RLock()
 	server := r.httpServer
 	isShutdown := r.isShutdown
 	r.serverMutex.RUnlock()
-	
+
 	// Assertion: server must be initialized by constructor
 	if server == nil {
 		return fmt.Errorf("Router.Start: server not initialized (call NewRouter first)")
 	}
-	
+
 	// Cannot start an already shut down router
 	if isShutdown {
 		return fmt.Errorf("Router.Start: router has been shut down")
 	}
-	
+
 	// Start server in separate goroutine to enable context-based cancellation
 	// This pattern allows the server to run concurrently while monitoring for cancellation
 	errChan := make(chan error, 1)
@@ -255,7 +255,7 @@ func (r *Router) Start(ctx context.Context) error {
 		}
 		// Normal shutdown (http.ErrServerClosed) doesn't send to errChan
 	}()
-	
+
 	// Block until either:
 	// 1. Context is cancelled (graceful shutdown requested)
 	// 2. Server encounters an error (unexpected failure)
@@ -266,7 +266,7 @@ func (r *Router) Start(ctx context.Context) error {
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 		return r.Shutdown(shutdownCtx)
-		
+
 	case err := <-errChan:
 		// Server error - propagate to caller
 		return err
@@ -297,32 +297,32 @@ func (r *Router) Shutdown(ctx context.Context) error {
 	if ctx == nil {
 		return fmt.Errorf("Router.Shutdown: context cannot be nil")
 	}
-	
+
 	// Acquire write lock for atomic shutdown state transition
 	r.serverMutex.Lock()
 	defer r.serverMutex.Unlock()
-	
+
 	// Idempotent: if already shut down, return success immediately
 	if r.isShutdown {
 		return nil
 	}
-	
+
 	// Mark as shut down to prevent future operations
 	// This must be done before actual shutdown to prevent race conditions
 	r.isShutdown = true
-	
+
 	// Perform actual graceful shutdown if server exists
 	if r.httpServer != nil {
 		// Delegate to http.Server.Shutdown for proper connection draining
 		// This will:
 		// - Stop accepting new connections
-		// - Close idle connections  
+		// - Close idle connections
 		// - Wait for active connections to complete within context timeout
 		if err := r.httpServer.Shutdown(ctx); err != nil {
 			return fmt.Errorf("Router.Shutdown: server shutdown failed: %w", err)
 		}
 	}
-	
+
 	// Successful shutdown
 	return nil
 }
@@ -331,11 +331,11 @@ func (r *Router) Shutdown(ctx context.Context) error {
 func (r *Router) GetAddr() string {
 	r.serverMutex.RLock()
 	defer r.serverMutex.RUnlock()
-	
+
 	if r.httpServer != nil {
 		return r.httpServer.Addr
 	}
-	
+
 	return fmt.Sprintf("%s:%d", r.config.Server.Host, r.config.Server.Port)
 }
 

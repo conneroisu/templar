@@ -110,10 +110,10 @@ func TestInitService_validateProjectDirectory(t *testing.T) {
 	service := NewInitService()
 
 	tests := []struct {
-		name        string
-		projectDir  string
-		wantErr     bool
-		setupDir    bool
+		name         string
+		projectDir   string
+		wantErr      bool
+		setupDir     bool
 		makeReadOnly bool
 	}{
 		{

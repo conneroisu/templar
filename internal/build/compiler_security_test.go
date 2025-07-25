@@ -72,7 +72,7 @@ func TestCompiler_UnicodeSecurityAttacks(t *testing.T) {
 				reason: "Right-to-left override characters should be rejected",
 			},
 			{
-				name:   "left-to-right override", 
+				name:   "left-to-right override",
 				input:  "generate\u202D--malicious", // Contains LRO character (U+202D)
 				reason: "Left-to-right override characters should be rejected",
 			},
@@ -287,7 +287,7 @@ func TestCompiler_ResourceLimits(t *testing.T) {
 				}
 
 				err := testCompiler.validateCommand()
-				
+
 				if tc.argLength >= 10000 {
 					// Very long arguments should be rejected
 					assert.Error(t, err, tc.reason)
@@ -478,7 +478,7 @@ func TestCompiler_UnicodeNormalization(t *testing.T) {
 			t.Run(test.name, func(t *testing.T) {
 				// Convert bytes to string (may contain invalid UTF-8)
 				invalidString := string(test.bytes)
-				
+
 				testCompiler := &TemplCompiler{
 					command: "templ",
 					args:    []string{invalidString},
@@ -506,7 +506,7 @@ func TestCompiler_UnicodeNormalization(t *testing.T) {
 			{
 				name:    "valid UTF-8 but non-ASCII",
 				input:   "générér", // French accented characters
-				isValid: false, // Should be rejected by our validation
+				isValid: false,     // Should be rejected by our validation
 				reason:  "Non-ASCII characters should be rejected for security",
 			},
 			{
@@ -546,7 +546,7 @@ func TestCompiler_SecurityBoundaries(t *testing.T) {
 	t.Run("command allowlist enforcement", func(t *testing.T) {
 		// Test that only specific commands are allowed
 		disallowedCommands := []string{
-			"rm", "mv", "cp", "chmod", "chown", "sudo", "su", 
+			"rm", "mv", "cp", "chmod", "chown", "sudo", "su",
 			"curl", "wget", "nc", "netcat", "ssh", "scp",
 			"python", "python3", "node", "ruby", "perl",
 			"sh", "bash", "zsh", "fish", "csh", "tcsh",
@@ -632,7 +632,7 @@ func TestCompiler_CompileResourceLimits(t *testing.T) {
 	t.Run("compilation timeout protection", func(t *testing.T) {
 		// Test that compilation operations have reasonable timeouts
 		compiler := &TemplCompiler{
-			command: "sleep", // Use sleep command to simulate long-running process
+			command: "sleep",        // Use sleep command to simulate long-running process
 			args:    []string{"10"}, // 10 seconds
 		}
 
@@ -643,12 +643,12 @@ func TestCompiler_CompileResourceLimits(t *testing.T) {
 		}
 
 		start := time.Now()
-		
+
 		// This should fail quickly due to command validation (sleep is not allowed)
 		_, err := compiler.Compile(context.Background(), component)
-		
+
 		duration := time.Since(start)
-		
+
 		// Should fail fast due to validation, not timeout
 		assert.Error(t, err, "Should reject disallowed command")
 		assert.Less(t, duration, 1*time.Second, "Should fail quickly due to validation")
@@ -659,7 +659,7 @@ func TestCompiler_CompileResourceLimits(t *testing.T) {
 		// Test memory-conscious compilation with pools
 		pools := NewObjectPools()
 		compiler := NewTemplCompiler()
-		
+
 		component := &types.ComponentInfo{
 			Name:     "TestComponent",
 			FilePath: "test.templ",
@@ -671,7 +671,7 @@ func TestCompiler_CompileResourceLimits(t *testing.T) {
 			// This will likely fail since we're not in a proper templ project,
 			// but it shouldn't cause memory issues
 			output, err := compiler.CompileWithPools(context.Background(), component, pools)
-			
+
 			if err != nil {
 				// Expected to fail in test environment, but should handle gracefully
 				assert.Contains(t, err.Error(), "templ generate failed")
@@ -688,7 +688,7 @@ func TestCompiler_EdgeCaseHandling(t *testing.T) {
 
 		// Test with nil component
 		_, err := compiler.Compile(context.Background(), nil)
-		
+
 		// Should either handle gracefully or provide meaningful error
 		// The actual implementation may or may not check for nil
 		if err != nil {
@@ -701,7 +701,7 @@ func TestCompiler_EdgeCaseHandling(t *testing.T) {
 		emptyComponent := &types.ComponentInfo{}
 
 		_, err := compiler.Compile(context.Background(), emptyComponent)
-		
+
 		// Should handle empty component gracefully
 		if err != nil {
 			assert.NotEmpty(t, err.Error(), "Error message should not be empty")
@@ -710,7 +710,7 @@ func TestCompiler_EdgeCaseHandling(t *testing.T) {
 
 	t.Run("component with special characters", func(t *testing.T) {
 		compiler := NewTemplCompiler()
-		
+
 		// Test component with Unicode in name/path
 		unicodeComponent := &types.ComponentInfo{
 			Name:     "Test🚀Component",
@@ -719,7 +719,7 @@ func TestCompiler_EdgeCaseHandling(t *testing.T) {
 		}
 
 		_, err := compiler.Compile(context.Background(), unicodeComponent)
-		
+
 		// Should complete without crashing
 		if err != nil {
 			assert.NotEmpty(t, err.Error(), "Error message should not be empty")
@@ -728,7 +728,7 @@ func TestCompiler_EdgeCaseHandling(t *testing.T) {
 
 	t.Run("very long component names", func(t *testing.T) {
 		compiler := NewTemplCompiler()
-		
+
 		longName := strings.Repeat("VeryLongComponentName", 100)
 		longComponent := &types.ComponentInfo{
 			Name:     longName,
@@ -737,7 +737,7 @@ func TestCompiler_EdgeCaseHandling(t *testing.T) {
 		}
 
 		_, err := compiler.Compile(context.Background(), longComponent)
-		
+
 		// Should handle long names without crashing
 		if err != nil {
 			assert.NotEmpty(t, err.Error(), "Error message should not be empty")
@@ -779,7 +779,7 @@ func BenchmarkCompiler_UnicodeValidation(b *testing.B) {
 			command: "templ",
 			args:    []string{input},
 		}
-		
+
 		err := compiler.validateCommand()
 		if err != nil {
 			b.Fatal(err)

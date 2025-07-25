@@ -49,11 +49,11 @@ func NewResultProcessor(metrics *BuildMetrics, errorParser *errors.ErrorParser) 
 func (rp *ResultProcessor) ProcessResults(ctx context.Context, results <-chan interface{}) {
 	// Create cancellable context for result processing
 	ctx, rp.cancel = context.WithCancel(ctx)
-	
+
 	rp.resultWg.Add(1)
 	go func() {
 		defer rp.resultWg.Done()
-		
+
 		for {
 			select {
 			case <-ctx.Done():
@@ -62,14 +62,14 @@ func (rp *ResultProcessor) ProcessResults(ctx context.Context, results <-chan in
 				if !ok {
 					return // Results channel closed
 				}
-				
+
 				buildResult, ok := result.(BuildResult)
 				if !ok {
 					// Log invalid result type - could add custom metric tracking if needed
 					// Note: IncrementInvalidResults would need to be added to BuildMetrics
 					continue
 				}
-				
+
 				rp.handleBuildResult(buildResult)
 			}
 		}
@@ -81,7 +81,7 @@ func (rp *ResultProcessor) ProcessResults(ctx context.Context, results <-chan in
 func (rp *ResultProcessor) AddCallback(callback interfaces.BuildCallbackFunc) {
 	rp.mu.Lock()
 	defer rp.mu.Unlock()
-	
+
 	// Wrap the interface callback in our concrete type
 	buildCallback := BuildCallback(func(result BuildResult) {
 		callback(result)
@@ -98,11 +98,11 @@ func (rp *ResultProcessor) Stop() {
 	}
 	rp.stopped = true
 	rp.mu.Unlock()
-	
+
 	if rp.cancel != nil {
 		rp.cancel()
 	}
-	
+
 	// Wait for result processing to complete
 	rp.resultWg.Wait()
 }
@@ -113,12 +113,12 @@ func (rp *ResultProcessor) handleBuildResult(result BuildResult) {
 	if rp.metrics != nil {
 		rp.metrics.RecordBuild(result)
 	}
-	
+
 	// Enhanced error reporting
 	if result.Error != nil && len(result.ParsedErrors) > 0 {
 		rp.handleBuildErrors(result)
 	}
-	
+
 	// Invoke all registered callbacks
 	rp.invokeCallbacks(result)
 }
@@ -132,7 +132,7 @@ func (rp *ResultProcessor) handleBuildErrors(result BuildResult) {
 			fmt.Print(err.FormatError())
 		}
 	}
-	
+
 	// Update error metrics
 	// Note: Error type tracking could be added to BuildMetrics if needed
 }
@@ -143,7 +143,7 @@ func (rp *ResultProcessor) invokeCallbacks(result BuildResult) {
 	callbacks := make([]BuildCallback, len(rp.callbacks))
 	copy(callbacks, rp.callbacks)
 	rp.mu.RUnlock()
-	
+
 	// Call callbacks without holding the lock to avoid deadlocks
 	for _, callback := range callbacks {
 		func() {
@@ -154,7 +154,7 @@ func (rp *ResultProcessor) invokeCallbacks(result BuildResult) {
 					fmt.Printf("Callback panic recovered: %v\n", r)
 				}
 			}()
-			
+
 			callback(result)
 		}()
 	}
@@ -165,7 +165,7 @@ func (rp *ResultProcessor) invokeCallbacks(result BuildResult) {
 func (rp *ResultProcessor) RemoveCallback(targetCallback BuildCallback) {
 	rp.mu.Lock()
 	defer rp.mu.Unlock()
-	
+
 	for i, callback := range rp.callbacks {
 		// Note: Function comparison in Go is limited, this is a simplified approach
 		// In practice, you might want to use callback IDs or a different mechanism
@@ -180,7 +180,7 @@ func (rp *ResultProcessor) RemoveCallback(targetCallback BuildCallback) {
 func (rp *ResultProcessor) ClearCallbacks() {
 	rp.mu.Lock()
 	defer rp.mu.Unlock()
-	
+
 	rp.callbacks = rp.callbacks[:0]
 }
 
@@ -188,7 +188,7 @@ func (rp *ResultProcessor) ClearCallbacks() {
 func (rp *ResultProcessor) GetCallbackCount() int {
 	rp.mu.RLock()
 	defer rp.mu.RUnlock()
-	
+
 	return len(rp.callbacks)
 }
 
@@ -196,7 +196,7 @@ func (rp *ResultProcessor) GetCallbackCount() int {
 func (rp *ResultProcessor) GetProcessorStats() ProcessorStats {
 	rp.mu.RLock()
 	defer rp.mu.RUnlock()
-	
+
 	return ProcessorStats{
 		CallbackCount: len(rp.callbacks),
 		Stopped:       rp.stopped,

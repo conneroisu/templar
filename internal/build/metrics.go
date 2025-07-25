@@ -27,11 +27,11 @@ type BuildMetrics struct {
 	ParallelFileDiscoveries int64 // Total file discoveries
 	FileDiscoveryDuration   int64 // Total time spent discovering files (nanoseconds)
 	ParallelProcessingTime  int64 // Total time spent in parallel processing (nanoseconds)
-	WorkerUtilization      int64 // Average worker utilization percentage
-	BatchProcessingCount   int64 // Number of batch operations
-	BatchSize              int64 // Average batch size
-	ConcurrencyLevel       int32 // Current concurrency level
-	PeakConcurrency        int32 // Peak concurrency achieved
+	WorkerUtilization       int64 // Average worker utilization percentage
+	BatchProcessingCount    int64 // Number of batch operations
+	BatchSize               int64 // Average batch size
+	ConcurrencyLevel        int32 // Current concurrency level
+	PeakConcurrency         int32 // Peak concurrency achieved
 
 	// AST caching metrics
 	ASTCacheHits   int64 // AST cache hits
@@ -39,9 +39,9 @@ type BuildMetrics struct {
 	ASTParseTime   int64 // Total AST parsing time (nanoseconds)
 
 	// Memory optimization metrics
-	PoolHits       int64 // Object pool cache hits
-	PoolMisses     int64 // Object pool cache misses
-	MemoryReused   int64 // Bytes of memory reused from pools
+	PoolHits     int64 // Object pool cache hits
+	PoolMisses   int64 // Object pool cache misses
+	MemoryReused int64 // Bytes of memory reused from pools
 
 	mutex sync.RWMutex
 }
@@ -225,11 +225,11 @@ func (bm *BuildMetrics) GetFailureCount() int64 {
 func (bm *BuildMetrics) GetAverageDuration() time.Duration {
 	bm.mutex.RLock()
 	defer bm.mutex.RUnlock()
-	
+
 	if bm.TotalBuilds == 0 {
 		return 0
 	}
-	
+
 	return time.Duration(int64(bm.TotalDuration) / bm.TotalBuilds)
 }
 
@@ -244,7 +244,7 @@ func (bm *BuildMetrics) RecordFileDiscovery(duration time.Duration, filesFound i
 // RecordParallelProcessing records parallel processing performance
 func (bm *BuildMetrics) RecordParallelProcessing(duration time.Duration, concurrency int32) {
 	atomic.AddInt64(&bm.ParallelProcessingTime, int64(duration))
-	
+
 	// Update peak concurrency atomically
 	for {
 		current := atomic.LoadInt32(&bm.PeakConcurrency)
@@ -255,7 +255,7 @@ func (bm *BuildMetrics) RecordParallelProcessing(duration time.Duration, concurr
 			break
 		}
 	}
-	
+
 	atomic.StoreInt32(&bm.ConcurrencyLevel, concurrency)
 }
 
@@ -356,29 +356,29 @@ func (bm *BuildMetrics) GetPerformanceSummary() map[string]interface{} {
 	defer bm.mutex.RUnlock()
 
 	current, peak := bm.GetConcurrencyStats()
-	
+
 	return map[string]interface{}{
 		"build_performance": map[string]interface{}{
-			"total_builds":      bm.TotalBuilds,
-			"success_rate":      bm.GetSuccessRate(),
-			"cache_hit_rate":    bm.GetCacheHitRate(),
-			"average_duration":  bm.AverageDuration,
+			"total_builds":     bm.TotalBuilds,
+			"success_rate":     bm.GetSuccessRate(),
+			"cache_hit_rate":   bm.GetCacheHitRate(),
+			"average_duration": bm.AverageDuration,
 		},
 		"parallel_processing": map[string]interface{}{
-			"file_discoveries":           atomic.LoadInt64(&bm.ParallelFileDiscoveries),
-			"avg_discovery_time":         bm.GetAverageFileDiscoveryTime(),
-			"avg_processing_time":        bm.GetAverageParallelProcessingTime(),
-			"current_concurrency":        current,
-			"peak_concurrency":          peak,
-			"avg_batch_size":            bm.GetAverageBatchSize(),
-			"batch_count":               atomic.LoadInt64(&bm.BatchProcessingCount),
+			"file_discoveries":    atomic.LoadInt64(&bm.ParallelFileDiscoveries),
+			"avg_discovery_time":  bm.GetAverageFileDiscoveryTime(),
+			"avg_processing_time": bm.GetAverageParallelProcessingTime(),
+			"current_concurrency": current,
+			"peak_concurrency":    peak,
+			"avg_batch_size":      bm.GetAverageBatchSize(),
+			"batch_count":         atomic.LoadInt64(&bm.BatchProcessingCount),
 		},
 		"caching_performance": map[string]interface{}{
-			"ast_cache_hit_rate":    bm.GetASTCacheHitRate(),
-			"ast_cache_hits":        atomic.LoadInt64(&bm.ASTCacheHits),
-			"ast_cache_misses":      atomic.LoadInt64(&bm.ASTCacheMisses),
-			"pool_efficiency":       bm.GetPoolEfficiency(),
-			"memory_reused_bytes":   atomic.LoadInt64(&bm.MemoryReused),
+			"ast_cache_hit_rate":  bm.GetASTCacheHitRate(),
+			"ast_cache_hits":      atomic.LoadInt64(&bm.ASTCacheHits),
+			"ast_cache_misses":    atomic.LoadInt64(&bm.ASTCacheMisses),
+			"pool_efficiency":     bm.GetPoolEfficiency(),
+			"memory_reused_bytes": atomic.LoadInt64(&bm.MemoryReused),
 		},
 		"queue_health": map[string]interface{}{
 			"dropped_tasks":   bm.DroppedTasks,

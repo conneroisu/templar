@@ -48,17 +48,17 @@ func BenchmarkDiscoverAssets(b *testing.B) {
 		{"large_nested", 1000, "nested"},
 		{"mixed_structure", 500, "mixed"},
 	}
-	
+
 	for _, testDir := range testDirs {
 		b.Run(testDir.name, func(b *testing.B) {
 			// Create temporary directory structure
 			tempDir := createTestAssetStructure(b, testDir.numFiles, testDir.structure)
 			defer os.RemoveAll(tempDir)
-			
+
 			cfg := createBenchConfig(b)
 			bundler := NewAssetBundler(cfg, tempDir)
 			ctx := context.Background()
-			
+
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
 				manifest, err := bundler.DiscoverAssets(ctx)
@@ -76,40 +76,40 @@ func BenchmarkBundle(b *testing.B) {
 	// Create test assets
 	tempDir := createTestAssetStructure(b, 50, "mixed")
 	defer os.RemoveAll(tempDir)
-	
+
 	cfg := createBenchConfig(b)
 	bundler := NewAssetBundler(cfg, tempDir)
 	ctx := context.Background()
-	
+
 	// Discover assets first
 	manifest, err := bundler.DiscoverAssets(ctx)
 	if err != nil {
 		b.Fatal(err)
 	}
-	
+
 	outputDir, err := os.MkdirTemp("", "bench_output_*")
 	if err != nil {
 		b.Fatal(err)
 	}
 	defer os.RemoveAll(outputDir)
-	
+
 	bundleTypes := []struct {
-		name      string
-		minify    bool
+		name   string
+		minify bool
 	}{
 		{"standard", false},
 		{"minified", true},
 	}
-	
+
 	for _, bundleType := range bundleTypes {
 		b.Run(bundleType.name, func(b *testing.B) {
 			options := BundlerOptions{
-				Minify: bundleType.minify,
+				Minify:      bundleType.minify,
 				Environment: "production",
-				Target: "es2020",
-				Format: "esm",
+				Target:      "es2020",
+				Format:      "esm",
 			}
-			
+
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
 				result, err := bundler.Bundle(ctx, manifest, options)
@@ -126,11 +126,11 @@ func BenchmarkBundle(b *testing.B) {
 func BenchmarkAssetProcessing(b *testing.B) {
 	tempDir := createTestAssetStructure(b, 100, "mixed")
 	defer os.RemoveAll(tempDir)
-	
+
 	cfg := createBenchConfig(b)
 	bundler := NewAssetBundler(cfg, tempDir)
 	ctx := context.Background()
-	
+
 	b.Run("asset_discovery", func(b *testing.B) {
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
@@ -148,27 +148,27 @@ func BenchmarkConcurrentBundling(b *testing.B) {
 	// Create test assets
 	tempDir := createTestAssetStructure(b, 200, "mixed")
 	defer os.RemoveAll(tempDir)
-	
+
 	cfg := createBenchConfig(b)
-	
+
 	b.Run("sequential_bundling", func(b *testing.B) {
 		bundler := NewAssetBundler(cfg, tempDir)
 		ctx := context.Background()
-		
+
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			manifest, err := bundler.DiscoverAssets(ctx)
 			if err != nil {
 				b.Fatal(err)
 			}
-			
+
 			options := BundlerOptions{
-				Minify: false,
+				Minify:      false,
 				Environment: "development",
-				Target: "es2020",
-				Format: "esm",
+				Target:      "es2020",
+				Format:      "esm",
 			}
-			
+
 			result, err := bundler.Bundle(ctx, manifest, options)
 			if err != nil {
 				b.Fatal(err)
@@ -176,26 +176,26 @@ func BenchmarkConcurrentBundling(b *testing.B) {
 			_ = result
 		}
 	})
-	
+
 	b.Run("concurrent_bundling", func(b *testing.B) {
 		b.ResetTimer()
 		b.RunParallel(func(pb *testing.PB) {
 			bundler := NewAssetBundler(cfg, tempDir)
 			ctx := context.Background()
-			
+
 			for pb.Next() {
 				manifest, err := bundler.DiscoverAssets(ctx)
 				if err != nil {
 					b.Fatal(err)
 				}
-				
+
 				options := BundlerOptions{
-					Minify: false,
+					Minify:      false,
 					Environment: "development",
-					Target: "es2020",
-					Format: "esm",
+					Target:      "es2020",
+					Format:      "esm",
 				}
-				
+
 				result, err := bundler.Bundle(ctx, manifest, options)
 				if err != nil {
 					b.Fatal(err)
@@ -215,20 +215,20 @@ func BenchmarkMemoryUsage(b *testing.B) {
 			b.Fatal(err)
 		}
 		defer os.RemoveAll(tempDir)
-		
+
 		// Create a large JavaScript file (1MB)
-		largeContent := fmt.Sprintf("// Large content\n%s", 
+		largeContent := fmt.Sprintf("// Large content\n%s",
 			strings.Repeat("console.log('test');\n", 50000))
 		largeFile := filepath.Join(tempDir, "large.js")
 		err = os.WriteFile(largeFile, []byte(largeContent), 0644)
 		if err != nil {
 			b.Fatal(err)
 		}
-		
+
 		cfg := createBenchConfig(b)
 		bundler := NewAssetBundler(cfg, tempDir)
 		ctx := context.Background()
-		
+
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			manifest, err := bundler.DiscoverAssets(ctx)
@@ -238,30 +238,30 @@ func BenchmarkMemoryUsage(b *testing.B) {
 			_ = manifest
 		}
 	})
-	
+
 	b.Run("many_small_assets", func(b *testing.B) {
 		tempDir, err := os.MkdirTemp("", "many_assets_*")
 		if err != nil {
 			b.Fatal(err)
 		}
 		defer os.RemoveAll(tempDir)
-		
+
 		// Create many small assets
 		for i := 0; i < 1000; i++ {
 			content := fmt.Sprintf("var x%d = %d;\n", i, i)
 			fileName := fmt.Sprintf("asset_%d.js", i)
 			filePath := filepath.Join(tempDir, fileName)
-			
+
 			err := os.WriteFile(filePath, []byte(content), 0644)
 			if err != nil {
 				b.Fatal(err)
 			}
 		}
-		
+
 		cfg := createBenchConfig(b)
 		bundler := NewAssetBundler(cfg, tempDir)
 		ctx := context.Background()
-		
+
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			manifest, err := bundler.DiscoverAssets(ctx)
@@ -280,7 +280,7 @@ func createTestAssetStructure(b *testing.B, numFiles int, structure string) stri
 	if err != nil {
 		b.Fatal(err)
 	}
-	
+
 	switch structure {
 	case "flat":
 		createFlatStructure(b, tempDir, numFiles)
@@ -289,18 +289,18 @@ func createTestAssetStructure(b *testing.B, numFiles int, structure string) stri
 	case "mixed":
 		createMixedStructure(b, tempDir, numFiles)
 	}
-	
+
 	return tempDir
 }
 
 func createFlatStructure(b *testing.B, baseDir string, numFiles int) {
 	extensions := []string{"js", "css", "ts", "scss"}
-	
+
 	for i := 0; i < numFiles; i++ {
 		ext := extensions[i%len(extensions)]
 		fileName := fmt.Sprintf("file_%d.%s", i, ext)
 		filePath := filepath.Join(baseDir, fileName)
-		
+
 		content := generateTestContent(ext, i)
 		err := os.WriteFile(filePath, []byte(content), 0644)
 		if err != nil {
@@ -313,26 +313,26 @@ func createNestedStructure(b *testing.B, baseDir string, numFiles int) {
 	extensions := []string{"js", "css", "ts", "scss"}
 	dirsPerLevel := 5
 	maxDepth := 4
-	
+
 	for i := 0; i < numFiles; i++ {
 		ext := extensions[i%len(extensions)]
-		
+
 		// Create nested directory path
 		var pathParts []string
 		for depth := 0; depth < maxDepth && i > 0; depth++ {
 			dirNum := (i / (depth + 1)) % dirsPerLevel
 			pathParts = append(pathParts, fmt.Sprintf("dir_%d_%d", depth, dirNum))
 		}
-		
+
 		dirPath := filepath.Join(append([]string{baseDir}, pathParts...)...)
 		err := os.MkdirAll(dirPath, 0755)
 		if err != nil {
 			b.Fatal(err)
 		}
-		
+
 		fileName := fmt.Sprintf("file_%d.%s", i, ext)
 		filePath := filepath.Join(dirPath, fileName)
-		
+
 		content := generateTestContent(ext, i)
 		err = os.WriteFile(filePath, []byte(content), 0644)
 		if err != nil {
@@ -345,7 +345,7 @@ func createMixedStructure(b *testing.B, baseDir string, numFiles int) {
 	// Mix of flat and nested files
 	flatFiles := numFiles / 2
 	nestedFiles := numFiles - flatFiles
-	
+
 	createFlatStructure(b, baseDir, flatFiles)
 	createNestedStructure(b, baseDir, nestedFiles)
 }
@@ -363,7 +363,7 @@ func generateTestContent(ext string, index int) string {
 			
 			var global_%d = func_%d();
 		`, index, index, index, index, index+1, index, index)
-		
+
 	case "css":
 		return fmt.Sprintf(`
 			.class_%d {
@@ -378,9 +378,9 @@ func generateTestContent(ext string, index int) string {
 				position: relative;
 				z-index: %d;
 			}
-		`, index, index*10, index*8, index%20, index%10, 
-		   (index*12345)&0xFFFFFF, index, index%100)
-		
+		`, index, index*10, index*8, index%20, index%10,
+			(index*12345)&0xFFFFFF, index, index%100)
+
 	case "ts":
 		return fmt.Sprintf(`
 			interface Interface_%d {
@@ -396,7 +396,7 @@ func generateTestContent(ext string, index int) string {
 				}
 			}
 		`, index, index, index, index, index, index, index, index)
-		
+
 	case "scss":
 		return fmt.Sprintf(`
 			$color_%d: #%06x;
@@ -414,9 +414,9 @@ func generateTestContent(ext string, index int) string {
 					margin: %dpx;
 				}
 			}
-		`, index, (index*54321)&0xFFFFFF, index, index%50+10, 
-		   index, index, index, index%10, index, index%30+5)
-		
+		`, index, (index*54321)&0xFFFFFF, index, index%50+10,
+			index, index, index, index%10, index, index%30+5)
+
 	default:
 		return fmt.Sprintf("/* Content for file %d */\n", index)
 	}
@@ -429,30 +429,30 @@ func BenchmarkFileIOOperations(b *testing.B) {
 		b.Fatal(err)
 	}
 	defer os.RemoveAll(tempDir)
-	
+
 	// Create test files of different sizes
 	fileSizes := map[string]int{
-		"small":  1024,      // 1KB
-		"medium": 10240,     // 10KB
-		"large":  102400,    // 100KB
+		"small":  1024,   // 1KB
+		"medium": 10240,  // 10KB
+		"large":  102400, // 100KB
 	}
-	
+
 	cfg := createBenchConfig(b)
 	bundler := NewAssetBundler(cfg, tempDir)
-	
+
 	for sizeName, size := range fileSizes {
 		fileName := fmt.Sprintf("test_%s.js", sizeName)
 		filePath := filepath.Join(tempDir, fileName)
 		content := strings.Repeat("a", size)
-		
+
 		err := os.WriteFile(filePath, []byte(content), 0644)
 		if err != nil {
 			b.Fatal(err)
 		}
-		
+
 		b.Run(fmt.Sprintf("process_%s", sizeName), func(b *testing.B) {
 			ctx := context.Background()
-			
+
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
 				manifest, err := bundler.DiscoverAssets(ctx)
@@ -472,10 +472,10 @@ func BenchmarkErrorHandling(b *testing.B) {
 		b.Fatal(err)
 	}
 	defer os.RemoveAll(tempDir)
-	
+
 	cfg := createBenchConfig(b)
 	bundler := NewAssetBundler(cfg, tempDir)
-	
+
 	b.Run("discovery_with_invalid_files", func(b *testing.B) {
 		// Create some invalid/empty files
 		for i := 0; i < 10; i++ {
@@ -483,7 +483,7 @@ func BenchmarkErrorHandling(b *testing.B) {
 			filePath := filepath.Join(tempDir, fileName)
 			os.WriteFile(filePath, []byte(""), 0000) // No permissions
 		}
-		
+
 		ctx := context.Background()
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {

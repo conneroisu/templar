@@ -16,10 +16,10 @@ import (
 func BenchmarkHashFunctions(b *testing.B) {
 	// Test data of different sizes
 	sizes := []int{
-		1024,     // 1KB - small component
-		10240,    // 10KB - medium component  
-		102400,   // 100KB - large component
-		1048576,  // 1MB - very large component
+		1024,    // 1KB - small component
+		10240,   // 10KB - medium component
+		102400,  // 100KB - large component
+		1048576, // 1MB - very large component
 	}
 
 	for _, size := range sizes {
@@ -200,7 +200,7 @@ func BenchmarkMemoryPooledHashing(b *testing.B) {
 				result = make([]byte, 8)
 			}
 			copy(result, []byte{byte(hash), byte(hash >> 8), byte(hash >> 16), byte(hash >> 24)})
-			
+
 			// Return to pool
 			select {
 			case pool <- result:

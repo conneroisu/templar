@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/conneroisu/templar/internal/interfaces"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/conneroisu/templar/internal/interfaces"
 )
 
 func TestEventTypeString(t *testing.T) {

@@ -92,41 +92,41 @@ type DevelopmentConfig struct {
 // ProductionConfig defines production-specific build and deployment settings
 type ProductionConfig struct {
 	// Output configuration
-	OutputDir    string `yaml:"output_dir"`
-	StaticDir    string `yaml:"static_dir"`
-	AssetsDir    string `yaml:"assets_dir"`
-	
+	OutputDir string `yaml:"output_dir"`
+	StaticDir string `yaml:"static_dir"`
+	AssetsDir string `yaml:"assets_dir"`
+
 	// Build optimization
 	Minification      OptimizationSettings `yaml:"minification"`
 	Compression       CompressionSettings  `yaml:"compression"`
 	AssetOptimization AssetSettings        `yaml:"asset_optimization"`
-	
+
 	// Bundling and chunking
-	Bundling      BundlingSettings `yaml:"bundling"`
+	Bundling      BundlingSettings  `yaml:"bundling"`
 	CodeSplitting SplittingSettings `yaml:"code_splitting"`
-	
+
 	// Deployment and CDN
 	Deployment DeploymentSettings `yaml:"deployment"`
 	CDN        CDNSettings        `yaml:"cdn"`
-	
+
 	// Performance and monitoring
-	Performance PerformanceSettings `yaml:"performance"`
+	Performance PerformanceSettings  `yaml:"performance"`
 	Monitoring  ProductionMonitoring `yaml:"monitoring"`
-	
+
 	// Security and validation
 	Security   SecuritySettings   `yaml:"security"`
 	Validation ValidationSettings `yaml:"validation"`
-	
+
 	// Environment-specific overrides
 	Environments map[string]EnvironmentConfig `yaml:"environments"`
 }
 
 // OptimizationSettings controls various optimization features
 type OptimizationSettings struct {
-	CSS        bool `yaml:"css"`
-	JavaScript bool `yaml:"javascript"`
-	HTML       bool `yaml:"html"`
-	JSON       bool `yaml:"json"`
+	CSS            bool `yaml:"css"`
+	JavaScript     bool `yaml:"javascript"`
+	HTML           bool `yaml:"html"`
+	JSON           bool `yaml:"json"`
 	RemoveComments bool `yaml:"remove_comments"`
 	StripDebug     bool `yaml:"strip_debug"`
 }
@@ -141,12 +141,12 @@ type CompressionSettings struct {
 
 // AssetSettings controls image and asset optimization
 type AssetSettings struct {
-	Images       ImageOptimization `yaml:"images"`
-	Fonts        FontOptimization  `yaml:"fonts"`
-	Icons        IconOptimization  `yaml:"icons"`
-	CriticalCSS  bool             `yaml:"critical_css"`
-	TreeShaking  bool             `yaml:"tree_shaking"`
-	DeadCodeElimination bool      `yaml:"dead_code_elimination"`
+	Images              ImageOptimization `yaml:"images"`
+	Fonts               FontOptimization  `yaml:"fonts"`
+	Icons               IconOptimization  `yaml:"icons"`
+	CriticalCSS         bool              `yaml:"critical_css"`
+	TreeShaking         bool              `yaml:"tree_shaking"`
+	DeadCodeElimination bool              `yaml:"dead_code_elimination"`
 }
 
 // ImageOptimization controls image processing
@@ -176,31 +176,31 @@ type IconOptimization struct {
 
 // BundlingSettings controls asset bundling
 type BundlingSettings struct {
-	Enabled      bool     `yaml:"enabled"`
-	Strategy     string   `yaml:"strategy"`     // single, multiple, adaptive
-	ChunkSizeLimit int64  `yaml:"chunk_size_limit"`
-	Externals    []string `yaml:"externals"`   // external dependencies to exclude
-	Splitting    bool     `yaml:"splitting"`   // enable automatic code splitting
+	Enabled        bool     `yaml:"enabled"`
+	Strategy       string   `yaml:"strategy"` // single, multiple, adaptive
+	ChunkSizeLimit int64    `yaml:"chunk_size_limit"`
+	Externals      []string `yaml:"externals"` // external dependencies to exclude
+	Splitting      bool     `yaml:"splitting"` // enable automatic code splitting
 }
 
 // SplittingSettings controls code splitting
 type SplittingSettings struct {
-	Enabled        bool     `yaml:"enabled"`
-	VendorSplit    bool     `yaml:"vendor_split"`
-	AsyncChunks    bool     `yaml:"async_chunks"`
-	CommonChunks   bool     `yaml:"common_chunks"`
-	ManualChunks   []string `yaml:"manual_chunks"`
+	Enabled      bool     `yaml:"enabled"`
+	VendorSplit  bool     `yaml:"vendor_split"`
+	AsyncChunks  bool     `yaml:"async_chunks"`
+	CommonChunks bool     `yaml:"common_chunks"`
+	ManualChunks []string `yaml:"manual_chunks"`
 }
 
 // DeploymentSettings controls deployment configuration
 type DeploymentSettings struct {
-	Target        string            `yaml:"target"`         // static, docker, serverless
-	Environment   string            `yaml:"environment"`    // production, staging, preview
-	BaseURL       string            `yaml:"base_url"`       // deployment base URL
-	AssetPrefix   string            `yaml:"asset_prefix"`   // prefix for asset URLs
-	Headers       map[string]string `yaml:"headers"`        // custom HTTP headers
-	Redirects     []RedirectRule    `yaml:"redirects"`      // URL redirects
-	ErrorPages    map[string]string `yaml:"error_pages"`    // custom error pages
+	Target      string            `yaml:"target"`       // static, docker, serverless
+	Environment string            `yaml:"environment"`  // production, staging, preview
+	BaseURL     string            `yaml:"base_url"`     // deployment base URL
+	AssetPrefix string            `yaml:"asset_prefix"` // prefix for asset URLs
+	Headers     map[string]string `yaml:"headers"`      // custom HTTP headers
+	Redirects   []RedirectRule    `yaml:"redirects"`    // URL redirects
+	ErrorPages  map[string]string `yaml:"error_pages"`  // custom error pages
 }
 
 // RedirectRule defines URL redirect rules
@@ -212,31 +212,31 @@ type RedirectRule struct {
 
 // CDNSettings controls CDN integration
 type CDNSettings struct {
-	Enabled     bool              `yaml:"enabled"`
-	Provider    string            `yaml:"provider"`    // cloudflare, aws, etc.
-	BasePath    string            `yaml:"base_path"`   // CDN base path
-	CacheTTL    int               `yaml:"cache_ttl"`   // cache time-to-live
-	Invalidation bool             `yaml:"invalidation"` // auto-invalidate on deploy
-	Headers     map[string]string `yaml:"headers"`     // CDN-specific headers
+	Enabled      bool              `yaml:"enabled"`
+	Provider     string            `yaml:"provider"`     // cloudflare, aws, etc.
+	BasePath     string            `yaml:"base_path"`    // CDN base path
+	CacheTTL     int               `yaml:"cache_ttl"`    // cache time-to-live
+	Invalidation bool              `yaml:"invalidation"` // auto-invalidate on deploy
+	Headers      map[string]string `yaml:"headers"`      // CDN-specific headers
 }
 
 // PerformanceSettings controls performance optimizations
 type PerformanceSettings struct {
-	BudgetLimits    map[string]int64 `yaml:"budget_limits"`    // size budgets
-	Preconnect      []string         `yaml:"preconnect"`       // domains to preconnect
-	Prefetch        []string         `yaml:"prefetch"`         // resources to prefetch
-	Preload         []string         `yaml:"preload"`          // resources to preload
-	LazyLoading     bool             `yaml:"lazy_loading"`     // enable lazy loading
-	ServiceWorker   bool             `yaml:"service_worker"`   // generate service worker
-	ManifestFile    bool             `yaml:"manifest_file"`    // generate web manifest
+	BudgetLimits  map[string]int64 `yaml:"budget_limits"`  // size budgets
+	Preconnect    []string         `yaml:"preconnect"`     // domains to preconnect
+	Prefetch      []string         `yaml:"prefetch"`       // resources to prefetch
+	Preload       []string         `yaml:"preload"`        // resources to preload
+	LazyLoading   bool             `yaml:"lazy_loading"`   // enable lazy loading
+	ServiceWorker bool             `yaml:"service_worker"` // generate service worker
+	ManifestFile  bool             `yaml:"manifest_file"`  // generate web manifest
 }
 
 // ProductionMonitoring extends base monitoring for production
 type ProductionMonitoring struct {
-	Analytics    AnalyticsSettings `yaml:"analytics"`
+	Analytics     AnalyticsSettings     `yaml:"analytics"`
 	ErrorTracking ErrorTrackingSettings `yaml:"error_tracking"`
-	Performance  PerformanceMonitoring `yaml:"performance"`
-	Uptime       UptimeSettings        `yaml:"uptime"`
+	Performance   PerformanceMonitoring `yaml:"performance"`
+	Uptime        UptimeSettings        `yaml:"uptime"`
 }
 
 // AnalyticsSettings controls analytics integration
@@ -249,10 +249,10 @@ type AnalyticsSettings struct {
 
 // ErrorTrackingSettings controls error tracking
 type ErrorTrackingSettings struct {
-	Enabled     bool   `yaml:"enabled"`
-	Provider    string `yaml:"provider"` // sentry, bugsnag, etc.
-	DSN         string `yaml:"dsn"`      // data source name
-	Environment string `yaml:"environment"`
+	Enabled     bool    `yaml:"enabled"`
+	Provider    string  `yaml:"provider"` // sentry, bugsnag, etc.
+	DSN         string  `yaml:"dsn"`      // data source name
+	Environment string  `yaml:"environment"`
 	SampleRate  float64 `yaml:"sample_rate"`
 }
 
@@ -260,8 +260,8 @@ type ErrorTrackingSettings struct {
 type PerformanceMonitoring struct {
 	Enabled      bool     `yaml:"enabled"`
 	RealUserData bool     `yaml:"real_user_data"`
-	Vitals       bool     `yaml:"vitals"`        // Core Web Vitals
-	Metrics      []string `yaml:"metrics"`      // custom metrics to track
+	Vitals       bool     `yaml:"vitals"`  // Core Web Vitals
+	Metrics      []string `yaml:"metrics"` // custom metrics to track
 }
 
 // UptimeSettings controls uptime monitoring
@@ -274,103 +274,103 @@ type UptimeSettings struct {
 
 // SecuritySettings controls security features
 type SecuritySettings struct {
-	CSP                ContentSecurityPolicy `yaml:"csp"`
-	HSTS               bool                  `yaml:"hsts"`
-	XFrameOptions      string                `yaml:"x_frame_options"`
-	XContentTypeOptions bool                 `yaml:"x_content_type_options"`
-	Scan               SecurityScanSettings  `yaml:"scan"`
-	Secrets            SecretsSettings       `yaml:"secrets"`
+	CSP                 ContentSecurityPolicy `yaml:"csp"`
+	HSTS                bool                  `yaml:"hsts"`
+	XFrameOptions       string                `yaml:"x_frame_options"`
+	XContentTypeOptions bool                  `yaml:"x_content_type_options"`
+	Scan                SecurityScanSettings  `yaml:"scan"`
+	Secrets             SecretsSettings       `yaml:"secrets"`
 }
 
 // ContentSecurityPolicy defines CSP configuration
 type ContentSecurityPolicy struct {
-	Enabled   bool              `yaml:"enabled"`
+	Enabled    bool              `yaml:"enabled"`
 	Directives map[string]string `yaml:"directives"`
-	ReportURI string             `yaml:"report_uri"`
+	ReportURI  string            `yaml:"report_uri"`
 }
 
 // SecurityScanSettings controls security scanning
 type SecurityScanSettings struct {
-	Enabled       bool     `yaml:"enabled"`
-	Dependencies  bool     `yaml:"dependencies"`  // scan dependencies for vulnerabilities
-	Secrets       bool     `yaml:"secrets"`       // scan for exposed secrets
-	StaticAnalysis bool    `yaml:"static_analysis"` // static code analysis
-	AllowedRisks  []string `yaml:"allowed_risks"` // acceptable risk levels
+	Enabled        bool     `yaml:"enabled"`
+	Dependencies   bool     `yaml:"dependencies"`    // scan dependencies for vulnerabilities
+	Secrets        bool     `yaml:"secrets"`         // scan for exposed secrets
+	StaticAnalysis bool     `yaml:"static_analysis"` // static code analysis
+	AllowedRisks   []string `yaml:"allowed_risks"`   // acceptable risk levels
 }
 
 // SecretsSettings controls secrets management
 type SecretsSettings struct {
-	Detection    bool     `yaml:"detection"`     // detect secrets in code
-	Validation   bool     `yaml:"validation"`    // validate secret formats
-	Patterns     []string `yaml:"patterns"`      // custom secret patterns
-	Exclusions   []string `yaml:"exclusions"`    // files to exclude from scanning
+	Detection  bool     `yaml:"detection"`  // detect secrets in code
+	Validation bool     `yaml:"validation"` // validate secret formats
+	Patterns   []string `yaml:"patterns"`   // custom secret patterns
+	Exclusions []string `yaml:"exclusions"` // files to exclude from scanning
 }
 
 // ValidationSettings controls build validation
 type ValidationSettings struct {
-	Enabled      bool                `yaml:"enabled"`
+	Enabled       bool                `yaml:"enabled"`
 	Accessibility AccessibilityChecks `yaml:"accessibility"`
 	Performance   PerformanceChecks   `yaml:"performance"`
-	SEO          SEOChecks           `yaml:"seo"`
-	Links        LinkChecks          `yaml:"links"`
-	Standards    StandardsChecks     `yaml:"standards"`
+	SEO           SEOChecks           `yaml:"seo"`
+	Links         LinkChecks          `yaml:"links"`
+	Standards     StandardsChecks     `yaml:"standards"`
 }
 
 // AccessibilityChecks controls accessibility validation
 type AccessibilityChecks struct {
-	Enabled    bool     `yaml:"enabled"`
-	Level      string   `yaml:"level"`      // A, AA, AAA
-	Rules      []string `yaml:"rules"`      // specific rules to check
+	Enabled     bool     `yaml:"enabled"`
+	Level       string   `yaml:"level"`        // A, AA, AAA
+	Rules       []string `yaml:"rules"`        // specific rules to check
 	IgnoreRules []string `yaml:"ignore_rules"` // rules to ignore
 }
 
 // PerformanceChecks controls performance validation
 type PerformanceChecks struct {
-	Enabled       bool              `yaml:"enabled"`
-	BundleSize    int64             `yaml:"bundle_size"`    // max bundle size
-	LoadTime      int               `yaml:"load_time"`      // max load time (ms)
-	Metrics       map[string]int64  `yaml:"metrics"`        // custom performance metrics
-	Lighthouse    bool              `yaml:"lighthouse"`     // run Lighthouse audits
+	Enabled    bool             `yaml:"enabled"`
+	BundleSize int64            `yaml:"bundle_size"` // max bundle size
+	LoadTime   int              `yaml:"load_time"`   // max load time (ms)
+	Metrics    map[string]int64 `yaml:"metrics"`     // custom performance metrics
+	Lighthouse bool             `yaml:"lighthouse"`  // run Lighthouse audits
 }
 
 // SEOChecks controls SEO validation
 type SEOChecks struct {
-	Enabled     bool     `yaml:"enabled"`
-	MetaTags    bool     `yaml:"meta_tags"`     // validate meta tags
-	Sitemap     bool     `yaml:"sitemap"`       // generate and validate sitemap
-	Robots      bool     `yaml:"robots"`        // generate robots.txt
-	Schema      bool     `yaml:"schema"`        // validate structured data
-	OpenGraph   bool     `yaml:"open_graph"`    // validate Open Graph tags
+	Enabled   bool `yaml:"enabled"`
+	MetaTags  bool `yaml:"meta_tags"`  // validate meta tags
+	Sitemap   bool `yaml:"sitemap"`    // generate and validate sitemap
+	Robots    bool `yaml:"robots"`     // generate robots.txt
+	Schema    bool `yaml:"schema"`     // validate structured data
+	OpenGraph bool `yaml:"open_graph"` // validate Open Graph tags
 }
 
 // LinkChecks controls link validation
 type LinkChecks struct {
 	Enabled    bool     `yaml:"enabled"`
-	Internal   bool     `yaml:"internal"`   // check internal links
-	External   bool     `yaml:"external"`   // check external links
-	Images     bool     `yaml:"images"`     // check image links
-	Timeout    int      `yaml:"timeout"`    // request timeout (seconds)
+	Internal   bool     `yaml:"internal"`    // check internal links
+	External   bool     `yaml:"external"`    // check external links
+	Images     bool     `yaml:"images"`      // check image links
+	Timeout    int      `yaml:"timeout"`     // request timeout (seconds)
 	IgnoreUrls []string `yaml:"ignore_urls"` // URLs to ignore
 }
 
 // StandardsChecks controls web standards validation
 type StandardsChecks struct {
-	Enabled   bool `yaml:"enabled"`
-	HTML      bool `yaml:"html"`      // validate HTML
-	CSS       bool `yaml:"css"`       // validate CSS
+	Enabled    bool `yaml:"enabled"`
+	HTML       bool `yaml:"html"`       // validate HTML
+	CSS        bool `yaml:"css"`        // validate CSS
 	JavaScript bool `yaml:"javascript"` // validate JavaScript
-	W3C       bool `yaml:"w3c"`       // use W3C validators
+	W3C        bool `yaml:"w3c"`        // use W3C validators
 }
 
 // EnvironmentConfig allows per-environment configuration overrides
 type EnvironmentConfig struct {
-	Extends     string                 `yaml:"extends"`     // inherit from another environment
-	Variables   map[string]string      `yaml:"variables"`   // environment variables
-	Features    map[string]bool        `yaml:"features"`    // feature flags
-	Overrides   map[string]interface{} `yaml:"overrides"`   // configuration overrides
-	Deployment  DeploymentSettings     `yaml:"deployment"`  // environment-specific deployment
-	CDN         CDNSettings            `yaml:"cdn"`         // environment-specific CDN
-	Monitoring  ProductionMonitoring   `yaml:"monitoring"`  // environment-specific monitoring
+	Extends    string                 `yaml:"extends"`    // inherit from another environment
+	Variables  map[string]string      `yaml:"variables"`  // environment variables
+	Features   map[string]bool        `yaml:"features"`   // feature flags
+	Overrides  map[string]interface{} `yaml:"overrides"`  // configuration overrides
+	Deployment DeploymentSettings     `yaml:"deployment"` // environment-specific deployment
+	CDN        CDNSettings            `yaml:"cdn"`        // environment-specific CDN
+	Monitoring ProductionMonitoring   `yaml:"monitoring"` // environment-specific monitoring
 }
 
 type PluginsConfig struct {
@@ -393,12 +393,12 @@ type MonitoringConfig struct {
 
 // CSSConfig defines CSS framework integration configuration
 type CSSConfig struct {
-	Framework    string               `yaml:"framework"`     // "tailwind", "bootstrap", "bulma", etc.
-	OutputPath   string               `yaml:"output_path"`   // Path for generated CSS
-	SourcePaths  []string             `yaml:"source_paths"`  // Paths to scan for CSS classes
-	Optimization *OptimizationConfig  `yaml:"optimization,omitempty"`
-	Theming      *ThemingConfig       `yaml:"theming,omitempty"`
-	Variables    map[string]string    `yaml:"variables,omitempty"`
+	Framework    string                 `yaml:"framework"`    // "tailwind", "bootstrap", "bulma", etc.
+	OutputPath   string                 `yaml:"output_path"`  // Path for generated CSS
+	SourcePaths  []string               `yaml:"source_paths"` // Paths to scan for CSS classes
+	Optimization *OptimizationConfig    `yaml:"optimization,omitempty"`
+	Theming      *ThemingConfig         `yaml:"theming,omitempty"`
+	Variables    map[string]string      `yaml:"variables,omitempty"`
 	Options      map[string]interface{} `yaml:"options,omitempty"`
 }
 
@@ -417,34 +417,34 @@ type ThemingConfig struct {
 // TimeoutConfig defines timeout settings for various operations
 type TimeoutConfig struct {
 	// Build and compilation timeouts
-	Build        time.Duration `yaml:"build"`         // Build operation timeout (templ generate, etc.)
-	External     time.Duration `yaml:"external"`      // External command timeout (npm, sass, etc.)
-	Plugin       time.Duration `yaml:"plugin"`        // Plugin execution timeout
-	Render       time.Duration `yaml:"render"`        // Template rendering timeout
-	
+	Build    time.Duration `yaml:"build"`    // Build operation timeout (templ generate, etc.)
+	External time.Duration `yaml:"external"` // External command timeout (npm, sass, etc.)
+	Plugin   time.Duration `yaml:"plugin"`   // Plugin execution timeout
+	Render   time.Duration `yaml:"render"`   // Template rendering timeout
+
 	// File system operations
-	FileIO       time.Duration `yaml:"file_io"`       // File I/O operation timeout
-	FileScan     time.Duration `yaml:"file_scan"`     // File scanning operation timeout
-	FileWatch    time.Duration `yaml:"file_watch"`    // File watching operation timeout
-	
+	FileIO    time.Duration `yaml:"file_io"`    // File I/O operation timeout
+	FileScan  time.Duration `yaml:"file_scan"`  // File scanning operation timeout
+	FileWatch time.Duration `yaml:"file_watch"` // File watching operation timeout
+
 	// Network operations
-	Network      time.Duration `yaml:"network"`       // Network operation timeout
-	HTTP         time.Duration `yaml:"http"`          // HTTP request timeout
-	WebSocket    time.Duration `yaml:"websocket"`     // WebSocket operation timeout
-	HealthCheck  time.Duration `yaml:"health_check"`  // Health check timeout
-	
+	Network     time.Duration `yaml:"network"`      // Network operation timeout
+	HTTP        time.Duration `yaml:"http"`         // HTTP request timeout
+	WebSocket   time.Duration `yaml:"websocket"`    // WebSocket operation timeout
+	HealthCheck time.Duration `yaml:"health_check"` // Health check timeout
+
 	// Server operations
-	Startup      time.Duration `yaml:"startup"`       // Server startup timeout
-	Shutdown     time.Duration `yaml:"shutdown"`      // Server shutdown timeout
-	Context      time.Duration `yaml:"context"`       // Default context timeout
-	
+	Startup  time.Duration `yaml:"startup"`  // Server startup timeout
+	Shutdown time.Duration `yaml:"shutdown"` // Server shutdown timeout
+	Context  time.Duration `yaml:"context"`  // Default context timeout
+
 	// Development and testing
-	Development  time.Duration `yaml:"development"`   // Development operations timeout
-	Testing      time.Duration `yaml:"testing"`       // Test execution timeout
-	
+	Development time.Duration `yaml:"development"` // Development operations timeout
+	Testing     time.Duration `yaml:"testing"`     // Test execution timeout
+
 	// Background operations
-	Background   time.Duration `yaml:"background"`    // Background task timeout
-	Cleanup      time.Duration `yaml:"cleanup"`       // Cleanup operation timeout
+	Background time.Duration `yaml:"background"` // Background task timeout
+	Cleanup    time.Duration `yaml:"cleanup"`    // Cleanup operation timeout
 }
 
 // loadDefaults applies default values to all configuration sections when not explicitly set.
@@ -535,7 +535,7 @@ func loadDefaults(config *Config) {
 
 	// Apply default values for ProductionConfig if not set
 	loadProductionDefaults(&config.Production)
-	
+
 	// Apply default values for TimeoutConfig if not set
 	loadTimeoutDefaults(&config.Timeouts)
 }
@@ -638,10 +638,10 @@ func loadProductionDefaults(prod *ProductionConfig) {
 	// Performance defaults
 	if prod.Performance.BudgetLimits == nil {
 		prod.Performance.BudgetLimits = map[string]int64{
-			"bundle_size":    500000,  // 500KB
-			"image_size":     1000000, // 1MB
-			"css_size":       100000,  // 100KB
-			"js_size":        300000,  // 300KB
+			"bundle_size": 500000,  // 500KB
+			"image_size":  1000000, // 1MB
+			"css_size":    100000,  // 100KB
+			"js_size":     300000,  // 300KB
 		}
 	}
 	if !viper.IsSet("production.performance.lazy_loading") {
@@ -767,7 +767,7 @@ func loadTimeoutDefaults(timeouts *TimeoutConfig) {
 	if timeouts.Render == 0 {
 		timeouts.Render = 30 * time.Second // Template rendering: 30 seconds
 	}
-	
+
 	// File system operations
 	if timeouts.FileIO == 0 {
 		timeouts.FileIO = 30 * time.Second // File I/O operations: 30 seconds
@@ -778,7 +778,7 @@ func loadTimeoutDefaults(timeouts *TimeoutConfig) {
 	if timeouts.FileWatch == 0 {
 		timeouts.FileWatch = 10 * time.Second // File watching: 10 seconds
 	}
-	
+
 	// Network operations
 	if timeouts.Network == 0 {
 		timeouts.Network = 30 * time.Second // Network operations: 30 seconds
@@ -792,7 +792,7 @@ func loadTimeoutDefaults(timeouts *TimeoutConfig) {
 	if timeouts.HealthCheck == 0 {
 		timeouts.HealthCheck = 10 * time.Second // Health checks: 10 seconds
 	}
-	
+
 	// Server operations
 	if timeouts.Startup == 0 {
 		timeouts.Startup = 30 * time.Second // Server startup: 30 seconds
@@ -803,7 +803,7 @@ func loadTimeoutDefaults(timeouts *TimeoutConfig) {
 	if timeouts.Context == 0 {
 		timeouts.Context = 30 * time.Second // Default context: 30 seconds
 	}
-	
+
 	// Development and testing
 	if timeouts.Development == 0 {
 		timeouts.Development = 10 * time.Minute // Development operations: 10 minutes
@@ -811,7 +811,7 @@ func loadTimeoutDefaults(timeouts *TimeoutConfig) {
 	if timeouts.Testing == 0 {
 		timeouts.Testing = 5 * time.Minute // Test execution: 5 minutes
 	}
-	
+
 	// Background operations
 	if timeouts.Background == 0 {
 		timeouts.Background = 15 * time.Minute // Background tasks: 15 minutes
@@ -918,7 +918,7 @@ func Load() (*Config, error) {
 
 	// Apply default values for all configuration sections
 	loadDefaults(&config)
-	
+
 	// Apply overrides from Viper (environment variables, flags, etc.)
 	applyOverrides(&config)
 
@@ -1022,4 +1022,3 @@ func (c *Config) GetProductionConfig(env string) (*ProductionConfig, error) {
 
 	return &prodConfig, nil
 }
-

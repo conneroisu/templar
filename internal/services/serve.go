@@ -34,10 +34,10 @@ type ServeOptions struct {
 
 // ServeResult contains the result of a serve operation
 type ServeResult struct {
-	ServerURL    string
-	MonitorURL   string
-	Success      bool
-	Error        error
+	ServerURL  string
+	MonitorURL string
+	Success    bool
+	Error      error
 }
 
 // Serve starts the development server with hot reload and monitoring

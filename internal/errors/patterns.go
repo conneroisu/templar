@@ -50,7 +50,7 @@ func BuildServiceError(operation, message string, cause error) *TemplarError {
 	return ServiceError("BUILD", operation, message, cause)
 }
 
-// ServeServiceError creates serve service errors  
+// ServeServiceError creates serve service errors
 func ServeServiceError(operation, message string, cause error) *TemplarError {
 	return ServiceError("SERVE", operation, message, cause)
 }
@@ -200,7 +200,7 @@ func WithLocationInfo(err error, filePath string, line, column int) error {
 	return EnhanceError(err, "", filePath, line, column)
 }
 
-// WithComponentInfo adds component context to any error  
+// WithComponentInfo adds component context to any error
 func WithComponentInfo(err error, componentName string) error {
 	return EnhanceError(err, componentName, "", 0, 0)
 }
@@ -210,7 +210,7 @@ func WithOperationContext(err error, operation string, context map[string]interf
 	if err == nil {
 		return nil
 	}
-	
+
 	if te, ok := err.(*TemplarError); ok {
 		if te.Context == nil {
 			te.Context = make(map[string]interface{})
@@ -221,14 +221,14 @@ func WithOperationContext(err error, operation string, context map[string]interf
 		}
 		return te
 	}
-	
+
 	// Create a new TemplarError for non-TemplarError types
 	newContext := make(map[string]interface{})
 	newContext["operation"] = operation
 	for k, v := range context {
 		newContext[k] = v
 	}
-	
+
 	return &TemplarError{
 		Type:        ErrorTypeInternal,
 		Code:        "ERR_ENHANCED",
@@ -294,7 +294,7 @@ func HasErrorType(err error, errType ErrorType) bool {
 //     return nil
 // }
 
-// Example: CLI Command Error  
+// Example: CLI Command Error
 // func runInit(cmd *cobra.Command, args []string) error {
 //     if len(args) > 1 {
 //         return ArgumentError("project_name", "too many arguments provided", args)

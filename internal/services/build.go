@@ -212,19 +212,19 @@ func (s *BuildService) buildComponents(ctx context.Context, pipeline interface{}
 // generateBuildAnalysis creates build analysis report
 func (s *BuildService) generateBuildAnalysis(outputDir string) error {
 	analysisFile := filepath.Join(outputDir, "build-analysis.json")
-	
+
 	// Create analysis data
 	analysis := map[string]interface{}{
-		"timestamp":     time.Now(),
-		"build_config":  s.config.Build,
-		"component_count": 0, // Would be filled with actual data
-		"build_time":    "0s", // Would be filled with actual data
+		"timestamp":       time.Now(),
+		"build_config":    s.config.Build,
+		"component_count": 0,    // Would be filled with actual data
+		"build_time":      "0s", // Would be filled with actual data
 	}
 
 	// Write analysis file (simplified implementation)
 	_ = analysis
 	_ = analysisFile
-	
+
 	return nil
 }
 

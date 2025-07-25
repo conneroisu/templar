@@ -86,7 +86,7 @@ func (s *InitService) validateProjectDirectory(projectDir string) error {
 func (s *InitService) createDirectoryStructure(projectDir string) error {
 	dirs := []string{
 		"components",
-		"views", 
+		"views",
 		"examples",
 		"static",
 		"static/css",
@@ -207,7 +207,7 @@ templ Button(text string, variant string) {
 		return errors.FileOperationError("CREATE_COMPONENT", buttonPath, "failed to create button component", err)
 	}
 
-	// Example card component  
+	// Example card component
 	cardContent := `package components
 
 templ Card(title string, content string) {

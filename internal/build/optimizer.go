@@ -32,25 +32,25 @@ func (o *AssetOptimizer) Optimize(ctx context.Context, assetsDir string, options
 			return fmt.Errorf("image optimization failed: %w", err)
 		}
 	}
-	
+
 	if options.CSS {
 		if err := o.optimizeCSS(ctx, assetsDir); err != nil {
 			return fmt.Errorf("CSS optimization failed: %w", err)
 		}
 	}
-	
+
 	if options.JavaScript {
 		if err := o.optimizeJavaScript(ctx, assetsDir); err != nil {
 			return fmt.Errorf("JavaScript optimization failed: %w", err)
 		}
 	}
-	
+
 	if options.Compression {
 		if err := o.compressAssets(ctx, assetsDir); err != nil {
 			return fmt.Errorf("asset compression failed: %w", err)
 		}
 	}
-	
+
 	return nil
 }
 

@@ -40,10 +40,10 @@ import (
 // - Apply() is safe for concurrent access (read-only operation)
 type MiddlewareChain struct {
 	config          *config.Config             // Application configuration for middleware behavior
-	rateLimiter     *TokenBucketManager       // Global rate limiter (optional)
+	rateLimiter     *TokenBucketManager        // Global rate limiter (optional)
 	monitor         *monitoring.TemplarMonitor // Monitoring system (optional)
-	originValidator OriginValidator           // Origin validation for CORS
-	middlewares     []Middleware              // Ordered list of middleware functions
+	originValidator OriginValidator            // Origin validation for CORS
+	middlewares     []Middleware               // Ordered list of middleware functions
 }
 
 // Middleware represents a single middleware function
@@ -88,25 +88,25 @@ func NewMiddlewareChain(deps MiddlewareDependencies) *MiddlewareChain {
 	if deps.OriginValidator == nil {
 		panic("MiddlewareChain: originValidator cannot be nil (required for CORS security)")
 	}
-	
+
 	// Validate configuration has required fields
 	if deps.Config.Server.Environment == "" {
 		panic("MiddlewareChain: config.Server.Environment cannot be empty")
 	}
-	
+
 	// Initialize chain with validated dependencies
 	chain := &MiddlewareChain{
-		config:          deps.Config,          // Application configuration
-		rateLimiter:     deps.RateLimiter,     // Optional global rate limiter
-		monitor:         deps.Monitor,         // Optional monitoring system
-		originValidator: deps.OriginValidator, // Required origin validator
+		config:          deps.Config,              // Application configuration
+		rateLimiter:     deps.RateLimiter,         // Optional global rate limiter
+		monitor:         deps.Monitor,             // Optional monitoring system
+		originValidator: deps.OriginValidator,     // Required origin validator
 		middlewares:     make([]Middleware, 0, 8), // Pre-allocate for typical middleware count
 	}
-	
+
 	// Build the default middleware stack with proper ordering
 	// This must happen during construction to ensure consistent behavior
 	chain.buildDefaultStack()
-	
+
 	// Post-construction invariant validation
 	if len(chain.middlewares) == 0 {
 		panic("MiddlewareChain: default stack build failed - no middlewares added")
@@ -114,26 +114,26 @@ func NewMiddlewareChain(deps MiddlewareDependencies) *MiddlewareChain {
 	if chain.middlewares == nil {
 		panic("MiddlewareChain: middleware slice initialization failed")
 	}
-	
+
 	return chain
 }
 
 // buildDefaultStack constructs the standard middleware stack
 func (mc *MiddlewareChain) buildDefaultStack() {
 	// Order matters: middlewares are executed in reverse order (last added, first executed)
-	
+
 	// 1. Logging and monitoring (outermost - first to execute, last to complete)
 	mc.AddMiddleware(mc.createLoggingMiddleware())
-	
+
 	// 2. CORS handling
 	mc.AddMiddleware(mc.createCORSMiddleware())
-	
+
 	// 3. Monitoring middleware (if available)
 	if mc.monitor != nil {
 		monitoringMiddleware := mc.monitor.CreateTemplarMiddleware()
 		mc.AddMiddleware(monitoringMiddleware)
 	}
-	
+
 	// 4. Rate limiting middleware (if enabled)
 	if mc.shouldEnableRateLimit() {
 		if mc.rateLimiter == nil {
@@ -141,11 +141,11 @@ func (mc *MiddlewareChain) buildDefaultStack() {
 		}
 		mc.AddMiddleware(RateLimitMiddleware(mc.rateLimiter))
 	}
-	
+
 	// 5. Security middleware
 	securityConfig := SecurityConfigFromAppConfig(mc.config)
 	mc.AddMiddleware(SecurityMiddleware(securityConfig))
-	
+
 	// 6. Authentication middleware (innermost - last to execute, first to complete)
 	mc.AddMiddleware(AuthMiddleware(&mc.config.Server.Auth))
 }
@@ -161,7 +161,7 @@ func (mc *MiddlewareChain) AddMiddlewareAt(index int, middleware Middleware) {
 		mc.middlewares = append(mc.middlewares, middleware)
 		return
 	}
-	
+
 	// Insert at specific position
 	mc.middlewares = append(mc.middlewares[:index+1], mc.middlewares[index:]...)
 	mc.middlewares[index] = middleware
@@ -214,33 +214,33 @@ func (mc *MiddlewareChain) Apply(handler http.Handler) http.Handler {
 	if handler == nil {
 		panic("MiddlewareChain.Apply: handler cannot be nil")
 	}
-	
+
 	// Defensive copy check - ensure middlewares slice is valid
 	if mc.middlewares == nil {
 		panic("MiddlewareChain.Apply: middlewares slice is nil (initialization error)")
 	}
-	
+
 	// Apply middlewares in reverse order to create onion-style wrapping
 	// This ensures the first added middleware is closest to the handler
 	// and the last added middleware is the outermost wrapper
 	wrappedHandler := handler
 	for i := len(mc.middlewares) - 1; i >= 0; i-- {
 		middleware := mc.middlewares[i]
-		
+
 		// Validate each middleware before application
 		if middleware == nil {
 			panic(fmt.Sprintf("MiddlewareChain.Apply: middleware at index %d is nil", i))
 		}
-		
+
 		// Apply middleware to create new wrapped handler
 		wrappedHandler = middleware(wrappedHandler)
-		
+
 		// Validate middleware didn't return nil handler
 		if wrappedHandler == nil {
 			panic(fmt.Sprintf("MiddlewareChain.Apply: middleware at index %d returned nil handler", i))
 		}
 	}
-	
+
 	// Return the fully wrapped handler
 	return wrappedHandler
 }
@@ -250,17 +250,17 @@ func (mc *MiddlewareChain) createLoggingMiddleware() Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
-			
+
 			// Execute next handler
 			next.ServeHTTP(w, r)
-			
+
 			duration := time.Since(start)
-			
+
 			// Track request in monitoring system
 			if mc.monitor != nil {
 				mc.monitor.RecordWebSocketEvent("http_request", 1)
 			}
-			
+
 			// Log request
 			log.Printf("%s %s %v", r.Method, r.URL.Path, duration)
 		})
@@ -273,7 +273,7 @@ func (mc *MiddlewareChain) createCORSMiddleware() Middleware {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// CORS headers based on environment
 			origin := r.Header.Get("Origin")
-			
+
 			if mc.originValidator.IsAllowedOrigin(origin) {
 				w.Header().Set("Access-Control-Allow-Origin", origin)
 			} else if mc.config.Server.Environment == "development" {
@@ -281,17 +281,17 @@ func (mc *MiddlewareChain) createCORSMiddleware() Middleware {
 				w.Header().Set("Access-Control-Allow-Origin", "*")
 			}
 			// Production default: no CORS header (blocks cross-origin requests)
-			
+
 			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
-			
+
 			// Handle preflight requests
 			if r.Method == http.MethodOptions {
 				w.WriteHeader(http.StatusOK)
 				return
 			}
-			
+
 			// Continue to next middleware
 			next.ServeHTTP(w, r)
 		})
@@ -331,21 +331,21 @@ func (mc *MiddlewareChain) Clone() *MiddlewareChain {
 		originValidator: mc.originValidator,
 		middlewares:     make([]Middleware, len(mc.middlewares)),
 	}
-	
+
 	copy(clone.middlewares, mc.middlewares)
-	
+
 	return clone
 }
 
 // MiddlewareConfig provides configuration for middleware components
 type MiddlewareConfig struct {
-	EnableLogging      bool
-	EnableCORS         bool
-	EnableRateLimit    bool
-	EnableSecurity     bool
-	EnableAuth         bool
-	EnableMonitoring   bool
-	CustomMiddlewares  []Middleware
+	EnableLogging     bool
+	EnableCORS        bool
+	EnableRateLimit   bool
+	EnableSecurity    bool
+	EnableAuth        bool
+	EnableMonitoring  bool
+	CustomMiddlewares []Middleware
 }
 
 // NewCustomMiddlewareChain creates a middleware chain with custom configuration
@@ -357,48 +357,48 @@ func NewCustomMiddlewareChain(deps MiddlewareDependencies, config MiddlewareConf
 		originValidator: deps.OriginValidator,
 		middlewares:     make([]Middleware, 0),
 	}
-	
+
 	// Build stack based on configuration
 	if config.EnableLogging {
 		chain.AddMiddleware(chain.createLoggingMiddleware())
 	}
-	
+
 	if config.EnableCORS {
 		chain.AddMiddleware(chain.createCORSMiddleware())
 	}
-	
+
 	if config.EnableMonitoring && chain.monitor != nil {
 		chain.AddMiddleware(chain.monitor.CreateTemplarMiddleware())
 	}
-	
+
 	if config.EnableRateLimit && chain.shouldEnableRateLimit() {
 		if chain.rateLimiter == nil {
 			chain.rateLimiter = chain.createRateLimiter()
 		}
 		chain.AddMiddleware(RateLimitMiddleware(chain.rateLimiter))
 	}
-	
+
 	if config.EnableSecurity {
 		securityConfig := SecurityConfigFromAppConfig(chain.config)
 		chain.AddMiddleware(SecurityMiddleware(securityConfig))
 	}
-	
+
 	if config.EnableAuth {
 		chain.AddMiddleware(AuthMiddleware(&chain.config.Server.Auth))
 	}
-	
+
 	// Add custom middlewares
 	for _, middleware := range config.CustomMiddlewares {
 		chain.AddMiddleware(middleware)
 	}
-	
+
 	return chain
 }
 
 // DebugMiddlewares logs information about all middlewares in the chain (for debugging)
 func (mc *MiddlewareChain) DebugMiddlewares() {
 	log.Printf("Middleware chain contains %d middlewares:", len(mc.middlewares))
-	for i, _ := range mc.middlewares {
+	for i := range mc.middlewares {
 		log.Printf("  %d: Middleware at position %d", i, i)
 	}
 }

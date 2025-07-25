@@ -178,7 +178,7 @@ func GetErrorContext(err error) map[string]interface{} {
 		context["recoverable"] = te.Recoverable
 		return context
 	}
-	
+
 	return map[string]interface{}{
 		"message": err.Error(),
 		"type":    "unknown",
@@ -254,9 +254,9 @@ func CombineErrors(errs ...error) error {
 	}
 
 	return &TemplarError{
-		Type:        ErrorTypeInternal,
-		Code:        "ERR_MULTIPLE_ERRORS",
-		Message:     fmt.Sprintf("multiple errors occurred: %d errors", len(nonNilErrs)),
+		Type:    ErrorTypeInternal,
+		Code:    "ERR_MULTIPLE_ERRORS",
+		Message: fmt.Sprintf("multiple errors occurred: %d errors", len(nonNilErrs)),
 		Context: map[string]interface{}{
 			"error_count": len(nonNilErrs),
 			"errors":      messages,

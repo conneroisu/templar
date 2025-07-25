@@ -98,14 +98,14 @@ func (tqm *TaskQueueManager) EnqueuePriority(task interface{}) error {
 func (tqm *TaskQueueManager) GetNextTask() <-chan interface{} {
 	// Create a merged channel that prioritizes priority tasks
 	merged := make(chan interface{}, 1)
-	
+
 	go func() {
 		defer close(merged)
 		for {
 			tqm.mu.RLock()
 			closed := tqm.closed
 			tqm.mu.RUnlock()
-			
+
 			if closed && len(tqm.priority) == 0 && len(tqm.tasks) == 0 {
 				return
 			}
@@ -134,7 +134,7 @@ func (tqm *TaskQueueManager) GetNextTask() <-chan interface{} {
 			}
 		}
 	}()
-	
+
 	return merged
 }
 
@@ -165,7 +165,7 @@ func (tqm *TaskQueueManager) PublishResult(result interface{}) error {
 // GetResults returns a channel for receiving build results.
 func (tqm *TaskQueueManager) GetResults() <-chan interface{} {
 	resultChan := make(chan interface{})
-	
+
 	go func() {
 		defer close(resultChan)
 		for result := range tqm.results {
@@ -176,7 +176,7 @@ func (tqm *TaskQueueManager) GetResults() <-chan interface{} {
 			}
 		}
 	}()
-	
+
 	return resultChan
 }
 
@@ -185,7 +185,7 @@ func (tqm *TaskQueueManager) GetResults() <-chan interface{} {
 func (tqm *TaskQueueManager) Close() {
 	tqm.mu.Lock()
 	defer tqm.mu.Unlock()
-	
+
 	if !tqm.closed {
 		tqm.closed = true
 		close(tqm.tasks)
@@ -198,7 +198,7 @@ func (tqm *TaskQueueManager) Close() {
 func (tqm *TaskQueueManager) GetQueueStats() QueueStats {
 	tqm.mu.RLock()
 	defer tqm.mu.RUnlock()
-	
+
 	return QueueStats{
 		TasksQueued:    len(tqm.tasks),
 		PriorityQueued: len(tqm.priority),

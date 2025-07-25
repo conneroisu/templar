@@ -16,7 +16,7 @@ import (
 func TestPluginBuildPipelineIntegration(t *testing.T) {
 	t.Run("plugin lifecycle during build process", func(t *testing.T) {
 		manager := NewPluginManager()
-		
+
 		// Create a build-aware plugin that tracks build lifecycle events
 		buildPlugin := &MockBuildLifecyclePlugin{
 			MockPlugin: MockPlugin{
@@ -46,7 +46,7 @@ func TestPluginBuildPipelineIntegration(t *testing.T) {
 				Metadata: make(map[string]interface{}),
 			},
 			{
-				Name:     "Component2", 
+				Name:     "Component2",
 				FilePath: "/test/component2.templ",
 				Package:  "test",
 				Metadata: make(map[string]interface{}),
@@ -69,9 +69,9 @@ func TestPluginBuildPipelineIntegration(t *testing.T) {
 
 		// Test post-build hook with successful build
 		buildResult := BuildResult{
-			Success: true,
+			Success:         true,
 			ComponentsBuilt: len(components),
-			Output: "Build completed successfully",
+			Output:          "Build completed successfully",
 		}
 		if len(manager.buildPlugins) > 0 {
 			err = manager.buildPlugins[0].PostBuild(ctx, components, buildResult)
@@ -91,12 +91,12 @@ func TestPluginBuildPipelineIntegration(t *testing.T) {
 
 	t.Run("plugin error handling during build failures", func(t *testing.T) {
 		manager := NewPluginManager()
-		
+
 		// Create a plugin that handles build failures
 		buildPlugin := &MockBuildLifecyclePlugin{
 			MockPlugin: MockPlugin{
 				name:    "build-failure-handler",
-				version: "1.0.0", 
+				version: "1.0.0",
 				health:  PluginHealth{Status: HealthStatusHealthy},
 			},
 			events: make([]string, 0),
@@ -122,10 +122,10 @@ func TestPluginBuildPipelineIntegration(t *testing.T) {
 
 		// Simulate build failure
 		buildResult := BuildResult{
-			Success: false,
-			Error:   "compilation failed",
+			Success:         false,
+			Error:           "compilation failed",
 			ComponentsBuilt: 0,
-			Output: "Build failed during compilation",
+			Output:          "Build failed during compilation",
 		}
 
 		// Test that post-build hook handles failure gracefully
@@ -140,7 +140,7 @@ func TestPluginBuildPipelineIntegration(t *testing.T) {
 
 	t.Run("concurrent build operations with plugins", func(t *testing.T) {
 		manager := NewPluginManager()
-		
+
 		// Register multiple plugins that process components
 		plugins := []*MockConcurrentBuildPlugin{
 			{
@@ -150,16 +150,16 @@ func TestPluginBuildPipelineIntegration(t *testing.T) {
 					health:  PluginHealth{Status: HealthStatusHealthy},
 				},
 				processedComponents: make(map[string]int),
-				mutex: sync.RWMutex{},
+				mutex:               sync.RWMutex{},
 			},
 			{
 				MockPlugin: MockPlugin{
-					name:    "concurrent-plugin-2", 
+					name:    "concurrent-plugin-2",
 					version: "1.0.0",
 					health:  PluginHealth{Status: HealthStatusHealthy},
 				},
 				processedComponents: make(map[string]int),
-				mutex: sync.RWMutex{},
+				mutex:               sync.RWMutex{},
 			},
 		}
 
@@ -178,7 +178,7 @@ func TestPluginBuildPipelineIntegration(t *testing.T) {
 		// Simulate concurrent build operations
 		const numComponents = 20
 		const numConcurrentBuilds = 5
-		
+
 		var wg sync.WaitGroup
 		errChan := make(chan error, numConcurrentBuilds*numComponents)
 
@@ -186,7 +186,7 @@ func TestPluginBuildPipelineIntegration(t *testing.T) {
 			wg.Add(1)
 			go func(id int) {
 				defer wg.Done()
-				
+
 				for compID := 0; compID < numComponents; compID++ {
 					component := &types.ComponentInfo{
 						Name:     fmt.Sprintf("Build%d-Component%d", id, compID),
@@ -221,8 +221,8 @@ func TestPluginBuildPipelineIntegration(t *testing.T) {
 				totalProcessed += count
 			}
 			plugin.mutex.RUnlock()
-			
-			assert.Equal(t, numConcurrentBuilds*numComponents, totalProcessed, 
+
+			assert.Equal(t, numConcurrentBuilds*numComponents, totalProcessed,
 				"Plugin %s should have processed all components", plugin.name)
 		}
 
@@ -232,7 +232,7 @@ func TestPluginBuildPipelineIntegration(t *testing.T) {
 
 	t.Run("plugin resource management during builds", func(t *testing.T) {
 		manager := NewPluginManager()
-		
+
 		// Create a plugin that tracks resource usage
 		resourcePlugin := &MockResourceTrackingPlugin{
 			MockPlugin: MockPlugin{
@@ -241,7 +241,7 @@ func TestPluginBuildPipelineIntegration(t *testing.T) {
 				health:  PluginHealth{Status: HealthStatusHealthy},
 			},
 			allocatedMemory: 0,
-			peakMemory:     0,
+			peakMemory:      0,
 		}
 
 		config := PluginConfig{
@@ -270,9 +270,9 @@ func TestPluginBuildPipelineIntegration(t *testing.T) {
 		}
 
 		// Verify resource management
-		assert.LessOrEqual(t, resourcePlugin.allocatedMemory, int64(1024*1024), 
+		assert.LessOrEqual(t, resourcePlugin.allocatedMemory, int64(1024*1024),
 			"Plugin should not exceed memory limits")
-		assert.Greater(t, resourcePlugin.peakMemory, int64(0), 
+		assert.Greater(t, resourcePlugin.peakMemory, int64(0),
 			"Plugin should have allocated some memory")
 
 		err = manager.Shutdown()
@@ -281,7 +281,7 @@ func TestPluginBuildPipelineIntegration(t *testing.T) {
 
 	t.Run("plugin communication during build coordination", func(t *testing.T) {
 		manager := NewPluginManager()
-		
+
 		// Create plugins that need to coordinate during builds
 		coordinatorPlugin := &MockCoordinatorPlugin{
 			MockPlugin: MockPlugin{
@@ -295,7 +295,7 @@ func TestPluginBuildPipelineIntegration(t *testing.T) {
 		workerPlugin := &MockWorkerPlugin{
 			MockPlugin: MockPlugin{
 				name:    "build-worker",
-				version: "1.0.0", 
+				version: "1.0.0",
 				health:  PluginHealth{Status: HealthStatusHealthy},
 			},
 			coordinator: coordinatorPlugin,
@@ -312,7 +312,7 @@ func TestPluginBuildPipelineIntegration(t *testing.T) {
 
 		// Register worker
 		config2 := PluginConfig{
-			Name:    "build-worker", 
+			Name:    "build-worker",
 			Enabled: true,
 			Config:  make(map[string]interface{}),
 		}
@@ -349,7 +349,7 @@ func TestPluginBuildPipelinePerformance(t *testing.T) {
 
 	t.Run("plugin overhead in build pipeline", func(t *testing.T) {
 		manager := NewPluginManager()
-		
+
 		// Register a lightweight plugin
 		plugin := &MockPerformancePlugin{
 			MockPlugin: MockPlugin{
@@ -373,7 +373,7 @@ func TestPluginBuildPipelinePerformance(t *testing.T) {
 		// Measure processing time with plugin
 		start := time.Now()
 		const numComponents = 1000
-		
+
 		for i := 0; i < numComponents; i++ {
 			component := &types.ComponentInfo{
 				Name:     fmt.Sprintf("PerfComponent%d", i),
@@ -389,7 +389,7 @@ func TestPluginBuildPipelinePerformance(t *testing.T) {
 		avgPerComponent := totalDuration / numComponents
 
 		// Performance assertions
-		assert.Less(t, avgPerComponent, 1*time.Millisecond, 
+		assert.Less(t, avgPerComponent, 1*time.Millisecond,
 			"Average plugin processing time should be under 1ms per component")
 		assert.Len(t, plugin.processingTimes, numComponents,
 			"Plugin should have tracked processing times for all components")
@@ -401,7 +401,7 @@ func TestPluginBuildPipelinePerformance(t *testing.T) {
 				totalTime += duration
 			}
 			avgTime := totalTime / time.Duration(len(plugin.processingTimes))
-			
+
 			assert.Less(t, avgTime, 500*time.Microsecond,
 				"Average plugin processing time should be under 500µs")
 		}
@@ -412,7 +412,7 @@ func TestPluginBuildPipelinePerformance(t *testing.T) {
 
 	t.Run("plugin memory efficiency during builds", func(t *testing.T) {
 		manager := NewPluginManager()
-		
+
 		// Create memory-efficient plugin
 		plugin := &MockMemoryEfficientPlugin{
 			MockPlugin: MockPlugin{
@@ -463,7 +463,7 @@ func TestPluginBuildPipelinePerformance(t *testing.T) {
 func TestPluginBuildPipelineErrorHandling(t *testing.T) {
 	t.Run("plugin failure during build process", func(t *testing.T) {
 		manager := NewPluginManager()
-		
+
 		// Create a plugin that fails intermittently
 		failingPlugin := &MockIntermittentFailurePlugin{
 			MockPlugin: MockPlugin{
@@ -516,7 +516,7 @@ func TestPluginBuildPipelineErrorHandling(t *testing.T) {
 
 	t.Run("build pipeline recovery from plugin errors", func(t *testing.T) {
 		manager := NewPluginManager()
-		
+
 		// Register a good plugin and a bad plugin
 		goodPlugin := &MockComponentPlugin{
 			MockPlugin: MockPlugin{
@@ -529,7 +529,7 @@ func TestPluginBuildPipelineErrorHandling(t *testing.T) {
 
 		badPlugin := &MockFailingPlugin{
 			MockPlugin: MockPlugin{
-				name:    "bad-plugin", 
+				name:    "bad-plugin",
 				version: "1.0.0",
 				health:  PluginHealth{Status: HealthStatusUnhealthy},
 			},
@@ -620,7 +620,7 @@ func (m *MockConcurrentBuildPlugin) Initialize(ctx context.Context, config Plugi
 func (m *MockConcurrentBuildPlugin) HandleComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	
+
 	m.processedComponents[component.Name]++
 	if component.Metadata == nil {
 		component.Metadata = make(map[string]interface{})
@@ -635,8 +635,8 @@ func (m *MockConcurrentBuildPlugin) Priority() int                 { return 1 }
 type MockResourceTrackingPlugin struct {
 	MockPlugin
 	allocatedMemory int64
-	peakMemory     int64
-	mutex          sync.Mutex
+	peakMemory      int64
+	mutex           sync.Mutex
 }
 
 func (m *MockResourceTrackingPlugin) Initialize(ctx context.Context, config PluginConfig) error {
@@ -647,20 +647,20 @@ func (m *MockResourceTrackingPlugin) Initialize(ctx context.Context, config Plug
 func (m *MockResourceTrackingPlugin) HandleComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	
+
 	// Simulate memory allocation
 	componentSize := int64(len(component.Name) + len(component.FilePath) + 1024)
 	m.allocatedMemory += componentSize
-	
+
 	if m.allocatedMemory > m.peakMemory {
 		m.peakMemory = m.allocatedMemory
 	}
-	
+
 	// Simulate memory cleanup for older components
 	if m.allocatedMemory > 512*1024 { // 512KB
 		m.allocatedMemory = m.allocatedMemory / 2 // Simple cleanup simulation
 	}
-	
+
 	if component.Metadata == nil {
 		component.Metadata = make(map[string]interface{})
 	}
@@ -728,7 +728,7 @@ func (m *MockWorkerPlugin) Priority() int                 { return 2 }
 type MockPerformancePlugin struct {
 	MockPlugin
 	processingTimes []time.Duration
-	mutex          sync.Mutex
+	mutex           sync.Mutex
 }
 
 func (m *MockPerformancePlugin) Initialize(ctx context.Context, config PluginConfig) error {
@@ -738,19 +738,19 @@ func (m *MockPerformancePlugin) Initialize(ctx context.Context, config PluginCon
 
 func (m *MockPerformancePlugin) HandleComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error) {
 	start := time.Now()
-	
+
 	// Simulate minimal processing
 	if component.Metadata == nil {
 		component.Metadata = make(map[string]interface{})
 	}
 	component.Metadata["performance_tested"] = true
-	
+
 	duration := time.Since(start)
-	
+
 	m.mutex.Lock()
 	m.processingTimes = append(m.processingTimes, duration)
 	m.mutex.Unlock()
-	
+
 	return component, nil
 }
 
@@ -771,16 +771,16 @@ func (m *MockMemoryEfficientPlugin) Initialize(ctx context.Context, config Plugi
 func (m *MockMemoryEfficientPlugin) HandleComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	
+
 	// Simulate memory-efficient processing
 	currentMemory := int64(len(component.Name) + len(component.FilePath))
 	m.memoryUsage = append(m.memoryUsage, currentMemory)
-	
+
 	// Keep only last 10 measurements to avoid unbounded growth
 	if len(m.memoryUsage) > 10 {
 		m.memoryUsage = m.memoryUsage[1:]
 	}
-	
+
 	if component.Metadata == nil {
 		component.Metadata = make(map[string]interface{})
 	}
@@ -806,14 +806,14 @@ func (m *MockIntermittentFailurePlugin) Initialize(ctx context.Context, config P
 func (m *MockIntermittentFailurePlugin) HandleComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	
+
 	m.callCount++
-	
+
 	// Fail based on call count and failure rate
 	if float64(m.callCount%10)/10.0 < m.failureRate {
 		return nil, fmt.Errorf("intermittent plugin failure for component %s", component.Name)
 	}
-	
+
 	if component.Metadata == nil {
 		component.Metadata = make(map[string]interface{})
 	}

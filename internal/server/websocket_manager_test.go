@@ -192,7 +192,7 @@ func TestWebSocketManager_HandleWebSocket_OriginValidation(t *testing.T) {
 // TestWebSocketManager_HandleWebSocket_RateLimiting tests rate limiting
 func TestWebSocketManager_HandleWebSocket_RateLimiting(t *testing.T) {
 	validator := &MockOriginValidator{AllowAll: true}
-	
+
 	// Test with no rate limiter (current behavior always allows)
 	manager := NewWebSocketManager(validator, nil)
 	defer manager.Shutdown(context.Background())
@@ -333,11 +333,11 @@ func TestWebSocketManager_GetClientIP(t *testing.T) {
 	defer manager.Shutdown(context.Background())
 
 	testCases := []struct {
-		name               string
-		xForwardedFor      string
-		xRealIP            string
-		remoteAddr         string
-		expectedContains   string
+		name             string
+		xForwardedFor    string
+		xRealIP          string
+		remoteAddr       string
+		expectedContains string
 	}{
 		{
 			name:             "x_forwarded_for",
@@ -366,7 +366,7 @@ func TestWebSocketManager_GetClientIP(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			req := httptest.NewRequest("GET", "/ws", nil)
-			
+
 			if tc.xForwardedFor != "" {
 				req.Header.Set("X-Forwarded-For", tc.xForwardedFor)
 			}

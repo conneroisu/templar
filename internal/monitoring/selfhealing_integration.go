@@ -156,9 +156,9 @@ func cleanTempDirectory(dir string) error {
 			continue
 		}
 
-		if info.ModTime().Before(cutoff) && 
-			(entry.Name() == ".templar_temp_" || 
-			 entry.Name() == "templar-health-") {
+		if info.ModTime().Before(cutoff) &&
+			(entry.Name() == ".templar_temp_" ||
+				entry.Name() == "templar-health-") {
 			os.Remove(dir + "/" + entry.Name())
 		}
 	}
@@ -174,11 +174,11 @@ func DumpGoroutineStacksAction(logger logging.Logger) RecoveryAction {
 		func(ctx context.Context, check HealthCheck) error {
 			buf := make([]byte, 64*1024) // 64KB should be enough for stack traces
 			n := runtime.Stack(buf, true)
-			
+
 			logger.Error(ctx, nil, "Goroutine stack dump due to high goroutine count",
 				"goroutine_count", runtime.NumGoroutine(),
 				"stack_trace", string(buf[:n]))
-			
+
 			return nil
 		},
 	)
@@ -208,11 +208,11 @@ func RestartBuildPipelineAction(buildPipeline interfaces.BuildPipeline) Recovery
 			if buildPipeline == nil {
 				return fmt.Errorf("build pipeline is nil")
 			}
-			
+
 			// Stop and restart the build pipeline
 			buildPipeline.Stop()
 			buildPipeline.Start(ctx)
-			
+
 			return nil
 		},
 	)
@@ -231,7 +231,7 @@ func RefreshComponentRegistryAction(registry interfaces.ComponentRegistry, scann
 			// Clear registry and rescan
 			// Note: This assumes the registry has a Clear method
 			// If not available, we can just rescan which should update existing entries
-			
+
 			// Scan common component directories
 			commonDirs := []string{"./components", "./views", "./examples"}
 			for _, dir := range commonDirs {
@@ -260,10 +260,10 @@ func RestartFileWatcherAction(fileWatcher interfaces.FileWatcher) RecoveryAction
 
 			// Stop and restart the file watcher
 			fileWatcher.Stop()
-			
+
 			// Add a brief delay to ensure cleanup
 			time.Sleep(1 * time.Second)
-			
+
 			if err := fileWatcher.Start(ctx); err != nil {
 				return fmt.Errorf("failed to restart file watcher: %w", err)
 			}
@@ -291,7 +291,7 @@ func CreateBuildPipelineHealthChecker(buildPipeline interfaces.BuildPipeline) He
 
 		// Get build metrics to assess pipeline health
 		metricsInterface := buildPipeline.GetMetrics()
-		
+
 		// Check if we can get metrics (indicates pipeline is responsive)
 		if metricsInterface == nil {
 			return HealthCheck{

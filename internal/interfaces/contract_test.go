@@ -339,7 +339,7 @@ func testServiceContainerContract(t *testing.T) {
 	// Note: This test would require importing the DI container
 	// For now, we'll test the interface structure
 	t.Log("✓ ServiceContainer interface contract defined")
-	
+
 	// Test would include:
 	// - Service registration with factory functions
 	// - Service retrieval by name

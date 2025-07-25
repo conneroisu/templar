@@ -19,7 +19,7 @@ func BenchmarkBuildMetrics_NewBuildMetrics(b *testing.B) {
 // BenchmarkBuildMetrics_RecordBuild benchmarks build result recording
 func BenchmarkBuildMetrics_RecordBuild(b *testing.B) {
 	metrics := NewBuildMetrics()
-	
+
 	result := BuildResult{
 		Component: &types.ComponentInfo{
 			Name:     "TestComponent",
@@ -32,7 +32,7 @@ func BenchmarkBuildMetrics_RecordBuild(b *testing.B) {
 		CacheHit: false,
 		Hash:     "abc123",
 	}
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		metrics.RecordBuild(result)
@@ -42,7 +42,7 @@ func BenchmarkBuildMetrics_RecordBuild(b *testing.B) {
 // BenchmarkBuildMetrics_GetSnapshot benchmarks snapshot retrieval
 func BenchmarkBuildMetrics_GetSnapshot(b *testing.B) {
 	metrics := NewBuildMetrics()
-	
+
 	// Pre-populate with some data
 	for i := 0; i < 100; i++ {
 		result := BuildResult{
@@ -61,7 +61,7 @@ func BenchmarkBuildMetrics_GetSnapshot(b *testing.B) {
 		}
 		metrics.RecordBuild(result)
 	}
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = metrics.GetSnapshot()
@@ -71,7 +71,7 @@ func BenchmarkBuildMetrics_GetSnapshot(b *testing.B) {
 // BenchmarkBuildMetrics_ConcurrentAccess benchmarks concurrent access
 func BenchmarkBuildMetrics_ConcurrentAccess(b *testing.B) {
 	metrics := NewBuildMetrics()
-	
+
 	b.RunParallel(func(pb *testing.PB) {
 		i := 0
 		for pb.Next() {
@@ -103,7 +103,7 @@ func BenchmarkBuildMetrics_Reset(b *testing.B) {
 			metrics.Reset()
 		}
 	})
-	
+
 	b.Run("populated_metrics", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			b.StopTimer()
@@ -113,7 +113,7 @@ func BenchmarkBuildMetrics_Reset(b *testing.B) {
 				result := BuildResult{
 					Component: &types.ComponentInfo{
 						Name:     "PopulatedComponent",
-						FilePath: "test.templ", 
+						FilePath: "test.templ",
 						Package:  "test",
 					},
 					Output:   []byte("Output"),
@@ -127,7 +127,7 @@ func BenchmarkBuildMetrics_Reset(b *testing.B) {
 				metrics.RecordBuild(result)
 			}
 			b.StartTimer()
-			
+
 			metrics.Reset()
 		}
 	})

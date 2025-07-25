@@ -756,7 +756,7 @@ func (s *PreviewServer) generateEditorJavaScript() string {
                 }
             }
         });
-    `;
+    `
 }
 
 // generateComponentEditorJavaScript generates JavaScript for component-specific editor

@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/conneroisu/templar/internal/config"
 	"github.com/coder/websocket"
+	"github.com/conneroisu/templar/internal/config"
 )
 
 // FuzzWebSocketOriginValidation tests origin validation with various malicious inputs

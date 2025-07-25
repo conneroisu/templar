@@ -117,7 +117,7 @@ func TestLRUEviction(t *testing.T) {
 
 	// Fill up the pending queue beyond max capacity
 	eventsToAdd := MaxPendingEvents + 200
-	
+
 	for i := 0; i < eventsToAdd; i++ {
 		event := ChangeEvent{
 			Type:    EventTypeModified,
@@ -180,7 +180,7 @@ func TestBackpressureHandling(t *testing.T) {
 			Size:    1024,
 		}
 		fw.debouncer.addEvent(event)
-		
+
 		// Small delay to allow some processing
 		if i%50 == 0 {
 			time.Sleep(1 * time.Millisecond)
@@ -231,16 +231,16 @@ func TestMemoryGrowthPrevention(t *testing.T) {
 			}
 			fw.debouncer.addEvent(event)
 		}
-		
+
 		// Let some processing happen
 		time.Sleep(10 * time.Millisecond)
-		
+
 		stats := fw.GetStats()
 		pendingCount := stats["pending_events"].(int)
 		pendingCapacity := stats["pending_capacity"].(int)
-		
+
 		t.Logf("Cycle %d: pending=%d, capacity=%d", cycle+1, pendingCount, pendingCapacity)
-		
+
 		// Capacity should not grow unbounded
 		if pendingCapacity > MaxPendingEvents*3 {
 			t.Errorf("Pending capacity grew too large: %d (cycle %d)", pendingCapacity, cycle+1)
@@ -280,7 +280,7 @@ func TestStatsAccuracy(t *testing.T) {
 	// Check updated stats
 	stats = fw.GetStats()
 	pendingCount := stats["pending_events"].(int)
-	
+
 	if pendingCount != eventsAdded {
 		t.Errorf("Expected %d pending events, got %d", eventsAdded, pendingCount)
 	}

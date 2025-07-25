@@ -13,9 +13,9 @@ import (
 
 // MockHTTPHandlers implements HTTPHandlers interface for testing
 type MockHTTPHandlers struct {
-	HandleWebSocketCalls   int
-	HandleHealthCalls      int
-	HandleComponentsCalls  int
+	HandleWebSocketCalls  int
+	HandleHealthCalls     int
+	HandleComponentsCalls int
 }
 
 func (m *MockHTTPHandlers) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
@@ -378,7 +378,7 @@ func TestHTTPRouter_Start_AlreadyShutdown(t *testing.T) {
 // TestHTTPRouter_TargetFiles tests target files routing
 func TestHTTPRouter_TargetFiles(t *testing.T) {
 	cfg := createTestConfig()
-	cfg.TargetFiles = []string{"test.templ"}  // Enable target files mode
+	cfg.TargetFiles = []string{"test.templ"} // Enable target files mode
 	handlers := &MockHTTPHandlers{}
 	middleware := &MockMiddlewareProvider{}
 

@@ -583,7 +583,7 @@ func (mt *MutationTester) generateTestSuggestions(mutations []MutationTestResult
 	}
 
 	// Generate suggestions based on surviving mutation types
-	for operator, _ := range operatorCounts {
+	for operator := range operatorCounts {
 		switch {
 		case strings.Contains(operator, "NEGATE_CONDITION"):
 			suggestions = append(suggestions, "Add tests for both true and false branches of conditional statements")

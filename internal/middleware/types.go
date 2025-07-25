@@ -2,14 +2,14 @@ package middleware
 
 import (
 	"net/http"
-	
+
 	"github.com/conneroisu/templar/internal/security"
 )
 
 // TokenBucketManager type alias for security package
 type TokenBucketManager = security.TokenBucketManager
 
-// OriginValidator type alias for security package  
+// OriginValidator type alias for security package
 type OriginValidator = security.OriginValidator
 
 // RateLimitMiddleware creates rate limiting middleware

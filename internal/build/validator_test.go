@@ -42,10 +42,10 @@ func TestBuildValidator_Validate(t *testing.T) {
 		{
 			name: "basic_validation_success",
 			artifacts: &BuildArtifacts{
-				StaticFiles:      []string{"index.html", "style.css"},
-				BundledAssets:    []string{"main.js", "vendor.js"},
-				GeneratedPages:   []string{"home.html", "about.html"},
-				AssetManifest:    "manifest.json",
+				StaticFiles:    []string{"index.html", "style.css"},
+				BundledAssets:  []string{"main.js", "vendor.js"},
+				GeneratedPages: []string{"home.html", "about.html"},
+				AssetManifest:  "manifest.json",
 			},
 			options: ValidationOptions{
 				BundleSizeLimit:  1024 * 1024, // 1MB
@@ -57,10 +57,10 @@ func TestBuildValidator_Validate(t *testing.T) {
 		{
 			name: "empty_artifacts",
 			artifacts: &BuildArtifacts{
-				StaticFiles:      []string{},
-				BundledAssets:    []string{},
-				GeneratedPages:   []string{},
-				AssetManifest:    "",
+				StaticFiles:    []string{},
+				BundledAssets:  []string{},
+				GeneratedPages: []string{},
+				AssetManifest:  "",
 			},
 			options: ValidationOptions{
 				BundleSizeLimit:  500 * 1024, // 500KB
@@ -238,10 +238,10 @@ func TestValidationResults_Structure(t *testing.T) {
 	assert.Len(t, results.Errors, 2)
 	assert.Contains(t, results.Errors, "error1")
 	assert.Contains(t, results.Errors, "error2")
-	
+
 	assert.Len(t, results.SecurityIssues, 1)
 	assert.Contains(t, results.SecurityIssues, "security issue")
-	
+
 	assert.Equal(t, 85, results.PerformanceScore)
 }
 
@@ -409,8 +409,8 @@ func BenchmarkBuildValidator_ValidateSmall(b *testing.B) {
 	validator := NewBuildValidator(cfg)
 
 	artifacts := &BuildArtifacts{
-		StaticFiles:      []string{"index.html"},
-		BundledAssets:    []string{"app.js"},
+		StaticFiles:   []string{"index.html"},
+		BundledAssets: []string{"app.js"},
 		AssetManifest: "",
 	}
 
@@ -461,7 +461,7 @@ func TestBuildValidator_LargeArtifacts(t *testing.T) {
 
 	// Test with large number of artifacts
 	artifacts := createMockBuildArtifacts(1000)
-	
+
 	options := ValidationOptions{
 		BundleSizeLimit:  10 * 1024 * 1024, // 10MB
 		SecurityScan:     true,

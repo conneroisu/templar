@@ -70,32 +70,32 @@ func TestWebSocketManagerTimeout(t *testing.T) {
 	t.Run("timeout configuration validation", func(t *testing.T) {
 		// Test various timeout values
 		testCases := []struct {
-			name              string
-			websocketTimeout  time.Duration
-			networkTimeout    time.Duration
-			expectedWS        time.Duration
-			expectedNetwork   time.Duration
+			name             string
+			websocketTimeout time.Duration
+			networkTimeout   time.Duration
+			expectedWS       time.Duration
+			expectedNetwork  time.Duration
 		}{
 			{
-				name:              "positive timeouts",
-				websocketTimeout:  45 * time.Second,
-				networkTimeout:    20 * time.Second,
-				expectedWS:        45 * time.Second,
-				expectedNetwork:   20 * time.Second,
+				name:             "positive timeouts",
+				websocketTimeout: 45 * time.Second,
+				networkTimeout:   20 * time.Second,
+				expectedWS:       45 * time.Second,
+				expectedNetwork:  20 * time.Second,
 			},
 			{
-				name:              "zero timeouts use defaults",
-				websocketTimeout:  0,
-				networkTimeout:    0,
-				expectedWS:        60 * time.Second,
-				expectedNetwork:   10 * time.Second,
+				name:             "zero timeouts use defaults",
+				websocketTimeout: 0,
+				networkTimeout:   0,
+				expectedWS:       60 * time.Second,
+				expectedNetwork:  10 * time.Second,
 			},
 			{
-				name:              "negative timeouts use defaults",
-				websocketTimeout:  -1 * time.Second,
-				networkTimeout:    -1 * time.Second,
-				expectedWS:        60 * time.Second,
-				expectedNetwork:   10 * time.Second,
+				name:             "negative timeouts use defaults",
+				websocketTimeout: -1 * time.Second,
+				networkTimeout:   -1 * time.Second,
+				expectedWS:       60 * time.Second,
+				expectedNetwork:  10 * time.Second,
 			},
 		}
 
@@ -115,7 +115,7 @@ func TestWebSocketManagerTimeout(t *testing.T) {
 
 				wsTimeout := manager.getWebSocketTimeout()
 				networkTimeout := manager.getNetworkTimeout()
-				
+
 				assert.Equal(t, tc.expectedWS, wsTimeout, "WebSocket timeout mismatch")
 				assert.Equal(t, tc.expectedNetwork, networkTimeout, "Network timeout mismatch")
 			})
@@ -143,7 +143,7 @@ func TestWebSocketManagerTimeout(t *testing.T) {
 
 		wsTimeout := manager.getWebSocketTimeout()
 		networkTimeout := manager.getNetworkTimeout()
-		
+
 		assert.Equal(t, 30*time.Second, wsTimeout, "Should use first config for WebSocket timeout")
 		assert.Equal(t, 5*time.Second, networkTimeout, "Should use first config for network timeout")
 	})

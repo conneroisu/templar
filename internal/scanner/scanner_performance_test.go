@@ -13,9 +13,9 @@ import (
 // BenchmarkPathValidationOriginal benchmarks the original path validation approach
 func BenchmarkPathValidationOriginal(b *testing.B) {
 	testPaths := generateTestPaths(100)
-	
+
 	b.ResetTimer()
-	
+
 	for i := 0; i < b.N; i++ {
 		path := testPaths[i%len(testPaths)]
 		_, _ = validatePathOriginal(path)
@@ -27,9 +27,9 @@ func BenchmarkPathValidationOptimized(b *testing.B) {
 	reg := registry.NewComponentRegistry()
 	scanner := NewComponentScanner(reg)
 	testPaths := generateTestPaths(100)
-	
+
 	b.ResetTimer()
-	
+
 	for i := 0; i < b.N; i++ {
 		path := testPaths[i%len(testPaths)]
 		_, _ = scanner.validatePath(path)
@@ -39,12 +39,12 @@ func BenchmarkPathValidationOptimized(b *testing.B) {
 // BenchmarkPathValidationComparison runs both methods to show performance difference
 func BenchmarkPathValidationComparison(b *testing.B) {
 	pathCounts := []int{10, 100, 1000}
-	
+
 	for _, pathCount := range pathCounts {
 		b.Run(fmt.Sprintf("Original_%d_paths", pathCount), func(b *testing.B) {
 			benchmarkOriginalWithPaths(b, pathCount)
 		})
-		
+
 		b.Run(fmt.Sprintf("Optimized_%d_paths", pathCount), func(b *testing.B) {
 			benchmarkOptimizedWithPaths(b, pathCount)
 		})
@@ -54,7 +54,7 @@ func BenchmarkPathValidationComparison(b *testing.B) {
 func benchmarkOriginalWithPaths(b *testing.B, pathCount int) {
 	testPaths := generateTestPaths(pathCount)
 	b.ResetTimer()
-	
+
 	for i := 0; i < b.N; i++ {
 		for _, path := range testPaths {
 			_, _ = validatePathOriginal(path)
@@ -66,9 +66,9 @@ func benchmarkOptimizedWithPaths(b *testing.B, pathCount int) {
 	reg := registry.NewComponentRegistry()
 	scanner := NewComponentScanner(reg)
 	testPaths := generateTestPaths(pathCount)
-	
+
 	b.ResetTimer()
-	
+
 	for i := 0; i < b.N; i++ {
 		for _, path := range testPaths {
 			_, _ = scanner.validatePath(path)
@@ -80,17 +80,17 @@ func benchmarkOptimizedWithPaths(b *testing.B, pathCount int) {
 func BenchmarkDirectoryScanSimulation(b *testing.B) {
 	tempDir, cleanup := createTestDirectoryStructure(b)
 	defer cleanup()
-	
+
 	originalDir, err := os.Getwd()
 	if err != nil {
 		b.Fatal(err)
 	}
 	defer os.Chdir(originalDir)
-	
+
 	if err := os.Chdir(tempDir); err != nil {
 		b.Fatal(err)
 	}
-	
+
 	b.Run("Original_DirectoryScan", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			err := filepath.WalkDir(".", func(path string, d os.DirEntry, err error) error {
@@ -107,11 +107,11 @@ func BenchmarkDirectoryScanSimulation(b *testing.B) {
 			}
 		}
 	})
-	
+
 	b.Run("Optimized_DirectoryScan", func(b *testing.B) {
 		reg := registry.NewComponentRegistry()
 		scanner := NewComponentScanner(reg)
-		
+
 		for i := 0; i < b.N; i++ {
 			err := filepath.WalkDir(".", func(path string, d os.DirEntry, err error) error {
 				if err != nil {
@@ -131,10 +131,10 @@ func BenchmarkDirectoryScanSimulation(b *testing.B) {
 
 func generateTestPaths(count int) []string {
 	paths := make([]string, count)
-	
+
 	pathPatterns := []string{
 		"components/button.templ",
-		"views/layout.templ", 
+		"views/layout.templ",
 		"examples/demo.templ",
 		"./components/card.templ",
 		"../outside/dangerous.templ",
@@ -142,7 +142,7 @@ func generateTestPaths(count int) []string {
 		"deeply/nested/component/tree/item.templ",
 		"simple.templ",
 	}
-	
+
 	for i := 0; i < count; i++ {
 		pattern := pathPatterns[i%len(pathPatterns)]
 		if i > 0 {
@@ -150,7 +150,7 @@ func generateTestPaths(count int) []string {
 		}
 		paths[i] = pattern
 	}
-	
+
 	return paths
 }
 
@@ -159,19 +159,19 @@ func createTestDirectoryStructure(b *testing.B) (string, func()) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	
+
 	dirs := []string{
 		"components",
-		"views", 
+		"views",
 		"examples",
 		"deeply/nested/components",
 	}
-	
+
 	for _, dir := range dirs {
 		if err := os.MkdirAll(filepath.Join(tempDir, dir), 0755); err != nil {
 			b.Fatal(err)
 		}
-		
+
 		for i := 0; i < 10; i++ {
 			filename := filepath.Join(tempDir, dir, fmt.Sprintf("component%d.templ", i))
 			content := fmt.Sprintf("package components\n\ntempl Component%d() {\n\t<div>Component %d</div>\n}\n", i, i)
@@ -180,7 +180,7 @@ func createTestDirectoryStructure(b *testing.B) (string, func()) {
 			}
 		}
 	}
-	
+
 	return tempDir, func() { os.RemoveAll(tempDir) }
 }
 
@@ -213,7 +213,7 @@ func validatePathOriginal(path string) (string, error) {
 func TestPathValidationCorrectness(t *testing.T) {
 	reg := registry.NewComponentRegistry()
 	scanner := NewComponentScanner(reg)
-	
+
 	testCases := []struct {
 		name        string
 		path        string
@@ -224,14 +224,14 @@ func TestPathValidationCorrectness(t *testing.T) {
 		{"directory_traversal_attack", "../../../etc/passwd", true},
 		{"dot_dot_in_path", "components/../views/page.templ", false}, // This gets cleaned to "views/page.templ" which is valid
 	}
-	
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := scanner.validatePath(tc.path)
 			hasError := err != nil
-			
+
 			if hasError != tc.expectError {
-				t.Errorf("Expected error=%v, got error=%v for path %s: %v", 
+				t.Errorf("Expected error=%v, got error=%v for path %s: %v",
 					tc.expectError, hasError, tc.path, err)
 			}
 		})

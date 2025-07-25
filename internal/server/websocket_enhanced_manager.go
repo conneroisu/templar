@@ -32,10 +32,10 @@ type ConnectionInfo struct {
 
 // WebSocketMemoryMetrics holds WebSocket memory metrics
 type WebSocketMemoryMetrics struct {
-	ActiveConnections  int
-	TotalConnections   int  
-	FailedConnections  int
-	MemoryUsageBytes   int64
+	ActiveConnections int
+	TotalConnections  int
+	FailedConnections int
+	MemoryUsageBytes  int64
 }
 
 // NewMemoryLeakPreventionManager creates a new memory manager stub
@@ -55,11 +55,11 @@ func (m *MemoryLeakPreventionManager) RegisterConnection(conn *websocket.Conn, r
 		Context:   context.Background(),
 		Conn:      conn,
 	}
-	
+
 	m.mutex.Lock()
 	m.connections[info.ID] = info
 	m.mutex.Unlock()
-	
+
 	return info, nil
 }
 
@@ -80,7 +80,7 @@ func (m *MemoryLeakPreventionManager) UpdateConnectionActivity(connID string) {
 func (m *MemoryLeakPreventionManager) GetMemoryMetrics() WebSocketMemoryMetrics {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
-	
+
 	return WebSocketMemoryMetrics{
 		ActiveConnections: len(m.connections),
 		TotalConnections:  len(m.connections),
@@ -105,7 +105,7 @@ func (m *MemoryLeakPreventionManager) ForceCleanupStaleConnections() int {
 }
 
 // EnhancedWebSocketManager combines the original WebSocketManager with comprehensive memory leak prevention
-// 
+//
 // This manager provides enterprise-grade WebSocket connection management with:
 // - Comprehensive memory leak prevention and detection
 // - Automatic stale connection cleanup with configurable intervals
@@ -124,73 +124,73 @@ func (m *MemoryLeakPreventionManager) ForceCleanupStaleConnections() int {
 type EnhancedWebSocketManager struct {
 	// Original WebSocket functionality
 	*WebSocketManager
-	
+
 	// Memory leak prevention system
 	memoryManager *MemoryLeakPreventionManager
-	
+
 	// Enhanced connection tracking
-	connections     map[string]*EnhancedClientInfo   // Connection registry with enhanced tracking
-	connectionsMux  sync.RWMutex                     // Protects enhanced connections map
-	
+	connections    map[string]*EnhancedClientInfo // Connection registry with enhanced tracking
+	connectionsMux sync.RWMutex                   // Protects enhanced connections map
+
 	// Lifecycle management
-	ctx             context.Context                  // Context for coordinated cancellation  
-	shutdownOnce    sync.Once                        // Ensures single shutdown
-	isShutdown      bool                             // Shutdown state indicator
-	
+	ctx          context.Context // Context for coordinated cancellation
+	shutdownOnce sync.Once       // Ensures single shutdown
+	isShutdown   bool            // Shutdown state indicator
+
 	// Enhanced metrics
-	enhancedMetrics *EnhancedWebSocketMetrics        // Advanced metrics collection
+	enhancedMetrics *EnhancedWebSocketMetrics // Advanced metrics collection
 }
 
 // EnhancedClientInfo extends ConnectionInfo with additional WebSocket-specific data
 type EnhancedClientInfo struct {
-	*ConnectionInfo                                  // Base connection information
-	
+	*ConnectionInfo // Base connection information
+
 	// WebSocket specific data
-	MessageCount      int64                         // Total messages processed
-	BytesSent         int64                         // Total bytes sent to client
-	BytesReceived     int64                         // Total bytes received from client
-	LastMessageTime   time.Time                     // Timestamp of last message
-	
+	MessageCount    int64     // Total messages processed
+	BytesSent       int64     // Total bytes sent to client
+	BytesReceived   int64     // Total bytes received from client
+	LastMessageTime time.Time // Timestamp of last message
+
 	// Error tracking
-	ErrorCount        int32                         // Number of errors encountered
-	LastError         error                         // Last error encountered
-	LastErrorTime     time.Time                     // Timestamp of last error
-	
+	ErrorCount    int32     // Number of errors encountered
+	LastError     error     // Last error encountered
+	LastErrorTime time.Time // Timestamp of last error
+
 	// Performance metrics
-	AverageLatency    time.Duration                 // Average message processing latency
-	PingLatency       time.Duration                 // WebSocket ping latency
-	
+	AverageLatency time.Duration // Average message processing latency
+	PingLatency    time.Duration // WebSocket ping latency
+
 	// Resource usage
-	MemoryUsage       int64                         // Estimated memory usage for this client
-	
-	mutex             sync.RWMutex                  // Protects client info updates
+	MemoryUsage int64 // Estimated memory usage for this client
+
+	mutex sync.RWMutex // Protects client info updates
 }
 
 // EnhancedWebSocketMetrics provides comprehensive WebSocket performance and health metrics
 type EnhancedWebSocketMetrics struct {
 	// Base metrics from memory manager
 	*WebSocketMemoryMetrics
-	
+
 	// Message processing metrics
-	TotalMessages         int64                     // Total messages processed
-	MessagesPerSecond     float64                   // Current message processing rate
-	AverageMessageSize    int64                     // Average message size in bytes
-	
+	TotalMessages      int64   // Total messages processed
+	MessagesPerSecond  float64 // Current message processing rate
+	AverageMessageSize int64   // Average message size in bytes
+
 	// Performance metrics
-	AverageLatency        time.Duration             // Average message processing latency
-	P95Latency           time.Duration             // 95th percentile latency
-	P99Latency           time.Duration             // 99th percentile latency
-	
+	AverageLatency time.Duration // Average message processing latency
+	P95Latency     time.Duration // 95th percentile latency
+	P99Latency     time.Duration // 99th percentile latency
+
 	// Health indicators
-	HealthScore          float64                   // Overall health score (0-100)
-	ResourceUtilization  float64                   // Resource utilization percentage
-	ErrorRate           float64                   // Error rate percentage
-	
+	HealthScore         float64 // Overall health score (0-100)
+	ResourceUtilization float64 // Resource utilization percentage
+	ErrorRate           float64 // Error rate percentage
+
 	// Capacity metrics
-	ConnectionCapacity   float64                   // Connection capacity utilization
-	ThroughputCapacity   float64                   // Throughput capacity utilization
-	
-	mutex               sync.RWMutex              // Protects metrics updates
+	ConnectionCapacity float64 // Connection capacity utilization
+	ThroughputCapacity float64 // Throughput capacity utilization
+
+	mutex sync.RWMutex // Protects metrics updates
 }
 
 // NewEnhancedWebSocketManager creates a comprehensive WebSocket manager with memory leak prevention
@@ -204,28 +204,28 @@ func NewEnhancedWebSocketManager(
 	if len(cfg) > 0 {
 		config = cfg[0]
 	}
-	
+
 	// Create base WebSocket manager
 	baseManager := NewWebSocketManager(originValidator, rateLimiter, config)
-	
+
 	// Create memory leak prevention manager
 	memoryManager := NewMemoryLeakPreventionManager(config)
-	
+
 	// Initialize enhanced manager
 	enhanced := &EnhancedWebSocketManager{
 		WebSocketManager: baseManager,
-		memoryManager:   memoryManager,
-		connections:     make(map[string]*EnhancedClientInfo),
-		ctx:             context.Background(),
+		memoryManager:    memoryManager,
+		connections:      make(map[string]*EnhancedClientInfo),
+		ctx:              context.Background(),
 		enhancedMetrics: &EnhancedWebSocketMetrics{
 			WebSocketMemoryMetrics: &WebSocketMemoryMetrics{},
 		},
 		isShutdown: false,
 	}
-	
+
 	// Start enhanced monitoring
 	go enhanced.startEnhancedMonitoring()
-	
+
 	return enhanced
 }
 
@@ -236,7 +236,7 @@ func (em *EnhancedWebSocketManager) HandleWebSocket(w http.ResponseWriter, r *ht
 		http.Error(w, "Service Unavailable", http.StatusServiceUnavailable)
 		return
 	}
-	
+
 	// Use base manager's security validation
 	em.WebSocketManager.HandleWebSocket(w, r)
 }
@@ -251,29 +251,29 @@ func (em *EnhancedWebSocketManager) registerEnhancedConnection(
 	if err != nil {
 		return nil, fmt.Errorf("memory manager registration failed: %w", err)
 	}
-	
+
 	// Create enhanced client info
 	enhanced := &EnhancedClientInfo{
-		ConnectionInfo:    connInfo,
-		MessageCount:      0,
-		BytesSent:        0,
-		BytesReceived:    0,
-		LastMessageTime:  time.Now(),
-		ErrorCount:       0,
-		LastError:        nil,
-		AverageLatency:   0,
-		PingLatency:      0,
-		MemoryUsage:      estimateClientMemoryUsage(),
+		ConnectionInfo:  connInfo,
+		MessageCount:    0,
+		BytesSent:       0,
+		BytesReceived:   0,
+		LastMessageTime: time.Now(),
+		ErrorCount:      0,
+		LastError:       nil,
+		AverageLatency:  0,
+		PingLatency:     0,
+		MemoryUsage:     estimateClientMemoryUsage(),
 	}
-	
+
 	// Register in enhanced tracking
 	em.connectionsMux.Lock()
 	em.connections[connInfo.ID] = enhanced
 	em.connectionsMux.Unlock()
-	
+
 	// Start enhanced client monitoring
 	go em.monitorEnhancedClient(enhanced)
-	
+
 	return enhanced, nil
 }
 
@@ -286,17 +286,17 @@ func (em *EnhancedWebSocketManager) unregisterEnhancedConnection(connID string) 
 		delete(em.connections, connID)
 	}
 	em.connectionsMux.Unlock()
-	
+
 	// Unregister from memory manager
 	if exists {
 		if err := em.memoryManager.UnregisterConnection(connID); err != nil {
 			log.Printf("Memory manager unregistration failed for %s: %v", connID, err)
 		}
-		
+
 		// Clean up enhanced client resources
 		em.cleanupEnhancedClient(enhanced)
 	}
-	
+
 	return nil
 }
 
@@ -304,15 +304,15 @@ func (em *EnhancedWebSocketManager) unregisterEnhancedConnection(connID string) 
 func (em *EnhancedWebSocketManager) monitorEnhancedClient(client *EnhancedClientInfo) {
 	ticker := time.NewTicker(30 * time.Second) // Monitor every 30 seconds
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-client.Context.Done():
 			return
-			
+
 		case <-ticker.C:
 			em.updateClientMetrics(client)
-			
+
 		case <-em.ctx.Done():
 			return
 		}
@@ -323,15 +323,15 @@ func (em *EnhancedWebSocketManager) monitorEnhancedClient(client *EnhancedClient
 func (em *EnhancedWebSocketManager) updateClientMetrics(client *EnhancedClientInfo) {
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
-	
+
 	// Update activity in memory manager
 	em.memoryManager.UpdateConnectionActivity(client.ID)
-	
+
 	// Calculate performance metrics
 	now := time.Now()
 	connectionAge := now.Sub(client.CreatedAt)
 	_ = now.Sub(client.LastMessageTime) // timeSinceLastMessage (unused in current implementation)
-	
+
 	// Update ping latency by sending ping and measuring response time
 	start := time.Now()
 	ctx, cancel := context.WithTimeout(client.Context, 5*time.Second)
@@ -343,7 +343,7 @@ func (em *EnhancedWebSocketManager) updateClientMetrics(client *EnhancedClientIn
 		client.LastErrorTime = now
 	}
 	cancel()
-	
+
 	// Log performance information periodically
 	if connectionAge.Minutes() > 1 && int(connectionAge.Minutes())%5 == 0 {
 		log.Printf("Client %s metrics: %d messages, %.2f KB sent, %.2f KB received, %v ping latency, %d errors",
@@ -362,13 +362,13 @@ func (em *EnhancedWebSocketManager) cleanupEnhancedClient(client *EnhancedClient
 	if client == nil {
 		return
 	}
-	
+
 	client.mutex.Lock()
 	defer client.mutex.Unlock()
-	
+
 	// Mark as inactive
 	client.IsActive = false
-	
+
 	// Log final statistics
 	connectionDuration := time.Since(client.CreatedAt)
 	log.Printf("Enhanced client cleanup for %s: duration=%v, messages=%d, bytes_sent=%d, bytes_received=%d, errors=%d",
@@ -385,12 +385,12 @@ func (em *EnhancedWebSocketManager) cleanupEnhancedClient(client *EnhancedClient
 func (em *EnhancedWebSocketManager) startEnhancedMonitoring() {
 	ticker := time.NewTicker(1 * time.Minute) // Update metrics every minute
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-em.ctx.Done():
 			return
-			
+
 		case <-ticker.C:
 			em.updateEnhancedMetrics()
 		}
@@ -401,14 +401,14 @@ func (em *EnhancedWebSocketManager) startEnhancedMonitoring() {
 func (em *EnhancedWebSocketManager) updateEnhancedMetrics() {
 	// Get base memory metrics
 	memoryMetrics := em.memoryManager.GetMemoryMetrics()
-	
+
 	// Calculate enhanced metrics
 	em.connectionsMux.RLock()
 	var totalMessages, totalBytesSent, totalBytesReceived int64
 	var totalLatency time.Duration
 	var errorCount int32
 	connectionCount := len(em.connections)
-	
+
 	for _, client := range em.connections {
 		client.mutex.RLock()
 		totalMessages += client.MessageCount
@@ -419,26 +419,26 @@ func (em *EnhancedWebSocketManager) updateEnhancedMetrics() {
 		client.mutex.RUnlock()
 	}
 	em.connectionsMux.RUnlock()
-	
+
 	// Calculate rates and averages
 	var averageLatency time.Duration
 	var messagesPerSecond, averageMessageSize, errorRate float64
-	
+
 	if connectionCount > 0 {
 		averageLatency = totalLatency / time.Duration(connectionCount)
 		if totalMessages > 0 {
-			averageMessageSize = float64(totalBytesSent + totalBytesReceived) / float64(totalMessages)
+			averageMessageSize = float64(totalBytesSent+totalBytesReceived) / float64(totalMessages)
 			errorRate = float64(errorCount) / float64(totalMessages) * 100
 		}
 	}
-	
+
 	// Calculate health score (0-100)
 	healthScore := em.calculateHealthScore(&memoryMetrics, errorRate)
-	
+
 	// Calculate capacity utilization
 	maxConnections := em.memoryManager.maxConnections
 	connectionCapacity := float64(memoryMetrics.ActiveConnections) / float64(maxConnections) * 100
-	
+
 	// Update enhanced metrics
 	em.enhancedMetrics.mutex.Lock()
 	em.enhancedMetrics.WebSocketMemoryMetrics = &memoryMetrics
@@ -450,7 +450,7 @@ func (em *EnhancedWebSocketManager) updateEnhancedMetrics() {
 	em.enhancedMetrics.ErrorRate = errorRate
 	em.enhancedMetrics.ConnectionCapacity = connectionCapacity
 	em.enhancedMetrics.mutex.Unlock()
-	
+
 	// Log health summary periodically
 	if int(time.Now().Unix())%300 == 0 { // Every 5 minutes
 		log.Printf("WebSocket Health Summary: %.1f%% health, %d active connections (%.1f%% capacity), %.2f%% error rate",
@@ -464,25 +464,25 @@ func (em *EnhancedWebSocketManager) calculateHealthScore(
 	errorRate float64,
 ) float64 {
 	score := 100.0
-	
+
 	// Deduct for high connection utilization
 	maxConnections := float64(em.memoryManager.maxConnections)
 	connectionRatio := float64(memoryMetrics.ActiveConnections) / maxConnections
 	if connectionRatio > 0.8 {
 		score -= (connectionRatio - 0.8) * 100 // Deduct up to 20 points
 	}
-	
+
 	// Deduct for high error rate
 	if errorRate > 1.0 {
 		score -= errorRate * 2 // Deduct 2 points per percent error rate
 	}
-	
+
 	// Deduct for memory issues
 	if memoryMetrics.MemoryUsageBytes > 100*1024*1024 { // 100MB threshold
 		memoryRatio := float64(memoryMetrics.MemoryUsageBytes) / (100 * 1024 * 1024)
 		score -= (memoryRatio - 1.0) * 10 // Deduct points for excess memory
 	}
-	
+
 	// Deduct for failed connections
 	if memoryMetrics.TotalConnections > 0 {
 		failureRate := float64(memoryMetrics.FailedConnections) / float64(memoryMetrics.TotalConnections)
@@ -490,7 +490,7 @@ func (em *EnhancedWebSocketManager) calculateHealthScore(
 			score -= failureRate * 50
 		}
 	}
-	
+
 	// Ensure score stays within bounds
 	if score < 0 {
 		score = 0
@@ -498,7 +498,7 @@ func (em *EnhancedWebSocketManager) calculateHealthScore(
 	if score > 100 {
 		score = 100
 	}
-	
+
 	return score
 }
 
@@ -506,21 +506,21 @@ func (em *EnhancedWebSocketManager) calculateHealthScore(
 func (em *EnhancedWebSocketManager) GetEnhancedMetrics() EnhancedWebSocketMetrics {
 	em.enhancedMetrics.mutex.RLock()
 	defer em.enhancedMetrics.mutex.RUnlock()
-	
+
 	// Create copy of metrics
 	return EnhancedWebSocketMetrics{
 		WebSocketMemoryMetrics: em.enhancedMetrics.WebSocketMemoryMetrics,
-		TotalMessages:         em.enhancedMetrics.TotalMessages,
-		MessagesPerSecond:     em.enhancedMetrics.MessagesPerSecond,
-		AverageMessageSize:    em.enhancedMetrics.AverageMessageSize,
-		AverageLatency:        em.enhancedMetrics.AverageLatency,
-		P95Latency:           em.enhancedMetrics.P95Latency,
-		P99Latency:           em.enhancedMetrics.P99Latency,
-		HealthScore:          em.enhancedMetrics.HealthScore,
-		ResourceUtilization:   em.enhancedMetrics.ResourceUtilization,
-		ErrorRate:            em.enhancedMetrics.ErrorRate,
-		ConnectionCapacity:    em.enhancedMetrics.ConnectionCapacity,
-		ThroughputCapacity:    em.enhancedMetrics.ThroughputCapacity,
+		TotalMessages:          em.enhancedMetrics.TotalMessages,
+		MessagesPerSecond:      em.enhancedMetrics.MessagesPerSecond,
+		AverageMessageSize:     em.enhancedMetrics.AverageMessageSize,
+		AverageLatency:         em.enhancedMetrics.AverageLatency,
+		P95Latency:             em.enhancedMetrics.P95Latency,
+		P99Latency:             em.enhancedMetrics.P99Latency,
+		HealthScore:            em.enhancedMetrics.HealthScore,
+		ResourceUtilization:    em.enhancedMetrics.ResourceUtilization,
+		ErrorRate:              em.enhancedMetrics.ErrorRate,
+		ConnectionCapacity:     em.enhancedMetrics.ConnectionCapacity,
+		ThroughputCapacity:     em.enhancedMetrics.ThroughputCapacity,
 	}
 }
 
@@ -534,37 +534,37 @@ func (em *EnhancedWebSocketManager) IsHealthy() bool {
 	if em.isShutdown {
 		return false
 	}
-	
+
 	// Check base manager health
 	if !em.WebSocketManager.IsShutdown() {
 		// Check memory manager health
 		if !em.memoryManager.IsHealthy() {
 			return false
 		}
-		
+
 		// Check enhanced metrics
 		metrics := em.GetEnhancedMetrics()
 		return metrics.HealthScore > 70.0 && metrics.ErrorRate < 5.0
 	}
-	
+
 	return false
 }
 
 // Shutdown gracefully shuts down the enhanced WebSocket manager
 func (em *EnhancedWebSocketManager) Shutdown(ctx context.Context) error {
 	var shutdownErr error
-	
+
 	em.shutdownOnce.Do(func() {
 		em.isShutdown = true
-		
+
 		log.Printf("Shutting down enhanced WebSocket manager...")
-		
+
 		// Shutdown memory manager first
 		if err := em.memoryManager.Shutdown(ctx); err != nil {
 			log.Printf("Memory manager shutdown error: %v", err)
 			shutdownErr = err
 		}
-		
+
 		// Shutdown base WebSocket manager
 		if err := em.WebSocketManager.Shutdown(ctx); err != nil {
 			log.Printf("Base WebSocket manager shutdown error: %v", err)
@@ -572,7 +572,7 @@ func (em *EnhancedWebSocketManager) Shutdown(ctx context.Context) error {
 				shutdownErr = err
 			}
 		}
-		
+
 		// Clean up enhanced connections
 		em.connectionsMux.Lock()
 		connectionCount := len(em.connections)
@@ -581,10 +581,10 @@ func (em *EnhancedWebSocketManager) Shutdown(ctx context.Context) error {
 			delete(em.connections, connID)
 		}
 		em.connectionsMux.Unlock()
-		
+
 		log.Printf("Enhanced WebSocket manager shutdown completed. Cleaned up %d connections.", connectionCount)
 	})
-	
+
 	return shutdownErr
 }
 

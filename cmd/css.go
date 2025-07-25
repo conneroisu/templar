@@ -6,9 +6,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/spf13/cobra"
 	"github.com/conneroisu/templar/internal/config"
 	"github.com/conneroisu/templar/internal/plugins/css"
+	"github.com/spf13/cobra"
 )
 
 // cssCmd represents the css command for managing CSS frameworks
@@ -38,22 +38,22 @@ var cssListCmd = &cobra.Command{
 			return fmt.Errorf("failed to load config: %w", err)
 		}
 		manager := css.NewFrameworkManager(cfg, ".")
-		
+
 		ctx := context.Background()
 		if err := manager.Initialize(ctx); err != nil {
 			return fmt.Errorf("failed to initialize framework manager: %w", err)
 		}
-		
+
 		frameworks := manager.GetAvailableFrameworks()
-		
+
 		if len(frameworks) == 0 {
 			fmt.Println("No CSS frameworks available")
 			return nil
 		}
-		
+
 		fmt.Println("Available CSS Frameworks:")
 		fmt.Println("========================")
-		
+
 		for _, fw := range frameworks {
 			fmt.Printf("\n%s (%s)\n", fw.DisplayName, fw.Name)
 			if fw.Description != "" {
@@ -72,7 +72,7 @@ var cssListCmd = &cobra.Command{
 				fmt.Printf("  Website: %s\n", fw.Website)
 			}
 		}
-		
+
 		return nil
 	},
 }
@@ -92,7 +92,7 @@ Examples:
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		frameworkName := args[0]
-		
+
 		// Get flags
 		method, _ := cmd.Flags().GetString("method")
 		version, _ := cmd.Flags().GetString("version")
@@ -100,18 +100,18 @@ Examples:
 		cdnUrl, _ := cmd.Flags().GetString("cdn-url")
 		force, _ := cmd.Flags().GetBool("force")
 		generateConfig, _ := cmd.Flags().GetBool("config")
-		
+
 		cfg, err := config.Load()
 		if err != nil {
 			return fmt.Errorf("failed to load config: %w", err)
 		}
 		manager := css.NewFrameworkManager(cfg, ".")
-		
+
 		ctx := context.Background()
 		if err := manager.Initialize(ctx); err != nil {
 			return fmt.Errorf("failed to initialize framework manager: %w", err)
 		}
-		
+
 		// Create setup configuration
 		setupConfig := css.FrameworkSetupConfig{
 			InstallMethod:  method,
@@ -123,21 +123,21 @@ Examples:
 			Force:          force,
 			Options:        make(map[string]interface{}),
 		}
-		
+
 		// Setup the framework
 		fmt.Printf("Setting up %s CSS framework...\n", frameworkName)
 		if err := manager.SetupFramework(ctx, frameworkName, setupConfig); err != nil {
 			return fmt.Errorf("failed to setup framework %s: %w", frameworkName, err)
 		}
-		
+
 		fmt.Printf("✅ Successfully setup %s CSS framework\n", frameworkName)
-		
+
 		// Show next steps
 		fmt.Println("\nNext steps:")
 		fmt.Printf("1. Run 'templar serve' to start the development server\n")
 		fmt.Printf("2. Edit your components to include %s classes\n", frameworkName)
 		fmt.Printf("3. Use 'templar css styleguide' to generate a style guide\n")
-		
+
 		return nil
 	},
 }
@@ -152,36 +152,36 @@ var cssStyleguideCmd = &cobra.Command{
 		if outputPath == "" {
 			outputPath = "styleguide.html"
 		}
-		
+
 		cfg, err := config.Load()
 		if err != nil {
 			return fmt.Errorf("failed to load config: %w", err)
 		}
 		manager := css.NewFrameworkManager(cfg, ".")
-		
+
 		ctx := context.Background()
 		if err := manager.Initialize(ctx); err != nil {
 			return fmt.Errorf("failed to initialize framework manager: %w", err)
 		}
-		
+
 		activeFramework := manager.GetActiveFramework()
 		if activeFramework == "" {
 			return fmt.Errorf("no active CSS framework found. Run 'templar css setup <framework>' first")
 		}
-		
+
 		fmt.Printf("Generating style guide for %s...\n", activeFramework)
-		
+
 		styleGuide, err := manager.GenerateStyleGuide(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to generate style guide: %w", err)
 		}
-		
+
 		if err := os.WriteFile(outputPath, styleGuide, 0644); err != nil {
 			return fmt.Errorf("failed to write style guide to %s: %w", outputPath, err)
 		}
-		
+
 		fmt.Printf("✅ Style guide generated: %s\n", outputPath)
-		
+
 		return nil
 	},
 }
@@ -206,46 +206,46 @@ var cssThemeExtractCmd = &cobra.Command{
 		if outputPath == "" {
 			outputPath = "theme-variables.json"
 		}
-		
+
 		cfg, err := config.Load()
 		if err != nil {
 			return fmt.Errorf("failed to load config: %w", err)
 		}
 		manager := css.NewFrameworkManager(cfg, ".")
-		
+
 		ctx := context.Background()
 		if err := manager.Initialize(ctx); err != nil {
 			return fmt.Errorf("failed to initialize framework manager: %w", err)
 		}
-		
+
 		activeFramework := manager.GetActiveFramework()
 		if activeFramework == "" {
 			return fmt.Errorf("no active CSS framework found. Run 'templar css setup <framework>' first")
 		}
-		
+
 		fmt.Printf("Extracting variables from %s...\n", activeFramework)
-		
+
 		// Read current CSS if it exists
 		cssPath := "dist/styles.css"
 		var cssContent []byte
 		if _, err := os.Stat(cssPath); err == nil {
 			cssContent, _ = os.ReadFile(cssPath)
 		}
-		
+
 		variables, err := manager.ExtractVariables(cssContent)
 		if err != nil {
 			return fmt.Errorf("failed to extract variables: %w", err)
 		}
-		
+
 		if len(variables) == 0 {
 			fmt.Println("No variables found to extract")
 			return nil
 		}
-		
+
 		// Format as JSON for easy editing
 		var jsonContent strings.Builder
 		jsonContent.WriteString("{\n")
-		
+
 		i := 0
 		for name, value := range variables {
 			if i > 0 {
@@ -254,16 +254,16 @@ var cssThemeExtractCmd = &cobra.Command{
 			jsonContent.WriteString(fmt.Sprintf("  \"%s\": \"%s\"", name, value))
 			i++
 		}
-		
+
 		jsonContent.WriteString("\n}")
-		
+
 		if err := os.WriteFile(outputPath, []byte(jsonContent.String()), 0644); err != nil {
 			return fmt.Errorf("failed to write variables to %s: %w", outputPath, err)
 		}
-		
+
 		fmt.Printf("✅ Variables extracted to: %s\n", outputPath)
 		fmt.Printf("Found %d variables\n", len(variables))
-		
+
 		return nil
 	},
 }
@@ -287,27 +287,27 @@ The variables file should be in JSON format with variable names and values:
 		if outputPath == "" {
 			outputPath = "custom-theme.css"
 		}
-		
+
 		// Read variables file
 		variablesContent, err := os.ReadFile(variablesFile)
 		if err != nil {
 			return fmt.Errorf("failed to read variables file %s: %w", variablesFile, err)
 		}
-		
+
 		// Parse JSON (simplified - in practice, you'd use encoding/json)
 		variables := make(map[string]string)
-		
+
 		// Simple JSON parsing for the demo
 		content := string(variablesContent)
 		content = strings.Trim(content, " \n\t{}")
-		
+
 		lines := strings.Split(content, ",")
 		for _, line := range lines {
 			line = strings.TrimSpace(line)
 			if line == "" {
 				continue
 			}
-			
+
 			parts := strings.SplitN(line, ":", 2)
 			if len(parts) == 2 {
 				key := strings.Trim(strings.TrimSpace(parts[0]), "\"")
@@ -315,41 +315,41 @@ The variables file should be in JSON format with variable names and values:
 				variables[key] = value
 			}
 		}
-		
+
 		if len(variables) == 0 {
 			return fmt.Errorf("no variables found in file %s", variablesFile)
 		}
-		
+
 		cfg, err := config.Load()
 		if err != nil {
 			return fmt.Errorf("failed to load config: %w", err)
 		}
 		manager := css.NewFrameworkManager(cfg, ".")
-		
+
 		ctx := context.Background()
 		if err := manager.Initialize(ctx); err != nil {
 			return fmt.Errorf("failed to initialize framework manager: %w", err)
 		}
-		
+
 		activeFramework := manager.GetActiveFramework()
 		if activeFramework == "" {
 			return fmt.Errorf("no active CSS framework found. Run 'templar css setup <framework>' first")
 		}
-		
+
 		fmt.Printf("Generating custom theme for %s...\n", activeFramework)
-		
+
 		themeCSS, err := manager.GenerateTheme(variables)
 		if err != nil {
 			return fmt.Errorf("failed to generate theme: %w", err)
 		}
-		
+
 		if err := os.WriteFile(outputPath, themeCSS, 0644); err != nil {
 			return fmt.Errorf("failed to write theme to %s: %w", outputPath, err)
 		}
-		
+
 		fmt.Printf("✅ Custom theme generated: %s\n", outputPath)
 		fmt.Printf("Applied %d custom variables\n", len(variables))
-		
+
 		return nil
 	},
 }
@@ -366,12 +366,12 @@ var cssValidateCmd = &cobra.Command{
 			return fmt.Errorf("failed to load config: %w", err)
 		}
 		manager := css.NewFrameworkManager(cfg, ".")
-		
+
 		ctx := context.Background()
 		if err := manager.Initialize(ctx); err != nil {
 			return fmt.Errorf("failed to initialize framework manager: %w", err)
 		}
-		
+
 		var frameworkName string
 		if len(args) > 0 {
 			frameworkName = args[0]
@@ -381,34 +381,34 @@ var cssValidateCmd = &cobra.Command{
 				return fmt.Errorf("no framework specified and no active framework found")
 			}
 		}
-		
+
 		fmt.Printf("Validating %s configuration...\n", frameworkName)
-		
+
 		if err := manager.ValidateFramework(frameworkName); err != nil {
 			fmt.Printf("❌ Validation failed: %v\n", err)
 			return nil
 		}
-		
+
 		fmt.Printf("✅ %s configuration is valid\n", frameworkName)
-		
+
 		return nil
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(cssCmd)
-	
+
 	// Add subcommands
 	cssCmd.AddCommand(cssListCmd)
 	cssCmd.AddCommand(cssSetupCmd)
 	cssCmd.AddCommand(cssStyleguideCmd)
 	cssCmd.AddCommand(cssThemeCmd)
 	cssCmd.AddCommand(cssValidateCmd)
-	
+
 	// Add theme subcommands
 	cssThemeCmd.AddCommand(cssThemeExtractCmd)
 	cssThemeCmd.AddCommand(cssThemeGenerateCmd)
-	
+
 	// Setup command flags
 	cssSetupCmd.Flags().StringP("method", "m", "npm", "Install method (npm, cdn, standalone)")
 	cssSetupCmd.Flags().StringP("version", "v", "", "Framework version")
@@ -416,13 +416,13 @@ func init() {
 	cssSetupCmd.Flags().String("cdn-url", "", "Custom CDN URL")
 	cssSetupCmd.Flags().BoolP("force", "f", false, "Force reinstall if already exists")
 	cssSetupCmd.Flags().Bool("config", true, "Generate framework configuration file")
-	
+
 	// Styleguide command flags
 	cssStyleguideCmd.Flags().StringP("output", "o", "styleguide.html", "Output path for style guide")
-	
+
 	// Theme extract flags
 	cssThemeExtractCmd.Flags().StringP("output", "o", "theme-variables.json", "Output path for variables")
-	
+
 	// Theme generate flags
 	cssThemeGenerateCmd.Flags().StringP("output", "o", "custom-theme.css", "Output path for custom theme")
 }

@@ -43,11 +43,11 @@ func init() {
 
 	// Use standardized flags
 	listFlags = AddStandardFlags(listCmd, "output")
-	
+
 	// Add list-specific flags with short aliases
 	listCmd.Flags().BoolVarP(&listWithDeps, "with-deps", "d", false, "Include component dependencies")
 	listCmd.Flags().BoolVarP(&listWithProps, "with-props", "p", false, "Include component properties/parameters")
-	
+
 	// Add format validation
 	AddFlagValidation(listCmd, "format", func(format string) error {
 		return ValidateFormatWithSuggestion(format, []string{"table", "json", "yaml", "csv"})

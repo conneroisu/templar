@@ -126,28 +126,28 @@ func (hp *HashProvider) GenerateHashBatch(components []*types.ComponentInfo) map
 	// OPTIMIZATION: Check which files have changed first using efficient Stat() calls
 	var needsHashing []*types.ComponentInfo
 	results := make(map[string]string, len(components))
-	
+
 	for _, component := range components {
 		// OPTIMIZATION: Use efficient Stat() + metadata cache check first
 		if stat, err := os.Stat(component.FilePath); err == nil {
 			metadataKey := fmt.Sprintf("%s:%d:%d", component.FilePath, stat.ModTime().Unix(), stat.Size())
-			
+
 			// Check metadata cache first (fastest path)
 			if hash, found := hp.cache.GetHash(metadataKey); found {
 				results[component.Name] = hash
 				continue
 			}
 		}
-		
+
 		// File needs hashing - add to processing list
 		needsHashing = append(needsHashing, component)
 	}
-	
+
 	// OPTIMIZATION: Batch process files that actually need hashing
 	if len(needsHashing) == 0 {
 		return results // All files were cached
 	}
-	
+
 	// For small batches, process synchronously to avoid goroutine overhead
 	if len(needsHashing) <= 5 {
 		for _, component := range needsHashing {
@@ -155,42 +155,42 @@ func (hp *HashProvider) GenerateHashBatch(components []*types.ComponentInfo) map
 		}
 		return results
 	}
-	
+
 	// For larger batches, use concurrent processing
 	type hashResult struct {
 		name string
 		hash string
 	}
-	
+
 	hashChan := make(chan hashResult, len(needsHashing))
 	var wg sync.WaitGroup
-	
+
 	// Use bounded parallelism to avoid overwhelming the system
 	semaphore := make(chan struct{}, 8) // Limit to 8 concurrent operations
-	
+
 	for _, component := range needsHashing {
 		wg.Add(1)
 		go func(comp *types.ComponentInfo) {
 			defer wg.Done()
-			semaphore <- struct{}{} // Acquire semaphore
+			semaphore <- struct{}{}        // Acquire semaphore
 			defer func() { <-semaphore }() // Release semaphore
-			
+
 			hash := hp.GenerateContentHash(comp)
 			hashChan <- hashResult{name: comp.Name, hash: hash}
 		}(component)
 	}
-	
+
 	// Close channel when all goroutines complete
 	go func() {
 		wg.Wait()
 		close(hashChan)
 	}()
-	
+
 	// Collect results
 	for result := range hashChan {
 		results[result.name] = result.hash
 	}
-	
+
 	return results
 }
 
@@ -198,7 +198,7 @@ func (hp *HashProvider) GenerateHashBatch(components []*types.ComponentInfo) map
 func (hp *HashProvider) ClearMmapCache() {
 	hp.mu.Lock()
 	defer hp.mu.Unlock()
-	
+
 	// Clear memory-mapped file tracking
 	hp.fileMmaps = make(map[string][]byte)
 }
@@ -208,20 +208,20 @@ func (hp *HashProvider) GetCacheStats() HashCacheStats {
 	if hp.cache == nil {
 		return HashCacheStats{}
 	}
-	
+
 	size, hits, misses := hp.cache.GetStats()
 	total := hits + misses
 	hitRatio := 0.0
 	if total > 0 {
 		hitRatio = float64(hits) / float64(total)
 	}
-	
+
 	return HashCacheStats{
 		MetadataHits:   hits,
 		MetadataMisses: misses,
 		HitRatio:       hitRatio,
 		Size:           int64(size),
-		MaxSize:        100*1024*1024, // Hardcoded for now, could be made configurable
+		MaxSize:        100 * 1024 * 1024, // Hardcoded for now, could be made configurable
 	}
 }
 

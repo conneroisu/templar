@@ -12,36 +12,38 @@ import (
 // multiple severity levels and contextual information.
 //
 // Thread Safety:
-//   All methods must be thread-safe for concurrent access.
+//
+//	All methods must be thread-safe for concurrent access.
 //
 // Performance:
-//   Log methods should be non-blocking and high-performance.
-//   Consider async logging for high-throughput scenarios.
+//
+//	Log methods should be non-blocking and high-performance.
+//	Consider async logging for high-throughput scenarios.
 type Logger interface {
 	// Debug logs debug-level messages (development only)
 	Debug(msg string, fields ...LogField)
-	
+
 	// Info logs informational messages
 	Info(msg string, fields ...LogField)
-	
+
 	// Warn logs warning messages
 	Warn(msg string, fields ...LogField)
-	
+
 	// Error logs error messages
 	Error(msg string, err error, fields ...LogField)
-	
+
 	// Fatal logs fatal messages and terminates the application
 	Fatal(msg string, err error, fields ...LogField)
-	
+
 	// WithContext returns a logger with context for request tracing
 	WithContext(ctx context.Context) Logger
-	
+
 	// WithFields returns a logger with pre-configured fields
 	WithFields(fields ...LogField) Logger
-	
+
 	// SetLevel sets the minimum logging level
 	SetLevel(level LogLevel)
-	
+
 	// GetLevel returns the current logging level
 	GetLevel() LogLevel
 }
@@ -52,28 +54,29 @@ type Logger interface {
 // All metrics should be efficiently collected and queryable.
 //
 // Performance:
-//   Metric recording should have minimal overhead (< 1µs per metric)
-//   Consider using atomic operations for high-frequency counters.
+//
+//	Metric recording should have minimal overhead (< 1µs per metric)
+//	Consider using atomic operations for high-frequency counters.
 type MetricsCollector interface {
 	// Counter metrics (monotonically increasing)
 	IncrementCounter(name string, tags ...MetricTag)
 	AddToCounter(name string, value float64, tags ...MetricTag)
-	
+
 	// Gauge metrics (current value)
 	SetGauge(name string, value float64, tags ...MetricTag)
-	
+
 	// Histogram metrics (distribution of values)
 	RecordHistogram(name string, value float64, tags ...MetricTag)
-	
+
 	// Timing metrics (duration measurements)
 	RecordTiming(name string, duration time.Duration, tags ...MetricTag)
 	StartTimer(name string, tags ...MetricTag) Timer
-	
+
 	// Metric queries
 	GetCounter(name string, tags ...MetricTag) float64
 	GetGauge(name string, tags ...MetricTag) float64
 	GetHistogramStats(name string, tags ...MetricTag) HistogramStats
-	
+
 	// Metric management
 	ListMetrics() []MetricInfo
 	ResetMetrics()
@@ -84,7 +87,7 @@ type MetricsCollector interface {
 type Timer interface {
 	// Stop stops the timer and records the duration
 	Stop()
-	
+
 	// Elapsed returns the elapsed time without stopping
 	Elapsed() time.Duration
 }
@@ -95,24 +98,25 @@ type Timer interface {
 // and dependencies. All checks should complete quickly and reliably.
 //
 // Performance:
-//   Health checks should complete within 5 seconds
-//   Critical checks should complete within 1 second
+//
+//	Health checks should complete within 5 seconds
+//	Critical checks should complete within 1 second
 type HealthChecker interface {
 	// Check performs a health check and returns the result
 	Check(ctx context.Context) HealthResult
-	
+
 	// CheckWithName performs a named health check
 	CheckWithName(ctx context.Context, name string) HealthResult
-	
+
 	// RegisterCheck registers a custom health check
 	RegisterCheck(name string, check HealthCheckFunc)
-	
+
 	// UnregisterCheck removes a health check
 	UnregisterCheck(name string)
-	
+
 	// GetChecks returns all registered health checks
 	GetChecks() []string
-	
+
 	// IsHealthy returns true if all critical checks pass
 	IsHealthy(ctx context.Context) bool
 }
@@ -124,22 +128,22 @@ type HealthChecker interface {
 type NotificationService interface {
 	// SendEmail sends an email notification
 	SendEmail(ctx context.Context, msg EmailMessage) error
-	
+
 	// SendSMS sends an SMS notification
 	SendSMS(ctx context.Context, msg SMSMessage) error
-	
+
 	// SendWebhook sends a webhook notification
 	SendWebhook(ctx context.Context, msg WebhookMessage) error
-	
+
 	// SendBatch sends multiple notifications in batch
 	SendBatch(ctx context.Context, notifications []Notification) error
-	
+
 	// GetDeliveryStatus returns delivery status for a notification
 	GetDeliveryStatus(notificationID string) (DeliveryStatus, error)
-	
+
 	// RegisterTemplate registers a notification template
 	RegisterTemplate(name string, template NotificationTemplate) error
-	
+
 	// SendWithTemplate sends a notification using a template
 	SendWithTemplate(ctx context.Context, templateName string, data map[string]interface{}, recipient string) error
 }
@@ -150,30 +154,31 @@ type NotificationService interface {
 // with configurable expiration and eviction policies.
 //
 // Performance:
-//   Get operations should complete in < 1ms for in-memory caches
-//   Set operations should be async when possible
+//
+//	Get operations should complete in < 1ms for in-memory caches
+//	Set operations should be async when possible
 type CacheService interface {
 	// Get retrieves a value from the cache
 	Get(ctx context.Context, key string) ([]byte, error)
-	
+
 	// Set stores a value in the cache with expiration
 	Set(ctx context.Context, key string, value []byte, expiration time.Duration) error
-	
+
 	// Delete removes a value from the cache
 	Delete(ctx context.Context, key string) error
-	
+
 	// Exists checks if a key exists in the cache
 	Exists(ctx context.Context, key string) (bool, error)
-	
+
 	// Clear removes all values from the cache
 	Clear(ctx context.Context) error
-	
+
 	// GetStats returns cache performance statistics
 	GetStats(ctx context.Context) CacheServiceStats
-	
+
 	// GetMulti retrieves multiple values in a single operation
 	GetMulti(ctx context.Context, keys []string) (map[string][]byte, error)
-	
+
 	// SetMulti stores multiple values in a single operation
 	SetMulti(ctx context.Context, items map[string][]byte, expiration time.Duration) error
 }
@@ -185,34 +190,34 @@ type CacheService interface {
 type FileService interface {
 	// Read reads the entire file contents
 	Read(ctx context.Context, path string) ([]byte, error)
-	
+
 	// Write writes data to a file atomically
 	Write(ctx context.Context, path string, data []byte) error
-	
+
 	// Append appends data to a file
 	Append(ctx context.Context, path string, data []byte) error
-	
+
 	// Copy copies a file from source to destination
 	Copy(ctx context.Context, src, dst string) error
-	
+
 	// Move moves a file from source to destination
 	Move(ctx context.Context, src, dst string) error
-	
+
 	// Delete removes a file
 	Delete(ctx context.Context, path string) error
-	
+
 	// Exists checks if a file exists
 	Exists(ctx context.Context, path string) (bool, error)
-	
+
 	// Stat returns file information
 	Stat(ctx context.Context, path string) (FileInfo, error)
-	
+
 	// List returns files in a directory
 	List(ctx context.Context, dir string) ([]FileInfo, error)
-	
+
 	// Watch monitors file changes
 	Watch(ctx context.Context, path string) (<-chan FileEvent, error)
-	
+
 	// CreateTemp creates a temporary file
 	CreateTemp(ctx context.Context, pattern string) (TempFile, error)
 }
@@ -224,28 +229,28 @@ type FileService interface {
 type SecurityService interface {
 	// Authenticate verifies user credentials
 	Authenticate(ctx context.Context, credentials Credentials) (AuthResult, error)
-	
+
 	// Authorize checks if a user has permission for an action
 	Authorize(ctx context.Context, user User, resource string, action string) (bool, error)
-	
+
 	// Encrypt encrypts data with the default key
 	Encrypt(ctx context.Context, data []byte) ([]byte, error)
-	
+
 	// Decrypt decrypts data with the default key
 	Decrypt(ctx context.Context, data []byte) ([]byte, error)
-	
+
 	// Hash generates a secure hash of data
 	Hash(data []byte) string
-	
+
 	// VerifyHash verifies data against a hash
 	VerifyHash(data []byte, hash string) bool
-	
+
 	// GenerateToken generates a secure token
 	GenerateToken(ctx context.Context, claims map[string]interface{}) (string, error)
-	
+
 	// VerifyToken verifies and parses a token
 	VerifyToken(ctx context.Context, token string) (map[string]interface{}, error)
-	
+
 	// AuditLog records a security event
 	AuditLog(ctx context.Context, event SecurityEvent)
 }
@@ -397,26 +402,26 @@ const (
 
 // NotificationTemplate represents a notification template
 type NotificationTemplate struct {
-	Name        string
-	Type        NotificationType
-	Subject     string
-	Body        string
-	Variables   []string
-	IsHTML      bool
+	Name      string
+	Type      NotificationType
+	Subject   string
+	Body      string
+	Variables []string
+	IsHTML    bool
 }
 
 // CacheServiceStats represents cache performance statistics
 type CacheServiceStats struct {
-	Hits        int64
-	Misses      int64
-	Sets        int64
-	Deletes     int64
-	Evictions   int64
-	Size        int64
-	MaxSize     int64
-	HitRate     float64
-	Memory      int64
-	MaxMemory   int64
+	Hits      int64
+	Misses    int64
+	Sets      int64
+	Deletes   int64
+	Evictions int64
+	Size      int64
+	MaxSize   int64
+	HitRate   float64
+	Memory    int64
+	MaxMemory int64
 }
 
 // FileInfo represents file metadata

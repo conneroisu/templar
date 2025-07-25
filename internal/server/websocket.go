@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/conneroisu/templar/internal/validation"
 	"github.com/coder/websocket"
+	"github.com/conneroisu/templar/internal/validation"
 )
 
 const (

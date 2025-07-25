@@ -104,12 +104,12 @@ func showInteractiveMenu() error {
 func runInteractiveInit() error {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("\n=== Initialize New Project ===")
-	
+
 	// Get project name
 	fmt.Print("Project name (press Enter for current directory): ")
 	projectName, _ := reader.ReadString('\n')
 	projectName = strings.TrimSpace(projectName)
-	
+
 	// Get template choice
 	fmt.Println("\nAvailable templates:")
 	fmt.Println("1. minimal        - Basic component setup")
@@ -119,10 +119,10 @@ func runInteractiveInit() error {
 	fmt.Println("5. ecommerce     - Product listings and shopping cart")
 	fmt.Println("6. documentation - Technical documentation")
 	fmt.Print("Choose template (1-6, default: minimal): ")
-	
+
 	templateChoice, _ := reader.ReadString('\n')
 	templateChoice = strings.TrimSpace(templateChoice)
-	
+
 	var template string
 	switch templateChoice {
 	case "2":
@@ -138,12 +138,12 @@ func runInteractiveInit() error {
 	default:
 		template = "minimal"
 	}
-	
+
 	// Ask for minimal setup
 	fmt.Print("Use minimal setup? (y/N): ")
 	minimalChoice, _ := reader.ReadString('\n')
 	minimalChoice = strings.TrimSpace(strings.ToLower(minimalChoice))
-	
+
 	// Build command args
 	args := []string{}
 	if projectName != "" {
@@ -155,7 +155,7 @@ func runInteractiveInit() error {
 	if minimalChoice == "y" || minimalChoice == "yes" {
 		args = append(args, "--minimal")
 	}
-	
+
 	fmt.Printf("\nRunning: templar init %s\n", strings.Join(args, " "))
 	return initCmd.RunE(initCmd, args)
 }
@@ -163,22 +163,22 @@ func runInteractiveInit() error {
 func runInteractiveServe() error {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("\n=== Start Development Server ===")
-	
+
 	// Get port
 	fmt.Print("Port (default: 8080): ")
 	portInput, _ := reader.ReadString('\n')
 	portInput = strings.TrimSpace(portInput)
-	
+
 	// Get host
 	fmt.Print("Host (default: localhost): ")
 	hostInput, _ := reader.ReadString('\n')
 	hostInput = strings.TrimSpace(hostInput)
-	
+
 	// Ask about opening browser
 	fmt.Print("Open browser automatically? (Y/n): ")
 	openChoice, _ := reader.ReadString('\n')
 	openChoice = strings.TrimSpace(strings.ToLower(openChoice))
-	
+
 	// Build command args
 	args := []string{}
 	if portInput != "" {
@@ -190,7 +190,7 @@ func runInteractiveServe() error {
 	if openChoice == "n" || openChoice == "no" {
 		args = append(args, "--no-open")
 	}
-	
+
 	fmt.Printf("\nRunning: templar serve %s\n", strings.Join(args, " "))
 	return serveCmd.RunE(serveCmd, args)
 }
@@ -198,27 +198,27 @@ func runInteractiveServe() error {
 func runInteractivePreview() error {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("\n=== Preview Component ===")
-	
+
 	// Get component name
 	fmt.Print("Component name: ")
 	componentName, _ := reader.ReadString('\n')
 	componentName = strings.TrimSpace(componentName)
-	
+
 	if componentName == "" {
 		fmt.Println("Error: Component name is required")
 		return nil
 	}
-	
+
 	// Get port
 	fmt.Print("Port (default: 8080): ")
 	portInput, _ := reader.ReadString('\n')
 	portInput = strings.TrimSpace(portInput)
-	
+
 	// Ask about props
 	fmt.Print("Props JSON (optional): ")
 	propsInput, _ := reader.ReadString('\n')
 	propsInput = strings.TrimSpace(propsInput)
-	
+
 	// Build command args
 	args := []string{componentName}
 	if portInput != "" {
@@ -227,7 +227,7 @@ func runInteractivePreview() error {
 	if propsInput != "" {
 		args = append(args, "--props="+propsInput)
 	}
-	
+
 	fmt.Printf("\nRunning: templar preview %s\n", strings.Join(args, " "))
 	return previewCmd.RunE(previewCmd, args)
 }
@@ -235,17 +235,17 @@ func runInteractivePreview() error {
 func runInteractiveBuild() error {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("\n=== Build Components ===")
-	
+
 	// Ask for production build
 	fmt.Print("Production build? (y/N): ")
 	prodChoice, _ := reader.ReadString('\n')
 	prodChoice = strings.TrimSpace(strings.ToLower(prodChoice))
-	
+
 	// Ask for analysis
 	fmt.Print("Generate build analysis? (y/N): ")
 	analyzeChoice, _ := reader.ReadString('\n')
 	analyzeChoice = strings.TrimSpace(strings.ToLower(analyzeChoice))
-	
+
 	// Build command args
 	args := []string{}
 	if prodChoice == "y" || prodChoice == "yes" {
@@ -254,7 +254,7 @@ func runInteractiveBuild() error {
 	if analyzeChoice == "y" || analyzeChoice == "yes" {
 		args = append(args, "--analyze")
 	}
-	
+
 	fmt.Printf("\nRunning: templar build %s\n", strings.Join(args, " "))
 	return buildCmd.RunE(buildCmd, args)
 }
@@ -262,17 +262,17 @@ func runInteractiveBuild() error {
 func runInteractiveList() error {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("\n=== List Components ===")
-	
+
 	// Get format
 	fmt.Println("Output format:")
 	fmt.Println("1. table (default)")
 	fmt.Println("2. json")
 	fmt.Println("3. yaml")
 	fmt.Print("Choose format (1-3): ")
-	
+
 	formatChoice, _ := reader.ReadString('\n')
 	formatChoice = strings.TrimSpace(formatChoice)
-	
+
 	var format string
 	switch formatChoice {
 	case "2":
@@ -282,16 +282,16 @@ func runInteractiveList() error {
 	default:
 		format = "table"
 	}
-	
+
 	// Ask for additional info
 	fmt.Print("Include properties? (y/N): ")
 	propsChoice, _ := reader.ReadString('\n')
 	propsChoice = strings.TrimSpace(strings.ToLower(propsChoice))
-	
+
 	fmt.Print("Include dependencies? (y/N): ")
 	depsChoice, _ := reader.ReadString('\n')
 	depsChoice = strings.TrimSpace(strings.ToLower(depsChoice))
-	
+
 	// Build command args
 	args := []string{}
 	if format != "table" {
@@ -303,7 +303,7 @@ func runInteractiveList() error {
 	if depsChoice == "y" || depsChoice == "yes" {
 		args = append(args, "--with-deps")
 	}
-	
+
 	fmt.Printf("\nRunning: templar list %s\n", strings.Join(args, " "))
 	return listCmd.RunE(listCmd, args)
 }
@@ -311,17 +311,17 @@ func runInteractiveList() error {
 func runInteractiveWatch() error {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("\n=== Watch Files ===")
-	
+
 	// Ask for verbose output
 	fmt.Print("Verbose output? (y/N): ")
 	verboseChoice, _ := reader.ReadString('\n')
 	verboseChoice = strings.TrimSpace(strings.ToLower(verboseChoice))
-	
+
 	// Ask for custom command
 	fmt.Print("Custom command to run on changes (optional): ")
 	commandInput, _ := reader.ReadString('\n')
 	commandInput = strings.TrimSpace(commandInput)
-	
+
 	// Build command args
 	args := []string{}
 	if verboseChoice == "y" || verboseChoice == "yes" {
@@ -330,7 +330,7 @@ func runInteractiveWatch() error {
 	if commandInput != "" {
 		args = append(args, "--command="+commandInput)
 	}
-	
+
 	fmt.Printf("\nRunning: templar watch %s\n", strings.Join(args, " "))
 	return watchCmd.RunE(watchCmd, args)
 }

@@ -651,13 +651,13 @@ func (s *PreviewServer) generateEnhancedEditorHTML(component *types.ComponentInf
         }
     </script>
 </body>
-</html>`, 
-		component.Name, 
-		component.Name, 
+</html>`,
 		component.Name,
-		component.Package, 
-		component.FilePath, 
-		len(component.Parameters), 
+		component.Name,
+		component.Name,
+		component.Package,
+		component.FilePath,
+		len(component.Parameters),
 		len(component.Dependencies),
 		component.Name,
 		s.parametersToJSON(component.Parameters))
@@ -666,7 +666,7 @@ func (s *PreviewServer) generateEnhancedEditorHTML(component *types.ComponentInf
 // parametersToJSON converts component parameters to JSON for JavaScript
 func (s *PreviewServer) parametersToJSON(parameters []types.ParameterInfo) string {
 	var paramJSON []string
-	
+
 	for _, param := range parameters {
 		paramJSON = append(paramJSON, fmt.Sprintf(`{
 			"name": "%s",
@@ -674,7 +674,7 @@ func (s *PreviewServer) parametersToJSON(parameters []types.ParameterInfo) strin
 			"optional": %t
 		}`, param.Name, param.Type, param.Optional))
 	}
-	
+
 	return "[" + strings.Join(paramJSON, ",") + "]"
 }
 
@@ -1655,5 +1655,5 @@ func (s *PreviewServer) generateEnhancedIndexHTML() string {
         }
     </script>
 </body>
-</html>`;
+</html>`
 }

@@ -95,17 +95,17 @@ func (ec *ErrorCollector) GetErrors() []BuildError {
 func (ec *ErrorCollector) GetAllErrors() []error {
 	ec.mutex.RLock()
 	defer ec.mutex.RUnlock()
-	
+
 	allErrors := make([]error, 0, len(ec.buildErrors)+len(ec.errors))
-	
+
 	// Convert build errors to general errors
 	for _, buildErr := range ec.buildErrors {
 		allErrors = append(allErrors, &buildErr)
 	}
-	
+
 	// Add general errors
 	allErrors = append(allErrors, ec.errors...)
-	
+
 	return allErrors
 }
 

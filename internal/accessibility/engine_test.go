@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/net/html"
 	"github.com/conneroisu/templar/internal/logging"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/net/html"
 )
 
 func TestDefaultAccessibilityEngine_Initialize(t *testing.T) {
@@ -18,10 +18,10 @@ func TestDefaultAccessibilityEngine_Initialize(t *testing.T) {
 	engine := NewDefaultAccessibilityEngine(logger)
 
 	config := EngineConfig{
-		EnableBrowserEngine:  false,
-		MaxConcurrentChecks:  5,
-		DefaultTimeout:       10 * time.Second,
-		CacheResults:         true,
+		EnableBrowserEngine: false,
+		MaxConcurrentChecks: 5,
+		DefaultTimeout:      10 * time.Second,
+		CacheResults:        true,
 		CacheSize:           1000,
 		LogLevel:            "info",
 	}
@@ -134,7 +134,7 @@ func TestDefaultAccessibilityEngine_AnalyzeMissingFormLabel(t *testing.T) {
 	}
 
 	assert.Len(t, violations, 1, "Should find 1 missing form label violation")
-	
+
 	violation := violations[0]
 	assert.Equal(t, "missing-form-label", violation.Rule)
 	assert.Equal(t, ImpactCritical, violation.Impact)
@@ -232,7 +232,7 @@ func TestDefaultAccessibilityEngine_AnalyzeHeadingStructure(t *testing.T) {
 	// Test proper structure - should pass
 	report1, err := engine.Analyze(context.Background(), htmlWithProperHeadings, auditConfig)
 	require.NoError(t, err)
-	
+
 	properHeadingViolations := []AccessibilityViolation{}
 	for _, violation := range report1.Violations {
 		if violation.Rule == "missing-heading-structure" {
@@ -244,7 +244,7 @@ func TestDefaultAccessibilityEngine_AnalyzeHeadingStructure(t *testing.T) {
 	// Test improper structure - should fail
 	report2, err := engine.Analyze(context.Background(), htmlWithImproperHeadings, auditConfig)
 	require.NoError(t, err)
-	
+
 	improperHeadingViolations := []AccessibilityViolation{}
 	for _, violation := range report2.Violations {
 		if violation.Rule == "missing-heading-structure" {
@@ -341,7 +341,7 @@ func TestDefaultAccessibilityEngine_AnalyzeMissingLangAttribute(t *testing.T) {
 	// Test without lang - should fail
 	report1, err := engine.Analyze(context.Background(), htmlWithoutLang, auditConfig)
 	require.NoError(t, err)
-	
+
 	violations1 := []AccessibilityViolation{}
 	for _, violation := range report1.Violations {
 		if violation.Rule == "missing-lang-attribute" {
@@ -353,7 +353,7 @@ func TestDefaultAccessibilityEngine_AnalyzeMissingLangAttribute(t *testing.T) {
 	// Test with lang - should pass
 	report2, err := engine.Analyze(context.Background(), htmlWithLang, auditConfig)
 	require.NoError(t, err)
-	
+
 	violations2 := []AccessibilityViolation{}
 	for _, violation := range report2.Violations {
 		if violation.Rule == "missing-lang-attribute" {
@@ -412,7 +412,7 @@ func TestDefaultAccessibilityEngine_GetSuggestions(t *testing.T) {
 			require.NoError(t, err)
 
 			assert.Len(t, suggestions, tc.expectedSuggestions)
-			
+
 			if len(suggestions) > 0 {
 				assert.Contains(t, tc.expectedTypes, suggestions[0].Type)
 				assert.NotEmpty(t, suggestions[0].Title)
@@ -429,7 +429,7 @@ func TestDefaultAccessibilityEngine_AutoFix(t *testing.T) {
 	engine.Initialize(context.Background(), EngineConfig{})
 
 	originalHTML := `<html><head></head><body><p>Test content</p></body></html>`
-	
+
 	violations := []AccessibilityViolation{
 		{
 			Rule:        "missing-lang-attribute",
@@ -442,8 +442,8 @@ func TestDefaultAccessibilityEngine_AutoFix(t *testing.T) {
 			AutoFixCode: `<title>Untitled Page</title>`,
 		},
 		{
-			Rule:        "missing-alt-text",
-			CanAutoFix:  false, // Not auto-fixable
+			Rule:       "missing-alt-text",
+			CanAutoFix: false, // Not auto-fixable
 		},
 	}
 
@@ -452,7 +452,7 @@ func TestDefaultAccessibilityEngine_AutoFix(t *testing.T) {
 
 	// Should have applied lang attribute
 	assert.Contains(t, fixedHTML, `lang="en"`)
-	
+
 	// Original HTML should be different from fixed HTML
 	assert.NotEqual(t, originalHTML, fixedHTML)
 }
@@ -474,7 +474,7 @@ func TestDefaultAccessibilityEngine_WCAGLevelFiltering(t *testing.T) {
 
 	// Level AA should include Level A rules
 	assert.Greater(t, len(levelAARules), len(levelARules))
-	
+
 	// Level AAA should include Level A and AA rules
 	assert.GreaterOrEqual(t, len(levelAAARules), len(levelAARules))
 	assert.GreaterOrEqual(t, len(levelAAARules), len(levelAARules))
@@ -678,7 +678,7 @@ func generateComplexHTML(elementCount int) string {
 
 	for i := 0; i < elementCount; i++ {
 		html.WriteString(fmt.Sprintf(`<div id="element-%d" class="test-class">`, i))
-		
+
 		if i%3 == 0 {
 			html.WriteString(`<img src="test.jpg" alt="Test image" />`)
 		}
@@ -688,7 +688,7 @@ func generateComplexHTML(elementCount int) string {
 		if i%5 == 0 {
 			html.WriteString(`<button>Button</button>`)
 		}
-		
+
 		html.WriteString(fmt.Sprintf(`Content %d</div>`, i))
 	}
 

@@ -77,7 +77,7 @@ func BenchmarkRealisticBuildPipeline(b *testing.B) {
 				}
 				// Use the buffer directly instead of copying
 				result.Output = output
-				
+
 				result.Duration = time.Millisecond
 				result.Hash = "abcd1234"
 

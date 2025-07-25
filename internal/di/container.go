@@ -428,17 +428,17 @@ func (c *ServiceContainer) registerCoreServices() error {
 		if err != nil {
 			return nil, err
 		}
-		
+
 		watcherService, err := resolver.Get("watcher")
 		if err != nil {
 			return nil, err
 		}
-		
+
 		scannerService, err := resolver.Get("scanner")
 		if err != nil {
 			return nil, err
 		}
-		
+
 		buildPipelineService, err := resolver.Get("buildPipeline")
 		if err != nil {
 			return nil, err

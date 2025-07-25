@@ -102,9 +102,9 @@ type Config interface {
 
 // ConfigEvent represents a configuration change event
 type ConfigEvent struct {
-	Key      string
-	OldValue interface{}
-	NewValue interface{}
+	Key       string
+	OldValue  interface{}
+	NewValue  interface{}
 	Timestamp time.Time
 }
 
@@ -151,19 +151,19 @@ type ComponentScanner interface {
 type TaskQueue interface {
 	// Enqueue adds a regular priority task to the queue
 	Enqueue(task interface{}) error
-	
+
 	// EnqueuePriority adds a high priority task to the queue
 	EnqueuePriority(task interface{}) error
-	
+
 	// GetNextTask returns a channel for receiving tasks
 	GetNextTask() <-chan interface{}
-	
+
 	// PublishResult publishes a build result
 	PublishResult(result interface{}) error
-	
+
 	// GetResults returns a channel for receiving results
 	GetResults() <-chan interface{}
-	
+
 	// Close shuts down the queue
 	Close()
 }
@@ -172,7 +172,7 @@ type TaskQueue interface {
 type HashProvider interface {
 	// GenerateContentHash generates a hash for a single component
 	GenerateContentHash(component *types.ComponentInfo) string
-	
+
 	// GenerateHashBatch generates hashes for multiple components
 	GenerateHashBatch(components []*types.ComponentInfo) map[string]string
 }
@@ -181,10 +181,10 @@ type HashProvider interface {
 type WorkerManager interface {
 	// StartWorkers begins worker goroutines with the given context and queue
 	StartWorkers(ctx context.Context, queue TaskQueue)
-	
+
 	// StopWorkers gracefully shuts down all workers
 	StopWorkers()
-	
+
 	// SetWorkerCount adjusts the number of active workers
 	SetWorkerCount(count int)
 }
@@ -193,10 +193,10 @@ type WorkerManager interface {
 type ResultProcessor interface {
 	// ProcessResults processes results from the given channel
 	ProcessResults(ctx context.Context, results <-chan interface{})
-	
+
 	// AddCallback registers a callback for build completion events
 	AddCallback(callback BuildCallbackFunc)
-	
+
 	// Stop gracefully shuts down result processing
 	Stop()
 }

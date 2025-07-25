@@ -51,15 +51,15 @@ func NewRefactoredBuildPipeline(workers int, registry interfaces.ComponentRegist
 	metrics := NewBuildMetrics()
 	errorParser := errors.NewErrorParser()
 	objectPools := NewObjectPools()
-	
+
 	// Create specialized components
 	queueManager := NewTaskQueueManager(100, 100, 10, metrics) // tasks, results, priority buffer sizes
 	hashProvider := NewHashProvider(cache)
 	compiler := NewTemplCompiler()
-	
+
 	workerManager := NewWorkerManager(workers, compiler, hashProvider, metrics, objectPools, errorParser)
 	resultProcessor := NewResultProcessor(metrics, errorParser)
-	
+
 	return &RefactoredBuildPipeline{
 		queueManager:    queueManager,
 		workerManager:   workerManager,
@@ -77,21 +77,21 @@ func NewRefactoredBuildPipeline(workers int, registry interfaces.ComponentRegist
 func (rbp *RefactoredBuildPipeline) Start(ctx context.Context) error {
 	rbp.mu.Lock()
 	defer rbp.mu.Unlock()
-	
+
 	if rbp.started {
 		return errors.NewBuildError("ERR_PIPELINE_ALREADY_STARTED", "pipeline is already started", nil)
 	}
-	
+
 	// Create cancellable context for all components
 	ctx, rbp.cancel = context.WithCancel(ctx)
-	
+
 	// Start result processor first
 	resultChan := rbp.queueManager.GetResults()
 	rbp.resultProcessor.ProcessResults(ctx, resultChan)
-	
+
 	// Start worker manager
 	rbp.workerManager.StartWorkers(ctx, rbp.queueManager)
-	
+
 	rbp.started = true
 	return nil
 }
@@ -100,21 +100,21 @@ func (rbp *RefactoredBuildPipeline) Start(ctx context.Context) error {
 func (rbp *RefactoredBuildPipeline) Stop() error {
 	rbp.mu.Lock()
 	defer rbp.mu.Unlock()
-	
+
 	if !rbp.started {
 		return nil // Already stopped or never started
 	}
-	
+
 	// Cancel context to signal shutdown
 	if rbp.cancel != nil {
 		rbp.cancel()
 	}
-	
+
 	// Stop components in reverse order
 	rbp.workerManager.StopWorkers()
 	rbp.resultProcessor.Stop()
 	rbp.queueManager.Close()
-	
+
 	rbp.started = false
 	return nil
 }
@@ -124,13 +124,13 @@ func (rbp *RefactoredBuildPipeline) Build(component *types.ComponentInfo) error 
 	if !rbp.started {
 		return errors.NewBuildError("ERR_PIPELINE_NOT_STARTED", "pipeline is not started", nil)
 	}
-	
+
 	task := BuildTask{
 		Component: component,
 		Priority:  0, // Normal priority
 		Timestamp: time.Now(),
 	}
-	
+
 	return rbp.queueManager.Enqueue(task)
 }
 
@@ -139,13 +139,13 @@ func (rbp *RefactoredBuildPipeline) BuildWithPriority(component *types.Component
 	if !rbp.started {
 		return // Cannot enqueue if not started
 	}
-	
+
 	task := BuildTask{
 		Component: component,
 		Priority:  1, // High priority
 		Timestamp: time.Now(),
 	}
-	
+
 	rbp.queueManager.EnqueuePriority(task)
 }
 
@@ -213,10 +213,10 @@ func (rbp *RefactoredBuildPipeline) IsStarted() bool {
 // GetPipelineStats returns comprehensive pipeline statistics.
 func (rbp *RefactoredBuildPipeline) GetPipelineStats() PipelineStats {
 	return PipelineStats{
-		Started:     rbp.IsStarted(),
-		QueueStats:  rbp.GetQueueStats(),
-		WorkerStats: rbp.GetWorkerStats(),
-		HashStats:   rbp.GetHashStats(),
+		Started:      rbp.IsStarted(),
+		QueueStats:   rbp.GetQueueStats(),
+		WorkerStats:  rbp.GetWorkerStats(),
+		HashStats:    rbp.GetHashStats(),
 		MetricsStats: rbp.metrics,
 	}
 }

@@ -36,29 +36,29 @@ import (
 // - isShutdown transitions from false to true exactly once
 type WebSocketManager struct {
 	// Connection management - protected by clientsMutex
-	clients         map[*websocket.Conn]*Client  // Active WebSocket connections
-	clientsMutex    sync.RWMutex                 // Protects clients map access
-	
+	clients      map[*websocket.Conn]*Client // Active WebSocket connections
+	clientsMutex sync.RWMutex                // Protects clients map access
+
 	// Broadcasting channels - used for async communication
-	broadcast    chan []byte               // Channel for messages to broadcast to all clients
-	register     chan *Client             // Channel for new client registration
-	unregister   chan *websocket.Conn     // Channel for client disconnection
-	
+	broadcast  chan []byte          // Channel for messages to broadcast to all clients
+	register   chan *Client         // Channel for new client registration
+	unregister chan *websocket.Conn // Channel for client disconnection
+
 	// Security and rate limiting - injected dependencies
-	originValidator OriginValidator        // Validates WebSocket connection origins
-	rateLimiter     *TokenBucketManager   // Global rate limiter for connections
-	
+	originValidator OriginValidator     // Validates WebSocket connection origins
+	rateLimiter     *TokenBucketManager // Global rate limiter for connections
+
 	// Enhanced WebSocket functionality
-	enhancements *WebSocketEnhancements   // Additional WebSocket features and metrics
-	
+	enhancements *WebSocketEnhancements // Additional WebSocket features and metrics
+
 	// Configuration - provides timeout values
-	config       *config.Config           // Configuration for timeout management
-	
+	config *config.Config // Configuration for timeout management
+
 	// Lifecycle management - coordinates shutdown across goroutines
-	ctx          context.Context          // Context for coordinated cancellation
-	cancel       context.CancelFunc       // Function to trigger shutdown
-	shutdownOnce sync.Once               // Ensures shutdown happens exactly once
-	isShutdown   bool                     // Indicates shutdown state (write-protected)
+	ctx          context.Context    // Context for coordinated cancellation
+	cancel       context.CancelFunc // Function to trigger shutdown
+	shutdownOnce sync.Once          // Ensures shutdown happens exactly once
+	isShutdown   bool               // Indicates shutdown state (write-protected)
 }
 
 // OriginValidator interface for WebSocket origin validation
@@ -70,7 +70,7 @@ type OriginValidator interface {
 //
 // This constructor initializes a fully functional WebSocket manager with:
 // - Secure connection handling with origin validation
-// - Rate limiting for connection and message protection  
+// - Rate limiting for connection and message protection
 // - Hub-based connection management with async message processing
 // - Graceful shutdown coordination via context cancellation
 //
@@ -96,10 +96,10 @@ func NewWebSocketManager(
 	if originValidator == nil {
 		panic("WebSocketManager: originValidator cannot be nil (required for security)")
 	}
-	
+
 	// Create cancellable context for coordinated shutdown
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	// Use first config if provided, otherwise nil
 	var config *config.Config
 	if len(cfg) > 0 {
@@ -108,26 +108,26 @@ func NewWebSocketManager(
 
 	// Initialize manager with validated dependencies
 	manager := &WebSocketManager{
-		clients:         make(map[*websocket.Conn]*Client),  // Empty client map
-		broadcast:       make(chan []byte, 256),             // Buffered broadcast channel
-		register:        make(chan *Client, 32),             // Buffered registration channel  
-		unregister:      make(chan *websocket.Conn, 32),     // Buffered unregistration channel
-		originValidator: originValidator,                     // Required security component
-		rateLimiter:     rateLimiter,                        // Optional rate limiter
-		config:          config,                             // Configuration for timeouts
-		ctx:             ctx,                                // Cancellation context
-		cancel:          cancel,                             // Cancellation function
-		isShutdown:      false,                              // Manager starts active
+		clients:         make(map[*websocket.Conn]*Client), // Empty client map
+		broadcast:       make(chan []byte, 256),            // Buffered broadcast channel
+		register:        make(chan *Client, 32),            // Buffered registration channel
+		unregister:      make(chan *websocket.Conn, 32),    // Buffered unregistration channel
+		originValidator: originValidator,                   // Required security component
+		rateLimiter:     rateLimiter,                       // Optional rate limiter
+		config:          config,                            // Configuration for timeouts
+		ctx:             ctx,                               // Cancellation context
+		cancel:          cancel,                            // Cancellation function
+		isShutdown:      false,                             // Manager starts active
 	}
-	
+
 	// Initialize enhanced WebSocket functionality
 	// TODO: Replace with proper initialization when WebSocketEnhancements is implemented
 	manager.enhancements = nil // NewWebSocketEnhancements()
-	
+
 	// Start the connection management hub in background goroutine
 	// This must happen before returning to ensure manager is ready for connections
 	go manager.runHub()
-	
+
 	// Post-construction invariant checks
 	if manager.ctx == nil || manager.cancel == nil {
 		panic("WebSocketManager: context initialization failed")
@@ -138,7 +138,7 @@ func NewWebSocketManager(
 	if manager.broadcast == nil || manager.register == nil || manager.unregister == nil {
 		panic("WebSocketManager: channel initialization failed")
 	}
-	
+
 	return manager
 }
 
@@ -152,7 +152,7 @@ func NewWebSocketManager(
 //
 // Security Features:
 // - Origin validation prevents unauthorized cross-origin connections
-// - Rate limiting prevents abuse and DoS attacks  
+// - Rate limiting prevents abuse and DoS attacks
 // - Connection timeouts prevent resource exhaustion
 // - Per-client rate limiting prevents message flooding
 //
@@ -178,20 +178,20 @@ func (wm *WebSocketManager) HandleWebSocket(w http.ResponseWriter, r *http.Reque
 		}
 		return
 	}
-	
+
 	// Check if manager is shut down
 	if wm.isShutdown {
 		http.Error(w, "Service Unavailable", http.StatusServiceUnavailable)
 		return
 	}
-	
+
 	// Security validation - critical for preventing unauthorized access
 	if !wm.validateWebSocketRequest(r) {
 		log.Printf("WebSocket connection rejected: failed security validation from %s", r.RemoteAddr)
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
-	
+
 	// Rate limiting - prevents connection flooding attacks
 	clientIP := wm.getClientIP(r)
 	if wm.rateLimiter != nil && !wm.checkRateLimit(clientIP) {
@@ -199,12 +199,12 @@ func (wm *WebSocketManager) HandleWebSocket(w http.ResponseWriter, r *http.Reque
 		http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
 		return
 	}
-	
+
 	// Upgrade HTTP connection to WebSocket protocol
 	// This is the critical transition point from HTTP to WebSocket
 	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
-		InsecureSkipVerify: false,                    // Enforce TLS verification in production
-		OriginPatterns:     []string{"*"},            // Allow all origins (validated separately)
+		InsecureSkipVerify: false,                         // Enforce TLS verification in production
+		OriginPatterns:     []string{"*"},                 // Allow all origins (validated separately)
 		CompressionMode:    websocket.CompressionDisabled, // Disable compression for simplicity
 	})
 	if err != nil {
@@ -212,23 +212,23 @@ func (wm *WebSocketManager) HandleWebSocket(w http.ResponseWriter, r *http.Reque
 		// http.Error is not needed here as websocket.Accept handles the response
 		return
 	}
-	
+
 	// Create client struct with all required fields
 	client := &Client{
-		conn:         conn,                            // WebSocket connection
-		send:         make(chan []byte, 256),          // Buffered send channel
-		server:       nil,                             // Legacy field for backward compatibility
-		lastActivity: time.Now(),                      // Track connection activity
+		conn:         conn,                                 // WebSocket connection
+		send:         make(chan []byte, 256),               // Buffered send channel
+		server:       nil,                                  // Legacy field for backward compatibility
+		lastActivity: time.Now(),                           // Track connection activity
 		rateLimiter:  wm.createClientRateLimiter(clientIP), // Per-client rate limiting
 	}
-	
+
 	// Verify client creation succeeded
 	if client.send == nil {
 		log.Printf("Failed to create send channel for WebSocket client")
 		conn.Close(websocket.StatusInternalError, "Internal server error")
 		return
 	}
-	
+
 	// Register client with the hub for broadcasting
 	// This is non-blocking due to buffered channel
 	select {
@@ -245,11 +245,11 @@ func (wm *WebSocketManager) HandleWebSocket(w http.ResponseWriter, r *http.Reque
 		conn.Close(websocket.StatusTryAgainLater, "Server busy")
 		return
 	}
-	
+
 	// Start client lifecycle management in separate goroutine
 	// This handles read/write pumps and connection cleanup
 	go wm.handleClient(client)
-	
+
 	log.Printf("WebSocket client connected successfully from %s", clientIP)
 }
 
@@ -261,7 +261,7 @@ func (wm *WebSocketManager) validateWebSocketRequest(r *http.Request) bool {
 		log.Printf("WebSocket connection rejected: invalid origin %s", origin)
 		return false
 	}
-	
+
 	// Additional security checks can be added here
 	return true
 }
@@ -272,12 +272,12 @@ func (wm *WebSocketManager) getClientIP(r *http.Request) string {
 	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
 		return xff
 	}
-	
+
 	// Check X-Real-IP header
 	if xri := r.Header.Get("X-Real-IP"); xri != "" {
 		return xri
 	}
-	
+
 	// Fall back to remote address
 	return r.RemoteAddr
 }
@@ -291,19 +291,19 @@ func (wm *WebSocketManager) runHub() {
 			if client != nil {
 				wm.registerClient(client)
 			}
-			
+
 		case conn := <-wm.unregister:
 			// Check for nil connection (can happen when channel is closed)
 			if conn != nil {
 				wm.unregisterClient(conn)
 			}
-			
+
 		case message := <-wm.broadcast:
 			// Check for non-empty message (zero value when channel is closed)
 			if len(message) > 0 {
 				wm.broadcastToClients(message)
 			}
-			
+
 		case <-wm.ctx.Done():
 			return
 		}
@@ -317,12 +317,12 @@ func (wm *WebSocketManager) registerClient(client *Client) {
 		log.Printf("Warning: Attempted to register nil client or connection")
 		return
 	}
-	
+
 	wm.clientsMutex.Lock()
 	wm.clients[client.conn] = client
 	clientCount := len(wm.clients)
 	wm.clientsMutex.Unlock()
-	
+
 	log.Printf("WebSocket client connected. Total clients: %d", clientCount)
 }
 
@@ -335,7 +335,7 @@ func (wm *WebSocketManager) unregisterClient(conn *websocket.Conn) {
 		close(client.send)
 	}
 	wm.clientsMutex.Unlock()
-	
+
 	if exists {
 		conn.Close(websocket.StatusNormalClosure, "")
 		log.Printf("WebSocket client disconnected. Total clients: %d", len(wm.clients))
@@ -350,7 +350,7 @@ func (wm *WebSocketManager) broadcastToClients(message []byte) {
 		clients = append(clients, client)
 	}
 	wm.clientsMutex.RUnlock()
-	
+
 	// Broadcast to clients asynchronously to avoid blocking
 	for _, client := range clients {
 		select {
@@ -369,10 +369,10 @@ func (wm *WebSocketManager) handleClient(client *Client) {
 	defer func() {
 		wm.unregister <- client.conn
 	}()
-	
+
 	// Start write pump
 	go wm.writeToClient(client)
-	
+
 	// Handle read pump
 	wm.readFromClient(client)
 }
@@ -380,14 +380,14 @@ func (wm *WebSocketManager) handleClient(client *Client) {
 // readFromClient handles reading messages from a WebSocket client
 func (wm *WebSocketManager) readFromClient(client *Client) {
 	defer client.conn.Close(websocket.StatusNormalClosure, "")
-	
+
 	for {
 		// Set read deadline using configured timeout
 		readTimeout := wm.getWebSocketTimeout()
 		ctx, cancel := context.WithTimeout(wm.ctx, readTimeout)
 		_, message, err := client.conn.Read(ctx)
 		cancel()
-		
+
 		if err != nil {
 			if websocket.CloseStatus(err) == websocket.StatusNormalClosure {
 				log.Printf("WebSocket client disconnected normally")
@@ -396,16 +396,16 @@ func (wm *WebSocketManager) readFromClient(client *Client) {
 			}
 			break
 		}
-		
+
 		// Update activity timestamp
 		client.lastActivity = time.Now()
-		
+
 		// Rate limiting check
 		if client.rateLimiter != nil && !wm.checkClientRateLimit(client.rateLimiter) {
 			log.Printf("WebSocket message rate limit exceeded for client")
 			break
 		}
-		
+
 		// Process message (can be extended for specific message handling)
 		wm.processClientMessage(client, message)
 	}
@@ -416,36 +416,36 @@ func (wm *WebSocketManager) writeToClient(client *Client) {
 	ticker := time.NewTicker(54 * time.Second) // Ping interval
 	defer ticker.Stop()
 	defer client.conn.Close(websocket.StatusNormalClosure, "")
-	
+
 	for {
 		select {
 		case message, ok := <-client.send:
 			if !ok {
 				return
 			}
-			
+
 			writeTimeout := wm.getNetworkTimeout()
 			ctx, cancel := context.WithTimeout(wm.ctx, writeTimeout)
 			err := client.conn.Write(ctx, websocket.MessageText, message)
 			cancel()
-			
+
 			if err != nil {
 				log.Printf("WebSocket write error: %v", err)
 				return
 			}
-			
+
 		case <-ticker.C:
 			// Send ping message using configured timeout
 			pingTimeout := wm.getNetworkTimeout()
 			ctx, cancel := context.WithTimeout(wm.ctx, pingTimeout)
 			err := client.conn.Ping(ctx)
 			cancel()
-			
+
 			if err != nil {
 				log.Printf("WebSocket ping error: %v", err)
 				return
 			}
-			
+
 		case <-wm.ctx.Done():
 			return
 		}
@@ -456,7 +456,7 @@ func (wm *WebSocketManager) writeToClient(client *Client) {
 func (wm *WebSocketManager) processClientMessage(client *Client, message []byte) {
 	// Basic message logging - can be extended for specific message types
 	log.Printf("Received WebSocket message from client: %d bytes", len(message))
-	
+
 	// Future: Add message routing logic here
 }
 
@@ -467,7 +467,7 @@ func (wm *WebSocketManager) BroadcastMessage(message UpdateMessage) {
 		log.Printf("Failed to marshal broadcast message: %v", err)
 		return
 	}
-	
+
 	select {
 	case wm.broadcast <- data:
 	case <-wm.ctx.Done():
@@ -488,26 +488,26 @@ func (wm *WebSocketManager) GetConnectedClients() int {
 func (wm *WebSocketManager) GetClients() map[string]*Client {
 	wm.clientsMutex.RLock()
 	defer wm.clientsMutex.RUnlock()
-	
+
 	clients := make(map[string]*Client)
 	for conn, client := range wm.clients {
 		// Use connection address as key
 		clients[fmt.Sprintf("%p", conn)] = client
 	}
-	
+
 	return clients
 }
 
 // Shutdown gracefully shuts down the WebSocket manager
 func (wm *WebSocketManager) Shutdown(ctx context.Context) error {
 	var shutdownErr error
-	
+
 	wm.shutdownOnce.Do(func() {
 		wm.isShutdown = true
-		
+
 		// Cancel the context to stop all goroutines
 		wm.cancel()
-		
+
 		// Close all client connections
 		wm.clientsMutex.Lock()
 		for conn, client := range wm.clients {
@@ -516,21 +516,21 @@ func (wm *WebSocketManager) Shutdown(ctx context.Context) error {
 		}
 		wm.clients = make(map[*websocket.Conn]*Client)
 		wm.clientsMutex.Unlock()
-		
+
 		// Close channels
 		close(wm.broadcast)
 		close(wm.register)
 		close(wm.unregister)
-		
+
 		// Shutdown enhancements
 		if wm.enhancements != nil {
 			// Enhancement cleanup would go here
 			// wm.enhancements.Shutdown()
 		}
-		
+
 		log.Printf("WebSocket manager shut down successfully")
 	})
-	
+
 	return shutdownErr
 }
 

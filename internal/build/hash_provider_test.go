@@ -389,20 +389,20 @@ func TestHashProvider_ConcurrentAccess(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		go func(workerID int) {
 			defer func() { done <- true }()
-			
+
 			// Each worker processes different components
 			startIdx := workerID * 2
 			endIdx := startIdx + 2
 			batch := components[startIdx:endIdx]
-			
+
 			results := provider.GenerateHashBatch(batch)
 			assert.Len(t, results, 2)
-			
+
 			// Verify results are consistent
 			for _, component := range batch {
 				hash := results[component.Name]
 				assert.NotEmpty(t, hash)
-				
+
 				// Generate same hash individually and compare
 				individualHash := provider.GenerateContentHash(component)
 				assert.Equal(t, hash, individualHash)
@@ -530,7 +530,7 @@ func BenchmarkHashProvider_GenerateHashBatch(b *testing.B) {
 
 func BenchmarkHashProvider_MmapVsRegular(b *testing.B) {
 	tempDir := b.TempDir()
-	
+
 	// Create large file
 	largeContent := strings.Repeat("This is benchmark content for comparing mmap vs regular read.\n", 2000)
 	testFile := filepath.Join(tempDir, "large_benchmark.templ")
@@ -545,7 +545,7 @@ func BenchmarkHashProvider_MmapVsRegular(b *testing.B) {
 	b.Run("with_cache", func(b *testing.B) {
 		cache := NewBuildCache(1024*1024, 5*time.Minute)
 		provider := NewHashProvider(cache)
-		
+
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			_ = provider.GenerateContentHash(component)

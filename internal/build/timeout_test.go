@@ -38,20 +38,20 @@ func TestBuildPipelineTimeout(t *testing.T) {
 
 	t.Run("compiler respects context cancellation", func(t *testing.T) {
 		compiler := NewTemplCompiler()
-		
+
 		// Create a very short timeout context
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Millisecond)
 		defer cancel()
-		
+
 		// Wait for context to timeout
 		<-ctx.Done()
-		
+
 		component := &types.ComponentInfo{
 			Name:     "TestComponent",
 			FilePath: "test.templ",
 			Package:  "test",
 		}
-		
+
 		_, err := compiler.Compile(ctx, component)
 		assert.Error(t, err, "Should fail due to context timeout")
 		assert.Contains(t, err.Error(), "timed out", "Error should mention timeout")
@@ -60,20 +60,20 @@ func TestBuildPipelineTimeout(t *testing.T) {
 	t.Run("compiler pools respect context cancellation", func(t *testing.T) {
 		compiler := NewTemplCompiler()
 		pools := NewObjectPools()
-		
+
 		// Create a very short timeout context
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Millisecond)
 		defer cancel()
-		
+
 		// Wait for context to timeout
 		<-ctx.Done()
-		
+
 		component := &types.ComponentInfo{
 			Name:     "TestComponent",
 			FilePath: "test.templ",
 			Package:  "test",
 		}
-		
+
 		_, err := compiler.CompileWithPools(ctx, component, pools)
 		assert.Error(t, err, "Should fail due to context timeout")
 		assert.Contains(t, err.Error(), "timed out", "Error should mention timeout")
@@ -138,11 +138,11 @@ func TestBuildPipelineTimeout(t *testing.T) {
 
 	t.Run("stop with timeout functionality", func(t *testing.T) {
 		pipeline := NewBuildPipeline(1, nil)
-		
+
 		// Start pipeline
 		ctx := context.Background()
 		pipeline.Start(ctx)
-		
+
 		// Stop with timeout should complete quickly since no work is in progress
 		err := pipeline.StopWithTimeout(1 * time.Second)
 		assert.NoError(t, err, "Should stop without timeout")
@@ -150,14 +150,14 @@ func TestBuildPipelineTimeout(t *testing.T) {
 
 	t.Run("graceful shutdown handling", func(t *testing.T) {
 		pipeline := NewBuildPipeline(1, nil)
-		
+
 		// Build should fail if pipeline is not started
 		component := &types.ComponentInfo{
 			Name:     "TestComponent",
 			FilePath: "test.templ",
 			Package:  "test",
 		}
-		
+
 		pipeline.Build(component)
 		// No assertion here as this tests logging behavior
 	})

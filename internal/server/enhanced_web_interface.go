@@ -111,7 +111,7 @@ func (s *PreviewServer) handleInlineRender(w http.ResponseWriter, component *typ
 // handleInlineValidate validates props against component schema
 func (s *PreviewServer) handleInlineValidate(w http.ResponseWriter, component *types.ComponentInfo, props map[string]interface{}) {
 	validationErrors := s.validateComponentProps(component, props)
-	
+
 	response := map[string]interface{}{
 		"valid":  len(validationErrors) == 0,
 		"errors": validationErrors,
@@ -122,7 +122,7 @@ func (s *PreviewServer) handleInlineValidate(w http.ResponseWriter, component *t
 // handleInlineSuggest provides prop suggestions and autocompletion
 func (s *PreviewServer) handleInlineSuggest(w http.ResponseWriter, component *types.ComponentInfo, props map[string]interface{}) {
 	suggestions := s.generatePropSuggestions(component, props)
-	
+
 	response := map[string]interface{}{
 		"suggestions": suggestions,
 	}
@@ -132,7 +132,7 @@ func (s *PreviewServer) handleInlineSuggest(w http.ResponseWriter, component *ty
 // validateComponentProps validates props against component parameter definitions
 func (s *PreviewServer) validateComponentProps(component *types.ComponentInfo, props map[string]interface{}) []ValidationError {
 	var errors []ValidationError
-	
+
 	// Check required parameters
 	for _, param := range component.Parameters {
 		if !param.Optional {
@@ -147,7 +147,7 @@ func (s *PreviewServer) validateComponentProps(component *types.ComponentInfo, p
 			}
 		}
 	}
-	
+
 	// Check type compatibility
 	for propName, propValue := range props {
 		param := s.findParameterByName(component, propName)
@@ -161,7 +161,7 @@ func (s *PreviewServer) validateComponentProps(component *types.ComponentInfo, p
 			})
 			continue
 		}
-		
+
 		if !s.isCompatibleType(propValue, param.Type) {
 			errors = append(errors, ValidationError{
 				Property: propName,
@@ -172,7 +172,7 @@ func (s *PreviewServer) validateComponentProps(component *types.ComponentInfo, p
 			})
 		}
 	}
-	
+
 	return errors
 }
 
@@ -228,17 +228,17 @@ func (s *PreviewServer) isCompatibleType(value interface{}, expectedType string)
 // generatePropSuggestions generates contextual suggestions for props
 func (s *PreviewServer) generatePropSuggestions(component *types.ComponentInfo, currentProps map[string]interface{}) map[string]interface{} {
 	suggestions := make(map[string]interface{})
-	
+
 	for _, param := range component.Parameters {
 		// Skip if already provided
 		if _, exists := currentProps[param.Name]; exists {
 			continue
 		}
-		
+
 		// Generate contextual suggestions based on parameter name and type
 		suggestions[param.Name] = s.generatePropExamples(param.Name, param.Type)
 	}
-	
+
 	return suggestions
 }
 
