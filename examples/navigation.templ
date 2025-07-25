@@ -1,0 +1,136 @@
+package examples
+
+import "strings"
+
+templ NavBar(brand string, isLoggedIn bool) {
+	<nav class="bg-white shadow-lg">
+		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+			<div class="flex justify-between items-center h-16">
+				<div class="flex items-center">
+					@Logo(brand)
+					@NavLinks()
+				</div>
+				
+				<div class="flex items-center space-x-4">
+					if isLoggedIn {
+						@UserMenu()
+					} else {
+						@AuthButtons()
+					}
+				</div>
+			</div>
+		</div>
+	</nav>
+}
+
+templ Logo(brand string) {
+	<div class="flex-shrink-0 flex items-center">
+		<div class="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
+			<span class="text-white font-bold text-lg">{brand[0:1]}</span>
+		</div>
+		<span class="ml-2 text-xl font-bold text-gray-900">{brand}</span>
+	</div>
+}
+
+templ NavLinks() {
+	<div class="hidden md:block ml-10">
+		<div class="flex items-baseline space-x-8">
+			@NavLink("Dashboard", "#dashboard", true)
+			@NavLink("Products", "#products", false)
+			@NavLink("Analytics", "#analytics", false)
+			@NavLink("Support", "#support", false)
+		</div>
+	</div>
+}
+
+templ NavLink(text string, href string, active bool) {
+	<a 
+		href={templ.URL(href)}
+		class={
+			"px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200",
+			templ.KV("bg-blue-100 text-blue-700", active),
+			templ.KV("text-gray-600 hover:text-gray-900 hover:bg-gray-50", !active)
+		}
+	>
+		{text}
+	</a>
+}
+
+templ UserMenu() {
+	<div class="relative">
+		<button class="flex items-center space-x-2 text-sm font-medium text-gray-700 hover:text-gray-900">
+			<div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+				<span class="text-xs font-medium">JD</span>
+			</div>
+			<span>John Doe</span>
+		</button>
+	</div>
+}
+
+templ AuthButtons() {
+	<div class="flex items-center space-x-3">
+		<a href="#login" class="text-gray-600 hover:text-gray-900 text-sm font-medium">Sign in</a>
+		<a href="#signup" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors">
+			Sign up
+		</a>
+	</div>
+}
+
+templ SideBar(items []string) {
+	<div class="w-64 bg-gray-900 text-white min-h-screen">
+		<div class="p-4">
+			<h2 class="text-xl font-bold mb-6">Navigation</h2>
+			<nav class="space-y-2">
+				for _, item := range items {
+					@SideBarItem(item, "#" + strings.ToLower(item))
+				}
+			</nav>
+		</div>
+	</div>
+}
+
+templ SideBarItem(text string, href string) {
+	<a 
+		href={templ.URL(href)}
+		class="block px-4 py-2 rounded-md text-gray-300 hover:bg-gray-800 hover:text-white transition-colors duration-200"
+	>
+		{text}
+	</a>
+}
+
+templ Breadcrumb(items []string) {
+	<nav class="flex items-center space-x-2 text-sm text-gray-500">
+		for i, item := range items {
+			if i > 0 {
+				<span class="text-gray-400">/</span>
+			}
+			if i == len(items)-1 {
+				<span class="text-gray-900 font-medium">{item}</span>
+			} else {
+				<a href="#" class="hover:text-gray-700">{item}</a>
+			}
+		}
+	</nav>
+}
+
+templ TabNavigation(tabs []string, activeTab string) {
+	<div class="border-b border-gray-200">
+		<nav class="flex space-x-8">
+			for _, tab := range tabs {
+				@Tab(tab, tab == activeTab)
+			}
+		</nav>
+	</div>
+}
+
+templ Tab(text string, active bool) {
+	<button 
+		class={
+			"py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200",
+			templ.KV("border-blue-500 text-blue-600", active),
+			templ.KV("border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300", !active)
+		}
+	>
+		{text}
+	</button>
+}

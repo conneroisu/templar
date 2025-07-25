@@ -1,0 +1,71 @@
+# Git files
+.git
+.gitignore
+.github
+
+# Documentation
+README.md
+CLAUDE.md
+docs/
+specs/
+
+# Development files
+.env
+.env.local
+.env.*.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Build artifacts
+templar
+*.exe
+*.out
+*.test
+*.prof
+coverage.out
+*-coverage.out
+*-bench.txt
+
+# Test files and directories
+test-project/
+integration_tests/
+*_test.go
+testdata/
+test_*.templ
+
+# Logs
+logs/
+*.log
+*.json
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Dependencies (handled by go mod)
+vendor/
+
+# Nix files
+flake.nix
+flake.lock
+result
+result-*
+
+# CI/CD artifacts
+.github/workflows/
+Makefile

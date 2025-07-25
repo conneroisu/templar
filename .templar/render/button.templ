@@ -1,0 +1,15 @@
+package components
+
+templ Button(text string, variant string) {
+	<button class={ "btn", "btn-" + variant, "hover:opacity-80", "transition-opacity" } type="button">
+		{text}
+	</button>
+}
+
+templ PrimaryButton(text string) {
+	@Button(text, "primary")
+}
+
+templ SecondaryButton(text string) {
+	@Button(text, "secondary")
+}

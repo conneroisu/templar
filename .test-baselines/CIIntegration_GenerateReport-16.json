@@ -1,0 +1,15 @@
+{
+  "benchmark_name": "CIIntegration_GenerateReport-16",
+  "samples": [
+    107.6,
+    110.1,
+    124.6
+  ],
+  "mean": 114.09999999999998,
+  "median": 110.1,
+  "std_dev": 7.494442385305705,
+  "min": 107.6,
+  "max": 124.6,
+  "last_updated": "2025-07-20T10:23:47.76352532-05:00",
+  "sample_count": 3
+}

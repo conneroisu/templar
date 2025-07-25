@@ -1,0 +1,511 @@
+package server
+
+import (
+	"context"
+	"sync"
+	"testing"
+	"time"
+
+	"github.com/coder/websocket"
+	"github.com/conneroisu/templar/internal/config"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+// TestMemoryLeakPreventionManager_BasicLifecycle tests basic connection lifecycle
+func TestMemoryLeakPreventionManager_BasicLifecycle(t *testing.T) {
+	cfg := &config.Config{
+		Server: config.ServerConfig{
+			MaxWebSocketConnections: 10,
+		},
+		Timeouts: config.TimeoutConfig{
+			WebSocket:        30 * time.Second,
+			WebSocketCleanup: 1 * time.Second,
+		},
+	}
+	
+	manager := NewMemoryLeakPreventionManager(cfg)
+	defer manager.Shutdown(context.Background())
+	
+	// Test initial state
+	metrics := manager.GetMemoryMetrics()
+	assert.Equal(t, int64(0), metrics.ActiveConnections)
+	assert.True(t, manager.IsHealthy())
+	
+	// Create mock connection
+	mockConn := &mockWebSocketConn{}
+	
+	// Register connection
+	connInfo, err := manager.RegisterConnection(mockConn, "192.168.1.100:12345")
+	require.NoError(t, err)
+	require.NotNil(t, connInfo)
+	assert.True(t, connInfo.IsActive)
+	assert.Equal(t, "192.168.1.100:12345", connInfo.RemoteAddr)
+	
+	// Verify metrics updated
+	metrics = manager.GetMemoryMetrics()
+	assert.Equal(t, int64(1), metrics.ActiveConnections)
+	assert.Equal(t, int64(1), metrics.TotalConnections)
+	
+	// Unregister connection
+	err = manager.UnregisterConnection(connInfo.ID)
+	assert.NoError(t, err)
+	
+	// Verify cleanup
+	metrics = manager.GetMemoryMetrics()
+	assert.Equal(t, int64(0), metrics.ActiveConnections)
+	assert.Equal(t, int64(1), metrics.CleanedConnections)
+}
+
+// TestMemoryLeakPreventionManager_ConnectionLimit tests connection limit enforcement
+func TestMemoryLeakPreventionManager_ConnectionLimit(t *testing.T) {
+	cfg := &config.Config{
+		Server: config.ServerConfig{
+			MaxWebSocketConnections: 2, // Low limit for testing
+		},
+		Timeouts: config.TimeoutConfig{
+			WebSocket:        30 * time.Second,
+			WebSocketCleanup: 1 * time.Second,
+		},
+	}
+	
+	manager := NewMemoryLeakPreventionManager(cfg)
+	defer manager.Shutdown(context.Background())
+	
+	var connections []*ConnectionInfo
+	
+	// Register up to limit
+	for i := 0; i < 2; i++ {
+		mockConn := &mockWebSocketConn{}
+		connInfo, err := manager.RegisterConnection(mockConn, "192.168.1.100:1234"+string(rune(i)))
+		require.NoError(t, err)
+		connections = append(connections, connInfo)
+	}
+	
+	// Verify limit reached
+	metrics := manager.GetMemoryMetrics()
+	assert.Equal(t, int64(2), metrics.ActiveConnections)
+	
+	// Try to exceed limit
+	mockConn := &mockWebSocketConn{}
+	connInfo, err := manager.RegisterConnection(mockConn, "192.168.1.100:12347")
+	assert.Error(t, err)
+	assert.Nil(t, connInfo)
+	assert.Contains(t, err.Error(), "connection limit exceeded")
+	
+	// Verify failed connection metric
+	metrics = manager.GetMemoryMetrics()
+	assert.Equal(t, int64(1), metrics.FailedConnections)
+	
+	// Clean up
+	for _, conn := range connections {
+		manager.UnregisterConnection(conn.ID)
+	}
+}
+
+// TestMemoryLeakPreventionManager_TimeoutCleanup tests automatic timeout cleanup
+func TestMemoryLeakPreventionManager_TimeoutCleanup(t *testing.T) {
+	cfg := &config.Config{
+		Server: config.ServerConfig{
+			MaxWebSocketConnections: 10,
+		},
+		Timeouts: config.TimeoutConfig{
+			WebSocket:        100 * time.Millisecond, // Very short timeout for testing
+			WebSocketCleanup: 50 * time.Millisecond,  // Frequent cleanup
+		},
+	}
+	
+	manager := NewMemoryLeakPreventionManager(cfg)
+	defer manager.Shutdown(context.Background())
+	
+	// Register connection
+	mockConn := &mockWebSocketConn{}
+	connInfo, err := manager.RegisterConnection(mockConn, "192.168.1.100:12345")
+	require.NoError(t, err)
+	
+	// Verify connection is active
+	metrics := manager.GetMemoryMetrics()
+	assert.Equal(t, int64(1), metrics.ActiveConnections)
+	
+	// Wait for timeout and cleanup
+	time.Sleep(200 * time.Millisecond)
+	
+	// Verify connection was cleaned up automatically
+	metrics = manager.GetMemoryMetrics()
+	assert.Equal(t, int64(0), metrics.ActiveConnections)
+	assert.Equal(t, int64(1), metrics.TimeoutConnections)
+	assert.Greater(t, metrics.CleanupOperations, int64(0))
+	
+	// Verify connection info is no longer accessible
+	_, exists := manager.GetConnectionInfo(connInfo.ID)
+	assert.False(t, exists)
+}
+
+// TestMemoryLeakPreventionManager_ActivityUpdates tests activity tracking
+func TestMemoryLeakPreventionManager_ActivityUpdates(t *testing.T) {
+	cfg := &config.Config{
+		Server: config.ServerConfig{
+			MaxWebSocketConnections: 10,
+		},
+		Timeouts: config.TimeoutConfig{
+			WebSocket:        200 * time.Millisecond,
+			WebSocketCleanup: 50 * time.Millisecond,
+		},
+	}
+	
+	manager := NewMemoryLeakPreventionManager(cfg)
+	defer manager.Shutdown(context.Background())
+	
+	// Register connection
+	mockConn := &mockWebSocketConn{}
+	connInfo, err := manager.RegisterConnection(mockConn, "192.168.1.100:12345")
+	require.NoError(t, err)
+	
+	// Wait half the timeout period
+	time.Sleep(100 * time.Millisecond)
+	
+	// Update activity to prevent timeout
+	manager.UpdateConnectionActivity(connInfo.ID)
+	
+	// Wait another half timeout period
+	time.Sleep(100 * time.Millisecond)
+	
+	// Connection should still be active due to activity update
+	metrics := manager.GetMemoryMetrics()
+	assert.Equal(t, int64(1), metrics.ActiveConnections)
+	
+	// Now wait for full timeout without activity
+	time.Sleep(250 * time.Millisecond)
+	
+	// Connection should now be cleaned up
+	metrics = manager.GetMemoryMetrics()
+	assert.Equal(t, int64(0), metrics.ActiveConnections)
+	assert.Equal(t, int64(1), metrics.TimeoutConnections)
+}
+
+// TestMemoryLeakPreventionManager_ConcurrentOperations tests thread safety
+func TestMemoryLeakPreventionManager_ConcurrentOperations(t *testing.T) {
+	cfg := &config.Config{
+		Server: config.ServerConfig{
+			MaxWebSocketConnections: 100,
+		},
+		Timeouts: config.TimeoutConfig{
+			WebSocket:        1 * time.Second,
+			WebSocketCleanup: 100 * time.Millisecond,
+		},
+	}
+	
+	manager := NewMemoryLeakPreventionManager(cfg)
+	defer manager.Shutdown(context.Background())
+	
+	const numGoroutines = 10
+	const operationsPerGoroutine = 20
+	
+	var wg sync.WaitGroup
+	connectionIDs := make(chan string, numGoroutines*operationsPerGoroutine)
+	
+	// Concurrent connection registration
+	for i := 0; i < numGoroutines; i++ {
+		wg.Add(1)
+		go func(workerID int) {
+			defer wg.Done()
+			
+			for j := 0; j < operationsPerGoroutine; j++ {
+				mockConn := &mockWebSocketConn{}
+				remoteAddr := fmt.Sprintf("192.168.1.%d:%d", workerID, j)
+				
+				connInfo, err := manager.RegisterConnection(mockConn, remoteAddr)
+				if err == nil {
+					connectionIDs <- connInfo.ID
+					
+					// Update activity randomly
+					if j%3 == 0 {
+						manager.UpdateConnectionActivity(connInfo.ID)
+					}
+				}
+			}
+		}(i)
+	}
+	
+	wg.Wait()
+	close(connectionIDs)
+	
+	// Collect all connection IDs
+	var allConnIDs []string
+	for connID := range connectionIDs {
+		allConnIDs = append(allConnIDs, connID)
+	}
+	
+	// Verify concurrent operations worked
+	metrics := manager.GetMemoryMetrics()
+	assert.Equal(t, int64(len(allConnIDs)), metrics.ActiveConnections)
+	assert.Greater(t, metrics.TotalConnections, int64(0))
+	
+	// Concurrent unregistration
+	var cleanupWg sync.WaitGroup
+	for _, connID := range allConnIDs {
+		cleanupWg.Add(1)
+		go func(id string) {
+			defer cleanupWg.Done()
+			manager.UnregisterConnection(id)
+		}(connID)
+	}
+	
+	cleanupWg.Wait()
+	
+	// Verify all connections were cleaned up
+	metrics = manager.GetMemoryMetrics()
+	assert.Equal(t, int64(0), metrics.ActiveConnections)
+	assert.Equal(t, int64(len(allConnIDs)), metrics.CleanedConnections)
+}
+
+// TestMemoryLeakPreventionManager_ForceCleanup tests manual cleanup functionality
+func TestMemoryLeakPreventionManager_ForceCleanup(t *testing.T) {
+	cfg := &config.Config{
+		Server: config.ServerConfig{
+			MaxWebSocketConnections: 10,
+		},
+		Timeouts: config.TimeoutConfig{
+			WebSocket:        50 * time.Millisecond, // Short timeout
+			WebSocketCleanup: 10 * time.Second,      // Long cleanup interval
+		},
+	}
+	
+	manager := NewMemoryLeakPreventionManager(cfg)
+	defer manager.Shutdown(context.Background())
+	
+	// Register multiple connections
+	var connectionIDs []string
+	for i := 0; i < 5; i++ {
+		mockConn := &mockWebSocketConn{}
+		connInfo, err := manager.RegisterConnection(mockConn, fmt.Sprintf("192.168.1.100:1234%d", i))
+		require.NoError(t, err)
+		connectionIDs = append(connectionIDs, connInfo.ID)
+	}
+	
+	// Verify connections are registered
+	metrics := manager.GetMemoryMetrics()
+	assert.Equal(t, int64(5), metrics.ActiveConnections)
+	
+	// Wait for connections to become stale
+	time.Sleep(100 * time.Millisecond)
+	
+	// Force cleanup manually
+	cleanedCount := manager.ForceCleanupStaleConnections()
+	
+	// Verify force cleanup worked
+	assert.Equal(t, 5, cleanedCount)
+	metrics = manager.GetMemoryMetrics()
+	assert.Equal(t, int64(0), metrics.ActiveConnections)
+	assert.Equal(t, int64(5), metrics.TimeoutConnections)
+	assert.Equal(t, int64(1), metrics.ForceCleanups)
+}
+
+// TestMemoryLeakPreventionManager_Shutdown tests graceful shutdown
+func TestMemoryLeakPreventionManager_Shutdown(t *testing.T) {
+	cfg := &config.Config{
+		Server: config.ServerConfig{
+			MaxWebSocketConnections: 10,
+		},
+		Timeouts: config.TimeoutConfig{
+			WebSocket:        30 * time.Second,
+			WebSocketCleanup: 1 * time.Second,
+		},
+	}
+	
+	manager := NewMemoryLeakPreventionManager(cfg)
+	
+	// Register connections
+	var connectionIDs []string
+	for i := 0; i < 3; i++ {
+		mockConn := &mockWebSocketConn{}
+		connInfo, err := manager.RegisterConnection(mockConn, fmt.Sprintf("192.168.1.100:1234%d", i))
+		require.NoError(t, err)
+		connectionIDs = append(connectionIDs, connInfo.ID)
+	}
+	
+	// Verify connections are active
+	metrics := manager.GetMemoryMetrics()
+	assert.Equal(t, int64(3), metrics.ActiveConnections)
+	assert.True(t, manager.IsHealthy())
+	
+	// Shutdown manager
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	
+	err := manager.Shutdown(ctx)
+	assert.NoError(t, err)
+	
+	// Verify shutdown state
+	assert.True(t, manager.isShutdown)
+	assert.False(t, manager.IsHealthy())
+	
+	// Verify all connections were cleaned up
+	metrics = manager.GetMemoryMetrics()
+	assert.Equal(t, int64(0), metrics.ActiveConnections)
+	
+	// Verify new connections are rejected
+	mockConn := &mockWebSocketConn{}
+	connInfo, err := manager.RegisterConnection(mockConn, "192.168.1.100:99999")
+	assert.Error(t, err)
+	assert.Nil(t, connInfo)
+	assert.Contains(t, err.Error(), "shutting down")
+}
+
+// TestMemoryLeakPreventionManager_HealthCheck tests health monitoring
+func TestMemoryLeakPreventionManager_HealthCheck(t *testing.T) {
+	cfg := &config.Config{
+		Server: config.ServerConfig{
+			MaxWebSocketConnections: 10,
+		},
+		Timeouts: config.TimeoutConfig{
+			WebSocket:        30 * time.Second,
+			WebSocketCleanup: 100 * time.Millisecond,
+		},
+	}
+	
+	manager := NewMemoryLeakPreventionManager(cfg)
+	defer manager.Shutdown(context.Background())
+	
+	// Initially healthy
+	assert.True(t, manager.IsHealthy())
+	
+	// Add connections up to near limit (80%)
+	for i := 0; i < 8; i++ {
+		mockConn := &mockWebSocketConn{}
+		_, err := manager.RegisterConnection(mockConn, fmt.Sprintf("192.168.1.100:1234%d", i))
+		require.NoError(t, err)
+	}
+	
+	// Still healthy at 80%
+	assert.True(t, manager.IsHealthy())
+	
+	// Add more connections to exceed 90% threshold
+	for i := 8; i < 10; i++ {
+		mockConn := &mockWebSocketConn{}
+		_, err := manager.RegisterConnection(mockConn, fmt.Sprintf("192.168.1.100:1234%d", i))
+		require.NoError(t, err)
+	}
+	
+	// Now should be unhealthy due to high connection ratio
+	time.Sleep(50 * time.Millisecond) // Allow cleanup cycle
+	isHealthy := manager.IsHealthy()
+	
+	// Health check should consider connection ratio
+	metrics := manager.GetMemoryMetrics()
+	connectionRatio := float64(metrics.ActiveConnections) / float64(10)
+	
+	if connectionRatio >= 0.9 {
+		assert.False(t, isHealthy)
+	} else {
+		assert.True(t, isHealthy)
+	}
+}
+
+// TestMemoryLeakPreventionManager_MetricsAccuracy tests metrics calculation accuracy
+func TestMemoryLeakPreventionManager_MetricsAccuracy(t *testing.T) {
+	cfg := &config.Config{
+		Server: config.ServerConfig{
+			MaxWebSocketConnections: 10,
+		},
+		Timeouts: config.TimeoutConfig{
+			WebSocket:        1 * time.Second,
+			WebSocketCleanup: 100 * time.Millisecond,
+		},
+	}
+	
+	manager := NewMemoryLeakPreventionManager(cfg)
+	defer manager.Shutdown(context.Background())
+	
+	// Register connections with known pattern
+	connectionCount := 5
+	for i := 0; i < connectionCount; i++ {
+		mockConn := &mockWebSocketConn{}
+		_, err := manager.RegisterConnection(mockConn, fmt.Sprintf("192.168.1.100:1234%d", i))
+		require.NoError(t, err)
+	}
+	
+	// Verify metrics accuracy
+	metrics := manager.GetMemoryMetrics()
+	assert.Equal(t, int64(connectionCount), metrics.ActiveConnections)
+	assert.Equal(t, int64(connectionCount), metrics.TotalConnections)
+	assert.Equal(t, int64(connectionCount*2), metrics.ActiveGoroutines) // read + write per connection
+	assert.Greater(t, metrics.MemoryUsageBytes, int64(0))
+	assert.Greater(t, metrics.AverageConnectionAge, time.Duration(0))
+	
+	// Unregister half the connections
+	connections := manager.ListActiveConnections()
+	for i := 0; i < len(connections)/2; i++ {
+		manager.UnregisterConnection(connections[i])
+	}
+	
+	// Verify metrics updated correctly
+	metrics = manager.GetMemoryMetrics()
+	expectedActive := int64(connectionCount - connectionCount/2)
+	assert.Equal(t, expectedActive, metrics.ActiveConnections)
+	assert.Equal(t, int64(connectionCount), metrics.TotalConnections) // Total doesn't decrease
+	assert.Equal(t, int64(connectionCount/2), metrics.CleanedConnections)
+}
+
+// Mock WebSocket connection for testing
+type mockWebSocketConn struct {
+	closed bool
+}
+
+func (m *mockWebSocketConn) Close(code websocket.StatusCode, reason string) error {
+	m.closed = true
+	return nil
+}
+
+func (m *mockWebSocketConn) Read(ctx context.Context) (websocket.MessageType, []byte, error) {
+	return websocket.MessageText, []byte("test"), nil
+}
+
+func (m *mockWebSocketConn) Write(ctx context.Context, typ websocket.MessageType, data []byte) error {
+	return nil
+}
+
+func (m *mockWebSocketConn) Ping(ctx context.Context) error {
+	return nil
+}
+
+func (m *mockWebSocketConn) SetReadLimit(limit int64) {
+	// Mock implementation
+}
+
+// TestWebSocketMemoryMetrics_ThreadSafety tests metrics thread safety
+func TestWebSocketMemoryMetrics_ThreadSafety(t *testing.T) {
+	metrics := &WebSocketMemoryMetrics{}
+	
+	const numGoroutines = 50
+	const operationsPerGoroutine = 100
+	
+	var wg sync.WaitGroup
+	
+	// Concurrent metric updates
+	for i := 0; i < numGoroutines; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			
+			for j := 0; j < operationsPerGoroutine; j++ {
+				// Simulate metric updates
+				metrics.mutex.Lock()
+				metrics.ActiveConnections++
+				metrics.TotalConnections++
+				metrics.CleanedConnections++
+				metrics.LastCleanupTime = time.Now()
+				metrics.mutex.Unlock()
+			}
+		}()
+	}
+	
+	wg.Wait()
+	
+	// Verify final values
+	expectedValue := int64(numGoroutines * operationsPerGoroutine)
+	assert.Equal(t, expectedValue, metrics.ActiveConnections)
+	assert.Equal(t, expectedValue, metrics.TotalConnections)
+	assert.Equal(t, expectedValue, metrics.CleanedConnections)
+	assert.False(t, metrics.LastCleanupTime.IsZero())
+}

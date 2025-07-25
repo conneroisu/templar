@@ -1,0 +1,82 @@
+package examples
+
+import "fmt"
+
+templ Dashboard(title string, userCount int) {
+	<div class="min-h-screen bg-gray-100">
+		<div class="bg-white shadow">
+			<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+				<div class="flex justify-between items-center py-6">
+					<h1 class="text-3xl font-bold text-gray-900">{title}</h1>
+					<div class="flex items-center space-x-4">
+						@StatusBadge("Online", "green")
+						@UserProfile("John Doe")
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+				@MetricCard("Users", fmt.Sprintf("%d", userCount), "bg-blue-500")
+				@MetricCard("Revenue", "$42,500", "bg-green-500")
+				@MetricCard("Orders", "1,234", "bg-purple-500")
+			</div>
+
+			<div class="mt-8 bg-white rounded-lg shadow p-6">
+				<h2 class="text-xl font-semibold text-gray-900 mb-4">Recent Activity</h2>
+				@ActivityFeed()
+			</div>
+		</div>
+	</div>
+}
+
+templ MetricCard(title string, value string, bgColor string) {
+	<div class="bg-white rounded-lg shadow p-6">
+		<div class="flex items-center">
+			<div class={ "w-4 h-4 rounded-full mr-3", bgColor }></div>
+			<div>
+				<p class="text-sm font-medium text-gray-600">{title}</p>
+				<p class="text-2xl font-bold text-gray-900">{value}</p>
+			</div>
+		</div>
+	</div>
+}
+
+templ StatusBadge(status string, color string) {
+	<span class={ "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium", 
+		templ.KV("bg-green-100 text-green-800", color == "green"),
+		templ.KV("bg-red-100 text-red-800", color == "red"),
+		templ.KV("bg-yellow-100 text-yellow-800", color == "yellow")
+	}>
+		{status}
+	</span>
+}
+
+templ UserProfile(name string) {
+	<div class="flex items-center space-x-2">
+		<div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+			<span class="text-sm font-medium text-gray-600">{name[0:1]}</span>
+		</div>
+		<span class="text-sm font-medium text-gray-700">{name}</span>
+	</div>
+}
+
+templ ActivityFeed() {
+	<div class="space-y-4">
+		@ActivityItem("User registered", "2 minutes ago", "text-blue-600")
+		@ActivityItem("Order completed", "5 minutes ago", "text-green-600")
+		@ActivityItem("Payment received", "8 minutes ago", "text-purple-600")
+		@ActivityItem("User logged in", "12 minutes ago", "text-gray-600")
+	</div>
+}
+
+templ ActivityItem(action string, time string, textColor string) {
+	<div class="flex items-center space-x-3">
+		<div class="w-2 h-2 bg-current rounded-full"></div>
+		<div class="flex-1">
+			<p class={ "text-sm font-medium", textColor }>{action}</p>
+			<p class="text-xs text-gray-500">{time}</p>
+		</div>
+	</div>
+}

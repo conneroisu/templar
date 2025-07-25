@@ -1,0 +1,27 @@
+package components
+
+templ Card(title string, content string) {
+	<div class="card">
+		<div class="card-header">
+			<h3>{title}</h3>
+		</div>
+		<div class="card-body">
+			<p>{content}</p>
+		</div>
+	</div>
+}
+
+templ CardWithActions(title string, content string) {
+	<div class="card">
+		<div class="card-header">
+			<h3>{title}</h3>
+		</div>
+		<div class="card-body">
+			<p>{content}</p>
+		</div>
+		<div class="card-footer">
+			@PrimaryButton("Save")
+			@SecondaryButton("Cancel")
+		</div>
+	</div>
+}

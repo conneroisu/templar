@@ -1,0 +1,112 @@
+name: 📚 Documentation Issue
+description: Report issues or suggest improvements to documentation
+title: '[DOCS] '
+labels: ['documentation', 'good-first-issue']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Help us improve Templar's documentation! Whether it's fixing typos, clarifying instructions, or adding new content, your contribution is valuable.
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: Documentation Type
+      description: What type of documentation needs attention?
+      options:
+        - README.md
+        - API Documentation
+        - CLI Help/Usage
+        - Installation Guide
+        - Getting Started Tutorial
+        - Architecture/Design Docs
+        - Contributing Guidelines
+        - Code Comments
+        - Examples/Demos
+        - Configuration Reference
+        - Troubleshooting Guide
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: issue_type
+    attributes:
+      label: Issue Type
+      description: What kind of documentation issue is this?
+      options:
+        - Missing Information
+        - Incorrect/Outdated Information
+        - Unclear Instructions
+        - Typo/Grammar
+        - Broken Links
+        - Missing Examples
+        - Formatting Issues
+        - Accessibility Improvement
+        - Translation
+        - New Documentation Request
+    validations:
+      required: true
+
+  - type: input
+    id: location
+    attributes:
+      label: Document Location
+      description: Which file or section needs attention?
+      placeholder: docs/getting-started.md, README.md section "Installation", CLI help for `templar serve`
+    validations:
+      required: true
+
+  - type: textarea
+    id: current_content
+    attributes:
+      label: Current Content
+      description: What does the current documentation say? (paste relevant section if applicable)
+      render: markdown
+      placeholder: |
+        Current documentation states:
+        "Run templar init to get started..."
+
+  - type: textarea
+    id: issue_description
+    attributes:
+      label: Issue Description
+      description: What's wrong or missing?
+      placeholder: |
+        The current documentation is unclear because...
+        This information is missing...
+        This step doesn't work because...
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggested_improvement
+    attributes:
+      label: Suggested Improvement
+      description: How should this be fixed or improved?
+      placeholder: |
+        The documentation should clarify that...
+        Add a section explaining...
+        Update the example to show...
+        Include a note about...
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Any other information that might help
+      placeholder: |
+        This confused me when...
+        Similar projects document this by...
+        Users might also need to know...
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution Offer
+      description: Are you willing to help with this documentation improvement?
+      options:
+        - label: I'd like to submit a PR to fix this
+        - label: I can provide more detailed suggestions
+        - label: I can help review proposed changes
+        - label: I can provide examples or use cases

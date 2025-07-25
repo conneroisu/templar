@@ -1,0 +1,15 @@
+{
+  "benchmark_name": "PerformanceDetector_ParseBenchmarkOutput-16",
+  "samples": [
+    125157,
+    135717,
+    141344
+  ],
+  "mean": 134072.66666666666,
+  "median": 135717,
+  "std_dev": 6709.824455395404,
+  "min": 125157,
+  "max": 141344,
+  "last_updated": "2025-07-20T10:23:47.763648032-05:00",
+  "sample_count": 3
+}

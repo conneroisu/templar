@@ -1,0 +1,39 @@
+server:
+  port: 3000
+  host: "0.0.0.0"
+  open: false
+  middleware: ["cors", "logging", "security", "ratelimit"]
+
+security:
+  csp:
+    default_src: ["'self'"]
+    script_src: ["'self'", "'unsafe-inline'"]
+    style_src: ["'self'", "'unsafe-inline'"]
+  cors:
+    allowed_origins: ["http://localhost:3000"]
+    allowed_methods: ["GET", "POST"]
+
+rate_limit:
+  requests_per_minute: 100
+  burst: 10
+
+components:
+  scan_paths: ["./components", "./layouts"]
+  auto_discovery: true
+  mock_data: "auto"
+
+preview:
+  wrapper: "layouts/preview.templ"
+  auto_props: true
+  sandbox: true
+
+performance:
+  worker_pool_size: 8
+  cache_size: 1000
+  enable_optimization: true
+
+logging:
+  level: "info"
+  format: "json"
+  outputs: ["stdout", "file"]
+  file_path: "./logs/templar.log"

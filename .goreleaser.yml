@@ -1,0 +1,134 @@
+version: 2
+
+# Build configuration
+before:
+  hooks:
+    - go mod tidy
+    - go generate ./...
+
+builds:
+  - id: templar
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    main: ./main.go
+    binary: templar
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.buildTime={{.Date}}
+      - -X main.gitCommit={{.FullCommit}}
+
+# Archive configuration
+archives:
+  - name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    files:
+      - README.md
+
+# Checksum generation
+checksum:
+  name_template: 'checksums.txt'
+
+# Changelog configuration
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'
+      - '^ci:'
+  groups:
+    - title: Features
+      regexp: '^.*feat[(\\w)]*:.*$'
+      order: 0
+    - title: 'Bug fixes'
+      regexp: '^.*fix[(\\w)]*:.*$'
+      order: 1
+    - title: 'Security'
+      regexp: '^.*sec[(\\w)]*:.*$'
+      order: 2
+    - title: Others
+      order: 999
+
+# Release configuration
+release:
+  github:
+    owner: conneroisu
+    name: templar
+  draft: false
+  prerelease: auto
+  mode: replace
+  header: |
+    ## Templar {{ .Tag }}
+    
+    Welcome to this new release of Templar! 
+    
+    ### What's Changed
+  footer: |
+    **Full Changelog**: https://github.com/conneroisu/templar/compare/{{ .PreviousTag }}...{{ .Tag }}
+    
+    ### Installation
+    
+    #### Using Go
+    ```bash
+    go install github.com/conneroisu/templar@{{ .Tag }}
+    ```
+    
+    #### Download Binary
+    Download the appropriate binary for your platform from the assets below.
+
+# Docker image configuration (disabled for now)
+# dockers:
+#   - image_templates:
+#       - "ghcr.io/conneroisu/templar:{{ .Tag }}"
+#       - "ghcr.io/conneroisu/templar:latest"
+#     dockerfile: Dockerfile
+#     use: buildx
+#     build_flag_templates:
+#       - "--platform=linux/amd64"
+#       - "--label=org.opencontainers.image.created={{.Date}}"
+#       - "--label=org.opencontainers.image.title={{.ProjectName}}"
+#       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+#       - "--label=org.opencontainers.image.version={{.Version}}"
+#       - "--label=org.opencontainers.image.source={{.GitURL}}"
+
+# Homebrew tap configuration (optional)
+brews:
+  - name: templar
+    repository:
+      owner: conneroisu
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: "https://github.com/conneroisu/templar"
+    description: "Rapid prototyping CLI tool for Go templ with browser preview and hot reload"
+    license: "MIT"
+    skip_upload: auto
+    test: |
+      system "#{bin}/templar --version"
+
+# Windows package manager (optional - can be added later)
+# scoop:
+#   bucket:
+#     owner: conneroisu
+#     name: scoop-bucket
+#     token: "{{ .Env.SCOOP_BUCKET_GITHUB_TOKEN }}"
+#   directory: bucket
+#   homepage: "https://github.com/conneroisu/templar"
+#   description: "Rapid prototyping CLI tool for Go templ with browser preview and hot reload"
+#   license: "MIT"
+#   skip_upload: auto

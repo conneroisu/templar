@@ -1,0 +1,9 @@
+monitoring:
+  enabled: true
+  log_level: info
+  log_format: json
+server:
+  port: 8080
+  host: localhost
+components:
+  scan_paths: ["./test-components"]

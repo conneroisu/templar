@@ -1,0 +1,42 @@
+package components
+
+type FormFieldProps struct {
+	Name        string
+	Type        string
+	Label       string
+	Placeholder string
+	Required    bool
+	Value       string
+	Error       string
+}
+
+templ FormField(props FormFieldProps) {
+	<div class="form-field">
+		<label for={ props.Name } class="form-label">
+			{ props.Label }
+			if props.Required {
+				<span class="required">*</span>
+			}
+		</label>
+		<input
+			type={ props.Type }
+			id={ props.Name }
+			name={ props.Name }
+			placeholder={ props.Placeholder }
+			value={ props.Value }
+			required?={ props.Required }
+			class={ getInputClasses(props) }
+		/>
+		if props.Error != "" {
+			<span class="form-error">{ props.Error }</span>
+		}
+	</div>
+}
+
+func getInputClasses(props FormFieldProps) string {
+	classes := "form-input"
+	if props.Error != "" {
+		classes += " form-input-error"
+	}
+	return classes
+}

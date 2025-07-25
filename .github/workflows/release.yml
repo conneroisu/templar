@@ -1,0 +1,386 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        type: string
+
+env:
+  GO_VERSION: "1.24"
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  validate-release:
+    name: Validate Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      is-prerelease: ${{ steps.version.outputs.is-prerelease }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/}"
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          
+          # Check if this is a prerelease (contains alpha, beta, rc)
+          if [[ "$VERSION" =~ (alpha|beta|rc) ]]; then
+            echo "is-prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "is-prerelease=false" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "Releasing version: $VERSION"
+          echo "Is prerelease: ${{ steps.version.outputs.is-prerelease }}"
+
+      - name: Validate version format
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+(\.[0-9]+)?)?$ ]]; then
+            echo "Invalid version format: $VERSION"
+            echo "Expected format: v1.2.3 or v1.2.3-alpha.1"
+            exit 1
+          fi
+
+      - name: Check if tag exists (for manual dispatch)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "Tag $VERSION already exists"
+            exit 1
+          fi
+
+  run-tests:
+    name: Run Full Test Suite
+    runs-on: ubuntu-latest
+    needs: validate-release
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Generate Go code (templ)
+        run: |
+          go install github.com/a-h/templ/cmd/templ@v0.3.819
+          go generate ./...
+
+      - name: Run comprehensive tests
+        run: |
+          # Run all tests with race detection and coverage
+          go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+          
+          # Run security tests
+          go test -v -tags=security ./cmd/... ./internal/... -timeout=10m
+          
+          # Run benchmarks to ensure no performance regressions
+          go test -bench=. -benchtime=2s ./internal/build/... ./internal/scanner/...
+
+      - name: Check vulnerabilities
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@v1.1.3
+          govulncheck ./...
+
+      - name: Verify build works
+        run: |
+          go build -o templar-test ./
+          ./templar-test --help
+
+  build-binaries:
+    name: Build Release Binaries
+    runs-on: ubuntu-latest
+    needs: [validate-release, run-tests]
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            suffix: linux-amd64
+          - goos: linux
+            goarch: arm64
+            suffix: linux-arm64
+          - goos: darwin
+            goarch: amd64
+            suffix: darwin-amd64
+          - goos: darwin
+            goarch: arm64
+            suffix: darwin-arm64
+          - goos: windows
+            goarch: amd64
+            suffix: windows-amd64.exe
+          - goos: windows
+            goarch: arm64
+            suffix: windows-arm64.exe
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Generate Go code (templ)
+        run: |
+          go install github.com/a-h/templ/cmd/templ@v0.3.819
+          go generate ./...
+
+      - name: Build binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          VERSION="${{ needs.validate-release.outputs.version }}"
+          LDFLAGS="-s -w -X main.version=${VERSION} -X main.buildTime=$(date -u +%Y-%m-%dT%H:%M:%SZ) -X main.gitCommit=${GITHUB_SHA}"
+          
+          go build \
+            -ldflags="${LDFLAGS}" \
+            -o "templar-${{ matrix.suffix }}" \
+            ./
+
+      - name: Test binary
+        if: matrix.goos == 'linux'
+        run: |
+          ./templar-${{ matrix.suffix }} --version
+          ./templar-${{ matrix.suffix }} --help
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: templar-${{ matrix.suffix }}
+          path: templar-${{ matrix.suffix }}
+          retention-days: 1
+
+  build-docker:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    needs: [validate-release, run-tests]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}},value=${{ needs.validate-release.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.validate-release.outputs.version }}
+            type=semver,pattern={{major}},value=${{ needs.validate-release.outputs.version }}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION=${{ needs.validate-release.outputs.version }}
+            BUILD_TIME=${{ github.run_id }}
+            GIT_COMMIT=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [validate-release, run-tests, build-binaries, build-docker]
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download all binary artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p ./release-assets
+          find ./artifacts -name "templar-*" -type f -exec cp {} ./release-assets/ \;
+          ls -la ./release-assets/
+
+      - name: Generate checksums
+        run: |
+          cd ./release-assets
+          sha256sum templar-* > checksums.txt
+          cat checksums.txt
+
+      - name: Generate release notes
+        id: release-notes
+        run: |
+          VERSION="${{ needs.validate-release.outputs.version }}"
+          
+          # Get the previous tag for changelog generation
+          PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+' | head -2 | tail -1 || echo "")
+          
+          echo "## 🚀 Release $VERSION" > release-notes.md
+          echo "" >> release-notes.md
+          
+          if [ -n "$PREVIOUS_TAG" ]; then
+            echo "### 📝 Changes since $PREVIOUS_TAG" >> release-notes.md
+            echo "" >> release-notes.md
+            
+            # Generate changelog from commit messages
+            git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges >> release-notes.md
+            echo "" >> release-notes.md
+          fi
+          
+          echo "" >> release-notes.md
+          echo "### 📦 Assets" >> release-notes.md
+          echo "" >> release-notes.md
+          echo "- **Linux AMD64**: \`templar-linux-amd64\`" >> release-notes.md
+          echo "- **Linux ARM64**: \`templar-linux-arm64\`" >> release-notes.md
+          echo "- **macOS AMD64**: \`templar-darwin-amd64\`" >> release-notes.md
+          echo "- **macOS ARM64**: \`templar-darwin-arm64\`" >> release-notes.md
+          echo "- **Windows AMD64**: \`templar-windows-amd64.exe\`" >> release-notes.md
+          echo "- **Windows ARM64**: \`templar-windows-arm64.exe\`" >> release-notes.md
+          echo "" >> release-notes.md
+          echo "### 🐳 Docker Image" >> release-notes.md
+          echo "" >> release-notes.md
+          echo "\`\`\`bash" >> release-notes.md
+          echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$VERSION" >> release-notes.md
+          echo "\`\`\`" >> release-notes.md
+          echo "" >> release-notes.md
+          echo "### ✅ Verification" >> release-notes.md
+          echo "" >> release-notes.md
+          echo "All binaries have been tested and verified. Check \`checksums.txt\` for file integrity verification." >> release-notes.md
+          
+          cat release-notes.md
+
+      - name: Create tag (for manual dispatch)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          VERSION="${{ needs.validate-release.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$VERSION" -m "Release $VERSION"
+          git push origin "$VERSION"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.validate-release.outputs.version }}
+          name: ${{ needs.validate-release.outputs.version }}
+          body_path: release-notes.md
+          prerelease: ${{ needs.validate-release.outputs.is-prerelease == 'true' }}
+          files: |
+            ./release-assets/templar-*
+            ./release-assets/checksums.txt
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  post-release:
+    name: Post-Release Tasks
+    runs-on: ubuntu-latest
+    needs: [validate-release, create-release]
+    if: success()
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create deployment summary
+        run: |
+          VERSION="${{ needs.validate-release.outputs.version }}"
+          echo "## 🎉 Release $VERSION Successful" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Completed Tasks" >> $GITHUB_STEP_SUMMARY
+          echo "- Full test suite passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Security vulnerability scan completed" >> $GITHUB_STEP_SUMMARY
+          echo "- Multi-platform binaries built and tested" >> $GITHUB_STEP_SUMMARY
+          echo "- Docker images built and pushed to registry" >> $GITHUB_STEP_SUMMARY
+          echo "- GitHub release created with assets" >> $GITHUB_STEP_SUMMARY
+          echo "- Checksums generated for verification" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📝 Release Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: $VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "- **Prerelease**: ${{ needs.validate-release.outputs.is-prerelease }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Docker Registry**: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 [View Release](https://github.com/${{ github.repository }}/releases/tag/$VERSION)" >> $GITHUB_STEP_SUMMARY
+
+  notify-failure:
+    name: Notify on Failure
+    runs-on: ubuntu-latest
+    needs: [validate-release, run-tests, build-binaries, build-docker, create-release]
+    if: failure()
+    steps:
+      - name: Create failure summary
+        run: |
+          echo "## ❌ Release Failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The release process failed. Please check the following:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔍 Check These Jobs:" >> $GITHUB_STEP_SUMMARY
+          echo "- Validate Release: ${{ needs.validate-release.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Run Tests: ${{ needs.run-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Build Binaries: ${{ needs.build-binaries.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Build Docker: ${{ needs.build-docker.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Create Release: ${{ needs.create-release.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🛠️ Next Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Check individual job logs for detailed error information" >> $GITHUB_STEP_SUMMARY
+          echo "2. Fix any issues and re-run the release workflow" >> $GITHUB_STEP_SUMMARY
+          echo "3. Ensure all tests pass locally before triggering release" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Build SHA**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY

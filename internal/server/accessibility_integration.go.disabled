@@ -1,0 +1,434 @@
+package server
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"time"
+
+	"github.com/conneroisu/templar/internal/accessibility"
+	"github.com/conneroisu/templar/internal/interfaces"
+	"github.com/conneroisu/templar/internal/logging"
+	"github.com/conneroisu/templar/internal/renderer"
+)
+
+// AccessibilityEnhancedServer extends the preview server with accessibility features
+type AccessibilityEnhancedServer struct {
+	*PreviewServer
+	accessibilityTester   accessibility.AccessibilityTester
+	realtimeMonitor      *accessibility.RealtimeAccessibilityMonitor
+	accessibilityEnabled bool
+}
+
+// NewAccessibilityEnhancedServer creates a new accessibility-enhanced preview server
+func NewAccessibilityEnhancedServer(
+	registry interfaces.ComponentRegistry,
+	renderer *renderer.ComponentRenderer,
+	logger logging.Logger,
+	enableAccessibility bool,
+) *AccessibilityEnhancedServer {
+	
+	baseServer := NewPreviewServer(registry, renderer, logger)
+	
+	if !enableAccessibility {
+		return &AccessibilityEnhancedServer{
+			PreviewServer:        baseServer,
+			accessibilityEnabled: false,
+		}
+	}
+	
+	// Initialize accessibility tester
+	testerConfig := accessibility.TesterConfig{
+		DefaultWCAGLevel:    accessibility.WCAGLevelAA,
+		DefaultTimeout:      10 * time.Second,
+		EnableRealTimeWarn:  true,
+		MaxConcurrentTests:  5,
+	}
+	
+	accessibilityTester := accessibility.NewComponentAccessibilityTester(
+		registry,
+		renderer,
+		logger,
+		testerConfig,
+	)
+	
+	// Initialize real-time monitor
+	realtimeConfig := accessibility.RealtimeConfig{
+		EnableRealTimeWarnings:  true,
+		WarningSeverityLevel:    accessibility.SeverityWarning,
+		CheckInterval:           5 * time.Second,
+		MaxWarningsPerComponent: 10,
+		EnableAutoFixes:         false, // Disabled by default for safety
+		ShowSuccessMessages:     false,
+	}
+	
+	realtimeMonitor := accessibility.NewRealtimeAccessibilityMonitor(
+		accessibilityTester,
+		logger,
+		realtimeConfig,
+	)
+	
+	return &AccessibilityEnhancedServer{
+		PreviewServer:        baseServer,
+		accessibilityTester:  accessibilityTester,
+		realtimeMonitor:     realtimeMonitor,
+		accessibilityEnabled: true,
+	}
+}
+
+// SetupAccessibilityRoutes adds accessibility-specific HTTP routes
+func (s *AccessibilityEnhancedServer) SetupAccessibilityRoutes() {
+	if !s.accessibilityEnabled {
+		return
+	}
+	
+	// Add accessibility audit endpoint
+	s.mux.HandleFunc("/api/accessibility/audit", s.handleAccessibilityAudit)
+	
+	// Add accessibility status endpoint
+	s.mux.HandleFunc("/api/accessibility/status", s.handleAccessibilityStatus)
+	
+	// Add real-time accessibility WebSocket endpoint
+	s.mux.HandleFunc("/ws/accessibility", s.handleAccessibilityWebSocket)
+	
+	// Add accessibility insights endpoint
+	s.mux.HandleFunc("/api/accessibility/insights", s.handleAccessibilityInsights)
+	
+	// Add accessibility suggestions endpoint
+	s.mux.HandleFunc("/api/accessibility/suggestions", s.handleAccessibilitySuggestions)
+}
+
+// handleAccessibilityAudit handles accessibility audit API requests
+func (s *AccessibilityEnhancedServer) handleAccessibilityAudit(w http.ResponseWriter, r *http.Request) {
+	if !s.accessibilityEnabled {
+		http.Error(w, "Accessibility features not enabled", http.StatusServiceUnavailable)
+		return
+	}
+	
+	switch r.Method {
+	case http.MethodPost:
+		s.handleAccessibilityAuditRequest(w, r)
+	case http.MethodGet:
+		s.handleAccessibilityAuditList(w, r)
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+// handleAccessibilityAuditRequest handles individual component audit requests
+func (s *AccessibilityEnhancedServer) handleAccessibilityAuditRequest(w http.ResponseWriter, r *http.Request) {
+	var req AccessibilityAuditRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid JSON request: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	
+	// Validate component name
+	if req.ComponentName == "" {
+		http.Error(w, "Component name is required", http.StatusBadRequest)
+		return
+	}
+	
+	ctx := r.Context()
+	
+	// Run accessibility audit
+	report, err := s.accessibilityTester.TestComponent(ctx, req.ComponentName, req.Props)
+	if err != nil {
+		s.logger.Error(ctx, err, "Accessibility audit failed", "component", req.ComponentName)
+		http.Error(w, "Accessibility audit failed: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	
+	// Create response
+	response := AccessibilityAuditResponse{
+		Report:    report,
+		Timestamp: time.Now(),
+		Success:   true,
+	}
+	
+	// Add suggestions if requested
+	if req.IncludeSuggestions {
+		insights, err := s.accessibilityTester.(*accessibility.ComponentAccessibilityTester).GetAccessibilityInsights(ctx, req.ComponentName)
+		if err != nil {
+			s.logger.Warn(ctx, err, "Failed to get accessibility insights", "component", req.ComponentName)
+		} else {
+			response.Insights = insights
+		}
+	}
+	
+	s.writeJSONResponse(w, response)
+}
+
+// handleAccessibilityAuditList handles requests for auditing all components
+func (s *AccessibilityEnhancedServer) handleAccessibilityAuditList(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	
+	// Get all components from registry
+	components := s.registry.GetAllComponents()
+	
+	reports := make(map[string]*accessibility.AccessibilityReport)
+	
+	for _, component := range components {
+		// Run audit for each component
+		report, err := s.accessibilityTester.TestComponent(ctx, component.Name, nil)
+		if err != nil {
+			s.logger.Warn(ctx, err, "Failed to audit component", "component", component.Name)
+			continue
+		}
+		
+		reports[component.Name] = report
+	}
+	
+	response := AccessibilityAuditListResponse{
+		Reports:   reports,
+		Timestamp: time.Now(),
+		Success:   true,
+	}
+	
+	s.writeJSONResponse(w, response)
+}
+
+// handleAccessibilityStatus handles accessibility status requests
+func (s *AccessibilityEnhancedServer) handleAccessibilityStatus(w http.ResponseWriter, r *http.Request) {
+	if !s.accessibilityEnabled {
+		http.Error(w, "Accessibility features not enabled", http.StatusServiceUnavailable)
+		return
+	}
+	
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	
+	ctx := r.Context()
+	
+	status, err := s.realtimeMonitor.GetAccessibilityStatus(ctx)
+	if err != nil {
+		s.logger.Error(ctx, err, "Failed to get accessibility status")
+		http.Error(w, "Failed to get accessibility status", http.StatusInternalServerError)
+		return
+	}
+	
+	s.writeJSONResponse(w, status)
+}
+
+// handleAccessibilityWebSocket handles WebSocket connections for real-time accessibility updates
+func (s *AccessibilityEnhancedServer) handleAccessibilityWebSocket(w http.ResponseWriter, r *http.Request) {
+	if !s.accessibilityEnabled {
+		http.Error(w, "Accessibility features not enabled", http.StatusServiceUnavailable)
+		return
+	}
+	
+	// This would integrate with the existing WebSocket infrastructure
+	// For now, we'll create a simplified implementation
+	
+	// Upgrade connection to WebSocket
+	conn, err := s.upgradeToWebSocket(w, r)
+	if err != nil {
+		s.logger.Error(r.Context(), err, "Failed to upgrade WebSocket connection")
+		return
+	}
+	defer conn.Close()
+	
+	// Generate unique subscriber ID
+	subscriberID := fmt.Sprintf("ws_%d", time.Now().UnixNano())
+	
+	// Subscribe to accessibility updates
+	updateChan := s.realtimeMonitor.Subscribe(subscriberID)
+	defer s.realtimeMonitor.Unsubscribe(subscriberID)
+	
+	// Handle WebSocket communication
+	ctx := r.Context()
+	
+	for {
+		select {
+		case update, ok := <-updateChan:
+			if !ok {
+				return // Channel closed
+			}
+			
+			// Send accessibility update to client
+			if err := conn.WriteJSON(update); err != nil {
+				s.logger.Error(ctx, err, "Failed to send accessibility update")
+				return
+			}
+			
+		case <-ctx.Done():
+			return
+		}
+	}
+}
+
+// handleAccessibilityInsights handles accessibility insights requests
+func (s *AccessibilityEnhancedServer) handleAccessibilityInsights(w http.ResponseWriter, r *http.Request) {
+	if !s.accessibilityEnabled {
+		http.Error(w, "Accessibility features not enabled", http.StatusServiceUnavailable)
+		return
+	}
+	
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	
+	componentName := r.URL.Query().Get("component")
+	if componentName == "" {
+		http.Error(w, "Component name parameter required", http.StatusBadRequest)
+		return
+	}
+	
+	ctx := r.Context()
+	
+	insights, err := s.accessibilityTester.(*accessibility.ComponentAccessibilityTester).GetAccessibilityInsights(ctx, componentName)
+	if err != nil {
+		s.logger.Error(ctx, err, "Failed to get accessibility insights", "component", componentName)
+		http.Error(w, "Failed to get accessibility insights", http.StatusInternalServerError)
+		return
+	}
+	
+	s.writeJSONResponse(w, insights)
+}
+
+// handleAccessibilitySuggestions handles accessibility suggestions requests
+func (s *AccessibilityEnhancedServer) handleAccessibilitySuggestions(w http.ResponseWriter, r *http.Request) {
+	if !s.accessibilityEnabled {
+		http.Error(w, "Accessibility features not enabled", http.StatusServiceUnavailable)
+		return
+	}
+	
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	
+	var req AccessibilitySuggestionsRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid JSON request: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	
+	ctx := r.Context()
+	
+	suggestions := []accessibility.AccessibilitySuggestion{}
+	
+	for _, violation := range req.Violations {
+		violationSuggestions, err := s.accessibilityTester.(*accessibility.ComponentAccessibilityTester).GetSuggestions(ctx, violation)
+		if err != nil {
+			s.logger.Warn(ctx, err, "Failed to get suggestions for violation", "violation", violation.ID)
+			continue
+		}
+		
+		suggestions = append(suggestions, violationSuggestions...)
+	}
+	
+	response := AccessibilitySuggestionsResponse{
+		Suggestions: suggestions,
+		Timestamp:   time.Now(),
+	}
+	
+	s.writeJSONResponse(w, response)
+}
+
+// Enhanced playground response with accessibility information
+func (s *AccessibilityEnhancedServer) enhancePlaygroundResponseWithAccessibility(response *PlaygroundResponse, componentName string, props map[string]interface{}) {
+	if !s.accessibilityEnabled {
+		return
+	}
+	
+	// Run quick accessibility check
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	
+	report, err := s.accessibilityTester.TestComponent(ctx, componentName, props)
+	if err != nil {
+		s.logger.Warn(ctx, err, "Failed to run accessibility check for playground", "component", componentName)
+		return
+	}
+	
+	// Add accessibility information to response
+	if response.ComponentMetadata == nil {
+		response.ComponentMetadata = &ComponentMetadata{}
+	}
+	
+	// Add accessibility score and warnings
+	accessibilityInfo := map[string]interface{}{
+		"score":                 report.Summary.OverallScore,
+		"violations_count":      len(report.Violations),
+		"critical_violations":   report.Summary.CriticalImpact,
+		"wcag_level_compliant": getHighestCompliantLevel(report),
+	}
+	
+	// Add to response (would need to extend PlaygroundResponse structure)
+	_ = accessibilityInfo
+	
+	// Trigger real-time check for connected clients
+	if len(report.Violations) > 0 {
+		go s.realtimeMonitor.CheckComponent(ctx, componentName, props)
+	}
+}
+
+// Helper functions
+func (s *AccessibilityEnhancedServer) upgradeToWebSocket(w http.ResponseWriter, r *http.Request) (*WebSocketConnection, error) {
+	// This would integrate with existing WebSocket infrastructure
+	// Placeholder implementation
+	return nil, fmt.Errorf("WebSocket upgrade not implemented")
+}
+
+func (s *AccessibilityEnhancedServer) writeJSONResponse(w http.ResponseWriter, data interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		s.logger.Error(context.Background(), err, "Failed to encode JSON response")
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
+}
+
+func getHighestCompliantLevel(report *accessibility.AccessibilityReport) accessibility.WCAGLevel {
+	if report.Summary.WCAGCompliance.LevelAAA.Status == accessibility.StatusCompliant {
+		return accessibility.WCAGLevelAAA
+	}
+	if report.Summary.WCAGCompliance.LevelAA.Status == accessibility.StatusCompliant {
+		return accessibility.WCAGLevelAA
+	}
+	if report.Summary.WCAGCompliance.LevelA.Status == accessibility.StatusCompliant {
+		return accessibility.WCAGLevelA
+	}
+	return accessibility.WCAGLevelA
+}
+
+// Request/Response types
+type AccessibilityAuditRequest struct {
+	ComponentName       string                 `json:"component_name"`
+	Props               map[string]interface{} `json:"props,omitempty"`
+	WCAGLevel           string                 `json:"wcag_level,omitempty"`
+	IncludeSuggestions  bool                   `json:"include_suggestions,omitempty"`
+	IncludeHTML         bool                   `json:"include_html,omitempty"`
+}
+
+type AccessibilityAuditResponse struct {
+	Report    *accessibility.AccessibilityReport  `json:"report"`
+	Insights  *accessibility.AccessibilityInsights `json:"insights,omitempty"`
+	Timestamp time.Time                           `json:"timestamp"`
+	Success   bool                                `json:"success"`
+}
+
+type AccessibilityAuditListResponse struct {
+	Reports   map[string]*accessibility.AccessibilityReport `json:"reports"`
+	Timestamp time.Time                                     `json:"timestamp"`
+	Success   bool                                          `json:"success"`
+}
+
+type AccessibilitySuggestionsRequest struct {
+	Violations []accessibility.AccessibilityViolation `json:"violations"`
+}
+
+type AccessibilitySuggestionsResponse struct {
+	Suggestions []accessibility.AccessibilitySuggestion `json:"suggestions"`
+	Timestamp   time.Time                               `json:"timestamp"`
+}
+
+// WebSocketConnection placeholder interface
+type WebSocketConnection interface {
+	WriteJSON(v interface{}) error
+	Close() error
+}

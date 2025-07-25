@@ -1,0 +1,33 @@
+package components
+
+type ButtonProps struct {
+	Text     string
+	Variant  string
+	Size     string
+	Disabled bool
+	OnClick  string
+}
+
+templ Button(props ButtonProps) {
+	<button 
+		class={ getButtonClasses(props) }
+		disabled?={ props.Disabled }
+		onclick={ templ.ComponentScript{Call: props.OnClick} }
+	>
+		{ props.Text }
+	</button>
+}
+
+func getButtonClasses(props ButtonProps) string {
+	classes := "btn"
+	if props.Variant != "" {
+		classes += " btn-" + props.Variant
+	}
+	if props.Size != "" {
+		classes += " btn-" + props.Size
+	}
+	if props.Disabled {
+		classes += " btn-disabled"
+	}
+	return classes
+}

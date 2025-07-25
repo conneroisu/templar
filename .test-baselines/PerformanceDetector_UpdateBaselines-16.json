@@ -1,0 +1,15 @@
+{
+  "benchmark_name": "PerformanceDetector_UpdateBaselines-16",
+  "samples": [
+    306790,
+    292242,
+    306313
+  ],
+  "mean": 301781.6666666667,
+  "median": 306313,
+  "std_dev": 6748.373252536907,
+  "min": 292242,
+  "max": 306790,
+  "last_updated": "2025-07-20T10:23:47.763754762-05:00",
+  "sample_count": 3
+}

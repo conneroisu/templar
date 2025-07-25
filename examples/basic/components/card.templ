@@ -1,0 +1,39 @@
+package components
+
+type CardProps struct {
+	Title    string
+	Subtitle string
+	ImageUrl string
+	Padding  string
+	Shadow   bool
+}
+
+templ Card(props CardProps) {
+	<div class={ getCardClasses(props) }>
+		if props.ImageUrl != "" {
+			<img src={ props.ImageUrl } alt={ props.Title } class="card-image"/>
+		}
+		<div class="card-content">
+			if props.Title != "" {
+				<h3 class="card-title">{ props.Title }</h3>
+			}
+			if props.Subtitle != "" {
+				<p class="card-subtitle">{ props.Subtitle }</p>
+			}
+			<div class="card-body">
+				{ children... }
+			</div>
+		</div>
+	</div>
+}
+
+func getCardClasses(props CardProps) string {
+	classes := "card"
+	if props.Shadow {
+		classes += " card-shadow"
+	}
+	if props.Padding != "" {
+		classes += " padding-" + props.Padding
+	}
+	return classes
+}
