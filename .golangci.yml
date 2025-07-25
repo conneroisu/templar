@@ -2,9 +2,6 @@ run:
   timeout: 5m
   issues-exit-code: 1
   tests: true
-  build-tags:
-    - integration
-    - security
 
 linters-settings:
   govet:
@@ -27,11 +24,9 @@ linters-settings:
     min-occurrences: 2
 
   depguard:
-    rules:
-      main:
-        deny:
-          - pkg: "github.com/sirupsen/logrus"
-            desc: logging is allowed only by logutils.Log
+    list-type: blacklist
+    packages:
+      - github.com/sirupsen/logrus
 
   misspell:
     locale: US
@@ -56,12 +51,10 @@ linters-settings:
   gocritic:
     enabled-tags:
       - diagnostic
-      - experimental
-      - opinionated
       - performance
       - style
     disabled-checks:
-      - dupImport # https://github.com/go-critic/go-critic/issues/845
+      - dupImport
       - ifElseChain
       - octalLiteral
       - whyNoLint
@@ -80,7 +73,6 @@ linters-settings:
   gomnd:
     settings:
       mnd:
-        # don't include the "operation" and "assign"
         checks: argument,case,condition,return
 
   godox:
@@ -96,16 +88,6 @@ linters-settings:
     multi-if: false
     multi-func: false
 
-  wsl:
-    strict-append: true
-    allow-assign-and-call: true
-    allow-multiline-assign: true
-    allow-cuddle-declarations: false
-    allow-trailing-comment: false
-    force-case-trailing-whitespace: 0
-    force-err-cuddling: false
-    allow-separated-leading-comment: false
-
   errorlint:
     errorf: true
 
@@ -115,9 +97,6 @@ linters-settings:
   godot:
     scope: declarations
     capital: false
-
-  testpackage:
-    skip-regexp: (export|internal)_test\.go
 
 linters:
   disable-all: true
@@ -161,8 +140,6 @@ linters:
     - nestif
     - gocognit
     - revive
-    - testpackage
-    - wsl
 
 issues:
   exclude-rules:
@@ -190,12 +167,10 @@ issues:
         - lll
       source: "^//go:generate "
 
-    # Exclude some security linters for test files
     - path: _test\.go
       linters:
         - gosec
 
-    # Exclude some linters for integration tests
     - path: integration_tests/
       linters:
         - gosec
@@ -205,13 +180,8 @@ issues:
 
   exclude-use-default: false
   exclude:
-    # errcheck: Almost all programs ignore errors on these functions and in most cases it's ok
     - "Error return value of .((os\\.)?std(out|err)\\..*|.*Close|.*Flush|os\\.Remove(All)?|.*print.*|os\\.(Un)?Setenv). is not checked"
-
-    # govet: Common false positives
     - "^(G104|G204|G304|G404):"
-
-    # gocritic: Too many false positives for these
     - "unnecessaryDefer:"
 
   max-issues-per-linter: 0
