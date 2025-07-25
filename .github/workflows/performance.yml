@@ -38,7 +38,7 @@ jobs:
       run: |
         if [ ! "$(ls -A .performance-baselines)" ]; then
           echo "Creating initial performance baselines..."
-          go run ./cmd/templar performance baseline create \
+          go run . performance baseline create \
             --packages="./internal/scanner,./internal/build,./internal/registry" \
             --baseline-dir=.performance-baselines
         else
@@ -47,7 +47,7 @@ jobs:
       
     - name: Run performance benchmarks and check for regressions
       run: |
-        go run ./cmd/templar performance check \
+        go run . performance check \
           --packages="./internal/scanner,./internal/build,./internal/registry,./internal/performance" \
           --format=github \
           --fail-on-critical \
@@ -68,7 +68,7 @@ jobs:
     - name: Generate performance trend report
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: |
-        go run ./cmd/templar performance report \
+        go run . performance report \
           --packages="./internal/scanner,./internal/build,./internal/registry" \
           --format=json \
           --baseline-dir=.performance-baselines \
@@ -111,7 +111,7 @@ jobs:
             ### Actions:
             - Critical regressions will fail the CI build
             - Review recent changes if regressions are detected
-            - Use \`go run ./cmd/templar performance report\` locally for detailed analysis
+            - Use \`go run . performance report\` locally for detailed analysis
             
             </details>`;
             
