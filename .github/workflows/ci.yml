@@ -45,7 +45,7 @@ jobs:
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v4
         with:
-          version: v1.62.2
+          version: latest
           args: --timeout=5m
 
       - name: Check code formatting
