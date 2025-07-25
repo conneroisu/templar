@@ -383,7 +383,12 @@ func (s *PreviewServer) addMiddleware(handler http.Handler) http.Handler {
 	// Create rate limiting middleware
 	rateLimitConfig := securityConfig.RateLimiting
 	if rateLimitConfig != nil && rateLimitConfig.Enabled {
-		s.rateLimiter = NewRateLimiter(rateLimitConfig, nil)
+		// Protect race condition during server initialization
+		s.shutdownMutex.Lock()
+		if s.rateLimiter == nil {
+			s.rateLimiter = NewRateLimiter(rateLimitConfig, nil)
+		}
+		s.shutdownMutex.Unlock()
 		rateLimitHandler := RateLimitMiddleware(s.rateLimiter)(securityHandler)
 		securityHandler = rateLimitHandler
 	}
@@ -540,8 +545,10 @@ func (s *PreviewServer) Shutdown(ctx context.Context) error {
 		}
 
 		// MEMORY LEAK FIX: Stop rate limiter to clean up goroutines
+		// Protected by shutdownMutex to prevent race with addMiddleware
 		if s.rateLimiter != nil {
 			s.rateLimiter.Stop()
+			s.rateLimiter = nil
 		}
 
 		// Close all WebSocket connections
