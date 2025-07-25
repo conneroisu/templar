@@ -321,9 +321,13 @@ func checkPortAvailability(ctx context.Context, report *DoctorReport) Diagnostic
 		result.Message = "All common development ports are available"
 	} else {
 		result.Message = fmt.Sprintf("Port conflicts detected: %v", conflictPorts)
-		result.Suggestion = fmt.Sprintf("Use alternative ports: %v, or stop conflicting services", availablePorts[:3])
+		maxPorts := len(availablePorts)
+		if maxPorts > 3 {
+			maxPorts = 3
+		}
+		result.Suggestion = fmt.Sprintf("Use alternative ports: %v, or stop conflicting services", availablePorts[:maxPorts])
 
-		if contains(conflictPorts, 8080) {
+		if contains(conflictPorts, 8080) && len(availablePorts) > 0 {
 			result.Suggestion += "\nFor Templar, use: templar serve --port " + fmt.Sprintf("%d", availablePorts[0])
 		}
 	}
