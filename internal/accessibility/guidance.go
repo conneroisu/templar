@@ -524,7 +524,9 @@ func (guide *AccessibilityGuide) getGeneralGuidance() []GuidanceItem {
 func (guide *AccessibilityGuide) GetGuidanceText(rule string) string {
 	items := guide.GetGuidanceForRule(rule)
 	if len(items) == 0 {
-		return fmt.Sprintf("No specific guidance available for rule: %s\n\nGeneral resources:\n• WCAG Quick Reference: https://www.w3.org/WAI/WCAG21/quickref/\n• WebAIM Guidelines: https://webaim.org/", rule)
+		return fmt.Sprintf("No specific guidance available for rule: %s\n\nGeneral resources:\n" +
+			"• WCAG Quick Reference: https://www.w3.org/WAI/WCAG21/quickref/\n" +
+			"• WebAIM Guidelines: https://webaim.org/", rule)
 	}
 
 	var text strings.Builder
@@ -570,7 +572,9 @@ func (guide *AccessibilityGuide) GetGuidanceText(rule string) string {
 func (guide *AccessibilityGuide) GetComponentGuidanceText(componentName string) string {
 	items := guide.GetGuidanceForComponent(componentName)
 	if len(items) == 0 {
-		return fmt.Sprintf("No specific guidance available for component: %s\n\nConsider these general principles:\n• Use semantic HTML elements\n• Provide text alternatives\n• Ensure keyboard accessibility\n• Test with screen readers", componentName)
+		return fmt.Sprintf("No specific guidance available for component: %s\n\nConsider these general principles:\n" +
+			"• Use semantic HTML elements\n• Provide text alternatives\n" +
+			"• Ensure keyboard accessibility\n• Test with screen readers", componentName)
 	}
 
 	var text strings.Builder

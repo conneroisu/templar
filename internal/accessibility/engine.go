@@ -52,8 +52,8 @@ func (engine *DefaultAccessibilityEngine) Initialize(ctx context.Context, config
 
 // Analyze performs accessibility analysis on HTML content
 func (engine *DefaultAccessibilityEngine) Analyze(
-	ctx context.Context, 
-	htmlContent string, 
+	ctx context.Context,
+	htmlContent string,
 	config AuditConfiguration,
 ) (*AccessibilityReport, error) {
 	start := time.Now()
@@ -121,7 +121,7 @@ func (engine *DefaultAccessibilityEngine) Analyze(
 
 // GetSuggestions generates actionable suggestions for violations
 func (engine *DefaultAccessibilityEngine) GetSuggestions(
-	ctx context.Context, 
+	ctx context.Context,
 	violation AccessibilityViolation,
 ) ([]AccessibilitySuggestion, error) {
 	suggestions := []AccessibilitySuggestion{}
@@ -208,8 +208,8 @@ func (engine *DefaultAccessibilityEngine) GetSuggestions(
 
 // AutoFix attempts to automatically fix simple accessibility issues
 func (engine *DefaultAccessibilityEngine) AutoFix(
-	ctx context.Context, 
-	htmlContent string, 
+	ctx context.Context,
+	htmlContent string,
 	violations []AccessibilityViolation,
 ) (string, error) {
 	fixed := htmlContent
@@ -387,9 +387,9 @@ func (engine *DefaultAccessibilityEngine) isRuleApplicableForLevel(rule Accessib
 
 // checkRule runs a specific accessibility rule against elements
 func (engine *DefaultAccessibilityEngine) checkRule(
-	ctx context.Context, 
-	rule AccessibilityRule, 
-	elements []HTMLElement, 
+	ctx context.Context,
+	rule AccessibilityRule,
+	elements []HTMLElement,
 	config AuditConfiguration,
 ) ([]AccessibilityViolation, error) {
 	violations := []AccessibilityViolation{}
@@ -465,8 +465,8 @@ func (engine *DefaultAccessibilityEngine) checkRule(
 
 // createViolation creates a new accessibility violation
 func (engine *DefaultAccessibilityEngine) createViolation(
-	rule AccessibilityRule, 
-	element HTMLElement, 
+	rule AccessibilityRule,
+	element HTMLElement,
 	message string,
 ) AccessibilityViolation {
 	violation := AccessibilityViolation{
@@ -649,8 +649,8 @@ func (engine *DefaultAccessibilityEngine) hasAccessibleName(element HTMLElement)
 }
 
 func (engine *DefaultAccessibilityEngine) generateSummary(
-	violations []AccessibilityViolation, 
-	passedRules []AccessibilityRule, 
+	violations []AccessibilityViolation,
+	passedRules []AccessibilityRule,
 	totalRules []AccessibilityRule,
 ) AccessibilitySummary {
 	summary := AccessibilitySummary{
