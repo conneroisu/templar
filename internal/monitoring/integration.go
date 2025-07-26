@@ -211,7 +211,14 @@ func NewLoggingIntegration(monitor *Monitor, logger logging.Logger) *LoggingInte
 // Metrics recorded:
 // - "templar_errors_total" with labels category=component, component=operation
 // - "templar_log_entries_total" with labels level=LogLevel, component=component
-func (li *LoggingIntegration) LogWithMetrics(ctx context.Context, level logging.LogLevel, component, operation string, err error, message string, fields ...interface{}) {
+func (li *LoggingIntegration) LogWithMetrics(
+	ctx context.Context, 
+	level logging.LogLevel, 
+	component, operation string, 
+	err error, 
+	message string, 
+	fields ...interface{},
+) {
 	// Record monitoring metrics if monitor is available
 	if li.monitor != nil && li.monitor.appMetrics != nil {
 		if err != nil {

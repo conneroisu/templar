@@ -316,7 +316,9 @@ func (w *ConfigWizard) configurePlugins() error {
 	// Suggest tailwind if detected or for web projects
 	tailwindDefault := false
 	if w.detectedStructure != nil {
-		tailwindDefault = w.detectedStructure.HasTailwindCSS || w.detectedStructure.ProjectType == "web" || w.detectedStructure.ProjectType == "fullstack"
+		tailwindDefault = w.detectedStructure.HasTailwindCSS ||
+			w.detectedStructure.ProjectType == "web" ||
+			w.detectedStructure.ProjectType == "fullstack"
 	}
 	if tailwindDefault {
 		fmt.Println("💡 Tailwind CSS detected or recommended for web projects")
