@@ -33,7 +33,10 @@ type TaskQueueManager struct {
 
 // NewTaskQueueManager creates a new task queue manager with the specified
 // buffer sizes and metrics tracking.
-func NewTaskQueueManager(taskBufferSize, resultBufferSize, priorityBufferSize int, metrics *BuildMetrics) *TaskQueueManager {
+func NewTaskQueueManager(
+	taskBufferSize, resultBufferSize, priorityBufferSize int,
+	metrics *BuildMetrics,
+) *TaskQueueManager {
 	return &TaskQueueManager{
 		tasks:    make(chan BuildTask, taskBufferSize),
 		results:  make(chan BuildResult, resultBufferSize),
@@ -49,6 +52,7 @@ func (tqm *TaskQueueManager) Enqueue(task interface{}) error {
 	tqm.mu.RLock()
 	if tqm.closed {
 		tqm.mu.RUnlock()
+
 		return ErrQueueClosed
 	}
 	tqm.mu.RUnlock()
@@ -74,6 +78,7 @@ func (tqm *TaskQueueManager) EnqueuePriority(task interface{}) error {
 	tqm.mu.RLock()
 	if tqm.closed {
 		tqm.mu.RUnlock()
+
 		return ErrQueueClosed
 	}
 	tqm.mu.RUnlock()
@@ -98,14 +103,14 @@ func (tqm *TaskQueueManager) EnqueuePriority(task interface{}) error {
 func (tqm *TaskQueueManager) GetNextTask() <-chan interface{} {
 	// Create a merged channel that prioritizes priority tasks
 	merged := make(chan interface{}, 1)
-	
+
 	go func() {
 		defer close(merged)
 		for {
 			tqm.mu.RLock()
 			closed := tqm.closed
 			tqm.mu.RUnlock()
-			
+
 			if closed && len(tqm.priority) == 0 && len(tqm.tasks) == 0 {
 				return
 			}
@@ -134,7 +139,7 @@ func (tqm *TaskQueueManager) GetNextTask() <-chan interface{} {
 			}
 		}
 	}()
-	
+
 	return merged
 }
 
@@ -143,6 +148,7 @@ func (tqm *TaskQueueManager) PublishResult(result interface{}) error {
 	tqm.mu.RLock()
 	if tqm.closed {
 		tqm.mu.RUnlock()
+
 		return ErrQueueClosed
 	}
 	tqm.mu.RUnlock()
@@ -165,7 +171,7 @@ func (tqm *TaskQueueManager) PublishResult(result interface{}) error {
 // GetResults returns a channel for receiving build results.
 func (tqm *TaskQueueManager) GetResults() <-chan interface{} {
 	resultChan := make(chan interface{})
-	
+
 	go func() {
 		defer close(resultChan)
 		for result := range tqm.results {
@@ -176,7 +182,7 @@ func (tqm *TaskQueueManager) GetResults() <-chan interface{} {
 			}
 		}
 	}()
-	
+
 	return resultChan
 }
 
@@ -185,7 +191,7 @@ func (tqm *TaskQueueManager) GetResults() <-chan interface{} {
 func (tqm *TaskQueueManager) Close() {
 	tqm.mu.Lock()
 	defer tqm.mu.Unlock()
-	
+
 	if !tqm.closed {
 		tqm.closed = true
 		close(tqm.tasks)
@@ -198,7 +204,7 @@ func (tqm *TaskQueueManager) Close() {
 func (tqm *TaskQueueManager) GetQueueStats() QueueStats {
 	tqm.mu.RLock()
 	defer tqm.mu.RUnlock()
-	
+
 	return QueueStats{
 		TasksQueued:    len(tqm.tasks),
 		PriorityQueued: len(tqm.priority),
@@ -215,12 +221,18 @@ type QueueStats struct {
 	Closed         bool
 }
 
-// Queue error definitions
+// Queue error definitions.
 var (
-	ErrQueueClosed       = &QueueError{Code: "QUEUE_CLOSED", Message: "task queue has been closed"}
-	ErrQueueFull         = &QueueError{Code: "QUEUE_FULL", Message: "task queue is full"}
-	ErrInvalidTaskType   = &QueueError{Code: "INVALID_TASK_TYPE", Message: "invalid task type provided"}
-	ErrInvalidResultType = &QueueError{Code: "INVALID_RESULT_TYPE", Message: "invalid result type provided"}
+	ErrQueueClosed     = &QueueError{Code: "QUEUE_CLOSED", Message: "task queue has been closed"}
+	ErrQueueFull       = &QueueError{Code: "QUEUE_FULL", Message: "task queue is full"}
+	ErrInvalidTaskType = &QueueError{
+		Code:    "INVALID_TASK_TYPE",
+		Message: "invalid task type provided",
+	}
+	ErrInvalidResultType = &QueueError{
+		Code:    "INVALID_RESULT_TYPE",
+		Message: "invalid result type provided",
+	}
 )
 
 // QueueError represents an error in queue operations.
@@ -233,5 +245,5 @@ func (qe *QueueError) Error() string {
 	return qe.Message
 }
 
-// Verify that TaskQueueManager implements the TaskQueue interface
+// Verify that TaskQueueManager implements the TaskQueue interface.
 var _ interfaces.TaskQueue = (*TaskQueueManager)(nil)

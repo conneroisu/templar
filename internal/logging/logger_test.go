@@ -180,7 +180,7 @@ func TestNewFileLogger(t *testing.T) {
 	})
 }
 
-// Mock logger for testing
+// Mock logger for testing.
 type mockLogger struct {
 	errorCallCount int
 	errorFunc      func(ctx context.Context, err error, msg string, fields ...interface{})
@@ -196,10 +196,20 @@ func (m *mockLogger) Error(ctx context.Context, err error, msg string, fields ..
 	}
 }
 func (m *mockLogger) Fatal(ctx context.Context, err error, msg string, fields ...interface{}) {}
-func (m *mockLogger) With(fields ...interface{}) Logger                                       { return m }
-func (m *mockLogger) WithComponent(component string) Logger                                   { return m }
 
-// Helper function to convert fields slice to map
+func (m *mockLogger) With(
+	fields ...interface{},
+) Logger {
+	return m
+}
+
+func (m *mockLogger) WithComponent(
+	component string,
+) Logger {
+	return m
+}
+
+// Helper function to convert fields slice to map.
 func fieldsToMap(fields []interface{}) map[string]interface{} {
 	result := make(map[string]interface{})
 	for i := 0; i < len(fields); i += 2 {
@@ -209,5 +219,6 @@ func fieldsToMap(fields []interface{}) map[string]interface{} {
 			}
 		}
 	}
+
 	return result
 }

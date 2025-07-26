@@ -119,8 +119,14 @@ func (s *E2ETestSystem) startServer() error {
 			Timestamp: time.Now(),
 			Version:   "test-e2e",
 			Checks: map[string]interface{}{
-				"server":   map[string]interface{}{"status": "healthy", "message": "HTTP server operational"},
-				"registry": map[string]interface{}{"status": "healthy", "components": len(s.Registry.GetAll())},
+				"server": map[string]interface{}{
+					"status":  "healthy",
+					"message": "HTTP server operational",
+				},
+				"registry": map[string]interface{}{
+					"status":     "healthy",
+					"components": len(s.Registry.GetAll()),
+				},
 			},
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -335,17 +341,17 @@ templ Card(title string, content string) {
 	// Step 2: Verify components are discovered via API with retry mechanism
 	ctx, cancel := context.WithTimeout(context.Background(), TestTimeout())
 	defer cancel()
-	
+
 	var resp *http.Response
 	err = RetryOperation(ctx, func() error {
 		var httpErr error
 		resp, httpErr = http.Get(system.ServerURL + "/api/components")
 		return httpErr
 	}, DefaultTestConfig())
-	
+
 	if err != nil {
 		// If API fails, verify registry directly as fallback
-		AssertEventuallyEqual(t, 2, func() interface{} { return system.Registry.Count() }, 
+		AssertEventuallyEqual(t, 2, func() interface{} { return system.Registry.Count() },
 			2*time.Second, "Expected 2 components in registry")
 
 		button, exists := system.Registry.Get("Button")
@@ -514,7 +520,7 @@ templ Modal(title string, visible bool) {
 	WaitForComponentProcessing()
 
 	// Verify all components are registered with eventual consistency
-	AssertEventuallyEqual(t, 4, func() interface{} { return system.Registry.Count() }, 
+	AssertEventuallyEqual(t, 4, func() interface{} { return system.Registry.Count() },
 		5*time.Second, "Expected 4 components to be registered")
 
 	// Verify component details
@@ -547,7 +553,11 @@ templ Modal(title string, visible bool) {
 			defer resp.Body.Close()
 
 			if resp.StatusCode != http.StatusOK {
-				return fmt.Errorf("expected status 200 for %s, got %d", componentName, resp.StatusCode)
+				return fmt.Errorf(
+					"expected status 200 for %s, got %d",
+					componentName,
+					resp.StatusCode,
+				)
 			}
 
 			body, readErr := io.ReadAll(resp.Body)
@@ -556,7 +566,10 @@ templ Modal(title string, visible bool) {
 			}
 
 			if !strings.Contains(string(body), "Component: "+componentName) {
-				return fmt.Errorf("response doesn't contain expected component name: %s", componentName)
+				return fmt.Errorf(
+					"response doesn't contain expected component name: %s",
+					componentName,
+				)
 			}
 
 			return nil
@@ -728,7 +741,7 @@ templ Component%d(text string, id int) {
 	if finalComponentCount > 0 {
 		ctx, cancel := context.WithTimeout(context.Background(), TestTimeout())
 		defer cancel()
-		
+
 		start = time.Now()
 		err = RetryOperation(ctx, func() error {
 			resp, httpErr := http.Get(system.ServerURL + "/api/components")
@@ -755,7 +768,7 @@ templ Component%d(text string, id int) {
 
 			return nil
 		}, DefaultTestConfig())
-		
+
 		if err != nil {
 			t.Logf("API performance test failed: %v", err)
 		}

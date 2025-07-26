@@ -9,7 +9,7 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// Plugin represents a Templar plugin interface
+// Plugin represents a Templar plugin interface.
 type Plugin interface {
 	// Name returns the unique name of the plugin
 	Name() string
@@ -30,12 +30,15 @@ type Plugin interface {
 	Health() PluginHealth
 }
 
-// ComponentPlugin extends Plugin with component-specific functionality
+// ComponentPlugin extends Plugin with component-specific functionality.
 type ComponentPlugin interface {
 	Plugin
 
 	// HandleComponent processes a component and returns modified component info
-	HandleComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error)
+	HandleComponent(
+		ctx context.Context,
+		component *types.ComponentInfo,
+	) (*types.ComponentInfo, error)
 
 	// SupportedExtensions returns file extensions this plugin can handle
 	SupportedExtensions() []string
@@ -44,7 +47,7 @@ type ComponentPlugin interface {
 	Priority() int
 }
 
-// BuildPlugin extends Plugin with build-specific functionality
+// BuildPlugin extends Plugin with build-specific functionality.
 type BuildPlugin interface {
 	Plugin
 
@@ -58,7 +61,7 @@ type BuildPlugin interface {
 	TransformBuildCommand(ctx context.Context, command []string) ([]string, error)
 }
 
-// ServerPlugin extends Plugin with server-specific functionality
+// ServerPlugin extends Plugin with server-specific functionality.
 type ServerPlugin interface {
 	Plugin
 
@@ -72,7 +75,7 @@ type ServerPlugin interface {
 	WebSocketHandler(ctx context.Context, conn WebSocketConnection) error
 }
 
-// WatcherPlugin extends Plugin with file watching functionality
+// WatcherPlugin extends Plugin with file watching functionality.
 type WatcherPlugin interface {
 	Plugin
 
@@ -86,7 +89,7 @@ type WatcherPlugin interface {
 	ShouldIgnore(filePath string) bool
 }
 
-// PluginConfig contains configuration for a plugin
+// PluginConfig contains configuration for a plugin.
 type PluginConfig struct {
 	// Name of the plugin
 	Name string `json:"name"`
@@ -101,7 +104,7 @@ type PluginConfig struct {
 	Settings PluginSettings `json:"settings"`
 }
 
-// PluginSettings contains plugin-specific settings
+// PluginSettings contains plugin-specific settings.
 type PluginSettings struct {
 	// Timeout for plugin operations
 	Timeout time.Duration `json:"timeout"`
@@ -116,7 +119,7 @@ type PluginSettings struct {
 	ResourceLimits ResourceLimits `json:"resource_limits"`
 }
 
-// ResourceLimits defines resource constraints for plugins
+// ResourceLimits defines resource constraints for plugins.
 type ResourceLimits struct {
 	// Maximum memory usage in MB
 	MaxMemoryMB int `json:"max_memory_mb"`
@@ -131,7 +134,7 @@ type ResourceLimits struct {
 	MaxFileDescriptors int `json:"max_file_descriptors"`
 }
 
-// PluginHealth represents the health status of a plugin
+// PluginHealth represents the health status of a plugin.
 type PluginHealth struct {
 	// Status of the plugin
 	Status HealthStatus `json:"status"`
@@ -146,7 +149,7 @@ type PluginHealth struct {
 	Metrics map[string]interface{} `json:"metrics,omitempty"`
 }
 
-// HealthStatus represents the health status values
+// HealthStatus represents the health status values.
 type HealthStatus string
 
 const (
@@ -156,7 +159,7 @@ const (
 	HealthStatusUnknown   HealthStatus = "unknown"
 )
 
-// BuildResult contains the result of a build operation
+// BuildResult contains the result of a build operation.
 type BuildResult struct {
 	// Success indicates if the build was successful
 	Success bool `json:"success"`
@@ -174,7 +177,7 @@ type BuildResult struct {
 	Error string `json:"error,omitempty"`
 }
 
-// Router interface for registering HTTP routes
+// Router interface for registering HTTP routes.
 type Router interface {
 	GET(path string, handler HandlerFunc)
 	POST(path string, handler HandlerFunc)
@@ -183,10 +186,10 @@ type Router interface {
 	Static(path, root string)
 }
 
-// HandlerFunc represents an HTTP handler function
+// HandlerFunc represents an HTTP handler function.
 type HandlerFunc func(ctx Context) error
 
-// Context represents an HTTP request context
+// Context represents an HTTP request context.
 type Context interface {
 	// Request methods
 	Method() string
@@ -207,10 +210,10 @@ type Context interface {
 	Get(key string) interface{}
 }
 
-// MiddlewareFunc represents HTTP middleware
+// MiddlewareFunc represents HTTP middleware.
 type MiddlewareFunc func(next HandlerFunc) HandlerFunc
 
-// WebSocketConnection represents a WebSocket connection
+// WebSocketConnection represents a WebSocket connection.
 type WebSocketConnection interface {
 	// Send sends data to the WebSocket
 	Send(data []byte) error
@@ -225,7 +228,7 @@ type WebSocketConnection interface {
 	RemoteAddr() string
 }
 
-// FileChangeEvent represents a file system change event
+// FileChangeEvent represents a file system change event.
 type FileChangeEvent struct {
 	// Path of the changed file
 	Path string `json:"path"`
@@ -240,7 +243,7 @@ type FileChangeEvent struct {
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
-// FileChangeType represents the type of file change
+// FileChangeType represents the type of file change.
 type FileChangeType string
 
 const (
@@ -250,7 +253,7 @@ const (
 	FileChangeTypeRename FileChangeType = "rename"
 )
 
-// PluginManager manages the lifecycle of plugins
+// PluginManager manages the lifecycle of plugins.
 type PluginManager struct {
 	plugins           map[string]Plugin
 	componentPlugins  []ComponentPlugin
@@ -265,7 +268,7 @@ type PluginManager struct {
 	healthCheckTicker *time.Ticker
 }
 
-// NewPluginManager creates a new plugin manager
+// NewPluginManager creates a new plugin manager.
 func NewPluginManager() *PluginManager {
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -278,7 +281,7 @@ func NewPluginManager() *PluginManager {
 	}
 }
 
-// RegisterPlugin registers a new plugin
+// RegisterPlugin registers a new plugin.
 func (pm *PluginManager) RegisterPlugin(plugin Plugin, config PluginConfig) error {
 	pm.mu.Lock()
 	defer pm.mu.Unlock()
@@ -314,7 +317,7 @@ func (pm *PluginManager) RegisterPlugin(plugin Plugin, config PluginConfig) erro
 	return nil
 }
 
-// UnregisterPlugin unregisters a plugin
+// UnregisterPlugin unregisters a plugin.
 func (pm *PluginManager) UnregisterPlugin(name string) error {
 	pm.mu.Lock()
 	defer pm.mu.Unlock()
@@ -346,7 +349,7 @@ func (pm *PluginManager) UnregisterPlugin(name string) error {
 	return nil
 }
 
-// GetPlugin retrieves a plugin by name
+// GetPlugin retrieves a plugin by name.
 func (pm *PluginManager) GetPlugin(name string) (Plugin, error) {
 	pm.mu.RLock()
 	defer pm.mu.RUnlock()
@@ -359,7 +362,7 @@ func (pm *PluginManager) GetPlugin(name string) (Plugin, error) {
 	return plugin, nil
 }
 
-// ListPlugins returns all registered plugins
+// ListPlugins returns all registered plugins.
 func (pm *PluginManager) ListPlugins() []PluginInfo {
 	pm.mu.RLock()
 	defer pm.mu.RUnlock()
@@ -381,7 +384,7 @@ func (pm *PluginManager) ListPlugins() []PluginInfo {
 	return plugins
 }
 
-// PluginInfo contains information about a plugin
+// PluginInfo contains information about a plugin.
 type PluginInfo struct {
 	Name        string       `json:"name"`
 	Version     string       `json:"version"`
@@ -390,16 +393,19 @@ type PluginInfo struct {
 	Health      PluginHealth `json:"health"`
 }
 
-// ProcessComponent processes a component through all component plugins
-func (pm *PluginManager) ProcessComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error) {
+// ProcessComponent processes a component through all component plugins.
+func (pm *PluginManager) ProcessComponent(
+	ctx context.Context,
+	component *types.ComponentInfo,
+) (*types.ComponentInfo, error) {
 	pm.mu.RLock()
 	plugins := make([]ComponentPlugin, len(pm.componentPlugins))
 	copy(plugins, pm.componentPlugins)
 	pm.mu.RUnlock()
 
 	// Sort plugins by priority
-	for i := 0; i < len(plugins)-1; i++ {
-		for j := 0; j < len(plugins)-i-1; j++ {
+	for i := range len(plugins) - 1 {
+		for j := range len(plugins) - i - 1 {
 			if plugins[j].Priority() > plugins[j+1].Priority() {
 				plugins[j], plugins[j+1] = plugins[j+1], plugins[j]
 			}
@@ -418,7 +424,7 @@ func (pm *PluginManager) ProcessComponent(ctx context.Context, component *types.
 	return result, nil
 }
 
-// StartHealthChecks starts periodic health checks for all plugins
+// StartHealthChecks starts periodic health checks for all plugins.
 func (pm *PluginManager) StartHealthChecks(interval time.Duration) {
 	pm.mu.Lock()
 	defer pm.mu.Unlock()
@@ -441,7 +447,7 @@ func (pm *PluginManager) StartHealthChecks(interval time.Duration) {
 	}()
 }
 
-// checkAllPluginHealth performs health checks on all plugins
+// checkAllPluginHealth performs health checks on all plugins.
 func (pm *PluginManager) checkAllPluginHealth() {
 	pm.mu.Lock()
 	defer pm.mu.Unlock()
@@ -453,7 +459,7 @@ func (pm *PluginManager) checkAllPluginHealth() {
 	}
 }
 
-// Shutdown gracefully shuts down all plugins
+// Shutdown gracefully shuts down all plugins.
 func (pm *PluginManager) Shutdown() error {
 	pm.mu.Lock()
 	defer pm.mu.Unlock()
@@ -480,13 +486,14 @@ func (pm *PluginManager) Shutdown() error {
 	return nil
 }
 
-// Helper functions for removing plugins from slices
+// Helper functions for removing plugins from slices.
 func removeComponentPlugin(plugins []ComponentPlugin, target Plugin) []ComponentPlugin {
 	for i, plugin := range plugins {
 		if plugin.Name() == target.Name() {
 			return append(plugins[:i], plugins[i+1:]...)
 		}
 	}
+
 	return plugins
 }
 
@@ -496,6 +503,7 @@ func removeBuildPlugin(plugins []BuildPlugin, target Plugin) []BuildPlugin {
 			return append(plugins[:i], plugins[i+1:]...)
 		}
 	}
+
 	return plugins
 }
 
@@ -505,6 +513,7 @@ func removeServerPlugin(plugins []ServerPlugin, target Plugin) []ServerPlugin {
 			return append(plugins[:i], plugins[i+1:]...)
 		}
 	}
+
 	return plugins
 }
 
@@ -514,5 +523,6 @@ func removeWatcherPlugin(plugins []WatcherPlugin, target Plugin) []WatcherPlugin
 			return append(plugins[:i], plugins[i+1:]...)
 		}
 	}
+
 	return plugins
 }

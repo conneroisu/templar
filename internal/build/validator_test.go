@@ -42,10 +42,10 @@ func TestBuildValidator_Validate(t *testing.T) {
 		{
 			name: "basic_validation_success",
 			artifacts: &BuildArtifacts{
-				StaticFiles:      []string{"index.html", "style.css"},
-				BundledAssets:    []string{"main.js", "vendor.js"},
-				GeneratedPages:   []string{"home.html", "about.html"},
-				AssetManifest:    "manifest.json",
+				StaticFiles:    []string{"index.html", "style.css"},
+				BundledAssets:  []string{"main.js", "vendor.js"},
+				GeneratedPages: []string{"home.html", "about.html"},
+				AssetManifest:  "manifest.json",
 			},
 			options: ValidationOptions{
 				BundleSizeLimit:  1024 * 1024, // 1MB
@@ -57,10 +57,10 @@ func TestBuildValidator_Validate(t *testing.T) {
 		{
 			name: "empty_artifacts",
 			artifacts: &BuildArtifacts{
-				StaticFiles:      []string{},
-				BundledAssets:    []string{},
-				GeneratedPages:   []string{},
-				AssetManifest:    "",
+				StaticFiles:    []string{},
+				BundledAssets:  []string{},
+				GeneratedPages: []string{},
+				AssetManifest:  "",
 			},
 			options: ValidationOptions{
 				BundleSizeLimit:  500 * 1024, // 500KB
@@ -238,10 +238,10 @@ func TestValidationResults_Structure(t *testing.T) {
 	assert.Len(t, results.Errors, 2)
 	assert.Contains(t, results.Errors, "error1")
 	assert.Contains(t, results.Errors, "error2")
-	
+
 	assert.Len(t, results.SecurityIssues, 1)
 	assert.Contains(t, results.SecurityIssues, "security issue")
-	
+
 	assert.Equal(t, 85, results.PerformanceScore)
 }
 
@@ -257,7 +257,7 @@ func TestBuildValidator_NilInputs(t *testing.T) {
 		// Current implementation doesn't handle nil, but shouldn't panic
 		// This test documents the current behavior
 		assert.NotPanics(t, func() {
-			validator.Validate(ctx, nil, options)
+			_, _ = validator.Validate(ctx, nil, options)
 		})
 		_ = results
 		_ = err
@@ -269,7 +269,7 @@ func TestBuildValidator_NilInputs(t *testing.T) {
 
 		// Should not panic with nil context
 		assert.NotPanics(t, func() {
-			validator.Validate(nil, artifacts, options)
+			_, _ = validator.Validate(context.TODO(), artifacts, options)
 		})
 	})
 }
@@ -330,7 +330,7 @@ func TestBuildValidator_ConcurrentValidation(t *testing.T) {
 	// Test concurrent validation calls
 	done := make(chan bool, 10)
 
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		go func(workerID int) {
 			defer func() { done <- true }()
 
@@ -358,12 +358,12 @@ func TestBuildValidator_ConcurrentValidation(t *testing.T) {
 	}
 
 	// Wait for all workers
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		<-done
 	}
 }
 
-// Benchmark tests for validator performance
+// Benchmark tests for validator performance.
 func BenchmarkBuildValidator_Validate(b *testing.B) {
 	cfg := &config.Config{}
 	validator := NewBuildValidator(cfg)
@@ -377,13 +377,13 @@ func BenchmarkBuildValidator_Validate(b *testing.B) {
 	}
 
 	// Fill with test data
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		artifacts.StaticFiles[i] = fmt.Sprintf("static%d.html", i)
 	}
-	for i := 0; i < 50; i++ {
+	for i := range 50 {
 		artifacts.BundledAssets[i] = fmt.Sprintf("bundle%d.js", i)
 	}
-	for i := 0; i < 200; i++ {
+	for i := range 200 {
 		artifacts.GeneratedPages[i] = fmt.Sprintf("page%d.html", i)
 	}
 
@@ -396,7 +396,7 @@ func BenchmarkBuildValidator_Validate(b *testing.B) {
 	ctx := context.Background()
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, err := validator.Validate(ctx, artifacts, options)
 		if err != nil {
 			b.Fatal(err)
@@ -409,8 +409,8 @@ func BenchmarkBuildValidator_ValidateSmall(b *testing.B) {
 	validator := NewBuildValidator(cfg)
 
 	artifacts := &BuildArtifacts{
-		StaticFiles:      []string{"index.html"},
-		BundledAssets:    []string{"app.js"},
+		StaticFiles:   []string{"index.html"},
+		BundledAssets: []string{"app.js"},
 		AssetManifest: "",
 	}
 
@@ -422,7 +422,7 @@ func BenchmarkBuildValidator_ValidateSmall(b *testing.B) {
 	ctx := context.Background()
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, err := validator.Validate(ctx, artifacts, options)
 		if err != nil {
 			b.Fatal(err)
@@ -430,7 +430,7 @@ func BenchmarkBuildValidator_ValidateSmall(b *testing.B) {
 	}
 }
 
-// Test helper to create mock BuildArtifacts
+// Test helper to create mock BuildArtifacts.
 func createMockBuildArtifacts(size int) *BuildArtifacts {
 	artifacts := &BuildArtifacts{
 		StaticFiles:    make([]string, size),
@@ -440,15 +440,15 @@ func createMockBuildArtifacts(size int) *BuildArtifacts {
 		BundleAnalysis: "analysis.json",
 	}
 
-	for i := 0; i < size; i++ {
+	for i := range size {
 		artifacts.StaticFiles[i] = fmt.Sprintf("static%d.html", i)
 	}
 
-	for i := 0; i < size/2; i++ {
+	for i := range size / 2 {
 		artifacts.BundledAssets[i] = fmt.Sprintf("bundle%d.js", i)
 	}
 
-	for i := 0; i < size*2; i++ {
+	for i := range size * 2 {
 		artifacts.GeneratedPages[i] = fmt.Sprintf("page%d.html", i)
 	}
 
@@ -461,7 +461,7 @@ func TestBuildValidator_LargeArtifacts(t *testing.T) {
 
 	// Test with large number of artifacts
 	artifacts := createMockBuildArtifacts(1000)
-	
+
 	options := ValidationOptions{
 		BundleSizeLimit:  10 * 1024 * 1024, // 10MB
 		SecurityScan:     true,

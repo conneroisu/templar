@@ -43,10 +43,13 @@ templ Button(text string, variant string) {
 
 	// Test component registration and build
 	component := &types.ComponentInfo{
-		Name:         "Button",
-		Package:      "components",
-		FilePath:     componentFile,
-		Parameters:   []types.ParameterInfo{{Name: "text", Type: "string", Optional: false}, {Name: "variant", Type: "string", Optional: false}},
+		Name:     "Button",
+		Package:  "components",
+		FilePath: componentFile,
+		Parameters: []types.ParameterInfo{
+			{Name: "text", Type: "string", Optional: false},
+			{Name: "variant", Type: "string", Optional: false},
+		},
 		Imports:      []string{},
 		LastMod:      time.Now(),
 		Hash:         "testhash",
@@ -185,9 +188,24 @@ templ Nav(items []string) {
 
 	// Register all components
 	componentInfos := []*types.ComponentInfo{
-		{Name: "Button", Package: "components", FilePath: filepath.Join(componentsDir, "button.templ"), Hash: "buttonhash"},
-		{Name: "Card", Package: "components", FilePath: filepath.Join(componentsDir, "card.templ"), Hash: "cardhash"},
-		{Name: "Nav", Package: "components", FilePath: filepath.Join(componentsDir, "nav.templ"), Hash: "navhash"},
+		{
+			Name:     "Button",
+			Package:  "components",
+			FilePath: filepath.Join(componentsDir, "button.templ"),
+			Hash:     "buttonhash",
+		},
+		{
+			Name:     "Card",
+			Package:  "components",
+			FilePath: filepath.Join(componentsDir, "card.templ"),
+			Hash:     "cardhash",
+		},
+		{
+			Name:     "Nav",
+			Package:  "components",
+			FilePath: filepath.Join(componentsDir, "nav.templ"),
+			Hash:     "navhash",
+		},
 	}
 
 	for _, comp := range componentInfos {

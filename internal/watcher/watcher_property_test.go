@@ -71,7 +71,9 @@ func TestFileWatcherProperties(t *testing.T) {
 				if err := os.WriteFile(testFile, content, 0644); err != nil {
 					continue
 				}
-				time.Sleep(time.Duration(debounceMs/4) * time.Millisecond) // Changes faster than debounce
+				time.Sleep(
+					time.Duration(debounceMs/4) * time.Millisecond,
+				) // Changes faster than debounce
 			}
 
 			// Wait for debounce period plus buffer

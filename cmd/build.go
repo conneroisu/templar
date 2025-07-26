@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -36,7 +37,8 @@ func init() {
 	rootCmd.AddCommand(buildCmd)
 
 	buildCmd.Flags().StringVarP(&buildOutput, "output", "o", "", "Output directory")
-	buildCmd.Flags().BoolVar(&buildProduction, "production", false, "Production build optimizations")
+	buildCmd.Flags().
+		BoolVar(&buildProduction, "production", false, "Production build optimizations")
 	buildCmd.Flags().BoolVar(&buildAnalyze, "analyze", false, "Generate build analysis")
 	buildCmd.Flags().BoolVar(&buildClean, "clean", false, "Clean build artifacts before building")
 }
@@ -81,9 +83,11 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		for _, buildErr := range result.Errors {
 			fmt.Printf("   Error: %v\n", buildErr)
 		}
-		return fmt.Errorf("build process failed")
+
+		return errors.New("build process failed")
 	}
 
 	fmt.Printf("⏱️  Total build time: %v\n", time.Since(startTime))
+
 	return nil
 }

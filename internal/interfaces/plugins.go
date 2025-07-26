@@ -16,8 +16,9 @@ import (
 // building, or rendering phases.
 //
 // Performance:
-//   HandleComponent should complete within 100ms for typical components
-//   to avoid blocking the build pipeline.
+//
+//	HandleComponent should complete within 100ms for typical components
+//	to avoid blocking the build pipeline.
 type ComponentPlugin interface {
 	Plugin
 
@@ -32,7 +33,10 @@ type ComponentPlugin interface {
 	// Returns:
 	//   Modified component (or original if unchanged)
 	//   Error if processing failed
-	HandleComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error)
+	HandleComponent(
+		ctx context.Context,
+		component *types.ComponentInfo,
+	) (*types.ComponentInfo, error)
 }
 
 // BuildPlugin extends Plugin for build process hooks
@@ -117,7 +121,7 @@ type CSSFrameworkPlugin interface {
 	ValidateCSS(ctx context.Context, css []byte) []ValidationError
 }
 
-// BuildResult represents the result of a build operation
+// BuildResult represents the result of a build operation.
 type BuildResult struct {
 	Component    *types.ComponentInfo
 	Output       []byte
@@ -128,28 +132,28 @@ type BuildResult struct {
 	ParsedErrors []ParsedError
 }
 
-// HTTPRouter defines routing capabilities for server plugins
+// HTTPRouter defines routing capabilities for server plugins.
 type HTTPRouter interface {
 	// GET registers a GET route handler
 	GET(path string, handler HTTPHandlerFunc)
-	
+
 	// POST registers a POST route handler
 	POST(path string, handler HTTPHandlerFunc)
-	
+
 	// PUT registers a PUT route handler
 	PUT(path string, handler HTTPHandlerFunc)
-	
+
 	// DELETE registers a DELETE route handler
 	DELETE(path string, handler HTTPHandlerFunc)
-	
+
 	// Use registers middleware for all routes
 	Use(middleware HTTPMiddlewareFunc)
-	
+
 	// Group creates a route group with common prefix/middleware
 	Group(prefix string) HTTPRouter
 }
 
-// HTTPRequest represents an HTTP request
+// HTTPRequest represents an HTTP request.
 type HTTPRequest struct {
 	Method     string
 	Path       string
@@ -159,27 +163,27 @@ type HTTPRequest struct {
 	RemoteAddr string
 }
 
-// HTTPResponse represents an HTTP response
+// HTTPResponse represents an HTTP response.
 type HTTPResponse struct {
 	StatusCode int
 	Headers    map[string]string
 	Body       []byte
 }
 
-// HTTPHandlerFunc is a function that handles HTTP requests
+// HTTPHandlerFunc is a function that handles HTTP requests.
 type HTTPHandlerFunc func(ctx context.Context, req *HTTPRequest) (*HTTPResponse, error)
 
-// HTTPMiddlewareFunc is a function that processes requests before handlers
+// HTTPMiddlewareFunc is a function that processes requests before handlers.
 type HTTPMiddlewareFunc func(next HTTPHandlerFunc) HTTPHandlerFunc
 
-// FileChangeEvent represents a file system change
+// FileChangeEvent represents a file system change.
 type FileChangeEvent struct {
 	Path      string
 	Operation FileOperation
 	Timestamp time.Time
 }
 
-// FileOperation represents the type of file system operation
+// FileOperation represents the type of file system operation.
 type FileOperation int
 
 const (
@@ -189,7 +193,7 @@ const (
 	FileOperationRename
 )
 
-// CSSFrameworkConfig represents CSS framework configuration
+// CSSFrameworkConfig represents CSS framework configuration.
 type CSSFrameworkConfig struct {
 	Name           string
 	Version        string
@@ -201,7 +205,7 @@ type CSSFrameworkConfig struct {
 	CustomConfig   map[string]interface{}
 }
 
-// ComponentSpec represents a component specification for generation
+// ComponentSpec represents a component specification for generation.
 type ComponentSpec struct {
 	Name        string
 	Type        string
@@ -211,7 +215,7 @@ type ComponentSpec struct {
 	Description string
 }
 
-// PropSpec represents a component property specification
+// PropSpec represents a component property specification.
 type PropSpec struct {
 	Name         string
 	Type         string
@@ -221,24 +225,24 @@ type PropSpec struct {
 	Validation   []ValidationRule
 }
 
-// ValidationRule represents a validation rule for component properties
+// ValidationRule represents a validation rule for component properties.
 type ValidationRule struct {
 	Type    string
 	Value   interface{}
 	Message string
 }
 
-// ProcessingOptions represents options for CSS processing
+// ProcessingOptions represents options for CSS processing.
 type ProcessingOptions struct {
-	InputPath    string
-	OutputPath   string
-	Optimize     bool
-	Minify       bool
-	SourceMaps   bool
-	CustomVars   map[string]string
+	InputPath  string
+	OutputPath string
+	Optimize   bool
+	Minify     bool
+	SourceMaps bool
+	CustomVars map[string]string
 }
 
-// ValidationError represents a CSS validation error
+// ValidationError represents a CSS validation error.
 type ValidationError struct {
 	Message  string
 	Line     int
@@ -246,7 +250,7 @@ type ValidationError struct {
 	Severity ValidationSeverity
 }
 
-// ValidationSeverity represents the severity of a validation error
+// ValidationSeverity represents the severity of a validation error.
 type ValidationSeverity int
 
 const (
@@ -255,27 +259,28 @@ const (
 	ValidationSeverityInfo
 )
 
-// ParsedError represents a parsed build error with enhanced information
+// ParsedError represents a parsed build error with enhanced information.
 type ParsedError struct {
-	Message   string
-	File      string
-	Line      int
-	Column    int
-	Severity  string
-	Code      string
-	Context   map[string]interface{}
+	Message  string
+	File     string
+	Line     int
+	Column   int
+	Severity string
+	Code     string
+	Context  map[string]interface{}
 }
 
-// FormatError formats the error for display
+// FormatError formats the error for display.
 func (pe *ParsedError) FormatError() string {
 	if pe.File != "" && pe.Line > 0 {
-		return fmt.Sprintf("[%s] %s in %s:%d:%d\n  %s\n", 
+		return fmt.Sprintf("[%s] %s in %s:%d:%d\n  %s\n",
 			pe.Severity, pe.Code, pe.File, pe.Line, pe.Column, pe.Message)
 	}
+
 	return fmt.Sprintf("[%s] %s: %s\n", pe.Severity, pe.Code, pe.Message)
 }
 
-// String returns the file operation as a string
+// String returns the file operation as a string.
 func (op FileOperation) String() string {
 	switch op {
 	case FileOperationCreate:
@@ -291,7 +296,7 @@ func (op FileOperation) String() string {
 	}
 }
 
-// String returns the validation severity as a string
+// String returns the validation severity as a string.
 func (vs ValidationSeverity) String() string {
 	switch vs {
 	case ValidationSeverityError:

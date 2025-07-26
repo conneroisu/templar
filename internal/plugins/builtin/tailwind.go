@@ -2,6 +2,7 @@ package builtin
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -14,7 +15,7 @@ import (
 	"github.com/conneroisu/templar/internal/validation"
 )
 
-// TailwindPlugin provides Tailwind CSS integration for Templar components
+// TailwindPlugin provides Tailwind CSS integration for Templar components.
 type TailwindPlugin struct {
 	config       plugins.PluginConfig
 	tailwindPath string
@@ -22,29 +23,29 @@ type TailwindPlugin struct {
 	enabled      bool
 }
 
-// NewTailwindPlugin creates a new Tailwind CSS plugin
+// NewTailwindPlugin creates a new Tailwind CSS plugin.
 func NewTailwindPlugin() *TailwindPlugin {
 	return &TailwindPlugin{
 		enabled: true,
 	}
 }
 
-// Name returns the plugin name
+// Name returns the plugin name.
 func (tp *TailwindPlugin) Name() string {
 	return "tailwind"
 }
 
-// Version returns the plugin version
+// Version returns the plugin version.
 func (tp *TailwindPlugin) Version() string {
 	return "1.0.0"
 }
 
-// Description returns the plugin description
+// Description returns the plugin description.
 func (tp *TailwindPlugin) Description() string {
 	return "Tailwind CSS integration for automatic class detection and CSS generation"
 }
 
-// Initialize initializes the Tailwind plugin
+// Initialize initializes the Tailwind plugin.
 func (tp *TailwindPlugin) Initialize(ctx context.Context, config plugins.PluginConfig) error {
 	tp.config = config
 
@@ -55,7 +56,7 @@ func (tp *TailwindPlugin) Initialize(ctx context.Context, config plugins.PluginC
 		if _, err := exec.LookPath("npx"); err == nil {
 			tp.tailwindPath = "npx tailwindcss"
 		} else {
-			return fmt.Errorf("tailwindcss not found in PATH and npx not available")
+			return errors.New("tailwindcss not found in PATH and npx not available")
 		}
 	} else {
 		tp.tailwindPath = tailwindPath
@@ -76,6 +77,7 @@ func (tp *TailwindPlugin) Initialize(ctx context.Context, config plugins.PluginC
 		}
 		if _, err := os.Stat(path); err == nil {
 			tp.configPath = path
+
 			break
 		}
 	}
@@ -83,13 +85,14 @@ func (tp *TailwindPlugin) Initialize(ctx context.Context, config plugins.PluginC
 	return nil
 }
 
-// Shutdown shuts down the plugin
+// Shutdown shuts down the plugin.
 func (tp *TailwindPlugin) Shutdown(ctx context.Context) error {
 	tp.enabled = false
+
 	return nil
 }
 
-// Health returns the plugin health status
+// Health returns the plugin health status.
 func (tp *TailwindPlugin) Health() plugins.PluginHealth {
 	status := plugins.HealthStatusHealthy
 	var errorMsg string
@@ -113,8 +116,11 @@ func (tp *TailwindPlugin) Health() plugins.PluginHealth {
 	}
 }
 
-// HandleComponent processes components to extract Tailwind classes
-func (tp *TailwindPlugin) HandleComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error) {
+// HandleComponent processes components to extract Tailwind classes.
+func (tp *TailwindPlugin) HandleComponent(
+	ctx context.Context,
+	component *types.ComponentInfo,
+) (*types.ComponentInfo, error) {
 	if !tp.enabled {
 		return component, nil
 	}
@@ -136,24 +142,28 @@ func (tp *TailwindPlugin) HandleComponent(ctx context.Context, component *types.
 	return component, nil
 }
 
-// SupportedExtensions returns the file extensions this plugin handles
+// SupportedExtensions returns the file extensions this plugin handles.
 func (tp *TailwindPlugin) SupportedExtensions() []string {
 	return []string{".templ", ".html", ".tsx", ".jsx"}
 }
 
-// Priority returns the execution priority
+// Priority returns the execution priority.
 func (tp *TailwindPlugin) Priority() int {
 	return 10 // Lower priority to run after basic processing
 }
 
-// PreBuild is called before the build process starts
+// PreBuild is called before the build process starts.
 func (tp *TailwindPlugin) PreBuild(ctx context.Context, components []*types.ComponentInfo) error {
 	// Nothing to do before build for Tailwind
 	return nil
 }
 
-// PostBuild generates CSS after components are built
-func (tp *TailwindPlugin) PostBuild(ctx context.Context, components []*types.ComponentInfo, buildResult plugins.BuildResult) error {
+// PostBuild generates CSS after components are built.
+func (tp *TailwindPlugin) PostBuild(
+	ctx context.Context,
+	components []*types.ComponentInfo,
+	buildResult plugins.BuildResult,
+) error {
 	if !tp.enabled || !buildResult.Success {
 		return nil
 	}
@@ -176,13 +186,16 @@ func (tp *TailwindPlugin) PostBuild(ctx context.Context, components []*types.Com
 	return tp.generateCSS(ctx, allClasses)
 }
 
-// TransformBuildCommand allows modifying the build command
-func (tp *TailwindPlugin) TransformBuildCommand(ctx context.Context, command []string) ([]string, error) {
+// TransformBuildCommand allows modifying the build command.
+func (tp *TailwindPlugin) TransformBuildCommand(
+	ctx context.Context,
+	command []string,
+) ([]string, error) {
 	// For Tailwind, we don't need to modify the build command
 	return command, nil
 }
 
-// extractTailwindClasses extracts Tailwind CSS classes from a component file
+// extractTailwindClasses extracts Tailwind CSS classes from a component file.
 func (tp *TailwindPlugin) extractTailwindClasses(filePath string) ([]string, error) {
 	// This is a simplified implementation
 	// In practice, you'd want a more sophisticated parser
@@ -227,7 +240,7 @@ func (tp *TailwindPlugin) extractTailwindClasses(filePath string) ([]string, err
 	return tp.deduplicate(classes), nil
 }
 
-// isTailwindClass checks if a class name looks like a Tailwind class
+// isTailwindClass checks if a class name looks like a Tailwind class.
 func (tp *TailwindPlugin) isTailwindClass(className string) bool {
 	// Simple heuristics for Tailwind classes
 	tailwindPrefixes := []string{
@@ -253,6 +266,7 @@ func (tp *TailwindPlugin) isTailwindClass(className string) bool {
 		if strings.HasPrefix(className, prefix) {
 			// Check if the rest is a Tailwind class
 			rest := className[len(prefix):]
+
 			return tp.isTailwindClass(rest)
 		}
 	}
@@ -262,6 +276,7 @@ func (tp *TailwindPlugin) isTailwindClass(className string) bool {
 	for _, prefix := range statePrefixes {
 		if strings.HasPrefix(className, prefix) {
 			rest := className[len(prefix):]
+
 			return tp.isTailwindClass(rest)
 		}
 	}
@@ -272,7 +287,7 @@ func (tp *TailwindPlugin) isTailwindClass(className string) bool {
 // Note: validatePath function has been replaced with centralized validation
 // in the validation package.
 
-// sanitizeInput ensures input content is safe for file operations
+// sanitizeInput ensures input content is safe for file operations.
 func sanitizeInput(input string) string {
 	// Remove any shell metacharacters and dangerous sequences
 	dangerous := []string{";", "&", "|", "`", "$", "(", ")", "<", ">", "\\", "'", "\""}
@@ -296,7 +311,7 @@ func sanitizeInput(input string) string {
 	return sanitized
 }
 
-// generateCSS generates CSS using Tailwind CLI
+// generateCSS generates CSS using Tailwind CLI.
 func (tp *TailwindPlugin) generateCSS(ctx context.Context, classes map[string]bool) error {
 	// Create temporary input CSS file with sanitized content
 	baseCSS := "@tailwind base;\n@tailwind components;\n@tailwind utilities;\n"
@@ -314,6 +329,7 @@ func (tp *TailwindPlugin) generateCSS(ctx context.Context, classes map[string]bo
 	// Write content to temporary file
 	if _, err := tempFile.Write([]byte(inputCSS)); err != nil {
 		os.Remove(tempFilePath) // Cleanup on error
+
 		return fmt.Errorf("failed to write to temporary CSS file: %w", err)
 	}
 
@@ -335,6 +351,7 @@ func (tp *TailwindPlugin) generateCSS(ctx context.Context, classes map[string]bo
 	// Validate temp file path
 	if err := validation.ValidatePath(tempFilePath); err != nil {
 		os.Remove(tempFilePath) // Cleanup temp file
+
 		return fmt.Errorf("invalid temp file path: %w", err)
 	}
 
@@ -342,10 +359,12 @@ func (tp *TailwindPlugin) generateCSS(ctx context.Context, classes map[string]bo
 		// Validate commands
 		if err := validation.ValidateCommand("npx", allowedCommands); err != nil {
 			os.Remove(tempFilePath) // Cleanup temp file
+
 			return fmt.Errorf("command validation failed: %w", err)
 		}
 		if err := validation.ValidateCommand("tailwindcss", allowedCommands); err != nil {
 			os.Remove(tempFilePath) // Cleanup temp file
+
 			return fmt.Errorf("command validation failed: %w", err)
 		}
 
@@ -354,10 +373,12 @@ func (tp *TailwindPlugin) generateCSS(ctx context.Context, classes map[string]bo
 			// Validate config path for security before use
 			if err := validation.ValidatePath(tp.configPath); err != nil {
 				os.Remove(tempFilePath) // Cleanup temp file
+
 				return fmt.Errorf("invalid config path: %w", err)
 			}
 			if err := validation.ValidateArgument(tp.configPath); err != nil {
 				os.Remove(tempFilePath) // Cleanup temp file
+
 				return fmt.Errorf("invalid config path argument: %w", err)
 			}
 			args = append(args, "--config", tp.configPath)
@@ -368,6 +389,7 @@ func (tp *TailwindPlugin) generateCSS(ctx context.Context, classes map[string]bo
 		tailwindCmd := filepath.Base(tp.tailwindPath)
 		if err := validation.ValidateCommand(tailwindCmd, allowedCommands); err != nil {
 			os.Remove(tempFilePath) // Cleanup temp file
+
 			return fmt.Errorf("command validation failed: %w", err)
 		}
 
@@ -376,10 +398,12 @@ func (tp *TailwindPlugin) generateCSS(ctx context.Context, classes map[string]bo
 			// Validate config path for security before use
 			if err := validation.ValidatePath(tp.configPath); err != nil {
 				os.Remove(tempFilePath) // Cleanup temp file
+
 				return fmt.Errorf("invalid config path: %w", err)
 			}
 			if err := validation.ValidateArgument(tp.configPath); err != nil {
 				os.Remove(tempFilePath) // Cleanup temp file
+
 				return fmt.Errorf("invalid config path argument: %w", err)
 			}
 			args = append(args, "--config", tp.configPath)
@@ -392,6 +416,7 @@ func (tp *TailwindPlugin) generateCSS(ctx context.Context, classes map[string]bo
 	if err != nil {
 		// Clean up temporary file on error
 		os.Remove(tempFilePath)
+
 		return fmt.Errorf("tailwind CSS generation failed: %w\nOutput: %s", err, string(output))
 	}
 
@@ -404,7 +429,7 @@ func (tp *TailwindPlugin) generateCSS(ctx context.Context, classes map[string]bo
 	return nil
 }
 
-// deduplicate removes duplicate strings from a slice
+// deduplicate removes duplicate strings from a slice.
 func (tp *TailwindPlugin) deduplicate(slice []string) []string {
 	seen := make(map[string]bool)
 	var result []string
@@ -419,6 +444,6 @@ func (tp *TailwindPlugin) deduplicate(slice []string) []string {
 	return result
 }
 
-// Ensure TailwindPlugin implements the required interfaces
+// Ensure TailwindPlugin implements the required interfaces.
 var _ plugins.ComponentPlugin = (*TailwindPlugin)(nil)
 var _ plugins.BuildPlugin = (*TailwindPlugin)(nil)

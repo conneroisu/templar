@@ -2,6 +2,7 @@ package plugins
 
 import (
 	"context"
+	stderrors "errors"
 	"fmt"
 	"sync"
 	"testing"
@@ -12,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestPluginSystemIntegration tests the plugin system integration with the registry and build pipeline
+// TestPluginSystemIntegration tests the plugin system integration with the registry and build pipeline.
 func TestPluginSystemIntegration(t *testing.T) {
 	t.Run("registry integration", func(t *testing.T) {
 		// Setup registry and plugin manager
@@ -121,7 +122,9 @@ func TestPluginSystemIntegration(t *testing.T) {
 func TestEnhancedPluginManagerIntegration(t *testing.T) {
 	t.Run("basic enhanced manager functionality", func(t *testing.T) {
 		// Skip this test for now as it has issues with logging setup
-		t.Skip("Enhanced plugin manager has logging setup issues, focusing on basic plugin manager tests")
+		t.Skip(
+			"Enhanced plugin manager has logging setup issues, focusing on basic plugin manager tests",
+		)
 	})
 }
 
@@ -149,8 +152,16 @@ func TestPluginIsolationAndSecurity(t *testing.T) {
 		}
 
 		// Register both plugins
-		config1 := PluginConfig{Name: "plugin1", Enabled: true, Config: make(map[string]interface{})}
-		config2 := PluginConfig{Name: "plugin2", Enabled: true, Config: make(map[string]interface{})}
+		config1 := PluginConfig{
+			Name:    "plugin1",
+			Enabled: true,
+			Config:  make(map[string]interface{}),
+		}
+		config2 := PluginConfig{
+			Name:    "plugin2",
+			Enabled: true,
+			Config:  make(map[string]interface{}),
+		}
 
 		err := manager.RegisterPlugin(plugin1, config1)
 		require.NoError(t, err)
@@ -191,7 +202,11 @@ func TestPluginIsolationAndSecurity(t *testing.T) {
 			},
 		}
 
-		config := PluginConfig{Name: "failing-plugin", Enabled: true, Config: make(map[string]interface{})}
+		config := PluginConfig{
+			Name:    "failing-plugin",
+			Enabled: true,
+			Config:  make(map[string]interface{}),
+		}
 		// This should fail during RegisterPlugin since Initialize is called
 		_ = manager.RegisterPlugin(failingPlugin, config)
 		// The manager should handle failures gracefully
@@ -229,7 +244,11 @@ func TestConcurrentPluginOperations(t *testing.T) {
 			priority: 1,
 		}
 
-		config := PluginConfig{Name: "concurrent-plugin", Enabled: true, Config: make(map[string]interface{})}
+		config := PluginConfig{
+			Name:    "concurrent-plugin",
+			Enabled: true,
+			Config:  make(map[string]interface{}),
+		}
 		err := manager.RegisterPlugin(plugin, config)
 		require.NoError(t, err)
 
@@ -239,7 +258,7 @@ func TestConcurrentPluginOperations(t *testing.T) {
 		const numComponents = 50
 		var wg sync.WaitGroup
 
-		for i := 0; i < numComponents; i++ {
+		for i := range numComponents {
 			wg.Add(1)
 			go func(id int) {
 				defer wg.Done()
@@ -277,7 +296,11 @@ func TestPluginLifecycleManagement(t *testing.T) {
 			},
 		}
 
-		config := PluginConfig{Name: "lifecycle-plugin", Enabled: true, Config: make(map[string]interface{})}
+		config := PluginConfig{
+			Name:    "lifecycle-plugin",
+			Enabled: true,
+			Config:  make(map[string]interface{}),
+		}
 		err := manager.RegisterPlugin(plugin, config)
 		require.NoError(t, err)
 
@@ -314,7 +337,11 @@ func TestPluginDiscoveryAndLoading(t *testing.T) {
 			health:  PluginHealth{Status: HealthStatusHealthy},
 		}
 
-		config := PluginConfig{Name: "discovery-test", Enabled: true, Config: make(map[string]interface{})}
+		config := PluginConfig{
+			Name:    "discovery-test",
+			Enabled: true,
+			Config:  make(map[string]interface{}),
+		}
 		err := manager.RegisterPlugin(mockPlugin, config)
 		assert.NoError(t, err, "Should be able to register discovered plugin")
 
@@ -331,11 +358,14 @@ type MockFailingPlugin struct {
 }
 
 func (mfp *MockFailingPlugin) Initialize(ctx context.Context, config PluginConfig) error {
-	return fmt.Errorf("intentional failure")
+	return stderrors.New("intentional failure")
 }
 
-func (mfp *MockFailingPlugin) HandleComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error) {
-	return nil, fmt.Errorf("component processing failed")
+func (mfp *MockFailingPlugin) HandleComponent(
+	ctx context.Context,
+	component *types.ComponentInfo,
+) (*types.ComponentInfo, error) {
+	return nil, stderrors.New("component processing failed")
 }
 
 func (mfp *MockFailingPlugin) SupportedExtensions() []string { return []string{".templ"} }
@@ -350,11 +380,13 @@ type MockLifecyclePlugin struct {
 func (mlp *MockLifecyclePlugin) Initialize(ctx context.Context, config PluginConfig) error {
 	mlp.initializeCalled = true
 	mlp.initialized = true
+
 	return nil
 }
 
 func (mlp *MockLifecyclePlugin) Shutdown(ctx context.Context) error {
 	mlp.shutdownCalled = true
+
 	return nil
 }
 

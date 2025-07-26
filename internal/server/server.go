@@ -20,6 +20,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/coder/websocket"
 	"github.com/conneroisu/templar/internal/build"
 	"github.com/conneroisu/templar/internal/config"
 	"github.com/conneroisu/templar/internal/errors"
@@ -32,10 +33,9 @@ import (
 	"github.com/conneroisu/templar/internal/validation"
 	"github.com/conneroisu/templar/internal/version"
 	"github.com/conneroisu/templar/internal/watcher"
-	"github.com/coder/websocket"
 )
 
-// Client represents a WebSocket client
+// Client represents a WebSocket client.
 type Client struct {
 	conn         *websocket.Conn
 	send         chan []byte
@@ -44,7 +44,7 @@ type Client struct {
 	rateLimiter  WebSocketRateLimiter // WebSocket-specific rate limiter interface
 }
 
-// PreviewServer serves components with live reload capability
+// PreviewServer serves components with live reload capability.
 type PreviewServer struct {
 	config          *config.Config
 	httpServer      *http.Server
@@ -71,7 +71,7 @@ type PreviewServer struct {
 	rateLimiter *TokenBucketManager
 }
 
-// UpdateMessage represents a message sent to the browser
+// UpdateMessage represents a message sent to the browser.
 type UpdateMessage struct {
 	Type      string    `json:"type"`
 	Target    string    `json:"target,omitempty"`
@@ -79,7 +79,7 @@ type UpdateMessage struct {
 	Timestamp time.Time `json:"timestamp"`
 }
 
-// New creates a new preview server (deprecated: use NewWithDependencies)
+// New creates a new preview server (deprecated: use NewWithDependencies).
 func New(cfg *config.Config) (*PreviewServer, error) {
 	registry := registry.NewComponentRegistry()
 
@@ -123,7 +123,7 @@ func New(cfg *config.Config) (*PreviewServer, error) {
 }
 
 // NewWithDependencies creates a new preview server with injected dependencies (LEGACY)
-// Deprecated: Use NewRefactoredWithDependencies for new implementations
+// Deprecated: Use NewRefactoredWithDependencies for new implementations.
 func NewWithDependencies(
 	cfg *config.Config,
 	componentRegistry interfaces.ComponentRegistry,
@@ -151,7 +151,7 @@ func NewWithDependencies(
 }
 
 // NewRefactoredWithDependencies creates a new refactored preview server with proper SRP
-// This is the recommended constructor that uses the new architecture
+// This is the recommended constructor that uses the new architecture.
 func NewRefactoredWithDependencies(
 	cfg *config.Config,
 	componentRegistry interfaces.ComponentRegistry,
@@ -170,7 +170,7 @@ func NewRefactoredWithDependencies(
 	)
 }
 
-// Start starts the preview server
+// Start starts the preview server.
 func (s *PreviewServer) Start(ctx context.Context) error {
 	// Set up file watcher
 	s.setupFileWatcher(ctx)
@@ -201,22 +201,22 @@ func (s *PreviewServer) Start(ctx context.Context) error {
 	mux.HandleFunc("/component/", s.handleComponent)
 	mux.HandleFunc("/render/", s.handleRender)
 	mux.HandleFunc("/static/", s.handleStatic)
-	
+
 	// Interactive Playground routes
 	mux.HandleFunc("/playground", s.handlePlaygroundIndex)
 	mux.HandleFunc("/playground/", s.handlePlaygroundComponent)
 	mux.HandleFunc("/api/playground/render", s.handlePlaygroundRender)
-	
+
 	// Enhanced Web Interface routes
 	mux.HandleFunc("/enhanced", s.handleEnhancedIndex)
-	
+
 	// Interactive Editor routes
 	mux.HandleFunc("/editor", s.handleEditorIndex)
 	mux.HandleFunc("/editor/", s.handleEditorIndex)
 	mux.HandleFunc("/api/editor", s.handleEditorAPI)
 	mux.HandleFunc("/api/files", s.handleFileAPI)
 	mux.HandleFunc("/api/inline-editor", s.handleInlineEditor)
-	
+
 	// Build API routes
 	mux.HandleFunc("/api/build/status", s.handleBuildStatus)
 	mux.HandleFunc("/api/build/metrics", s.handleBuildMetrics)
@@ -246,7 +246,7 @@ func (s *PreviewServer) Start(ctx context.Context) error {
 
 	// Open browser if configured
 	if s.config.Server.Open {
-		go s.openBrowser(fmt.Sprintf("http://%s", addr))
+		go s.openBrowser("http://" + addr)
 	}
 
 	// Start server
@@ -265,13 +265,12 @@ func (s *PreviewServer) setupFileWatcher(ctx context.Context) {
 	s.watcher.AddFilter(interfaces.FileFilterFunc(watcher.NoVendorFilter))
 	s.watcher.AddFilter(interfaces.FileFilterFunc(watcher.NoGitFilter))
 
-	// Add handler 
+	// Add handler
 	s.watcher.AddHandler(func(events []interfaces.ChangeEvent) error {
 		// Convert to local watcher events
 		changeEvents := make([]watcher.ChangeEvent, len(events))
-		for i, event := range events {
-			changeEvents[i] = watcher.ChangeEvent(event)
-		}
+		copy(changeEvents, events)
+
 		return s.handleFileChange(changeEvents)
 	})
 
@@ -300,6 +299,7 @@ func (s *PreviewServer) initialScan() error {
 	}
 
 	log.Printf("Found %d components", s.registry.Count())
+
 	return nil
 }
 
@@ -346,6 +346,7 @@ func (s *PreviewServer) openBrowser(url string) {
 	// Critical security validation: prevent command injection attacks
 	if err := validation.ValidateURL(url); err != nil {
 		log.Printf("Security: Browser open blocked due to invalid URL: %v", err)
+
 		return
 	}
 
@@ -362,6 +363,7 @@ func (s *PreviewServer) openBrowser(url string) {
 		err = exec.Command("open", url).Start()
 	default:
 		log.Printf("Browser auto-open not supported on platform: %s", runtime.GOOS)
+
 		return
 	}
 
@@ -383,7 +385,12 @@ func (s *PreviewServer) addMiddleware(handler http.Handler) http.Handler {
 	// Create rate limiting middleware
 	rateLimitConfig := securityConfig.RateLimiting
 	if rateLimitConfig != nil && rateLimitConfig.Enabled {
-		s.rateLimiter = NewRateLimiter(rateLimitConfig, nil)
+		// Protect race condition during server initialization
+		s.shutdownMutex.Lock()
+		if s.rateLimiter == nil {
+			s.rateLimiter = NewRateLimiter(rateLimitConfig, nil)
+		}
+		s.shutdownMutex.Unlock()
 		rateLimitHandler := RateLimitMiddleware(s.rateLimiter)(securityHandler)
 		securityHandler = rateLimitHandler
 	}
@@ -413,6 +420,7 @@ func (s *PreviewServer) addMiddleware(handler http.Handler) http.Handler {
 		// Handle preflight requests
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
+
 			return
 		}
 
@@ -430,7 +438,7 @@ func (s *PreviewServer) addMiddleware(handler http.Handler) http.Handler {
 	})
 }
 
-// isAllowedOrigin checks if the origin is in the allowed origins list
+// isAllowedOrigin checks if the origin is in the allowed origins list.
 func (s *PreviewServer) isAllowedOrigin(origin string) bool {
 	if origin == "" {
 		return false
@@ -453,13 +461,14 @@ func (s *PreviewServer) broadcastMessage(msg UpdateMessage) {
 		log.Printf("Failed to marshal message: %v", err)
 		// Fallback to simple reload message
 		s.broadcast <- []byte(`{"type":"full_reload"}`)
+
 		return
 	}
 
 	s.broadcast <- jsonData
 }
 
-// handleBuildResult handles build results from the build pipeline
+// handleBuildResult handles build results from the build pipeline.
 func (s *PreviewServer) handleBuildResult(result build.BuildResult) {
 	if result.Error != nil {
 		// Store build errors
@@ -486,7 +495,7 @@ func (s *PreviewServer) handleBuildResult(result build.BuildResult) {
 	}
 }
 
-// triggerFullRebuild triggers a full rebuild of all components
+// triggerFullRebuild triggers a full rebuild of all components.
 func (s *PreviewServer) triggerFullRebuild() {
 	components := s.registry.GetAll()
 	for _, component := range components {
@@ -494,7 +503,7 @@ func (s *PreviewServer) triggerFullRebuild() {
 	}
 }
 
-// GetBuildMetrics returns the current build metrics
+// GetBuildMetrics returns the current build metrics.
 func (s *PreviewServer) GetBuildMetrics() build.BuildMetrics {
 	// Get metrics from the pipeline interface
 	metricsInterface := s.buildPipeline.GetMetrics()
@@ -512,12 +521,12 @@ func (s *PreviewServer) GetBuildMetrics() build.BuildMetrics {
 	return build.BuildMetrics{}
 }
 
-// GetLastBuildErrors returns the last build errors
+// GetLastBuildErrors returns the last build errors.
 func (s *PreviewServer) GetLastBuildErrors() []*errors.ParsedError {
 	return s.lastBuildErrors
 }
 
-// Shutdown gracefully shuts down the server and cleans up resources
+// Shutdown gracefully shuts down the server and cleans up resources.
 func (s *PreviewServer) Shutdown(ctx context.Context) error {
 	var shutdownErr error
 
@@ -540,8 +549,10 @@ func (s *PreviewServer) Shutdown(ctx context.Context) error {
 		}
 
 		// MEMORY LEAK FIX: Stop rate limiter to clean up goroutines
+		// Protected by shutdownMutex to prevent race with addMiddleware
 		if s.rateLimiter != nil {
 			s.rateLimiter.Stop()
+			s.rateLimiter = nil
 		}
 
 		// Close all WebSocket connections
@@ -585,10 +596,11 @@ func (s *PreviewServer) Shutdown(ctx context.Context) error {
 	return shutdownErr
 }
 
-// handleHealth returns the server health status for health checks
+// handleHealth returns the server health status for health checks.
 func (s *PreviewServer) handleHealth(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+
 		return
 	}
 
@@ -598,10 +610,22 @@ func (s *PreviewServer) handleHealth(w http.ResponseWriter, r *http.Request) {
 		"version":    version.GetShortVersion(),
 		"build_info": version.GetBuildInfo(),
 		"checks": map[string]interface{}{
-			"server":   map[string]interface{}{"status": "healthy", "message": "HTTP server operational"},
-			"registry": map[string]interface{}{"status": "healthy", "components": len(s.registry.GetAll())},
-			"watcher":  map[string]interface{}{"status": "healthy", "message": "File watcher operational"},
-			"build":    map[string]interface{}{"status": "healthy", "message": "Build pipeline operational"},
+			"server": map[string]interface{}{
+				"status":  "healthy",
+				"message": "HTTP server operational",
+			},
+			"registry": map[string]interface{}{
+				"status":     "healthy",
+				"components": len(s.registry.GetAll()),
+			},
+			"watcher": map[string]interface{}{
+				"status":  "healthy",
+				"message": "File watcher operational",
+			},
+			"build": map[string]interface{}{
+				"status":  "healthy",
+				"message": "Build pipeline operational",
+			},
 		},
 	}
 
@@ -613,10 +637,11 @@ func (s *PreviewServer) handleHealth(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleBuildStatus returns the current build status
+// handleBuildStatus returns the current build status.
 func (s *PreviewServer) handleBuildStatus(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+
 		return
 	}
 
@@ -646,10 +671,11 @@ func (s *PreviewServer) handleBuildStatus(w http.ResponseWriter, r *http.Request
 	json.NewEncoder(w).Encode(response)
 }
 
-// handleBuildMetrics returns detailed build metrics
+// handleBuildMetrics returns detailed build metrics.
 func (s *PreviewServer) handleBuildMetrics(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+
 		return
 	}
 
@@ -687,10 +713,11 @@ func (s *PreviewServer) handleBuildMetrics(w http.ResponseWriter, r *http.Reques
 	json.NewEncoder(w).Encode(response)
 }
 
-// handleBuildErrors returns the last build errors
+// handleBuildErrors returns the last build errors.
 func (s *PreviewServer) handleBuildErrors(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+
 		return
 	}
 
@@ -706,7 +733,7 @@ func (s *PreviewServer) handleBuildErrors(w http.ResponseWriter, r *http.Request
 	json.NewEncoder(w).Encode(response)
 }
 
-// handleBuildCache manages the build cache
+// handleBuildCache manages the build cache.
 func (s *PreviewServer) handleBuildCache(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:

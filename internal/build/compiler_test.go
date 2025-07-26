@@ -342,18 +342,19 @@ templ TestComponent(title string) {
 	})
 }
 
-// Helper function to check if a command is available
+// Helper function to check if a command is available.
 func isCommandAvailable(command string) bool {
 	_, err := exec.LookPath(command)
+
 	return err == nil
 }
 
-// Benchmark tests for performance validation
+// Benchmark tests for performance validation.
 func BenchmarkTemplCompiler_validateCommand(b *testing.B) {
 	compiler := NewTemplCompiler()
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = compiler.validateCommand()
 	}
 }
@@ -368,7 +369,7 @@ func BenchmarkTemplCompiler_Compile(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, _ = compiler.Compile(context.Background(), component)
 	}
 }
@@ -385,7 +386,7 @@ func BenchmarkTemplCompiler_CompileWithPools(b *testing.B) {
 	pools := NewObjectPools()
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, _ = compiler.CompileWithPools(context.Background(), component, pools)
 	}
 }

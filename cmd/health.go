@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -11,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// HealthStatus represents the health check response
+// HealthStatus represents the health check response.
 type HealthStatus struct {
 	Status    string           `json:"status"`
 	Timestamp time.Time        `json:"timestamp"`
@@ -19,7 +20,7 @@ type HealthStatus struct {
 	Overall   bool             `json:"overall"`
 }
 
-// Check represents an individual health check result
+// Check represents an individual health check result.
 type Check struct {
 	Status  string `json:"status"`
 	Message string `json:"message,omitempty"`
@@ -50,8 +51,10 @@ func init() {
 	rootCmd.AddCommand(healthCmd)
 
 	healthCmd.Flags().IntVarP(&healthPort, "port", "p", 8080, "Port to check for HTTP server")
-	healthCmd.Flags().StringVarP(&healthHost, "host", "H", "localhost", "Host to check for HTTP server")
-	healthCmd.Flags().DurationVarP(&healthTimeout, "timeout", "t", 3*time.Second, "Timeout for health checks")
+	healthCmd.Flags().
+		StringVarP(&healthHost, "host", "H", "localhost", "Host to check for HTTP server")
+	healthCmd.Flags().
+		DurationVarP(&healthTimeout, "timeout", "t", 3*time.Second, "Timeout for health checks")
 	healthCmd.Flags().BoolVarP(&healthVerbose, "verbose", "v", false, "Verbose health check output")
 }
 
@@ -87,13 +90,13 @@ func runHealthCheck(cmd *cobra.Command, args []string) error {
 	}
 
 	if !status.Overall {
-		return fmt.Errorf("health checks failed")
+		return errors.New("health checks failed")
 	}
 
 	return nil
 }
 
-// checkHTTPServer verifies the HTTP server is responding
+// checkHTTPServer verifies the HTTP server is responding.
 func checkHTTPServer(status *HealthStatus) {
 	client := &http.Client{
 		Timeout: healthTimeout,
@@ -109,9 +112,14 @@ func checkHTTPServer(status *HealthStatus) {
 			Healthy: false,
 		}
 		status.Overall = false
+
 		return
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to close response body: %v\n", err)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		status.Checks["http_server"] = Check{
@@ -120,6 +128,7 @@ func checkHTTPServer(status *HealthStatus) {
 			Healthy: false,
 		}
 		status.Overall = false
+
 		return
 	}
 
@@ -130,7 +139,7 @@ func checkHTTPServer(status *HealthStatus) {
 	}
 }
 
-// checkFileSystemAccess verifies basic file system access
+// checkFileSystemAccess verifies basic file system access.
 func checkFileSystemAccess(status *HealthStatus) {
 	// Check current directory access
 	_, err := os.Getwd()
@@ -141,6 +150,7 @@ func checkFileSystemAccess(status *HealthStatus) {
 			Healthy: false,
 		}
 		status.Overall = false
+
 		return
 	}
 
@@ -153,10 +163,15 @@ func checkFileSystemAccess(status *HealthStatus) {
 			Healthy: false,
 		}
 		status.Overall = false
+
 		return
 	}
-	tmpFile.Close()
-	os.Remove(tmpFile.Name())
+	if err := tmpFile.Close(); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: failed to close temp file: %v\n", err)
+	}
+	if err := os.Remove(tmpFile.Name()); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: failed to remove temp file: %v\n", err)
+	}
 
 	status.Checks["filesystem"] = Check{
 		Status:  "healthy",
@@ -165,7 +180,7 @@ func checkFileSystemAccess(status *HealthStatus) {
 	}
 }
 
-// checkBuildTools verifies required build tools are available
+// checkBuildTools verifies required build tools are available.
 func checkBuildTools(status *HealthStatus) {
 	// Check for templ binary
 	_, err := exec.LookPath("templ")
@@ -184,7 +199,7 @@ func checkBuildTools(status *HealthStatus) {
 	}
 }
 
-// checkComponentDirectories verifies component directories are accessible
+// checkComponentDirectories verifies component directories are accessible.
 func checkComponentDirectories(status *HealthStatus) {
 	// Check common component directories
 	commonDirs := []string{"./components", "./views", "./examples"}

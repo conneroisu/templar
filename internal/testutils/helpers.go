@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// CreateTempProject creates a temporary project structure for testing
+// CreateTempProject creates a temporary project structure for testing.
 func CreateTempProject(t *testing.T) string {
 	tempDir := t.TempDir()
 
@@ -33,15 +33,16 @@ func CreateTempProject(t *testing.T) string {
 	return tempDir
 }
 
-// CreateTestComponent creates a test component file
+// CreateTestComponent creates a test component file.
 func CreateTestComponent(t *testing.T, dir, name, content string) string {
 	componentPath := filepath.Join(dir, name+".templ")
 	err := os.WriteFile(componentPath, []byte(content), 0644)
 	require.NoError(t, err)
+
 	return componentPath
 }
 
-// CreateTestConfig creates a test configuration
+// CreateTestConfig creates a test configuration.
 func CreateTestConfig(projectDir string) *config.Config {
 	return &config.Config{
 		Server: config.ServerConfig{
@@ -70,7 +71,7 @@ func CreateTestConfig(projectDir string) *config.Config {
 	}
 }
 
-// CreateTestRegistry creates a registry with sample components
+// CreateTestRegistry creates a registry with sample components.
 func CreateTestRegistry() *registry.ComponentRegistry {
 	reg := registry.NewComponentRegistry()
 
@@ -124,7 +125,7 @@ func CreateTestRegistry() *registry.ComponentRegistry {
 	return reg
 }
 
-// StandardTemplContent provides standard templ component templates for testing
+// StandardTemplContent provides standard templ component templates for testing.
 var StandardTemplContent = map[string]string{
 	"Button": `package components
 
@@ -173,7 +174,7 @@ templ Layout(title string, content templ.Component) {
 }`,
 }
 
-// SecurityTestCases provides common security test vectors
+// SecurityTestCases provides common security test vectors.
 var SecurityTestCases = struct {
 	PathTraversal    []string
 	CommandInjection []string
@@ -222,7 +223,7 @@ var SecurityTestCases = struct {
 	},
 }
 
-// CreateSecureTestEnvironment sets up a test environment with security considerations
+// CreateSecureTestEnvironment sets up a test environment with security considerations.
 func CreateSecureTestEnvironment(t *testing.T) (string, *config.Config) {
 	projectDir := CreateTempProject(t)
 
@@ -237,7 +238,7 @@ func CreateSecureTestEnvironment(t *testing.T) (string, *config.Config) {
 	return projectDir, cfg
 }
 
-// AssertFilePermissions checks that files have secure permissions
+// AssertFilePermissions checks that files have secure permissions.
 func AssertFilePermissions(t *testing.T, path string, expectedMode os.FileMode) {
 	info, err := os.Stat(path)
 	require.NoError(t, err)
@@ -248,7 +249,7 @@ func AssertFilePermissions(t *testing.T, path string, expectedMode os.FileMode) 
 		path, actualMode&os.FileMode(0777), expectedMode)
 }
 
-// AssertDirectoryPermissions checks that directories have secure permissions
+// AssertDirectoryPermissions checks that directories have secure permissions.
 func AssertDirectoryPermissions(t *testing.T, path string, expectedMode os.FileMode) {
 	info, err := os.Stat(path)
 	require.NoError(t, err)
@@ -260,13 +261,18 @@ func AssertDirectoryPermissions(t *testing.T, path string, expectedMode os.FileM
 		path, actualMode&os.FileMode(0777), expectedMode)
 }
 
-// CleanupTestEnvironment removes test files and directories
+// CleanupTestEnvironment removes test files and directories.
 func CleanupTestEnvironment(projectDir string) error {
 	return os.RemoveAll(projectDir)
 }
 
-// WaitForFileChange waits for a file to be modified (useful for testing file watchers)
-func WaitForFileChange(t *testing.T, filePath string, originalModTime time.Time, timeout time.Duration) {
+// WaitForFileChange waits for a file to be modified (useful for testing file watchers).
+func WaitForFileChange(
+	t *testing.T,
+	filePath string,
+	originalModTime time.Time,
+	timeout time.Duration,
+) {
 	deadline := time.Now().Add(timeout)
 
 	for time.Now().Before(deadline) {

@@ -67,7 +67,11 @@ func TestCIIntegration_GenerateReport(t *testing.T) {
 	// Health score should be reduced due to major regression
 	expectedHealthScore := 100.0 - 15.0 // 100 - (1 major * 15 points)
 	if report.Summary.OverallHealthScore != expectedHealthScore {
-		t.Errorf("Expected health score %f, got %f", expectedHealthScore, report.Summary.OverallHealthScore)
+		t.Errorf(
+			"Expected health score %f, got %f",
+			expectedHealthScore,
+			report.Summary.OverallHealthScore,
+		)
 	}
 }
 
@@ -106,7 +110,10 @@ func TestCIIntegration_OutputJSON(t *testing.T) {
 	}
 
 	if parsedReport.Summary.TotalBenchmarks != 1 {
-		t.Errorf("Expected 1 total benchmark in parsed report, got %d", parsedReport.Summary.TotalBenchmarks)
+		t.Errorf(
+			"Expected 1 total benchmark in parsed report, got %d",
+			parsedReport.Summary.TotalBenchmarks,
+		)
 	}
 }
 
@@ -344,19 +351,31 @@ func TestCIIntegration_CalculateSummary(t *testing.T) {
 	// Health score calculation: 100 - (1*30 + 2*15 + 2*5) = 100 - 70 = 30
 	expectedHealthScore := 30.0
 	if summary.OverallHealthScore != expectedHealthScore {
-		t.Errorf("Expected health score %f, got %f", expectedHealthScore, summary.OverallHealthScore)
+		t.Errorf(
+			"Expected health score %f, got %f",
+			expectedHealthScore,
+			summary.OverallHealthScore,
+		)
 	}
 
 	// Average degradation: (50 + 30 + 25 + 10) / 4 = 28.75
 	expectedAvgDegradation := 28.75
 	if summary.AverageDegradation != expectedAvgDegradation {
-		t.Errorf("Expected average degradation %f, got %f", expectedAvgDegradation, summary.AverageDegradation)
+		t.Errorf(
+			"Expected average degradation %f, got %f",
+			expectedAvgDegradation,
+			summary.AverageDegradation,
+		)
 	}
 
 	// Average improvement: 5.0 (only one improvement)
 	expectedAvgImprovement := 5.0
 	if summary.AverageImprovement != expectedAvgImprovement {
-		t.Errorf("Expected average improvement %f, got %f", expectedAvgImprovement, summary.AverageImprovement)
+		t.Errorf(
+			"Expected average improvement %f, got %f",
+			expectedAvgImprovement,
+			summary.AverageImprovement,
+		)
 	}
 }
 
@@ -378,13 +397,13 @@ func TestCIIntegration_CountCriticalRegressions(t *testing.T) {
 	}
 }
 
-// Benchmark the CI integration components
+// Benchmark the CI integration components.
 func BenchmarkCIIntegration_GenerateReport(b *testing.B) {
 	detector := NewPerformanceDetector("test", DefaultThresholds())
 	ci := NewCIIntegration(detector, "json", false)
 
 	results := make([]BenchmarkResult, 100)
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		results[i] = BenchmarkResult{
 			Name:    "Benchmark" + string(rune(i)),
 			NsPerOp: float64(1000 + i*10),
@@ -392,7 +411,7 @@ func BenchmarkCIIntegration_GenerateReport(b *testing.B) {
 	}
 
 	regressions := make([]RegressionDetection, 10)
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		regressions[i] = RegressionDetection{
 			BenchmarkName:    "Benchmark" + string(rune(i)),
 			IsRegression:     true,
@@ -402,7 +421,7 @@ func BenchmarkCIIntegration_GenerateReport(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = ci.GenerateReport(results, regressions)
 	}
 }
@@ -422,7 +441,7 @@ func BenchmarkCIIntegration_OutputText(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = ci.outputText(report, "")
 	}
 }

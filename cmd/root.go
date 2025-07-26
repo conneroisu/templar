@@ -29,7 +29,7 @@ import (
 
 var cfgFile string
 
-// rootCmd represents the base command when called without any subcommands
+// rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
 	Use:   "templar",
 	Short: "A rapid prototyping CLI helper tool for Go templ",
@@ -69,9 +69,11 @@ func Execute() error {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is .templar.yml, can also use TEMPLAR_CONFIG_FILE env var)")
-	rootCmd.PersistentFlags().StringP("log-level", "l", "info", "log level (debug, info, warn, error)")
-	viper.BindPFlag("log-level", rootCmd.PersistentFlags().Lookup("log-level"))
+	rootCmd.PersistentFlags().
+		StringVar(&cfgFile, "config", "", "config file (default is .templar.yml, can also use TEMPLAR_CONFIG_FILE env var)")
+	rootCmd.PersistentFlags().
+		StringP("log-level", "l", "info", "log level (debug, info, warn, error)")
+	_ = viper.BindPFlag("log-level", rootCmd.PersistentFlags().Lookup("log-level"))
 }
 
 // initConfig initializes the configuration system with support for multiple config sources.

@@ -2,6 +2,7 @@ package monitoring
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"runtime"
@@ -11,7 +12,7 @@ import (
 	"github.com/conneroisu/templar/internal/logging"
 )
 
-// DefaultSelfHealingRules creates default recovery rules for common failure scenarios
+// DefaultSelfHealingRules creates default recovery rules for common failure scenarios.
 func DefaultSelfHealingRules(deps *SelfHealingDependencies) []*RecoveryRule {
 	return []*RecoveryRule{
 		{
@@ -90,7 +91,7 @@ func DefaultSelfHealingRules(deps *SelfHealingDependencies) []*RecoveryRule {
 	}
 }
 
-// SelfHealingDependencies contains dependencies needed for self-healing actions
+// SelfHealingDependencies contains dependencies needed for self-healing actions.
 type SelfHealingDependencies struct {
 	Logger        logging.Logger
 	BuildPipeline interfaces.BuildPipeline
@@ -99,8 +100,11 @@ type SelfHealingDependencies struct {
 	FileWatcher   interfaces.FileWatcher
 }
 
-// SetupSelfHealingSystem creates and configures a complete self-healing system
-func SetupSelfHealingSystem(healthMonitor *HealthMonitor, deps *SelfHealingDependencies) *SelfHealingSystem {
+// SetupSelfHealingSystem creates and configures a complete self-healing system.
+func SetupSelfHealingSystem(
+	healthMonitor *HealthMonitor,
+	deps *SelfHealingDependencies,
+) *SelfHealingSystem {
 	system := NewSelfHealingSystem(healthMonitor, deps.Logger)
 
 	// Register default recovery rules
@@ -114,7 +118,7 @@ func SetupSelfHealingSystem(healthMonitor *HealthMonitor, deps *SelfHealingDepen
 
 // Advanced recovery actions specific to Templar components
 
-// CleanTemporaryFilesAction creates an action to clean up temporary files
+// CleanTemporaryFilesAction creates an action to clean up temporary files.
 func CleanTemporaryFilesAction() RecoveryAction {
 	return NewRecoveryActionFunc(
 		"clean_temp_files",
@@ -132,12 +136,13 @@ func CleanTemporaryFilesAction() RecoveryAction {
 					continue
 				}
 			}
+
 			return nil
 		},
 	)
 }
 
-// cleanTempDirectory removes old temporary files from a directory
+// cleanTempDirectory removes old temporary files from a directory.
 func cleanTempDirectory(dir string) error {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -156,9 +161,9 @@ func cleanTempDirectory(dir string) error {
 			continue
 		}
 
-		if info.ModTime().Before(cutoff) && 
-			(entry.Name() == ".templar_temp_" || 
-			 entry.Name() == "templar-health-") {
+		if info.ModTime().Before(cutoff) &&
+			(entry.Name() == ".templar_temp_" ||
+				entry.Name() == "templar-health-") {
 			os.Remove(dir + "/" + entry.Name())
 		}
 	}
@@ -166,7 +171,7 @@ func cleanTempDirectory(dir string) error {
 	return nil
 }
 
-// DumpGoroutineStacksAction creates an action to dump goroutine stacks for debugging
+// DumpGoroutineStacksAction creates an action to dump goroutine stacks for debugging.
 func DumpGoroutineStacksAction(logger logging.Logger) RecoveryAction {
 	return NewRecoveryActionFunc(
 		"dump_goroutine_stacks",
@@ -174,64 +179,68 @@ func DumpGoroutineStacksAction(logger logging.Logger) RecoveryAction {
 		func(ctx context.Context, check HealthCheck) error {
 			buf := make([]byte, 64*1024) // 64KB should be enough for stack traces
 			n := runtime.Stack(buf, true)
-			
+
 			logger.Error(ctx, nil, "Goroutine stack dump due to high goroutine count",
 				"goroutine_count", runtime.NumGoroutine(),
 				"stack_trace", string(buf[:n]))
-			
+
 			return nil
 		},
 	)
 }
 
-// ClearBuildCacheAction creates an action to clear build caches
+// ClearBuildCacheAction creates an action to clear build caches.
 func ClearBuildCacheAction(buildPipeline interfaces.BuildPipeline) RecoveryAction {
 	return NewRecoveryActionFunc(
 		"clear_build_cache",
 		"Clear build pipeline caches to resolve build issues",
 		func(ctx context.Context, check HealthCheck) error {
 			if buildPipeline == nil {
-				return fmt.Errorf("build pipeline is nil")
+				return errors.New("build pipeline is nil")
 			}
 			buildPipeline.ClearCache()
+
 			return nil
 		},
 	)
 }
 
-// RestartBuildPipelineAction creates an action to restart the build pipeline
+// RestartBuildPipelineAction creates an action to restart the build pipeline.
 func RestartBuildPipelineAction(buildPipeline interfaces.BuildPipeline) RecoveryAction {
 	return NewRecoveryActionFunc(
 		"restart_build_pipeline",
 		"Restart the build pipeline to recover from build failures",
 		func(ctx context.Context, check HealthCheck) error {
 			if buildPipeline == nil {
-				return fmt.Errorf("build pipeline is nil")
+				return errors.New("build pipeline is nil")
 			}
-			
+
 			// Stop and restart the build pipeline
 			buildPipeline.Stop()
 			buildPipeline.Start(ctx)
-			
+
 			return nil
 		},
 	)
 }
 
-// RefreshComponentRegistryAction creates an action to refresh the component registry
-func RefreshComponentRegistryAction(registry interfaces.ComponentRegistry, scanner interfaces.ComponentScanner) RecoveryAction {
+// RefreshComponentRegistryAction creates an action to refresh the component registry.
+func RefreshComponentRegistryAction(
+	registry interfaces.ComponentRegistry,
+	scanner interfaces.ComponentScanner,
+) RecoveryAction {
 	return NewRecoveryActionFunc(
 		"refresh_component_registry",
 		"Refresh component registry by rescanning component directories",
 		func(ctx context.Context, check HealthCheck) error {
 			if registry == nil || scanner == nil {
-				return fmt.Errorf("registry or scanner is nil")
+				return errors.New("registry or scanner is nil")
 			}
 
 			// Clear registry and rescan
 			// Note: This assumes the registry has a Clear method
 			// If not available, we can just rescan which should update existing entries
-			
+
 			// Scan common component directories
 			commonDirs := []string{"./components", "./views", "./examples"}
 			for _, dir := range commonDirs {
@@ -248,22 +257,22 @@ func RefreshComponentRegistryAction(registry interfaces.ComponentRegistry, scann
 	)
 }
 
-// RestartFileWatcherAction creates an action to restart the file watcher
+// RestartFileWatcherAction creates an action to restart the file watcher.
 func RestartFileWatcherAction(fileWatcher interfaces.FileWatcher) RecoveryAction {
 	return NewRecoveryActionFunc(
 		"restart_file_watcher",
 		"Restart file watcher to recover from file system monitoring issues",
 		func(ctx context.Context, check HealthCheck) error {
 			if fileWatcher == nil {
-				return fmt.Errorf("file watcher is nil")
+				return errors.New("file watcher is nil")
 			}
 
 			// Stop and restart the file watcher
 			fileWatcher.Stop()
-			
+
 			// Add a brief delay to ensure cleanup
 			time.Sleep(1 * time.Second)
-			
+
 			if err := fileWatcher.Start(ctx); err != nil {
 				return fmt.Errorf("failed to restart file watcher: %w", err)
 			}
@@ -273,7 +282,7 @@ func RestartFileWatcherAction(fileWatcher interfaces.FileWatcher) RecoveryAction
 	)
 }
 
-// CreateBuildPipelineHealthChecker creates a health checker for the build pipeline
+// CreateBuildPipelineHealthChecker creates a health checker for the build pipeline.
 func CreateBuildPipelineHealthChecker(buildPipeline interfaces.BuildPipeline) HealthChecker {
 	return NewHealthCheckFunc("build_pipeline", true, func(ctx context.Context) HealthCheck {
 		start := time.Now()
@@ -291,7 +300,7 @@ func CreateBuildPipelineHealthChecker(buildPipeline interfaces.BuildPipeline) He
 
 		// Get build metrics to assess pipeline health
 		metricsInterface := buildPipeline.GetMetrics()
-		
+
 		// Check if we can get metrics (indicates pipeline is responsive)
 		if metricsInterface == nil {
 			return HealthCheck{
@@ -318,7 +327,7 @@ func CreateBuildPipelineHealthChecker(buildPipeline interfaces.BuildPipeline) He
 	})
 }
 
-// CreateComponentRegistryHealthChecker creates a health checker for the component registry
+// CreateComponentRegistryHealthChecker creates a health checker for the component registry.
 func CreateComponentRegistryHealthChecker(registry interfaces.ComponentRegistry) HealthChecker {
 	return NewHealthCheckFunc("component_registry", false, func(ctx context.Context) HealthCheck {
 		start := time.Now()
@@ -362,7 +371,7 @@ func CreateComponentRegistryHealthChecker(registry interfaces.ComponentRegistry)
 	})
 }
 
-// CreateFileWatcherHealthChecker creates a health checker for the file watcher
+// CreateFileWatcherHealthChecker creates a health checker for the file watcher.
 func CreateFileWatcherHealthChecker(fileWatcher interfaces.FileWatcher) HealthChecker {
 	return NewHealthCheckFunc("file_watcher", false, func(ctx context.Context) HealthCheck {
 		start := time.Now()

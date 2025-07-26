@@ -43,7 +43,8 @@ func init() {
 	rootCmd.AddCommand(watchCmd)
 
 	watchCmd.Flags().BoolVarP(&watchVerbose, "verbose", "v", false, "Verbose output")
-	watchCmd.Flags().StringVarP(&watchCommand, "command", "c", "", "Custom command to run on changes")
+	watchCmd.Flags().
+		StringVarP(&watchCommand, "command", "c", "", "Custom command to run on changes")
 }
 
 func runWatch(cmd *cobra.Command, args []string) error {
@@ -62,7 +63,7 @@ func runWatch(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create file watcher: %w", err)
 	}
-	defer fileWatcher.Stop()
+	defer func() { _ = fileWatcher.Stop() }()
 
 	// Add filters using interface adapter
 	fileWatcher.AddFilter(interfaces.FileFilterFunc(watcher.TemplFilter))
@@ -199,7 +200,7 @@ func runCustomCommand(command string) error {
 	return nil
 }
 
-// validateCustomCommand validates custom commands with a security-focused allowlist
+// validateCustomCommand validates custom commands with a security-focused allowlist.
 func validateCustomCommand(command string, args []string) error {
 	// Allowlist of essential development commands only (security-hardened)
 	allowedCommands := map[string]bool{
@@ -231,7 +232,7 @@ func validateCustomCommand(command string, args []string) error {
 	return nil
 }
 
-// validateCommandSpecific provides enhanced validation for specific commands
+// validateCommandSpecific provides enhanced validation for specific commands.
 func validateCommandSpecific(command string, args []string) error {
 	switch command {
 	case "git":
@@ -241,13 +242,14 @@ func validateCommandSpecific(command string, args []string) error {
 	case "go":
 		return validateGoCommand(args)
 	}
+
 	return nil
 }
 
-// validateGitCommand ensures git commands are safe (read-only operations)
+// validateGitCommand ensures git commands are safe (read-only operations).
 func validateGitCommand(args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("git command requires arguments")
+		return errors.New("git command requires arguments")
 	}
 
 	// Allow only safe, read-only git operations
@@ -266,16 +268,19 @@ func validateGitCommand(args []string) error {
 
 	subcommand := args[0]
 	if !safeGitCommands[subcommand] {
-		return fmt.Errorf("git subcommand '%s' is not allowed (only read-only operations permitted)", subcommand)
+		return fmt.Errorf(
+			"git subcommand '%s' is not allowed (only read-only operations permitted)",
+			subcommand,
+		)
 	}
 
 	return nil
 }
 
-// validatePackageManagerCommand ensures package manager commands are safe
+// validatePackageManagerCommand ensures package manager commands are safe.
 func validatePackageManagerCommand(args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("package manager command requires arguments")
+		return errors.New("package manager command requires arguments")
 	}
 
 	// Allow common build/development operations
@@ -302,10 +307,10 @@ func validatePackageManagerCommand(args []string) error {
 	return nil
 }
 
-// validateGoCommand ensures go commands are safe
+// validateGoCommand ensures go commands are safe.
 func validateGoCommand(args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("go command requires arguments")
+		return errors.New("go command requires arguments")
 	}
 
 	// Allow common development operations
@@ -352,7 +357,9 @@ func runBuildCommand(cfg *config.Config) error {
 	// Check if templ is available
 	if parts[0] == "templ" {
 		if _, err := exec.LookPath("templ"); err != nil {
-			return errors.New("templ command not found. Please install it with: go install github.com/a-h/templ/cmd/templ@v0.3.819")
+			return errors.New(
+				"templ command not found. Please install it with: go install github.com/a-h/templ/cmd/templ@v0.3.819",
+			)
 		}
 	}
 

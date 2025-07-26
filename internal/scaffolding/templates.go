@@ -2,7 +2,7 @@ package scaffolding
 
 // Note: fmt, strings, time are used in template content generation
 
-// ComponentTemplate represents a template for generating components
+// ComponentTemplate represents a template for generating components.
 type ComponentTemplate struct {
 	Name        string
 	Description string
@@ -14,7 +14,7 @@ type ComponentTemplate struct {
 	DocContent  string
 }
 
-// TemplateParameter represents a parameter in a component template
+// TemplateParameter represents a parameter in a component template.
 type TemplateParameter struct {
 	Name         string
 	Type         string
@@ -23,7 +23,7 @@ type TemplateParameter struct {
 	Required     bool
 }
 
-// TemplateContext holds the context for template generation
+// TemplateContext holds the context for template generation.
 type TemplateContext struct {
 	ComponentName string
 	PackageName   string
@@ -35,7 +35,7 @@ type TemplateContext struct {
 	CustomProps   map[string]interface{}
 }
 
-// GetBuiltinTemplates returns all built-in component templates
+// GetBuiltinTemplates returns all built-in component templates.
 func GetBuiltinTemplates() map[string]ComponentTemplate {
 	return map[string]ComponentTemplate{
 		"button":     getButtonTemplate(),
@@ -67,11 +67,41 @@ func getButtonTemplate() ComponentTemplate {
 		Description: "Interactive button component with variants and states",
 		Category:    "interaction",
 		Parameters: []TemplateParameter{
-			{Name: "text", Type: "string", DefaultValue: "Click me", Description: "Button text content", Required: true},
-			{Name: "variant", Type: "string", DefaultValue: "primary", Description: "Button style variant", Required: false},
-			{Name: "size", Type: "string", DefaultValue: "medium", Description: "Button size", Required: false},
-			{Name: "disabled", Type: "bool", DefaultValue: "false", Description: "Whether button is disabled", Required: false},
-			{Name: "onclick", Type: "string", DefaultValue: "", Description: "Click handler", Required: false},
+			{
+				Name:         "text",
+				Type:         "string",
+				DefaultValue: "Click me",
+				Description:  "Button text content",
+				Required:     true,
+			},
+			{
+				Name:         "variant",
+				Type:         "string",
+				DefaultValue: "primary",
+				Description:  "Button style variant",
+				Required:     false,
+			},
+			{
+				Name:         "size",
+				Type:         "string",
+				DefaultValue: "medium",
+				Description:  "Button size",
+				Required:     false,
+			},
+			{
+				Name:         "disabled",
+				Type:         "bool",
+				DefaultValue: "false",
+				Description:  "Whether button is disabled",
+				Required:     false,
+			},
+			{
+				Name:         "onclick",
+				Type:         "string",
+				DefaultValue: "",
+				Description:  "Click handler",
+				Required:     false,
+			},
 		},
 		Content: `package {{.PackageName}}
 
@@ -282,10 +312,34 @@ func getCardTemplate() ComponentTemplate {
 		Description: "Flexible card component for displaying content",
 		Category:    "layout",
 		Parameters: []TemplateParameter{
-			{Name: "title", Type: "string", DefaultValue: "Card Title", Description: "Card title", Required: false},
-			{Name: "content", Type: "string", DefaultValue: "Card content", Description: "Card body content", Required: false},
-			{Name: "imageUrl", Type: "string", DefaultValue: "", Description: "Optional image URL", Required: false},
-			{Name: "footer", Type: "string", DefaultValue: "", Description: "Optional footer content", Required: false},
+			{
+				Name:         "title",
+				Type:         "string",
+				DefaultValue: "Card Title",
+				Description:  "Card title",
+				Required:     false,
+			},
+			{
+				Name:         "content",
+				Type:         "string",
+				DefaultValue: "Card content",
+				Description:  "Card body content",
+				Required:     false,
+			},
+			{
+				Name:         "imageUrl",
+				Type:         "string",
+				DefaultValue: "",
+				Description:  "Optional image URL",
+				Required:     false,
+			},
+			{
+				Name:         "footer",
+				Type:         "string",
+				DefaultValue: "",
+				Description:  "Optional footer content",
+				Required:     false,
+			},
 		},
 		Content: `package {{.PackageName}}
 
@@ -371,9 +425,27 @@ func getFormTemplate() ComponentTemplate {
 		Description: "Form component with validation and field management",
 		Category:    "input",
 		Parameters: []TemplateParameter{
-			{Name: "action", Type: "string", DefaultValue: "", Description: "Form action URL", Required: false},
-			{Name: "method", Type: "string", DefaultValue: "POST", Description: "HTTP method", Required: false},
-			{Name: "title", Type: "string", DefaultValue: "", Description: "Form title", Required: false},
+			{
+				Name:         "action",
+				Type:         "string",
+				DefaultValue: "",
+				Description:  "Form action URL",
+				Required:     false,
+			},
+			{
+				Name:         "method",
+				Type:         "string",
+				DefaultValue: "POST",
+				Description:  "HTTP method",
+				Required:     false,
+			},
+			{
+				Name:         "title",
+				Type:         "string",
+				DefaultValue: "",
+				Description:  "Form title",
+				Required:     false,
+			},
 		},
 		Content: `package {{.PackageName}}
 
@@ -388,7 +460,10 @@ templ {{.ComponentName}}(action string, method string, title string) {
 }
 
 // {{.ComponentName}}Field renders a form field with label and validation
-templ {{.ComponentName}}Field(name string, label string, fieldType string, required bool, placeholder string, value string, errorMsg string) {
+templ {{.ComponentName}}Field(
+	name string, label string, fieldType string, required bool, 
+	placeholder string, value string, errorMsg string,
+) {
 	<div class="form-field">
 		<label for={ name } class="form-label">
 			{ label }
@@ -518,8 +593,20 @@ func getLayoutTemplate() ComponentTemplate {
 		Description: "Base layout component with header, main, and footer",
 		Category:    "layout",
 		Parameters: []TemplateParameter{
-			{Name: "title", Type: "string", DefaultValue: "Page Title", Description: "Page title", Required: true},
-			{Name: "description", Type: "string", DefaultValue: "", Description: "Page description", Required: false},
+			{
+				Name:         "title",
+				Type:         "string",
+				DefaultValue: "Page Title",
+				Description:  "Page title",
+				Required:     true,
+			},
+			{
+				Name:         "description",
+				Type:         "string",
+				DefaultValue: "",
+				Description:  "Page description",
+				Required:     false,
+			},
 		},
 		Content: `package {{.PackageName}}
 
@@ -647,9 +734,27 @@ func getModalTemplate() ComponentTemplate {
 		Description: "Modal dialog component with overlay and close functionality",
 		Category:    "overlay",
 		Parameters: []TemplateParameter{
-			{Name: "title", Type: "string", DefaultValue: "Modal Title", Description: "Modal title", Required: false},
-			{Name: "size", Type: "string", DefaultValue: "medium", Description: "Modal size", Required: false},
-			{Name: "closable", Type: "bool", DefaultValue: "true", Description: "Whether modal can be closed", Required: false},
+			{
+				Name:         "title",
+				Type:         "string",
+				DefaultValue: "Modal Title",
+				Description:  "Modal title",
+				Required:     false,
+			},
+			{
+				Name:         "size",
+				Type:         "string",
+				DefaultValue: "medium",
+				Description:  "Modal size",
+				Required:     false,
+			},
+			{
+				Name:         "closable",
+				Type:         "bool",
+				DefaultValue: "true",
+				Description:  "Whether modal can be closed",
+				Required:     false,
+			},
 		},
 		Content: `package {{.PackageName}}
 

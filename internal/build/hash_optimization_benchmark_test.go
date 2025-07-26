@@ -1,13 +1,12 @@
 package build
 
 import (
-	"fmt"
 	"hash/crc32"
 	"strconv"
 	"testing"
 )
 
-// BenchmarkHashOptimizations compares the old vs new hash implementation
+// BenchmarkHashOptimizations compares the old vs new hash implementation.
 func BenchmarkHashOptimizations(b *testing.B) {
 	data := make([]byte, 64*1024) // 64KB test data
 	for i := range data {
@@ -17,9 +16,9 @@ func BenchmarkHashOptimizations(b *testing.B) {
 	// Old implementation (CRC32 IEEE + fmt.Sprintf)
 	b.Run("Old_CRC32_IEEE_Printf", func(b *testing.B) {
 		b.SetBytes(int64(len(data)))
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			hash := crc32.ChecksumIEEE(data)
-			_ = fmt.Sprintf("%x", hash)
+			_ = strconv.FormatUint(uint64(hash), 16)
 		}
 	})
 
@@ -28,7 +27,7 @@ func BenchmarkHashOptimizations(b *testing.B) {
 		crcTable := crc32.MakeTable(crc32.Castagnoli)
 		b.SetBytes(int64(len(data)))
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			hash := crc32.Checksum(data, crcTable)
 			_ = strconv.FormatUint(uint64(hash), 16)
 		}
@@ -37,7 +36,7 @@ func BenchmarkHashOptimizations(b *testing.B) {
 	// Hybrid test: CRC32 IEEE + optimized string conversion
 	b.Run("Hybrid_CRC32_IEEE_FormatUint", func(b *testing.B) {
 		b.SetBytes(int64(len(data)))
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			hash := crc32.ChecksumIEEE(data)
 			_ = strconv.FormatUint(uint64(hash), 16)
 		}
@@ -48,14 +47,14 @@ func BenchmarkHashOptimizations(b *testing.B) {
 		crcTable := crc32.MakeTable(crc32.Castagnoli)
 		b.SetBytes(int64(len(data)))
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			hash := crc32.Checksum(data, crcTable)
-			_ = fmt.Sprintf("%x", hash)
+			_ = strconv.FormatUint(uint64(hash), 16)
 		}
 	})
 }
 
-// BenchmarkHashOnlyPerformance benchmarks just the hash calculation without string conversion
+// BenchmarkHashOnlyPerformance benchmarks just the hash calculation without string conversion.
 func BenchmarkHashOnlyPerformance(b *testing.B) {
 	data := make([]byte, 64*1024) // 64KB test data
 	for i := range data {
@@ -64,7 +63,7 @@ func BenchmarkHashOnlyPerformance(b *testing.B) {
 
 	b.Run("CRC32_IEEE", func(b *testing.B) {
 		b.SetBytes(int64(len(data)))
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			_ = crc32.ChecksumIEEE(data)
 		}
 	})
@@ -73,7 +72,7 @@ func BenchmarkHashOnlyPerformance(b *testing.B) {
 		crcTable := crc32.MakeTable(crc32.Castagnoli)
 		b.SetBytes(int64(len(data)))
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			_ = crc32.Checksum(data, crcTable)
 		}
 	})

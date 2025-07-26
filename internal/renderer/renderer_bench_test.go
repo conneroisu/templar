@@ -26,7 +26,7 @@ func BenchmarkComponentRenderer_GenerateMockData(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		renderer.generateMockData(component)
 	}
 }
@@ -40,7 +40,7 @@ func BenchmarkComponentRenderer_GenerateMockString(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		paramName := paramNames[i%len(paramNames)]
 		renderer.generateMockString(paramName)
 	}
@@ -65,8 +65,8 @@ func BenchmarkComponentRenderer_GenerateGoCode(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		renderer.generateGoCode(component, mockData)
+	for range b.N {
+		_, _ = renderer.generateGoCode(component, mockData)
 	}
 }
 
@@ -78,7 +78,7 @@ func BenchmarkComponentRenderer_RenderComponentWithLayout(b *testing.B) {
 	html := "<div class='test-component'><h1>Hello World</h1><p>This is a test component</p></div>"
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		renderer.RenderComponentWithLayout(componentName, html)
 	}
 }
@@ -95,9 +95,9 @@ func BenchmarkComponentRenderer_ValidateWorkDir(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		dir := validDirs[i%len(validDirs)]
-		renderer.validateWorkDir(dir)
+		_ = renderer.validateWorkDir(dir)
 	}
 }
 
@@ -107,7 +107,7 @@ func BenchmarkComponentRenderer_Memory(b *testing.B) {
 	reg := registry.NewComponentRegistry()
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		renderer := NewComponentRenderer(reg)
 
 		component := &types.ComponentInfo{
@@ -120,7 +120,7 @@ func BenchmarkComponentRenderer_Memory(b *testing.B) {
 		}
 
 		mockData := renderer.generateMockData(component)
-		renderer.generateGoCode(component, mockData)
+		_, _ = renderer.generateGoCode(component, mockData)
 	}
 }
 
@@ -130,7 +130,7 @@ func BenchmarkComponentRenderer_LargeComponent(b *testing.B) {
 
 	// Create a component with many parameters
 	var params []types.ParameterInfo
-	for i := 0; i < 20; i++ {
+	for i := range 20 {
 		params = append(params, types.ParameterInfo{
 			Name:     fmt.Sprintf("param%d", i),
 			Type:     "string",
@@ -145,9 +145,9 @@ func BenchmarkComponentRenderer_LargeComponent(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		mockData := renderer.generateMockData(component)
-		renderer.generateGoCode(component, mockData)
+		_, _ = renderer.generateGoCode(component, mockData)
 	}
 }
 
@@ -156,7 +156,7 @@ func BenchmarkComponentRenderer_ManyComponents(b *testing.B) {
 	renderer := NewComponentRenderer(reg)
 
 	// Pre-register many components
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		component := &types.ComponentInfo{
 			Name:         fmt.Sprintf("Component%d", i),
 			Package:      "components",
@@ -171,12 +171,12 @@ func BenchmarkComponentRenderer_ManyComponents(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		componentName := fmt.Sprintf("Component%d", i%100)
 		component, exists := reg.Get(componentName)
 		if exists {
 			mockData := renderer.generateMockData(component)
-			renderer.generateGoCode(component, mockData)
+			_, _ = renderer.generateGoCode(component, mockData)
 		}
 	}
 }
@@ -197,7 +197,7 @@ func BenchmarkComponentRenderer_Concurrent(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			mockData := renderer.generateMockData(component)
-			renderer.generateGoCode(component, mockData)
+			_, _ = renderer.generateGoCode(component, mockData)
 		}
 	})
 }

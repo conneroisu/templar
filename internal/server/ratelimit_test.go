@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -20,7 +21,7 @@ func TestTokenBucket_Consume(t *testing.T) {
 	}
 
 	// Should allow consuming tokens up to capacity
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		result := bucket.consume()
 		assert.True(t, result.Allowed)
 		assert.Equal(t, 4-i, result.Remaining)
@@ -74,7 +75,7 @@ func TestRateLimiter_Check(t *testing.T) {
 	defer limiter.Stop()
 
 	// Test multiple requests from same IP
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		result := limiter.Check("192.168.1.1")
 		assert.True(t, result.Allowed)
 		assert.Equal(t, 9-i, result.Remaining)
@@ -119,7 +120,7 @@ func TestRateLimiter_Disabled(t *testing.T) {
 	defer limiter.Stop()
 
 	// Should allow all requests when disabled
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		result := limiter.Check("192.168.1.1")
 		assert.True(t, result.Allowed)
 	}
@@ -141,7 +142,7 @@ func TestRateLimiter_Concurrent(t *testing.T) {
 	var allowedCount, deniedCount int32
 	var mu sync.Mutex
 
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -181,7 +182,7 @@ func TestRateLimitMiddleware(t *testing.T) {
 	}))
 
 	// First 3 requests should pass
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		req := httptest.NewRequest(http.MethodGet, "/test", nil)
 		req.RemoteAddr = "192.168.1.1:8080"
 		w := httptest.NewRecorder()
@@ -192,7 +193,7 @@ func TestRateLimitMiddleware(t *testing.T) {
 		assert.Equal(t, "60", w.Header().Get("X-RateLimit-Limit"))
 
 		// Remaining should decrease with each request
-		expectedRemaining := fmt.Sprintf("%d", 2-i)
+		expectedRemaining := strconv.Itoa(2 - i)
 		assert.Equal(t, expectedRemaining, w.Header().Get("X-RateLimit-Remaining"))
 	}
 
@@ -264,9 +265,13 @@ func TestWhitelistMiddleware(t *testing.T) {
 
 	whitelist := NewIPWhitelist([]string{"192.168.1.100"})
 
-	rateLimitHandler := RateLimitMiddleware(limiter)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	}))
+	rateLimitHandler := RateLimitMiddleware(
+		limiter,
+	)(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
 
 	middleware := WhitelistMiddleware(whitelist, rateLimitHandler)
 	handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -274,7 +279,7 @@ func TestWhitelistMiddleware(t *testing.T) {
 	}))
 
 	// Whitelisted IP should bypass rate limit
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		req := httptest.NewRequest(http.MethodGet, "/test", nil)
 		req.RemoteAddr = "192.168.1.100:8080"
 		w := httptest.NewRecorder()
@@ -314,13 +319,15 @@ func TestAdaptiveRateLimiter(t *testing.T) {
 	assert.Equal(t, 100, limiter.GetCurrentLimit())
 
 	// Simulate high load by creating many buckets
-	for i := 0; i < 200; i++ {
+	for i := range 200 {
 		limiter.Check(fmt.Sprintf("192.168.1.%d", i))
 	}
 
 	// Force adjustment by manipulating lastCheck to bypass time interval check
 	limiter.adjustmentMutex.Lock()
-	limiter.lastCheck = time.Now().Add(-time.Hour) // Make it seem like we haven't checked in an hour
+	limiter.lastCheck = time.Now().
+		Add(-time.Hour)
+		// Make it seem like we haven't checked in an hour
 	limiter.adjustmentMutex.Unlock()
 
 	// Force adjustment check
@@ -344,7 +351,7 @@ func TestDDoSProtection(t *testing.T) {
 	ddos := NewDDoSProtection(limiter, nil)
 
 	// Test normal requests
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		allowed := ddos.CheckRequest("192.168.1.1")
 		assert.True(t, allowed)
 	}
@@ -353,7 +360,7 @@ func TestDDoSProtection(t *testing.T) {
 	ip := "192.168.1.2"
 	var blockedCount int
 
-	for i := 0; i < 1500; i++ {
+	for range 1500 {
 		if !ddos.CheckRequest(ip) {
 			blockedCount++
 		}
@@ -386,7 +393,7 @@ func TestDDoSMiddleware(t *testing.T) {
 	}))
 
 	// Send many requests quickly to trigger DDoS protection
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		req := httptest.NewRequest(http.MethodGet, "/test", nil)
 		req.RemoteAddr = "192.168.1.1:8080"
 		w := httptest.NewRecorder()
@@ -492,7 +499,7 @@ func BenchmarkTokenBucket_Consume(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		bucket.consume()
 	}
 }
@@ -519,7 +526,7 @@ func BenchmarkRateLimitMiddleware(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		w := httptest.NewRecorder()
 		handler.ServeHTTP(w, req)
 	}

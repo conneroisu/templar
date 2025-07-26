@@ -38,7 +38,7 @@ jobs:
       run: |
         if [ ! "$(ls -A .performance-baselines)" ]; then
           echo "Creating initial performance baselines..."
-          go run ./cmd/templar performance baseline create \
+          go run . performance baseline create \
             --packages="./internal/scanner,./internal/build,./internal/registry" \
             --baseline-dir=.performance-baselines
         else
@@ -47,7 +47,7 @@ jobs:
       
     - name: Run performance benchmarks and check for regressions
       run: |
-        go run ./cmd/templar performance check \
+        go run . performance check \
           --packages="./internal/scanner,./internal/build,./internal/registry,./internal/performance" \
           --format=github \
           --fail-on-critical \
@@ -59,7 +59,7 @@ jobs:
           --min-samples=3
           
     - name: Upload performance report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: performance-report-${{ github.run_number }}
@@ -68,14 +68,14 @@ jobs:
     - name: Generate performance trend report
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: |
-        go run ./cmd/templar performance report \
+        go run . performance report \
           --packages="./internal/scanner,./internal/build,./internal/registry" \
           --format=json \
           --baseline-dir=.performance-baselines \
           --output=performance-trend.json
           
     - name: Upload performance trend data
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       with:
         name: performance-trend-${{ github.run_number }}
@@ -84,6 +84,7 @@ jobs:
     - name: Comment PR with performance results
       if: github.event_name == 'pull_request'
       uses: actions/github-script@v6
+      continue-on-error: true
       with:
         script: |
           const fs = require('fs');
@@ -111,16 +112,22 @@ jobs:
             ### Actions:
             - Critical regressions will fail the CI build
             - Review recent changes if regressions are detected
-            - Use \`go run ./cmd/templar performance report\` locally for detailed analysis
+            - Use \`go run . performance report\` locally for detailed analysis
             
             </details>`;
             
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: body
-            });
+            try {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body
+              });
+              console.log('Performance report comment posted successfully');
+            } catch (error) {
+              console.log('Failed to post comment (likely permissions issue):', error.message);
+              console.log('Performance report generated successfully - see artifacts');
+            }
           }
           
     - name: Performance regression summary

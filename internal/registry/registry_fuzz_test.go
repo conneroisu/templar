@@ -8,10 +8,12 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// FuzzComponentRegistration tests component registration with various inputs
+// FuzzComponentRegistration tests component registration with various inputs.
 func FuzzComponentRegistration(f *testing.F) {
 	// Seed with various component registration scenarios
-	f.Add("Button\x00./components/button.templ\x00package components\n\ntempl Button(text string) {\n\t<button>{text}</button>\n}")
+	f.Add(
+		"Button\x00./components/button.templ\x00package components\n\ntempl Button(text string) {\n\t<button>{text}</button>\n}",
+	)
 	f.Add("../../../etc/passwd\x00./malicious.templ\x00malicious content")
 	f.Add("<script>alert('xss')</script>\x00./xss.templ\x00XSS content")
 	f.Add("\x00\x00\x00")
@@ -52,7 +54,10 @@ func FuzzComponentRegistration(f *testing.F) {
 		components := registry.GetAll()
 		for _, comp := range components {
 			// Check for control characters in component name
-			if strings.ContainsAny(comp.Name, "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f") {
+			if strings.ContainsAny(
+				comp.Name,
+				"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f",
+			) {
 				t.Errorf("Registered component name contains control characters: %q", comp.Name)
 			}
 
@@ -60,7 +65,11 @@ func FuzzComponentRegistration(f *testing.F) {
 			if (strings.Contains(comp.Name, "..") || strings.Contains(comp.FilePath, "..")) &&
 				(strings.Contains(comp.Name, "etc") || strings.Contains(comp.FilePath, "etc") ||
 					strings.Contains(comp.Name, "system32") || strings.Contains(comp.FilePath, "system32")) {
-				t.Errorf("Registered component contains dangerous path traversal: name=%q path=%q", comp.Name, comp.FilePath)
+				t.Errorf(
+					"Registered component contains dangerous path traversal: name=%q path=%q",
+					comp.Name,
+					comp.FilePath,
+				)
 			}
 
 			// Component content validation removed since Content field doesn't exist
@@ -69,7 +78,7 @@ func FuzzComponentRegistration(f *testing.F) {
 	})
 }
 
-// FuzzComponentSearch tests component search with various queries
+// FuzzComponentSearch tests component search with various queries.
 func FuzzComponentSearch(f *testing.F) {
 	// Seed with various search patterns
 	f.Add("Button")
@@ -106,7 +115,10 @@ func FuzzComponentSearch(f *testing.F) {
 
 		// Verify Get result is safe
 		if component != nil {
-			if strings.ContainsAny(component.Name, "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f") {
+			if strings.ContainsAny(
+				component.Name,
+				"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f",
+			) {
 				t.Errorf("Get result contains control characters: %q", component.Name)
 			}
 		}
@@ -114,14 +126,17 @@ func FuzzComponentSearch(f *testing.F) {
 		// Test GetAll to ensure all components are safe
 		allComponents := registry.GetAll()
 		for _, comp := range allComponents {
-			if strings.ContainsAny(comp.Name, "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f") {
+			if strings.ContainsAny(
+				comp.Name,
+				"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f",
+			) {
 				t.Errorf("GetAll result contains control characters: %q", comp.Name)
 			}
 		}
 	})
 }
 
-// FuzzComponentParameters tests component parameter parsing
+// FuzzComponentParameters tests component parameter parsing.
 func FuzzComponentParameters(f *testing.F) {
 	// Seed with various parameter patterns
 	f.Add("text\x00string")
@@ -169,10 +184,16 @@ func FuzzComponentParameters(f *testing.F) {
 		if component != nil {
 			for _, p := range component.Parameters {
 				// Check for control characters
-				if strings.ContainsAny(p.Name, "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f") {
+				if strings.ContainsAny(
+					p.Name,
+					"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f",
+				) {
 					t.Errorf("Parameter name contains control characters: %q", p.Name)
 				}
-				if strings.ContainsAny(p.Type, "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f") {
+				if strings.ContainsAny(
+					p.Type,
+					"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f",
+				) {
 					t.Errorf("Parameter type contains control characters: %q", p.Type)
 				}
 
@@ -185,7 +206,7 @@ func FuzzComponentParameters(f *testing.F) {
 	})
 }
 
-// FuzzComponentDependencies tests component dependency handling
+// FuzzComponentDependencies tests component dependency handling.
 func FuzzComponentDependencies(f *testing.F) {
 	// Seed with various dependency patterns
 	f.Add("Button\x00Card\x00Form")
@@ -223,7 +244,10 @@ func FuzzComponentDependencies(f *testing.F) {
 		if component != nil {
 			for _, dep := range component.Dependencies {
 				// Check for control characters
-				if strings.ContainsAny(dep, "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f") {
+				if strings.ContainsAny(
+					dep,
+					"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f",
+				) {
 					t.Errorf("Dependency contains control characters: %q", dep)
 				}
 

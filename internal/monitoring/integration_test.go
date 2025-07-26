@@ -27,7 +27,7 @@ func TestMonitoringMiddleware(t *testing.T) {
 	t.Run("successful request", func(t *testing.T) {
 		handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("OK"))
+			_, _ = w.Write([]byte("OK"))
 		}))
 
 		req := httptest.NewRequest(http.MethodGet, "/test", nil)
@@ -46,6 +46,7 @@ func TestMonitoringMiddleware(t *testing.T) {
 				if metric.Labels["method"] == "GET" && metric.Labels["status"] == "200" {
 					assert.Equal(t, 1.0, metric.Value)
 					found = true
+
 					break
 				}
 			}
@@ -56,7 +57,7 @@ func TestMonitoringMiddleware(t *testing.T) {
 	t.Run("error request", func(t *testing.T) {
 		handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("Error"))
+			_, _ = w.Write([]byte("Error"))
 		}))
 
 		req := httptest.NewRequest(http.MethodPost, "/error", nil)
@@ -74,6 +75,7 @@ func TestMonitoringMiddleware(t *testing.T) {
 				if metric.Labels["method"] == "POST" && metric.Labels["status"] == "500" {
 					assert.Equal(t, 1.0, metric.Value)
 					found = true
+
 					break
 				}
 			}
@@ -99,6 +101,7 @@ func TestMonitoringMiddleware(t *testing.T) {
 			if metric.Name == "templar_http_request_duration_seconds_count" {
 				assert.Equal(t, 1.0, metric.Value)
 				found = true
+
 				break
 			}
 		}
@@ -120,7 +123,7 @@ func TestResponseWriter(t *testing.T) {
 		recorder := httptest.NewRecorder()
 		wrapper := &responseWriter{ResponseWriter: recorder, statusCode: http.StatusOK}
 
-		wrapper.Write([]byte("test"))
+		_, _ = wrapper.Write([]byte("test"))
 		assert.Equal(t, http.StatusOK, wrapper.statusCode)
 	})
 }
@@ -247,7 +250,16 @@ func TestLoggingIntegration(t *testing.T) {
 
 	t.Run("log with metrics - error", func(t *testing.T) {
 		testErr := errors.New("test error")
-		integration.LogWithMetrics(context.Background(), logging.LevelError, "test_component", "test_operation", testErr, "Test error message", "key", "value")
+		integration.LogWithMetrics(
+			context.Background(),
+			logging.LevelError,
+			"test_component",
+			"test_operation",
+			testErr,
+			"Test error message",
+			"key",
+			"value",
+		)
 
 		// Verify error metrics were recorded
 		metrics := monitor.metrics.GatherMetrics()
@@ -255,7 +267,8 @@ func TestLoggingIntegration(t *testing.T) {
 		logFound := false
 
 		for _, metric := range metrics {
-			if metric.Name == "templar_errors_total" && metric.Labels["category"] == "test_component" {
+			if metric.Name == "templar_errors_total" &&
+				metric.Labels["category"] == "test_component" {
 				errorFound = true
 			}
 			if metric.Name == "templar_log_entries_total" && metric.Labels["level"] == "ERROR" {
@@ -268,7 +281,16 @@ func TestLoggingIntegration(t *testing.T) {
 	})
 
 	t.Run("log with metrics - info", func(t *testing.T) {
-		integration.LogWithMetrics(context.Background(), logging.LevelInfo, "test_component", "test_operation", nil, "Test info message", "key", "value")
+		integration.LogWithMetrics(
+			context.Background(),
+			logging.LevelInfo,
+			"test_component",
+			"test_operation",
+			nil,
+			"Test info message",
+			"key",
+			"value",
+		)
 
 		// Verify log metrics were recorded
 		metrics := monitor.metrics.GatherMetrics()
@@ -277,6 +299,7 @@ func TestLoggingIntegration(t *testing.T) {
 		for _, metric := range metrics {
 			if metric.Name == "templar_log_entries_total" && metric.Labels["level"] == "INFO" {
 				found = true
+
 				break
 			}
 		}
@@ -297,10 +320,15 @@ func TestOperationTracker(t *testing.T) {
 
 	t.Run("successful operation", func(t *testing.T) {
 		executed := false
-		err := tracker.TrackOperation(context.Background(), "test_operation", func(ctx context.Context) error {
-			executed = true
-			return nil
-		})
+		err := tracker.TrackOperation(
+			context.Background(),
+			"test_operation",
+			func(ctx context.Context) error {
+				executed = true
+
+				return nil
+			},
+		)
 
 		assert.NoError(t, err)
 		assert.True(t, executed)
@@ -312,6 +340,7 @@ func TestOperationTracker(t *testing.T) {
 			if metric.Name == "templar_test_component_test_operation_duration_seconds_count" {
 				assert.Equal(t, 1.0, metric.Value)
 				found = true
+
 				break
 			}
 		}
@@ -320,9 +349,13 @@ func TestOperationTracker(t *testing.T) {
 
 	t.Run("failed operation", func(t *testing.T) {
 		testErr := errors.New("operation failed")
-		err := tracker.TrackOperation(context.Background(), "failing_operation", func(ctx context.Context) error {
-			return testErr
-		})
+		err := tracker.TrackOperation(
+			context.Background(),
+			"failing_operation",
+			func(ctx context.Context) error {
+				return testErr
+			},
+		)
 
 		assert.Equal(t, testErr, err)
 
@@ -330,8 +363,10 @@ func TestOperationTracker(t *testing.T) {
 		metrics := monitor.metrics.GatherMetrics()
 		found := false
 		for _, metric := range metrics {
-			if metric.Name == "templar_errors_total" && metric.Labels["category"] == "test_component" {
+			if metric.Name == "templar_errors_total" &&
+				metric.Labels["category"] == "test_component" {
 				found = true
+
 				break
 			}
 		}
@@ -351,7 +386,7 @@ func TestBatchTracker(t *testing.T) {
 		tracker := NewBatchTracker(monitor, logger, "test_component", 5)
 
 		// Process items
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			err := tracker.TrackItem(context.Background(), fmt.Sprintf("item_%d", i), func() error {
 				return nil
 			})
@@ -453,10 +488,16 @@ func TestGlobalFunctions(t *testing.T) {
 
 	t.Run("track operation globally", func(t *testing.T) {
 		executed := false
-		err := TrackOperation(context.Background(), "global_component", "global_operation", func(ctx context.Context) error {
-			executed = true
-			return nil
-		})
+		err := TrackOperation(
+			context.Background(),
+			"global_component",
+			"global_operation",
+			func(ctx context.Context) error {
+				executed = true
+
+				return nil
+			},
+		)
 
 		assert.NoError(t, err)
 		assert.True(t, executed)
@@ -464,13 +505,28 @@ func TestGlobalFunctions(t *testing.T) {
 
 	t.Run("log error globally", func(t *testing.T) {
 		testErr := errors.New("global error")
-		LogError(context.Background(), "global_component", "global_operation", testErr, "Test error message", "key", "value")
+		LogError(
+			context.Background(),
+			"global_component",
+			"global_operation",
+			testErr,
+			"Test error message",
+			"key",
+			"value",
+		)
 
 		// Function should not panic
 	})
 
 	t.Run("log info globally", func(t *testing.T) {
-		LogInfo(context.Background(), "global_component", "global_operation", "Test info message", "key", "value")
+		LogInfo(
+			context.Background(),
+			"global_component",
+			"global_operation",
+			"Test info message",
+			"key",
+			"value",
+		)
 
 		// Function should not panic
 	})
@@ -479,9 +535,14 @@ func TestGlobalFunctions(t *testing.T) {
 		SetGlobalMonitor(nil)
 
 		// These should not panic
-		err := TrackOperation(context.Background(), "component", "operation", func(ctx context.Context) error {
-			return nil
-		})
+		err := TrackOperation(
+			context.Background(),
+			"component",
+			"operation",
+			func(ctx context.Context) error {
+				return nil
+			},
+		)
 		assert.NoError(t, err)
 
 		LogError(context.Background(), "component", "operation", errors.New("test"), "message")
@@ -505,7 +566,7 @@ func BenchmarkMonitoringMiddleware(b *testing.B) {
 	}))
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		req := httptest.NewRequest(http.MethodGet, "/test", nil)
 		recorder := httptest.NewRecorder()
 		handler.ServeHTTP(recorder, req)
@@ -523,10 +584,14 @@ func BenchmarkOperationTracking(b *testing.B) {
 	tracker := NewOperationTracker(monitor, logger, "benchmark_component")
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		err := tracker.TrackOperation(context.Background(), "benchmark_operation", func(ctx context.Context) error {
-			return nil
-		})
+	for range b.N {
+		err := tracker.TrackOperation(
+			context.Background(),
+			"benchmark_operation",
+			func(ctx context.Context) error {
+				return nil
+			},
+		)
 		require.NoError(b, err)
 	}
 }

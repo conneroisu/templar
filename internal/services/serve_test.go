@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -101,7 +100,7 @@ func TestServeService_Serve(t *testing.T) {
 			select {
 			case err := <-errChan:
 				result := <-resultChan
-				
+
 				if tt.wantErr {
 					// In test environment, we expect certain errors with our new standardized error handling
 					if err != nil {
@@ -111,17 +110,21 @@ func TestServeService_Serve(t *testing.T) {
 							"address already in use",
 							"bind:",
 						}
-						
+
 						foundExpected := false
 						for _, expectedErr := range expectedErrors {
 							if assert.Contains(t, err.Error(), expectedErr) {
 								foundExpected = true
+
 								break
 							}
 						}
-						
+
 						if !foundExpected {
-							t.Logf("Got unexpected error (but this might be ok in test env): %v", err)
+							t.Logf(
+								"Got unexpected error (but this might be ok in test env): %v",
+								err,
+							)
 						}
 					}
 				} else {
@@ -132,7 +135,7 @@ func TestServeService_Serve(t *testing.T) {
 						assert.NotEmpty(t, result.ServerURL)
 					}
 				}
-				
+
 			case <-ctx.Done():
 				// Timeout occurred, which is fine for these tests
 				t.Log("Test timed out as expected")
@@ -239,38 +242,4 @@ func createTestServeConfig(tempDir string) *config.Config {
 			HTTPPort: 8081,
 		},
 	}
-}
-
-func createTestServeComponents(tempDir string) error {
-	componentDir := filepath.Join(tempDir, "components")
-	if err := os.MkdirAll(componentDir, 0755); err != nil {
-		return err
-	}
-
-	buttonContent := `package components
-
-templ Button(text string, variant string) {
-	<button class={ "btn", "btn-" + variant } type="button">
-		{ text }
-	</button>
-}`
-
-	cardContent := `package components
-
-templ Card(title string, content string) {
-	<div class="card">
-		<div class="card-header">
-			<h3>{ title }</h3>
-		</div>
-		<div class="card-body">
-			<p>{ content }</p>
-		</div>
-	</div>
-}`
-
-	if err := os.WriteFile(filepath.Join(componentDir, "button.templ"), []byte(buttonContent), 0644); err != nil {
-		return err
-	}
-
-	return os.WriteFile(filepath.Join(componentDir, "card.templ"), []byte(cardContent), 0644)
 }

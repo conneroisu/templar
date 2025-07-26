@@ -47,6 +47,7 @@ func TestCSPNonceImplementation(t *testing.T) {
 				// Add unsafe directives when nonce is disabled
 				config.CSP.ScriptSrc = append(config.CSP.ScriptSrc, "'unsafe-inline'")
 				config.CSP.StyleSrc = append(config.CSP.StyleSrc, "'unsafe-inline'")
+
 				return config
 			}(),
 			expectNonce:  false,
@@ -128,7 +129,7 @@ func TestCSPNonceGeneration(t *testing.T) {
 	}))
 
 	// Make multiple requests
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		req := httptest.NewRequest(http.MethodGet, "/test", nil)
 		rec := httptest.NewRecorder()
 		handler.ServeHTTP(rec, req)
@@ -205,7 +206,11 @@ func TestNonceInHTMLGeneration(t *testing.T) {
 	mockRenderer := renderer.NewComponentRenderer(nil)
 
 	// Test HTML generation with nonce
-	html := mockRenderer.RenderComponentWithLayoutAndNonce("TestComponent", "<div>Test</div>", testNonce)
+	html := mockRenderer.RenderComponentWithLayoutAndNonce(
+		"TestComponent",
+		"<div>Test</div>",
+		testNonce,
+	)
 
 	// Verify nonce is included in script and style tags
 	expectedScriptNonce := `nonce="` + testNonce + `"`
@@ -315,4 +320,3 @@ func TestGetNonceFromContextNew(t *testing.T) {
 		t.Errorf("Expected empty nonce for wrong type but got '%s'", retrievedNonce)
 	}
 }
-

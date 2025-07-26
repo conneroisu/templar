@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// TemplarMonitor provides Templar-specific monitoring integration
+// TemplarMonitor provides Templar-specific monitoring integration.
 type TemplarMonitor struct {
 	*Monitor
 	scannerTracker  *OperationTracker
@@ -21,7 +21,7 @@ type TemplarMonitor struct {
 	registryTracker *OperationTracker
 }
 
-// NewTemplarMonitor creates a Templar-specific monitor with all integrations
+// NewTemplarMonitor creates a Templar-specific monitor with all integrations.
 func NewTemplarMonitor(configPath string) (*TemplarMonitor, error) {
 	// Load configuration from file if provided
 	config := DefaultMonitorConfig()
@@ -56,41 +56,45 @@ func NewTemplarMonitor(configPath string) (*TemplarMonitor, error) {
 	return templatorMonitor, nil
 }
 
-// registerTemplarHealthChecks registers health checks specific to Templar components
+// registerTemplarHealthChecks registers health checks specific to Templar components.
 func (tm *TemplarMonitor) registerTemplarHealthChecks() {
 	// Component registry health check
-	registryCheck := NewHealthCheckFunc("component_registry", true, func(ctx context.Context) HealthCheck {
-		start := time.Now()
+	registryCheck := NewHealthCheckFunc(
+		"component_registry",
+		true,
+		func(ctx context.Context) HealthCheck {
+			start := time.Now()
 
-		// Check if registry is accessible (mock implementation)
-		registryPath := "./components"
-		if _, err := os.Stat(registryPath); err != nil {
+			// Check if registry is accessible (mock implementation)
+			registryPath := "./components"
+			if _, err := os.Stat(registryPath); err != nil {
+				return HealthCheck{
+					Name:        "component_registry",
+					Status:      HealthStatusUnhealthy,
+					Message:     fmt.Sprintf("Component registry not accessible: %v", err),
+					LastChecked: time.Now(),
+					Duration:    time.Since(start),
+					Critical:    true,
+					Metadata: map[string]interface{}{
+						"registry_path": registryPath,
+						"error":         err.Error(),
+					},
+				}
+			}
+
 			return HealthCheck{
 				Name:        "component_registry",
-				Status:      HealthStatusUnhealthy,
-				Message:     fmt.Sprintf("Component registry not accessible: %v", err),
+				Status:      HealthStatusHealthy,
+				Message:     "Component registry is accessible",
 				LastChecked: time.Now(),
 				Duration:    time.Since(start),
 				Critical:    true,
 				Metadata: map[string]interface{}{
 					"registry_path": registryPath,
-					"error":         err.Error(),
 				},
 			}
-		}
-
-		return HealthCheck{
-			Name:        "component_registry",
-			Status:      HealthStatusHealthy,
-			Message:     "Component registry is accessible",
-			LastChecked: time.Now(),
-			Duration:    time.Since(start),
-			Critical:    true,
-			Metadata: map[string]interface{}{
-				"registry_path": registryPath,
-			},
-		}
-	})
+		},
+	)
 	tm.RegisterHealthCheck(registryCheck)
 
 	// Templ binary check
@@ -127,75 +131,103 @@ func (tm *TemplarMonitor) registerTemplarHealthChecks() {
 	tm.RegisterHealthCheck(templCheck)
 
 	// Cache directory health check
-	cacheCheck := NewHealthCheckFunc("cache_directory", false, func(ctx context.Context) HealthCheck {
-		start := time.Now()
-		cacheDir := ".templar/cache"
+	cacheCheck := NewHealthCheckFunc(
+		"cache_directory",
+		false,
+		func(ctx context.Context) HealthCheck {
+			start := time.Now()
+			cacheDir := ".templar/cache"
 
-		if err := os.MkdirAll(cacheDir, 0755); err != nil {
+			if err := os.MkdirAll(cacheDir, 0755); err != nil {
+				return HealthCheck{
+					Name:        "cache_directory",
+					Status:      HealthStatusDegraded,
+					Message:     fmt.Sprintf("Cannot create cache directory: %v", err),
+					LastChecked: time.Now(),
+					Duration:    time.Since(start),
+					Critical:    false,
+					Metadata: map[string]interface{}{
+						"cache_dir": cacheDir,
+						"error":     err.Error(),
+					},
+				}
+			}
+
 			return HealthCheck{
 				Name:        "cache_directory",
-				Status:      HealthStatusDegraded,
-				Message:     fmt.Sprintf("Cannot create cache directory: %v", err),
+				Status:      HealthStatusHealthy,
+				Message:     "Cache directory is accessible",
 				LastChecked: time.Now(),
 				Duration:    time.Since(start),
 				Critical:    false,
 				Metadata: map[string]interface{}{
 					"cache_dir": cacheDir,
-					"error":     err.Error(),
 				},
 			}
-		}
-
-		return HealthCheck{
-			Name:        "cache_directory",
-			Status:      HealthStatusHealthy,
-			Message:     "Cache directory is accessible",
-			LastChecked: time.Now(),
-			Duration:    time.Since(start),
-			Critical:    false,
-			Metadata: map[string]interface{}{
-				"cache_dir": cacheDir,
-			},
-		}
-	})
+		},
+	)
 	tm.RegisterHealthCheck(cacheCheck)
 }
 
 // Component operation tracking methods
 
-// TrackScanOperation tracks component scanning operations
-func (tm *TemplarMonitor) TrackScanOperation(ctx context.Context, operation string, fn func(ctx context.Context) error) error {
+// TrackScanOperation tracks component scanning operations.
+func (tm *TemplarMonitor) TrackScanOperation(
+	ctx context.Context,
+	operation string,
+	fn func(ctx context.Context) error,
+) error {
 	return tm.scannerTracker.TrackOperation(ctx, operation, fn)
 }
 
-// TrackBuildOperation tracks build operations
-func (tm *TemplarMonitor) TrackBuildOperation(ctx context.Context, operation string, fn func(ctx context.Context) error) error {
+// TrackBuildOperation tracks build operations.
+func (tm *TemplarMonitor) TrackBuildOperation(
+	ctx context.Context,
+	operation string,
+	fn func(ctx context.Context) error,
+) error {
 	return tm.buildTracker.TrackOperation(ctx, operation, fn)
 }
 
-// TrackServerOperation tracks server operations
-func (tm *TemplarMonitor) TrackServerOperation(ctx context.Context, operation string, fn func(ctx context.Context) error) error {
+// TrackServerOperation tracks server operations.
+func (tm *TemplarMonitor) TrackServerOperation(
+	ctx context.Context,
+	operation string,
+	fn func(ctx context.Context) error,
+) error {
 	return tm.serverTracker.TrackOperation(ctx, operation, fn)
 }
 
-// TrackWatcherOperation tracks file watcher operations
-func (tm *TemplarMonitor) TrackWatcherOperation(ctx context.Context, operation string, fn func(ctx context.Context) error) error {
+// TrackWatcherOperation tracks file watcher operations.
+func (tm *TemplarMonitor) TrackWatcherOperation(
+	ctx context.Context,
+	operation string,
+	fn func(ctx context.Context) error,
+) error {
 	return tm.watcherTracker.TrackOperation(ctx, operation, fn)
 }
 
-// TrackRendererOperation tracks renderer operations
-func (tm *TemplarMonitor) TrackRendererOperation(ctx context.Context, operation string, fn func(ctx context.Context) error) error {
+// TrackRendererOperation tracks renderer operations.
+func (tm *TemplarMonitor) TrackRendererOperation(
+	ctx context.Context,
+	operation string,
+	fn func(ctx context.Context) error,
+) error {
 	return tm.rendererTracker.TrackOperation(ctx, operation, fn)
 }
 
-// TrackRegistryOperation tracks registry operations
-func (tm *TemplarMonitor) TrackRegistryOperation(ctx context.Context, operation string, fn func(ctx context.Context) error) error {
+// TrackRegistryOperation tracks registry operations.
+func (tm *TemplarMonitor) TrackRegistryOperation(
+	ctx context.Context,
+	operation string,
+	fn func(ctx context.Context) error,
+) error {
 	return tm.registryTracker.TrackOperation(ctx, operation, fn)
 }
 
 // Component-specific metrics
 
-// RecordComponentScanned records a component scan event
+// RecordComponentScanned records a component scan event.
 func (tm *TemplarMonitor) RecordComponentScanned(componentType, componentName string) {
 	if tm.appMetrics != nil {
 		tm.appMetrics.ComponentScanned(componentType)
@@ -206,8 +238,12 @@ func (tm *TemplarMonitor) RecordComponentScanned(componentType, componentName st
 	}
 }
 
-// RecordComponentBuilt records a component build event
-func (tm *TemplarMonitor) RecordComponentBuilt(componentName string, success bool, duration time.Duration) {
+// RecordComponentBuilt records a component build event.
+func (tm *TemplarMonitor) RecordComponentBuilt(
+	componentName string,
+	success bool,
+	duration time.Duration,
+) {
 	if tm.appMetrics != nil {
 		tm.appMetrics.ComponentBuilt(componentName, success)
 		tm.appMetrics.BuildDuration(componentName, duration)
@@ -217,14 +253,18 @@ func (tm *TemplarMonitor) RecordComponentBuilt(componentName string, success boo
 			status = "failure"
 		}
 
-		tm.metrics.Histogram("component_build_duration_seconds", duration.Seconds(), map[string]string{
-			"component": componentName,
-			"status":    status,
-		})
+		tm.metrics.Histogram(
+			"component_build_duration_seconds",
+			duration.Seconds(),
+			map[string]string{
+				"component": componentName,
+				"status":    status,
+			},
+		)
 	}
 }
 
-// RecordFileWatchEvent records a file watch event
+// RecordFileWatchEvent records a file watch event.
 func (tm *TemplarMonitor) RecordFileWatchEvent(eventType, filePath string) {
 	if tm.appMetrics != nil {
 		tm.appMetrics.FileWatcherEvent(eventType)
@@ -237,7 +277,7 @@ func (tm *TemplarMonitor) RecordFileWatchEvent(eventType, filePath string) {
 	}
 }
 
-// RecordWebSocketEvent records WebSocket events
+// RecordWebSocketEvent records WebSocket events.
 func (tm *TemplarMonitor) RecordWebSocketEvent(eventType string, clientCount int) {
 	if tm.appMetrics != nil {
 		tm.appMetrics.WebSocketConnection(eventType)
@@ -245,7 +285,7 @@ func (tm *TemplarMonitor) RecordWebSocketEvent(eventType string, clientCount int
 	}
 }
 
-// RecordCacheEvent records cache hit/miss events
+// RecordCacheEvent records cache hit/miss events.
 func (tm *TemplarMonitor) RecordCacheEvent(operation string, hit bool, itemKey string) {
 	if tm.appMetrics != nil {
 		tm.appMetrics.CacheOperation(operation, hit)
@@ -264,7 +304,7 @@ func (tm *TemplarMonitor) RecordCacheEvent(operation string, hit bool, itemKey s
 
 // HTTP Middleware factory for Templar server
 
-// CreateTemplarMiddleware creates HTTP middleware with Templar-specific tracking
+// CreateTemplarMiddleware creates HTTP middleware with Templar-specific tracking.
 func (tm *TemplarMonitor) CreateTemplarMiddleware() func(http.Handler) http.Handler {
 	baseMiddleware := MonitoringMiddleware(tm.Monitor)
 
@@ -275,18 +315,18 @@ func (tm *TemplarMonitor) CreateTemplarMiddleware() func(http.Handler) http.Hand
 			// Add request-specific tracking
 			if tm.appMetrics != nil {
 				// Track specific endpoint patterns
-				switch {
-				case r.URL.Path == "/api/components":
+				switch r.URL.Path {
+				case "/api/components":
 					tm.metrics.Counter("api_component_requests_total", map[string]string{
 						"method": r.Method,
 					})
-				case r.URL.Path == "/api/build":
+				case "/api/build":
 					tm.metrics.Counter("api_build_requests_total", map[string]string{
 						"method": r.Method,
 					})
-				case r.URL.Path == "/ws":
+				case "/ws":
 					tm.metrics.Counter("websocket_connection_attempts_total", nil)
-				case r.URL.Path == "/preview":
+				case "/preview":
 					tm.metrics.Counter("preview_requests_total", map[string]string{
 						"component": r.URL.Query().Get("component"),
 					})
@@ -301,7 +341,7 @@ func (tm *TemplarMonitor) CreateTemplarMiddleware() func(http.Handler) http.Hand
 
 // Configuration and setup helpers
 
-// SetupTemplarMonitoring sets up monitoring for a Templar application
+// SetupTemplarMonitoring sets up monitoring for a Templar application.
 func SetupTemplarMonitoring(configPath string) (*TemplarMonitor, error) {
 	monitor, err := NewTemplarMonitor(configPath)
 	if err != nil {
@@ -319,7 +359,7 @@ func SetupTemplarMonitoring(configPath string) (*TemplarMonitor, error) {
 	return monitor, nil
 }
 
-// TemplarConfig represents Templar-specific monitoring configuration
+// TemplarConfig represents Templar-specific monitoring configuration.
 type TemplarConfig struct {
 	MonitorConfig    `yaml:",inline"`
 	ComponentPaths   []string `yaml:"component_paths" json:"component_paths"`
@@ -330,7 +370,7 @@ type TemplarConfig struct {
 	WebSocketEnabled bool     `yaml:"websocket_enabled" json:"websocket_enabled"`
 }
 
-// DefaultTemplarConfig returns default Templar monitoring configuration
+// DefaultTemplarConfig returns default Templar monitoring configuration.
 func DefaultTemplarConfig() TemplarConfig {
 	return TemplarConfig{
 		MonitorConfig: DefaultMonitorConfig(),
@@ -349,7 +389,7 @@ func DefaultTemplarConfig() TemplarConfig {
 
 // Startup and shutdown helpers
 
-// GracefulShutdown handles graceful shutdown of Templar monitoring
+// GracefulShutdown handles graceful shutdown of Templar monitoring.
 func (tm *TemplarMonitor) GracefulShutdown(ctx context.Context) error {
 	tm.GetLogger().Info(ctx, "Starting graceful shutdown of monitoring system")
 
@@ -366,13 +406,18 @@ func (tm *TemplarMonitor) GracefulShutdown(ctx context.Context) error {
 	}
 
 	tm.GetLogger().Info(ctx, "Monitoring system shutdown complete")
+
 	return nil
 }
 
 // Utility functions for common monitoring patterns
 
-// MonitorComponentOperation is a convenience function for monitoring component operations
-func MonitorComponentOperation(ctx context.Context, component, operation string, fn func() error) error {
+// MonitorComponentOperation is a convenience function for monitoring component operations.
+func MonitorComponentOperation(
+	ctx context.Context,
+	component, operation string,
+	fn func() error,
+) error {
 	monitor := GetGlobalMonitor()
 	if monitor == nil {
 		return fn()
@@ -399,8 +444,13 @@ func MonitorComponentOperation(ctx context.Context, component, operation string,
 	return err
 }
 
-// LogComponentError logs component-specific errors with proper categorization
-func LogComponentError(ctx context.Context, component, operation string, err error, details map[string]interface{}) {
+// LogComponentError logs component-specific errors with proper categorization.
+func LogComponentError(
+	ctx context.Context,
+	component, operation string,
+	err error,
+	details map[string]interface{},
+) {
 	monitor := GetGlobalMonitor()
 	if monitor == nil {
 		return

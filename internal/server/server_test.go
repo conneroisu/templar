@@ -2,15 +2,16 @@ package server
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
+	"github.com/coder/websocket"
 	"github.com/conneroisu/templar/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/coder/websocket"
 )
 
 func TestNew(t *testing.T) {
@@ -177,6 +178,7 @@ func TestClient_String(t *testing.T) {
 		conn, err := websocket.Accept(w, r, nil)
 		if err != nil {
 			t.Errorf("Failed to upgrade connection: %v", err)
+
 			return
 		}
 		defer conn.Close(websocket.StatusNormalClosure, "")
@@ -262,7 +264,7 @@ func TestPreviewServer_FileWatcherIntegration(t *testing.T) {
 	// This should not panic or error
 	err = server.Start(ctx)
 	// We expect context deadline exceeded since we're stopping early
-	if err != nil && err != context.DeadlineExceeded {
+	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
 		t.Errorf("Unexpected error: %v", err)
 	}
 }
@@ -342,7 +344,7 @@ func TestPreviewServer_MiddlewareOptions(t *testing.T) {
 	assert.Empty(t, rr.Body.String()) // Should not reach the handler
 }
 
-// Helper function to stop the server (for tests that need cleanup)
+// Helper function to stop the server (for tests that need cleanup).
 func (s *PreviewServer) Stop() {
 	if s.watcher != nil {
 		s.watcher.Stop()

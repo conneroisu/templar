@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -11,12 +12,12 @@ import (
 	"github.com/spf13/pflag"
 )
 
-// StandardFlags provides consistent flag definitions across commands
+// StandardFlags provides consistent flag definitions across commands.
 type StandardFlags struct {
 	// Server flags (consistent across serve, preview commands)
-	Port           int    `flag:"port,p" desc:"Port to serve on" default:"8080"`
-	Host           string `flag:"host,h" desc:"Host to bind to" default:"localhost"`
-	NoOpen         bool   `flag:"no-open,n" desc:"Don't automatically open browser" default:"false"`
+	Port   int    `flag:"port,p" desc:"Port to serve on" default:"8080"`
+	Host   string `flag:"host,h" desc:"Host to bind to" default:"localhost"`
+	NoOpen bool   `flag:"no-open,n" desc:"Don't automatically open browser" default:"false"`
 
 	// Component flags (consistent property handling)
 	Props     string `flag:"props" desc:"Component properties (JSON or @file.json)" default:""`
@@ -36,7 +37,7 @@ type StandardFlags struct {
 	Quiet   bool   `flag:"quiet,q" desc:"Suppress non-essential output" default:"false"`
 }
 
-// AddStandardFlags adds standard flags to a command
+// AddStandardFlags adds standard flags to a command.
 func AddStandardFlags(cmd *cobra.Command, flagTypes ...string) *StandardFlags {
 	flags := &StandardFlags{}
 
@@ -58,31 +59,37 @@ func AddStandardFlags(cmd *cobra.Command, flagTypes ...string) *StandardFlags {
 
 func addServerFlags(cmd *cobra.Command, flags *StandardFlags) {
 	cmd.Flags().IntVarP(&flags.Port, "port", "p", 8080, "Port to serve on")
-	cmd.Flags().StringVar(&flags.Host, "host", "localhost", "Host to bind to (use 0.0.0.0 for all interfaces)")
+	cmd.Flags().
+		StringVar(&flags.Host, "host", "localhost", "Host to bind to (use 0.0.0.0 for all interfaces)")
 	cmd.Flags().BoolVarP(&flags.NoOpen, "no-open", "n", false, "Don't automatically open browser")
 }
 
 func addComponentFlags(cmd *cobra.Command, flags *StandardFlags) {
-	cmd.Flags().StringVar(&flags.Props, "props", "", "Component properties (JSON string or @file.json)")
+	cmd.Flags().
+		StringVar(&flags.Props, "props", "", "Component properties (JSON string or @file.json)")
 	cmd.Flags().StringVarP(&flags.PropsFile, "props-file", "P", "", "Properties file path (JSON)")
-	cmd.Flags().StringVarP(&flags.MockData, "mock", "m", "", "Mock data file, pattern, or 'auto' for generation")
+	cmd.Flags().
+		StringVarP(&flags.MockData, "mock", "m", "", "Mock data file, pattern, or 'auto' for generation")
 	cmd.Flags().StringVarP(&flags.Wrapper, "wrapper", "w", "", "Wrapper template path")
 }
 
 func addBuildFlags(cmd *cobra.Command, flags *StandardFlags) {
-	cmd.Flags().StringVarP(&flags.WatchPattern, "watch", "W", "**/*.templ", "File watch pattern for auto-rebuild")
-	cmd.Flags().StringVarP(&flags.BuildCmd, "build-cmd", "B", "templ generate", "Build command to execute")
+	cmd.Flags().
+		StringVarP(&flags.WatchPattern, "watch", "W", "**/*.templ", "File watch pattern for auto-rebuild")
+	cmd.Flags().
+		StringVarP(&flags.BuildCmd, "build-cmd", "B", "templ generate", "Build command to execute")
 	cmd.Flags().BoolVarP(&flags.Clean, "clean", "c", false, "Clean build artifacts before building")
 }
 
 func addOutputFlags(cmd *cobra.Command, flags *StandardFlags) {
-	cmd.Flags().StringVarP(&flags.Format, "format", "f", "table", "Output format (table|json|yaml|csv)")
+	cmd.Flags().
+		StringVarP(&flags.Format, "format", "f", "table", "Output format (table|json|yaml|csv)")
 	cmd.Flags().StringVarP(&flags.Output, "output", "o", "", "Output directory or file")
 	cmd.Flags().BoolVarP(&flags.Verbose, "verbose", "v", false, "Enable verbose/detailed output")
 	cmd.Flags().BoolVarP(&flags.Quiet, "quiet", "q", false, "Suppress non-essential output")
 }
 
-// ParseProps parses component properties with support for file references
+// ParseProps parses component properties with support for file references.
 func (f *StandardFlags) ParseProps() (map[string]interface{}, error) {
 	var props map[string]interface{}
 
@@ -127,12 +134,12 @@ func (f *StandardFlags) ParseProps() (map[string]interface{}, error) {
 	return make(map[string]interface{}), nil
 }
 
-// ShouldOpenBrowser returns whether to open browser based on flags
+// ShouldOpenBrowser returns whether to open browser based on flags.
 func (f *StandardFlags) ShouldOpenBrowser() bool {
 	return !f.NoOpen
 }
 
-// ValidateFlags validates flag combinations and values
+// ValidateFlags validates flag combinations and values.
 func (f *StandardFlags) ValidateFlags() error {
 	// Port validation
 	if f.Port < 1 || f.Port > 65535 {
@@ -141,12 +148,12 @@ func (f *StandardFlags) ValidateFlags() error {
 
 	// Host validation
 	if f.Host == "" {
-		return fmt.Errorf("host cannot be empty")
+		return errors.New("host cannot be empty")
 	}
 
 	// Props validation
 	if f.Props != "" && f.PropsFile != "" {
-		return fmt.Errorf("cannot specify both --props and --props-file")
+		return errors.New("cannot specify both --props and --props-file")
 	}
 
 	// Output format validation
@@ -156,6 +163,7 @@ func (f *StandardFlags) ValidateFlags() error {
 		for _, format := range validFormats {
 			if f.Format == format {
 				valid = true
+
 				break
 			}
 		}
@@ -167,13 +175,13 @@ func (f *StandardFlags) ValidateFlags() error {
 
 	// Quiet and verbose are mutually exclusive
 	if f.Quiet && f.Verbose {
-		return fmt.Errorf("cannot specify both --quiet and --verbose")
+		return errors.New("cannot specify both --quiet and --verbose")
 	}
 
 	return nil
 }
 
-// SetViperBindings binds flags to viper configuration keys
+// SetViperBindings binds flags to viper configuration keys.
 func SetViperBindings(cmd *cobra.Command, bindings map[string]string) {
 	for flagName, configKey := range bindings {
 		if flag := cmd.Flags().Lookup(flagName); flag != nil {
@@ -183,7 +191,7 @@ func SetViperBindings(cmd *cobra.Command, bindings map[string]string) {
 	}
 }
 
-// AddFlagValidation adds validation for a specific flag
+// AddFlagValidation adds validation for a specific flag.
 func AddFlagValidation(cmd *cobra.Command, flagName string, validator func(string) error) {
 	flag := cmd.Flags().Lookup(flagName)
 	if flag == nil {
@@ -213,10 +221,11 @@ func (v *validatingValue) Set(val string) error {
 			return err
 		}
 	}
+
 	return v.originalSet(val)
 }
 
-// Port validation helper
+// Port validation helper.
 func ValidatePort(portStr string) error {
 	port, err := strconv.Atoi(portStr)
 	if err != nil {
@@ -230,7 +239,7 @@ func ValidatePort(portStr string) error {
 	return nil
 }
 
-// File existence validation helper
+// File existence validation helper.
 func ValidateFileExists(filename string) error {
 	if filename == "" {
 		return nil // Empty is valid for optional files
@@ -243,7 +252,7 @@ func ValidateFileExists(filename string) error {
 	return nil
 }
 
-// JSON validation helper
+// JSON validation helper.
 func ValidateJSON(jsonStr string) error {
 	if jsonStr == "" {
 		return nil
@@ -257,17 +266,17 @@ func ValidateJSON(jsonStr string) error {
 	return nil
 }
 
-// FuzzyMatch provides suggestions for mistyped flags or values
+// FuzzyMatch provides suggestions for mistyped flags or values.
 type FuzzyMatch struct {
 	options []string
 }
 
-// NewFuzzyMatch creates a new fuzzy matcher with the given options
+// NewFuzzyMatch creates a new fuzzy matcher with the given options.
 func NewFuzzyMatch(options []string) *FuzzyMatch {
 	return &FuzzyMatch{options: options}
 }
 
-// FindSuggestion finds the closest match using Levenshtein distance
+// FindSuggestion finds the closest match using Levenshtein distance.
 func (f *FuzzyMatch) FindSuggestion(input string) (string, bool) {
 	if input == "" || len(f.options) == 0 {
 		return "", false
@@ -288,7 +297,7 @@ func (f *FuzzyMatch) FindSuggestion(input string) (string, bool) {
 	return bestMatch, bestMatch != ""
 }
 
-// levenshteinDistance calculates the edit distance between two strings
+// levenshteinDistance calculates the edit distance between two strings.
 func levenshteinDistance(a, b string) int {
 	if len(a) == 0 {
 		return len(b)
@@ -331,10 +340,11 @@ func min(a, b, c int) int {
 	if b <= c {
 		return b
 	}
+
 	return c
 }
 
-// ValidateFormatWithSuggestion validates format with fuzzy suggestions
+// ValidateFormatWithSuggestion validates format with fuzzy suggestions.
 func ValidateFormatWithSuggestion(format string, validFormats []string) error {
 	if format == "" {
 		return nil
@@ -358,7 +368,7 @@ func ValidateFormatWithSuggestion(format string, validFormats []string) error {
 		format, strings.Join(validFormats, ", "))
 }
 
-// ValidateTemplateWithSuggestion validates template names with suggestions
+// ValidateTemplateWithSuggestion validates template names with suggestions.
 func ValidateTemplateWithSuggestion(template string, validTemplates []string) error {
 	if template == "" {
 		return nil
@@ -382,27 +392,27 @@ func ValidateTemplateWithSuggestion(template string, validTemplates []string) er
 		template, strings.Join(validTemplates, ", "))
 }
 
-// EnhancedStandardFlags extends StandardFlags with better validation and consistency
+// EnhancedStandardFlags extends StandardFlags with better validation and consistency.
 type EnhancedStandardFlags struct {
 	*StandardFlags
-	
+
 	// Additional common flags for consistency
-	Template     string `flag:"template,t" desc:"Template to use" default:""`
-	Output       string `flag:"output,o" desc:"Output directory or file" default:""`
-	Clean        bool   `flag:"clean" desc:"Clean before operation" default:"false"`
-	DryRun       bool   `flag:"dry-run,n" desc:"Show what would be done without executing" default:"false"`
-	Force        bool   `flag:"force,f" desc:"Force operation, skip confirmations" default:"false"`
-	Help         bool   `flag:"help,h" desc:"Show help information" default:"false"`
+	Template string `flag:"template,t" desc:"Template to use" default:""`
+	Output   string `flag:"output,o" desc:"Output directory or file" default:""`
+	Clean    bool   `flag:"clean" desc:"Clean before operation" default:"false"`
+	DryRun   bool   `flag:"dry-run,n" desc:"Show what would be done without executing" default:"false"`
+	Force    bool   `flag:"force,f" desc:"Force operation, skip confirmations" default:"false"`
+	Help     bool   `flag:"help,h" desc:"Show help information" default:"false"`
 }
 
-// NewEnhancedStandardFlags creates enhanced standard flags
+// NewEnhancedStandardFlags creates enhanced standard flags.
 func NewEnhancedStandardFlags() *EnhancedStandardFlags {
 	return &EnhancedStandardFlags{
 		StandardFlags: &StandardFlags{},
 	}
 }
 
-// AddEnhancedFlags adds enhanced standard flags to a command
+// AddEnhancedFlags adds enhanced standard flags to a command.
 func AddEnhancedFlags(cmd *cobra.Command, flagTypes ...string) *EnhancedStandardFlags {
 	flags := NewEnhancedStandardFlags()
 
@@ -426,35 +436,40 @@ func AddEnhancedFlags(cmd *cobra.Command, flagTypes ...string) *EnhancedStandard
 
 func addEnhancedServerFlags(cmd *cobra.Command, flags *EnhancedStandardFlags) {
 	cmd.Flags().IntVarP(&flags.Port, "port", "p", 8080, "Port to serve on")
-	cmd.Flags().StringVar(&flags.Host, "host", "localhost", "Host to bind to (use 0.0.0.0 for all interfaces)")
+	cmd.Flags().
+		StringVar(&flags.Host, "host", "localhost", "Host to bind to (use 0.0.0.0 for all interfaces)")
 	cmd.Flags().BoolVarP(&flags.NoOpen, "no-open", "n", false, "Don't automatically open browser")
-	
+
 	// Add validation
 	AddFlagValidation(cmd, "port", ValidatePort)
 }
 
 func addEnhancedComponentFlags(cmd *cobra.Command, flags *EnhancedStandardFlags) {
-	cmd.Flags().StringVar(&flags.Props, "props", "", "Component properties (JSON string or @file.json)")
+	cmd.Flags().
+		StringVar(&flags.Props, "props", "", "Component properties (JSON string or @file.json)")
 	cmd.Flags().StringVarP(&flags.PropsFile, "props-file", "P", "", "Properties file path (JSON)")
-	cmd.Flags().StringVarP(&flags.MockData, "mock", "m", "", "Mock data file, pattern, or 'auto' for generation")
+	cmd.Flags().
+		StringVarP(&flags.MockData, "mock", "m", "", "Mock data file, pattern, or 'auto' for generation")
 	cmd.Flags().StringVarP(&flags.Wrapper, "wrapper", "w", "", "Wrapper template path")
-	
+
 	// Add validation for JSON props
 	AddFlagValidation(cmd, "props", ValidateJSON)
 }
 
 func addEnhancedBuildFlags(cmd *cobra.Command, flags *EnhancedStandardFlags) {
 	cmd.Flags().StringVar(&flags.WatchPattern, "watch", "**/*.templ", "File watch pattern")
-	cmd.Flags().StringVar(&flags.BuildCmd, "build-cmd", "templ generate", "Build command to execute")
+	cmd.Flags().
+		StringVar(&flags.BuildCmd, "build-cmd", "templ generate", "Build command to execute")
 	cmd.Flags().BoolVar(&flags.Clean, "clean", false, "Clean build artifacts before building")
 }
 
 func addEnhancedOutputFlags(cmd *cobra.Command, flags *EnhancedStandardFlags) {
-	cmd.Flags().StringVarP(&flags.Format, "format", "f", "table", "Output format (table|json|yaml|csv)")
+	cmd.Flags().
+		StringVarP(&flags.Format, "format", "f", "table", "Output format (table|json|yaml|csv)")
 	cmd.Flags().StringVarP(&flags.Output, "output", "o", "", "Output directory or file")
 	cmd.Flags().BoolVarP(&flags.Verbose, "verbose", "v", false, "Enable verbose/detailed output")
 	cmd.Flags().BoolVarP(&flags.Quiet, "quiet", "q", false, "Suppress non-essential output")
-	
+
 	// Add format validation with suggestions
 	AddFlagValidation(cmd, "format", func(format string) error {
 		return ValidateFormatWithSuggestion(format, []string{"table", "json", "yaml", "csv"})
@@ -463,17 +478,18 @@ func addEnhancedOutputFlags(cmd *cobra.Command, flags *EnhancedStandardFlags) {
 
 func addCommonFlags(cmd *cobra.Command, flags *EnhancedStandardFlags) {
 	cmd.Flags().StringVarP(&flags.Template, "template", "t", "", "Template name to use")
-	cmd.Flags().BoolVar(&flags.DryRun, "dry-run", false, "Show what would be done without executing")
+	cmd.Flags().
+		BoolVar(&flags.DryRun, "dry-run", false, "Show what would be done without executing")
 	cmd.Flags().BoolVarP(&flags.Force, "force", "F", false, "Force operation, skip confirmations")
 }
 
-// ValidateEnhancedFlags validates all enhanced flags with better error messages
+// ValidateEnhancedFlags validates all enhanced flags with better error messages.
 func (f *EnhancedStandardFlags) ValidateEnhancedFlags() error {
 	// Validate base flags first
-	if err := f.StandardFlags.ValidateFlags(); err != nil {
+	if err := f.ValidateFlags(); err != nil {
 		return err
 	}
-	
+
 	// Additional validations
 	if f.Output != "" {
 		// Validate output path is reasonable
@@ -481,10 +497,10 @@ func (f *EnhancedStandardFlags) ValidateEnhancedFlags() error {
 			return fmt.Errorf("output path cannot contain '..' for security reasons: %s", f.Output)
 		}
 	}
-	
+
 	if f.DryRun && f.Force {
-		return fmt.Errorf("cannot use --dry-run and --force together")
+		return errors.New("cannot use --dry-run and --force together")
 	}
-	
+
 	return nil
 }

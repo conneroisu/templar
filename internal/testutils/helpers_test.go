@@ -95,7 +95,12 @@ func TestStandardTemplContent(t *testing.T) {
 		content, exists := StandardTemplContent[name]
 		assert.True(t, exists, "Standard content for %s should exist", name)
 		assert.NotEmpty(t, content, "Content for %s should not be empty", name)
-		assert.Contains(t, content, "package components", "Content should contain package declaration")
+		assert.Contains(
+			t,
+			content,
+			"package components",
+			"Content should contain package declaration",
+		)
 		assert.Contains(t, content, "templ "+name, "Content should contain templ declaration")
 	}
 }

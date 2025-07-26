@@ -3,6 +3,7 @@ package builtin
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -12,7 +13,7 @@ import (
 	"github.com/conneroisu/templar/internal/plugins"
 )
 
-// HotReloadPlugin provides hot reload functionality for development
+// HotReloadPlugin provides hot reload functionality for development.
 type HotReloadPlugin struct {
 	config      plugins.PluginConfig
 	connections map[string]plugins.WebSocketConnection
@@ -21,7 +22,7 @@ type HotReloadPlugin struct {
 	reloadQueue chan ReloadEvent
 }
 
-// ReloadEvent represents a hot reload event
+// ReloadEvent represents a hot reload event.
 type ReloadEvent struct {
 	Type      string                 `json:"type"`
 	File      string                 `json:"file"`
@@ -30,7 +31,7 @@ type ReloadEvent struct {
 	Data      map[string]interface{} `json:"data,omitempty"`
 }
 
-// NewHotReloadPlugin creates a new hot reload plugin
+// NewHotReloadPlugin creates a new hot reload plugin.
 func NewHotReloadPlugin() *HotReloadPlugin {
 	return &HotReloadPlugin{
 		connections: make(map[string]plugins.WebSocketConnection),
@@ -39,22 +40,22 @@ func NewHotReloadPlugin() *HotReloadPlugin {
 	}
 }
 
-// Name returns the plugin name
+// Name returns the plugin name.
 func (hrp *HotReloadPlugin) Name() string {
 	return "hotreload"
 }
 
-// Version returns the plugin version
+// Version returns the plugin version.
 func (hrp *HotReloadPlugin) Version() string {
 	return "1.0.0"
 }
 
-// Description returns the plugin description
+// Description returns the plugin description.
 func (hrp *HotReloadPlugin) Description() string {
 	return "Hot reload functionality for real-time development feedback"
 }
 
-// Initialize initializes the hot reload plugin
+// Initialize initializes the hot reload plugin.
 func (hrp *HotReloadPlugin) Initialize(ctx context.Context, config plugins.PluginConfig) error {
 	hrp.config = config
 
@@ -64,23 +65,27 @@ func (hrp *HotReloadPlugin) Initialize(ctx context.Context, config plugins.Plugi
 	return nil
 }
 
-// Shutdown shuts down the plugin
+// Shutdown shuts down the plugin.
 func (hrp *HotReloadPlugin) Shutdown(ctx context.Context) error {
 	hrp.enabled = false
 
 	// Close all connections
 	hrp.connMutex.Lock()
 	for id, conn := range hrp.connections {
-		conn.Close()
+		if err := conn.Close(); err != nil {
+			// Log error but continue cleanup
+			fmt.Printf("Warning: failed to close connection %s: %v\n", id, err)
+		}
 		delete(hrp.connections, id)
 	}
 	hrp.connMutex.Unlock()
 
 	close(hrp.reloadQueue)
+
 	return nil
 }
 
-// Health returns the plugin health status
+// Health returns the plugin health status.
 func (hrp *HotReloadPlugin) Health() plugins.PluginHealth {
 	hrp.connMutex.RLock()
 	connectionCount := len(hrp.connections)
@@ -101,7 +106,7 @@ func (hrp *HotReloadPlugin) Health() plugins.PluginHealth {
 	}
 }
 
-// RegisterRoutes registers HTTP routes for hot reload functionality
+// RegisterRoutes registers HTTP routes for hot reload functionality.
 func (hrp *HotReloadPlugin) RegisterRoutes(router plugins.Router) error {
 	// Register hot reload WebSocket endpoint
 	router.GET("/ws/hotreload", hrp.handleWebSocket)
@@ -115,17 +120,20 @@ func (hrp *HotReloadPlugin) RegisterRoutes(router plugins.Router) error {
 	return nil
 }
 
-// Middleware returns middleware functions
+// Middleware returns middleware functions.
 func (hrp *HotReloadPlugin) Middleware() []plugins.MiddlewareFunc {
 	return []plugins.MiddlewareFunc{
 		hrp.injectReloadScript,
 	}
 }
 
-// WebSocketHandler handles WebSocket connections for hot reload
-func (hrp *HotReloadPlugin) WebSocketHandler(ctx context.Context, conn plugins.WebSocketConnection) error {
+// WebSocketHandler handles WebSocket connections for hot reload.
+func (hrp *HotReloadPlugin) WebSocketHandler(
+	ctx context.Context,
+	conn plugins.WebSocketConnection,
+) error {
 	if !hrp.enabled {
-		return fmt.Errorf("hot reload plugin is disabled")
+		return errors.New("hot reload plugin is disabled")
 	}
 
 	// Generate connection ID
@@ -141,7 +149,9 @@ func (hrp *HotReloadPlugin) WebSocketHandler(ctx context.Context, conn plugins.W
 		hrp.connMutex.Lock()
 		delete(hrp.connections, connID)
 		hrp.connMutex.Unlock()
-		conn.Close()
+		if err := conn.Close(); err != nil {
+			fmt.Printf("Warning: failed to close connection %s: %v\n", connID, err)
+		}
 	}()
 
 	// Send initial connection message
@@ -181,7 +191,7 @@ func (hrp *HotReloadPlugin) WebSocketHandler(ctx context.Context, conn plugins.W
 	}
 }
 
-// WatchPatterns returns file patterns to watch for hot reload
+// WatchPatterns returns file patterns to watch for hot reload.
 func (hrp *HotReloadPlugin) WatchPatterns() []string {
 	return []string{
 		"**/*.templ",
@@ -195,8 +205,11 @@ func (hrp *HotReloadPlugin) WatchPatterns() []string {
 	}
 }
 
-// HandleFileChange handles file change events for hot reload
-func (hrp *HotReloadPlugin) HandleFileChange(ctx context.Context, event plugins.FileChangeEvent) error {
+// HandleFileChange handles file change events for hot reload.
+func (hrp *HotReloadPlugin) HandleFileChange(
+	ctx context.Context,
+	event plugins.FileChangeEvent,
+) error {
 	if !hrp.enabled {
 		return nil
 	}
@@ -227,7 +240,7 @@ func (hrp *HotReloadPlugin) HandleFileChange(ctx context.Context, event plugins.
 	return nil
 }
 
-// ShouldIgnore determines if a file change should be ignored
+// ShouldIgnore determines if a file change should be ignored.
 func (hrp *HotReloadPlugin) ShouldIgnore(filePath string) bool {
 	// Ignore certain file patterns
 	ignorePatterns := []string{
@@ -248,7 +261,7 @@ func (hrp *HotReloadPlugin) ShouldIgnore(filePath string) bool {
 	return false
 }
 
-// processReloadEvents processes queued reload events
+// processReloadEvents processes queued reload events.
 func (hrp *HotReloadPlugin) processReloadEvents(ctx context.Context) {
 	debouncer := make(map[string]time.Time)
 	debounceInterval := 250 * time.Millisecond
@@ -284,7 +297,7 @@ func (hrp *HotReloadPlugin) processReloadEvents(ctx context.Context) {
 	}
 }
 
-// broadcastEvent broadcasts an event to all connected clients
+// broadcastEvent broadcasts an event to all connected clients.
 func (hrp *HotReloadPlugin) broadcastEvent(event ReloadEvent) {
 	hrp.connMutex.RLock()
 	connections := make([]plugins.WebSocketConnection, 0, len(hrp.connections))
@@ -301,7 +314,7 @@ func (hrp *HotReloadPlugin) broadcastEvent(event ReloadEvent) {
 	}
 }
 
-// sendEvent sends an event to a WebSocket connection
+// sendEvent sends an event to a WebSocket connection.
 func (hrp *HotReloadPlugin) sendEvent(conn plugins.WebSocketConnection, event ReloadEvent) error {
 	data, err := json.Marshal(event)
 	if err != nil {
@@ -311,7 +324,7 @@ func (hrp *HotReloadPlugin) sendEvent(conn plugins.WebSocketConnection, event Re
 	return conn.Send(data)
 }
 
-// extractComponentName extracts component name from file path
+// extractComponentName extracts component name from file path.
 func (hrp *HotReloadPlugin) extractComponentName(filePath string) string {
 	// Simple extraction - get filename without extension
 	base := filepath.Base(filePath)
@@ -328,7 +341,7 @@ func (hrp *HotReloadPlugin) extractComponentName(filePath string) string {
 	return base
 }
 
-// HTTP handlers
+// HTTP handlers.
 func (hrp *HotReloadPlugin) handleWebSocket(ctx plugins.Context) error {
 	// This would be implemented based on the specific HTTP framework
 	// For now, return a placeholder
@@ -337,6 +350,7 @@ func (hrp *HotReloadPlugin) handleWebSocket(ctx plugins.Context) error {
 
 func (hrp *HotReloadPlugin) handleStatus(ctx plugins.Context) error {
 	status := hrp.Health()
+
 	return ctx.JSON(200, map[string]interface{}{
 		"plugin":  hrp.Name(),
 		"version": hrp.Version(),
@@ -362,7 +376,7 @@ func (hrp *HotReloadPlugin) handleTrigger(ctx plugins.Context) error {
 	})
 }
 
-// injectReloadScript middleware injects hot reload client script
+// injectReloadScript middleware injects hot reload client script.
 func (hrp *HotReloadPlugin) injectReloadScript(next plugins.HandlerFunc) plugins.HandlerFunc {
 	return func(ctx plugins.Context) error {
 		// Call the next handler
@@ -379,6 +393,6 @@ func (hrp *HotReloadPlugin) injectReloadScript(next plugins.HandlerFunc) plugins
 	}
 }
 
-// Ensure HotReloadPlugin implements the required interfaces
+// Ensure HotReloadPlugin implements the required interfaces.
 var _ plugins.ServerPlugin = (*HotReloadPlugin)(nil)
 var _ plugins.WatcherPlugin = (*HotReloadPlugin)(nil)

@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -45,7 +46,7 @@ var (
 	doctorFormat  string
 )
 
-// DiagnosticResult represents the result of a diagnostic check
+// DiagnosticResult represents the result of a diagnostic check.
 type DiagnosticResult struct {
 	Name        string                 `json:"name" yaml:"name"`
 	Category    string                 `json:"category" yaml:"category"`
@@ -56,7 +57,7 @@ type DiagnosticResult struct {
 	AutoFixable bool                   `json:"auto_fixable" yaml:"auto_fixable"`
 }
 
-// DoctorReport represents the complete diagnostic report
+// DoctorReport represents the complete diagnostic report.
 type DoctorReport struct {
 	Timestamp   time.Time          `json:"timestamp" yaml:"timestamp"`
 	Environment map[string]string  `json:"environment" yaml:"environment"`
@@ -64,7 +65,7 @@ type DoctorReport struct {
 	Summary     ReportSummary      `json:"summary" yaml:"summary"`
 }
 
-// ReportSummary provides an overview of diagnostic results
+// ReportSummary provides an overview of diagnostic results.
 type ReportSummary struct {
 	Total    int `json:"total" yaml:"total"`
 	OK       int `json:"ok" yaml:"ok"`
@@ -76,21 +77,24 @@ type ReportSummary struct {
 func init() {
 	rootCmd.AddCommand(doctorCmd)
 
-	doctorCmd.Flags().BoolVarP(&doctorVerbose, "verbose", "v", false, "Show verbose diagnostic information")
-	doctorCmd.Flags().BoolVar(&doctorFix, "fix", false, "Automatically fix common issues where possible")
-	doctorCmd.Flags().StringVarP(&doctorFormat, "format", "f", "table", "Output format (table|json|yaml)")
+	doctorCmd.Flags().
+		BoolVarP(&doctorVerbose, "verbose", "v", false, "Show verbose diagnostic information")
+	doctorCmd.Flags().
+		BoolVar(&doctorFix, "fix", false, "Automatically fix common issues where possible")
+	doctorCmd.Flags().
+		StringVarP(&doctorFormat, "format", "f", "table", "Output format (table|json|yaml)")
 }
 
 func runDoctor(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
-	
+
 	fmt.Println("🔍 Templar Development Environment Doctor")
 	fmt.Println("==========================================")
-	
+
 	if doctorFix {
 		fmt.Println("⚡ Auto-fix mode enabled")
 	}
-	
+
 	fmt.Println()
 
 	// Create diagnostic report
@@ -119,11 +123,11 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 	for _, check := range checks {
 		result := check(ctx, report)
 		report.Results = append(report.Results, result)
-		
+
 		if !doctorVerbose && result.Status == "info" {
 			continue
 		}
-		
+
 		displayResult(result)
 	}
 
@@ -152,23 +156,23 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 
 func gatherEnvironmentInfo() map[string]string {
 	env := map[string]string{
-		"os":           runtime.GOOS,
-		"arch":         runtime.GOARCH,
-		"go_version":   runtime.Version(),
-		"templar_dir":  getCurrentDirectory(),
-		"user":         os.Getenv("USER"),
-		"shell":        os.Getenv("SHELL"),
-		"editor":       getPreferredEditor(),
-		"path":         os.Getenv("PATH"),
-		"gopath":       os.Getenv("GOPATH"),
-		"goroot":       os.Getenv("GOROOT"),
+		"os":          runtime.GOOS,
+		"arch":        runtime.GOARCH,
+		"go_version":  runtime.Version(),
+		"templar_dir": getCurrentDirectory(),
+		"user":        os.Getenv("USER"),
+		"shell":       os.Getenv("SHELL"),
+		"editor":      getPreferredEditor(),
+		"path":        os.Getenv("PATH"),
+		"gopath":      os.Getenv("GOPATH"),
+		"goroot":      os.Getenv("GOROOT"),
 	}
-	
+
 	// Add working directory info
 	if wd, err := os.Getwd(); err == nil {
 		env["working_dir"] = wd
 	}
-	
+
 	return env
 }
 
@@ -186,6 +190,7 @@ func checkTemplarConfiguration(ctx context.Context, report *DoctorReport) Diagno
 		result.Message = "No .templar.yml configuration file found"
 		result.Suggestion = "Run 'templar init' to create a new project or 'templar config wizard' for interactive setup"
 		result.AutoFixable = true
+
 		return result
 	}
 
@@ -196,16 +201,17 @@ func checkTemplarConfiguration(ctx context.Context, report *DoctorReport) Diagno
 		result.Message = fmt.Sprintf("Configuration file exists but has errors: %v", err)
 		result.Suggestion = "Fix configuration errors or run 'templar config wizard' to reconfigure"
 		result.AutoFixable = true
+
 		return result
 	}
 
 	result.Message = "Configuration file is valid"
 	result.Details = map[string]interface{}{
-		"scan_paths":     cfg.Components.ScanPaths,
-		"server_port":    cfg.Server.Port,
-		"build_command":  cfg.Build.Command,
-		"hot_reload":     cfg.Development.HotReload,
-		"monitoring":     cfg.Monitoring.Enabled,
+		"scan_paths":    cfg.Components.ScanPaths,
+		"server_port":   cfg.Server.Port,
+		"build_command": cfg.Build.Command,
+		"hot_reload":    cfg.Development.HotReload,
+		"monitoring":    cfg.Monitoring.Enabled,
 	}
 
 	// Check for common configuration issues
@@ -233,11 +239,12 @@ func checkTemplTool(ctx context.Context, report *DoctorReport) DiagnosticResult 
 		result.Message = "Templ tool not found"
 		result.Suggestion = "Install templ with: go install github.com/a-h/templ/cmd/templ@latest"
 		result.AutoFixable = true
+
 		return result
 	}
 
 	version := strings.TrimSpace(string(output))
-	result.Message = fmt.Sprintf("Templ tool installed: %s", version)
+	result.Message = "Templ tool installed: " + version
 	result.Details = map[string]interface{}{
 		"version": version,
 		"path":    getCommandPath("templ"),
@@ -246,7 +253,7 @@ func checkTemplTool(ctx context.Context, report *DoctorReport) DiagnosticResult 
 	// Check if it's a recent version
 	if strings.Contains(version, "v0.2") {
 		result.Status = "warning"
-		result.Message = fmt.Sprintf("Templ version may be outdated: %s", version)
+		result.Message = "Templ version may be outdated: " + version
 		result.Suggestion = "Update templ with: go install github.com/a-h/templ/cmd/templ@latest"
 		result.AutoFixable = true
 	}
@@ -263,8 +270,8 @@ func checkGoEnvironment(ctx context.Context, report *DoctorReport) DiagnosticRes
 
 	// Check Go version
 	goVersion := runtime.Version()
-	result.Message = fmt.Sprintf("Go version: %s", goVersion)
-	
+	result.Message = "Go version: " + goVersion
+
 	details := map[string]interface{}{
 		"version": goVersion,
 		"gopath":  os.Getenv("GOPATH"),
@@ -285,7 +292,7 @@ func checkGoEnvironment(ctx context.Context, report *DoctorReport) DiagnosticRes
 	// Check Go version compatibility
 	if strings.Contains(goVersion, "go1.19") || strings.Contains(goVersion, "go1.18") {
 		result.Status = "warning"
-		result.Message = fmt.Sprintf("Go version may be outdated for optimal templ support: %s", goVersion)
+		result.Message = "Go version may be outdated for optimal templ support: " + goVersion
 		result.Suggestion = "Consider upgrading to Go 1.20+ for better generics and templ support"
 	}
 
@@ -321,10 +328,14 @@ func checkPortAvailability(ctx context.Context, report *DoctorReport) Diagnostic
 		result.Message = "All common development ports are available"
 	} else {
 		result.Message = fmt.Sprintf("Port conflicts detected: %v", conflictPorts)
-		result.Suggestion = fmt.Sprintf("Use alternative ports: %v, or stop conflicting services", availablePorts[:3])
-		
-		if contains(conflictPorts, 8080) {
-			result.Suggestion += "\nFor Templar, use: templar serve --port " + fmt.Sprintf("%d", availablePorts[0])
+		maxPorts := len(availablePorts)
+		if maxPorts > 3 {
+			maxPorts = 3
+		}
+		result.Suggestion = fmt.Sprintf("Use alternative ports: %v, or stop conflicting services", availablePorts[:maxPorts])
+
+		if contains(conflictPorts, 8080) && len(availablePorts) > 0 {
+			result.Suggestion += "\nFor Templar, use: templar serve --port " + strconv.Itoa(availablePorts[0])
 		}
 	}
 
@@ -350,12 +361,13 @@ func checkAirIntegration(ctx context.Context, report *DoctorReport) DiagnosticRe
 		result.Message = "Air tool not detected"
 		result.Suggestion = "Install Air for Go hot reload: go install github.com/air-verse/air@latest"
 		result.AutoFixable = true
+
 		return result
 	}
 
 	version := strings.TrimSpace(string(output))
 	result.Status = "ok"
-	result.Message = fmt.Sprintf("Air installed: %s", version)
+	result.Message = "Air installed: " + version
 
 	// Check for .air.toml configuration
 	airConfigExists := false
@@ -368,11 +380,14 @@ func checkAirIntegration(ctx context.Context, report *DoctorReport) DiagnosticRe
 
 	if !airConfigExists {
 		result.Status = "warning"
-		result.Message = fmt.Sprintf("Air installed (%s) but no .air.toml configuration found", version)
+		result.Message = fmt.Sprintf(
+			"Air installed (%s) but no .air.toml configuration found",
+			version,
+		)
 		result.Suggestion = "Create .air.toml with: air init, or integrate with Templar using our air config template"
 		result.AutoFixable = true
 	} else {
-		result.Message = fmt.Sprintf("Air properly configured: %s", version)
+		result.Message = "Air properly configured: " + version
 		result.Details["configured"] = true
 	}
 
@@ -396,6 +411,7 @@ func checkTailwindIntegration(ctx context.Context, report *DoctorReport) Diagnos
 	for _, path := range tailwindPaths {
 		if cmd := exec.CommandContext(ctx, path, "--version"); cmd.Run() == nil {
 			tailwindPath = path
+
 			break
 		}
 	}
@@ -404,6 +420,7 @@ func checkTailwindIntegration(ctx context.Context, report *DoctorReport) Diagnos
 		result.Message = "Tailwind CSS not detected"
 		result.Suggestion = "Install Tailwind CSS: npm install -D tailwindcss@latest"
 		result.AutoFixable = false
+
 		return result
 	}
 
@@ -413,6 +430,7 @@ func checkTailwindIntegration(ctx context.Context, report *DoctorReport) Diagnos
 	for _, file := range configFiles {
 		if _, err := os.Stat(file); err == nil {
 			configFile = file
+
 			break
 		}
 	}
@@ -449,6 +467,7 @@ func checkVSCodeIntegration(ctx context.Context, report *DoctorReport) Diagnosti
 	for _, cmd := range vscodeCommands {
 		if exec.CommandContext(ctx, cmd, "--version").Run() == nil {
 			vscodeCmd = cmd
+
 			break
 		}
 	}
@@ -456,6 +475,7 @@ func checkVSCodeIntegration(ctx context.Context, report *DoctorReport) Diagnosti
 	if vscodeCmd == "" {
 		result.Message = "VS Code not detected"
 		result.Suggestion = "Install VS Code for better templ development experience"
+
 		return result
 	}
 
@@ -469,7 +489,7 @@ func checkVSCodeIntegration(ctx context.Context, report *DoctorReport) Diagnosti
 	vscodeDir := ".vscode"
 	if _, err := os.Stat(vscodeDir); err == nil {
 		result.Details["workspace_config"] = true
-		
+
 		// Check for recommended extensions
 		if _, err := os.Stat(filepath.Join(vscodeDir, "extensions.json")); err == nil {
 			result.Details["recommended_extensions"] = true
@@ -502,6 +522,7 @@ func checkGitIntegration(ctx context.Context, report *DoctorReport) DiagnosticRe
 		result.Message = "Not a Git repository"
 		result.Suggestion = "Initialize Git repository: git init"
 		result.AutoFixable = true
+
 		return result
 	}
 
@@ -526,13 +547,13 @@ func checkGitIntegration(ctx context.Context, report *DoctorReport) DiagnosticRe
 			gitignoreContent := string(content)
 			requiredPatterns := []string{"*_templ.go", ".templar/", "node_modules/"}
 			missingPatterns := []string{}
-			
+
 			for _, pattern := range requiredPatterns {
 				if !strings.Contains(gitignoreContent, pattern) {
 					missingPatterns = append(missingPatterns, pattern)
 				}
 			}
-			
+
 			if len(missingPatterns) > 0 {
 				result.Status = "warning"
 				result.Message = "Git configured but .gitignore may be missing templ-related patterns"
@@ -557,7 +578,7 @@ func checkProcessConflicts(ctx context.Context, report *DoctorReport) Diagnostic
 	}
 
 	conflictingProcesses := []string{}
-	
+
 	// Check for common development server processes
 	processesToCheck := []string{
 		"air",
@@ -600,9 +621,13 @@ func checkFileSystemPermissions(ctx context.Context, report *DoctorReport) Diagn
 		result.Status = "error"
 		result.Message = "Cannot write to current directory"
 		result.Suggestion = "Check directory permissions or change to a writable directory"
+
 		return result
 	}
-	os.Remove(testFile) // Clean up
+	if err := os.Remove(testFile); err != nil {
+		// Non-critical, just log
+		fmt.Fprintf(os.Stderr, "Warning: failed to remove test file: %v\n", err)
+	}
 
 	// Check cache directory permissions
 	cacheDir := ".templar"
@@ -610,10 +635,12 @@ func checkFileSystemPermissions(ctx context.Context, report *DoctorReport) Diagn
 		result.Status = "warning"
 		result.Message = "Cannot create .templar cache directory"
 		result.Suggestion = "Check permissions for creating directories in current location"
+
 		return result
 	}
 
 	result.Message = "File system permissions are adequate"
+
 	return result
 }
 
@@ -630,15 +657,18 @@ func checkNetworkConfiguration(ctx context.Context, report *DoctorReport) Diagno
 		result.Status = "error"
 		result.Message = "Cannot bind to localhost"
 		result.Suggestion = "Check network configuration and firewall settings"
+
 		return result
 	}
-	
+
 	port := listener.Addr().(*net.TCPAddr).Port
-	listener.Close()
+	if err := listener.Close(); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: failed to close listener: %v\n", err)
+	}
 
 	result.Message = "Network configuration is working"
 	result.Details = map[string]interface{}{
-		"test_port": port,
+		"test_port":            port,
 		"localhost_accessible": true,
 	}
 
@@ -660,22 +690,34 @@ func checkDevelopmentWorkflow(ctx context.Context, report *DoctorReport) Diagnos
 		switch prevResult.Name {
 		case "Air Integration":
 			if prevResult.Status == "ok" {
-				recommendations = append(recommendations, "✅ Air + Templar: Use 'air' for Go hot reload and 'templar serve' for component preview")
+				recommendations = append(
+					recommendations,
+					"✅ Air + Templar: Use 'air' for Go hot reload and 'templar serve' for component preview",
+				)
 				workflowScore++
 			}
 		case "Tailwind CSS Integration":
 			if prevResult.Status == "ok" {
-				recommendations = append(recommendations, "✅ Tailwind + Templar: Run 'tailwindcss --watch' alongside 'templar serve'")
+				recommendations = append(
+					recommendations,
+					"✅ Tailwind + Templar: Run 'tailwindcss --watch' alongside 'templar serve'",
+				)
 				workflowScore++
 			}
 		case "VS Code Integration":
 			if prevResult.Status == "ok" {
-				recommendations = append(recommendations, "✅ VS Code: Install templ extension for syntax highlighting")
+				recommendations = append(
+					recommendations,
+					"✅ VS Code: Install templ extension for syntax highlighting",
+				)
 				workflowScore++
 			}
 		case "Git Integration":
 			if prevResult.Status == "ok" {
-				recommendations = append(recommendations, "✅ Git: Exclude *_templ.go files from version control")
+				recommendations = append(
+					recommendations,
+					"✅ Git: Exclude *_templ.go files from version control",
+				)
 				workflowScore++
 			}
 		}
@@ -696,9 +738,9 @@ func checkDevelopmentWorkflow(ctx context.Context, report *DoctorReport) Diagnos
 	}
 
 	result.Details = map[string]interface{}{
-		"workflow_score":     workflowScore,
-		"recommendations":    recommendations,
-		"integration_level":  getIntegrationLevel(workflowScore),
+		"workflow_score":    workflowScore,
+		"recommendations":   recommendations,
+		"integration_level": getIntegrationLevel(workflowScore),
 	}
 
 	return result
@@ -710,6 +752,7 @@ func getCurrentDirectory() string {
 	if wd, err := os.Getwd(); err == nil {
 		return wd
 	}
+
 	return "unknown"
 }
 
@@ -720,6 +763,7 @@ func getPreferredEditor() string {
 			return editor
 		}
 	}
+
 	return "unknown"
 }
 
@@ -727,6 +771,7 @@ func getCommandPath(command string) string {
 	if path, err := exec.LookPath(command); err == nil {
 		return path
 	}
+
 	return "not found"
 }
 
@@ -735,12 +780,16 @@ func isPortAvailable(port int) bool {
 	if err != nil {
 		return false
 	}
-	listener.Close()
+	if err := listener.Close(); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: failed to close listener: %v\n", err)
+	}
+
 	return true
 }
 
 func isProcessRunning(processName string) bool {
 	cmd := exec.Command("pgrep", "-f", processName)
+
 	return cmd.Run() == nil
 }
 
@@ -750,6 +799,7 @@ func contains(slice []int, item int) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -761,6 +811,7 @@ func getIntegrationLevel(score int) string {
 	} else if score >= 1 {
 		return "basic"
 	}
+
 	return "minimal"
 }
 
@@ -779,16 +830,22 @@ func displayResult(result DiagnosticResult) {
 		icon = "•"
 	}
 
-	fmt.Printf("%s [%s] %s: %s\n", icon, strings.ToUpper(result.Category), result.Name, result.Message)
-	
+	fmt.Printf(
+		"%s [%s] %s: %s\n",
+		icon,
+		strings.ToUpper(result.Category),
+		result.Name,
+		result.Message,
+	)
+
 	if result.Suggestion != "" {
 		fmt.Printf("   💡 %s\n", result.Suggestion)
 	}
-	
+
 	if doctorVerbose && result.Details != nil && len(result.Details) > 0 {
 		fmt.Printf("   📋 Details: %+v\n", result.Details)
 	}
-	
+
 	fmt.Println()
 }
 
@@ -819,7 +876,7 @@ func displaySummary(summary ReportSummary) {
 	fmt.Printf("⚠️  Warnings: %d\n", summary.Warnings)
 	fmt.Printf("❌ Errors: %d\n", summary.Errors)
 	fmt.Printf("ℹ️  Info: %d\n", summary.Info)
-	
+
 	// Calculate health score
 	healthScore := float64(summary.OK) / float64(summary.Total) * 100
 	fmt.Printf("\n🎯 Environment Health Score: %.0f%%\n", healthScore)
@@ -830,9 +887,11 @@ func outputReport(report *DoctorReport, format string) error {
 	case "json":
 		encoder := json.NewEncoder(os.Stdout)
 		encoder.SetIndent("", "  ")
+
 		return encoder.Encode(report)
 	case "yaml":
 		encoder := yaml.NewEncoder(os.Stdout)
+
 		return encoder.Encode(report)
 	default:
 		return fmt.Errorf("unsupported format: %s", format)
@@ -866,17 +925,17 @@ func provideFinalRecommendations(report *DoctorReport) {
 
 	// Provide specific next steps based on findings
 	fmt.Println("📝 Next Steps:")
-	
+
 	if !hasTemplarConfig(report) {
 		fmt.Println("   1. Run 'templar init' to set up a new project")
 	} else {
 		fmt.Println("   1. Run 'templar serve' to start the development server")
 	}
-	
+
 	if hasIntegrationOpportunities(report) {
 		fmt.Println("   2. Consider integrating detected tools for better workflow")
 	}
-	
+
 	fmt.Println("   3. Visit https://templar.dev/docs for comprehensive guides")
 	fmt.Println()
 }
@@ -887,6 +946,7 @@ func hasTemplarConfig(report *DoctorReport) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -896,5 +956,6 @@ func hasIntegrationOpportunities(report *DoctorReport) bool {
 			return true
 		}
 	}
+
 	return false
 }

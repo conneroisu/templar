@@ -174,6 +174,7 @@ func TestMonitorOperationTracking(t *testing.T) {
 		executed := false
 		err := monitor.LogOperation("test_operation", func() error {
 			executed = true
+
 			return nil
 		})
 
@@ -340,15 +341,19 @@ func TestMonitorAlerting(t *testing.T) {
 	require.NoError(t, err)
 
 	// Register an unhealthy check
-	unhealthyCheck := NewHealthCheckFunc("failing_check", true, func(ctx context.Context) HealthCheck {
-		return HealthCheck{
-			Name:        "failing_check",
-			Status:      HealthStatusUnhealthy,
-			Message:     "This check always fails",
-			LastChecked: time.Now(),
-			Critical:    true,
-		}
-	})
+	unhealthyCheck := NewHealthCheckFunc(
+		"failing_check",
+		true,
+		func(ctx context.Context) HealthCheck {
+			return HealthCheck{
+				Name:        "failing_check",
+				Status:      HealthStatusUnhealthy,
+				Message:     "This check always fails",
+				LastChecked: time.Now(),
+				Critical:    true,
+			}
+		},
+	)
 
 	monitor.RegisterHealthCheck(unhealthyCheck)
 

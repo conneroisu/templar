@@ -3,7 +3,6 @@ package build
 import (
 	"crypto/md5"
 	"crypto/sha256"
-	"fmt"
 	"hash/crc32"
 	"hash/fnv"
 	"strconv"
@@ -16,10 +15,10 @@ import (
 func BenchmarkHashFunctions(b *testing.B) {
 	// Test data of different sizes
 	sizes := []int{
-		1024,     // 1KB - small component
-		10240,    // 10KB - medium component  
-		102400,   // 100KB - large component
-		1048576,  // 1MB - very large component
+		1024,    // 1KB - small component
+		10240,   // 10KB - medium component
+		102400,  // 100KB - large component
+		1048576, // 1MB - very large component
 	}
 
 	for _, size := range sizes {
@@ -32,7 +31,7 @@ func BenchmarkHashFunctions(b *testing.B) {
 			// Benchmark CRC32 (current implementation)
 			b.Run("CRC32", func(b *testing.B) {
 				b.SetBytes(int64(size))
-				for i := 0; i < b.N; i++ {
+				for range b.N {
 					_ = crc32.ChecksumIEEE(data)
 				}
 			})
@@ -40,7 +39,7 @@ func BenchmarkHashFunctions(b *testing.B) {
 			// Benchmark MD5 (for comparison - should be slower)
 			b.Run("MD5", func(b *testing.B) {
 				b.SetBytes(int64(size))
-				for i := 0; i < b.N; i++ {
+				for range b.N {
 					_ = md5.Sum(data)
 				}
 			})
@@ -48,7 +47,7 @@ func BenchmarkHashFunctions(b *testing.B) {
 			// Benchmark SHA256 (for comparison - should be slowest)
 			b.Run("SHA256", func(b *testing.B) {
 				b.SetBytes(int64(size))
-				for i := 0; i < b.N; i++ {
+				for range b.N {
 					_ = sha256.Sum256(data)
 				}
 			})
@@ -56,7 +55,7 @@ func BenchmarkHashFunctions(b *testing.B) {
 			// Benchmark FNV-1a (non-cryptographic alternative)
 			b.Run("FNV1a", func(b *testing.B) {
 				b.SetBytes(int64(size))
-				for i := 0; i < b.N; i++ {
+				for range b.N {
 					h := fnv.New64a()
 					h.Write(data)
 					_ = h.Sum64()
@@ -66,7 +65,7 @@ func BenchmarkHashFunctions(b *testing.B) {
 			// Benchmark simple sum (baseline)
 			b.Run("SimpleSum", func(b *testing.B) {
 				b.SetBytes(int64(size))
-				for i := 0; i < b.N; i++ {
+				for range b.N {
 					var sum uint64
 					for _, b := range data {
 						sum += uint64(b)
@@ -78,7 +77,7 @@ func BenchmarkHashFunctions(b *testing.B) {
 	}
 }
 
-// BenchmarkCRC32Variants compares different CRC32 variants
+// BenchmarkCRC32Variants compares different CRC32 variants.
 func BenchmarkCRC32Variants(b *testing.B) {
 	data := make([]byte, 64*1024) // 64KB test data
 	for i := range data {
@@ -87,7 +86,7 @@ func BenchmarkCRC32Variants(b *testing.B) {
 
 	b.Run("CRC32_IEEE", func(b *testing.B) {
 		b.SetBytes(int64(len(data)))
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			_ = crc32.ChecksumIEEE(data)
 		}
 	})
@@ -96,7 +95,7 @@ func BenchmarkCRC32Variants(b *testing.B) {
 		crcTable := crc32.MakeTable(crc32.Castagnoli)
 		b.SetBytes(int64(len(data)))
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			_ = crc32.Checksum(data, crcTable)
 		}
 	})
@@ -105,13 +104,13 @@ func BenchmarkCRC32Variants(b *testing.B) {
 		crcTable := crc32.MakeTable(crc32.Koopman)
 		b.SetBytes(int64(len(data)))
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			_ = crc32.Checksum(data, crcTable)
 		}
 	})
 }
 
-// BenchmarkHashStringConversion tests the cost of converting hash to string
+// BenchmarkHashStringConversion tests the cost of converting hash to string.
 func BenchmarkHashStringConversion(b *testing.B) {
 	data := make([]byte, 64*1024)
 	for i := range data {
@@ -119,40 +118,40 @@ func BenchmarkHashStringConversion(b *testing.B) {
 	}
 
 	b.Run("CRC32_Printf", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			hash := crc32.ChecksumIEEE(data)
 			_ = formatHash(hash)
 		}
 	})
 
 	b.Run("CRC32_FormatUint", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			hash := crc32.ChecksumIEEE(data)
 			_ = formatHashOptimized(hash)
 		}
 	})
 }
 
-// formatHash formats hash using current method (fmt.Sprintf)
+// formatHash formats hash using current method (fmt.Sprintf).
 func formatHash(hash uint32) string {
 	return formatHashInline(hash)
 }
 
-// formatHashOptimized formats hash using optimized method
+// formatHashOptimized formats hash using optimized method.
 func formatHashOptimized(hash uint32) string {
 	return formatHashInlineOptimized(hash)
 }
 
-// Inline functions to avoid call overhead in benchmarks
+// Inline functions to avoid call overhead in benchmarks.
 func formatHashInline(hash uint32) string {
-	return fmt.Sprintf("%x", hash)
+	return strconv.FormatUint(uint64(hash), 16)
 }
 
 func formatHashInlineOptimized(hash uint32) string {
 	return strconv.FormatUint(uint64(hash), 16)
 }
 
-// formatSize converts size to human readable string
+// formatSize converts size to human readable string.
 func formatSize(size int) string {
 	if size >= 1024*1024 {
 		return "1MB"
@@ -165,7 +164,7 @@ func formatSize(size int) string {
 	}
 }
 
-// BenchmarkMemoryPooledHashing tests if using a memory pool for hash results improves performance
+// BenchmarkMemoryPooledHashing tests if using a memory pool for hash results improves performance.
 func BenchmarkMemoryPooledHashing(b *testing.B) {
 	data := make([]byte, 64*1024)
 	for i := range data {
@@ -174,7 +173,7 @@ func BenchmarkMemoryPooledHashing(b *testing.B) {
 
 	// Test current approach
 	b.Run("DirectAllocation", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			hash := crc32.ChecksumIEEE(data)
 			result := make([]byte, 8) // Simulate hash result allocation
 			copy(result, []byte{byte(hash), byte(hash >> 8), byte(hash >> 16), byte(hash >> 24)})
@@ -186,12 +185,12 @@ func BenchmarkMemoryPooledHashing(b *testing.B) {
 	b.Run("PooledAllocation", func(b *testing.B) {
 		pool := make(chan []byte, 100)
 		// Pre-populate pool
-		for i := 0; i < 100; i++ {
+		for range 100 {
 			pool <- make([]byte, 8)
 		}
 
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			hash := crc32.ChecksumIEEE(data)
 			var result []byte
 			select {
@@ -200,7 +199,7 @@ func BenchmarkMemoryPooledHashing(b *testing.B) {
 				result = make([]byte, 8)
 			}
 			copy(result, []byte{byte(hash), byte(hash >> 8), byte(hash >> 16), byte(hash >> 24)})
-			
+
 			// Return to pool
 			select {
 			case pool <- result:

@@ -9,12 +9,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/conneroisu/templar/internal/config"
 	"github.com/coder/websocket"
+	"github.com/conneroisu/templar/internal/config"
 )
 
 // TestWebSocketRateLimitBypassVulnerability tests that rate limiting only applies to actual messages
-// and not to connection maintenance (ping/pong) or connection attempts
+// and not to connection maintenance (ping/pong) or connection attempts.
 func TestWebSocketRateLimitBypassVulnerability(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -52,9 +52,11 @@ func TestWebSocketRateLimitBypassVulnerability(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := setupTestWebSocketServerForBypassTest(t)
 
-			testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				server.handleWebSocket(w, r)
-			}))
+			testServer := httptest.NewServer(
+				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					server.handleWebSocket(w, r)
+				}),
+			)
 			defer testServer.Close()
 
 			wsURL := "ws" + strings.TrimPrefix(testServer.URL, "http")
@@ -65,7 +67,7 @@ func TestWebSocketRateLimitBypassVulnerability(t *testing.T) {
 	}
 }
 
-// testConnectionWithoutMessages verifies that idle connections don't trigger rate limiting
+// testConnectionWithoutMessages verifies that idle connections don't trigger rate limiting.
 func testConnectionWithoutMessages(t *testing.T, wsURL string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -99,7 +101,7 @@ func testConnectionWithoutMessages(t *testing.T, wsURL string) {
 	}
 }
 
-// testRapidMessageBurst verifies that rapid message sending triggers rate limiting
+// testRapidMessageBurst verifies that rapid message sending triggers rate limiting.
 func testRapidMessageBurst(t *testing.T, wsURL string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -123,19 +125,25 @@ func testRapidMessageBurst(t *testing.T, wsURL string) {
 	messagesSent := 0
 	rateLimitTriggered := false
 
-	for i := 0; i < 70; i++ {
+	for i := range 70 {
 		writeCtx, writeCancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-		err := conn.Write(writeCtx, websocket.MessageText, []byte(fmt.Sprintf("test message %d", i)))
+		err := conn.Write(
+			writeCtx,
+			websocket.MessageText,
+			[]byte(fmt.Sprintf("test message %d", i)),
+		)
 		writeCancel()
 
 		if err != nil {
 			// Check if it's a rate limit violation
 			if websocket.CloseStatus(err) == websocket.StatusPolicyViolation {
 				rateLimitTriggered = true
+
 				break
 			}
 			// Other errors are also acceptable as rate limiting might close the connection
 			rateLimitTriggered = true
+
 			break
 		}
 		messagesSent++
@@ -145,15 +153,21 @@ func testRapidMessageBurst(t *testing.T, wsURL string) {
 	}
 
 	if !rateLimitTriggered {
-		t.Errorf("Expected rate limiting to be triggered after sending %d messages, but it wasn't", messagesSent)
+		t.Errorf(
+			"Expected rate limiting to be triggered after sending %d messages, but it wasn't",
+			messagesSent,
+		)
 	}
 
 	if messagesSent < 60 {
-		t.Logf("Rate limiting triggered after %d messages (expected, as it should be around the limit)", messagesSent)
+		t.Logf(
+			"Rate limiting triggered after %d messages (expected, as it should be around the limit)",
+			messagesSent,
+		)
 	}
 }
 
-// testEmptyMessageHandling verifies that empty messages don't count towards rate limit
+// testEmptyMessageHandling verifies that empty messages don't count towards rate limit.
 func testEmptyMessageHandling(t *testing.T, wsURL string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -173,13 +187,14 @@ func testEmptyMessageHandling(t *testing.T, wsURL string) {
 	defer conn.Close(websocket.StatusNormalClosure, "")
 
 	// Send many empty messages - these should not count towards rate limit
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		writeCtx, writeCancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 		err := conn.Write(writeCtx, websocket.MessageText, []byte(""))
 		writeCancel()
 
 		if err != nil {
 			t.Errorf("Empty message %d failed: %v", i, err)
+
 			break
 		}
 
@@ -197,7 +212,7 @@ func testEmptyMessageHandling(t *testing.T, wsURL string) {
 	}
 }
 
-// testRateLimitWindowBoundary verifies that rate limiting respects sliding window correctly
+// testRateLimitWindowBoundary verifies that rate limiting respects sliding window correctly.
 func testRateLimitWindowBoundary(t *testing.T, wsURL string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -221,13 +236,14 @@ func testRateLimitWindowBoundary(t *testing.T, wsURL string) {
 	batchDelay := 35 * time.Second // Slightly more than half a minute
 
 	// First batch
-	for i := 0; i < messagesPerBatch; i++ {
+	for i := range messagesPerBatch {
 		writeCtx, writeCancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 		err := conn.Write(writeCtx, websocket.MessageText, []byte(fmt.Sprintf("batch1 msg %d", i)))
 		writeCancel()
 
 		if err != nil {
 			t.Errorf("Message in first batch failed: %v", err)
+
 			return
 		}
 		time.Sleep(20 * time.Millisecond) // Space out messages
@@ -237,26 +253,30 @@ func testRateLimitWindowBoundary(t *testing.T, wsURL string) {
 	time.Sleep(batchDelay)
 
 	// Second batch should succeed as the window has slid
-	for i := 0; i < messagesPerBatch; i++ {
+	for i := range messagesPerBatch {
 		writeCtx, writeCancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 		err := conn.Write(writeCtx, websocket.MessageText, []byte(fmt.Sprintf("batch2 msg %d", i)))
 		writeCancel()
 
 		if err != nil {
-			t.Errorf("Message in second batch failed (sliding window not working correctly): %v", err)
+			t.Errorf(
+				"Message in second batch failed (sliding window not working correctly): %v",
+				err,
+			)
+
 			return
 		}
 		time.Sleep(20 * time.Millisecond)
 	}
 }
 
-// testConcurrentConnections verifies that multiple connections have independent rate limits
+// testConcurrentConnections verifies that multiple connections have independent rate limits.
 func testConcurrentConnections(t *testing.T, wsURL string) {
 	const numConnections = 3
 	connections := make([]*websocket.Conn, numConnections)
 
 	// Establish multiple connections
-	for i := 0; i < numConnections; i++ {
+	for i := range numConnections {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		conn, resp, err := websocket.Dial(ctx, wsURL, &websocket.DialOptions{
 			HTTPHeader: http.Header{
@@ -279,9 +299,13 @@ func testConcurrentConnections(t *testing.T, wsURL string) {
 	messageCount := 20 // Well under the limit per connection
 
 	for connIdx, conn := range connections {
-		for msgIdx := 0; msgIdx < messageCount; msgIdx++ {
+		for msgIdx := range messageCount {
 			writeCtx, writeCancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-			err := conn.Write(writeCtx, websocket.MessageText, []byte(fmt.Sprintf("conn%d msg%d", connIdx, msgIdx)))
+			err := conn.Write(
+				writeCtx,
+				websocket.MessageText,
+				[]byte(fmt.Sprintf("conn%d msg%d", connIdx, msgIdx)),
+			)
 			writeCancel()
 
 			if err != nil {
@@ -293,7 +317,7 @@ func testConcurrentConnections(t *testing.T, wsURL string) {
 	}
 }
 
-// setupTestWebSocketServerForBypassTest creates a test server for WebSocket testing
+// setupTestWebSocketServerForBypassTest creates a test server for WebSocket testing.
 func setupTestWebSocketServerForBypassTest(t *testing.T) *PreviewServer {
 	cfg := &config.Config{
 		Server: config.ServerConfig{
@@ -322,13 +346,13 @@ func setupTestWebSocketServerForBypassTest(t *testing.T) *PreviewServer {
 	return server
 }
 
-// TestSlidingWindowRateLimiterSecurityProperties tests security properties of the rate limiter
+// TestSlidingWindowRateLimiterSecurityProperties tests security properties of the rate limiter.
 func TestSlidingWindowRateLimiterSecurityProperties(t *testing.T) {
 	t.Run("PreventsBurstAtWindowBoundary", func(t *testing.T) {
 		limiter := NewSlidingWindowRateLimiter(5, 100*time.Millisecond)
 
 		// Fill up the window
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			if !limiter.IsAllowed() {
 				t.Fatalf("Request %d should be allowed", i)
 			}
@@ -360,7 +384,7 @@ func TestSlidingWindowRateLimiterSecurityProperties(t *testing.T) {
 		limiter := NewSlidingWindowRateLimiter(3, 100*time.Millisecond)
 
 		// Simulate rapid requests
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			if !limiter.IsAllowed() {
 				t.Fatalf("Request %d should be allowed", i)
 			}

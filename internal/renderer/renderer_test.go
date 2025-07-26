@@ -64,9 +64,18 @@ func TestGenerateMockString(t *testing.T) {
 		{"name", "John Doe"},
 		{"username", "John Doe"},
 		{"email", "john@example.com"},
-		{"message", "This is sample content for the component preview. Lorem ipsum dolor sit amet, consectetur adipiscing elit."},
-		{"content", "This is sample content for the component preview. Lorem ipsum dolor sit amet, consectetur adipiscing elit."},
-		{"text", "This is sample content for the component preview. Lorem ipsum dolor sit amet, consectetur adipiscing elit."},
+		{
+			"message",
+			"This is sample content for the component preview. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+		},
+		{
+			"content",
+			"This is sample content for the component preview. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+		},
+		{
+			"text",
+			"This is sample content for the component preview. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+		},
 		{"url", "https://example.com"},
 		{"link", "https://example.com"},
 		{"href", "https://example.com"},
@@ -241,7 +250,7 @@ templ SimpleButton(text string) {
 	assert.Error(t, err)
 }
 
-// Helper function to check if templ command is available
+// Helper function to check if templ command is available.
 func isTemplAvailable() bool {
 	// Try to run templ --version
 	// This is a simple check - in practice, we'd use exec.Command

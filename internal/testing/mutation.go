@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-// MutationTestResult represents the result of a mutation test
+// MutationTestResult represents the result of a mutation test.
 type MutationTestResult struct {
 	MutationID   string        `json:"mutation_id"`
 	OriginalCode string        `json:"original_code"`
@@ -31,7 +31,7 @@ type MutationTestResult struct {
 	Killed       bool          `json:"killed"` // true if tests caught the mutation
 }
 
-// MutationTestSummary provides aggregate results of mutation testing
+// MutationTestSummary provides aggregate results of mutation testing.
 type MutationTestSummary struct {
 	TotalMutations    int                  `json:"total_mutations"`
 	KilledMutations   int                  `json:"killed_mutations"`
@@ -42,7 +42,7 @@ type MutationTestSummary struct {
 	WeakSpots         []WeakSpot           `json:"weak_spots"`
 }
 
-// WeakSpot represents code that survived mutations (indicating weak tests)
+// WeakSpot represents code that survived mutations (indicating weak tests).
 type WeakSpot struct {
 	File        string   `json:"file"`
 	Line        int      `json:"line"`
@@ -53,7 +53,7 @@ type WeakSpot struct {
 	Suggestions []string `json:"suggestions"`
 }
 
-// MutationTester performs mutation testing to assess test quality
+// MutationTester performs mutation testing to assess test quality.
 type MutationTester struct {
 	ProjectRoot  string
 	Packages     []string
@@ -63,7 +63,7 @@ type MutationTester struct {
 	Verbose      bool
 }
 
-// NewMutationTester creates a new mutation tester
+// NewMutationTester creates a new mutation tester.
 func NewMutationTester(projectRoot string, packages []string) *MutationTester {
 	return &MutationTester{
 		ProjectRoot:  projectRoot,
@@ -75,7 +75,7 @@ func NewMutationTester(projectRoot string, packages []string) *MutationTester {
 	}
 }
 
-// RunMutationTests performs mutation testing on the specified packages
+// RunMutationTests performs mutation testing on the specified packages.
 func (mt *MutationTester) RunMutationTests() (*MutationTestSummary, error) {
 	start := time.Now()
 
@@ -98,6 +98,7 @@ func (mt *MutationTester) RunMutationTests() (*MutationTestSummary, error) {
 			if mt.Verbose {
 				fmt.Printf("Warning: failed to generate mutations for %s: %v\n", file, err)
 			}
+
 			continue
 		}
 		mutations = append(mutations, fileMutations...)
@@ -133,7 +134,11 @@ func (mt *MutationTester) RunMutationTests() (*MutationTestSummary, error) {
 
 	// Calculate mutation score
 	if summary.TotalMutations > 0 {
-		summary.MutationScore = float64(summary.KilledMutations) / float64(summary.TotalMutations) * 100
+		summary.MutationScore = float64(
+			summary.KilledMutations,
+		) / float64(
+			summary.TotalMutations,
+		) * 100
 	}
 
 	summary.Duration = time.Since(start)
@@ -144,7 +149,7 @@ func (mt *MutationTester) RunMutationTests() (*MutationTestSummary, error) {
 	return summary, nil
 }
 
-// Mutation represents a code mutation
+// Mutation represents a code mutation.
 type Mutation struct {
 	ID           string
 	File         string
@@ -156,7 +161,7 @@ type Mutation struct {
 	Description  string
 }
 
-// discoverGoFiles finds all Go files in the specified packages
+// discoverGoFiles finds all Go files in the specified packages.
 func (mt *MutationTester) discoverGoFiles() ([]string, error) {
 	files := make([]string, 0)
 
@@ -194,7 +199,7 @@ func (mt *MutationTester) discoverGoFiles() ([]string, error) {
 	return files, nil
 }
 
-// generateMutations creates mutations for a Go file
+// generateMutations creates mutations for a Go file.
 func (mt *MutationTester) generateMutations(filename string) ([]Mutation, error) {
 	content, err := os.ReadFile(filename)
 	if err != nil {
@@ -223,14 +228,20 @@ func (mt *MutationTester) generateMutations(filename string) ([]Mutation, error)
 			// Mutate literals
 			mutations = append(mutations, mt.mutateBasicLit(filename, fset, node, &mutationID)...)
 		}
+
 		return true
 	})
 
 	return mutations, nil
 }
 
-// mutateBinaryExpr creates mutations for binary expressions
-func (mt *MutationTester) mutateBinaryExpr(filename string, fset *token.FileSet, expr *ast.BinaryExpr, mutationID *int) []Mutation {
+// mutateBinaryExpr creates mutations for binary expressions.
+func (mt *MutationTester) mutateBinaryExpr(
+	filename string,
+	fset *token.FileSet,
+	expr *ast.BinaryExpr,
+	mutationID *int,
+) []Mutation {
 	mutations := make([]Mutation, 0)
 	position := fset.Position(expr.Pos())
 
@@ -240,13 +251,20 @@ func (mt *MutationTester) mutateBinaryExpr(filename string, fset *token.FileSet,
 	originalCode := buf.String()
 
 	// Mutation mappings for comparison operators
-	mutations = append(mutations, mt.createOperatorMutations(filename, position, expr, originalCode, mutationID)...)
+	mutations = append(
+		mutations,
+		mt.createOperatorMutations(filename, position, expr, originalCode, mutationID)...)
 
 	return mutations
 }
 
-// mutateIfStmt creates mutations for if statements
-func (mt *MutationTester) mutateIfStmt(filename string, fset *token.FileSet, stmt *ast.IfStmt, mutationID *int) []Mutation {
+// mutateIfStmt creates mutations for if statements.
+func (mt *MutationTester) mutateIfStmt(
+	filename string,
+	fset *token.FileSet,
+	stmt *ast.IfStmt,
+	mutationID *int,
+) []Mutation {
 	mutations := make([]Mutation, 0)
 	position := fset.Position(stmt.Pos())
 
@@ -265,15 +283,24 @@ func (mt *MutationTester) mutateIfStmt(filename string, fset *token.FileSet, stm
 		OriginalCode: originalCode,
 		MutatedCode:  "!(" + originalCode + ")",
 		Operator:     "NEGATE_CONDITION",
-		Description:  fmt.Sprintf("Negate condition at %s:%d", filepath.Base(filename), position.Line),
+		Description: fmt.Sprintf(
+			"Negate condition at %s:%d",
+			filepath.Base(filename),
+			position.Line,
+		),
 	}
 	mutations = append(mutations, mutation)
 
 	return mutations
 }
 
-// mutateBasicLit creates mutations for basic literals
-func (mt *MutationTester) mutateBasicLit(filename string, fset *token.FileSet, lit *ast.BasicLit, mutationID *int) []Mutation {
+// mutateBasicLit creates mutations for basic literals.
+func (mt *MutationTester) mutateBasicLit(
+	filename string,
+	fset *token.FileSet,
+	lit *ast.BasicLit,
+	mutationID *int,
+) []Mutation {
 	mutations := make([]Mutation, 0)
 	position := fset.Position(lit.Pos())
 
@@ -281,18 +308,28 @@ func (mt *MutationTester) mutateBasicLit(filename string, fset *token.FileSet, l
 	case token.INT:
 		// Mutate integer literals
 		if val, err := strconv.Atoi(lit.Value); err == nil {
-			mutations = append(mutations, mt.createIntegerMutations(filename, position, lit.Value, val, mutationID)...)
+			mutations = append(
+				mutations,
+				mt.createIntegerMutations(filename, position, lit.Value, val, mutationID)...)
 		}
 	case token.STRING:
 		// Mutate string literals
-		mutations = append(mutations, mt.createStringMutations(filename, position, lit.Value, mutationID)...)
+		mutations = append(
+			mutations,
+			mt.createStringMutations(filename, position, lit.Value, mutationID)...)
 	}
 
 	return mutations
 }
 
-// createOperatorMutations creates mutations for operators
-func (mt *MutationTester) createOperatorMutations(filename string, position token.Position, expr *ast.BinaryExpr, originalCode string, mutationID *int) []Mutation {
+// createOperatorMutations creates mutations for operators.
+func (mt *MutationTester) createOperatorMutations(
+	filename string,
+	position token.Position,
+	expr *ast.BinaryExpr,
+	originalCode string,
+	mutationID *int,
+) []Mutation {
 	mutations := make([]Mutation, 0)
 
 	operatorMutations := map[token.Token][]token.Token{
@@ -328,8 +365,18 @@ func (mt *MutationTester) createOperatorMutations(filename string, position toke
 				Column:       position.Column,
 				OriginalCode: originalCode,
 				MutatedCode:  mutatedCode,
-				Operator:     fmt.Sprintf("REPLACE_%s_WITH_%s", expr.Op.String(), replacement.String()),
-				Description:  fmt.Sprintf("Replace %s with %s at %s:%d", expr.Op.String(), replacement.String(), filepath.Base(filename), position.Line),
+				Operator: fmt.Sprintf(
+					"REPLACE_%s_WITH_%s",
+					expr.Op.String(),
+					replacement.String(),
+				),
+				Description: fmt.Sprintf(
+					"Replace %s with %s at %s:%d",
+					expr.Op.String(),
+					replacement.String(),
+					filepath.Base(filename),
+					position.Line,
+				),
 			}
 			mutations = append(mutations, mutation)
 		}
@@ -338,8 +385,14 @@ func (mt *MutationTester) createOperatorMutations(filename string, position toke
 	return mutations
 }
 
-// createIntegerMutations creates mutations for integer literals
-func (mt *MutationTester) createIntegerMutations(filename string, position token.Position, original string, value int, mutationID *int) []Mutation {
+// createIntegerMutations creates mutations for integer literals.
+func (mt *MutationTester) createIntegerMutations(
+	filename string,
+	position token.Position,
+	original string,
+	value int,
+	mutationID *int,
+) []Mutation {
 	mutations := make([]Mutation, 0)
 
 	// Common integer mutations
@@ -359,7 +412,13 @@ func (mt *MutationTester) createIntegerMutations(filename string, position token
 			OriginalCode: original,
 			MutatedCode:  strconv.Itoa(mutated),
 			Operator:     "REPLACE_INTEGER",
-			Description:  fmt.Sprintf("Replace %s with %d at %s:%d", original, mutated, filepath.Base(filename), position.Line),
+			Description: fmt.Sprintf(
+				"Replace %s with %d at %s:%d",
+				original,
+				mutated,
+				filepath.Base(filename),
+				position.Line,
+			),
 		}
 		mutations = append(mutations, mutation)
 	}
@@ -367,8 +426,13 @@ func (mt *MutationTester) createIntegerMutations(filename string, position token
 	return mutations
 }
 
-// createStringMutations creates mutations for string literals
-func (mt *MutationTester) createStringMutations(filename string, position token.Position, original string, mutationID *int) []Mutation {
+// createStringMutations creates mutations for string literals.
+func (mt *MutationTester) createStringMutations(
+	filename string,
+	position token.Position,
+	original string,
+	mutationID *int,
+) []Mutation {
 	mutations := make([]Mutation, 0)
 
 	// String mutations
@@ -388,7 +452,13 @@ func (mt *MutationTester) createStringMutations(filename string, position token.
 			OriginalCode: original,
 			MutatedCode:  mutated,
 			Operator:     "REPLACE_STRING",
-			Description:  fmt.Sprintf("Replace %s with %s at %s:%d", original, mutated, filepath.Base(filename), position.Line),
+			Description: fmt.Sprintf(
+				"Replace %s with %s at %s:%d",
+				original,
+				mutated,
+				filepath.Base(filename),
+				position.Line,
+			),
 		}
 		mutations = append(mutations, mutation)
 	}
@@ -396,7 +466,7 @@ func (mt *MutationTester) createStringMutations(filename string, position token.
 	return mutations
 }
 
-// runBaselineTests runs tests to ensure they pass before mutation testing
+// runBaselineTests runs tests to ensure they pass before mutation testing.
 func (mt *MutationTester) runBaselineTests() error {
 	cmd := exec.Command("go", "test", "./...")
 	cmd.Dir = mt.ProjectRoot
@@ -409,7 +479,7 @@ func (mt *MutationTester) runBaselineTests() error {
 	return nil
 }
 
-// testMutation applies a mutation and runs tests
+// testMutation applies a mutation and runs tests.
 func (mt *MutationTester) testMutation(mutation Mutation) MutationTestResult {
 	start := time.Now()
 
@@ -427,6 +497,7 @@ func (mt *MutationTester) testMutation(mutation Mutation) MutationTestResult {
 	if err := mt.applyMutation(mutation); err != nil {
 		result.TestOutput = fmt.Sprintf("Failed to apply mutation: %v", err)
 		result.Duration = time.Since(start)
+
 		return result
 	}
 
@@ -440,10 +511,11 @@ func (mt *MutationTester) testMutation(mutation Mutation) MutationTestResult {
 	mt.restoreMutation(mutation)
 
 	result.Duration = time.Since(start)
+
 	return result
 }
 
-// applyMutation modifies the source file with the mutation
+// applyMutation modifies the source file with the mutation.
 func (mt *MutationTester) applyMutation(mutation Mutation) error {
 	content, err := os.ReadFile(mutation.File)
 	if err != nil {
@@ -462,10 +534,11 @@ func (mt *MutationTester) applyMutation(mutation Mutation) error {
 	lines[mutation.Line-1] = mutatedLine
 
 	mutatedContent := strings.Join(lines, "\n")
+
 	return os.WriteFile(mutation.File, []byte(mutatedContent), 0644)
 }
 
-// restoreMutation restores the original code after testing
+// restoreMutation restores the original code after testing.
 func (mt *MutationTester) restoreMutation(mutation Mutation) error {
 	content, err := os.ReadFile(mutation.File)
 	if err != nil {
@@ -483,10 +556,11 @@ func (mt *MutationTester) restoreMutation(mutation Mutation) error {
 	lines[mutation.Line-1] = restoredLine
 
 	restoredContent := strings.Join(lines, "\n")
+
 	return os.WriteFile(mutation.File, []byte(restoredContent), 0644)
 }
 
-// runTests executes the test suite and returns pass/fail status and output
+// runTests executes the test suite and returns pass/fail status and output.
 func (mt *MutationTester) runTests() (bool, string) {
 	cmd := exec.Command("go", "test", "-short", "./...")
 	cmd.Dir = mt.ProjectRoot
@@ -503,7 +577,7 @@ func (mt *MutationTester) runTests() (bool, string) {
 	return passed, output
 }
 
-// analyzeWeakSpots identifies code areas with poor test coverage based on surviving mutations
+// analyzeWeakSpots identifies code areas with poor test coverage based on surviving mutations.
 func (mt *MutationTester) analyzeWeakSpots(results []MutationTestResult) []WeakSpot {
 	// Group mutations by file and line
 	locationMap := make(map[string]map[int][]MutationTestResult)
@@ -512,7 +586,10 @@ func (mt *MutationTester) analyzeWeakSpots(results []MutationTestResult) []WeakS
 		if locationMap[result.File] == nil {
 			locationMap[result.File] = make(map[int][]MutationTestResult)
 		}
-		locationMap[result.File][result.Line] = append(locationMap[result.File][result.Line], result)
+		locationMap[result.File][result.Line] = append(
+			locationMap[result.File][result.Line],
+			result,
+		)
 	}
 
 	weakSpots := make([]WeakSpot, 0)
@@ -551,7 +628,7 @@ func (mt *MutationTester) analyzeWeakSpots(results []MutationTestResult) []WeakS
 	return weakSpots
 }
 
-// extractFunctionName attempts to determine the function containing the given line
+// extractFunctionName attempts to determine the function containing the given line.
 func (mt *MutationTester) extractFunctionName(filename string, line int) string {
 	content, err := os.ReadFile(filename)
 	if err != nil {
@@ -571,7 +648,7 @@ func (mt *MutationTester) extractFunctionName(filename string, line int) string 
 	return "unknown"
 }
 
-// generateTestSuggestions provides suggestions for improving test coverage
+// generateTestSuggestions provides suggestions for improving test coverage.
 func (mt *MutationTester) generateTestSuggestions(mutations []MutationTestResult) []string {
 	suggestions := make([]string, 0)
 
@@ -583,10 +660,13 @@ func (mt *MutationTester) generateTestSuggestions(mutations []MutationTestResult
 	}
 
 	// Generate suggestions based on surviving mutation types
-	for operator, _ := range operatorCounts {
+	for operator := range operatorCounts {
 		switch {
 		case strings.Contains(operator, "NEGATE_CONDITION"):
-			suggestions = append(suggestions, "Add tests for both true and false branches of conditional statements")
+			suggestions = append(
+				suggestions,
+				"Add tests for both true and false branches of conditional statements",
+			)
 		case strings.Contains(operator, "REPLACE_EQL_WITH_NEQ"):
 			suggestions = append(suggestions, "Add tests that verify exact equality conditions")
 		case strings.Contains(operator, "REPLACE_INTEGER"):
@@ -601,7 +681,7 @@ func (mt *MutationTester) generateTestSuggestions(mutations []MutationTestResult
 	return suggestions
 }
 
-// GenerateReport creates a detailed mutation testing report
+// GenerateReport creates a detailed mutation testing report.
 func (mt *MutationTester) GenerateReport(summary *MutationTestSummary, outputPath string) error {
 	var report strings.Builder
 
@@ -625,11 +705,17 @@ func (mt *MutationTester) GenerateReport(summary *MutationTestSummary, outputPat
 	case summary.MutationScore >= 90:
 		report.WriteString("🟢 **Excellent** - Your tests are very effective at catching defects.\n")
 	case summary.MutationScore >= 80:
-		report.WriteString("🟡 **Good** - Your tests catch most defects, but there's room for improvement.\n")
+		report.WriteString(
+			"🟡 **Good** - Your tests catch most defects, but there's room for improvement.\n",
+		)
 	case summary.MutationScore >= 70:
-		report.WriteString("🟠 **Fair** - Your tests catch some defects, but significant improvements are needed.\n")
+		report.WriteString(
+			"🟠 **Fair** - Your tests catch some defects, but significant improvements are needed.\n",
+		)
 	default:
-		report.WriteString("🔴 **Poor** - Your tests are not effective at catching defects. Major improvements needed.\n")
+		report.WriteString(
+			"🔴 **Poor** - Your tests are not effective at catching defects. Major improvements needed.\n",
+		)
 	}
 	report.WriteString("\n")
 
@@ -639,7 +725,9 @@ func (mt *MutationTester) GenerateReport(summary *MutationTestSummary, outputPat
 		report.WriteString("These areas have poor test coverage based on surviving mutations:\n\n")
 
 		for _, spot := range summary.WeakSpots {
-			report.WriteString(fmt.Sprintf("### %s:%d (%s)\n", filepath.Base(spot.File), spot.Line, spot.Function))
+			report.WriteString(
+				fmt.Sprintf("### %s:%d (%s)\n", filepath.Base(spot.File), spot.Line, spot.Function),
+			)
 			report.WriteString(fmt.Sprintf("- **Mutations:** %d\n", spot.Mutations))
 			report.WriteString(fmt.Sprintf("- **Survivors:** %d\n", spot.Survivors))
 			report.WriteString(fmt.Sprintf("- **Weak Score:** %.1f%%\n", spot.WeakScore))
@@ -662,7 +750,9 @@ func (mt *MutationTester) GenerateReport(summary *MutationTestSummary, outputPat
 			survivedCount++
 			if survivedCount <= 10 { // Limit to first 10 survivors
 				report.WriteString(fmt.Sprintf("### %s\n", result.MutationID))
-				report.WriteString(fmt.Sprintf("- **File:** %s:%d\n", filepath.Base(result.File), result.Line))
+				report.WriteString(
+					fmt.Sprintf("- **File:** %s:%d\n", filepath.Base(result.File), result.Line),
+				)
 				report.WriteString(fmt.Sprintf("- **Operator:** %s\n", result.Operator))
 				report.WriteString(fmt.Sprintf("- **Original:** `%s`\n", result.OriginalCode))
 				report.WriteString(fmt.Sprintf("- **Mutated:** `%s`\n", result.MutatedCode))
@@ -670,6 +760,7 @@ func (mt *MutationTester) GenerateReport(summary *MutationTestSummary, outputPat
 					if result.Killed {
 						return "KILLED ✅"
 					}
+
 					return "SURVIVED ❌"
 				}()))
 				report.WriteString("\n")
@@ -678,7 +769,9 @@ func (mt *MutationTester) GenerateReport(summary *MutationTestSummary, outputPat
 	}
 
 	if survivedCount > 10 {
-		report.WriteString(fmt.Sprintf("*... and %d more surviving mutations*\n\n", survivedCount-10))
+		report.WriteString(
+			fmt.Sprintf("*... and %d more surviving mutations*\n\n", survivedCount-10),
+		)
 	}
 
 	// Write report to file

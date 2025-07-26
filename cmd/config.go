@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -99,10 +100,12 @@ func init() {
 	configCmd.AddCommand(configShowCmd)
 
 	// Wizard flags
-	configWizardCmd.Flags().StringVarP(&configOutput, "output", "o", ".templar.yml", "Output configuration file")
+	configWizardCmd.Flags().
+		StringVarP(&configOutput, "output", "o", ".templar.yml", "Output configuration file")
 
 	// Validate flags
-	configValidateCmd.Flags().StringVarP(&configFile, "file", "f", "", "Configuration file to validate (default: .templar.yml)")
+	configValidateCmd.Flags().
+		StringVarP(&configFile, "file", "f", "", "Configuration file to validate (default: .templar.yml)")
 	configValidateCmd.Flags().BoolVar(&configStrict, "strict", false, "Treat warnings as errors")
 
 	// Show flags
@@ -122,10 +125,15 @@ func runConfigWizard(cmd *cobra.Command, args []string) error {
 		fmt.Print("Do you want to overwrite it? (y/N): ")
 
 		var response string
-		fmt.Scanln(&response)
+		if _, err := fmt.Scanln(&response); err != nil {
+			fmt.Printf("Failed to read input: %v\n", err)
+
+			return err
+		}
 
 		if response != "y" && response != "Y" && response != "yes" && response != "Yes" {
 			fmt.Println("Configuration wizard cancelled.")
+
 			return nil
 		}
 	}
@@ -143,7 +151,8 @@ func runConfigWizard(cmd *cobra.Command, args []string) error {
 	if validation.HasErrors() {
 		fmt.Println("\n❌ Configuration validation failed:")
 		fmt.Print(validation.String())
-		return fmt.Errorf("generated configuration is invalid")
+
+		return errors.New("generated configuration is invalid")
 	}
 
 	if validation.HasWarnings() {
@@ -152,10 +161,15 @@ func runConfigWizard(cmd *cobra.Command, args []string) error {
 		fmt.Print("Continue anyway? (y/N): ")
 
 		var response string
-		fmt.Scanln(&response)
+		if _, err := fmt.Scanln(&response); err != nil {
+			fmt.Printf("Failed to read input: %v\n", err)
+
+			return err
+		}
 
 		if response != "y" && response != "Y" && response != "yes" && response != "Yes" {
 			fmt.Println("Configuration wizard cancelled.")
+
 			return nil
 		}
 	}
@@ -183,7 +197,8 @@ func runConfigValidate(cmd *cobra.Command, args []string) error {
 		if _, err := os.Stat(".templar.yml"); err == nil {
 			targetFile = ".templar.yml"
 		} else {
-			return fmt.Errorf("no configuration file found. Use --file to specify a config file or run 'templar config wizard' to create one")
+			return errors.New("no configuration file found. Use --file to specify a config file " +
+				"or run 'templar config wizard' to create one")
 		}
 	}
 
@@ -215,12 +230,14 @@ func runConfigValidate(cmd *cobra.Command, args []string) error {
 	if validation.Valid && !validation.HasWarnings() {
 		fmt.Println("✅ Configuration is valid!")
 		fmt.Println("No errors or warnings found.")
+
 		return nil
 	}
 
 	// Print validation results
 	if validation.HasErrors() {
 		fmt.Print(validation.String())
+
 		return fmt.Errorf("configuration validation failed with %d errors", len(validation.Errors))
 	}
 
@@ -228,11 +245,17 @@ func runConfigValidate(cmd *cobra.Command, args []string) error {
 		fmt.Print(validation.String())
 
 		if configStrict {
-			return fmt.Errorf("configuration validation failed in strict mode with %d warnings", len(validation.Warnings))
+			return fmt.Errorf(
+				"configuration validation failed in strict mode with %d warnings",
+				len(validation.Warnings),
+			)
 		}
 
 		fmt.Println("✅ Configuration is valid with warnings.")
-		fmt.Printf("Found %d warnings. Use --strict to treat warnings as errors.\n", len(validation.Warnings))
+		fmt.Printf(
+			"Found %d warnings. Use --strict to treat warnings as errors.\n",
+			len(validation.Warnings),
+		)
 	}
 
 	return nil

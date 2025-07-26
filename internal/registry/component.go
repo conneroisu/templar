@@ -24,7 +24,7 @@ import (
 // - Thread-safe component registration, lookup, and removal
 // - Event broadcasting to subscribers for real-time updates
 // - Dependency analysis and circular dependency detection
-// - Security hardening through input sanitization
+// - Security hardening through input sanitization.
 type ComponentRegistry struct {
 	// components stores all registered component information indexed by component name
 	components map[string]*types.ComponentInfo
@@ -41,7 +41,7 @@ type ComponentRegistry struct {
 // The registry is initialized with:
 // - Empty component storage
 // - No active watchers
-// - Dependency analyzer for automatic dependency resolution
+// - Dependency analyzer for automatic dependency resolution.
 func NewComponentRegistry() *ComponentRegistry {
 	registry := &ComponentRegistry{
 		components: make(map[string]*types.ComponentInfo),
@@ -111,16 +111,17 @@ func (r *ComponentRegistry) Register(component *types.ComponentInfo) {
 	r.mutex.RUnlock()
 }
 
-// Get retrieves a component by name
+// Get retrieves a component by name.
 func (r *ComponentRegistry) Get(name string) (*types.ComponentInfo, bool) {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
 
 	component, exists := r.components[name]
+
 	return component, exists
 }
 
-// GetAll returns all registered components
+// GetAll returns all registered components.
 func (r *ComponentRegistry) GetAll() []*types.ComponentInfo {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
@@ -129,10 +130,11 @@ func (r *ComponentRegistry) GetAll() []*types.ComponentInfo {
 	for _, component := range r.components {
 		result = append(result, component)
 	}
+
 	return result
 }
 
-// GetAllMap returns all registered components as a map
+// GetAllMap returns all registered components as a map.
 func (r *ComponentRegistry) GetAllMap() map[string]*types.ComponentInfo {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
@@ -141,10 +143,11 @@ func (r *ComponentRegistry) GetAllMap() map[string]*types.ComponentInfo {
 	for name, component := range r.components {
 		result[name] = component
 	}
+
 	return result
 }
 
-// Remove removes a component from the registry
+// Remove removes a component from the registry.
 func (r *ComponentRegistry) Remove(name string) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
@@ -188,10 +191,11 @@ func (r *ComponentRegistry) Watch() <-chan types.ComponentEvent {
 
 	ch := make(chan types.ComponentEvent, 100)
 	r.watchers = append(r.watchers, ch)
+
 	return ch
 }
 
-// UnWatch removes a watcher channel and closes it
+// UnWatch removes a watcher channel and closes it.
 func (r *ComponentRegistry) UnWatch(ch <-chan types.ComponentEvent) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
@@ -200,12 +204,13 @@ func (r *ComponentRegistry) UnWatch(ch <-chan types.ComponentEvent) {
 		if watcher == ch {
 			close(watcher)
 			r.watchers = append(r.watchers[:i], r.watchers[i+1:]...)
+
 			break
 		}
 	}
 }
 
-// Count returns the number of registered components
+// Count returns the number of registered components.
 func (r *ComponentRegistry) Count() int {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
@@ -213,7 +218,7 @@ func (r *ComponentRegistry) Count() int {
 	return len(r.components)
 }
 
-// sanitizeComponent sanitizes component data to prevent security issues
+// sanitizeComponent sanitizes component data to prevent security issues.
 func (r *ComponentRegistry) sanitizeComponent(component *types.ComponentInfo) *types.ComponentInfo {
 	if component == nil {
 		return component
@@ -249,12 +254,13 @@ func (r *ComponentRegistry) sanitizeComponent(component *types.ComponentInfo) *t
 	return &sanitized
 }
 
-// sanitizeIdentifier removes dangerous characters from identifiers
+// sanitizeIdentifier removes dangerous characters from identifiers.
 func sanitizeIdentifier(identifier string) string {
 	// Only allow alphanumeric characters, underscores, and dots (for package names)
 	var cleaned []rune
 	for _, r := range identifier {
-		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_' || r == '.' {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_' ||
+			r == '.' {
 			cleaned = append(cleaned, r)
 		}
 	}
@@ -262,12 +268,23 @@ func sanitizeIdentifier(identifier string) string {
 	cleanedId := string(cleaned)
 
 	// Additional security check for dangerous system identifiers
-	dangerousPatterns := []string{"etc", "system32", "windows", "usr", "bin", "var", "tmp", "passwd", "shadow"}
+	dangerousPatterns := []string{
+		"etc",
+		"system32",
+		"windows",
+		"usr",
+		"bin",
+		"var",
+		"tmp",
+		"passwd",
+		"shadow",
+	}
 	lowerCleaned := strings.ToLower(cleanedId)
 	for _, pattern := range dangerousPatterns {
 		if strings.Contains(lowerCleaned, pattern) {
 			// Replace with safe alternative
 			cleanedId = "safe_component"
+
 			break
 		}
 	}
@@ -275,7 +292,7 @@ func sanitizeIdentifier(identifier string) string {
 	return cleanedId
 }
 
-// sanitizeFilePath removes control characters and prevents path traversal attacks
+// sanitizeFilePath removes control characters and prevents path traversal attacks.
 func sanitizeFilePath(path string) string {
 	var cleaned []rune
 	for _, r := range path {
@@ -319,10 +336,11 @@ func sanitizeFilePath(path string) string {
 	return cleanedPath
 }
 
-// DetectCircularDependencies detects circular dependencies using the dependency analyzer
+// DetectCircularDependencies detects circular dependencies using the dependency analyzer.
 func (r *ComponentRegistry) DetectCircularDependencies() [][]string {
 	if r.dependencyAnalyzer == nil {
 		return make([][]string, 0)
 	}
+
 	return r.dependencyAnalyzer.DetectCircularDependencies()
 }

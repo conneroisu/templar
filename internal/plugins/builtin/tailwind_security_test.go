@@ -132,6 +132,7 @@ func TestTailwindPlugin_SecureFileOperations(t *testing.T) {
 			for _, class := range classes {
 				if class == expected {
 					found = true
+
 					break
 				}
 			}
@@ -344,7 +345,7 @@ func BenchmarkSanitizeInput(b *testing.B) {
 	input := "@tailwind base;\n@tailwind components;\n@tailwind utilities;\n$(rm -rf /) && echo 'hello'"
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		sanitizeInput(input)
 	}
 }
@@ -353,12 +354,12 @@ func BenchmarkValidatePath(b *testing.B) {
 	path := "components/button.templ"
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		validation.ValidatePath(path)
 	}
 }
 
-// TestTailwindPlugin_ConfigPathCommandInjection tests the specific vulnerability that was fixed
+// TestTailwindPlugin_ConfigPathCommandInjection tests the specific vulnerability that was fixed.
 func TestTailwindPlugin_ConfigPathCommandInjection(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -441,7 +442,10 @@ func TestTailwindPlugin_ConfigPathCommandInjection(t *testing.T) {
 
 			if tt.shouldFail {
 				if err == nil {
-					t.Errorf("Expected error for malicious config path %q, but got none", tt.configPath)
+					t.Errorf(
+						"Expected error for malicious config path %q, but got none",
+						tt.configPath,
+					)
 				} else if !strings.Contains(strings.ToLower(err.Error()), strings.ToLower(tt.errorMsg)) {
 					t.Errorf("Expected error containing %q, got: %v", tt.errorMsg, err)
 				}
@@ -458,7 +462,7 @@ func TestTailwindPlugin_ConfigPathCommandInjection(t *testing.T) {
 	}
 }
 
-// TestTailwindPlugin_CommandValidation tests command allowlisting
+// TestTailwindPlugin_CommandValidation tests command allowlisting.
 func TestTailwindPlugin_CommandValidation(t *testing.T) {
 	tests := []struct {
 		name         string
@@ -510,7 +514,10 @@ func TestTailwindPlugin_CommandValidation(t *testing.T) {
 
 			if tt.shouldFail {
 				if err == nil {
-					t.Errorf("Expected error for malicious tailwind path %q, but got none", tt.tailwindPath)
+					t.Errorf(
+						"Expected error for malicious tailwind path %q, but got none",
+						tt.tailwindPath,
+					)
 				} else if !strings.Contains(strings.ToLower(err.Error()), strings.ToLower(tt.errorMsg)) {
 					t.Errorf("Expected error containing %q, got: %v", tt.errorMsg, err)
 				}

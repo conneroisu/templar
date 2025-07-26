@@ -21,7 +21,7 @@ func TestInitCommand(t *testing.T) {
 	// Change to temp directory
 	oldDir, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(oldDir)
+	defer func() { _ = os.Chdir(oldDir) }()
 
 	err = os.Chdir(tempDir)
 	require.NoError(t, err)
@@ -72,7 +72,7 @@ func TestInitCommandWithProjectName(t *testing.T) {
 	// Change to temp directory
 	oldDir, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(oldDir)
+	defer func() { _ = os.Chdir(oldDir) }()
 
 	err = os.Chdir(tempDir)
 	require.NoError(t, err)
@@ -99,7 +99,7 @@ func TestInitCommandMinimal(t *testing.T) {
 	// Change to temp directory
 	oldDir, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(oldDir)
+	defer func() { _ = os.Chdir(oldDir) }()
 
 	err = os.Chdir(tempDir)
 	require.NoError(t, err)
@@ -130,7 +130,7 @@ func TestInitCommandWithTemplate(t *testing.T) {
 	// Change to temp directory
 	oldDir, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(oldDir)
+	defer func() { _ = os.Chdir(oldDir) }()
 
 	err = os.Chdir(tempDir)
 	require.NoError(t, err)
@@ -220,15 +220,15 @@ templ TestComponent(title string) {
 
 func TestBuildCommand(t *testing.T) {
 	tests := []struct {
-		name        string
+		name         string
 		buildAnalyze bool
 	}{
 		{
-			name:        "basic_build",
+			name:         "basic_build",
 			buildAnalyze: false,
 		},
 		{
-			name:        "build_with_analysis",
+			name:         "build_with_analysis",
 			buildAnalyze: true,
 		},
 	}
@@ -241,7 +241,7 @@ func TestBuildCommand(t *testing.T) {
 			// Change to temp directory
 			oldDir, err := os.Getwd()
 			require.NoError(t, err)
-			defer os.Chdir(oldDir)
+			defer func() { _ = os.Chdir(oldDir) }()
 
 			err = os.Chdir(tempDir)
 			require.NoError(t, err)
@@ -258,7 +258,11 @@ templ TestComponent(title string) {
 }
 `
 
-			err = os.WriteFile(filepath.Join(componentDir, "test.templ"), []byte(componentContent), 0644)
+			err = os.WriteFile(
+				filepath.Join(componentDir, "test.templ"),
+				[]byte(componentContent),
+				0644,
+			)
 			require.NoError(t, err)
 
 			// Set up viper configuration
@@ -344,7 +348,7 @@ func TestServeCommand(t *testing.T) {
 	// Change to temp directory
 	oldDir, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(oldDir)
+	defer func() { _ = os.Chdir(oldDir) }()
 
 	err = os.Chdir(tempDir)
 	require.NoError(t, err)
@@ -398,7 +402,7 @@ func TestWatchCommand(t *testing.T) {
 	// Change to temp directory
 	oldDir, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(oldDir)
+	defer func() { _ = os.Chdir(oldDir) }()
 
 	err = os.Chdir(tempDir)
 	require.NoError(t, err)
@@ -454,7 +458,7 @@ func TestPreviewCommand(t *testing.T) {
 	// Change to temp directory
 	oldDir, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(oldDir)
+	defer func() { _ = os.Chdir(oldDir) }()
 
 	err = os.Chdir(tempDir)
 	require.NoError(t, err)
@@ -561,7 +565,7 @@ func TestDoctorCommand(t *testing.T) {
 	// Change to temp directory
 	oldDir, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(oldDir)
+	defer func() { _ = os.Chdir(oldDir) }()
 
 	err = os.Chdir(tempDir)
 	require.NoError(t, err)

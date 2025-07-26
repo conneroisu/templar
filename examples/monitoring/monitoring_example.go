@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -13,7 +14,7 @@ import (
 	"github.com/conneroisu/templar/internal/monitoring"
 )
 
-// Example demonstrating comprehensive monitoring integration
+// Example demonstrating comprehensive monitoring integration.
 func main() {
 	// Setup monitoring
 	config := monitoring.MonitoringConfig{
@@ -32,7 +33,7 @@ func main() {
 	if err := monitor.Start(); err != nil {
 		log.Fatalf("Failed to start monitoring: %v", err)
 	}
-	defer monitor.Stop()
+	defer func() { _ = monitor.Stop() }()
 
 	// Register custom health checks
 	registerCustomHealthChecks(monitor)
@@ -85,7 +86,7 @@ func main() {
 	fmt.Println("Server exited")
 }
 
-// registerCustomHealthChecks demonstrates registering custom health checks
+// registerCustomHealthChecks demonstrates registering custom health checks.
 func registerCustomHealthChecks(monitor *monitoring.Monitor) {
 	// Component health check
 	componentChecker := monitoring.ComponentHealthChecker("example_component", func() error {
@@ -116,7 +117,7 @@ func registerCustomHealthChecks(monitor *monitoring.Monitor) {
 	monitor.RegisterHealthCheck(wsChecker)
 }
 
-// handleHome demonstrates basic request handling
+// handleHome demonstrates basic request handling.
 func handleHome(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -152,7 +153,8 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 		</html>
 		`
 
-		w.Write([]byte(html))
+		_, _ = w.Write([]byte(html))
+
 		return nil
 	})
 
@@ -162,87 +164,126 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleComponent demonstrates component operation tracking
+// handleComponent demonstrates component operation tracking.
 func handleComponent(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	err := monitoring.TrackOperation(ctx, "component_api", "list_components", func(ctx context.Context) error {
-		// Simulate component discovery
-		components := []string{"Button", "Card", "Modal", "Form"}
+	err := monitoring.TrackOperation(
+		ctx,
+		"component_api",
+		"list_components",
+		func(ctx context.Context) error {
+			// Simulate component discovery
+			components := []string{"Button", "Card", "Modal", "Form"}
 
-		monitoring.LogInfo(ctx, "component_api", "list_components", "Listing components", "count", len(components))
+			monitoring.LogInfo(
+				ctx,
+				"component_api",
+				"list_components",
+				"Listing components",
+				"count",
+				len(components),
+			)
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
 
-		response := fmt.Sprintf(`{
+			response := fmt.Sprintf(`{
 			"components": %q,
 			"count": %d,
 			"timestamp": "%s"
 		}`, components, len(components), time.Now().Format(time.RFC3339))
 
-		w.Write([]byte(response))
-		return nil
-	})
+			_, _ = w.Write([]byte(response))
+
+			return nil
+		},
+	)
 
 	if err != nil {
-		monitoring.LogError(ctx, "component_api", "list_components", err, "Failed to list components")
+		monitoring.LogError(
+			ctx,
+			"component_api",
+			"list_components",
+			err,
+			"Failed to list components",
+		)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
 
-// handleBuild demonstrates build operation tracking with batch processing
+// handleBuild demonstrates build operation tracking with batch processing.
 func handleBuild(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	err := monitoring.TrackOperation(ctx, "build_api", "build_components", func(ctx context.Context) error {
-		// Simulate batch build process
-		components := []string{"Button", "Card", "Modal", "Form", "Layout"}
+	err := monitoring.TrackOperation(
+		ctx,
+		"build_api",
+		"build_components",
+		func(ctx context.Context) error {
+			// Simulate batch build process
+			components := []string{"Button", "Card", "Modal", "Form", "Layout"}
 
-		// Create batch tracker
-		monitor := monitoring.GetGlobalMonitor()
-		if monitor == nil {
-			return fmt.Errorf("monitor not available")
-		}
-
-		batchTracker := monitoring.NewBatchTracker(monitor, monitor.GetLogger(), "build_system", len(components))
-
-		successCount := 0
-		for _, component := range components {
-			err := batchTracker.TrackItem(ctx, component, func() error {
-				// Simulate component build
-				time.Sleep(20 * time.Millisecond)
-
-				// Simulate occasional build failure
-				if component == "Modal" {
-					return fmt.Errorf("build failed for %s", component)
-				}
-
-				successCount++
-				return nil
-			})
-
-			// Continue processing even if individual item fails
-			if err != nil {
-				monitoring.LogError(ctx, "build_system", "build_component", err, "Component build failed", "component", component)
+			// Create batch tracker
+			monitor := monitoring.GetGlobalMonitor()
+			if monitor == nil {
+				return errors.New("monitor not available")
 			}
-		}
 
-		batchTracker.Complete(ctx)
+			batchTracker := monitoring.NewBatchTracker(
+				monitor,
+				monitor.GetLogger(),
+				"build_system",
+				len(components),
+			)
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
+			successCount := 0
+			for _, component := range components {
+				err := batchTracker.TrackItem(ctx, component, func() error {
+					// Simulate component build
+					time.Sleep(20 * time.Millisecond)
 
-		response := fmt.Sprintf(`{
+					// Simulate occasional build failure
+					if component == "Modal" {
+						return fmt.Errorf("build failed for %s", component)
+					}
+
+					successCount++
+
+					return nil
+				})
+
+				// Continue processing even if individual item fails
+				if err != nil {
+					monitoring.LogError(
+						ctx,
+						"build_system",
+						"build_component",
+						err,
+						"Component build failed",
+						"component",
+						component,
+					)
+				}
+			}
+
+			batchTracker.Complete(ctx)
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+
+			response := fmt.Sprintf(`{
 			"total": %d,
 			"successful": %d,
 			"failed": %d,
 			"timestamp": "%s"
 		}`, len(components), successCount, len(components)-successCount, time.Now().Format(time.RFC3339))
 
-		w.Write([]byte(response))
-		return nil
-	})
+			_, _ = w.Write([]byte(response))
+
+			return nil
+		},
+	)
 
 	if err != nil {
 		monitoring.LogError(ctx, "build_api", "build_components", err, "Failed to build components")
@@ -250,27 +291,25 @@ func handleBuild(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// simulateActivity demonstrates background monitoring
+// simulateActivity demonstrates background monitoring.
 func simulateActivity() {
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
-	for {
-		select {
-		case <-ticker.C:
-			simulateBackgroundOperations()
-		}
+	for range ticker.C {
+		simulateBackgroundOperations()
 	}
 }
 
-// simulateBackgroundOperations demonstrates various monitoring scenarios
+// simulateBackgroundOperations demonstrates various monitoring scenarios.
 func simulateBackgroundOperations() {
 	ctx := context.Background()
 
 	// Simulate file scanning
-	monitoring.TrackOperation(ctx, "scanner", "scan_files", func(ctx context.Context) error {
+	_ = monitoring.TrackOperation(ctx, "scanner", "scan_files", func(ctx context.Context) error {
 		monitoring.LogInfo(ctx, "scanner", "scan_files", "Scanning component files")
 		time.Sleep(50 * time.Millisecond)
+
 		return nil
 	})
 
@@ -294,7 +333,7 @@ func simulateBackgroundOperations() {
 	// Simulate occasional errors
 	if time.Now().Unix()%10 == 0 { // Every 10th cycle
 		monitoring.LogError(ctx, "background_worker", "cleanup",
-			fmt.Errorf("temporary cleanup error"),
+			errors.New("temporary cleanup error"),
 			"Cleanup operation failed",
 			"retry_after", "30s")
 	}

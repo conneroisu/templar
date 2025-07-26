@@ -20,23 +20,23 @@ import (
 
 // TestServerConfig contains configuration for test server setup
 type TestServerConfig struct {
-	Host            string
-	Port            int
-	ReadinessTimeout time.Duration
+	Host                string
+	Port                int
+	ReadinessTimeout    time.Duration
 	HealthCheckInterval time.Duration
-	MaxRetries      int
-	BaseRetryDelay  time.Duration
+	MaxRetries          int
+	BaseRetryDelay      time.Duration
 }
 
 // DefaultTestConfig returns a default test configuration
 func DefaultTestConfig() *TestServerConfig {
 	return &TestServerConfig{
-		Host:            "localhost",
-		Port:            0, // Use random available port
-		ReadinessTimeout: 30 * time.Second,
+		Host:                "localhost",
+		Port:                0, // Use random available port
+		ReadinessTimeout:    30 * time.Second,
 		HealthCheckInterval: 100 * time.Millisecond,
-		MaxRetries:      5,
-		BaseRetryDelay:  100 * time.Millisecond,
+		MaxRetries:          5,
+		BaseRetryDelay:      100 * time.Millisecond,
 	}
 }
 
@@ -53,26 +53,30 @@ type ServerReadiness struct {
 // HealthResponse represents the structure of health check response
 type HealthResponse struct {
 	Status    string                 `json:"status"`
-	Timestamp time.Time             `json:"timestamp"`
+	Timestamp time.Time              `json:"timestamp"`
 	Version   string                 `json:"version"`
 	Checks    map[string]interface{} `json:"checks"`
 }
 
 // WaitForServerReadiness waits for a server to become ready and healthy
 // Returns ServerReadiness with detailed information about the readiness check
-func WaitForServerReadiness(ctx context.Context, baseURL string, config *TestServerConfig) (*ServerReadiness, error) {
+func WaitForServerReadiness(
+	ctx context.Context,
+	baseURL string,
+	config *TestServerConfig,
+) (*ServerReadiness, error) {
 	if config == nil {
 		config = DefaultTestConfig()
 	}
 
 	result := &ServerReadiness{
-		URL:   baseURL,
-		Ready: false,
+		URL:     baseURL,
+		Ready:   false,
 		Healthy: false,
 	}
 
 	start := time.Now()
-	
+
 	// Create timeout context
 	timeoutCtx, cancel := context.WithTimeout(ctx, config.ReadinessTimeout)
 	defer cancel()
@@ -95,12 +99,12 @@ func WaitForServerReadiness(ctx context.Context, baseURL string, config *TestSer
 		select {
 		case <-timeoutCtx.Done():
 			result.Duration = time.Since(start)
-			return result, fmt.Errorf("server readiness timeout after %v (retries: %d)", 
+			return result, fmt.Errorf("server readiness timeout after %v (retries: %d)",
 				config.ReadinessTimeout, result.Retries)
 
 		case <-ticker.C:
 			result.Retries++
-			
+
 			// First check if we can connect at all
 			if !result.Ready {
 				if err := checkServerConnection(baseURL); err != nil {
@@ -123,7 +127,7 @@ func WaitForServerReadiness(ctx context.Context, baseURL string, config *TestSer
 	}
 
 	result.Duration = time.Since(start)
-	return result, fmt.Errorf("server failed to become healthy after %d retries in %v", 
+	return result, fmt.Errorf("server failed to become healthy after %d retries in %v",
 		config.MaxRetries, result.Duration)
 }
 
@@ -206,16 +210,16 @@ func RetryOperation(ctx context.Context, operation func() error, config *TestSer
 				// Exponential backoff with jitter
 				jitter := time.Duration(float64(delay) * 0.1)
 				sleepTime := delay + time.Duration(float64(jitter)*2*(0.5-float64(attempt%2)))
-				
+
 				select {
 				case <-ctx.Done():
 					return fmt.Errorf("operation cancelled during retry: %w", ctx.Err())
 				case <-time.After(sleepTime):
 				}
-				
+
 				delay *= 2 // Exponential backoff
 				if delay > 5*time.Second {
-					delay = 5*time.Second // Cap maximum delay
+					delay = 5 * time.Second // Cap maximum delay
 				}
 			}
 			continue
@@ -223,7 +227,7 @@ func RetryOperation(ctx context.Context, operation func() error, config *TestSer
 		return nil // Success
 	}
 
-	return fmt.Errorf("operation failed after %d attempts, last error: %w", 
+	return fmt.Errorf("operation failed after %d attempts, last error: %w",
 		config.MaxRetries, lastErr)
 }
 
@@ -266,14 +270,14 @@ func WaitForComponentProcessing() {
 }
 
 // AssertEventuallyEqual checks that a condition becomes true within a timeout
-func AssertEventuallyEqual(t *testing.T, expected interface{}, getValue func() interface{}, 
+func AssertEventuallyEqual(t *testing.T, expected interface{}, getValue func() interface{},
 	timeout time.Duration, message string) {
-	
+
 	ticker := time.NewTicker(10 * time.Millisecond)
 	defer ticker.Stop()
-	
+
 	timeoutChan := time.After(timeout)
-	
+
 	for {
 		select {
 		case <-timeoutChan:
@@ -293,11 +297,11 @@ func ValidateServerURL(url string) (string, error) {
 	if url == "" {
 		return "", fmt.Errorf("empty server URL")
 	}
-	
+
 	if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
 		url = "http://" + url
 	}
-	
+
 	return url, nil
 }
 

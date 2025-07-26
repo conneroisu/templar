@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -138,7 +137,7 @@ func TestHandleComponent(t *testing.T) {
 		}
 
 		for _, name := range dangerousNames {
-			t.Run(fmt.Sprintf("dangerous name: %s", name), func(t *testing.T) {
+			t.Run("dangerous name: "+name, func(t *testing.T) {
 				// URL encode the dangerous name to prevent HTTP parsing issues
 				encodedName := url.QueryEscape(name)
 				req := httptest.NewRequest(http.MethodGet, "/component/"+encodedName, nil)
@@ -236,7 +235,7 @@ func TestHandleTargetFiles(t *testing.T) {
 			FilePath: "test1.templ",
 		})
 		reg.Register(&types.ComponentInfo{
-			Name:     "TestComponent2", 
+			Name:     "TestComponent2",
 			FilePath: "test2.templ",
 		})
 
@@ -364,8 +363,11 @@ func TestRenderComponentSelection(t *testing.T) {
 			Parameters: []types.ParameterInfo{{Name: "text", Type: "string"}},
 		},
 		{
-			Name:       "Card",
-			Parameters: []types.ParameterInfo{{Name: "title", Type: "string"}, {Name: "content", Type: "string"}},
+			Name: "Card",
+			Parameters: []types.ParameterInfo{
+				{Name: "title", Type: "string"},
+				{Name: "content", Type: "string"},
+			},
 		},
 	}
 

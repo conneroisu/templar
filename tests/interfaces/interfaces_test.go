@@ -14,16 +14,14 @@ import (
 	"github.com/conneroisu/templar/internal/watcher"
 )
 
-// TestComponentRegistryInterface validates that concrete registry implements ComponentRegistry interface
+// TestComponentRegistryInterface validates that concrete registry implements ComponentRegistry interface.
 func TestComponentRegistryInterface(t *testing.T) {
 	// Create concrete registry
 	concreteRegistry := registry.NewComponentRegistry()
 
 	// Verify it implements the interface
 	var iface interfaces.ComponentRegistry = concreteRegistry
-	if iface == nil {
-		t.Fatal("Registry does not implement ComponentRegistry interface")
-	}
+	// Interface assignment succeeds, confirming implementation compliance
 
 	// Test basic operations
 	testComponent := &types.ComponentInfo{
@@ -67,7 +65,7 @@ func TestComponentRegistryInterface(t *testing.T) {
 	_ = cycles
 }
 
-// TestFileWatcherInterface validates that concrete watcher implements FileWatcher interface
+// TestFileWatcherInterface validates that concrete watcher implements FileWatcher interface.
 func TestFileWatcherInterface(t *testing.T) {
 	// Create concrete watcher
 	concreteWatcher, err := watcher.NewFileWatcher(100 * time.Millisecond)
@@ -78,9 +76,7 @@ func TestFileWatcherInterface(t *testing.T) {
 
 	// Use concrete type directly and verify interface implementation
 	var iface interfaces.FileWatcher = concreteWatcher
-	if iface == nil {
-		t.Fatal("Watcher does not implement FileWatcher interface")
-	}
+	// Interface assignment succeeds, confirming implementation compliance
 
 	// Test filter addition
 	testFilter := interfaces.FileFilterFunc(func(path string) bool {
@@ -103,7 +99,7 @@ func TestFileWatcherInterface(t *testing.T) {
 	iface.Stop()
 }
 
-// TestComponentScannerInterface validates that concrete scanner implements ComponentScanner interface
+// TestComponentScannerInterface validates that concrete scanner implements ComponentScanner interface.
 func TestComponentScannerInterface(t *testing.T) {
 	// Create dependencies
 	reg := registry.NewComponentRegistry()
@@ -113,9 +109,7 @@ func TestComponentScannerInterface(t *testing.T) {
 
 	// Use concrete type directly and verify interface implementation
 	var iface interfaces.ComponentScanner = concreteScanner
-	if iface == nil {
-		t.Fatal("Scanner does not implement ComponentScanner interface")
-	}
+	// Interface assignment succeeds, confirming implementation compliance
 
 	// Test ScanFile (should not panic even with non-existent file)
 	err := iface.ScanFile("/non/existent/file.templ")
@@ -132,7 +126,7 @@ func TestComponentScannerInterface(t *testing.T) {
 	}
 }
 
-// TestBuildPipelineInterface validates that concrete build pipeline implements BuildPipeline interface
+// TestBuildPipelineInterface validates that concrete build pipeline implements BuildPipeline interface.
 func TestBuildPipelineInterface(t *testing.T) {
 	// Create dependencies
 	reg := registry.NewComponentRegistry()
@@ -142,9 +136,7 @@ func TestBuildPipelineInterface(t *testing.T) {
 
 	// Use concrete type directly and verify interface implementation
 	var iface interfaces.BuildPipeline = concretePipeline
-	if iface == nil {
-		t.Fatal("Build pipeline does not implement BuildPipeline interface")
-	}
+	// Interface assignment succeeds, confirming implementation compliance
 
 	// Test Start/Stop
 	ctx := context.Background()
@@ -182,7 +174,7 @@ func TestBuildPipelineInterface(t *testing.T) {
 	iface.ClearCache()
 }
 
-// TestFullInterfaceIntegration tests the complete interface ecosystem
+// TestFullInterfaceIntegration tests the complete interface ecosystem.
 func TestFullInterfaceIntegration(t *testing.T) {
 	// Create concrete implementations
 	reg := registry.NewComponentRegistry()
@@ -202,7 +194,12 @@ func TestFullInterfaceIntegration(t *testing.T) {
 	pipelineAdapter := concretePipeline
 
 	// Validate all interfaces
-	summary := interfaces.ValidateAllInterfaces(reg, watcherAdapter, scannerAdapter, pipelineAdapter)
+	summary := interfaces.ValidateAllInterfaces(
+		reg,
+		watcherAdapter,
+		scannerAdapter,
+		pipelineAdapter,
+	)
 
 	if !summary.IsValid() {
 		t.Errorf("Interface validation failed: %s", summary.String())
@@ -230,7 +227,7 @@ func TestFullInterfaceIntegration(t *testing.T) {
 	t.Logf("Interface validation summary: %s", summary.String())
 }
 
-// TestInterfaceWorkflow tests a complete workflow using only interfaces
+// TestInterfaceWorkflow tests a complete workflow using only interfaces.
 func TestInterfaceWorkflow(t *testing.T) {
 	// Create concrete implementations
 	reg := registry.NewComponentRegistry()
@@ -313,7 +310,7 @@ func TestInterfaceWorkflow(t *testing.T) {
 	t.Log("Interface workflow test completed successfully")
 }
 
-// TestConcurrentInterfaceAccess tests concurrent access to interfaces
+// TestConcurrentInterfaceAccess tests concurrent access to interfaces.
 func TestConcurrentInterfaceAccess(t *testing.T) {
 	reg := registry.NewComponentRegistry()
 	concretePipeline := build.NewRefactoredBuildPipeline(4, reg)
@@ -328,11 +325,11 @@ func TestConcurrentInterfaceAccess(t *testing.T) {
 		done := make(chan bool, 10)
 
 		// Launch 10 goroutines that register components concurrently
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			go func(id int) {
 				defer func() { done <- true }()
 
-				for j := 0; j < 100; j++ {
+				for j := range 100 {
 					testComponent := &types.ComponentInfo{
 						Name:     fmt.Sprintf("Concurrent_%d_%d", id, j),
 						FilePath: fmt.Sprintf("/test/concurrent_%d_%d.templ", id, j),
@@ -341,7 +338,8 @@ func TestConcurrentInterfaceAccess(t *testing.T) {
 
 					reg.Register(testComponent)
 
-					if retrieved, exists := reg.Get(testComponent.Name); !exists || retrieved.Name != testComponent.Name {
+					if retrieved, exists := reg.Get(testComponent.Name); !exists ||
+						retrieved.Name != testComponent.Name {
 						t.Errorf("Concurrent access error for component %s", testComponent.Name)
 					}
 				}
@@ -349,7 +347,7 @@ func TestConcurrentInterfaceAccess(t *testing.T) {
 		}
 
 		// Wait for all goroutines to complete
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			<-done
 		}
 	})
@@ -359,11 +357,11 @@ func TestConcurrentInterfaceAccess(t *testing.T) {
 		done := make(chan bool, 5)
 
 		// Launch 5 goroutines that build components concurrently
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			go func(id int) {
 				defer func() { done <- true }()
 
-				for j := 0; j < 50; j++ {
+				for j := range 50 {
 					testComponent := &types.ComponentInfo{
 						Name:     fmt.Sprintf("Build_%d_%d", id, j),
 						FilePath: fmt.Sprintf("/test/build_%d_%d.templ", id, j),
@@ -379,7 +377,7 @@ func TestConcurrentInterfaceAccess(t *testing.T) {
 		}
 
 		// Wait for all goroutines to complete
-		for i := 0; i < 5; i++ {
+		for range 5 {
 			<-done
 		}
 	})
@@ -387,7 +385,7 @@ func TestConcurrentInterfaceAccess(t *testing.T) {
 	t.Log("Concurrent interface access test completed")
 }
 
-// TestInterfaceContractCompliance verifies that interfaces maintain their contracts
+// TestInterfaceContractCompliance verifies that interfaces maintain their contracts.
 func TestInterfaceContractCompliance(t *testing.T) {
 	reg := registry.NewComponentRegistry()
 
@@ -419,11 +417,19 @@ func TestInterfaceContractCompliance(t *testing.T) {
 	newAll := reg.GetAll()
 
 	if newCount != len(newAll) {
-		t.Errorf("After registration: Count() (%d) does not match len(GetAll()) (%d)", newCount, len(newAll))
+		t.Errorf(
+			"After registration: Count() (%d) does not match len(GetAll()) (%d)",
+			newCount,
+			len(newAll),
+		)
 	}
 
 	if newCount != initialCount+1 {
-		t.Errorf("Count should increase by 1 after registration: got %d, want %d", newCount, initialCount+1)
+		t.Errorf(
+			"Count should increase by 1 after registration: got %d, want %d",
+			newCount,
+			initialCount+1,
+		)
 	}
 
 	// Test that Get() returns what was registered

@@ -11,13 +11,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/coder/websocket"
 	"github.com/conneroisu/templar/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/coder/websocket"
 )
 
-// TestWebSocketConnectionHijacking tests various connection hijacking attack scenarios
+// TestWebSocketConnectionHijacking tests various connection hijacking attack scenarios.
 func TestWebSocketConnectionHijacking(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -29,13 +29,18 @@ func TestWebSocketConnectionHijacking(t *testing.T) {
 			name: "session_fixation_attack",
 			setupAttack: func(server *httptest.Server) (*http.Request, error) {
 				// Attempt to hijack by providing a fixed session cookie
-				req, err := http.NewRequest(http.MethodGet, strings.Replace(server.URL, "http://", "ws://", 1)+"/ws", nil)
+				req, err := http.NewRequest(
+					http.MethodGet,
+					strings.Replace(server.URL, "http://", "ws://", 1)+"/ws",
+					nil,
+				)
 				if err != nil {
 					return nil, err
 				}
 				req.Header.Set("Origin", "http://localhost:3000")
 				req.Header.Set("Cookie", "session=admin123; csrf=bypassed")
 				req.Header.Set("X-Forwarded-For", "127.0.0.1")
+
 				return req, nil
 			},
 			expectBlock: true,
@@ -44,13 +49,18 @@ func TestWebSocketConnectionHijacking(t *testing.T) {
 		{
 			name: "csrf_token_manipulation",
 			setupAttack: func(server *httptest.Server) (*http.Request, error) {
-				req, err := http.NewRequest(http.MethodGet, strings.Replace(server.URL, "http://", "ws://", 1)+"/ws", nil)
+				req, err := http.NewRequest(
+					http.MethodGet,
+					strings.Replace(server.URL, "http://", "ws://", 1)+"/ws",
+					nil,
+				)
 				if err != nil {
 					return nil, err
 				}
 				req.Header.Set("Origin", "http://malicious.com")
 				req.Header.Set("X-CSRF-Token", "fake_token")
 				req.Header.Set("Referer", "http://malicious.com/attack")
+
 				return req, nil
 			},
 			expectBlock: true,
@@ -59,12 +69,17 @@ func TestWebSocketConnectionHijacking(t *testing.T) {
 		{
 			name: "host_header_injection",
 			setupAttack: func(server *httptest.Server) (*http.Request, error) {
-				req, err := http.NewRequest(http.MethodGet, strings.Replace(server.URL, "http://", "ws://", 1)+"/ws", nil)
+				req, err := http.NewRequest(
+					http.MethodGet,
+					strings.Replace(server.URL, "http://", "ws://", 1)+"/ws",
+					nil,
+				)
 				if err != nil {
 					return nil, err
 				}
 				req.Header.Set("Origin", "http://localhost:3000")
 				req.Header.Set("Host", "localhost:3000\r\nX-Injected: evil")
+
 				return req, nil
 			},
 			expectBlock: true,
@@ -73,13 +88,18 @@ func TestWebSocketConnectionHijacking(t *testing.T) {
 		{
 			name: "connection_upgrade_smuggling",
 			setupAttack: func(server *httptest.Server) (*http.Request, error) {
-				req, err := http.NewRequest(http.MethodGet, strings.Replace(server.URL, "http://", "ws://", 1)+"/ws", nil)
+				req, err := http.NewRequest(
+					http.MethodGet,
+					strings.Replace(server.URL, "http://", "ws://", 1)+"/ws",
+					nil,
+				)
 				if err != nil {
 					return nil, err
 				}
 				req.Header.Set("Origin", "http://localhost:3000")
 				req.Header.Set("Connection", "Upgrade, keep-alive")
 				req.Header.Set("Upgrade", "websocket\r\nContent-Length: 100")
+
 				return req, nil
 			},
 			expectBlock: true,
@@ -100,9 +120,11 @@ func TestWebSocketConnectionHijacking(t *testing.T) {
 			server, err := New(cfg)
 			require.NoError(t, err)
 
-			testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				server.handleWebSocket(w, r)
-			}))
+			testServer := httptest.NewServer(
+				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					server.handleWebSocket(w, r)
+				}),
+			)
 			defer testServer.Close()
 
 			// Setup attack
@@ -113,18 +135,26 @@ func TestWebSocketConnectionHijacking(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 			defer cancel()
 
-			conn, response, err := websocket.Dial(ctx, strings.Replace(testServer.URL, "http://", "ws://", 1)+"/ws", &websocket.DialOptions{
-				HTTPHeader: req.Header,
-			})
+			conn, response, err := websocket.Dial(
+				ctx,
+				strings.Replace(testServer.URL, "http://", "ws://", 1)+"/ws",
+				&websocket.DialOptions{
+					HTTPHeader: req.Header,
+				},
+			)
 			if response != nil && response.Body != nil {
 				defer response.Body.Close()
 			}
 
 			if tt.expectBlock {
 				// Should be blocked - either connection fails or non-101 response
-				if err == nil && response != nil && response.StatusCode == http.StatusSwitchingProtocols {
+				if err == nil && response != nil &&
+					response.StatusCode == http.StatusSwitchingProtocols {
 					conn.Close(websocket.StatusNormalClosure, "")
-					t.Errorf("%s: Expected connection to be blocked, but it succeeded", tt.description)
+					t.Errorf(
+						"%s: Expected connection to be blocked, but it succeeded",
+						tt.description,
+					)
 				}
 			} else {
 				// Should succeed
@@ -136,7 +166,7 @@ func TestWebSocketConnectionHijacking(t *testing.T) {
 	}
 }
 
-// TestWebSocketProtocolDowngradeAttacks tests protocol downgrade attack prevention
+// TestWebSocketProtocolDowngradeAttacks tests protocol downgrade attack prevention.
 func TestWebSocketProtocolDowngradeAttacks(t *testing.T) {
 	cfg := &config.Config{
 		Server: config.ServerConfig{
@@ -209,18 +239,24 @@ func TestWebSocketProtocolDowngradeAttacks(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				tt.setupRequest(r)
-				r.Header.Set("Origin", "http://localhost:3000") // Valid origin
-				server.handleWebSocket(w, r)
-			}))
+			testServer := httptest.NewServer(
+				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					tt.setupRequest(r)
+					r.Header.Set("Origin", "http://localhost:3000") // Valid origin
+					server.handleWebSocket(w, r)
+				}),
+			)
 			defer testServer.Close()
 
 			// Attempt connection
 			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 			defer cancel()
 
-			conn, response, err := websocket.Dial(ctx, strings.Replace(testServer.URL, "http://", "ws://", 1), nil)
+			conn, response, err := websocket.Dial(
+				ctx,
+				strings.Replace(testServer.URL, "http://", "ws://", 1),
+				nil,
+			)
 			if response != nil && response.Body != nil {
 				defer response.Body.Close()
 			}
@@ -240,7 +276,7 @@ func TestWebSocketProtocolDowngradeAttacks(t *testing.T) {
 	}
 }
 
-// TestWebSocketRateLimitingEdgeCases tests rate limiting edge cases and bypass attempts
+// TestWebSocketRateLimitingEdgeCases tests rate limiting edge cases and bypass attempts.
 func TestWebSocketRateLimitingEdgeCases(t *testing.T) {
 	cfg := &config.Config{
 		Server: config.ServerConfig{
@@ -260,9 +296,11 @@ func TestWebSocketRateLimitingEdgeCases(t *testing.T) {
 		{
 			name: "connection_flooding_attack",
 			testFunc: func(t *testing.T, server *PreviewServer) {
-				testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					server.handleWebSocket(w, r)
-				}))
+				testServer := httptest.NewServer(
+					http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+						server.handleWebSocket(w, r)
+					}),
+				)
 				defer testServer.Close()
 
 				// Attempt to create many connections rapidly
@@ -279,12 +317,16 @@ func TestWebSocketRateLimitingEdgeCases(t *testing.T) {
 				defer cancel()
 
 				blocked := 0
-				for i := 0; i < 100; i++ {
-					conn, resp, err := websocket.Dial(ctx, strings.Replace(testServer.URL, "http://", "ws://", 1), &websocket.DialOptions{
-						HTTPHeader: http.Header{
-							"Origin": []string{"http://localhost:3000"},
+				for range 100 {
+					conn, resp, err := websocket.Dial(
+						ctx,
+						strings.Replace(testServer.URL, "http://", "ws://", 1),
+						&websocket.DialOptions{
+							HTTPHeader: http.Header{
+								"Origin": []string{"http://localhost:3000"},
+							},
 						},
-					})
+					)
 					if resp != nil && resp.Body != nil {
 						resp.Body.Close()
 					}
@@ -301,7 +343,9 @@ func TestWebSocketRateLimitingEdgeCases(t *testing.T) {
 
 				// Should have blocked some connections
 				if blocked == 0 {
-					t.Error("Expected some connections to be blocked in flooding attack, but none were")
+					t.Error(
+						"Expected some connections to be blocked in flooding attack, but none were",
+					)
 				}
 
 				t.Logf("Blocked %d out of 100 connection attempts", blocked)
@@ -311,19 +355,25 @@ func TestWebSocketRateLimitingEdgeCases(t *testing.T) {
 		{
 			name: "message_size_limit_bypass",
 			testFunc: func(t *testing.T, server *PreviewServer) {
-				testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					server.handleWebSocket(w, r)
-				}))
+				testServer := httptest.NewServer(
+					http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+						server.handleWebSocket(w, r)
+					}),
+				)
 				defer testServer.Close()
 
 				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 				defer cancel()
 
-				conn, resp, err := websocket.Dial(ctx, strings.Replace(testServer.URL, "http://", "ws://", 1), &websocket.DialOptions{
-					HTTPHeader: http.Header{
-						"Origin": []string{"http://localhost:3000"},
+				conn, resp, err := websocket.Dial(
+					ctx,
+					strings.Replace(testServer.URL, "http://", "ws://", 1),
+					&websocket.DialOptions{
+						HTTPHeader: http.Header{
+							"Origin": []string{"http://localhost:3000"},
+						},
 					},
-				})
+				)
 				if resp != nil && resp.Body != nil {
 					defer resp.Body.Close()
 				}
@@ -348,20 +398,26 @@ func TestWebSocketRateLimitingEdgeCases(t *testing.T) {
 		{
 			name: "rapid_reconnection_attack",
 			testFunc: func(t *testing.T, server *PreviewServer) {
-				testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					server.handleWebSocket(w, r)
-				}))
+				testServer := httptest.NewServer(
+					http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+						server.handleWebSocket(w, r)
+					}),
+				)
 				defer testServer.Close()
 
 				blocked := 0
-				for i := 0; i < 50; i++ {
+				for range 50 {
 					ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-					
-					conn, resp, err := websocket.Dial(ctx, strings.Replace(testServer.URL, "http://", "ws://", 1), &websocket.DialOptions{
-						HTTPHeader: http.Header{
-							"Origin": []string{"http://localhost:3000"},
+
+					conn, resp, err := websocket.Dial(
+						ctx,
+						strings.Replace(testServer.URL, "http://", "ws://", 1),
+						&websocket.DialOptions{
+							HTTPHeader: http.Header{
+								"Origin": []string{"http://localhost:3000"},
+							},
 						},
-					})
+					)
 					if resp != nil && resp.Body != nil {
 						resp.Body.Close()
 					}
@@ -369,6 +425,7 @@ func TestWebSocketRateLimitingEdgeCases(t *testing.T) {
 					if err != nil {
 						blocked++
 						cancel()
+
 						continue
 					}
 
@@ -379,7 +436,9 @@ func TestWebSocketRateLimitingEdgeCases(t *testing.T) {
 
 				// Should block some rapid reconnection attempts
 				if blocked == 0 {
-					t.Log("Warning: No connections blocked in rapid reconnection test - rate limiting may not be effective")
+					t.Log(
+						"Warning: No connections blocked in rapid reconnection test - rate limiting may not be effective",
+					)
 				}
 
 				t.Logf("Blocked %d out of 50 rapid reconnection attempts", blocked)
@@ -395,7 +454,7 @@ func TestWebSocketRateLimitingEdgeCases(t *testing.T) {
 	}
 }
 
-// TestWebSocketChaosTestingNetworkFailures tests WebSocket behavior under network failures
+// TestWebSocketChaosTestingNetworkFailures tests WebSocket behavior under network failures.
 func TestWebSocketChaosTestingNetworkFailures(t *testing.T) {
 	cfg := &config.Config{
 		Server: config.ServerConfig{
@@ -418,11 +477,15 @@ func TestWebSocketChaosTestingNetworkFailures(t *testing.T) {
 				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 				defer cancel()
 
-				conn, resp, err := websocket.Dial(ctx, strings.Replace(testServer.URL, "http://", "ws://", 1), &websocket.DialOptions{
-					HTTPHeader: http.Header{
-						"Origin": []string{"http://localhost:3000"},
+				conn, resp, err := websocket.Dial(
+					ctx,
+					strings.Replace(testServer.URL, "http://", "ws://", 1),
+					&websocket.DialOptions{
+						HTTPHeader: http.Header{
+							"Origin": []string{"http://localhost:3000"},
+						},
 					},
-				})
+				)
 				if resp != nil && resp.Body != nil {
 					defer resp.Body.Close()
 				}
@@ -459,11 +522,15 @@ func TestWebSocketChaosTestingNetworkFailures(t *testing.T) {
 
 				// Establish connections
 				for i := range connections {
-					conn, resp, err := websocket.Dial(ctx, strings.Replace(testServer.URL, "http://", "ws://", 1), &websocket.DialOptions{
-						HTTPHeader: http.Header{
-							"Origin": []string{"http://localhost:3000"},
+					conn, resp, err := websocket.Dial(
+						ctx,
+						strings.Replace(testServer.URL, "http://", "ws://", 1),
+						&websocket.DialOptions{
+							HTTPHeader: http.Header{
+								"Origin": []string{"http://localhost:3000"},
+							},
 						},
-					})
+					)
 					if resp != nil && resp.Body != nil {
 						resp.Body.Close()
 					}
@@ -472,13 +539,17 @@ func TestWebSocketChaosTestingNetworkFailures(t *testing.T) {
 				}
 
 				// Simulate network partition by closing some connections abruptly
-				for i := 0; i < 2; i++ {
+				for i := range 2 {
 					connections[i].Close(websocket.StatusInternalError, "network partition")
 				}
 
 				// Remaining connection should still work
 				err = connections[2].Write(ctx, websocket.MessageText, []byte("survivor"))
-				assert.NoError(t, err, "Surviving connection should still work after network partition")
+				assert.NoError(
+					t,
+					err,
+					"Surviving connection should still work after network partition",
+				)
 			},
 			description: "Should handle network partitions gracefully",
 		},
@@ -488,11 +559,15 @@ func TestWebSocketChaosTestingNetworkFailures(t *testing.T) {
 				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 				defer cancel()
 
-				conn, resp, err := websocket.Dial(ctx, strings.Replace(testServer.URL, "http://", "ws://", 1), &websocket.DialOptions{
-					HTTPHeader: http.Header{
-						"Origin": []string{"http://localhost:3000"},
+				conn, resp, err := websocket.Dial(
+					ctx,
+					strings.Replace(testServer.URL, "http://", "ws://", 1),
+					&websocket.DialOptions{
+						HTTPHeader: http.Header{
+							"Origin": []string{"http://localhost:3000"},
+						},
 					},
-				})
+				)
 				if resp != nil && resp.Body != nil {
 					defer resp.Body.Close()
 				}
@@ -518,11 +593,15 @@ func TestWebSocketChaosTestingNetworkFailures(t *testing.T) {
 				ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 				defer cancel()
 
-				conn, resp, err := websocket.Dial(ctx, strings.Replace(testServer.URL, "http://", "ws://", 1), &websocket.DialOptions{
-					HTTPHeader: http.Header{
-						"Origin": []string{"http://localhost:3000"},
+				conn, resp, err := websocket.Dial(
+					ctx,
+					strings.Replace(testServer.URL, "http://", "ws://", 1),
+					&websocket.DialOptions{
+						HTTPHeader: http.Header{
+							"Origin": []string{"http://localhost:3000"},
+						},
 					},
-				})
+				)
 				if resp != nil && resp.Body != nil {
 					defer resp.Body.Close()
 				}
@@ -530,7 +609,7 @@ func TestWebSocketChaosTestingNetworkFailures(t *testing.T) {
 				defer conn.Close(websocket.StatusNormalClosure, "")
 
 				// Simulate intermittent connectivity by alternating successful and failed sends
-				for i := 0; i < 10; i++ {
+				for i := range 10 {
 					message := []byte("intermittent_" + string(rune(i+'0')))
 					err = conn.Write(ctx, websocket.MessageText, message)
 
@@ -541,7 +620,11 @@ func TestWebSocketChaosTestingNetworkFailures(t *testing.T) {
 
 					// Some messages may fail due to simulated network issues, which is expected
 					if err != nil {
-						t.Logf("Message %d failed as expected due to simulated network issues: %v", i, err)
+						t.Logf(
+							"Message %d failed as expected due to simulated network issues: %v",
+							i,
+							err,
+						)
 					}
 				}
 			},
@@ -551,9 +634,11 @@ func TestWebSocketChaosTestingNetworkFailures(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				server.handleWebSocket(w, r)
-			}))
+			testServer := httptest.NewServer(
+				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					server.handleWebSocket(w, r)
+				}),
+			)
 			defer testServer.Close()
 
 			tt.chaosFunc(t, server, testServer)
@@ -561,7 +646,7 @@ func TestWebSocketChaosTestingNetworkFailures(t *testing.T) {
 	}
 }
 
-// TestWebSocketOriginValidationComprehensive tests comprehensive origin validation scenarios
+// TestWebSocketOriginValidationComprehensive tests comprehensive origin validation scenarios.
 func TestWebSocketOriginValidationComprehensive(t *testing.T) {
 	cfg := &config.Config{
 		Server: config.ServerConfig{
@@ -604,19 +689,28 @@ func TestWebSocketOriginValidationComprehensive(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 			defer cancel()
 
-			conn, response, err := websocket.Dial(ctx, strings.Replace(testServer.URL, "http://", "ws://", 1), &websocket.DialOptions{
-				HTTPHeader: http.Header{
-					"Origin": []string{test.origin},
+			conn, response, err := websocket.Dial(
+				ctx,
+				strings.Replace(testServer.URL, "http://", "ws://", 1),
+				&websocket.DialOptions{
+					HTTPHeader: http.Header{
+						"Origin": []string{test.origin},
+					},
 				},
-			})
+			)
 			if response != nil && response.Body != nil {
 				defer response.Body.Close()
 			}
 
 			// All malicious origins should be blocked
-			if err == nil && response != nil && response.StatusCode == http.StatusSwitchingProtocols {
+			if err == nil && response != nil &&
+				response.StatusCode == http.StatusSwitchingProtocols {
 				conn.Close(websocket.StatusNormalClosure, "")
-				t.Errorf("Origin validation failed: %s should have been blocked (%s)", test.origin, test.description)
+				t.Errorf(
+					"Origin validation failed: %s should have been blocked (%s)",
+					test.origin,
+					test.description,
+				)
 			} else {
 				t.Logf("Successfully blocked %s: %s", test.attackType, test.description)
 			}
@@ -624,7 +718,7 @@ func TestWebSocketOriginValidationComprehensive(t *testing.T) {
 	}
 }
 
-// TestWebSocketSecurityHeaders tests that proper security headers are set
+// TestWebSocketSecurityHeaders tests that proper security headers are set.
 func TestWebSocketSecurityHeaders(t *testing.T) {
 	cfg := &config.Config{
 		Server: config.ServerConfig{
@@ -662,7 +756,7 @@ func TestWebSocketSecurityHeaders(t *testing.T) {
 	// Check that security headers are present (these should be set by middleware)
 	expectedHeaders := []string{
 		"X-Content-Type-Options",
-		"X-Frame-Options", 
+		"X-Frame-Options",
 		"X-XSS-Protection",
 		"Referrer-Policy",
 	}
@@ -680,11 +774,16 @@ func TestWebSocketSecurityHeaders(t *testing.T) {
 		connection := resp.Header.Get("Connection")
 
 		assert.Equal(t, "websocket", upgrade, "Upgrade header should be 'websocket'")
-		assert.Contains(t, strings.ToLower(connection), "upgrade", "Connection header should contain 'upgrade'")
+		assert.Contains(
+			t,
+			strings.ToLower(connection),
+			"upgrade",
+			"Connection header should contain 'upgrade'",
+		)
 	}
 }
 
-// BenchmarkWebSocketSecurityValidation benchmarks the performance of security validation
+// BenchmarkWebSocketSecurityValidation benchmarks the performance of security validation.
 func BenchmarkWebSocketSecurityValidation(b *testing.B) {
 	cfg := &config.Config{
 		Server: config.ServerConfig{

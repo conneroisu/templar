@@ -108,6 +108,7 @@ func TestAlertManager(t *testing.T) {
 		assert.Eventually(t, func() bool {
 			testChannel.mutex.Lock()
 			defer testChannel.mutex.Unlock()
+
 			return len(testChannel.alerts) == 1
 		}, 100*time.Millisecond, 10*time.Millisecond, "Alert should be delivered to channel")
 
@@ -127,6 +128,7 @@ func TestAlertManager(t *testing.T) {
 		assert.Eventually(t, func() bool {
 			testChannel.mutex.Lock()
 			defer testChannel.mutex.Unlock()
+
 			return len(testChannel.alerts) == 2
 		}, 100*time.Millisecond, 10*time.Millisecond, "Resolution alert should be delivered to channel")
 
@@ -162,6 +164,7 @@ func TestAlertManager(t *testing.T) {
 		assert.Eventually(t, func() bool {
 			testChannel.mutex.Lock()
 			defer testChannel.mutex.Unlock()
+
 			return len(testChannel.alerts) == 1
 		}, 100*time.Millisecond, 10*time.Millisecond, "First alert should be delivered")
 
@@ -176,6 +179,7 @@ func TestAlertManager(t *testing.T) {
 		assert.Eventually(t, func() bool {
 			testChannel.mutex.Lock()
 			defer testChannel.mutex.Unlock()
+
 			return len(testChannel.alerts) == 2
 		}, 100*time.Millisecond, 10*time.Millisecond, "Should have initial alert + resolution")
 
@@ -187,6 +191,7 @@ func TestAlertManager(t *testing.T) {
 		assert.Eventually(t, func() bool {
 			testChannel.mutex.Lock()
 			defer testChannel.mutex.Unlock()
+
 			return len(testChannel.alerts) == 3
 		}, 100*time.Millisecond, 10*time.Millisecond, "Should trigger new alert after cooldown")
 	})
@@ -241,10 +246,10 @@ func TestWebhookChannel(t *testing.T) {
 	var receivedAlert Alert
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var payload map[string]interface{}
-		json.NewDecoder(r.Body).Decode(&payload)
+		_ = json.NewDecoder(r.Body).Decode(&payload)
 
 		alertData, _ := json.Marshal(payload["alert"])
-		json.Unmarshal(alertData, &receivedAlert)
+		_ = json.Unmarshal(alertData, &receivedAlert)
 
 		w.WriteHeader(http.StatusOK)
 	}))
@@ -433,7 +438,7 @@ func TestAlertIntegration(t *testing.T) {
 		logger := logging.NewLogger(logging.DefaultConfig())
 		monitor, err := NewMonitor(config, logger)
 		require.NoError(t, err)
-		defer monitor.Stop()
+		defer func() { _ = monitor.Stop() }()
 
 		// Create alert manager
 		alertManager := NewAlertManager(logger)
@@ -463,12 +468,13 @@ func TestAlertIntegration(t *testing.T) {
 		assert.Eventually(t, func() bool {
 			testChannel.mutex.Lock()
 			defer testChannel.mutex.Unlock()
+
 			return len(testChannel.alerts) > 0
 		}, 100*time.Millisecond, 10*time.Millisecond, "Alerts should be delivered to channel")
 	})
 }
 
-// TestChannel is a test implementation of AlertChannel
+// TestChannel is a test implementation of AlertChannel.
 type TestChannel struct {
 	alerts []Alert
 	mutex  sync.Mutex
@@ -478,6 +484,7 @@ func (tc *TestChannel) Send(ctx context.Context, alert Alert) error {
 	tc.mutex.Lock()
 	defer tc.mutex.Unlock()
 	tc.alerts = append(tc.alerts, alert)
+
 	return nil
 }
 
@@ -501,13 +508,17 @@ func BenchmarkAlertEvaluation(b *testing.B) {
 		{Name: "templar_errors_total", Value: 5.0},
 		{Name: "memory_heap_alloc", Value: 500000000},
 		{Name: "goroutines", Value: 500.0},
-		{Name: "templar_components_built_total", Value: 2.0, Labels: map[string]string{"status": "error"}},
+		{
+			Name:   "templar_components_built_total",
+			Value:  2.0,
+			Labels: map[string]string{"status": "error"},
+		},
 	}
 
 	ctx := context.Background()
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		am.EvaluateMetrics(ctx, metrics)
 	}
 }
@@ -527,7 +538,7 @@ func BenchmarkAlertChannelSend(b *testing.B) {
 	ctx := context.Background()
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		channel.Send(ctx, alert)
+	for range b.N {
+		_ = channel.Send(ctx, alert)
 	}
 }

@@ -42,7 +42,7 @@ func TestInterfaceContracts(t *testing.T) {
 	})
 }
 
-// testBuildMetricsContract verifies BuildMetrics interface contract
+// testBuildMetricsContract verifies BuildMetrics interface contract.
 func testBuildMetricsContract(t *testing.T) {
 	metrics := build.NewBuildMetrics()
 
@@ -131,7 +131,7 @@ func testBuildMetricsContract(t *testing.T) {
 	t.Log("✓ Reset functionality works")
 }
 
-// testCacheStatsContract verifies CacheStats interface contract
+// testCacheStatsContract verifies CacheStats interface contract.
 func testCacheStatsContract(t *testing.T) {
 	cache := build.NewBuildCache(1024*1024, time.Hour) // 1MB, 1 hour TTL
 
@@ -197,7 +197,7 @@ func testCacheStatsContract(t *testing.T) {
 	t.Log("✓ Clear functionality works")
 }
 
-// testBuildPipelineContract verifies BuildPipeline interface contract
+// testBuildPipelineContract verifies BuildPipeline interface contract.
 func testBuildPipelineContract(t *testing.T) {
 	registry := registry.NewComponentRegistry()
 	pipeline := build.NewRefactoredBuildPipeline(2, registry)
@@ -230,7 +230,7 @@ func testBuildPipelineContract(t *testing.T) {
 		t.Error("Expected GetMetrics() to return non-nil metrics")
 	}
 	// Verify it implements the BuildMetrics interface
-	var _ interfaces.BuildMetrics = metrics
+	var _ = metrics
 	t.Log("✓ GetMetrics returns valid BuildMetrics interface")
 
 	// Test cache interface
@@ -239,7 +239,7 @@ func testBuildPipelineContract(t *testing.T) {
 		t.Error("Expected GetCache() to return non-nil cache stats")
 	}
 	// Verify it implements the CacheStats interface
-	var _ interfaces.CacheStats = cacheStats
+	var _ = cacheStats
 	t.Log("✓ GetCache returns valid CacheStats interface")
 
 	// Test callback registration
@@ -264,7 +264,7 @@ func testBuildPipelineContract(t *testing.T) {
 	t.Log("✓ Pipeline stop works")
 }
 
-// testComponentRegistryContract verifies ComponentRegistry interface contract
+// testComponentRegistryContract verifies ComponentRegistry interface contract.
 func testComponentRegistryContract(t *testing.T) {
 	registry := registry.NewComponentRegistry()
 
@@ -306,6 +306,8 @@ func testComponentRegistryContract(t *testing.T) {
 	}
 	if retrieved == nil {
 		t.Error("Expected retrieved component to be non-nil")
+
+		return
 	}
 	if retrieved.Name != "TestComponent" {
 		t.Errorf("Expected component name 'TestComponent', got '%s'", retrieved.Name)
@@ -334,12 +336,12 @@ func testComponentRegistryContract(t *testing.T) {
 	t.Log("✓ Circular dependency detection works")
 }
 
-// testServiceContainerContract verifies ServiceContainer interface contract
+// testServiceContainerContract verifies ServiceContainer interface contract.
 func testServiceContainerContract(t *testing.T) {
 	// Note: This test would require importing the DI container
 	// For now, we'll test the interface structure
 	t.Log("✓ ServiceContainer interface contract defined")
-	
+
 	// Test would include:
 	// - Service registration with factory functions
 	// - Service retrieval by name
@@ -348,7 +350,7 @@ func testServiceContainerContract(t *testing.T) {
 	// - Dependency resolution
 }
 
-// TestInterfaceContractConsistency ensures all interface contracts are consistent
+// TestInterfaceContractConsistency ensures all interface contracts are consistent.
 func TestInterfaceContractConsistency(t *testing.T) {
 	t.Run("MethodNamingConsistency", func(t *testing.T) {
 		// Verify all interfaces follow our naming conventions
@@ -373,7 +375,7 @@ func TestInterfaceContractConsistency(t *testing.T) {
 	})
 }
 
-// BenchmarkInterfacePerformance benchmarks interface method performance
+// BenchmarkInterfacePerformance benchmarks interface method performance.
 func BenchmarkInterfacePerformance(b *testing.B) {
 	// Benchmark BuildMetrics interface
 	b.Run("BuildMetrics", func(b *testing.B) {
@@ -386,7 +388,7 @@ func BenchmarkInterfacePerformance(b *testing.B) {
 		}
 
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			metrics.RecordBuild(result)
 		}
 	})
@@ -397,7 +399,7 @@ func BenchmarkInterfacePerformance(b *testing.B) {
 		testData := []byte("benchmark data")
 
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for i := range b.N {
 			key := fmt.Sprintf("key-%d", i%1000) // Cycle through 1000 keys
 			cache.Set(key, testData)
 			cache.Get(key)
@@ -414,7 +416,7 @@ func BenchmarkInterfacePerformance(b *testing.B) {
 		}
 
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for i := range b.N {
 			component.Name = fmt.Sprintf("BenchComponent-%d", i%1000)
 			registry.Register(component)
 			registry.Get(component.Name)
@@ -422,7 +424,7 @@ func BenchmarkInterfacePerformance(b *testing.B) {
 	})
 }
 
-// TestInterfaceMemoryLeaks tests for memory leaks in interface implementations
+// TestInterfaceMemoryLeaks tests for memory leaks in interface implementations.
 func TestInterfaceMemoryLeaks(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping memory leak tests in short mode")
@@ -441,7 +443,7 @@ func TestInterfaceMemoryLeaks(t *testing.T) {
 		}
 
 		// Record many operations
-		for i := 0; i < 10000; i++ {
+		for range 10000 {
 			metrics.RecordBuild(result)
 		}
 
@@ -458,7 +460,7 @@ func TestInterfaceMemoryLeaks(t *testing.T) {
 		testData := []byte("leak test data")
 
 		// Perform many cache operations
-		for i := 0; i < 10000; i++ {
+		for i := range 10000 {
 			key := fmt.Sprintf("leak-key-%d", i)
 			cache.Set(key, testData)
 			cache.Get(key)

@@ -27,7 +27,10 @@ type SlidingWindowRateLimiter struct {
 }
 
 // NewSlidingWindowRateLimiter creates a new sliding window rate limiter with exponential backoff.
-func NewSlidingWindowRateLimiter(maxRequests int, windowDuration time.Duration) *SlidingWindowRateLimiter {
+func NewSlidingWindowRateLimiter(
+	maxRequests int,
+	windowDuration time.Duration,
+) *SlidingWindowRateLimiter {
 	return &SlidingWindowRateLimiter{
 		maxRequests:       maxRequests,
 		windowDuration:    windowDuration,

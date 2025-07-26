@@ -14,9 +14,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/coder/websocket"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/coder/websocket"
 )
 
 // testWebSocketServer is a minimal WebSocket server for testing
@@ -186,7 +186,10 @@ func connectWebSocketTestClient(serverURL string) (*websocket.Conn, error) {
 }
 
 // readWebSocketTestMessage reads a message from WebSocket with timeout
-func readWebSocketTestMessage(conn *websocket.Conn, timeout time.Duration) (map[string]interface{}, error) {
+func readWebSocketTestMessage(
+	conn *websocket.Conn,
+	timeout time.Duration,
+) (map[string]interface{}, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 

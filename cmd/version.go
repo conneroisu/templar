@@ -14,7 +14,7 @@ var (
 	versionShort  bool
 )
 
-// versionCmd represents the version command
+// versionCmd represents the version command.
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Show version information",
@@ -37,7 +37,8 @@ Examples:
 func init() {
 	rootCmd.AddCommand(versionCmd)
 
-	versionCmd.Flags().StringVarP(&versionFormat, "format", "f", "text", "Output format (text, json)")
+	versionCmd.Flags().
+		StringVarP(&versionFormat, "format", "f", "text", "Output format (text, json)")
 	versionCmd.Flags().BoolVar(&versionShort, "short", false, "Show short version only")
 	versionCmd.Flags().Bool("detailed", false, "Show detailed version information")
 }
@@ -63,6 +64,7 @@ func runVersionCommand(cmd *cobra.Command, args []string) error {
 
 func outputVersionShort() error {
 	fmt.Println(version.GetShortVersion())
+
 	return nil
 }
 
@@ -124,5 +126,6 @@ func outputVersionJSON() error {
 
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", "  ")
+
 	return encoder.Encode(jsonInfo)
 }

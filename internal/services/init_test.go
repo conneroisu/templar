@@ -61,6 +61,7 @@ func TestInitService_InitProject(t *testing.T) {
 
 			if tt.wantErr {
 				assert.Error(t, err)
+
 				return
 			}
 
@@ -93,14 +94,26 @@ func TestInitService_InitProject(t *testing.T) {
 
 			// Check example components based on options
 			if tt.opts.Example || (!tt.opts.Minimal && tt.opts.Template == "") {
-				assert.FileExists(t, filepath.Join(tt.opts.ProjectDir, "components", "button.templ"))
+				assert.FileExists(
+					t,
+					filepath.Join(tt.opts.ProjectDir, "components", "button.templ"),
+				)
 				assert.FileExists(t, filepath.Join(tt.opts.ProjectDir, "components", "card.templ"))
-				assert.FileExists(t, filepath.Join(tt.opts.ProjectDir, "static", "css", "styles.css"))
+				assert.FileExists(
+					t,
+					filepath.Join(tt.opts.ProjectDir, "static", "css", "styles.css"),
+				)
 			}
 
 			if tt.opts.Minimal {
-				assert.NoFileExists(t, filepath.Join(tt.opts.ProjectDir, "components", "button.templ"))
-				assert.NoFileExists(t, filepath.Join(tt.opts.ProjectDir, "components", "card.templ"))
+				assert.NoFileExists(
+					t,
+					filepath.Join(tt.opts.ProjectDir, "components", "button.templ"),
+				)
+				assert.NoFileExists(
+					t,
+					filepath.Join(tt.opts.ProjectDir, "components", "card.templ"),
+				)
 			}
 		})
 	}
@@ -110,10 +123,10 @@ func TestInitService_validateProjectDirectory(t *testing.T) {
 	service := NewInitService()
 
 	tests := []struct {
-		name        string
-		projectDir  string
-		wantErr     bool
-		setupDir    bool
+		name         string
+		projectDir   string
+		wantErr      bool
+		setupDir     bool
 		makeReadOnly bool
 	}{
 		{
@@ -251,6 +264,7 @@ go 1.21
 
 			if tt.wantErr {
 				assert.Error(t, err)
+
 				return
 			}
 

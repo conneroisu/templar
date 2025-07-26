@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/conneroisu/templar/internal/config"
 	"github.com/coder/websocket"
+	"github.com/conneroisu/templar/internal/config"
 )
 
 func TestWebSocketEnhancements_BasicFunctionality(t *testing.T) {
@@ -49,7 +49,7 @@ func TestWebSocketEnhancements_IPTracking(t *testing.T) {
 	}
 
 	// Check if IP limit is working
-	for i := 0; i < enhancements.maxConnectionsPerIP-5; i++ {
+	for i := range enhancements.maxConnectionsPerIP - 5 {
 		if !enhancements.checkIPLimit(testIP) {
 			t.Errorf("IP should be allowed at connection %d", i+5)
 		}
@@ -162,7 +162,7 @@ func TestEnhancedWebSocket_RateLimiting(t *testing.T) {
 
 	// Connect up to limit
 	connections := make([]*websocket.Conn, 2)
-	for i := 0; i < 2; i++ {
+	for i := range 2 {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 
 		conn, resp, err := websocket.Dial(ctx, wsURL, &websocket.DialOptions{
@@ -237,7 +237,7 @@ func TestEnhancedWebSocket_Broadcasting(t *testing.T) {
 	numClients := 3
 	connections := make([]*websocket.Conn, numClients)
 
-	for i := 0; i < numClients; i++ {
+	for i := range numClients {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 
 		conn, resp, err := websocket.Dial(ctx, wsURL, &websocket.DialOptions{
@@ -278,7 +278,7 @@ func TestEnhancedWebSocket_Broadcasting(t *testing.T) {
 	}
 }
 
-// Benchmark the enhanced WebSocket implementation
+// Benchmark the enhanced WebSocket implementation.
 func BenchmarkEnhancedWebSocket_100Clients(b *testing.B) {
 	benchmarkEnhancedWebSocket(b, 100)
 }
@@ -318,7 +318,7 @@ func benchmarkEnhancedWebSocket(b *testing.B, numClients int) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		b.StopTimer()
 
 		// Connect clients
@@ -326,7 +326,7 @@ func benchmarkEnhancedWebSocket(b *testing.B, numClients int) {
 		var wg sync.WaitGroup
 
 		start := time.Now()
-		for j := 0; j < numClients; j++ {
+		for j := range numClients {
 			wg.Add(1)
 			go func(index int) {
 				defer wg.Done()
@@ -344,6 +344,7 @@ func benchmarkEnhancedWebSocket(b *testing.B, numClients int) {
 				}
 				if err != nil {
 					b.Errorf("Failed to connect client %d: %v", index, err)
+
 					return
 				}
 				connections[index] = conn
@@ -356,7 +357,7 @@ func benchmarkEnhancedWebSocket(b *testing.B, numClients int) {
 
 		// Benchmark broadcasting
 		broadcastStart := time.Now()
-		for broadcast := 0; broadcast < 10; broadcast++ {
+		for broadcast := range 10 {
 			message := fmt.Sprintf("Enhanced broadcast %d", broadcast)
 			server.broadcastEnhanced([]byte(message))
 		}
@@ -383,7 +384,7 @@ func benchmarkEnhancedWebSocket(b *testing.B, numClients int) {
 	}
 }
 
-// Performance comparison between original and enhanced implementations
+// Performance comparison between original and enhanced implementations.
 func BenchmarkComparison_OriginalVsEnhanced(b *testing.B) {
 	numClients := 100
 
@@ -422,7 +423,7 @@ func benchmarkOriginalWebSocket(b *testing.B, numClients int) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		b.StopTimer()
 
 		// Connect clients
@@ -430,7 +431,7 @@ func benchmarkOriginalWebSocket(b *testing.B, numClients int) {
 		var wg sync.WaitGroup
 
 		start := time.Now()
-		for j := 0; j < numClients; j++ {
+		for j := range numClients {
 			wg.Add(1)
 			go func(index int) {
 				defer wg.Done()
@@ -448,6 +449,7 @@ func benchmarkOriginalWebSocket(b *testing.B, numClients int) {
 				}
 				if err != nil {
 					b.Errorf("Failed to connect client %d: %v", index, err)
+
 					return
 				}
 				connections[index] = conn
@@ -460,7 +462,7 @@ func benchmarkOriginalWebSocket(b *testing.B, numClients int) {
 
 		// Benchmark original broadcasting via message struct
 		broadcastStart := time.Now()
-		for broadcast := 0; broadcast < 10; broadcast++ {
+		for broadcast := range 10 {
 			msg := UpdateMessage{
 				Type:      "test",
 				Content:   fmt.Sprintf("Original broadcast %d", broadcast),

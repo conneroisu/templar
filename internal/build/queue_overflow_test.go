@@ -11,7 +11,7 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// TestQueueOverflowProtection tests that the pipeline handles queue overflow gracefully
+// TestQueueOverflowProtection tests that the pipeline handles queue overflow gracefully.
 func TestQueueOverflowProtection(t *testing.T) {
 	tempDir := t.TempDir()
 
@@ -36,9 +36,9 @@ func TestQueueOverflowProtection(t *testing.T) {
 	numComponents := 10 // More than queue capacity
 	components := make([]*types.ComponentInfo, numComponents)
 
-	for i := 0; i < numComponents; i++ {
+	for i := range numComponents {
 		componentName := fmt.Sprintf("OverflowComponent_%d", i)
-		filePath := filepath.Join(tempDir, fmt.Sprintf("%s.templ", componentName))
+		filePath := filepath.Join(tempDir, componentName+".templ")
 
 		components[i] = &types.ComponentInfo{
 			FilePath: filePath,
@@ -53,7 +53,7 @@ func TestQueueOverflowProtection(t *testing.T) {
 	// Test regular queue overflow
 	t.Run("RegularQueueOverflow", func(t *testing.T) {
 		// Try to queue more tasks than capacity
-		for i := 0; i < numComponents; i++ {
+		for i := range numComponents {
 			pipeline.Build(components[i])
 		}
 
@@ -83,7 +83,7 @@ func TestQueueOverflowProtection(t *testing.T) {
 		pipeline.metrics.Reset()
 
 		// Try to queue more priority tasks than capacity
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			pipeline.BuildWithPriority(components[i])
 		}
 
@@ -101,10 +101,9 @@ func TestQueueOverflowProtection(t *testing.T) {
 
 		t.Logf("Dropped %d priority tasks with reasons: %v", droppedTasks, dropReasons)
 	})
-
 }
 
-// TestResultsQueueOverflowProtection tests that results queue overflow is handled
+// TestResultsQueueOverflowProtection tests that results queue overflow is handled.
 func TestResultsQueueOverflowProtection(t *testing.T) {
 	tempDir := t.TempDir()
 
@@ -136,9 +135,9 @@ func TestResultsQueueOverflowProtection(t *testing.T) {
 	numComponents := 5
 	components := make([]*types.ComponentInfo, numComponents)
 
-	for i := 0; i < numComponents; i++ {
+	for i := range numComponents {
 		componentName := fmt.Sprintf("ResultsComponent_%d", i)
-		filePath := filepath.Join(tempDir, fmt.Sprintf("%s.templ", componentName))
+		filePath := filepath.Join(tempDir, componentName+".templ")
 
 		// Create actual files for successful compilation
 		content := fmt.Sprintf(`package test
@@ -161,7 +160,7 @@ templ %s() {
 	// Note: We'll rely on metrics instead of capturing output
 
 	// Queue builds rapidly to overwhelm results queue
-	for i := 0; i < numComponents; i++ {
+	for i := range numComponents {
 		pipeline.Build(components[i])
 	}
 
@@ -194,7 +193,7 @@ templ ResponsiveTest() {
 	t.Log("System remained responsive after queue overflow scenarios")
 }
 
-// TestQueueHealthMetrics validates that queue health metrics work correctly
+// TestQueueHealthMetrics validates that queue health metrics work correctly.
 func TestQueueHealthMetrics(t *testing.T) {
 	metrics := NewBuildMetrics()
 

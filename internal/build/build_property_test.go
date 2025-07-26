@@ -138,7 +138,10 @@ templ TestComponent() {
 			}
 			reg.Register(component)
 
-			ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutMs)*time.Millisecond)
+			ctx, cancel := context.WithTimeout(
+				context.Background(),
+				time.Duration(timeoutMs)*time.Millisecond,
+			)
 			defer cancel()
 
 			start := time.Now()

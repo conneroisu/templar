@@ -34,9 +34,10 @@ func TestMetricsCollector(t *testing.T) {
 		postCounter := 0
 		for _, metric := range metrics {
 			if metric.Name == "test_requests" {
-				if metric.Labels["method"] == "GET" {
+				switch metric.Labels["method"] {
+				case "GET":
 					getCounter = int(metric.Value)
-				} else if metric.Labels["method"] == "POST" {
+				case "POST":
 					postCounter = int(metric.Value)
 				}
 			}
@@ -50,7 +51,11 @@ func TestMetricsCollector(t *testing.T) {
 		collector := NewMetricsCollector("test", "")
 
 		collector.Gauge("memory_usage", 100.5, map[string]string{"type": "heap"})
-		collector.Gauge("memory_usage", 150.7, map[string]string{"type": "heap"}) // Should overwrite
+		collector.Gauge(
+			"memory_usage",
+			150.7,
+			map[string]string{"type": "heap"},
+		) // Should overwrite
 
 		metrics := collector.GatherMetrics()
 
@@ -59,6 +64,7 @@ func TestMetricsCollector(t *testing.T) {
 			if metric.Name == "test_memory_usage" && metric.Labels["type"] == "heap" {
 				assert.Equal(t, 150.7, metric.Value)
 				found = true
+
 				break
 			}
 		}
@@ -80,12 +86,13 @@ func TestMetricsCollector(t *testing.T) {
 		sumMetrics := 0
 
 		for _, metric := range metrics {
-			if metric.Name == "test_request_duration_bucket" {
+			switch metric.Name {
+			case "test_request_duration_bucket":
 				bucketMetrics++
-			} else if metric.Name == "test_request_duration_count" {
+			case "test_request_duration_count":
 				countMetrics++
 				assert.Equal(t, 3.0, metric.Value) // 3 observations
-			} else if metric.Name == "test_request_duration_sum" {
+			case "test_request_duration_sum":
 				sumMetrics++
 				assert.Equal(t, 2.6, metric.Value) // 0.1 + 0.5 + 2.0
 			}
@@ -111,6 +118,7 @@ func TestMetricsCollector(t *testing.T) {
 			if metric.Name == "test_operation_duration_seconds_count" {
 				assert.Equal(t, 1.0, metric.Value)
 				found = true
+
 				break
 			}
 		}
@@ -132,9 +140,10 @@ func TestMetricsCollector(t *testing.T) {
 		gaugeFound := false
 
 		for _, metric := range metrics {
-			if metric.Name == "test_context_operation_duration_seconds_count" {
+			switch metric.Name {
+			case "test_context_operation_duration_seconds_count":
 				histogramFound = true
-			} else if metric.Name == "test_context_operation_last_duration_seconds" {
+			case "test_context_operation_last_duration_seconds":
 				gaugeFound = true
 			}
 		}
@@ -197,7 +206,7 @@ func TestHistogram(t *testing.T) {
 		// Simulate concurrent access
 		done := make(chan bool)
 
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			go func(val float64) {
 				hist.Observe(val)
 				done <- true
@@ -205,7 +214,7 @@ func TestHistogram(t *testing.T) {
 		}
 
 		// Wait for all goroutines
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			<-done
 		}
 
@@ -232,12 +241,14 @@ func TestApplicationMetrics(t *testing.T) {
 		builtErrorCount := 0
 
 		for _, metric := range metrics {
-			if metric.Name == "test_components_scanned_total" {
+			switch metric.Name {
+			case "test_components_scanned_total":
 				scannedCount += int(metric.Value)
-			} else if metric.Name == "test_components_built_total" {
-				if metric.Labels["status"] == "success" {
+			case "test_components_built_total":
+				switch metric.Labels["status"] {
+				case "success":
 					builtSuccessCount += int(metric.Value)
-				} else if metric.Labels["status"] == "error" {
+				case "error":
 					builtErrorCount += int(metric.Value)
 				}
 			}
@@ -263,6 +274,7 @@ func TestApplicationMetrics(t *testing.T) {
 			if metric.Name == "test_build_duration_seconds_count" {
 				assert.Equal(t, 2.0, metric.Value)
 				found = true
+
 				break
 			}
 		}
@@ -311,9 +323,10 @@ func TestApplicationMetrics(t *testing.T) {
 		messageCount := 0
 
 		for _, metric := range metrics {
-			if metric.Name == "test_websocket_connections_total" {
+			switch metric.Name {
+			case "test_websocket_connections_total":
 				connectionCount += int(metric.Value)
-			} else if metric.Name == "test_websocket_messages_total" {
+			case "test_websocket_messages_total":
 				messageCount += int(metric.Value)
 			}
 		}
@@ -338,9 +351,10 @@ func TestApplicationMetrics(t *testing.T) {
 
 		for _, metric := range metrics {
 			if metric.Name == "test_cache_operations_total" {
-				if metric.Labels["result"] == "hit" {
+				switch metric.Labels["result"] {
+				case "hit":
 					hits += int(metric.Value)
-				} else if metric.Labels["result"] == "miss" {
+				case "miss":
 					misses += int(metric.Value)
 				}
 			}
@@ -366,9 +380,10 @@ func TestApplicationMetrics(t *testing.T) {
 
 		for _, metric := range metrics {
 			if metric.Name == "test_errors_total" {
-				if metric.Labels["category"] == "build" {
+				switch metric.Labels["category"] {
+				case "build":
 					buildErrors += int(metric.Value)
-				} else if metric.Labels["category"] == "network" {
+				case "network":
 					networkErrors += int(metric.Value)
 				}
 			}
@@ -391,6 +406,7 @@ func TestApplicationMetrics(t *testing.T) {
 			if metric.Name == "test_custom_metric" && metric.Labels["type"] == "custom" {
 				assert.Equal(t, 42.5, metric.Value)
 				found = true
+
 				break
 			}
 		}
@@ -409,6 +425,7 @@ func TestApplicationMetrics(t *testing.T) {
 				assert.Greater(t, metric.Value, 0.0)
 				assert.Equal(t, MetricTypeGauge, metric.Type)
 				found = true
+
 				break
 			}
 		}

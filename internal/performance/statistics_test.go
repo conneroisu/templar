@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-// TestStatisticalValidator_BasicConfidenceCalculation tests basic statistical confidence
+// TestStatisticalValidator_BasicConfidenceCalculation tests basic statistical confidence.
 func TestStatisticalValidator_BasicConfidenceCalculation(t *testing.T) {
 	validator := NewStatisticalValidator(0.95, 3)
 
@@ -139,7 +139,7 @@ func TestStatisticalValidator_BasicConfidenceCalculation(t *testing.T) {
 	}
 }
 
-// TestStatisticalValidator_TDistributionVsNormal tests t-distribution vs normal distribution usage
+// TestStatisticalValidator_TDistributionVsNormal tests t-distribution vs normal distribution usage.
 func TestStatisticalValidator_TDistributionVsNormal(t *testing.T) {
 	validator := NewStatisticalValidator(0.95, 3)
 
@@ -160,7 +160,7 @@ func TestStatisticalValidator_TDistributionVsNormal(t *testing.T) {
 
 	// Large sample should use z-test
 	largeSampleValues := make([]float64, 50)
-	for i := 0; i < 50; i++ {
+	for i := range 50 {
 		largeSampleValues[i] = 100.0 + float64(i%10) // Values from 100-109
 	}
 
@@ -181,12 +181,15 @@ func TestStatisticalValidator_TDistributionVsNormal(t *testing.T) {
 	// Small sample should have lower confidence for same effect size
 	// (due to t-distribution having fatter tails)
 	if smallResult.Confidence >= largeResult.Confidence {
-		t.Errorf("Expected small sample confidence (%.4f) < large sample confidence (%.4f) for same effect size",
-			smallResult.Confidence, largeResult.Confidence)
+		t.Errorf(
+			"Expected small sample confidence (%.4f) < large sample confidence (%.4f) for same effect size",
+			smallResult.Confidence,
+			largeResult.Confidence,
+		)
 	}
 }
 
-// TestStatisticalValidator_MultipleComparisonCorrection tests Bonferroni correction
+// TestStatisticalValidator_MultipleComparisonCorrection tests Bonferroni correction.
 func TestStatisticalValidator_MultipleComparisonCorrection(t *testing.T) {
 	validator := NewStatisticalValidator(0.95, 3)
 
@@ -216,8 +219,11 @@ func TestStatisticalValidator_MultipleComparisonCorrection(t *testing.T) {
 	extremeResult := validator.CalculateStatisticalConfidence(currentValue, baseline, 1000)
 
 	if extremeResult.Confidence >= multipleResult.Confidence {
-		t.Errorf("Expected extreme multiple comparison confidence (%.4f) < moderate multiple (%.4f)",
-			extremeResult.Confidence, multipleResult.Confidence)
+		t.Errorf(
+			"Expected extreme multiple comparison confidence (%.4f) < moderate multiple (%.4f)",
+			extremeResult.Confidence,
+			multipleResult.Confidence,
+		)
 	}
 
 	// Confidence should be bounded [0, 1]
@@ -226,7 +232,7 @@ func TestStatisticalValidator_MultipleComparisonCorrection(t *testing.T) {
 	}
 }
 
-// TestStatisticalValidator_ConfidenceIntervals tests confidence interval calculation
+// TestStatisticalValidator_ConfidenceIntervals tests confidence interval calculation.
 func TestStatisticalValidator_ConfidenceIntervals(t *testing.T) {
 	validator := NewStatisticalValidator(0.95, 3)
 
@@ -268,7 +274,7 @@ func TestStatisticalValidator_ConfidenceIntervals(t *testing.T) {
 	}
 }
 
-// TestStatisticalValidator_EffectSizeClassification tests Cohen's d effect size calculation
+// TestStatisticalValidator_EffectSizeClassification tests Cohen's d effect size calculation.
 func TestStatisticalValidator_EffectSizeClassification(t *testing.T) {
 	validator := NewStatisticalValidator(0.95, 3)
 
@@ -338,7 +344,7 @@ func TestStatisticalValidator_EffectSizeClassification(t *testing.T) {
 	}
 }
 
-// TestStatisticalValidator_EdgeCases tests statistical validator edge cases
+// TestStatisticalValidator_EdgeCases tests statistical validator edge cases.
 func TestStatisticalValidator_EdgeCases(t *testing.T) {
 	validator := NewStatisticalValidator(0.95, 3)
 
@@ -385,20 +391,26 @@ func TestStatisticalValidator_EdgeCases(t *testing.T) {
 
 	sameResult := validator.CalculateStatisticalConfidence(100.0, zeroVarSame, 1)
 	if sameResult.Confidence != 1.0 {
-		t.Errorf("Expected 1.0 confidence for identical value with zero variance, got %.4f", sameResult.Confidence)
+		t.Errorf(
+			"Expected 1.0 confidence for identical value with zero variance, got %.4f",
+			sameResult.Confidence,
+		)
 	}
 
 	// Zero variance baseline with different value
 	diffResult := validator.CalculateStatisticalConfidence(101.0, zeroVarSame, 1)
 	if diffResult.Confidence < 0.99 {
-		t.Errorf("Expected high confidence (>=0.99) for different value with zero variance, got %.4f", diffResult.Confidence)
+		t.Errorf(
+			"Expected high confidence (>=0.99) for different value with zero variance, got %.4f",
+			diffResult.Confidence,
+		)
 	}
 	if diffResult.TestType != "no_baseline_variance" {
 		t.Errorf("Expected 'no_baseline_variance' test type, got '%s'", diffResult.TestType)
 	}
 }
 
-// TestStatisticalValidator_PowerAnalysis tests statistical power calculations
+// TestStatisticalValidator_PowerAnalysis tests statistical power calculations.
 func TestStatisticalValidator_PowerAnalysis(t *testing.T) {
 	validator := NewStatisticalValidator(0.95, 3)
 
@@ -457,7 +469,7 @@ func TestStatisticalValidator_PowerAnalysis(t *testing.T) {
 	}
 }
 
-// TestStatisticalValidator_IntegrationWithDetector tests integration with performance detector
+// TestStatisticalValidator_IntegrationWithDetector tests integration with performance detector.
 func TestStatisticalValidator_IntegrationWithDetector(t *testing.T) {
 	// Create a detector with proper statistical validation
 	detector := NewPerformanceDetector("test_stats_integration", DefaultThresholds())
@@ -494,6 +506,7 @@ func TestStatisticalValidator_IntegrationWithDetector(t *testing.T) {
 	// Should detect the clear regression with high confidence
 	if len(regressions) == 0 {
 		t.Error("Expected to detect regression, but none found")
+
 		return
 	}
 

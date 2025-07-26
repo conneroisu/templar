@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestCheckOriginValidation tests the checkOrigin function with various inputs
+// TestCheckOriginValidation tests the checkOrigin function with various inputs.
 func TestCheckOriginValidation(t *testing.T) {
 	cfg := &config.Config{
 		Server: config.ServerConfig{

@@ -11,7 +11,7 @@ import (
 	"github.com/conneroisu/templar/internal/logging"
 )
 
-// PerformanceMonitor tracks detailed performance metrics
+// PerformanceMonitor tracks detailed performance metrics.
 type PerformanceMonitor struct {
 	metrics *MetricsCollector
 	logger  logging.Logger
@@ -27,7 +27,7 @@ type PerformanceMonitor struct {
 	maxOperations   int
 }
 
-// OperationMetrics tracks performance for a specific operation
+// OperationMetrics tracks performance for a specific operation.
 type OperationMetrics struct {
 	Name        string
 	Count       int64
@@ -44,7 +44,7 @@ type OperationMetrics struct {
 	lastCleanup time.Time
 }
 
-// ResourceMetrics tracks system resource usage
+// ResourceMetrics tracks system resource usage.
 type ResourceMetrics struct {
 	CPUPercent    float64
 	MemoryUsage   uint64
@@ -62,7 +62,7 @@ type ResourceMetrics struct {
 	lastUpdate time.Time
 }
 
-// NetworkStats tracks network-related metrics
+// NetworkStats tracks network-related metrics.
 type NetworkStats struct {
 	ConnectionsActive int
 	ConnectionsTotal  int64
@@ -70,7 +70,7 @@ type NetworkStats struct {
 	BytesReceived     int64
 }
 
-// PerformanceSnapshot represents a point-in-time performance snapshot
+// PerformanceSnapshot represents a point-in-time performance snapshot.
 type PerformanceSnapshot struct {
 	Timestamp  time.Time                   `json:"timestamp"`
 	Operations map[string]OperationSummary `json:"operations"`
@@ -78,7 +78,7 @@ type PerformanceSnapshot struct {
 	SystemInfo SystemPerformanceInfo       `json:"system_info"`
 }
 
-// OperationSummary provides summary statistics for an operation
+// OperationSummary provides summary statistics for an operation.
 type OperationSummary struct {
 	Name           string        `json:"name"`
 	Count          int64         `json:"count"`
@@ -93,7 +93,7 @@ type OperationSummary struct {
 	ActiveRequests int64         `json:"active_requests"`
 }
 
-// ResourceSummary provides system resource summary
+// ResourceSummary provides system resource summary.
 type ResourceSummary struct {
 	CPUPercent      float64       `json:"cpu_percent"`
 	MemoryUsage     uint64        `json:"memory_usage_bytes"`
@@ -106,7 +106,7 @@ type ResourceSummary struct {
 	FileDescPercent float64       `json:"file_desc_percent"`
 }
 
-// SystemPerformanceInfo provides detailed system performance information
+// SystemPerformanceInfo provides detailed system performance information.
 type SystemPerformanceInfo struct {
 	Uptime     time.Duration `json:"uptime"`
 	GoVersion  string        `json:"go_version"`
@@ -116,7 +116,7 @@ type SystemPerformanceInfo struct {
 	CGOEnabled bool          `json:"cgo_enabled"`
 }
 
-// NewPerformanceMonitor creates a new performance monitor
+// NewPerformanceMonitor creates a new performance monitor.
 func NewPerformanceMonitor(metrics *MetricsCollector, logger logging.Logger) *PerformanceMonitor {
 	return &PerformanceMonitor{
 		metrics:          metrics,
@@ -129,7 +129,7 @@ func NewPerformanceMonitor(metrics *MetricsCollector, logger logging.Logger) *Pe
 	}
 }
 
-// TrackOperation tracks the performance of an operation
+// TrackOperation tracks the performance of an operation.
 func (pm *PerformanceMonitor) TrackOperation(name string, fn func() error) error {
 	if !pm.trackingEnabled {
 		return fn()
@@ -151,8 +151,12 @@ func (pm *PerformanceMonitor) TrackOperation(name string, fn func() error) error
 	return err
 }
 
-// TrackOperationWithContext tracks operation with context
-func (pm *PerformanceMonitor) TrackOperationWithContext(ctx context.Context, name string, fn func(context.Context) error) error {
+// TrackOperationWithContext tracks operation with context.
+func (pm *PerformanceMonitor) TrackOperationWithContext(
+	ctx context.Context,
+	name string,
+	fn func(context.Context) error,
+) error {
 	if !pm.trackingEnabled {
 		return fn(ctx)
 	}
@@ -181,7 +185,7 @@ func (pm *PerformanceMonitor) TrackOperationWithContext(ctx context.Context, nam
 	return err
 }
 
-// recordOperation records performance metrics for an operation
+// recordOperation records performance metrics for an operation.
 func (pm *PerformanceMonitor) recordOperation(name string, duration time.Duration, isError bool) {
 	pm.mutex.Lock()
 	defer pm.mutex.Unlock()
@@ -242,7 +246,7 @@ func (pm *PerformanceMonitor) recordOperation(name string, duration time.Duratio
 	}
 }
 
-// incrementActive increments the active operation count
+// incrementActive increments the active operation count.
 func (pm *PerformanceMonitor) incrementActive(name string) {
 	pm.mutex.Lock()
 	defer pm.mutex.Unlock()
@@ -252,7 +256,7 @@ func (pm *PerformanceMonitor) incrementActive(name string) {
 	}
 }
 
-// decrementActive decrements the active operation count
+// decrementActive decrements the active operation count.
 func (pm *PerformanceMonitor) decrementActive(name string) {
 	pm.mutex.Lock()
 	defer pm.mutex.Unlock()
@@ -265,7 +269,7 @@ func (pm *PerformanceMonitor) decrementActive(name string) {
 	}
 }
 
-// cleanupOperation cleans up old operation data
+// cleanupOperation cleans up old operation data.
 func (pm *PerformanceMonitor) cleanupOperation(op *OperationMetrics) {
 	// Keep only recent samples for percentile calculation
 	if len(op.durations) > 100 {
@@ -277,7 +281,7 @@ func (pm *PerformanceMonitor) cleanupOperation(op *OperationMetrics) {
 	op.lastCleanup = time.Now()
 }
 
-// UpdateResourceMetrics updates system resource metrics
+// UpdateResourceMetrics updates system resource metrics.
 func (pm *PerformanceMonitor) UpdateResourceMetrics() {
 	pm.mutex.Lock()
 	defer pm.mutex.Unlock()
@@ -313,7 +317,7 @@ func (pm *PerformanceMonitor) UpdateResourceMetrics() {
 	}
 }
 
-// GetPerformanceSnapshot returns a current performance snapshot
+// GetPerformanceSnapshot returns a current performance snapshot.
 func (pm *PerformanceMonitor) GetPerformanceSnapshot() PerformanceSnapshot {
 	pm.mutex.RLock()
 	defer pm.mutex.RUnlock()
@@ -336,7 +340,7 @@ func (pm *PerformanceMonitor) GetPerformanceSnapshot() PerformanceSnapshot {
 	return snapshot
 }
 
-// buildOperationSummary builds summary statistics for an operation
+// buildOperationSummary builds summary statistics for an operation.
 func (pm *PerformanceMonitor) buildOperationSummary(op *OperationMetrics) OperationSummary {
 	summary := OperationSummary{
 		Name:           op.Name,
@@ -381,7 +385,7 @@ func (pm *PerformanceMonitor) buildOperationSummary(op *OperationMetrics) Operat
 	return summary
 }
 
-// buildResourceSummary builds resource usage summary
+// buildResourceSummary builds resource usage summary.
 func (pm *PerformanceMonitor) buildResourceSummary() ResourceSummary {
 	summary := ResourceSummary{
 		MemoryUsage:    pm.resourceMetrics.MemoryUsage,
@@ -408,13 +412,17 @@ func (pm *PerformanceMonitor) buildResourceSummary() ResourceSummary {
 
 	// Calculate file descriptor percentage
 	if pm.resourceMetrics.MaxFiles > 0 {
-		summary.FileDescPercent = float64(pm.resourceMetrics.OpenFiles) / float64(pm.resourceMetrics.MaxFiles) * 100
+		summary.FileDescPercent = float64(
+			pm.resourceMetrics.OpenFiles,
+		) / float64(
+			pm.resourceMetrics.MaxFiles,
+		) * 100
 	}
 
 	return summary
 }
 
-// getSystemInfo returns system performance information
+// getSystemInfo returns system performance information.
 func (pm *PerformanceMonitor) getSystemInfo() SystemPerformanceInfo {
 	return SystemPerformanceInfo{
 		Uptime:     time.Since(startTime),
@@ -426,7 +434,7 @@ func (pm *PerformanceMonitor) getSystemInfo() SystemPerformanceInfo {
 	}
 }
 
-// GetTopOperations returns the top N operations by various metrics
+// GetTopOperations returns the top N operations by various metrics.
 func (pm *PerformanceMonitor) GetTopOperations(n int, sortBy string) []OperationSummary {
 	snapshot := pm.GetPerformanceSnapshot()
 
@@ -467,7 +475,7 @@ func (pm *PerformanceMonitor) GetTopOperations(n int, sortBy string) []Operation
 	return operations[:n]
 }
 
-// ResetMetrics resets all performance metrics
+// ResetMetrics resets all performance metrics.
 func (pm *PerformanceMonitor) ResetMetrics() {
 	pm.mutex.Lock()
 	defer pm.mutex.Unlock()
@@ -478,7 +486,7 @@ func (pm *PerformanceMonitor) ResetMetrics() {
 	pm.logger.Info(context.Background(), "Performance metrics reset")
 }
 
-// SetSampleRate sets the sampling rate for performance tracking
+// SetSampleRate sets the sampling rate for performance tracking.
 func (pm *PerformanceMonitor) SetSampleRate(rate float64) {
 	pm.mutex.Lock()
 	defer pm.mutex.Unlock()
@@ -494,14 +502,15 @@ func (pm *PerformanceMonitor) SetSampleRate(rate float64) {
 	pm.logger.Info(context.Background(), "Performance sampling rate updated", "rate", rate)
 }
 
-// IsEnabled returns whether performance tracking is enabled
+// IsEnabled returns whether performance tracking is enabled.
 func (pm *PerformanceMonitor) IsEnabled() bool {
 	pm.mutex.RLock()
 	defer pm.mutex.RUnlock()
+
 	return pm.trackingEnabled
 }
 
-// SetEnabled enables or disables performance tracking
+// SetEnabled enables or disables performance tracking.
 func (pm *PerformanceMonitor) SetEnabled(enabled bool) {
 	pm.mutex.Lock()
 	defer pm.mutex.Unlock()
@@ -510,7 +519,7 @@ func (pm *PerformanceMonitor) SetEnabled(enabled bool) {
 	pm.logger.Info(context.Background(), "Performance tracking updated", "enabled", enabled)
 }
 
-// StartBackgroundUpdates starts background resource metric updates
+// StartBackgroundUpdates starts background resource metric updates.
 func (pm *PerformanceMonitor) StartBackgroundUpdates(interval time.Duration) {
 	go func() {
 		ticker := time.NewTicker(interval)
@@ -521,19 +530,29 @@ func (pm *PerformanceMonitor) StartBackgroundUpdates(interval time.Duration) {
 		}
 	}()
 
-	pm.logger.Info(context.Background(), "Background performance updates started", "interval", interval)
+	pm.logger.Info(
+		context.Background(),
+		"Background performance updates started",
+		"interval",
+		interval,
+	)
 }
 
-// PerformanceMiddleware creates HTTP middleware for performance tracking
+// PerformanceMiddleware creates HTTP middleware for performance tracking.
 func (pm *PerformanceMonitor) PerformanceMiddleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			operationName := fmt.Sprintf("http_%s_%s", r.Method, r.URL.Path)
 
-			err := pm.TrackOperationWithContext(r.Context(), operationName, func(ctx context.Context) error {
-				next.ServeHTTP(w, r.WithContext(ctx))
-				return nil
-			})
+			err := pm.TrackOperationWithContext(
+				r.Context(),
+				operationName,
+				func(ctx context.Context) error {
+					next.ServeHTTP(w, r.WithContext(ctx))
+
+					return nil
+				},
+			)
 
 			if err != nil {
 				pm.logger.Error(r.Context(), err, "HTTP request performance tracking failed")

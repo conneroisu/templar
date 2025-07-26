@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -38,7 +39,7 @@ var (
 	auditGuidanceOnly    bool
 )
 
-// auditCmd represents the audit command
+// auditCmd represents the audit command.
 var auditCmd = &cobra.Command{
 	Use:   "audit [component-name]",
 	Short: "Run accessibility audit on components",
@@ -76,21 +77,34 @@ Examples:
 func init() {
 	rootCmd.AddCommand(auditCmd)
 
-	auditCmd.Flags().StringVarP(&auditComponentName, "component", "c", "", "Specific component to audit (if not provided as argument)")
-	auditCmd.Flags().StringVarP(&auditWCAGLevel, "wcag-level", "w", "AA", "WCAG compliance level to test against (A, AA, AAA)")
-	auditCmd.Flags().StringVarP(&auditOutputFormat, "output", "o", "console", "Output format (console, json, html, markdown)")
-	auditCmd.Flags().StringVarP(&auditOutputFile, "output-file", "f", "", "Output file path (stdout if not specified)")
-	auditCmd.Flags().BoolVar(&auditIncludeHTML, "include-html", false, "Include HTML snapshot in report")
-	auditCmd.Flags().BoolVar(&auditFixableOnly, "fixable-only", false, "Show only issues that can be automatically fixed")
-	auditCmd.Flags().StringVarP(&auditSeverityFilter, "severity", "s", "", "Filter by severity level (error, warning, info)")
+	auditCmd.Flags().
+		StringVarP(&auditComponentName, "component", "c", "", "Specific component to audit (if not provided as argument)")
+	auditCmd.Flags().
+		StringVarP(&auditWCAGLevel, "wcag-level", "w", "AA", "WCAG compliance level to test against (A, AA, AAA)")
+	auditCmd.Flags().
+		StringVarP(&auditOutputFormat, "output", "o", "console", "Output format (console, json, html, markdown)")
+	auditCmd.Flags().
+		StringVarP(&auditOutputFile, "output-file", "f", "", "Output file path (stdout if not specified)")
+	auditCmd.Flags().
+		BoolVar(&auditIncludeHTML, "include-html", false, "Include HTML snapshot in report")
+	auditCmd.Flags().
+		BoolVar(&auditFixableOnly, "fixable-only", false, "Show only issues that can be automatically fixed")
+	auditCmd.Flags().
+		StringVarP(&auditSeverityFilter, "severity", "s", "", "Filter by severity level (error, warning, info)")
 	auditCmd.Flags().BoolVarP(&auditQuiet, "quiet", "q", false, "Suppress non-error output")
 	auditCmd.Flags().BoolVarP(&auditVerbose, "verbose", "v", false, "Enable verbose output")
-	auditCmd.Flags().IntVarP(&auditMaxViolations, "max-violations", "m", 0, "Maximum number of violations to report (0 = unlimited)")
-	auditCmd.Flags().BoolVar(&auditGenerateReport, "generate-report", false, "Generate detailed accessibility report")
-	auditCmd.Flags().BoolVar(&auditShowSuggestions, "show-suggestions", true, "Include suggestions in output")
-	auditCmd.Flags().BoolVar(&auditAutoFix, "auto-fix", false, "Attempt to automatically fix issues where possible")
-	auditCmd.Flags().BoolVar(&auditShowGuidance, "show-guidance", false, "Include detailed accessibility guidance")
-	auditCmd.Flags().BoolVar(&auditGuidanceOnly, "guidance-only", false, "Show only guidance without running audit")
+	auditCmd.Flags().
+		IntVarP(&auditMaxViolations, "max-violations", "m", 0, "Maximum number of violations to report (0 = unlimited)")
+	auditCmd.Flags().
+		BoolVar(&auditGenerateReport, "generate-report", false, "Generate detailed accessibility report")
+	auditCmd.Flags().
+		BoolVar(&auditShowSuggestions, "show-suggestions", true, "Include suggestions in output")
+	auditCmd.Flags().
+		BoolVar(&auditAutoFix, "auto-fix", false, "Attempt to automatically fix issues where possible")
+	auditCmd.Flags().
+		BoolVar(&auditShowGuidance, "show-guidance", false, "Include detailed accessibility guidance")
+	auditCmd.Flags().
+		BoolVar(&auditGuidanceOnly, "guidance-only", false, "Show only guidance without running audit")
 }
 
 func runAuditCommand(cmd *cobra.Command, args []string) error {
@@ -110,7 +124,7 @@ func runAuditCommand(cmd *cobra.Command, args []string) error {
 	// Initialize logging
 	loggerConfig := &logging.LoggerConfig{
 		Level:     logging.LevelInfo,
-		Format:    "text", 
+		Format:    "text",
 		Component: "audit",
 		Output:    os.Stdout,
 	}
@@ -146,10 +160,10 @@ func runAuditCommand(cmd *cobra.Command, args []string) error {
 
 	// Initialize accessibility tester
 	testerConfig := accessibility.TesterConfig{
-		DefaultWCAGLevel:    parseWCAGLevel(auditWCAGLevel),
-		DefaultTimeout:      30 * time.Second,
-		EnableRealTimeWarn:  false,
-		MaxConcurrentTests:  1,
+		DefaultWCAGLevel:   parseWCAGLevel(auditWCAGLevel),
+		DefaultTimeout:     30 * time.Second,
+		EnableRealTimeWarn: false,
+		MaxConcurrentTests: 1,
 	}
 
 	tester := accessibility.NewComponentAccessibilityTester(
@@ -167,7 +181,12 @@ func runAuditCommand(cmd *cobra.Command, args []string) error {
 	}
 }
 
-func runSingleComponentAudit(ctx context.Context, tester accessibility.AccessibilityTester, componentName string, logger logging.Logger) error {
+func runSingleComponentAudit(
+	ctx context.Context,
+	tester accessibility.AccessibilityTester,
+	componentName string,
+	logger logging.Logger,
+) error {
 	if !auditQuiet {
 		logger.Info(ctx, "Running accessibility audit", "component", componentName)
 	}
@@ -195,9 +214,14 @@ func runSingleComponentAudit(ctx context.Context, tester accessibility.Accessibi
 	return outputAuditResults([]*accessibility.AccessibilityReport{report}, logger)
 }
 
-func runAllComponentsAudit(ctx context.Context, tester accessibility.AccessibilityTester, registry interfaces.ComponentRegistry, logger logging.Logger) error {
+func runAllComponentsAudit(
+	ctx context.Context,
+	tester accessibility.AccessibilityTester,
+	registry interfaces.ComponentRegistry,
+	logger logging.Logger,
+) error {
 	components := registry.GetAll()
-	
+
 	if !auditQuiet {
 		logger.Info(ctx, "Running accessibility audit on all components", "count", len(components))
 	}
@@ -208,7 +232,7 @@ func runAllComponentsAudit(ctx context.Context, tester accessibility.Accessibili
 
 	for i, component := range components {
 		if auditVerbose {
-			logger.Info(ctx, "Auditing component", 
+			logger.Info(ctx, "Auditing component",
 				"component", component.Name,
 				"progress", fmt.Sprintf("%d/%d", i+1, len(components)))
 		}
@@ -217,12 +241,13 @@ func runAllComponentsAudit(ctx context.Context, tester accessibility.Accessibili
 		report, err := tester.TestComponent(ctx, component.Name, nil)
 		if err != nil {
 			logger.Warn(ctx, err, "Failed to audit component", "component", component.Name)
+
 			continue
 		}
 
 		// Apply filters
 		report = applyReportFilters(report)
-		
+
 		// Apply auto-fixes if requested
 		if auditAutoFix && len(report.Violations) > 0 {
 			fixedCount, err := applyAutoFixes(ctx, tester, report)
@@ -241,7 +266,7 @@ func runAllComponentsAudit(ctx context.Context, tester accessibility.Accessibili
 		logger.Info(ctx, "Audit completed",
 			"components", len(reports),
 			"total_violations", totalViolations)
-		
+
 		if auditAutoFix && totalAutoFixes > 0 {
 			logger.Info(ctx, "Applied automatic fixes", "total_fixes", totalAutoFixes)
 		}
@@ -251,7 +276,9 @@ func runAllComponentsAudit(ctx context.Context, tester accessibility.Accessibili
 	return outputAuditResults(reports, logger)
 }
 
-func applyReportFilters(report *accessibility.AccessibilityReport) *accessibility.AccessibilityReport {
+func applyReportFilters(
+	report *accessibility.AccessibilityReport,
+) *accessibility.AccessibilityReport {
 	filteredViolations := []accessibility.AccessibilityViolation{}
 
 	for _, violation := range report.Violations {
@@ -278,14 +305,18 @@ func applyReportFilters(report *accessibility.AccessibilityReport) *accessibilit
 
 	// Update report
 	report.Violations = filteredViolations
-	
+
 	// Recalculate summary
 	report.Summary = calculateAccessibilitySummary(filteredViolations, report.Passed)
 
 	return report
 }
 
-func applyAutoFixes(ctx context.Context, tester accessibility.AccessibilityTester, report *accessibility.AccessibilityReport) (int, error) {
+func applyAutoFixes(
+	ctx context.Context,
+	tester accessibility.AccessibilityTester,
+	report *accessibility.AccessibilityReport,
+) (int, error) {
 	if componentTester, ok := tester.(*accessibility.ComponentAccessibilityTester); ok {
 		autoFixableViolations := []accessibility.AccessibilityViolation{}
 		for _, violation := range report.Violations {
@@ -307,7 +338,7 @@ func applyAutoFixes(ctx context.Context, tester accessibility.AccessibilityTeste
 		return len(autoFixableViolations), nil
 	}
 
-	return 0, fmt.Errorf("auto-fix not supported for this tester type")
+	return 0, errors.New("auto-fix not supported for this tester type")
 }
 
 func outputAuditResults(reports []*accessibility.AccessibilityReport, logger logging.Logger) error {
@@ -341,20 +372,23 @@ func outputJSON(reports []*accessibility.AccessibilityReport) error {
 
 func outputHTML(reports []*accessibility.AccessibilityReport) error {
 	html := generateHTMLReport(reports)
+
 	return writeOutput(html)
 }
 
 func outputMarkdown(reports []*accessibility.AccessibilityReport) error {
 	markdown := generateMarkdownReport(reports)
+
 	return writeOutput(markdown)
 }
 
 func outputConsole(reports []*accessibility.AccessibilityReport, logger logging.Logger) error {
 	ctx := context.Background()
 	_ = ctx // TODO: Use context in console output if needed
-	
+
 	if len(reports) == 0 {
 		fmt.Println("No components audited.")
+
 		return nil
 	}
 
@@ -368,11 +402,11 @@ func outputConsole(reports []*accessibility.AccessibilityReport, logger logging.
 	for _, report := range reports {
 		totalViolations += len(report.Violations)
 		overallScoreSum += report.Summary.OverallScore
-		
+
 		if len(report.Violations) > 0 {
 			componentsWithIssues++
 		}
-		
+
 		for _, violation := range report.Violations {
 			if violation.Impact == accessibility.ImpactCritical {
 				criticalViolations++
@@ -390,7 +424,7 @@ func outputConsole(reports []*accessibility.AccessibilityReport, logger logging.
 	fmt.Printf("Total violations:       %d\n", totalViolations)
 	fmt.Printf("Critical violations:    %d\n", criticalViolations)
 	fmt.Printf("Average score:          %.1f/100\n", averageScore)
-	
+
 	// Overall status
 	var status string
 	var statusIcon string
@@ -404,7 +438,7 @@ func outputConsole(reports []*accessibility.AccessibilityReport, logger logging.
 		status = "ALL CHECKS PASSED"
 		statusIcon = "✅"
 	}
-	
+
 	fmt.Printf("Status:                 %s %s\n\n", statusIcon, status)
 
 	// Detailed component results
@@ -416,7 +450,7 @@ func outputConsole(reports []*accessibility.AccessibilityReport, logger logging.
 		// Show only components with issues
 		fmt.Printf("Components with accessibility issues:\n")
 		fmt.Printf("───────────────────────────────────\n\n")
-		
+
 		for _, report := range reports {
 			if len(report.Violations) > 0 {
 				outputComponentSummary(report)
@@ -428,7 +462,7 @@ func outputConsole(reports []*accessibility.AccessibilityReport, logger logging.
 	if auditShowSuggestions && totalViolations > 0 {
 		fmt.Printf("\n💡 Top Suggestions\n")
 		fmt.Printf("──────────────────\n\n")
-		
+
 		suggestions := aggregateSuggestions(reports)
 		for i, suggestion := range suggestions {
 			if i >= 5 { // Limit to top 5
@@ -441,7 +475,7 @@ func outputConsole(reports []*accessibility.AccessibilityReport, logger logging.
 			fmt.Printf("\n")
 		}
 	}
-	
+
 	// Show detailed guidance if enabled and there are violations
 	if totalViolations > 0 {
 		allViolations := []accessibility.AccessibilityViolation{}
@@ -461,13 +495,14 @@ func outputComponentDetails(report *accessibility.AccessibilityReport) {
 	}
 
 	scoreColor := getScoreColor(report.Summary.OverallScore)
-	
-	fmt.Printf("📦 %s (Score: %s%.1f/100%s)\n", 
+
+	fmt.Printf("📦 %s (Score: %s%.1f/100%s)\n",
 		componentName, scoreColor, report.Summary.OverallScore, "\033[0m")
 	fmt.Printf("   File: %s\n", report.ComponentFile)
-	
+
 	if len(report.Violations) == 0 {
 		fmt.Printf("   ✅ No accessibility issues found\n\n")
+
 		return
 	}
 
@@ -494,14 +529,14 @@ func outputComponentDetails(report *accessibility.AccessibilityReport) {
 			outputViolation(violation, "     ")
 		}
 	}
-	
+
 	if len(warningViolations) > 0 {
 		fmt.Printf("   ⚠️  Warnings (%d):\n", len(warningViolations))
 		for _, violation := range warningViolations {
 			outputViolation(violation, "     ")
 		}
 	}
-	
+
 	if len(infoViolations) > 0 && auditVerbose {
 		fmt.Printf("   ℹ️  Info (%d):\n", len(infoViolations))
 		for _, violation := range infoViolations {
@@ -528,17 +563,25 @@ func outputComponentSummary(report *accessibility.AccessibilityReport) {
 			errorCount++
 		case accessibility.SeverityWarning:
 			warningCount++
+		case accessibility.SeverityInfo:
+			// Info violations are informational only
 		}
-		
+
 		if violation.Impact == accessibility.ImpactCritical {
 			criticalCount++
 		}
 	}
 
 	scoreColor := getScoreColor(report.Summary.OverallScore)
-	
-	fmt.Printf("📦 %s %s(%.1f/100)%s\n", componentName, scoreColor, report.Summary.OverallScore, "\033[0m")
-	
+
+	fmt.Printf(
+		"📦 %s %s(%.1f/100)%s\n",
+		componentName,
+		scoreColor,
+		report.Summary.OverallScore,
+		"\033[0m",
+	)
+
 	if criticalCount > 0 {
 		fmt.Printf("   🚨 %d critical issue(s)\n", criticalCount)
 	}
@@ -548,30 +591,30 @@ func outputComponentSummary(report *accessibility.AccessibilityReport) {
 	if warningCount > 0 {
 		fmt.Printf("   ⚠️  %d warning(s)\n", warningCount)
 	}
-	
+
 	fmt.Printf("\n")
 }
 
 func outputViolation(violation accessibility.AccessibilityViolation, indent string) {
 	fmt.Printf("%s• %s\n", indent, violation.Message)
-	fmt.Printf("%s  Rule: %s | WCAG: %s %s\n", 
+	fmt.Printf("%s  Rule: %s | WCAG: %s %s\n",
 		indent, violation.Rule, violation.WCAG.Level, violation.WCAG.Criteria)
-	
+
 	if violation.Element != "" {
 		fmt.Printf("%s  Element: <%s>\n", indent, violation.Element)
 	}
-	
+
 	if auditShowSuggestions && len(violation.Suggestions) > 0 {
 		fmt.Printf("%s  💡 %s\n", indent, violation.Suggestions[0].Title)
 		if violation.Suggestions[0].Code != "" && auditVerbose {
 			fmt.Printf("%s     Code: %s\n", indent, violation.Suggestions[0].Code)
 		}
 	}
-	
+
 	if violation.CanAutoFix {
 		fmt.Printf("%s  🔧 Auto-fixable\n", indent)
 	}
-	
+
 	fmt.Printf("\n")
 }
 
@@ -582,22 +625,24 @@ func writeOutput(content string) error {
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			return fmt.Errorf("failed to create output directory: %w", err)
 		}
-		
+
 		// Write to file
 		if err := os.WriteFile(auditOutputFile, []byte(content), 0644); err != nil {
 			return fmt.Errorf("failed to write output file: %w", err)
 		}
-		
+
 		fmt.Printf("Report written to: %s\n", auditOutputFile)
+
 		return nil
 	}
-	
+
 	// Write to stdout
 	fmt.Print(content)
+
 	return nil
 }
 
-// Helper functions
+// Helper functions.
 func parseWCAGLevel(level string) accessibility.WCAGLevel {
 	switch strings.ToUpper(level) {
 	case "A":
@@ -634,24 +679,27 @@ func getScoreColor(score float64) string {
 	}
 }
 
-func aggregateSuggestions(reports []*accessibility.AccessibilityReport) []accessibility.AccessibilitySuggestion {
+func aggregateSuggestions(
+	reports []*accessibility.AccessibilityReport,
+) []accessibility.AccessibilitySuggestion {
 	suggestionMap := make(map[string]*accessibility.AccessibilitySuggestion)
 	suggestionCounts := make(map[string]int)
-	
+
 	for _, report := range reports {
 		for _, violation := range report.Violations {
 			for _, suggestion := range violation.Suggestions {
 				key := fmt.Sprintf("%s_%s", suggestion.Type, suggestion.Title)
 				suggestionCounts[key]++
-				
-				if existing, exists := suggestionMap[key]; !exists || suggestion.Priority < existing.Priority {
+
+				if existing, exists := suggestionMap[key]; !exists ||
+					suggestion.Priority < existing.Priority {
 					suggestionCopy := suggestion
 					suggestionMap[key] = &suggestionCopy
 				}
 			}
 		}
 	}
-	
+
 	// Convert to slice and sort by frequency and priority
 	suggestions := []accessibility.AccessibilitySuggestion{}
 	for key, suggestion := range suggestionMap {
@@ -659,23 +707,26 @@ func aggregateSuggestions(reports []*accessibility.AccessibilityReport) []access
 		suggestion.Priority -= suggestionCounts[key] // Lower number = higher priority
 		suggestions = append(suggestions, *suggestion)
 	}
-	
+
 	// Sort by priority
 	sort.Slice(suggestions, func(i, j int) bool {
 		return suggestions[i].Priority < suggestions[j].Priority
 	})
-	
+
 	return suggestions
 }
 
-func calculateAccessibilitySummary(violations []accessibility.AccessibilityViolation, passed []accessibility.AccessibilityRule) accessibility.AccessibilitySummary {
+func calculateAccessibilitySummary(
+	violations []accessibility.AccessibilityViolation,
+	passed []accessibility.AccessibilityRule,
+) accessibility.AccessibilitySummary {
 	summary := accessibility.AccessibilitySummary{
 		TotalRules:      len(passed) + len(violations),
 		PassedRules:     len(passed),
 		FailedRules:     len(violations),
 		TotalViolations: len(violations),
 	}
-	
+
 	for _, violation := range violations {
 		switch violation.Severity {
 		case accessibility.SeverityError:
@@ -685,7 +736,7 @@ func calculateAccessibilitySummary(violations []accessibility.AccessibilityViola
 		case accessibility.SeverityInfo:
 			summary.InfoViolations++
 		}
-		
+
 		switch violation.Impact {
 		case accessibility.ImpactCritical:
 			summary.CriticalImpact++
@@ -697,12 +748,12 @@ func calculateAccessibilitySummary(violations []accessibility.AccessibilityViola
 			summary.MinorImpact++
 		}
 	}
-	
+
 	// Calculate overall score
 	if summary.TotalRules > 0 {
 		summary.OverallScore = float64(summary.PassedRules) / float64(summary.TotalRules) * 100
 	}
-	
+
 	return summary
 }
 
@@ -747,13 +798,16 @@ func generateHTMLReport(reports []*accessibility.AccessibilityReport) string {
 }
 
 func generateMarkdownReport(reports []*accessibility.AccessibilityReport) string {
-	md := fmt.Sprintf("# Accessibility Audit Report\n\nGenerated on: %s\n\n", time.Now().Format("2006-01-02 15:04:05"))
-	
+	md := fmt.Sprintf(
+		"# Accessibility Audit Report\n\nGenerated on: %s\n\n",
+		time.Now().Format("2006-01-02 15:04:05"),
+	)
+
 	for _, report := range reports {
 		md += fmt.Sprintf("## %s\n\n", report.ComponentName)
 		md += fmt.Sprintf("- **Score**: %.1f/100\n", report.Summary.OverallScore)
 		md += fmt.Sprintf("- **Violations**: %d\n\n", len(report.Violations))
-		
+
 		if len(report.Violations) > 0 {
 			md += "### Issues Found\n\n"
 			for _, violation := range report.Violations {
@@ -762,7 +816,7 @@ func generateMarkdownReport(reports []*accessibility.AccessibilityReport) string
 			md += "\n"
 		}
 	}
-	
+
 	return md
 }
 
@@ -772,22 +826,22 @@ func getComponentCompletions(toComplete string) []string {
 	return []string{}
 }
 
-// showGuidanceOnly displays accessibility guidance without running an audit
+// showGuidanceOnly displays accessibility guidance without running an audit.
 func showGuidanceOnly(componentName string) error {
 	guide := accessibility.NewAccessibilityGuide()
-	
+
 	if componentName != "" {
 		// Show component-specific guidance
 		fmt.Printf("🎯 Accessibility Guidance for %s Component\n", componentName)
 		fmt.Printf("═══════════════════════════════════════════════\n\n")
-		
+
 		guidanceText := guide.GetComponentGuidanceText(componentName)
 		fmt.Print(guidanceText)
-		
+
 		// Also show general guidance applicable to all components
 		fmt.Printf("\n📋 General Accessibility Guidelines\n")
 		fmt.Printf("──────────────────────────────────────────────\n\n")
-		
+
 		quickStart := guide.GetQuickStartGuide()
 		for i, item := range quickStart {
 			if i >= 3 { // Limit to top 3 for brevity
@@ -796,17 +850,16 @@ func showGuidanceOnly(componentName string) error {
 			fmt.Printf("%d. %s\n", i+1, item.Title)
 			fmt.Printf("   %s\n\n", item.Description)
 		}
-		
 	} else {
 		// Show general accessibility guidance
 		fmt.Printf("🌟 Accessibility Quick Start Guide\n")
 		fmt.Printf("═══════════════════════════════════════\n\n")
-		
+
 		quickStart := guide.GetQuickStartGuide()
 		for i, item := range quickStart {
 			fmt.Printf("%d. %s\n", i+1, item.Title)
 			fmt.Printf("   %s\n", item.Description)
-			
+
 			if len(item.Examples) > 0 {
 				example := item.Examples[0]
 				if example.BadCode != "" {
@@ -818,10 +871,10 @@ func showGuidanceOnly(componentName string) error {
 			}
 			fmt.Printf("\n")
 		}
-		
+
 		fmt.Printf("💡 Advanced Guidelines\n")
 		fmt.Printf("─────────────────────────\n\n")
-		
+
 		bestPractices := guide.GetBestPracticesGuide()
 		for i, item := range bestPractices {
 			if i >= 3 { // Limit for readability
@@ -830,51 +883,51 @@ func showGuidanceOnly(componentName string) error {
 			fmt.Printf("• %s\n", item.Title)
 			fmt.Printf("  %s\n\n", item.Description)
 		}
-		
+
 		fmt.Printf("📚 Additional Resources\n")
 		fmt.Printf("──────────────────────────\n")
 		fmt.Printf("• WCAG Quick Reference: https://www.w3.org/WAI/WCAG21/quickref/\n")
 		fmt.Printf("• WebAIM Guidelines: https://webaim.org/\n")
 		fmt.Printf("• A11y Project: https://www.a11yproject.com/\n")
 		fmt.Printf("• MDN Accessibility: https://developer.mozilla.org/en-US/docs/Web/Accessibility\n\n")
-		
+
 		fmt.Printf("🔧 To audit your components, run:\n")
 		fmt.Printf("   templar audit              # Audit all components\n")
 		fmt.Printf("   templar audit Button       # Audit specific component\n")
 		fmt.Printf("   templar audit --help        # See all options\n")
 	}
-	
+
 	return nil
 }
 
-// showGuidanceForViolations displays guidance for specific accessibility violations
+// showGuidanceForViolations displays guidance for specific accessibility violations.
 func showGuidanceForViolations(violations []accessibility.AccessibilityViolation) {
 	if !auditShowGuidance || len(violations) == 0 {
 		return
 	}
-	
+
 	fmt.Printf("\n🎓 Accessibility Guidance\n")
 	fmt.Printf("═════════════════════════\n\n")
-	
+
 	guide := accessibility.NewAccessibilityGuide()
-	
+
 	// Group violations by rule to avoid duplicate guidance
 	ruleMap := make(map[string]bool)
 	uniqueRules := []string{}
-	
+
 	for _, violation := range violations {
 		if !ruleMap[violation.Rule] {
 			ruleMap[violation.Rule] = true
 			uniqueRules = append(uniqueRules, violation.Rule)
 		}
 	}
-	
+
 	// Show guidance for each unique rule
 	for i, rule := range uniqueRules {
 		if i > 0 {
 			fmt.Print("\n" + strings.Repeat("─", 60) + "\n\n")
 		}
-		
+
 		guidanceText := guide.GetGuidanceText(rule)
 		fmt.Print(guidanceText)
 	}

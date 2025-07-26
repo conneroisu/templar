@@ -2,7 +2,7 @@ package server
 
 import (
 	"context"
-	"fmt"
+	stderrors "errors"
 	"testing"
 	"time"
 
@@ -14,7 +14,7 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// MockComponentRegistry provides mock component registry for testing
+// MockComponentRegistry provides mock component registry for testing.
 type MockComponentRegistry struct {
 	components []*types.ComponentInfo
 	count      int
@@ -32,6 +32,7 @@ func (m *MockComponentRegistry) Get(name string) (*types.ComponentInfo, bool) {
 			return component, true
 		}
 	}
+
 	return nil, false
 }
 
@@ -46,6 +47,7 @@ func (m *MockComponentRegistry) Count() int {
 func (m *MockComponentRegistry) Watch() <-chan types.ComponentEvent {
 	ch := make(chan types.ComponentEvent)
 	m.watchers = append(m.watchers, ch)
+
 	return ch
 }
 
@@ -55,6 +57,7 @@ func (m *MockComponentRegistry) UnWatch(ch <-chan types.ComponentEvent) {
 		if watcher == ch {
 			close(watcher)
 			m.watchers = append(m.watchers[:i], m.watchers[i+1:]...)
+
 			break
 		}
 	}
@@ -64,12 +67,12 @@ func (m *MockComponentRegistry) DetectCircularDependencies() [][]string {
 	return nil // No circular dependencies in mock
 }
 
-// MockFileWatcher provides mock file watcher for testing
+// MockFileWatcher provides mock file watcher for testing.
 type MockFileWatcher struct {
-	started   bool
-	stopped   bool
-	filters   []interfaces.FileFilter
-	handlers  []interfaces.ChangeHandlerFunc
+	started    bool
+	stopped    bool
+	filters    []interfaces.FileFilter
+	handlers   []interfaces.ChangeHandlerFunc
 	watchPaths []string
 }
 
@@ -83,43 +86,50 @@ func (m *MockFileWatcher) AddHandler(handler interfaces.ChangeHandlerFunc) {
 
 func (m *MockFileWatcher) AddPath(path string) error {
 	m.watchPaths = append(m.watchPaths, path)
+
 	return nil
 }
 
 func (m *MockFileWatcher) AddRecursive(path string) error {
 	m.watchPaths = append(m.watchPaths, path)
+
 	return nil
 }
 
 func (m *MockFileWatcher) Start(ctx context.Context) error {
 	m.started = true
+
 	return nil
 }
 
 func (m *MockFileWatcher) Stop() error {
 	m.stopped = true
+
 	return nil
 }
 
-// MockComponentScanner provides mock component scanner for testing
+// MockComponentScanner provides mock component scanner for testing.
 type MockComponentScanner struct {
 	scannedDirectories []string
-	scannedFiles      []string
-	registry          interfaces.ComponentRegistry
+	scannedFiles       []string
+	registry           interfaces.ComponentRegistry
 }
 
 func (m *MockComponentScanner) ScanDirectory(path string) error {
 	m.scannedDirectories = append(m.scannedDirectories, path)
+
 	return nil
 }
 
 func (m *MockComponentScanner) ScanDirectoryParallel(dir string, workers int) error {
 	m.scannedDirectories = append(m.scannedDirectories, dir)
+
 	return nil
 }
 
 func (m *MockComponentScanner) ScanFile(path string) error {
 	m.scannedFiles = append(m.scannedFiles, path)
+
 	return nil
 }
 
@@ -127,7 +137,7 @@ func (m *MockComponentScanner) GetRegistry() interfaces.ComponentRegistry {
 	return m.registry
 }
 
-// MockBuildPipeline provides mock build pipeline for testing
+// MockBuildPipeline provides mock build pipeline for testing.
 type MockBuildPipeline struct {
 	started   bool
 	stopped   bool
@@ -137,16 +147,19 @@ type MockBuildPipeline struct {
 
 func (m *MockBuildPipeline) Start(ctx context.Context) error {
 	m.started = true
+
 	return nil
 }
 
 func (m *MockBuildPipeline) Stop() error {
 	m.stopped = true
+
 	return nil
 }
 
 func (m *MockBuildPipeline) Build(component *types.ComponentInfo) error {
 	m.built = append(m.built, component)
+
 	return nil
 }
 
@@ -171,18 +184,18 @@ func (m *MockBuildPipeline) ClearCache() {
 	// Mock implementation
 }
 
-// MockBuildMetrics provides mock build metrics for testing
+// MockBuildMetrics provides mock build metrics for testing.
 type MockBuildMetrics struct{}
 
-func (m *MockBuildMetrics) GetBuildCount() int64     { return 10 }
-func (m *MockBuildMetrics) GetSuccessCount() int64   { return 8 }
-func (m *MockBuildMetrics) GetFailureCount() int64   { return 2 }
+func (m *MockBuildMetrics) GetBuildCount() int64              { return 10 }
+func (m *MockBuildMetrics) GetSuccessCount() int64            { return 8 }
+func (m *MockBuildMetrics) GetFailureCount() int64            { return 2 }
 func (m *MockBuildMetrics) GetAverageDuration() time.Duration { return 100 * time.Millisecond }
-func (m *MockBuildMetrics) GetCacheHitRate() float64 { return 0.75 }
-func (m *MockBuildMetrics) GetSuccessRate() float64  { return 0.8 }
-func (m *MockBuildMetrics) Reset()                   {}
+func (m *MockBuildMetrics) GetCacheHitRate() float64          { return 0.75 }
+func (m *MockBuildMetrics) GetSuccessRate() float64           { return 0.8 }
+func (m *MockBuildMetrics) Reset()                            {}
 
-// MockCacheStats provides mock cache stats for testing
+// MockCacheStats provides mock cache stats for testing.
 type MockCacheStats struct{}
 
 func (m *MockCacheStats) GetSize() int64      { return 50 }
@@ -192,7 +205,7 @@ func (m *MockCacheStats) GetHitRate() float64 { return 0.83 }
 func (m *MockCacheStats) GetEvictions() int64 { return 5 }
 func (m *MockCacheStats) Clear()              {}
 
-// MockWebSocketManager provides mock WebSocket manager for testing
+// MockWebSocketManager provides mock WebSocket manager for testing.
 type MockWebSocketManager struct {
 	broadcastMessages []UpdateMessage
 	clientCount       int
@@ -206,11 +219,11 @@ func (m *MockWebSocketManager) GetConnectedClients() int {
 	return m.clientCount
 }
 
-// createTestServiceDependencies creates valid dependencies for testing
+// createTestServiceDependencies creates valid dependencies for testing.
 func createTestServiceDependencies() ServiceDependencies {
 	registry := &MockComponentRegistry{}
 	scanner := &MockComponentScanner{registry: registry}
-	
+
 	return ServiceDependencies{
 		Config: &config.Config{
 			Components: config.ComponentsConfig{
@@ -230,7 +243,7 @@ func createTestServiceDependencies() ServiceDependencies {
 	}
 }
 
-// TestNewServiceOrchestrator_ValidInputs tests successful construction
+// TestNewServiceOrchestrator_ValidInputs tests successful construction.
 func TestNewServiceOrchestrator_ValidInputs(t *testing.T) {
 	deps := createTestServiceDependencies()
 
@@ -276,7 +289,7 @@ func TestNewServiceOrchestrator_ValidInputs(t *testing.T) {
 	orchestrator.Shutdown(context.Background())
 }
 
-// TestNewServiceOrchestrator_NilConfig tests panic on nil config
+// TestNewServiceOrchestrator_NilConfig tests panic on nil config.
 func TestNewServiceOrchestrator_NilConfig(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
@@ -289,7 +302,7 @@ func TestNewServiceOrchestrator_NilConfig(t *testing.T) {
 	NewServiceOrchestrator(deps)
 }
 
-// TestNewServiceOrchestrator_EmptyScanPaths tests panic on empty scan paths
+// TestNewServiceOrchestrator_EmptyScanPaths tests panic on empty scan paths.
 func TestNewServiceOrchestrator_EmptyScanPaths(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
@@ -302,10 +315,10 @@ func TestNewServiceOrchestrator_EmptyScanPaths(t *testing.T) {
 	NewServiceOrchestrator(deps)
 }
 
-// TestNewServiceOrchestrator_OptionalDependencies tests construction with optional dependencies
+// TestNewServiceOrchestrator_OptionalDependencies tests construction with optional dependencies.
 func TestNewServiceOrchestrator_OptionalDependencies(t *testing.T) {
 	deps := createTestServiceDependencies()
-	
+
 	// Make some dependencies nil to test optional handling
 	deps.Monitor = nil
 	deps.Renderer = nil
@@ -330,7 +343,7 @@ func TestNewServiceOrchestrator_OptionalDependencies(t *testing.T) {
 	}
 }
 
-// TestServiceOrchestrator_Start tests service startup coordination
+// TestServiceOrchestrator_Start tests service startup coordination.
 func TestServiceOrchestrator_Start(t *testing.T) {
 	deps := createTestServiceDependencies()
 	orchestrator := NewServiceOrchestrator(deps)
@@ -373,7 +386,7 @@ func TestServiceOrchestrator_Start(t *testing.T) {
 	}
 }
 
-// TestServiceOrchestrator_HandleBuildResult tests build result processing
+// TestServiceOrchestrator_HandleBuildResult tests build result processing.
 func TestServiceOrchestrator_HandleBuildResult(t *testing.T) {
 	deps := createTestServiceDependencies()
 	orchestrator := NewServiceOrchestrator(deps)
@@ -404,7 +417,7 @@ func TestServiceOrchestrator_HandleBuildResult(t *testing.T) {
 			{Message: "Test error", Line: 1, Column: 1},
 		},
 		Component: &types.ComponentInfo{Name: "TestComponent"},
-		Error:     fmt.Errorf("build failed"),
+		Error:     stderrors.New("build failed"),
 		Duration:  200 * time.Millisecond,
 		CacheHit:  false,
 	}
@@ -418,7 +431,7 @@ func TestServiceOrchestrator_HandleBuildResult(t *testing.T) {
 	}
 }
 
-// TestServiceOrchestrator_GetBuildMetrics tests build metrics retrieval
+// TestServiceOrchestrator_GetBuildMetrics tests build metrics retrieval.
 func TestServiceOrchestrator_GetBuildMetrics(t *testing.T) {
 	deps := createTestServiceDependencies()
 	orchestrator := NewServiceOrchestrator(deps)
@@ -435,7 +448,7 @@ func TestServiceOrchestrator_GetBuildMetrics(t *testing.T) {
 	}
 }
 
-// TestServiceOrchestrator_GetConnectedWebSocketClients tests client count retrieval
+// TestServiceOrchestrator_GetConnectedWebSocketClients tests client count retrieval.
 func TestServiceOrchestrator_GetConnectedWebSocketClients(t *testing.T) {
 	deps := createTestServiceDependencies()
 	orchestrator := NewServiceOrchestrator(deps)
@@ -448,7 +461,7 @@ func TestServiceOrchestrator_GetConnectedWebSocketClients(t *testing.T) {
 	}
 }
 
-// TestServiceOrchestrator_IsHealthy tests health checking
+// TestServiceOrchestrator_IsHealthy tests health checking.
 func TestServiceOrchestrator_IsHealthy(t *testing.T) {
 	deps := createTestServiceDependencies()
 	orchestrator := NewServiceOrchestrator(deps)
@@ -471,7 +484,7 @@ func TestServiceOrchestrator_IsHealthy(t *testing.T) {
 	}
 }
 
-// TestServiceOrchestrator_GetServiceStatus tests service status reporting
+// TestServiceOrchestrator_GetServiceStatus tests service status reporting.
 func TestServiceOrchestrator_GetServiceStatus(t *testing.T) {
 	deps := createTestServiceDependencies()
 	orchestrator := NewServiceOrchestrator(deps)
@@ -482,7 +495,7 @@ func TestServiceOrchestrator_GetServiceStatus(t *testing.T) {
 	// Verify all expected fields are present
 	expectedFields := []string{
 		"registry_available",
-		"scanner_available", 
+		"scanner_available",
 		"build_pipeline_available",
 		"file_watcher_available",
 		"websocket_manager_available",
@@ -506,11 +519,14 @@ func TestServiceOrchestrator_GetServiceStatus(t *testing.T) {
 		t.Error("Monitor should be reported as unavailable (nil)")
 	}
 	if status["websocket_clients"] != 0 {
-		t.Errorf("Expected 0 WebSocket clients in status (nil manager), got %v", status["websocket_clients"])
+		t.Errorf(
+			"Expected 0 WebSocket clients in status (nil manager), got %v",
+			status["websocket_clients"],
+		)
 	}
 }
 
-// TestServiceOrchestrator_Shutdown tests graceful shutdown
+// TestServiceOrchestrator_Shutdown tests graceful shutdown.
 func TestServiceOrchestrator_Shutdown(t *testing.T) {
 	deps := createTestServiceDependencies()
 	orchestrator := NewServiceOrchestrator(deps)
@@ -545,10 +561,10 @@ func TestServiceOrchestrator_Shutdown(t *testing.T) {
 	}
 }
 
-// TestServiceOrchestrator_OpenBrowser tests browser opening functionality
+// TestServiceOrchestrator_OpenBrowser tests browser opening functionality.
 func TestServiceOrchestrator_OpenBrowser(t *testing.T) {
 	deps := createTestServiceDependencies()
-	
+
 	// Test with browser opening disabled
 	deps.Config.Server.Open = false
 	orchestrator := NewServiceOrchestrator(deps)
@@ -566,7 +582,7 @@ func TestServiceOrchestrator_OpenBrowser(t *testing.T) {
 	orchestrator2.OpenBrowser("http://localhost:8080")
 }
 
-// BenchmarkServiceOrchestrator_HandleBuildResult benchmarks build result processing
+// BenchmarkServiceOrchestrator_HandleBuildResult benchmarks build result processing.
 func BenchmarkServiceOrchestrator_HandleBuildResult(b *testing.B) {
 	deps := createTestServiceDependencies()
 	orchestrator := NewServiceOrchestrator(deps)
@@ -577,25 +593,25 @@ func BenchmarkServiceOrchestrator_HandleBuildResult(b *testing.B) {
 			{Message: "Benchmark error", Line: 1, Column: 1},
 		},
 		Component: &types.ComponentInfo{Name: "BenchmarkComponent"},
-		Error:     fmt.Errorf("benchmark error"),
+		Error:     stderrors.New("benchmark error"),
 		Duration:  50 * time.Millisecond,
 		CacheHit:  false,
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		orchestrator.handleBuildResult(buildResult)
 	}
 }
 
-// BenchmarkServiceOrchestrator_GetServiceStatus benchmarks status reporting
+// BenchmarkServiceOrchestrator_GetServiceStatus benchmarks status reporting.
 func BenchmarkServiceOrchestrator_GetServiceStatus(b *testing.B) {
 	deps := createTestServiceDependencies()
 	orchestrator := NewServiceOrchestrator(deps)
 	defer orchestrator.Shutdown(context.Background())
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		orchestrator.GetServiceStatus()
 	}
 }

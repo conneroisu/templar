@@ -12,7 +12,7 @@ import (
 	"github.com/conneroisu/templar/internal/logging"
 )
 
-// AlertLevel represents the severity of an alert
+// AlertLevel represents the severity of an alert.
 type AlertLevel string
 
 const (
@@ -21,7 +21,7 @@ const (
 	AlertLevelCritical AlertLevel = "critical"
 )
 
-// Alert represents a monitoring alert
+// Alert represents a monitoring alert.
 type Alert struct {
 	ID        string                 `json:"id"`
 	Name      string                 `json:"name"`
@@ -40,7 +40,7 @@ type Alert struct {
 	Labels    map[string]string      `json:"labels,omitempty"`
 }
 
-// AlertRule defines conditions for triggering alerts
+// AlertRule defines conditions for triggering alerts.
 type AlertRule struct {
 	Name      string            `json:"name"`
 	Component string            `json:"component"`
@@ -55,13 +55,13 @@ type AlertRule struct {
 	Cooldown  time.Duration     `json:"cooldown"`
 }
 
-// AlertChannel defines how alerts are delivered
+// AlertChannel defines how alerts are delivered.
 type AlertChannel interface {
 	Send(ctx context.Context, alert Alert) error
 	Name() string
 }
 
-// AlertManager manages alert rules, state, and delivery
+// AlertManager manages alert rules, state, and delivery.
 type AlertManager struct {
 	rules        map[string]*AlertRule
 	activeAlerts map[string]*Alert
@@ -75,7 +75,7 @@ type AlertManager struct {
 	lastCheck   time.Time
 }
 
-// NewAlertManager creates a new alert manager
+// NewAlertManager creates a new alert manager.
 func NewAlertManager(logger logging.Logger) *AlertManager {
 	return &AlertManager{
 		rules:        make(map[string]*AlertRule),
@@ -88,7 +88,7 @@ func NewAlertManager(logger logging.Logger) *AlertManager {
 	}
 }
 
-// AddRule adds an alert rule
+// AddRule adds an alert rule.
 func (am *AlertManager) AddRule(rule *AlertRule) {
 	am.mutex.Lock()
 	defer am.mutex.Unlock()
@@ -101,7 +101,7 @@ func (am *AlertManager) AddRule(rule *AlertRule) {
 		"threshold", rule.Threshold)
 }
 
-// RemoveRule removes an alert rule
+// RemoveRule removes an alert rule.
 func (am *AlertManager) RemoveRule(name string) {
 	am.mutex.Lock()
 	defer am.mutex.Unlock()
@@ -112,7 +112,7 @@ func (am *AlertManager) RemoveRule(name string) {
 	am.logger.Info(context.Background(), "Alert rule removed", "rule_name", name)
 }
 
-// AddChannel adds an alert delivery channel
+// AddChannel adds an alert delivery channel.
 func (am *AlertManager) AddChannel(channel AlertChannel) {
 	am.mutex.Lock()
 	defer am.mutex.Unlock()
@@ -121,7 +121,7 @@ func (am *AlertManager) AddChannel(channel AlertChannel) {
 	am.logger.Info(context.Background(), "Alert channel added", "channel", channel.Name())
 }
 
-// EvaluateMetrics evaluates current metrics against alert rules
+// EvaluateMetrics evaluates current metrics against alert rules.
 func (am *AlertManager) EvaluateMetrics(ctx context.Context, metrics []Metric) {
 	am.mutex.Lock()
 	defer am.mutex.Unlock()
@@ -144,7 +144,7 @@ func (am *AlertManager) EvaluateMetrics(ctx context.Context, metrics []Metric) {
 	am.lastCheck = time.Now()
 }
 
-// evaluateRule evaluates a single alert rule
+// evaluateRule evaluates a single alert rule.
 func (am *AlertManager) evaluateRule(ctx context.Context, rule *AlertRule) {
 	metricKey := am.getMetricKey(rule.Metric, rule.Labels)
 	value, exists := am.metricCache[metricKey]
@@ -154,6 +154,7 @@ func (am *AlertManager) evaluateRule(ctx context.Context, rule *AlertRule) {
 		if rule.Condition == "exists" {
 			am.triggerAlert(ctx, rule, 0, 0)
 		}
+
 		return
 	}
 
@@ -180,7 +181,7 @@ func (am *AlertManager) evaluateRule(ctx context.Context, rule *AlertRule) {
 	}
 }
 
-// evaluateCondition checks if a condition is met
+// evaluateCondition checks if a condition is met.
 func (am *AlertManager) evaluateCondition(condition string, value, threshold float64) bool {
 	switch condition {
 	case "gt", ">":
@@ -200,8 +201,12 @@ func (am *AlertManager) evaluateCondition(condition string, value, threshold flo
 	}
 }
 
-// triggerAlert creates and sends a new alert
-func (am *AlertManager) triggerAlert(ctx context.Context, rule *AlertRule, value, threshold float64) {
+// triggerAlert creates and sends a new alert.
+func (am *AlertManager) triggerAlert(
+	ctx context.Context,
+	rule *AlertRule,
+	value, threshold float64,
+) {
 	// Check cooldown
 	if cooldownTime, exists := am.cooldowns[rule.Name]; exists {
 		if time.Since(cooldownTime) < rule.Cooldown {
@@ -245,7 +250,7 @@ func (am *AlertManager) triggerAlert(ctx context.Context, rule *AlertRule, value
 	am.sendAlert(ctx, *alert)
 }
 
-// resolveAlert marks an alert as resolved
+// resolveAlert marks an alert as resolved.
 func (am *AlertManager) resolveAlert(ctx context.Context, alert *Alert) {
 	alert.Active = false
 	alert.LastSeen = time.Now()
@@ -260,7 +265,7 @@ func (am *AlertManager) resolveAlert(ctx context.Context, alert *Alert) {
 
 	// Send resolution notification
 	resolvedAlert := *alert
-	resolvedAlert.Message = fmt.Sprintf("RESOLVED: %s", alert.Message)
+	resolvedAlert.Message = "RESOLVED: " + alert.Message
 	am.sendAlert(ctx, resolvedAlert)
 
 	// Remove from active alerts after some time
@@ -272,7 +277,7 @@ func (am *AlertManager) resolveAlert(ctx context.Context, alert *Alert) {
 	}()
 }
 
-// sendAlert sends an alert to all configured channels
+// sendAlert sends an alert to all configured channels.
 func (am *AlertManager) sendAlert(ctx context.Context, alert Alert) {
 	for _, channel := range am.channels {
 		go func(ch AlertChannel) {
@@ -285,7 +290,7 @@ func (am *AlertManager) sendAlert(ctx context.Context, alert Alert) {
 	}
 }
 
-// GetActiveAlerts returns all currently active alerts
+// GetActiveAlerts returns all currently active alerts.
 func (am *AlertManager) GetActiveAlerts() []Alert {
 	am.mutex.RLock()
 	defer am.mutex.RUnlock()
@@ -300,7 +305,7 @@ func (am *AlertManager) GetActiveAlerts() []Alert {
 	return alerts
 }
 
-// GetAlertHistory returns alert history (simplified implementation)
+// GetAlertHistory returns alert history (simplified implementation).
 func (am *AlertManager) GetAlertHistory(hours int) []Alert {
 	am.mutex.RLock()
 	defer am.mutex.RUnlock()
@@ -317,7 +322,7 @@ func (am *AlertManager) GetAlertHistory(hours int) []Alert {
 	return alerts
 }
 
-// HTTPHandler returns an HTTP handler for alerts API
+// HTTPHandler returns an HTTP handler for alerts API.
 func (am *AlertManager) HTTPHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
@@ -335,7 +340,7 @@ func (am *AlertManager) HTTPHandler() http.HandlerFunc {
 	}
 }
 
-// handleAlertsAPI handles the main alerts API
+// handleAlertsAPI handles the main alerts API.
 func (am *AlertManager) handleAlertsAPI(w http.ResponseWriter, r *http.Request) {
 	activeAlerts := am.GetActiveAlerts()
 
@@ -347,18 +352,18 @@ func (am *AlertManager) handleAlertsAPI(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response)
 }
 
-// handleActiveAlerts handles active alerts endpoint
+// handleActiveAlerts handles active alerts endpoint.
 func (am *AlertManager) handleActiveAlerts(w http.ResponseWriter, r *http.Request) {
 	alerts := am.GetActiveAlerts()
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(alerts)
+	_ = json.NewEncoder(w).Encode(alerts)
 }
 
-// handleAlertHistory handles alert history endpoint
+// handleAlertHistory handles alert history endpoint.
 func (am *AlertManager) handleAlertHistory(w http.ResponseWriter, r *http.Request) {
 	hours := 24 // Default to 24 hours
 	if h := r.URL.Query().Get("hours"); h != "" {
@@ -370,10 +375,10 @@ func (am *AlertManager) handleAlertHistory(w http.ResponseWriter, r *http.Reques
 	alerts := am.GetAlertHistory(hours)
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(alerts)
+	_ = json.NewEncoder(w).Encode(alerts)
 }
 
-// handleAlertRules handles alert rules endpoint
+// handleAlertRules handles alert rules endpoint.
 func (am *AlertManager) handleAlertRules(w http.ResponseWriter, r *http.Request) {
 	am.mutex.RLock()
 	rules := make([]*AlertRule, 0, len(am.rules))
@@ -383,13 +388,13 @@ func (am *AlertManager) handleAlertRules(w http.ResponseWriter, r *http.Request)
 	am.mutex.RUnlock()
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(rules)
+	_ = json.NewEncoder(w).Encode(rules)
 }
 
 // Utility functions
 
 func (am *AlertManager) getMetricKey(name string, labels map[string]string) string {
-	if labels == nil || len(labels) == 0 {
+	if len(labels) == 0 {
 		return name
 	}
 
@@ -414,24 +419,25 @@ func copyStringMap(m map[string]string) map[string]string {
 	for k, v := range m {
 		copy[k] = v
 	}
+
 	return copy
 }
 
 // Built-in Alert Channels
 
-// LogChannel sends alerts to the logging system
+// LogChannel sends alerts to the logging system.
 type LogChannel struct {
 	logger logging.Logger
 }
 
-// NewLogChannel creates a log-based alert channel
+// NewLogChannel creates a log-based alert channel.
 func NewLogChannel(logger logging.Logger) *LogChannel {
 	return &LogChannel{
 		logger: logger.WithComponent("alert_channel"),
 	}
 }
 
-// Send implements AlertChannel
+// Send implements AlertChannel.
 func (lc *LogChannel) Send(ctx context.Context, alert Alert) error {
 	switch alert.Level {
 	case AlertLevelCritical:
@@ -456,19 +462,19 @@ func (lc *LogChannel) Send(ctx context.Context, alert Alert) error {
 	return nil
 }
 
-// Name implements AlertChannel
+// Name implements AlertChannel.
 func (lc *LogChannel) Name() string {
 	return "log"
 }
 
-// WebhookChannel sends alerts to HTTP webhooks
+// WebhookChannel sends alerts to HTTP webhooks.
 type WebhookChannel struct {
 	url    string
 	client *http.Client
 	logger logging.Logger
 }
 
-// NewWebhookChannel creates a webhook-based alert channel
+// NewWebhookChannel creates a webhook-based alert channel.
 func NewWebhookChannel(url string, logger logging.Logger) *WebhookChannel {
 	return &WebhookChannel{
 		url: url,
@@ -479,7 +485,7 @@ func NewWebhookChannel(url string, logger logging.Logger) *WebhookChannel {
 	}
 }
 
-// Send implements AlertChannel
+// Send implements AlertChannel.
 func (wc *WebhookChannel) Send(ctx context.Context, alert Alert) error {
 	payload := map[string]interface{}{
 		"alert":     alert,
@@ -492,7 +498,12 @@ func (wc *WebhookChannel) Send(ctx context.Context, alert Alert) error {
 		return fmt.Errorf("failed to marshal alert: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, wc.url, strings.NewReader(string(data)))
+	req, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodPost,
+		wc.url,
+		strings.NewReader(string(data)),
+	)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
@@ -518,14 +529,14 @@ func (wc *WebhookChannel) Send(ctx context.Context, alert Alert) error {
 	return nil
 }
 
-// Name implements AlertChannel
+// Name implements AlertChannel.
 func (wc *WebhookChannel) Name() string {
 	return "webhook"
 }
 
 // Default Alert Rules
 
-// CreateDefaultAlertRules creates a set of default alert rules for Templar
+// CreateDefaultAlertRules creates a set of default alert rules for Templar.
 func CreateDefaultAlertRules() []*AlertRule {
 	return []*AlertRule{
 		{

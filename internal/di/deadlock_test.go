@@ -9,7 +9,7 @@ import (
 	"github.com/conneroisu/templar/internal/config"
 )
 
-// TestCircularDependencyDetection tests that circular dependencies are detected
+// TestCircularDependencyDetection tests that circular dependencies are detected.
 func TestCircularDependencyDetection(t *testing.T) {
 	cfg := &config.Config{}
 	container := NewServiceContainer(cfg)
@@ -21,6 +21,7 @@ func TestCircularDependencyDetection(t *testing.T) {
 		if err != nil {
 			return nil, err
 		}
+
 		return map[string]interface{}{"name": "serviceA", "dependency": serviceB}, nil
 	}).AsSingleton()
 
@@ -30,6 +31,7 @@ func TestCircularDependencyDetection(t *testing.T) {
 		if err != nil {
 			return nil, err
 		}
+
 		return map[string]interface{}{"name": "serviceB", "dependency": serviceA}, nil
 	}).AsSingleton()
 
@@ -44,7 +46,7 @@ func TestCircularDependencyDetection(t *testing.T) {
 	}
 }
 
-// TestConcurrentSingletonCreation tests that singletons are created safely under concurrent access
+// TestConcurrentSingletonCreation tests that singletons are created safely under concurrent access.
 func TestConcurrentSingletonCreation(t *testing.T) {
 	cfg := &config.Config{}
 	container := NewServiceContainer(cfg)
@@ -53,20 +55,23 @@ func TestConcurrentSingletonCreation(t *testing.T) {
 	var creationCount int32
 	var mu sync.Mutex
 
-	container.RegisterSingleton("expensiveService", func(resolver DependencyResolver) (interface{}, error) {
-		mu.Lock()
-		creationCount++
-		currentCount := creationCount
-		mu.Unlock()
+	container.RegisterSingleton(
+		"expensiveService",
+		func(resolver DependencyResolver) (interface{}, error) {
+			mu.Lock()
+			creationCount++
+			currentCount := creationCount
+			mu.Unlock()
 
-		// Simulate expensive creation
-		time.Sleep(time.Millisecond * 10)
+			// Simulate expensive creation
+			time.Sleep(time.Millisecond * 10)
 
-		return map[string]interface{}{
-			"id":      currentCount,
-			"created": time.Now(),
-		}, nil
-	})
+			return map[string]interface{}{
+				"id":      currentCount,
+				"created": time.Now(),
+			}, nil
+		},
+	)
 
 	// Launch multiple goroutines trying to get the same singleton
 	const numGoroutines = 50
@@ -74,7 +79,7 @@ func TestConcurrentSingletonCreation(t *testing.T) {
 	results := make([]interface{}, numGoroutines)
 	errors := make([]error, numGoroutines)
 
-	for i := 0; i < numGoroutines; i++ {
+	for i := range numGoroutines {
 		wg.Add(1)
 		go func(index int) {
 			defer wg.Done()
@@ -95,12 +100,14 @@ func TestConcurrentSingletonCreation(t *testing.T) {
 
 		if result == nil {
 			t.Errorf("Goroutine %d got nil result", i)
+
 			continue
 		}
 
 		resultMap, ok := result.(map[string]interface{})
 		if !ok {
 			t.Errorf("Goroutine %d got unexpected type: %T", i, result)
+
 			continue
 		}
 
@@ -124,7 +131,7 @@ func TestConcurrentSingletonCreation(t *testing.T) {
 	mu.Unlock()
 }
 
-// TestDeadlockPrevention tests that dependency resolution doesn't deadlock
+// TestDeadlockPrevention tests that dependency resolution doesn't deadlock.
 func TestDeadlockPrevention(t *testing.T) {
 	cfg := &config.Config{}
 	container := NewServiceContainer(cfg)
@@ -136,6 +143,7 @@ func TestDeadlockPrevention(t *testing.T) {
 		if err != nil {
 			return nil, err
 		}
+
 		return map[string]interface{}{
 			"name":       "serviceA",
 			"dependency": serviceB,
@@ -168,23 +176,27 @@ func TestDeadlockPrevention(t *testing.T) {
 	}
 }
 
-// TestConcurrentDifferentServices tests concurrent access to different services
+// TestConcurrentDifferentServices tests concurrent access to different services.
 func TestConcurrentDifferentServices(t *testing.T) {
 	cfg := &config.Config{}
 	container := NewServiceContainer(cfg)
 
 	// Register multiple services
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		serviceName := fmt.Sprintf("service%d", i)
 		serviceValue := i
-		container.RegisterSingleton(serviceName, func(resolver DependencyResolver) (interface{}, error) {
-			// Simulate some work
-			time.Sleep(time.Millisecond * 5)
-			return map[string]interface{}{
-				"id":   serviceValue,
-				"name": serviceName,
-			}, nil
-		})
+		container.RegisterSingleton(
+			serviceName,
+			func(resolver DependencyResolver) (interface{}, error) {
+				// Simulate some work
+				time.Sleep(time.Millisecond * 5)
+
+				return map[string]interface{}{
+					"id":   serviceValue,
+					"name": serviceName,
+				}, nil
+			},
+		)
 	}
 
 	// Concurrently access different services
@@ -192,7 +204,7 @@ func TestConcurrentDifferentServices(t *testing.T) {
 	var wg sync.WaitGroup
 	errors := make([]error, numGoroutines)
 
-	for i := 0; i < numGoroutines; i++ {
+	for i := range numGoroutines {
 		wg.Add(1)
 		go func(index int) {
 			defer wg.Done()
@@ -212,7 +224,7 @@ func TestConcurrentDifferentServices(t *testing.T) {
 	}
 }
 
-// TestDependencyChain tests a longer chain of dependencies
+// TestDependencyChain tests a longer chain of dependencies.
 func TestDependencyChain(t *testing.T) {
 	cfg := &config.Config{}
 	container := NewServiceContainer(cfg)
@@ -227,6 +239,7 @@ func TestDependencyChain(t *testing.T) {
 		if err != nil {
 			return nil, err
 		}
+
 		return map[string]interface{}{"name": "serviceC", "dep": dep}, nil
 	})
 
@@ -235,6 +248,7 @@ func TestDependencyChain(t *testing.T) {
 		if err != nil {
 			return nil, err
 		}
+
 		return map[string]interface{}{"name": "serviceB", "dep": dep}, nil
 	})
 
@@ -243,6 +257,7 @@ func TestDependencyChain(t *testing.T) {
 		if err != nil {
 			return nil, err
 		}
+
 		return map[string]interface{}{"name": "serviceA", "dep": dep}, nil
 	})
 
@@ -257,7 +272,7 @@ func TestDependencyChain(t *testing.T) {
 	}
 }
 
-// TestTransientServiceCreation tests that transient services are created each time
+// TestTransientServiceCreation tests that transient services are created each time.
 func TestTransientServiceCreation(t *testing.T) {
 	cfg := &config.Config{}
 	container := NewServiceContainer(cfg)
@@ -281,7 +296,7 @@ func TestTransientServiceCreation(t *testing.T) {
 	const numCalls = 5
 	instances := make([]interface{}, numCalls)
 
-	for i := 0; i < numCalls; i++ {
+	for i := range numCalls {
 		service, err := container.Get("transientService")
 		if err != nil {
 			t.Errorf("Call %d failed: %v", i, err)
@@ -297,9 +312,10 @@ func TestTransientServiceCreation(t *testing.T) {
 	mu.Unlock()
 
 	// Verify instances are different by comparing their IDs
-	for i := 0; i < numCalls-1; i++ {
+	for i := range numCalls - 1 {
 		if instances[i] == nil || instances[i+1] == nil {
 			t.Errorf("Instance %d or %d is nil", i, i+1)
+
 			continue
 		}
 
@@ -307,6 +323,7 @@ func TestTransientServiceCreation(t *testing.T) {
 		map2, ok2 := instances[i+1].(map[string]interface{})
 		if !ok1 || !ok2 {
 			t.Errorf("Instances %d or %d are not maps", i, i+1)
+
 			continue
 		}
 
@@ -318,12 +335,13 @@ func TestTransientServiceCreation(t *testing.T) {
 	}
 }
 
-// Helper function to check if a string contains a substring
+// Helper function to check if a string contains a substring.
 func containsString(s, substr string) bool {
 	for i := 0; i <= len(s)-len(substr); i++ {
 		if s[i:i+len(substr)] == substr {
 			return true
 		}
 	}
+
 	return false
 }

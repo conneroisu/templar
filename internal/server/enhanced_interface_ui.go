@@ -7,7 +7,7 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// generateEnhancedEditorHTML creates the enhanced component editor interface
+// generateEnhancedEditorHTML creates the enhanced component editor interface.
 func (s *PreviewServer) generateEnhancedEditorHTML(component *types.ComponentInfo) string {
 	return fmt.Sprintf(`<!DOCTYPE html>
 <html>
@@ -651,22 +651,22 @@ func (s *PreviewServer) generateEnhancedEditorHTML(component *types.ComponentInf
         }
     </script>
 </body>
-</html>`, 
-		component.Name, 
-		component.Name, 
+</html>`,
 		component.Name,
-		component.Package, 
-		component.FilePath, 
-		len(component.Parameters), 
+		component.Name,
+		component.Name,
+		component.Package,
+		component.FilePath,
+		len(component.Parameters),
 		len(component.Dependencies),
 		component.Name,
 		s.parametersToJSON(component.Parameters))
 }
 
-// parametersToJSON converts component parameters to JSON for JavaScript
+// parametersToJSON converts component parameters to JSON for JavaScript.
 func (s *PreviewServer) parametersToJSON(parameters []types.ParameterInfo) string {
 	var paramJSON []string
-	
+
 	for _, param := range parameters {
 		paramJSON = append(paramJSON, fmt.Sprintf(`{
 			"name": "%s",
@@ -674,11 +674,11 @@ func (s *PreviewServer) parametersToJSON(parameters []types.ParameterInfo) strin
 			"optional": %t
 		}`, param.Name, param.Type, param.Optional))
 	}
-	
+
 	return "[" + strings.Join(paramJSON, ",") + "]"
 }
 
-// generateEnhancedIndexHTML creates an enhanced index page with inline prop editing
+// generateEnhancedIndexHTML creates an enhanced index page with inline prop editing.
 func (s *PreviewServer) generateEnhancedIndexHTML() string {
 	return `<!DOCTYPE html>
 <html>
@@ -1309,7 +1309,8 @@ func (s *PreviewServer) generateEnhancedIndexHTML() string {
                     '<label class="prop-label">' + param.name + ':</label>' +
                     '<input class="prop-input-inline" type="' + inputType + '" ' +
                     'value="' + value + '" ' +
-                    'onchange="updateComponentProp(\\\'' + component.name + '\\\', \\\'' + param.name + '\\\', this.value, \\\'' + param.type + '\\\')">' +
+                    'onchange="updateComponentProp(\\\'' + component.name + '\\\', ' +
+                    '\\\'' + param.name + '\\\', this.value, \\\'' + param.type + '\\\')">' +
                     '</div>';
             }).join('');
         }
@@ -1655,5 +1656,5 @@ func (s *PreviewServer) generateEnhancedIndexHTML() string {
         }
     </script>
 </body>
-</html>`;
+</html>`
 }

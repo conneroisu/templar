@@ -9,7 +9,7 @@ import (
 	"github.com/conneroisu/templar/internal/config"
 )
 
-// Test interfaces and implementations
+// Test interfaces and implementations.
 type TestService interface {
 	GetName() string
 }
@@ -58,9 +58,12 @@ func TestServiceContainer_SingletonBehavior(t *testing.T) {
 	container := NewServiceContainer(&config.Config{})
 
 	// Register singleton service
-	container.RegisterSingleton("singleton", func(resolver DependencyResolver) (interface{}, error) {
-		return &TestImplementation{name: "singleton-service"}, nil
-	})
+	container.RegisterSingleton(
+		"singleton",
+		func(resolver DependencyResolver) (interface{}, error) {
+			return &TestImplementation{name: "singleton-service"}, nil
+		},
+	)
 
 	// Get service twice
 	service1, err := container.Get("singleton")
@@ -108,9 +111,12 @@ func TestServiceContainer_DependencyInjection(t *testing.T) {
 	container := NewServiceContainer(&config.Config{})
 
 	// Register dependency
-	container.RegisterSingleton("dependency", func(resolver DependencyResolver) (interface{}, error) {
-		return &TestImplementation{name: "dependency-service"}, nil
-	})
+	container.RegisterSingleton(
+		"dependency",
+		func(resolver DependencyResolver) (interface{}, error) {
+			return &TestImplementation{name: "dependency-service"}, nil
+		},
+	)
 
 	// Register service with dependency
 	container.Register("dependent", func(resolver DependencyResolver) (interface{}, error) {
@@ -118,6 +124,7 @@ func TestServiceContainer_DependencyInjection(t *testing.T) {
 		if err != nil {
 			return nil, err
 		}
+
 		return &TestDependentService{dependency: dep.(TestService)}, nil
 	}).DependsOn("dependency")
 
@@ -312,21 +319,26 @@ func TestServiceContainer_ConcurrentAccess(t *testing.T) {
 	container := NewServiceContainer(&config.Config{})
 
 	// Register singleton service
-	container.RegisterSingleton("concurrent", func(resolver DependencyResolver) (interface{}, error) {
-		time.Sleep(10 * time.Millisecond) // Simulate slow creation
-		return &TestImplementation{name: "concurrent-service"}, nil
-	})
+	container.RegisterSingleton(
+		"concurrent",
+		func(resolver DependencyResolver) (interface{}, error) {
+			time.Sleep(10 * time.Millisecond) // Simulate slow creation
+
+			return &TestImplementation{name: "concurrent-service"}, nil
+		},
+	)
 
 	// Access service concurrently
 	const numGoroutines = 10
 	results := make(chan interface{}, numGoroutines)
 	errors := make(chan error, numGoroutines)
 
-	for i := 0; i < numGoroutines; i++ {
+	for range numGoroutines {
 		go func() {
 			service, err := container.Get("concurrent")
 			if err != nil {
 				errors <- err
+
 				return
 			}
 			results <- service
@@ -335,7 +347,7 @@ func TestServiceContainer_ConcurrentAccess(t *testing.T) {
 
 	// Collect results
 	var services []interface{}
-	for i := 0; i < numGoroutines; i++ {
+	for range numGoroutines {
 		select {
 		case service := <-results:
 			services = append(services, service)
@@ -444,7 +456,7 @@ func BenchmarkServiceContainer_GetSingleton(b *testing.B) {
 	_, _ = container.Get("test")
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, _ = container.Get("test")
 	}
 }
@@ -456,7 +468,7 @@ func BenchmarkServiceContainer_GetTransient(b *testing.B) {
 	})
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, _ = container.Get("test")
 	}
 }

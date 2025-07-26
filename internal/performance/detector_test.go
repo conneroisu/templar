@@ -35,7 +35,10 @@ PASS
 	// Test first result
 	result := results[0]
 	if result.Name != "ComponentScanner_ScanDirectory/components-10-16" {
-		t.Errorf("Expected name 'ComponentScanner_ScanDirectory/components-10-16', got '%s'", result.Name)
+		t.Errorf(
+			"Expected name 'ComponentScanner_ScanDirectory/components-10-16', got '%s'",
+			result.Name,
+		)
 	}
 	if result.Iterations != 2204 {
 		t.Errorf("Expected iterations 2204, got %d", result.Iterations)
@@ -261,7 +264,11 @@ func TestPerformanceDetector_PathValidation(t *testing.T) {
 	}
 
 	if loadedBaseline.BenchmarkName != baseline.BenchmarkName {
-		t.Errorf("Expected benchmark name %s, got %s", baseline.BenchmarkName, loadedBaseline.BenchmarkName)
+		t.Errorf(
+			"Expected benchmark name %s, got %s",
+			baseline.BenchmarkName,
+			loadedBaseline.BenchmarkName,
+		)
 	}
 
 	if len(loadedBaseline.Samples) != len(baseline.Samples) {
@@ -276,7 +283,7 @@ func TestPerformanceDetector_MaxSamplesLimit(t *testing.T) {
 
 	// Create results with more than max samples (100)
 	var results []BenchmarkResult
-	for i := 0; i < 150; i++ {
+	for i := range 150 {
 		results = append(results, BenchmarkResult{
 			Name:      "TestBenchmark",
 			NsPerOp:   float64(1000 + i),
@@ -325,10 +332,34 @@ func TestPerformanceDetector_MultipleRegressionTypes(t *testing.T) {
 
 	// Create baseline
 	baselineResults := []BenchmarkResult{
-		{Name: "TestBenchmark", NsPerOp: 1000.0, BytesPerOp: 1000, AllocsPerOp: 10, Timestamp: time.Now()},
-		{Name: "TestBenchmark", NsPerOp: 1100.0, BytesPerOp: 1100, AllocsPerOp: 11, Timestamp: time.Now()},
-		{Name: "TestBenchmark", NsPerOp: 900.0, BytesPerOp: 900, AllocsPerOp: 9, Timestamp: time.Now()},
-		{Name: "TestBenchmark", NsPerOp: 1000.0, BytesPerOp: 1000, AllocsPerOp: 10, Timestamp: time.Now()},
+		{
+			Name:        "TestBenchmark",
+			NsPerOp:     1000.0,
+			BytesPerOp:  1000,
+			AllocsPerOp: 10,
+			Timestamp:   time.Now(),
+		},
+		{
+			Name:        "TestBenchmark",
+			NsPerOp:     1100.0,
+			BytesPerOp:  1100,
+			AllocsPerOp: 11,
+			Timestamp:   time.Now(),
+		},
+		{
+			Name:        "TestBenchmark",
+			NsPerOp:     900.0,
+			BytesPerOp:  900,
+			AllocsPerOp: 9,
+			Timestamp:   time.Now(),
+		},
+		{
+			Name:        "TestBenchmark",
+			NsPerOp:     1000.0,
+			BytesPerOp:  1000,
+			AllocsPerOp: 10,
+			Timestamp:   time.Now(),
+		},
 	}
 
 	err := detector.UpdateBaselines(baselineResults)
@@ -378,15 +409,18 @@ func TestPerformanceDetector_MultipleRegressionTypes(t *testing.T) {
 	}
 }
 
-// Benchmark tests for the performance detector itself
+// Benchmark tests for the performance detector itself.
 func BenchmarkPerformanceDetector_ParseBenchmarkOutput(b *testing.B) {
 	detector := NewPerformanceDetector("test", DefaultThresholds())
 
-	benchmarkOutput := strings.Repeat(`BenchmarkTest-16         	    1000	    100000 ns/op	  10000 B/op	    100 allocs/op
-`, 50) // 50 lines of benchmark output
+	benchmarkOutput := strings.Repeat(
+		`BenchmarkTest-16         	    1000	    100000 ns/op	  10000 B/op	    100 allocs/op
+`,
+		50,
+	) // 50 lines of benchmark output
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, err := detector.ParseBenchmarkOutput(benchmarkOutput)
 		if err != nil {
 			b.Fatal(err)
@@ -405,7 +439,7 @@ func BenchmarkPerformanceDetector_UpdateBaselines(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		err := detector.UpdateBaselines(results)
 		if err != nil {
 			b.Fatal(err)
@@ -433,7 +467,7 @@ func BenchmarkPerformanceDetector_DetectRegressions(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, err := detector.DetectRegressions(currentResults)
 		if err != nil {
 			b.Fatal(err)

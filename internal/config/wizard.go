@@ -2,6 +2,7 @@ package config
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,15 +10,15 @@ import (
 	"strings"
 )
 
-// ConfigWizard provides an interactive setup experience for new projects
+// ConfigWizard provides an interactive setup experience for new projects.
 type ConfigWizard struct {
-	reader *bufio.Reader
-	config *Config
-	projectDir string
+	reader            *bufio.Reader
+	config            *Config
+	projectDir        string
 	detectedStructure *ProjectStructure
 }
 
-// ProjectStructure represents detected project characteristics
+// ProjectStructure represents detected project characteristics.
 type ProjectStructure struct {
 	HasGoMod         bool
 	HasNodeModules   bool
@@ -28,7 +29,7 @@ type ProjectStructure struct {
 	ComponentDirs    []string
 }
 
-// NewConfigWizard creates a new configuration wizard
+// NewConfigWizard creates a new configuration wizard.
 func NewConfigWizard() *ConfigWizard {
 	return &ConfigWizard{
 		reader: bufio.NewReader(os.Stdin),
@@ -36,7 +37,7 @@ func NewConfigWizard() *ConfigWizard {
 	}
 }
 
-// NewConfigWizardWithProjectDir creates a new configuration wizard for a specific project directory
+// NewConfigWizardWithProjectDir creates a new configuration wizard for a specific project directory.
 func NewConfigWizardWithProjectDir(projectDir string) *ConfigWizard {
 	wizard := &ConfigWizard{
 		reader:     bufio.NewReader(os.Stdin),
@@ -44,31 +45,35 @@ func NewConfigWizardWithProjectDir(projectDir string) *ConfigWizard {
 		projectDir: projectDir,
 	}
 	wizard.detectProjectStructure()
+
 	return wizard
 }
 
-// Run executes the interactive configuration wizard
+// Run executes the interactive configuration wizard.
 func (w *ConfigWizard) Run() (*Config, error) {
 	fmt.Println("🧙 Templar Configuration Wizard")
 	fmt.Println("================================")
 	fmt.Println("This wizard will help you set up your Templar project configuration.")
-	
+
 	// Show detected project structure if available
 	if w.detectedStructure != nil {
 		fmt.Println()
 		fmt.Printf("🔍 Detected project type: %s\n", w.detectedStructure.ProjectType)
-		
+
 		if len(w.detectedStructure.ComponentDirs) > 0 {
-			fmt.Printf("📁 Found existing directories: %s\n", strings.Join(w.detectedStructure.ComponentDirs, ", "))
+			fmt.Printf(
+				"📁 Found existing directories: %s\n",
+				strings.Join(w.detectedStructure.ComponentDirs, ", "),
+			)
 		}
-		
+
 		if w.detectedStructure.HasExistingTempl {
 			fmt.Println("✨ Found existing .templ files")
 		}
-		
+
 		fmt.Println("💡 Smart defaults will be applied based on your project structure.")
 	}
-	
+
 	fmt.Println()
 
 	// Server configuration
@@ -101,7 +106,7 @@ func (w *ConfigWizard) Run() (*Config, error) {
 		return nil, fmt.Errorf("plugins configuration failed: %w", err)
 	}
 
-	// Monitoring configuration  
+	// Monitoring configuration
 	if err := w.configureMonitoring(); err != nil {
 		return nil, fmt.Errorf("monitoring configuration failed: %w", err)
 	}
@@ -116,6 +121,7 @@ func (w *ConfigWizard) Run() (*Config, error) {
 
 	fmt.Println()
 	fmt.Println("✅ Configuration completed successfully!")
+
 	return w.config, nil
 }
 
@@ -150,6 +156,7 @@ func (w *ConfigWizard) configureServer() error {
 	}
 
 	fmt.Println()
+
 	return nil
 }
 
@@ -163,9 +170,12 @@ func (w *ConfigWizard) configureComponents() error {
 
 	// Use detected component directories if available
 	if w.detectedStructure != nil && len(w.detectedStructure.ComponentDirs) > 0 {
-		fmt.Printf("Using detected directories: %s\n", strings.Join(w.detectedStructure.ComponentDirs, ", "))
+		fmt.Printf(
+			"Using detected directories: %s\n",
+			strings.Join(w.detectedStructure.ComponentDirs, ", "),
+		)
 		for _, path := range w.detectedStructure.ComponentDirs {
-			if w.askBool(fmt.Sprintf("Include %s", path), true) {
+			if w.askBool("Include "+path, true) {
 				scanPaths = append(scanPaths, path)
 			}
 		}
@@ -173,17 +183,14 @@ func (w *ConfigWizard) configureComponents() error {
 		// Use default paths
 		defaultPaths := []string{"./components", "./views", "./examples"}
 		for _, path := range defaultPaths {
-			if w.askBool(fmt.Sprintf("Include %s", path), true) {
+			if w.askBool("Include "+path, true) {
 				scanPaths = append(scanPaths, path)
 			}
 		}
 	}
 
 	// Allow custom paths
-	for {
-		if !w.askBool("Add custom scan path", false) {
-			break
-		}
+	for w.askBool("Add custom scan path", false) {
 		customPath := w.askString("Custom scan path", "")
 		if customPath != "" && customPath != "y" && customPath != "n" {
 			scanPaths = append(scanPaths, customPath)
@@ -200,16 +207,13 @@ func (w *ConfigWizard) configureComponents() error {
 
 	fmt.Println("File exclusion patterns:")
 	for _, pattern := range defaultExcludes {
-		if w.askBool(fmt.Sprintf("Exclude %s", pattern), true) {
+		if w.askBool("Exclude "+pattern, true) {
 			excludePatterns = append(excludePatterns, pattern)
 		}
 	}
 
 	// Allow custom exclusion patterns
-	for {
-		if !w.askBool("Add custom exclusion pattern", false) {
-			break
-		}
+	for w.askBool("Add custom exclusion pattern", false) {
 		customPattern := w.askString("Custom exclusion pattern", "")
 		if customPattern != "" && customPattern != "y" && customPattern != "n" {
 			excludePatterns = append(excludePatterns, customPattern)
@@ -220,6 +224,7 @@ func (w *ConfigWizard) configureComponents() error {
 
 	w.config.Components.ExcludePatterns = excludePatterns
 	fmt.Println()
+
 	return nil
 }
 
@@ -236,7 +241,7 @@ func (w *ConfigWizard) configureBuild() error {
 
 	fmt.Println("File watch patterns (for auto-rebuild):")
 	for _, pattern := range defaultWatchPatterns {
-		if w.askBool(fmt.Sprintf("Watch %s", pattern), true) {
+		if w.askBool("Watch "+pattern, true) {
 			watchPatterns = append(watchPatterns, pattern)
 		}
 	}
@@ -249,7 +254,7 @@ func (w *ConfigWizard) configureBuild() error {
 
 	fmt.Println("Build ignore patterns:")
 	for _, pattern := range defaultIgnorePatterns {
-		if w.askBool(fmt.Sprintf("Ignore %s", pattern), true) {
+		if w.askBool("Ignore "+pattern, true) {
 			ignorePatterns = append(ignorePatterns, pattern)
 		}
 	}
@@ -260,6 +265,7 @@ func (w *ConfigWizard) configureBuild() error {
 	w.config.Build.CacheDir = w.askString("Build cache directory", ".templar/cache")
 
 	fmt.Println()
+
 	return nil
 }
 
@@ -273,6 +279,7 @@ func (w *ConfigWizard) configureDevelopment() error {
 	w.config.Development.ErrorOverlay = w.askBool("Enable error overlay", true)
 
 	fmt.Println()
+
 	return nil
 }
 
@@ -298,6 +305,7 @@ func (w *ConfigWizard) configurePreview() error {
 	w.config.Preview.AutoProps = w.askBool("Enable auto props generation", true)
 
 	fmt.Println()
+
 	return nil
 }
 
@@ -316,7 +324,9 @@ func (w *ConfigWizard) configurePlugins() error {
 	// Suggest tailwind if detected or for web projects
 	tailwindDefault := false
 	if w.detectedStructure != nil {
-		tailwindDefault = w.detectedStructure.HasTailwindCSS || w.detectedStructure.ProjectType == "web" || w.detectedStructure.ProjectType == "fullstack"
+		tailwindDefault = w.detectedStructure.HasTailwindCSS ||
+			w.detectedStructure.ProjectType == "web" ||
+			w.detectedStructure.ProjectType == "fullstack"
 	}
 	if tailwindDefault {
 		fmt.Println("💡 Tailwind CSS detected or recommended for web projects")
@@ -345,6 +355,7 @@ func (w *ConfigWizard) configurePlugins() error {
 	w.config.Plugins.Configurations = make(map[string]PluginConfigMap)
 
 	fmt.Println()
+
 	return nil
 }
 
@@ -353,7 +364,11 @@ func (w *ConfigWizard) configureMonitoring() error {
 	fmt.Println("---------------------------")
 
 	w.config.Monitoring.Enabled = w.askBool("Enable application monitoring", true)
-	w.config.Monitoring.LogLevel = w.askChoice("Log level", []string{"debug", "info", "warn", "error", "fatal"}, "info")
+	w.config.Monitoring.LogLevel = w.askChoice(
+		"Log level",
+		[]string{"debug", "info", "warn", "error", "fatal"},
+		"info",
+	)
 	w.config.Monitoring.LogFormat = w.askChoice("Log format", []string{"json", "text"}, "json")
 	w.config.Monitoring.AlertsEnabled = w.askBool("Enable alerts", false)
 
@@ -370,6 +385,7 @@ func (w *ConfigWizard) configureMonitoring() error {
 	}
 
 	fmt.Println()
+
 	return nil
 }
 
@@ -419,11 +435,17 @@ func (w *ConfigWizard) askInt(prompt string, defaultValue, min, max int) (int, e
 		value, err := strconv.Atoi(input)
 		if err != nil {
 			fmt.Printf("❌ Invalid number. Please enter a number between %d and %d.\n", min, max)
+
 			continue
 		}
 
 		if value < min || value > max {
-			fmt.Printf("❌ Number out of range. Please enter a number between %d and %d.\n", min, max)
+			fmt.Printf(
+				"❌ Number out of range. Please enter a number between %d and %d.\n",
+				min,
+				max,
+			)
+
 			continue
 		}
 
@@ -468,7 +490,7 @@ func (w *ConfigWizard) askChoice(prompt string, choices []string, defaultValue s
 
 		// Check if input is valid choice
 		for _, choice := range choices {
-			if strings.ToLower(input) == strings.ToLower(choice) {
+			if strings.EqualFold(input, choice) {
 				return choice
 			}
 		}
@@ -477,13 +499,16 @@ func (w *ConfigWizard) askChoice(prompt string, choices []string, defaultValue s
 	}
 }
 
-// WriteConfigFile writes the configuration to a YAML file
+// WriteConfigFile writes the configuration to a YAML file.
 func (w *ConfigWizard) WriteConfigFile(filename string) error {
 	// Check if file already exists
 	if _, err := os.Stat(filename); err == nil {
-		overwrite := w.askBool(fmt.Sprintf("Configuration file %s already exists. Overwrite", filename), false)
+		overwrite := w.askBool(
+			fmt.Sprintf("Configuration file %s already exists. Overwrite", filename),
+			false,
+		)
 		if !overwrite {
-			return fmt.Errorf("configuration file already exists")
+			return errors.New("configuration file already exists")
 		}
 	}
 
@@ -496,6 +521,7 @@ func (w *ConfigWizard) WriteConfigFile(filename string) error {
 	}
 
 	fmt.Printf("✅ Configuration saved to %s\n", filename)
+
 	return nil
 }
 
@@ -566,7 +592,9 @@ func (w *ConfigWizard) generateYAMLConfig() string {
 	builder.WriteString("development:\n")
 	builder.WriteString(fmt.Sprintf("  hot_reload: %t\n", w.config.Development.HotReload))
 	builder.WriteString(fmt.Sprintf("  css_injection: %t\n", w.config.Development.CSSInjection))
-	builder.WriteString(fmt.Sprintf("  state_preservation: %t\n", w.config.Development.StatePreservation))
+	builder.WriteString(
+		fmt.Sprintf("  state_preservation: %t\n", w.config.Development.StatePreservation),
+	)
 	builder.WriteString(fmt.Sprintf("  error_overlay: %t\n", w.config.Development.ErrorOverlay))
 	builder.WriteString("\n")
 
@@ -588,7 +616,8 @@ func (w *ConfigWizard) generateYAMLConfig() string {
 	}
 
 	// Monitoring configuration
-	if w.config.Monitoring.Enabled || w.config.Monitoring.LogLevel != "" || w.config.Monitoring.LogFormat != "" {
+	if w.config.Monitoring.Enabled || w.config.Monitoring.LogLevel != "" ||
+		w.config.Monitoring.LogFormat != "" {
 		builder.WriteString("\nmonitoring:\n")
 		builder.WriteString(fmt.Sprintf("  enabled: %t\n", w.config.Monitoring.Enabled))
 		if w.config.Monitoring.LogLevel != "" {
@@ -598,18 +627,22 @@ func (w *ConfigWizard) generateYAMLConfig() string {
 			builder.WriteString(fmt.Sprintf("  log_format: %s\n", w.config.Monitoring.LogFormat))
 		}
 		if w.config.Monitoring.MetricsPath != "" {
-			builder.WriteString(fmt.Sprintf("  metrics_path: \"%s\"\n", w.config.Monitoring.MetricsPath))
+			builder.WriteString(
+				fmt.Sprintf("  metrics_path: \"%s\"\n", w.config.Monitoring.MetricsPath),
+			)
 		}
 		if w.config.Monitoring.HTTPPort != 0 && w.config.Monitoring.HTTPPort != 8081 {
 			builder.WriteString(fmt.Sprintf("  http_port: %d\n", w.config.Monitoring.HTTPPort))
 		}
-		builder.WriteString(fmt.Sprintf("  alerts_enabled: %t\n", w.config.Monitoring.AlertsEnabled))
+		builder.WriteString(
+			fmt.Sprintf("  alerts_enabled: %t\n", w.config.Monitoring.AlertsEnabled),
+		)
 	}
 
 	return builder.String()
 }
 
-// detectProjectStructure analyzes the project directory to determine smart defaults
+// detectProjectStructure analyzes the project directory to determine smart defaults.
 func (w *ConfigWizard) detectProjectStructure() {
 	if w.projectDir == "" {
 		return
@@ -622,7 +655,8 @@ func (w *ConfigWizard) detectProjectStructure() {
 	// Check for existing files and directories
 	w.detectedStructure.HasGoMod = w.fileExists("go.mod")
 	w.detectedStructure.HasNodeModules = w.fileExists("node_modules")
-	w.detectedStructure.HasTailwindCSS = w.fileExists("tailwind.config.js") || w.fileExists("tailwind.config.ts")
+	w.detectedStructure.HasTailwindCSS = w.fileExists("tailwind.config.js") ||
+		w.fileExists("tailwind.config.ts")
 	w.detectedStructure.HasTypeScript = w.fileExists("tsconfig.json")
 
 	// Scan for existing .templ files
@@ -640,38 +674,41 @@ func (w *ConfigWizard) detectProjectStructure() {
 	w.detectedStructure.ProjectType = w.inferProjectType()
 }
 
-// fileExists checks if a file or directory exists in the project directory
+// fileExists checks if a file or directory exists in the project directory.
 func (w *ConfigWizard) fileExists(path string) bool {
 	if w.projectDir == "" {
 		return false
 	}
 	fullPath := w.projectDir + "/" + path
 	_, err := os.Stat(fullPath)
+
 	return err == nil
 }
 
-// hasTemplFiles recursively checks for .templ files
+// hasTemplFiles recursively checks for .templ files.
 func (w *ConfigWizard) hasTemplFiles() bool {
 	if w.projectDir == "" {
 		return false
 	}
-	
+
 	found := false
-	filepath.Walk(w.projectDir, func(path string, info os.FileInfo, err error) error {
+	_ = filepath.Walk(w.projectDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return nil
 		}
 		if strings.HasSuffix(path, ".templ") {
 			found = true
+
 			return filepath.SkipDir
 		}
+
 		return nil
 	})
-	
+
 	return found
 }
 
-// inferProjectType determines the project type based on detected structure
+// inferProjectType determines the project type based on detected structure.
 func (w *ConfigWizard) inferProjectType() string {
 	if w.detectedStructure.HasNodeModules && w.detectedStructure.HasGoMod {
 		return "fullstack"
@@ -682,5 +719,6 @@ func (w *ConfigWizard) inferProjectType() string {
 	if w.detectedStructure.HasGoMod && !w.detectedStructure.HasExistingTempl {
 		return "api"
 	}
+
 	return "web" // default
 }

@@ -94,33 +94,45 @@ func TestHealthMonitor(t *testing.T) {
 		monitor := NewHealthMonitor(logger)
 
 		// Register multiple checks
-		healthyCheck := NewHealthCheckFunc("healthy_check", false, func(ctx context.Context) HealthCheck {
-			return HealthCheck{
-				Name:        "healthy_check",
-				Status:      HealthStatusHealthy,
-				Message:     "All good",
-				LastChecked: time.Now(),
-			}
-		})
+		healthyCheck := NewHealthCheckFunc(
+			"healthy_check",
+			false,
+			func(ctx context.Context) HealthCheck {
+				return HealthCheck{
+					Name:        "healthy_check",
+					Status:      HealthStatusHealthy,
+					Message:     "All good",
+					LastChecked: time.Now(),
+				}
+			},
+		)
 
-		unhealthyCheck := NewHealthCheckFunc("unhealthy_check", true, func(ctx context.Context) HealthCheck {
-			return HealthCheck{
-				Name:        "unhealthy_check",
-				Status:      HealthStatusUnhealthy,
-				Message:     "Something is wrong",
-				LastChecked: time.Now(),
-				Critical:    true,
-			}
-		})
+		unhealthyCheck := NewHealthCheckFunc(
+			"unhealthy_check",
+			true,
+			func(ctx context.Context) HealthCheck {
+				return HealthCheck{
+					Name:        "unhealthy_check",
+					Status:      HealthStatusUnhealthy,
+					Message:     "Something is wrong",
+					LastChecked: time.Now(),
+					Critical:    true,
+				}
+			},
+		)
 
-		degradedCheck := NewHealthCheckFunc("degraded_check", false, func(ctx context.Context) HealthCheck {
-			return HealthCheck{
-				Name:        "degraded_check",
-				Status:      HealthStatusDegraded,
-				Message:     "Performance degraded",
-				LastChecked: time.Now(),
-			}
-		})
+		degradedCheck := NewHealthCheckFunc(
+			"degraded_check",
+			false,
+			func(ctx context.Context) HealthCheck {
+				return HealthCheck{
+					Name:        "degraded_check",
+					Status:      HealthStatusDegraded,
+					Message:     "Performance degraded",
+					LastChecked: time.Now(),
+				}
+			},
+		)
 
 		monitor.RegisterCheck(healthyCheck)
 		monitor.RegisterCheck(unhealthyCheck)
@@ -145,12 +157,16 @@ func TestHealthMonitor(t *testing.T) {
 		monitor := NewHealthMonitor(logger)
 		monitor.interval = 50 * time.Millisecond
 
-		healthyCheck := NewHealthCheckFunc("test_check", false, func(ctx context.Context) HealthCheck {
-			return HealthCheck{
-				Name:   "test_check",
-				Status: HealthStatusHealthy,
-			}
-		})
+		healthyCheck := NewHealthCheckFunc(
+			"test_check",
+			false,
+			func(ctx context.Context) HealthCheck {
+				return HealthCheck{
+					Name:   "test_check",
+					Status: HealthStatusHealthy,
+				}
+			},
+		)
 
 		monitor.RegisterCheck(healthyCheck)
 		monitor.Start()
@@ -246,20 +262,28 @@ func TestHealthHTTPHandler(t *testing.T) {
 	monitor := NewHealthMonitor(logger)
 
 	// Register some checks
-	healthyCheck := NewHealthCheckFunc("healthy_check", false, func(ctx context.Context) HealthCheck {
-		return HealthCheck{
-			Name:   "healthy_check",
-			Status: HealthStatusHealthy,
-		}
-	})
+	healthyCheck := NewHealthCheckFunc(
+		"healthy_check",
+		false,
+		func(ctx context.Context) HealthCheck {
+			return HealthCheck{
+				Name:   "healthy_check",
+				Status: HealthStatusHealthy,
+			}
+		},
+	)
 
-	unhealthyCheck := NewHealthCheckFunc("unhealthy_check", true, func(ctx context.Context) HealthCheck {
-		return HealthCheck{
-			Name:     "unhealthy_check",
-			Status:   HealthStatusUnhealthy,
-			Critical: true,
-		}
-	})
+	unhealthyCheck := NewHealthCheckFunc(
+		"unhealthy_check",
+		true,
+		func(ctx context.Context) HealthCheck {
+			return HealthCheck{
+				Name:     "unhealthy_check",
+				Status:   HealthStatusUnhealthy,
+				Critical: true,
+			}
+		},
+	)
 
 	monitor.RegisterCheck(healthyCheck)
 	monitor.runHealthChecks()
@@ -379,10 +403,11 @@ func TestHealthMonitorConcurrency(t *testing.T) {
 	monitor := NewHealthMonitor(logger)
 
 	// Add multiple checks that take some time
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		checkName := fmt.Sprintf("check_%d", i)
 		checker := NewHealthCheckFunc(checkName, false, func(ctx context.Context) HealthCheck {
 			time.Sleep(10 * time.Millisecond) // Simulate work
+
 			return HealthCheck{
 				Name:   checkName,
 				Status: HealthStatusHealthy,
@@ -447,7 +472,7 @@ func BenchmarkHealthCheck(b *testing.B) {
 	monitor.RegisterCheck(checker)
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		monitor.runHealthChecks()
 	}
 }
@@ -457,7 +482,7 @@ func BenchmarkHealthResponseGeneration(b *testing.B) {
 	monitor := NewHealthMonitor(logger)
 
 	// Add several checks
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		checkName := fmt.Sprintf("check_%d", i)
 		checker := NewHealthCheckFunc(checkName, false, func(ctx context.Context) HealthCheck {
 			return HealthCheck{
@@ -471,7 +496,7 @@ func BenchmarkHealthResponseGeneration(b *testing.B) {
 	monitor.runHealthChecks()
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = monitor.GetHealth()
 	}
 }
@@ -482,6 +507,7 @@ func TestHealthCheckDuration(t *testing.T) {
 
 	checker := NewHealthCheckFunc("duration_check", false, func(ctx context.Context) HealthCheck {
 		time.Sleep(20 * time.Millisecond)
+
 		return HealthCheck{
 			Name:   "duration_check",
 			Status: HealthStatusHealthy,

@@ -2,6 +2,7 @@ package logging
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -12,7 +13,7 @@ import (
 	"time"
 )
 
-// LogLevel represents different log levels
+// LogLevel represents different log levels.
 type LogLevel int
 
 const (
@@ -23,7 +24,7 @@ const (
 	LevelFatal
 )
 
-// String returns the string representation of the log level
+// String returns the string representation of the log level.
 func (l LogLevel) String() string {
 	switch l {
 	case LevelDebug:
@@ -41,7 +42,7 @@ func (l LogLevel) String() string {
 	}
 }
 
-// Logger interface for structured logging
+// Logger interface for structured logging.
 type Logger interface {
 	Debug(ctx context.Context, msg string, fields ...interface{})
 	Info(ctx context.Context, msg string, fields ...interface{})
@@ -53,7 +54,7 @@ type Logger interface {
 	WithComponent(component string) Logger
 }
 
-// TemplarLogger implements structured logging for Templar
+// TemplarLogger implements structured logging for Templar.
 type TemplarLogger struct {
 	logger    *slog.Logger
 	level     LogLevel
@@ -61,7 +62,7 @@ type TemplarLogger struct {
 	fields    map[string]interface{}
 }
 
-// LoggerConfig holds logger configuration
+// LoggerConfig holds logger configuration.
 type LoggerConfig struct {
 	Level      LogLevel
 	Format     string // "json" or "text"
@@ -71,7 +72,7 @@ type LoggerConfig struct {
 	Component  string
 }
 
-// DefaultConfig returns default logger configuration
+// DefaultConfig returns default logger configuration.
 func DefaultConfig() *LoggerConfig {
 	return &LoggerConfig{
 		Level:      LevelInfo,
@@ -82,7 +83,7 @@ func DefaultConfig() *LoggerConfig {
 	}
 }
 
-// NewLogger creates a new structured logger
+// NewLogger creates a new structured logger.
 func NewLogger(config *LoggerConfig) *TemplarLogger {
 	if config == nil {
 		config = DefaultConfig()
@@ -111,7 +112,7 @@ func NewLogger(config *LoggerConfig) *TemplarLogger {
 	}
 }
 
-// Debug logs a debug message
+// Debug logs a debug message.
 func (l *TemplarLogger) Debug(ctx context.Context, msg string, fields ...interface{}) {
 	if l.level > LevelDebug {
 		return
@@ -119,7 +120,7 @@ func (l *TemplarLogger) Debug(ctx context.Context, msg string, fields ...interfa
 	l.log(ctx, slog.LevelDebug, nil, msg, fields...)
 }
 
-// Info logs an info message
+// Info logs an info message.
 func (l *TemplarLogger) Info(ctx context.Context, msg string, fields ...interface{}) {
 	if l.level > LevelInfo {
 		return
@@ -127,7 +128,7 @@ func (l *TemplarLogger) Info(ctx context.Context, msg string, fields ...interfac
 	l.log(ctx, slog.LevelInfo, nil, msg, fields...)
 }
 
-// Warn logs a warning message
+// Warn logs a warning message.
 func (l *TemplarLogger) Warn(ctx context.Context, err error, msg string, fields ...interface{}) {
 	if l.level > LevelWarn {
 		return
@@ -135,7 +136,7 @@ func (l *TemplarLogger) Warn(ctx context.Context, err error, msg string, fields 
 	l.log(ctx, slog.LevelWarn, err, msg, fields...)
 }
 
-// Error logs an error message
+// Error logs an error message.
 func (l *TemplarLogger) Error(ctx context.Context, err error, msg string, fields ...interface{}) {
 	if l.level > LevelError {
 		return
@@ -150,7 +151,7 @@ func (l *TemplarLogger) Fatal(ctx context.Context, err error, msg string, fields
 	l.log(ctx, slog.LevelError, err, msg, fields...)
 }
 
-// With creates a new logger with additional fields
+// With creates a new logger with additional fields.
 func (l *TemplarLogger) With(fields ...interface{}) Logger {
 	newFields := make(map[string]interface{})
 	for k, v := range l.fields {
@@ -173,7 +174,7 @@ func (l *TemplarLogger) With(fields ...interface{}) Logger {
 	}
 }
 
-// WithComponent creates a new logger with component context
+// WithComponent creates a new logger with component context.
 func (l *TemplarLogger) WithComponent(component string) Logger {
 	return &TemplarLogger{
 		logger:    l.logger,
@@ -183,11 +184,18 @@ func (l *TemplarLogger) WithComponent(component string) Logger {
 	}
 }
 
-// log is the internal logging method
-func (l *TemplarLogger) log(ctx context.Context, level slog.Level, err error, msg string, fields ...interface{}) {
+// log is the internal logging method.
+func (l *TemplarLogger) log(
+	ctx context.Context,
+	level slog.Level,
+	err error,
+	msg string,
+	fields ...interface{},
+) {
 	// Defensive programming - ensure we don't panic on nil logger
 	if l.logger == nil {
 		fmt.Fprintf(os.Stderr, "[ERROR] Logger is nil - message: %s\n", msg)
+
 		return
 	}
 
@@ -231,19 +239,24 @@ func (l *TemplarLogger) log(ctx context.Context, level slog.Level, err error, ms
 	if handler := l.logger.Handler(); handler != nil {
 		if err := handler.Handle(ctx, record); err != nil {
 			// Fallback to stderr if primary logging fails
-			fmt.Fprintf(os.Stderr, "[ERROR] Failed to write log: %v - Original message: %s\n", err, msg)
+			fmt.Fprintf(
+				os.Stderr,
+				"[ERROR] Failed to write log: %v - Original message: %s\n",
+				err,
+				msg,
+			)
 		}
 	}
 }
 
-// FileLogger creates a logger that writes to files with rotation
+// FileLogger creates a logger that writes to files with rotation.
 type FileLogger struct {
 	*TemplarLogger
 	file     *os.File
 	filePath string
 }
 
-// NewFileLogger creates a file-based logger with daily rotation
+// NewFileLogger creates a file-based logger with daily rotation.
 func NewFileLogger(config *LoggerConfig, logDir string) (*FileLogger, error) {
 	if config == nil {
 		config = DefaultConfig()
@@ -251,7 +264,7 @@ func NewFileLogger(config *LoggerConfig, logDir string) (*FileLogger, error) {
 
 	// Validate log directory path
 	if logDir == "" {
-		return nil, fmt.Errorf("log directory cannot be empty")
+		return nil, errors.New("log directory cannot be empty")
 	}
 
 	// Clean the path to prevent path traversal
@@ -287,7 +300,7 @@ func NewFileLogger(config *LoggerConfig, logDir string) (*FileLogger, error) {
 	}, nil
 }
 
-// Close closes the file logger
+// Close closes the file logger.
 func (f *FileLogger) Close() error {
 	if f.file != nil {
 		if err := f.file.Close(); err != nil {
@@ -295,80 +308,83 @@ func (f *FileLogger) Close() error {
 		}
 		f.file = nil // Prevent double-close
 	}
+
 	return nil
 }
 
-// MultiLogger writes to multiple loggers
+// MultiLogger writes to multiple loggers.
 type MultiLogger struct {
 	loggers []Logger
 }
 
-// NewMultiLogger creates a logger that writes to multiple destinations
+// NewMultiLogger creates a logger that writes to multiple destinations.
 func NewMultiLogger(loggers ...Logger) *MultiLogger {
 	return &MultiLogger{loggers: loggers}
 }
 
-// Debug logs to all loggers
+// Debug logs to all loggers.
 func (m *MultiLogger) Debug(ctx context.Context, msg string, fields ...interface{}) {
 	for _, logger := range m.loggers {
 		logger.Debug(ctx, msg, fields...)
 	}
 }
 
-// Info logs to all loggers
+// Info logs to all loggers.
 func (m *MultiLogger) Info(ctx context.Context, msg string, fields ...interface{}) {
 	for _, logger := range m.loggers {
 		logger.Info(ctx, msg, fields...)
 	}
 }
 
-// Warn logs to all loggers
+// Warn logs to all loggers.
 func (m *MultiLogger) Warn(ctx context.Context, err error, msg string, fields ...interface{}) {
 	for _, logger := range m.loggers {
 		logger.Warn(ctx, err, msg, fields...)
 	}
 }
 
-// Error logs to all loggers
+// Error logs to all loggers.
 func (m *MultiLogger) Error(ctx context.Context, err error, msg string, fields ...interface{}) {
 	for _, logger := range m.loggers {
 		logger.Error(ctx, err, msg, fields...)
 	}
 }
 
-// Fatal logs to all loggers
+// Fatal logs to all loggers.
 func (m *MultiLogger) Fatal(ctx context.Context, err error, msg string, fields ...interface{}) {
 	for _, logger := range m.loggers {
 		logger.Fatal(ctx, err, msg, fields...)
 	}
 }
 
-// With creates a new multi-logger with additional fields
+// With creates a new multi-logger with additional fields.
 func (m *MultiLogger) With(fields ...interface{}) Logger {
 	newLoggers := make([]Logger, len(m.loggers))
 	for i, logger := range m.loggers {
 		newLoggers[i] = logger.With(fields...)
 	}
+
 	return &MultiLogger{loggers: newLoggers}
 }
 
-// WithComponent creates a new multi-logger with component context
+// WithComponent creates a new multi-logger with component context.
 func (m *MultiLogger) WithComponent(component string) Logger {
 	newLoggers := make([]Logger, len(m.loggers))
 	for i, logger := range m.loggers {
 		newLoggers[i] = logger.WithComponent(component)
 	}
+
 	return &MultiLogger{loggers: newLoggers}
 }
 
-// ContextLogger adds request context to logs
+// ContextLogger adds request context to logs.
 type ContextLogger struct {
 	Logger
 	requestID string
 	userID    string
 }
 
-// WithRequestID adds request ID to logger context
+// WithRequestID adds request ID to logger context.
 func (l *TemplarLogger) WithRequestID(requestID string) *ContextLogger {
 	return &ContextLogger{
 		Logger:    l.With("request_id", requestID),
@@ -376,21 +392,21 @@ func (l *TemplarLogger) WithRequestID(requestID string) *ContextLogger {
 	}
 }
 
-// WithUserID adds user ID to logger context
+// WithUserID adds user ID to logger context.
 func (c *ContextLogger) WithUserID(userID string) *ContextLogger {
 	return &ContextLogger{
-		Logger: c.Logger.With("user_id", userID),
+		Logger: c.With("user_id", userID),
 		userID: userID,
 	}
 }
 
-// LogFormatter provides custom formatting
+// LogFormatter provides custom formatting.
 type LogFormatter struct {
 	TimestampFormat string
 	UseColors       bool
 }
 
-// FormatLevel formats log level with optional colors
+// FormatLevel formats log level with optional colors.
 func (f *LogFormatter) FormatLevel(level LogLevel) string {
 	if !f.UseColors {
 		return level.String()
@@ -414,7 +430,7 @@ func (f *LogFormatter) FormatLevel(level LogLevel) string {
 
 // Security-focused logging utilities
 
-// SanitizeForLog sanitizes data for safe logging (removes sensitive info)
+// SanitizeForLog sanitizes data for safe logging (removes sensitive info).
 func SanitizeForLog(data string) string {
 	// Remove potential passwords, tokens, etc.
 	sensitive := []string{
@@ -436,8 +452,13 @@ func SanitizeForLog(data string) string {
 	return data
 }
 
-// LogSecurityEvent logs security-related events with special handling
-func LogSecurityEvent(logger Logger, ctx context.Context, event string, details map[string]interface{}) {
+// LogSecurityEvent logs security-related events with special handling.
+func LogSecurityEvent(
+	logger Logger,
+	ctx context.Context,
+	event string,
+	details map[string]interface{},
+) {
 	sanitizedDetails := make(map[string]interface{})
 	for k, v := range details {
 		if str, ok := v.(string); ok {
@@ -457,14 +478,14 @@ func LogSecurityEvent(logger Logger, ctx context.Context, event string, details 
 
 // Performance logging utilities
 
-// PerfLogger tracks performance metrics
+// PerfLogger tracks performance metrics.
 type PerfLogger struct {
 	Logger
 	startTime time.Time
 	operation string
 }
 
-// StartOperation begins performance tracking
+// StartOperation begins performance tracking.
 func (l *TemplarLogger) StartOperation(operation string) *PerfLogger {
 	return &PerfLogger{
 		Logger:    l.With("operation", operation),
@@ -473,7 +494,7 @@ func (l *TemplarLogger) StartOperation(operation string) *PerfLogger {
 	}
 }
 
-// End completes performance tracking and logs the duration
+// End completes performance tracking and logs the duration.
 func (p *PerfLogger) End(ctx context.Context) {
 	duration := time.Since(p.startTime)
 	p.Info(ctx, "Operation completed",
@@ -482,7 +503,7 @@ func (p *PerfLogger) End(ctx context.Context) {
 	)
 }
 
-// EndWithError completes performance tracking and logs an error
+// EndWithError completes performance tracking and logs an error.
 func (p *PerfLogger) EndWithError(ctx context.Context, err error) {
 	duration := time.Since(p.startTime)
 	p.Error(ctx, err, "Operation failed",
@@ -491,7 +512,7 @@ func (p *PerfLogger) EndWithError(ctx context.Context, err error) {
 	)
 }
 
-// ErrorCategory represents different types of errors for better categorization
+// ErrorCategory represents different types of errors for better categorization.
 type ErrorCategory string
 
 const (
@@ -505,7 +526,7 @@ const (
 	ErrorCategoryUnknown    ErrorCategory = "unknown"
 )
 
-// StructuredError provides enhanced error information for logging
+// StructuredError provides enhanced error information for logging.
 type StructuredError struct {
 	Category  ErrorCategory          `json:"category"`
 	Operation string                 `json:"operation"`
@@ -518,20 +539,21 @@ type StructuredError struct {
 	Severity  string                 `json:"severity"`
 }
 
-// Error implements the error interface
+// Error implements the error interface.
 func (e *StructuredError) Error() string {
 	if e.Cause != nil {
 		return fmt.Sprintf("%s: %s (caused by: %v)", e.Operation, e.Message, e.Cause)
 	}
+
 	return fmt.Sprintf("%s: %s", e.Operation, e.Message)
 }
 
-// Unwrap returns the underlying error for error unwrapping
+// Unwrap returns the underlying error for error unwrapping.
 func (e *StructuredError) Unwrap() error {
 	return e.Cause
 }
 
-// NewStructuredError creates a new structured error
+// NewStructuredError creates a new structured error.
 func NewStructuredError(category ErrorCategory, operation, message string) *StructuredError {
 	return &StructuredError{
 		Category:  category,
@@ -543,40 +565,45 @@ func NewStructuredError(category ErrorCategory, operation, message string) *Stru
 	}
 }
 
-// WithCause adds a cause error
+// WithCause adds a cause error.
 func (e *StructuredError) WithCause(cause error) *StructuredError {
 	e.Cause = cause
+
 	return e
 }
 
-// WithComponent adds component context
+// WithComponent adds component context.
 func (e *StructuredError) WithComponent(component string) *StructuredError {
 	e.Component = component
+
 	return e
 }
 
-// WithContext adds additional context
+// WithContext adds additional context.
 func (e *StructuredError) WithContext(key string, value interface{}) *StructuredError {
 	if e.Context == nil {
 		e.Context = make(map[string]interface{})
 	}
 	e.Context[key] = value
+
 	return e
 }
 
-// WithRetryable marks the error as retryable
+// WithRetryable marks the error as retryable.
 func (e *StructuredError) WithRetryable(retryable bool) *StructuredError {
 	e.Retryable = retryable
+
 	return e
 }
 
-// WithSeverity sets the error severity
+// WithSeverity sets the error severity.
 func (e *StructuredError) WithSeverity(severity string) *StructuredError {
 	e.Severity = severity
+
 	return e
 }
 
-// ResilientLogger provides retry capabilities for logging operations
+// ResilientLogger provides retry capabilities for logging operations.
 type ResilientLogger struct {
 	Logger
 	maxRetries int
@@ -584,7 +611,7 @@ type ResilientLogger struct {
 	mutex      sync.RWMutex
 }
 
-// NewResilientLogger creates a logger with retry capabilities
+// NewResilientLogger creates a logger with retry capabilities.
 func NewResilientLogger(logger Logger, maxRetries int, retryDelay time.Duration) *ResilientLogger {
 	return &ResilientLogger{
 		Logger:     logger,
@@ -593,8 +620,13 @@ func NewResilientLogger(logger Logger, maxRetries int, retryDelay time.Duration)
 	}
 }
 
-// ErrorWithRetry logs an error with retry mechanism
-func (r *ResilientLogger) ErrorWithRetry(ctx context.Context, err error, msg string, fields ...interface{}) {
+// ErrorWithRetry logs an error with retry mechanism.
+func (r *ResilientLogger) ErrorWithRetry(
+	ctx context.Context,
+	err error,
+	msg string,
+	fields ...interface{},
+) {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
 
@@ -616,7 +648,7 @@ func (r *ResilientLogger) ErrorWithRetry(ctx context.Context, err error, msg str
 					success = true
 				}
 			}()
-			r.Logger.Error(ctx, err, msg, fields...)
+			r.Error(ctx, err, msg, fields...)
 		}()
 
 		// If logging succeeded, return
@@ -626,10 +658,16 @@ func (r *ResilientLogger) ErrorWithRetry(ctx context.Context, err error, msg str
 	}
 
 	// All retry attempts failed, use fallback
-	fmt.Fprintf(os.Stderr, "[CRITICAL] Failed to log error after %d retries: %s - %v\n", r.maxRetries, msg, err)
+	fmt.Fprintf(
+		os.Stderr,
+		"[CRITICAL] Failed to log error after %d retries: %s - %v\n",
+		r.maxRetries,
+		msg,
+		err,
+	)
 }
 
-// LogStructuredError logs a structured error with enhanced context
+// LogStructuredError logs a structured error with enhanced context.
 func LogStructuredError(logger Logger, ctx context.Context, structErr *StructuredError) {
 	fields := []interface{}{
 		"error_category", string(structErr.Category),
@@ -651,7 +689,7 @@ func LogStructuredError(logger Logger, ctx context.Context, structErr *Structure
 	logger.Error(ctx, structErr.Cause, structErr.Message, fields...)
 }
 
-// NewTestLogger creates a logger for testing purposes
+// NewTestLogger creates a logger for testing purposes.
 func NewTestLogger() Logger {
 	config := &LoggerConfig{
 		Level:      LevelDebug,
@@ -660,5 +698,6 @@ func NewTestLogger() Logger {
 		TimeFormat: time.RFC3339,
 		AddSource:  false, // Disable source for cleaner test output
 	}
+
 	return NewLogger(config)
 }

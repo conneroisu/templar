@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// ErrorInjector provides controlled failure injection for testing
+// ErrorInjector provides controlled failure injection for testing.
 type ErrorInjector struct {
 	targets     map[string]*ErrorTarget
 	mu          sync.RWMutex
@@ -15,7 +15,7 @@ type ErrorInjector struct {
 	probability float64 // 0.0 to 1.0
 }
 
-// ErrorTarget represents an injection point with configuration
+// ErrorTarget represents an injection point with configuration.
 type ErrorTarget struct {
 	Name        string
 	Error       error
@@ -26,7 +26,7 @@ type ErrorTarget struct {
 	Enabled     bool
 }
 
-// NewErrorInjector creates a new error injection framework
+// NewErrorInjector creates a new error injection framework.
 func NewErrorInjector() *ErrorInjector {
 	return &ErrorInjector{
 		targets:     make(map[string]*ErrorTarget),
@@ -35,7 +35,7 @@ func NewErrorInjector() *ErrorInjector {
 	}
 }
 
-// InjectError configures error injection for a specific operation
+// InjectError configures error injection for a specific operation.
 func (ei *ErrorInjector) InjectError(operation string, err error) *ErrorTarget {
 	ei.mu.Lock()
 	defer ei.mu.Unlock()
@@ -50,31 +50,39 @@ func (ei *ErrorInjector) InjectError(operation string, err error) *ErrorTarget {
 	}
 
 	ei.targets[operation] = target
+
 	return target
 }
 
-// InjectErrorOnce configures error injection for a single occurrence
+// InjectErrorOnce configures error injection for a single occurrence.
 func (ei *ErrorInjector) InjectErrorOnce(operation string, err error) *ErrorTarget {
 	target := ei.InjectError(operation, err)
 	target.Remaining = 1
+
 	return target
 }
 
-// InjectErrorCount configures error injection for a specific count
+// InjectErrorCount configures error injection for a specific count.
 func (ei *ErrorInjector) InjectErrorCount(operation string, err error, count int64) *ErrorTarget {
 	target := ei.InjectError(operation, err)
 	target.Remaining = count
+
 	return target
 }
 
-// InjectErrorWithDelay configures error injection with a delay
-func (ei *ErrorInjector) InjectErrorWithDelay(operation string, err error, delay time.Duration) *ErrorTarget {
+// InjectErrorWithDelay configures error injection with a delay.
+func (ei *ErrorInjector) InjectErrorWithDelay(
+	operation string,
+	err error,
+	delay time.Duration,
+) *ErrorTarget {
 	target := ei.InjectError(operation, err)
 	target.Delay = delay
+
 	return target
 }
 
-// ShouldFail checks if an operation should fail and returns the error
+// ShouldFail checks if an operation should fail and returns the error.
 func (ei *ErrorInjector) ShouldFail(operation string) error {
 	ei.mu.RLock()
 	defer ei.mu.RUnlock()
@@ -116,21 +124,21 @@ func (ei *ErrorInjector) ShouldFail(operation string) error {
 	return target.Error
 }
 
-// Enable enables error injection globally
+// Enable enables error injection globally.
 func (ei *ErrorInjector) Enable() {
 	ei.mu.Lock()
 	defer ei.mu.Unlock()
 	ei.enabled = true
 }
 
-// Disable disables error injection globally
+// Disable disables error injection globally.
 func (ei *ErrorInjector) Disable() {
 	ei.mu.Lock()
 	defer ei.mu.Unlock()
 	ei.enabled = false
 }
 
-// SetGlobalProbability sets the default probability for new targets
+// SetGlobalProbability sets the default probability for new targets.
 func (ei *ErrorInjector) SetGlobalProbability(prob float64) {
 	ei.mu.Lock()
 	defer ei.mu.Unlock()
@@ -139,21 +147,21 @@ func (ei *ErrorInjector) SetGlobalProbability(prob float64) {
 	}
 }
 
-// Clear removes all error injection targets
+// Clear removes all error injection targets.
 func (ei *ErrorInjector) Clear() {
 	ei.mu.Lock()
 	defer ei.mu.Unlock()
 	ei.targets = make(map[string]*ErrorTarget)
 }
 
-// RemoveTarget removes a specific error injection target
+// RemoveTarget removes a specific error injection target.
 func (ei *ErrorInjector) RemoveTarget(operation string) {
 	ei.mu.Lock()
 	defer ei.mu.Unlock()
 	delete(ei.targets, operation)
 }
 
-// GetTarget retrieves information about a specific target
+// GetTarget retrieves information about a specific target.
 func (ei *ErrorInjector) GetTarget(operation string) (*ErrorTarget, bool) {
 	ei.mu.RLock()
 	defer ei.mu.RUnlock()
@@ -170,10 +178,11 @@ func (ei *ErrorInjector) GetTarget(operation string) (*ErrorTarget, bool) {
 			Enabled:     target.Enabled,
 		}, true
 	}
+
 	return nil, false
 }
 
-// ListTargets returns all configured targets
+// ListTargets returns all configured targets.
 func (ei *ErrorInjector) ListTargets() map[string]*ErrorTarget {
 	ei.mu.RLock()
 	defer ei.mu.RUnlock()
@@ -190,10 +199,11 @@ func (ei *ErrorInjector) ListTargets() map[string]*ErrorTarget {
 			Enabled:     target.Enabled,
 		}
 	}
+
 	return result
 }
 
-// GetStats returns statistics about error injections
+// GetStats returns statistics about error injections.
 func (ei *ErrorInjector) GetStats() ErrorInjectionStats {
 	ei.mu.RLock()
 	defer ei.mu.RUnlock()
@@ -215,7 +225,7 @@ func (ei *ErrorInjector) GetStats() ErrorInjectionStats {
 	return stats
 }
 
-// ErrorInjectionStats contains statistics about error injection
+// ErrorInjectionStats contains statistics about error injection.
 type ErrorInjectionStats struct {
 	Enabled         bool
 	TotalTargets    int
@@ -225,33 +235,37 @@ type ErrorInjectionStats struct {
 
 // ErrorTarget configuration methods for fluent interface
 
-// WithProbability sets the injection probability
+// WithProbability sets the injection probability.
 func (et *ErrorTarget) WithProbability(prob float64) *ErrorTarget {
 	if prob >= 0.0 && prob <= 1.0 {
 		et.Probability = prob
 	}
+
 	return et
 }
 
-// WithDelay sets the injection delay
+// WithDelay sets the injection delay.
 func (et *ErrorTarget) WithDelay(delay time.Duration) *ErrorTarget {
 	et.Delay = delay
+
 	return et
 }
 
-// Enable enables this specific target
+// Enable enables this specific target.
 func (et *ErrorTarget) Enable() *ErrorTarget {
 	et.Enabled = true
+
 	return et
 }
 
-// Disable disables this specific target
+// Disable disables this specific target.
 func (et *ErrorTarget) Disable() *ErrorTarget {
 	et.Enabled = false
+
 	return et
 }
 
-// Common error types for testing
+// Common error types for testing.
 var (
 	ErrFileNotFound       = errors.New("file not found")
 	ErrPermissionDenied   = errors.New("permission denied")
@@ -263,14 +277,14 @@ var (
 	ErrServiceUnavailable = errors.New("service unavailable")
 )
 
-// ErrorScenario represents a complex error injection scenario
+// ErrorScenario represents a complex error injection scenario.
 type ErrorScenario struct {
 	Name        string
 	Description string
 	Steps       []ErrorStep
 }
 
-// ErrorStep represents a single step in an error scenario
+// ErrorStep represents a single step in an error scenario.
 type ErrorStep struct {
 	Operation   string
 	Error       error
@@ -279,14 +293,14 @@ type ErrorStep struct {
 	Probability float64
 }
 
-// ScenarioManager manages complex error injection scenarios
+// ScenarioManager manages complex error injection scenarios.
 type ScenarioManager struct {
 	injector  *ErrorInjector
 	scenarios map[string]*ErrorScenario
 	mu        sync.RWMutex
 }
 
-// NewScenarioManager creates a new scenario manager
+// NewScenarioManager creates a new scenario manager.
 func NewScenarioManager(injector *ErrorInjector) *ScenarioManager {
 	return &ScenarioManager{
 		injector:  injector,
@@ -294,14 +308,14 @@ func NewScenarioManager(injector *ErrorInjector) *ScenarioManager {
 	}
 }
 
-// RegisterScenario registers a new error scenario
+// RegisterScenario registers a new error scenario.
 func (sm *ScenarioManager) RegisterScenario(scenario *ErrorScenario) {
 	sm.mu.Lock()
 	defer sm.mu.Unlock()
 	sm.scenarios[scenario.Name] = scenario
 }
 
-// ExecuteScenario executes a specific error scenario
+// ExecuteScenario executes a specific error scenario.
 func (sm *ScenarioManager) ExecuteScenario(name string) error {
 	sm.mu.RLock()
 	scenario, exists := sm.scenarios[name]
@@ -325,7 +339,7 @@ func (sm *ScenarioManager) ExecuteScenario(name string) error {
 	return nil
 }
 
-// StopScenario stops a running scenario by clearing its targets
+// StopScenario stops a running scenario by clearing its targets.
 func (sm *ScenarioManager) StopScenario(name string) error {
 	sm.mu.RLock()
 	scenario, exists := sm.scenarios[name]
@@ -343,7 +357,7 @@ func (sm *ScenarioManager) StopScenario(name string) error {
 	return nil
 }
 
-// ListScenarios returns all registered scenarios
+// ListScenarios returns all registered scenarios.
 func (sm *ScenarioManager) ListScenarios() []string {
 	sm.mu.RLock()
 	defer sm.mu.RUnlock()
@@ -352,12 +366,13 @@ func (sm *ScenarioManager) ListScenarios() []string {
 	for name := range sm.scenarios {
 		scenarios = append(scenarios, name)
 	}
+
 	return scenarios
 }
 
 // Predefined scenarios for common testing situations
 
-// CreateBuildFailureScenario creates a scenario for build pipeline failures
+// CreateBuildFailureScenario creates a scenario for build pipeline failures.
 func CreateBuildFailureScenario() *ErrorScenario {
 	return &ErrorScenario{
 		Name:        "build_failure",
@@ -385,7 +400,7 @@ func CreateBuildFailureScenario() *ErrorScenario {
 	}
 }
 
-// CreateNetworkFailureScenario creates a scenario for network-related failures
+// CreateNetworkFailureScenario creates a scenario for network-related failures.
 func CreateNetworkFailureScenario() *ErrorScenario {
 	return &ErrorScenario{
 		Name:        "network_failure",
@@ -413,7 +428,7 @@ func CreateNetworkFailureScenario() *ErrorScenario {
 	}
 }
 
-// CreateResourceExhaustionScenario creates a scenario for resource exhaustion
+// CreateResourceExhaustionScenario creates a scenario for resource exhaustion.
 func CreateResourceExhaustionScenario() *ErrorScenario {
 	return &ErrorScenario{
 		Name:        "resource_exhaustion",

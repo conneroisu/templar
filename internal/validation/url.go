@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"strings"
@@ -35,23 +36,26 @@ func ValidateURL(rawURL string) error {
 
 	for _, char := range rawURL {
 		if strings.ContainsRune(shellMetachars, char) {
-			return fmt.Errorf("URL contains shell metacharacter %q (potential command injection)", char)
+			return fmt.Errorf(
+				"URL contains shell metacharacter %q (potential command injection)",
+				char,
+			)
 		}
 	}
 
 	// Additional safety: reject URLs with spaces (could indicate injection attempts)
 	if strings.Contains(rawURL, " ") {
-		return fmt.Errorf("URL contains spaces (possible command injection attempt)")
+		return errors.New("URL contains spaces (possible command injection attempt)")
 	}
 
 	// Validate hostname isn't empty
 	if parsed.Host == "" {
-		return fmt.Errorf("URL must have a valid hostname")
+		return errors.New("URL must have a valid hostname")
 	}
 
 	// Check for path traversal patterns that could bypass browser security
 	if strings.Contains(parsed.Path, "..") {
-		return fmt.Errorf("URL contains path traversal sequence '..' (potential directory traversal)")
+		return errors.New("URL contains path traversal sequence '..' (potential directory traversal)")
 	}
 
 	// Check for encoded path traversal attempts

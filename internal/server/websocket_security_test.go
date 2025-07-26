@@ -9,13 +9,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/coder/websocket"
 	"github.com/conneroisu/templar/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/coder/websocket"
 )
 
-// TestWebSocketOriginValidation_Security tests WebSocket origin validation security
+// TestWebSocketOriginValidation_Security tests WebSocket origin validation security.
 func TestWebSocketOriginValidation_Security(t *testing.T) {
 	// Create test server first to get the actual port
 	testServer := httptest.NewServer(nil)
@@ -176,7 +176,7 @@ func TestWebSocketOriginValidation_Security(t *testing.T) {
 	}
 }
 
-// TestWebSocketSecurity_CSRF tests CSRF protection in WebSocket connections
+// TestWebSocketSecurity_CSRF tests CSRF protection in WebSocket connections.
 func TestWebSocketSecurity_CSRF(t *testing.T) {
 	cfg := &config.Config{
 		Server: config.ServerConfig{
@@ -256,7 +256,7 @@ func TestWebSocketSecurity_CSRF(t *testing.T) {
 	}
 }
 
-// TestWebSocketSecurity_MessageValidation tests message content validation
+// TestWebSocketSecurity_MessageValidation tests message content validation.
 func TestWebSocketSecurity_MessageValidation(t *testing.T) {
 	// Create a test-specific WebSocket handler that allows connections for testing
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -266,6 +266,7 @@ func TestWebSocketSecurity_MessageValidation(t *testing.T) {
 		})
 		if err != nil {
 			http.Error(w, "WebSocket upgrade failed", http.StatusBadRequest)
+
 			return
 		}
 		defer conn.Close(websocket.StatusNormalClosure, "")
@@ -330,7 +331,7 @@ func TestWebSocketSecurity_MessageValidation(t *testing.T) {
 	}
 }
 
-// TestSecurityRegression_WebSocketHijacking verifies WebSocket hijacking prevention
+// TestSecurityRegression_WebSocketHijacking verifies WebSocket hijacking prevention.
 func TestSecurityRegression_WebSocketHijacking(t *testing.T) {
 	cfg := &config.Config{
 		Server: config.ServerConfig{
@@ -416,7 +417,7 @@ func TestSecurityRegression_WebSocketHijacking(t *testing.T) {
 	}
 }
 
-// TestWebSocketSecurityUnderLoad tests security validation under high concurrent load
+// TestWebSocketSecurityUnderLoad tests security validation under high concurrent load.
 func TestWebSocketSecurityUnderLoad(t *testing.T) {
 	// Create test server
 	testServer := httptest.NewServer(nil)
@@ -464,7 +465,7 @@ func TestWebSocketSecurityUnderLoad(t *testing.T) {
 	var wg sync.WaitGroup
 
 	// Launch legitimate clients (should succeed)
-	for i := 0; i < numConcurrentClients; i++ {
+	for i := range numConcurrentClients {
 		wg.Add(1)
 		go func(clientID int) {
 			defer wg.Done()
@@ -508,7 +509,7 @@ func TestWebSocketSecurityUnderLoad(t *testing.T) {
 		"ftp://malicious.com",
 	}
 
-	for i := 0; i < numMaliciousAttempts; i++ {
+	for i := range numMaliciousAttempts {
 		wg.Add(1)
 		go func(attemptID int) {
 			defer wg.Done()
@@ -555,12 +556,25 @@ func TestWebSocketSecurityUnderLoad(t *testing.T) {
 	t.Logf("  Unexpectedly allowed malicious: %d", unexpectedAllowed)
 
 	// Security validations - the core requirement
-	assert.Zero(t, unexpectedAllowed, "CRITICAL: Security validation failed under load: %d malicious connections allowed", unexpectedAllowed)
-	assert.Equal(t, numMaliciousAttempts, rejectedMaliciousAttempts, "CRITICAL: Not all malicious attempts were rejected under load")
+	assert.Zero(
+		t,
+		unexpectedAllowed,
+		"CRITICAL: Security validation failed under load: %d malicious connections allowed",
+		unexpectedAllowed,
+	)
+	assert.Equal(
+		t,
+		numMaliciousAttempts,
+		rejectedMaliciousAttempts,
+		"CRITICAL: Not all malicious attempts were rejected under load",
+	)
 
 	// Load performance validation - security system should handle the load
 	if unexpectedAllowed == 0 && rejectedMaliciousAttempts == numMaliciousAttempts {
-		t.Logf("✅ SUCCESS: Security validation is robust under load - all %d malicious attempts correctly rejected", numMaliciousAttempts)
+		t.Logf(
+			"✅ SUCCESS: Security validation is robust under load - all %d malicious attempts correctly rejected",
+			numMaliciousAttempts,
+		)
 		t.Logf("✅ SUCCESS: No race conditions detected in concurrent security validation")
 	}
 

@@ -12,18 +12,19 @@ import (
 // with progressive complexity tiers and clear separation of concerns.
 //
 // Usage:
-//   config, err := NewConfigBuilder().
-//       WithBasicSettings().
-//       WithDevelopmentMode().
-//       WithProductionOptimizations().
-//       Build()
+//
+//	config, err := NewConfigBuilder().
+//	    WithBasicSettings().
+//	    WithDevelopmentMode().
+//	    WithProductionOptimizations().
+//	    Build()
 type ConfigBuilder struct {
-	config    *Config
+	config     *Config
 	validators []ValidatorFunc
-	tier      ConfigTier
+	tier       ConfigTier
 }
 
-// ConfigTier represents the complexity level of configuration
+// ConfigTier represents the complexity level of configuration.
 type ConfigTier int
 
 const (
@@ -33,68 +34,70 @@ const (
 	TierEnterprise
 )
 
-// ValidatorFunc represents a configuration validation function
+// ValidatorFunc represents a configuration validation function.
 type ValidatorFunc func(*Config) error
 
-// NewConfigBuilder creates a new configuration builder with sensible defaults
+// NewConfigBuilder creates a new configuration builder with sensible defaults.
 func NewConfigBuilder() *ConfigBuilder {
 	return &ConfigBuilder{
-		config: &Config{},
+		config:     &Config{},
 		validators: []ValidatorFunc{},
-		tier: TierBasic,
+		tier:       TierBasic,
 	}
 }
 
-// WithBasicSettings applies basic configuration suitable for simple projects
+// WithBasicSettings applies basic configuration suitable for simple projects.
 func (cb *ConfigBuilder) WithBasicSettings() *ConfigBuilder {
 	cb.tier = TierBasic
 	cb.config.Server = ServerConfig{
-		Port: 8080,
-		Host: "localhost",
-		Open: true,
+		Port:        8080,
+		Host:        "localhost",
+		Open:        true,
 		Environment: "development",
 	}
 	cb.config.Components = ComponentsConfig{
-		ScanPaths: []string{"./components"},
+		ScanPaths:       []string{"./components"},
 		ExcludePatterns: []string{"*_test.templ", "*.bak"},
 	}
 	cb.config.Build = BuildConfig{
-		Command: "templ generate",
-		Watch: []string{"**/*.templ"},
-		Ignore: []string{"node_modules", ".git"},
+		Command:  "templ generate",
+		Watch:    []string{"**/*.templ"},
+		Ignore:   []string{"node_modules", ".git"},
 		CacheDir: ".templar/cache",
 	}
+
 	return cb
 }
 
-// WithDevelopmentMode adds development-specific settings
+// WithDevelopmentMode adds development-specific settings.
 func (cb *ConfigBuilder) WithDevelopmentMode() *ConfigBuilder {
 	if cb.tier < TierDevelopment {
 		cb.tier = TierDevelopment
 	}
 	cb.config.Development = DevelopmentConfig{
-		HotReload: true,
-		CSSInjection: true,
-		ErrorOverlay: true,
+		HotReload:         true,
+		CSSInjection:      true,
+		ErrorOverlay:      true,
 		StatePreservation: false,
 	}
 	cb.config.Preview = PreviewConfig{
-		MockData: "auto",
-		Wrapper: "layout.templ",
+		MockData:  "auto",
+		Wrapper:   "layout.templ",
 		AutoProps: true,
 	}
 	cb.config.Monitoring = MonitoringConfig{
-		Enabled: true,
-		LogLevel: "info",
-		LogFormat: "json",
-		MetricsPath: "./logs/metrics.json",
-		HTTPPort: 8081,
+		Enabled:       true,
+		LogLevel:      "info",
+		LogFormat:     "json",
+		MetricsPath:   "./logs/metrics.json",
+		HTTPPort:      8081,
 		AlertsEnabled: false,
 	}
+
 	return cb
 }
 
-// WithProductionOptimizations adds production-ready settings
+// WithProductionOptimizations adds production-ready settings.
 func (cb *ConfigBuilder) WithProductionOptimizations() *ConfigBuilder {
 	if cb.tier < TierProduction {
 		cb.tier = TierProduction
@@ -104,22 +107,22 @@ func (cb *ConfigBuilder) WithProductionOptimizations() *ConfigBuilder {
 		StaticDir: "static",
 		AssetsDir: "assets",
 		Minification: OptimizationSettings{
-			CSS: true,
-			JavaScript: true,
-			HTML: true,
+			CSS:            true,
+			JavaScript:     true,
+			HTML:           true,
 			RemoveComments: true,
 		},
 		Compression: CompressionSettings{
-			Enabled: true,
+			Enabled:    true,
 			Algorithms: []string{"gzip", "brotli"},
-			Level: 6,
+			Level:      6,
 			Extensions: []string{".html", ".css", ".js", ".json"},
 		},
 		Bundling: BundlingSettings{
-			Enabled: true,
-			Strategy: "adaptive",
+			Enabled:        true,
+			Strategy:       "adaptive",
 			ChunkSizeLimit: 250000,
-			Splitting: true,
+			Splitting:      true,
 		},
 		AssetOptimization: AssetSettings{
 			CriticalCSS: true,
@@ -131,35 +134,36 @@ func (cb *ConfigBuilder) WithProductionOptimizations() *ConfigBuilder {
 			},
 		},
 		Security: SecuritySettings{
-			HSTS: true,
-			XFrameOptions: "DENY",
+			HSTS:                true,
+			XFrameOptions:       "DENY",
 			XContentTypeOptions: true,
 			Scan: SecurityScanSettings{
-				Enabled: true,
+				Enabled:      true,
 				Dependencies: true,
-				Secrets: true,
+				Secrets:      true,
 			},
 		},
 	}
+
 	return cb
 }
 
-// WithEnterpriseFeatures adds enterprise-level configuration
+// WithEnterpriseFeatures adds enterprise-level configuration.
 func (cb *ConfigBuilder) WithEnterpriseFeatures() *ConfigBuilder {
 	cb.tier = TierEnterprise
-	
+
 	// Add authentication
 	cb.config.Server.Auth = AuthConfig{
-		Enabled: true,
-		Mode: "token",
-		RequireAuth: true,
+		Enabled:         true,
+		Mode:            "token",
+		RequireAuth:     true,
 		LocalhostBypass: false,
-		AllowedIPs: []string{},
+		AllowedIPs:      []string{},
 	}
-	
+
 	// Enhanced monitoring
 	cb.config.Monitoring.AlertsEnabled = true
-	
+
 	// Production monitoring
 	cb.config.Production.Monitoring = ProductionMonitoring{
 		Analytics: AnalyticsSettings{
@@ -168,71 +172,75 @@ func (cb *ConfigBuilder) WithEnterpriseFeatures() *ConfigBuilder {
 		},
 		Performance: PerformanceMonitoring{
 			Enabled: true,
-			Vitals: true,
+			Vitals:  true,
 		},
 		ErrorTracking: ErrorTrackingSettings{
-			Enabled: true,
+			Enabled:    true,
 			SampleRate: 0.1,
 		},
 	}
-	
+
 	return cb
 }
 
-// WithCustomServer allows customization of server settings
+// WithCustomServer allows customization of server settings.
 func (cb *ConfigBuilder) WithCustomServer(port int, host string) *ConfigBuilder {
 	cb.config.Server.Port = port
 	cb.config.Server.Host = host
 	cb.addValidator(validateServerConfig(&cb.config.Server))
+
 	return cb
 }
 
-// WithComponentPaths sets custom component scan paths
+// WithComponentPaths sets custom component scan paths.
 func (cb *ConfigBuilder) WithComponentPaths(paths ...string) *ConfigBuilder {
 	cb.config.Components.ScanPaths = paths
 	cb.addValidator(validateComponentsConfig(&cb.config.Components))
+
 	return cb
 }
 
-// WithCSS adds CSS framework configuration
+// WithCSS adds CSS framework configuration.
 func (cb *ConfigBuilder) WithCSS(framework string, config *CSSConfig) *ConfigBuilder {
 	if config == nil {
 		config = &CSSConfig{
-			Framework: framework,
-			OutputPath: "./static/css/style.css",
+			Framework:   framework,
+			OutputPath:  "./static/css/style.css",
 			SourcePaths: []string{"./components", "./views"},
 		}
-		
+
 		// Add framework-specific defaults
 		switch framework {
 		case "tailwind":
 			config.Options = map[string]interface{}{
-				"purge": true,
+				"purge":  true,
 				"minify": true,
 			}
 		case "bootstrap":
 			config.Options = map[string]interface{}{
-				"theme": "default",
+				"theme":     "default",
 				"customize": true,
 			}
 		}
 	}
 	cb.config.CSS = config
+
 	return cb
 }
 
-// WithPlugins adds plugin configuration
+// WithPlugins adds plugin configuration.
 func (cb *ConfigBuilder) WithPlugins(enabled []string, discoveryPaths []string) *ConfigBuilder {
 	cb.config.Plugins = PluginsConfig{
-		Enabled: enabled,
+		Enabled:        enabled,
 		DiscoveryPaths: discoveryPaths,
 		Configurations: make(map[string]PluginConfigMap),
 	}
 	cb.addValidator(validatePluginsConfig(&cb.config.Plugins))
+
 	return cb
 }
 
-// WithEnvironment applies environment-specific overrides
+// WithEnvironment applies environment-specific overrides.
 func (cb *ConfigBuilder) WithEnvironment(env string) *ConfigBuilder {
 	switch env {
 	case "development":
@@ -254,50 +262,53 @@ func (cb *ConfigBuilder) WithEnvironment(env string) *ConfigBuilder {
 		cb.WithEnterpriseFeatures()
 		cb.config.Server.Environment = "production"
 	}
+
 	return cb
 }
 
-// FromViper loads settings from viper configuration
+// FromViper loads settings from viper configuration.
 func (cb *ConfigBuilder) FromViper() *ConfigBuilder {
 	var viperConfig Config
 	if err := viper.Unmarshal(&viperConfig); err == nil {
 		cb.mergeViperConfig(&viperConfig)
 	}
+
 	return cb
 }
 
-// AddValidator adds a custom validation function
+// AddValidator adds a custom validation function.
 func (cb *ConfigBuilder) AddValidator(validator ValidatorFunc) *ConfigBuilder {
 	cb.validators = append(cb.validators, validator)
+
 	return cb
 }
 
-// Build creates the final configuration after applying all settings and validations
+// Build creates the final configuration after applying all settings and validations.
 func (cb *ConfigBuilder) Build() (*Config, error) {
 	// Apply viper overrides for known issues
 	cb.applyViperWorkarounds()
-	
+
 	// Run all validators
 	for _, validator := range cb.validators {
 		if err := validator(cb.config); err != nil {
 			return nil, fmt.Errorf("configuration validation failed: %w", err)
 		}
 	}
-	
+
 	// Final validation
 	if err := validateConfig(cb.config); err != nil {
 		return nil, fmt.Errorf("configuration validation failed: %w", err)
 	}
-	
+
 	return cb.config, nil
 }
 
-// GetTier returns the current configuration tier
+// GetTier returns the current configuration tier.
 func (cb *ConfigBuilder) GetTier() ConfigTier {
 	return cb.tier
 }
 
-// addValidator is a helper to add validator functions
+// addValidator is a helper to add validator functions.
 func (cb *ConfigBuilder) addValidator(err error) {
 	if err != nil {
 		cb.validators = append(cb.validators, func(*Config) error {
@@ -306,7 +317,7 @@ func (cb *ConfigBuilder) addValidator(err error) {
 	}
 }
 
-// mergeViperConfig merges settings from viper into the current config
+// mergeViperConfig merges settings from viper into the current config.
 func (cb *ConfigBuilder) mergeViperConfig(viperConfig *Config) {
 	// Only merge non-zero values to avoid overriding builder settings
 	if viperConfig.Server.Port != 0 {
@@ -321,7 +332,7 @@ func (cb *ConfigBuilder) mergeViperConfig(viperConfig *Config) {
 	// Add more merge logic as needed
 }
 
-// applyViperWorkarounds handles known viper issues with slice and boolean handling
+// applyViperWorkarounds handles known viper issues with slice and boolean handling.
 func (cb *ConfigBuilder) applyViperWorkarounds() {
 	// Handle scan_paths set via viper
 	if viper.IsSet("components.scan_paths") {
@@ -329,7 +340,7 @@ func (cb *ConfigBuilder) applyViperWorkarounds() {
 			cb.config.Components.ScanPaths = scanPaths
 		}
 	}
-	
+
 	// Handle development settings
 	if viper.IsSet("development.hot_reload") {
 		cb.config.Development.HotReload = viper.GetBool("development.hot_reload")
@@ -337,12 +348,12 @@ func (cb *ConfigBuilder) applyViperWorkarounds() {
 	if viper.IsSet("development.css_injection") {
 		cb.config.Development.CSSInjection = viper.GetBool("development.css_injection")
 	}
-	
+
 	// Handle monitoring settings
 	if viper.IsSet("monitoring.enabled") {
 		cb.config.Monitoring.Enabled = viper.GetBool("monitoring.enabled")
 	}
-	
+
 	// Override no-open if explicitly set
 	if viper.IsSet("server.no-open") && viper.GetBool("server.no-open") {
 		cb.config.Server.Open = false

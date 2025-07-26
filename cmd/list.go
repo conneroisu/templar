@@ -43,11 +43,13 @@ func init() {
 
 	// Use standardized flags
 	listFlags = AddStandardFlags(listCmd, "output")
-	
+
 	// Add list-specific flags with short aliases
-	listCmd.Flags().BoolVarP(&listWithDeps, "with-deps", "d", false, "Include component dependencies")
-	listCmd.Flags().BoolVarP(&listWithProps, "with-props", "p", false, "Include component properties/parameters")
-	
+	listCmd.Flags().
+		BoolVarP(&listWithDeps, "with-deps", "d", false, "Include component dependencies")
+	listCmd.Flags().
+		BoolVarP(&listWithProps, "with-props", "p", false, "Include component properties/parameters")
+
 	// Add format validation
 	AddFlagValidation(listCmd, "format", func(format string) error {
 		return ValidateFormatWithSuggestion(format, []string{"table", "json", "yaml", "csv"})
@@ -96,14 +98,12 @@ func runList(cmd *cobra.Command, args []string) error {
 
 	if len(components) == 0 {
 		fmt.Println("No components found.")
+
 		return nil
 	}
 
-	// Convert map to slice for output
-	componentSlice := make([]*types.ComponentInfo, 0, len(components))
-	for _, comp := range components {
-		componentSlice = append(componentSlice, comp)
-	}
+	// Components are already a slice
+	componentSlice := components
 
 	// Validate flags
 	if err := listFlags.ValidateFlags(); err != nil {
@@ -156,6 +156,7 @@ func outputListJSON(components []*types.ComponentInfo) error {
 
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", "  ")
+
 	return encoder.Encode(output)
 }
 
@@ -189,13 +190,22 @@ func outputYAML(components []*types.ComponentInfo) error {
 	}
 
 	encoder := yaml.NewEncoder(os.Stdout)
-	defer encoder.Close()
+	defer func() {
+		if err := encoder.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to close YAML encoder: %v\n", err)
+		}
+	}()
+
 	return encoder.Encode(output)
 }
 
 func outputTable(components []*types.ComponentInfo) error {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	defer w.Flush()
+	defer func() {
+		if err := w.Flush(); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to flush output: %v\n", err)
+		}
+	}()
 
 	// Write header
 	header := "NAME\tPACKAGE\tFILE\tFUNCTION"
@@ -208,7 +218,19 @@ func outputTable(components []*types.ComponentInfo) error {
 	fmt.Fprintln(w, header)
 
 	// Write separator
-	separator := strings.Repeat("-", 4) + "\t" + strings.Repeat("-", 7) + "\t" + strings.Repeat("-", 4) + "\t" + strings.Repeat("-", 8)
+	separator := strings.Repeat(
+		"-",
+		4,
+	) + "\t" + strings.Repeat(
+		"-",
+		7,
+	) + "\t" + strings.Repeat(
+		"-",
+		4,
+	) + "\t" + strings.Repeat(
+		"-",
+		8,
+	)
 	if listWithProps {
 		separator += "\t" + strings.Repeat("-", 10)
 	}

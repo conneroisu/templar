@@ -297,7 +297,7 @@ func TestComponentRegistry_ConcurrentAccess(t *testing.T) {
 	// Test concurrent adds
 	done := make(chan bool)
 
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		go func(index int) {
 			component := &types.ComponentInfo{
 				Name:       fmt.Sprintf("Component%d", index),
@@ -311,14 +311,14 @@ func TestComponentRegistry_ConcurrentAccess(t *testing.T) {
 	}
 
 	// Wait for all goroutines to complete
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		<-done
 	}
 
 	assert.Equal(t, 10, registry.Count())
 
 	// Test concurrent reads
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		go func(index int) {
 			name := fmt.Sprintf("Component%d", index)
 			_, exists := registry.Get(name)
@@ -328,7 +328,7 @@ func TestComponentRegistry_ConcurrentAccess(t *testing.T) {
 	}
 
 	// Wait for all read goroutines to complete
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		<-done
 	}
 }

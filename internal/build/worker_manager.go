@@ -42,8 +42,14 @@ type WorkerManager struct {
 }
 
 // NewWorkerManager creates a new worker manager with the specified configuration.
-func NewWorkerManager(workers int, compiler *TemplCompiler, hashProvider interfaces.HashProvider, 
-	metrics *BuildMetrics, objectPools *ObjectPools, errorParser *errors.ErrorParser) *WorkerManager {
+func NewWorkerManager(
+	workers int,
+	compiler *TemplCompiler,
+	hashProvider interfaces.HashProvider,
+	metrics *BuildMetrics,
+	objectPools *ObjectPools,
+	errorParser *errors.ErrorParser,
+) *WorkerManager {
 	return &WorkerManager{
 		workers:      workers,
 		workerPool:   NewWorkerPool(),
@@ -60,12 +66,12 @@ func NewWorkerManager(workers int, compiler *TemplCompiler, hashProvider interfa
 func (wm *WorkerManager) StartWorkers(ctx context.Context, queue interfaces.TaskQueue) {
 	wm.mu.Lock()
 	defer wm.mu.Unlock()
-	
+
 	// Create cancellable context for workers
 	ctx, wm.cancel = context.WithCancel(ctx)
-	
+
 	// Start the configured number of workers
-	for i := 0; i < wm.workers; i++ {
+	for range wm.workers {
 		wm.workerWg.Add(1)
 		go wm.worker(ctx, queue)
 	}
@@ -76,11 +82,11 @@ func (wm *WorkerManager) StopWorkers() {
 	wm.mu.RLock()
 	cancel := wm.cancel
 	wm.mu.RUnlock()
-	
+
 	if cancel != nil {
 		cancel()
 	}
-	
+
 	// Wait for all workers to finish
 	wm.workerWg.Wait()
 }
@@ -90,7 +96,7 @@ func (wm *WorkerManager) StopWorkers() {
 func (wm *WorkerManager) SetWorkerCount(count int) {
 	wm.mu.Lock()
 	defer wm.mu.Unlock()
-	
+
 	wm.workers = count
 	// Note: Actual worker adjustment would require more complex logic
 	// to gracefully stop/start workers. This is a simplified implementation.
@@ -99,9 +105,9 @@ func (wm *WorkerManager) SetWorkerCount(count int) {
 // worker is the main worker goroutine that processes build tasks.
 func (wm *WorkerManager) worker(ctx context.Context, queue interfaces.TaskQueue) {
 	defer wm.workerWg.Done()
-	
+
 	taskChan := queue.GetNextTask()
-	
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -110,19 +116,17 @@ func (wm *WorkerManager) worker(ctx context.Context, queue interfaces.TaskQueue)
 			if !ok {
 				return // Queue closed
 			}
-			
+
 			buildTask, ok := task.(BuildTask)
 			if !ok {
 				continue // Invalid task type
 			}
-			
+
 			// Process the build task
 			result := wm.processBuildTask(ctx, buildTask)
-			
-			// Publish the result
-			if err := queue.PublishResult(result); err != nil {
-				// Note: Results dropped tracking could be added to metrics if needed
-			}
+
+			// Publish the result - ignore publication errors as they don't affect core functionality
+			_ = queue.PublishResult(result)
 		}
 	}
 }
@@ -130,43 +134,43 @@ func (wm *WorkerManager) worker(ctx context.Context, queue interfaces.TaskQueue)
 // processBuildTask processes a single build task and returns the result.
 func (wm *WorkerManager) processBuildTask(ctx context.Context, task BuildTask) BuildResult {
 	startTime := time.Now()
-	
+
 	// Use object pool for build result
 	buildResult := wm.objectPools.GetBuildResult()
 	buildResult.Component = task.Component
 	buildResult.CacheHit = false
 	buildResult.Hash = ""
-	
+
 	// Generate hash for caching
 	hash := wm.hashProvider.GenerateContentHash(task.Component)
 	buildResult.Hash = hash
-	
+
 	// Check cache first (if cache is integrated into the system)
 	// For now, we'll proceed with compilation
-	
+
 	// Execute build with pooled output buffer
 	output, err := wm.compiler.CompileWithPools(ctx, task.Component, wm.objectPools)
-	
+
 	// Parse errors if build failed
 	var parsedErrors []*errors.ParsedError
 	if err != nil {
 		// Wrap the error with build context for better debugging
-		err = errors.WrapBuild(err, errors.ErrCodeBuildFailed, 
+		err = errors.WrapBuild(err, errors.ErrCodeBuildFailed,
 			"component compilation failed", task.Component.Name).
 			WithLocation(task.Component.FilePath, 0, 0)
 		parsedErrors = wm.errorParser.ParseError(string(output))
 	}
-	
+
 	buildResult.Output = output
 	buildResult.Error = err
 	buildResult.ParsedErrors = parsedErrors
 	buildResult.Duration = time.Since(startTime)
-	
+
 	// Update metrics
 	if wm.metrics != nil {
 		wm.metrics.RecordBuild(*buildResult)
 	}
-	
+
 	return *buildResult
 }
 
@@ -174,9 +178,9 @@ func (wm *WorkerManager) processBuildTask(ctx context.Context, task BuildTask) B
 func (wm *WorkerManager) GetWorkerStats() WorkerStats {
 	wm.mu.RLock()
 	defer wm.mu.RUnlock()
-	
+
 	return WorkerStats{
-		ActiveWorkers:   wm.workers,
+		ActiveWorkers: wm.workers,
 		// Note: Pool task tracking methods would need to be implemented
 		TotalTasks:      0,
 		CompletedTasks:  0,
@@ -194,5 +198,5 @@ type WorkerStats struct {
 	AverageTaskTime time.Duration
 }
 
-// Verify that WorkerManager implements the WorkerManager interface
+// Verify that WorkerManager implements the WorkerManager interface.
 var _ interfaces.WorkerManager = (*WorkerManager)(nil)

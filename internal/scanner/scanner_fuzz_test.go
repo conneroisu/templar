@@ -10,7 +10,7 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// FuzzTemplateParser tests the template parser with various inputs
+// FuzzTemplateParser tests the template parser with various inputs.
 func FuzzTemplateParser(f *testing.F) {
 	// Seed with known good templates
 	f.Add(`package components
@@ -104,16 +104,26 @@ templ Valid() {
 
 				// Package should be reasonable if set
 				if component.Package != "" && strings.ContainsAny(component.Package, "/\\:;") {
-					t.Errorf("Parser returned invalid package name: %q for input: %q", component.Package, template)
+					t.Errorf(
+						"Parser returned invalid package name: %q for input: %q",
+						component.Package,
+						template,
+					)
 				}
 
 				// Parameters should have names and types if present
 				for _, param := range component.Parameters {
 					if param.Name == "" {
-						t.Errorf("Parser returned parameter with empty name for input: %q", template)
+						t.Errorf(
+							"Parser returned parameter with empty name for input: %q",
+							template,
+						)
 					}
 					if param.Type == "" {
-						t.Errorf("Parser returned parameter with empty type for input: %q", template)
+						t.Errorf(
+							"Parser returned parameter with empty type for input: %q",
+							template,
+						)
 					}
 				}
 			}
@@ -121,7 +131,7 @@ templ Valid() {
 	})
 }
 
-// FuzzDirectoryScanning tests directory scanning with various path inputs
+// FuzzDirectoryScanning tests directory scanning with various path inputs.
 func FuzzDirectoryScanning(f *testing.F) {
 	// Seed with valid directory patterns
 	f.Add("./components")
@@ -176,7 +186,7 @@ func FuzzDirectoryScanning(f *testing.F) {
 	})
 }
 
-// FuzzComponentValidation tests component validation with various inputs
+// FuzzComponentValidation tests component validation with various inputs.
 func FuzzComponentValidation(f *testing.F) {
 	// Seed with valid component data
 	f.Add("Button", "components", "button.templ", "text", "string")
@@ -201,8 +211,15 @@ func FuzzComponentValidation(f *testing.F) {
 		// Component creation should never panic
 		defer func() {
 			if r := recover(); r != nil {
-				t.Errorf("Component creation panicked\nName: %q, Package: %q, FilePath: %q, ParamName: %q, ParamType: %q\nPanic: %v",
-					name, pkg, filePath, paramName, paramType, r)
+				t.Errorf(
+					"Component creation panicked\nName: %q, Package: %q, FilePath: %q, ParamName: %q, ParamType: %q\nPanic: %v",
+					name,
+					pkg,
+					filePath,
+					paramName,
+					paramType,
+					r,
+				)
 			}
 		}()
 

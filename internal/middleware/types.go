@@ -2,17 +2,17 @@ package middleware
 
 import (
 	"net/http"
-	
+
 	"github.com/conneroisu/templar/internal/security"
 )
 
-// TokenBucketManager type alias for security package
+// TokenBucketManager type alias for security package.
 type TokenBucketManager = security.TokenBucketManager
 
-// OriginValidator type alias for security package  
+// OriginValidator type alias for security package.
 type OriginValidator = security.OriginValidator
 
-// RateLimitMiddleware creates rate limiting middleware
+// RateLimitMiddleware creates rate limiting middleware.
 func RateLimitMiddleware(rateLimiter *RateLimiter) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -22,17 +22,17 @@ func RateLimitMiddleware(rateLimiter *RateLimiter) func(http.Handler) http.Handl
 	}
 }
 
-// SecurityConfig represents security configuration
+// SecurityConfig represents security configuration.
 type SecurityConfig struct {
 	RateLimiting *RateLimitConfig
 }
 
-// RateLimitConfig represents rate limiting configuration
+// RateLimitConfig represents rate limiting configuration.
 type RateLimitConfig struct {
 	Enabled bool
 }
 
-// SecurityConfigFromAppConfig extracts security config from app config
+// SecurityConfigFromAppConfig extracts security config from app config.
 func SecurityConfigFromAppConfig(config interface{}) *SecurityConfig {
 	// For now, return a basic security config
 	return &SecurityConfig{
@@ -42,7 +42,7 @@ func SecurityConfigFromAppConfig(config interface{}) *SecurityConfig {
 	}
 }
 
-// SecurityMiddleware creates security middleware
+// SecurityMiddleware creates security middleware.
 func SecurityMiddleware(config interface{}) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -52,7 +52,7 @@ func SecurityMiddleware(config interface{}) func(http.Handler) http.Handler {
 	}
 }
 
-// AuthMiddleware creates authentication middleware
+// AuthMiddleware creates authentication middleware.
 func AuthMiddleware(config interface{}) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

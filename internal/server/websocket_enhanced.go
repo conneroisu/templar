@@ -16,7 +16,7 @@ import (
 	"github.com/coder/websocket"
 )
 
-// WebSocketEnhancements provides performance improvements for WebSocket management
+// WebSocketEnhancements provides performance improvements for WebSocket management.
 type WebSocketEnhancements struct {
 	// Per-IP connection tracking for rate limiting
 	ipConnections sync.Map // map[string]*IPConnectionTracker
@@ -37,7 +37,7 @@ type WebSocketEnhancements struct {
 	cleanupWorkers       int
 }
 
-// EnhancedClient extends the basic Client with performance tracking
+// EnhancedClient extends the basic Client with performance tracking.
 type EnhancedClient struct {
 	*Client
 	ip           string
@@ -46,7 +46,7 @@ type EnhancedClient struct {
 	pingFailures int
 }
 
-// IPConnectionTracker tracks connections and rate limiting per IP
+// IPConnectionTracker tracks connections and rate limiting per IP.
 type IPConnectionTracker struct {
 	connections  map[*websocket.Conn]struct{}
 	count        int
@@ -55,7 +55,7 @@ type IPConnectionTracker struct {
 	mutex        sync.RWMutex
 }
 
-// NewWebSocketEnhancements creates enhanced WebSocket management
+// NewWebSocketEnhancements creates enhanced WebSocket management.
 func NewWebSocketEnhancements() *WebSocketEnhancements {
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -69,7 +69,7 @@ func NewWebSocketEnhancements() *WebSocketEnhancements {
 	}
 
 	// Start cleanup workers
-	for i := 0; i < enhancements.cleanupWorkers; i++ {
+	for range enhancements.cleanupWorkers {
 		enhancements.cleanupWg.Add(1)
 		go enhancements.cleanupWorker()
 	}
@@ -77,7 +77,7 @@ func NewWebSocketEnhancements() *WebSocketEnhancements {
 	return enhancements
 }
 
-// Enhanced WebSocket handler that integrates with existing server
+// Enhanced WebSocket handler that integrates with existing server.
 func (s *PreviewServer) handleWebSocketEnhanced(w http.ResponseWriter, r *http.Request) {
 	// Initialize enhancements if not already done
 	if s.enhancements == nil {
@@ -88,6 +88,7 @@ func (s *PreviewServer) handleWebSocketEnhanced(w http.ResponseWriter, r *http.R
 	if !s.checkOrigin(r) {
 		http.Error(w, "Origin not allowed", http.StatusForbidden)
 		atomic.AddInt64(&s.enhancements.rejectedConnections, 1)
+
 		return
 	}
 
@@ -99,6 +100,7 @@ func (s *PreviewServer) handleWebSocketEnhanced(w http.ResponseWriter, r *http.R
 		http.Error(w, "Too Many Connections from IP", http.StatusTooManyRequests)
 		atomic.AddInt64(&s.enhancements.rejectedConnections, 1)
 		log.Printf("WebSocket connection rejected: IP limit exceeded for %s", clientIP)
+
 		return
 	}
 
@@ -110,7 +112,12 @@ func (s *PreviewServer) handleWebSocketEnhanced(w http.ResponseWriter, r *http.R
 	if currentConnections >= maxConnections {
 		http.Error(w, "Too Many Connections", http.StatusTooManyRequests)
 		atomic.AddInt64(&s.enhancements.rejectedConnections, 1)
-		log.Printf("WebSocket connection rejected: global limit exceeded (%d/%d)", currentConnections, maxConnections)
+		log.Printf(
+			"WebSocket connection rejected: global limit exceeded (%d/%d)",
+			currentConnections,
+			maxConnections,
+		)
+
 		return
 	}
 
@@ -122,6 +129,7 @@ func (s *PreviewServer) handleWebSocketEnhanced(w http.ResponseWriter, r *http.R
 	if err != nil {
 		log.Printf("WebSocket upgrade error: %v", err)
 		atomic.AddInt64(&s.enhancements.rejectedConnections, 1)
+
 		return
 	}
 
@@ -150,10 +158,14 @@ func (s *PreviewServer) handleWebSocketEnhanced(w http.ResponseWriter, r *http.R
 	s.register <- enhancedClient.Client
 
 	atomic.AddInt64(&s.enhancements.totalConnections, 1)
-	log.Printf("Enhanced WebSocket client connected: %s (total: %d)", enhancedClient.id, currentConnections+1)
+	log.Printf(
+		"Enhanced WebSocket client connected: %s (total: %d)",
+		enhancedClient.id,
+		currentConnections+1,
+	)
 }
 
-// Enhanced read pump with better performance and monitoring
+// Enhanced read pump with better performance and monitoring.
 func (s *PreviewServer) readPumpEnhanced(client *EnhancedClient) {
 	defer func() {
 		// MEMORY LEAK FIX: Always untrack IP connection first
@@ -190,6 +202,7 @@ func (s *PreviewServer) readPumpEnhanced(client *EnhancedClient) {
 		// Enhanced connection timeout check
 		if time.Since(client.lastActivity) > connectionTimeout {
 			log.Printf("Enhanced WebSocket connection %s timed out due to inactivity", client.id)
+
 			break
 		}
 
@@ -203,6 +216,7 @@ func (s *PreviewServer) readPumpEnhanced(client *EnhancedClient) {
 				websocket.CloseStatus(err) != websocket.StatusGoingAway {
 				log.Printf("Enhanced WebSocket read error for client %s: %v", client.id, err)
 			}
+
 			break
 		}
 
@@ -221,6 +235,7 @@ func (s *PreviewServer) readPumpEnhanced(client *EnhancedClient) {
 			if !client.rateLimiter.IsAllowed() {
 				log.Printf("Enhanced WebSocket rate limit exceeded for client %s", client.id)
 				client.conn.Close(websocket.StatusPolicyViolation, "Rate limit exceeded")
+
 				break
 			}
 
@@ -233,6 +248,7 @@ func (s *PreviewServer) readPumpEnhanced(client *EnhancedClient) {
 				if ipRateExceeded {
 					log.Printf("Enhanced WebSocket IP rate limit exceeded for %s", client.ip)
 					client.conn.Close(websocket.StatusPolicyViolation, "IP rate limit exceeded")
+
 					break
 				}
 
@@ -262,7 +278,7 @@ func (s *PreviewServer) readPumpEnhanced(client *EnhancedClient) {
 	}
 }
 
-// Enhanced write pump with better ping handling
+// Enhanced write pump with better ping handling.
 func (s *PreviewServer) writePumpEnhanced(client *EnhancedClient) {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
@@ -291,12 +307,14 @@ func (s *PreviewServer) writePumpEnhanced(client *EnhancedClient) {
 			if !ok {
 				client.conn.Close(websocket.StatusNormalClosure, "")
 				cancel()
+
 				return
 			}
 
 			if err := client.conn.Write(writeCtx, websocket.MessageText, message); err != nil {
 				log.Printf("Enhanced WebSocket write error for client %s: %v", client.id, err)
 				cancel()
+
 				return
 			}
 			cancel()
@@ -311,8 +329,12 @@ func (s *PreviewServer) writePumpEnhanced(client *EnhancedClient) {
 
 				// Enhanced ping failure handling
 				if client.pingFailures >= 3 {
-					log.Printf("Enhanced WebSocket client %s failed ping test %d times, disconnecting",
-						client.id, client.pingFailures)
+					log.Printf(
+						"Enhanced WebSocket client %s failed ping test %d times, disconnecting",
+						client.id,
+						client.pingFailures,
+					)
+
 					return
 				}
 
@@ -326,7 +348,7 @@ func (s *PreviewServer) writePumpEnhanced(client *EnhancedClient) {
 	}
 }
 
-// Enhanced broadcast that works with existing system
+// Enhanced broadcast that works with existing system.
 func (s *PreviewServer) broadcastEnhanced(message []byte) {
 	// Get current time for metrics
 	start := time.Now()
@@ -388,7 +410,7 @@ func (s *PreviewServer) broadcastEnhanced(message []byte) {
 		clientCount, duration, len(failedClients))
 }
 
-// checkIPLimit checks if an IP can accept new connections
+// checkIPLimit checks if an IP can accept new connections.
 func (enhancements *WebSocketEnhancements) checkIPLimit(ip string) bool {
 	trackerInterface, _ := enhancements.ipConnections.LoadOrStore(ip, &IPConnectionTracker{
 		connections: make(map[*websocket.Conn]struct{}),
@@ -403,7 +425,7 @@ func (enhancements *WebSocketEnhancements) checkIPLimit(ip string) bool {
 	return count < enhancements.maxConnectionsPerIP
 }
 
-// trackIPConnection tracks a connection for an IP
+// trackIPConnection tracks a connection for an IP.
 func (enhancements *WebSocketEnhancements) trackIPConnection(ip string, conn *websocket.Conn) {
 	trackerInterface, _ := enhancements.ipConnections.LoadOrStore(ip, &IPConnectionTracker{
 		connections: make(map[*websocket.Conn]struct{}),
@@ -417,7 +439,7 @@ func (enhancements *WebSocketEnhancements) trackIPConnection(ip string, conn *we
 	tracker.mutex.Unlock()
 }
 
-// untrackIPConnection removes tracking for an IP connection
+// untrackIPConnection removes tracking for an IP connection.
 func (enhancements *WebSocketEnhancements) untrackIPConnection(ip string, conn *websocket.Conn) {
 	if trackerInterface, ok := enhancements.ipConnections.Load(ip); ok {
 		tracker := trackerInterface.(*IPConnectionTracker)
@@ -435,7 +457,7 @@ func (enhancements *WebSocketEnhancements) untrackIPConnection(ip string, conn *
 	}
 }
 
-// cleanupWorker handles asynchronous client cleanup
+// cleanupWorker handles asynchronous client cleanup.
 func (enhancements *WebSocketEnhancements) cleanupWorker() {
 	defer enhancements.cleanupWg.Done()
 
@@ -464,13 +486,14 @@ func (enhancements *WebSocketEnhancements) cleanupWorker() {
 	}
 }
 
-// getClientIPEnhanced efficiently extracts client IP
+// getClientIPEnhanced efficiently extracts client IP.
 func (s *PreviewServer) getClientIPEnhanced(r *http.Request) string {
 	// Check X-Forwarded-For header first (most common in production)
 	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
 		if commaIdx := strings.Index(xff, ","); commaIdx > 0 {
 			return strings.TrimSpace(xff[:commaIdx])
 		}
+
 		return strings.TrimSpace(xff)
 	}
 
@@ -487,7 +510,7 @@ func (s *PreviewServer) getClientIPEnhanced(r *http.Request) string {
 	return r.RemoteAddr
 }
 
-// GetEnhancedMetrics returns enhanced WebSocket metrics
+// GetEnhancedMetrics returns enhanced WebSocket metrics.
 func (s *PreviewServer) GetEnhancedMetrics() map[string]interface{} {
 	metrics := make(map[string]interface{})
 
@@ -502,6 +525,7 @@ func (s *PreviewServer) GetEnhancedMetrics() map[string]interface{} {
 		ipCount := 0
 		s.enhancements.ipConnections.Range(func(key, value interface{}) bool {
 			ipCount++
+
 			return true
 		})
 		metrics["tracked_ips"] = ipCount
@@ -515,7 +539,7 @@ func (s *PreviewServer) GetEnhancedMetrics() map[string]interface{} {
 	return metrics
 }
 
-// ShutdownEnhancements gracefully shuts down enhanced WebSocket features
+// ShutdownEnhancements gracefully shuts down enhanced WebSocket features.
 func (s *PreviewServer) ShutdownEnhancements() {
 	if s.enhancements == nil {
 		return

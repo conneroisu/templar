@@ -8,13 +8,14 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// handleEditorIndex serves the main editor interface
+// handleEditorIndex serves the main editor interface.
 func (s *PreviewServer) handleEditorIndex(w http.ResponseWriter, r *http.Request) {
 	// Check if a specific component is requested
 	path := strings.TrimPrefix(r.URL.Path, "/editor")
 	if path != "" && path != "/" {
 		componentName := strings.TrimPrefix(path, "/")
 		s.handleComponentEditorView(w, r, componentName)
+
 		return
 	}
 
@@ -24,11 +25,16 @@ func (s *PreviewServer) handleEditorIndex(w http.ResponseWriter, r *http.Request
 	w.Write([]byte(html))
 }
 
-// handleComponentEditorView serves the editor for a specific component
-func (s *PreviewServer) handleComponentEditorView(w http.ResponseWriter, r *http.Request, componentName string) {
+// handleComponentEditorView serves the editor for a specific component.
+func (s *PreviewServer) handleComponentEditorView(
+	w http.ResponseWriter,
+	r *http.Request,
+	componentName string,
+) {
 	// Validate component name
 	if err := validateComponentName(componentName); err != nil {
 		http.Error(w, "Invalid component name: "+err.Error(), http.StatusBadRequest)
+
 		return
 	}
 
@@ -36,6 +42,7 @@ func (s *PreviewServer) handleComponentEditorView(w http.ResponseWriter, r *http
 	component, exists := s.registry.Get(componentName)
 	if !exists {
 		http.NotFound(w, r)
+
 		return
 	}
 
@@ -45,7 +52,7 @@ func (s *PreviewServer) handleComponentEditorView(w http.ResponseWriter, r *http
 	w.Write([]byte(html))
 }
 
-// generateEditorHTML generates the main editor interface HTML
+// generateEditorHTML generates the main editor interface HTML.
 func (s *PreviewServer) generateEditorHTML() string {
 	return fmt.Sprintf(`<!DOCTYPE html>
 <html lang="en">
@@ -275,7 +282,7 @@ func (s *PreviewServer) generateEditorHTML() string {
 </html>`, s.generateEditorJavaScript())
 }
 
-// generateComponentEditorHTML generates the editor HTML for a specific component
+// generateComponentEditorHTML generates the editor HTML for a specific component.
 func (s *PreviewServer) generateComponentEditorHTML(component *types.ComponentInfo) string {
 	return fmt.Sprintf(`<!DOCTYPE html>
 <html lang="en">
@@ -292,10 +299,16 @@ func (s *PreviewServer) generateComponentEditorHTML(component *types.ComponentIn
         .editor-content { flex: 1; display: flex; }
         .code-editor { flex: 1; }
         .preview-pane { width: 400px; background: white; display: flex; flex-direction: column; }
-        .preview-header { height: 40px; background: #f3f3f3; display: flex; align-items: center; padding: 0 15px; border-bottom: 1px solid #ddd; }
+        .preview-header { 
+            height: 40px; background: #f3f3f3; display: flex; 
+            align-items: center; padding: 0 15px; border-bottom: 1px solid #ddd; 
+        }
         .preview-content { flex: 1; padding: 15px; overflow-y: auto; }
         .props-panel { height: 200px; border-top: 1px solid #ddd; background: #fafafa; padding: 15px; overflow-y: auto; }
-        .status-bar { height: 25px; background: #007acc; color: white; display: flex; align-items: center; padding: 0 15px; font-size: 12px; }
+        .status-bar { 
+            height: 25px; background: #007acc; color: white; display: flex; 
+            align-items: center; padding: 0 15px; font-size: 12px; 
+        }
     </style>
 </head>
 <body class="editor-container">
@@ -358,10 +371,16 @@ func (s *PreviewServer) generateComponentEditorHTML(component *types.ComponentIn
         %s
     </script>
 </body>
-</html>`, component.Name, component.Name, component.FilePath, component.Name, component.FilePath, s.generateComponentEditorJavaScript(component))
+</html>`,
+		component.Name,
+		component.Name,
+		component.FilePath,
+		component.Name,
+		component.FilePath,
+		s.generateComponentEditorJavaScript(component))
 }
 
-// generateEditorJavaScript generates JavaScript for the main editor
+// generateEditorJavaScript generates JavaScript for the main editor.
 func (s *PreviewServer) generateEditorJavaScript() string {
 	return `
         // Global state
@@ -756,10 +775,10 @@ func (s *PreviewServer) generateEditorJavaScript() string {
                 }
             }
         });
-    `;
+    `
 }
 
-// generateComponentEditorJavaScript generates JavaScript for component-specific editor
+// generateComponentEditorJavaScript generates JavaScript for component-specific editor.
 func (s *PreviewServer) generateComponentEditorJavaScript(component *types.ComponentInfo) string {
 	return `
         // Component-specific editor JavaScript

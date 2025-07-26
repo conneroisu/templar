@@ -9,7 +9,7 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// MockPlugin is a test plugin implementation
+// MockPlugin is a test plugin implementation.
 type MockPlugin struct {
 	name           string
 	version        string
@@ -23,30 +23,39 @@ func (mp *MockPlugin) Version() string     { return mp.version }
 func (mp *MockPlugin) Description() string { return "Mock plugin for testing" }
 func (mp *MockPlugin) Initialize(ctx context.Context, config PluginConfig) error {
 	mp.initialized = true
+
 	return nil
 }
-func (mp *MockPlugin) Shutdown(ctx context.Context) error { mp.shutdownCalled = true; return nil }
-func (mp *MockPlugin) Health() PluginHealth               { return mp.health }
+func (mp *MockPlugin) Shutdown(ctx context.Context) error {
+	mp.shutdownCalled = true
 
-// MockComponentPlugin extends MockPlugin with component functionality
+	return nil
+}
+func (mp *MockPlugin) Health() PluginHealth { return mp.health }
+
+// MockComponentPlugin extends MockPlugin with component functionality.
 type MockComponentPlugin struct {
 	MockPlugin
 	priority int
 }
 
-func (mcp *MockComponentPlugin) HandleComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error) {
+func (mcp *MockComponentPlugin) HandleComponent(
+	ctx context.Context,
+	component *types.ComponentInfo,
+) (*types.ComponentInfo, error) {
 	// Add test metadata
 	if component.Metadata == nil {
 		component.Metadata = make(map[string]interface{})
 	}
 	component.Metadata["processed_by"] = mcp.name
+
 	return component, nil
 }
 
 func (mcp *MockComponentPlugin) SupportedExtensions() []string { return []string{".templ"} }
 func (mcp *MockComponentPlugin) Priority() int                 { return mcp.priority }
 
-// MockBuildPlugin extends MockPlugin with build functionality
+// MockBuildPlugin extends MockPlugin with build functionality.
 type MockBuildPlugin struct {
 	MockPlugin
 	preBuildCalled  bool
@@ -55,15 +64,24 @@ type MockBuildPlugin struct {
 
 func (mbp *MockBuildPlugin) PreBuild(ctx context.Context, components []*types.ComponentInfo) error {
 	mbp.preBuildCalled = true
+
 	return nil
 }
 
-func (mbp *MockBuildPlugin) PostBuild(ctx context.Context, components []*types.ComponentInfo, buildResult BuildResult) error {
+func (mbp *MockBuildPlugin) PostBuild(
+	ctx context.Context,
+	components []*types.ComponentInfo,
+	buildResult BuildResult,
+) error {
 	mbp.postBuildCalled = true
+
 	return nil
 }
 
-func (mbp *MockBuildPlugin) TransformBuildCommand(ctx context.Context, command []string) ([]string, error) {
+func (mbp *MockBuildPlugin) TransformBuildCommand(
+	ctx context.Context,
+	command []string,
+) ([]string, error) {
 	// Add a test flag
 	return append(command, "--test-flag"), nil
 }
@@ -335,7 +353,10 @@ func TestBuildPlugin_Lifecycle(t *testing.T) {
 
 	// Test TransformBuildCommand
 	originalCommand := []string{"go", "build"}
-	transformedCommand, err := pm.buildPlugins[0].TransformBuildCommand(context.Background(), originalCommand)
+	transformedCommand, err := pm.buildPlugins[0].TransformBuildCommand(
+		context.Background(),
+		originalCommand,
+	)
 	if err != nil {
 		t.Fatalf("TransformBuildCommand failed: %v", err)
 	}
@@ -410,7 +431,7 @@ func BenchmarkPluginManager_ProcessComponent(b *testing.B) {
 	defer pm.Shutdown()
 
 	// Register multiple component plugins
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		plugin := &MockComponentPlugin{
 			MockPlugin: MockPlugin{
 				name:    fmt.Sprintf("plugin-%d", i),
@@ -431,7 +452,7 @@ func BenchmarkPluginManager_ProcessComponent(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, err := pm.ProcessComponent(context.Background(), component)
 		if err != nil {
 			b.Fatalf("Failed to process component: %v", err)
@@ -444,7 +465,7 @@ func BenchmarkPluginManager_ListPlugins(b *testing.B) {
 	defer pm.Shutdown()
 
 	// Register many plugins
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		plugin := &MockPlugin{
 			name:    fmt.Sprintf("plugin-%d", i),
 			version: "1.0.0",
@@ -456,7 +477,7 @@ func BenchmarkPluginManager_ListPlugins(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		plugins := pm.ListPlugins()
 		if len(plugins) != 100 {
 			b.Fatalf("Expected 100 plugins, got %d", len(plugins))

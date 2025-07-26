@@ -11,7 +11,7 @@ import (
 	"github.com/conneroisu/templar/internal/interfaces"
 )
 
-// TestMemoryGrowthUnderHighLoad tests memory behavior under sustained high load
+// TestMemoryGrowthUnderHighLoad tests memory behavior under sustained high load.
 func TestMemoryGrowthUnderHighLoad(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping memory stress test in short mode")
@@ -24,7 +24,7 @@ func TestMemoryGrowthUnderHighLoad(t *testing.T) {
 		t.Fatalf("Failed to create test directory: %v", err)
 	}
 	defer os.RemoveAll(tempDir)
-	
+
 	// Create watcher with very short debounce to maximize event processing
 	fw, err := NewFileWatcher(1 * time.Millisecond)
 	if err != nil {
@@ -36,6 +36,7 @@ func TestMemoryGrowthUnderHighLoad(t *testing.T) {
 	eventCount := 0
 	fw.AddHandler(func(events []ChangeEvent) error {
 		eventCount += len(events)
+
 		return nil
 	})
 
@@ -58,62 +59,73 @@ func TestMemoryGrowthUnderHighLoad(t *testing.T) {
 	runtime.ReadMemStats(&m1)
 
 	// Create sustained file activity to stress memory management
-	for cycle := 0; cycle < 5; cycle++ {
+	for cycle := range 5 {
 		t.Logf("Memory stress cycle %d/5", cycle+1)
-		
+
 		// Create many files rapidly
-		for i := 0; i < 200; i++ {
-			fileName := filepath.Join(tempDir, "stress_test_"+string(rune(cycle))+"_"+string(rune(i))+".templ")
+		for i := range 200 {
+			fileName := filepath.Join(
+				tempDir,
+				"stress_test_"+string(rune(cycle))+"_"+string(rune(i))+".templ",
+			)
 			content := make([]byte, 1024) // 1KB per file
 			for j := range content {
 				content[j] = byte(i % 256)
 			}
-			
+
 			if err := os.WriteFile(fileName, content, 0644); err != nil {
 				continue
 			}
-			
+
 			// Small delay to allow event processing
 			if i%10 == 0 {
 				time.Sleep(1 * time.Millisecond)
 			}
 		}
-		
+
 		// Wait for event processing
 		time.Sleep(50 * time.Millisecond)
-		
-		// Delete files to create more events  
-		for i := 0; i < 200; i++ {
-			fileName := filepath.Join(tempDir, "stress_test_"+string(rune(cycle))+"_"+string(rune(i))+".templ")
+
+		// Delete files to create more events
+		for i := range 200 {
+			fileName := filepath.Join(
+				tempDir,
+				"stress_test_"+string(rune(cycle))+"_"+string(rune(i))+".templ",
+			)
 			os.Remove(fileName)
 		}
-		
+
 		// Wait for deletion events
 		time.Sleep(50 * time.Millisecond)
-		
+
 		// Force GC and measure memory growth
 		runtime.GC()
 		var m runtime.MemStats
 		runtime.ReadMemStats(&m)
-		
+
 		memGrowth := int64(0)
 		if m.Alloc > m1.Alloc {
 			memGrowth = int64(m.Alloc - m1.Alloc)
 		}
-		
-		t.Logf("Cycle %d: Memory growth: %d bytes, Events processed: %d", cycle+1, memGrowth, eventCount)
-		
+
+		t.Logf(
+			"Cycle %d: Memory growth: %d bytes, Events processed: %d",
+			cycle+1,
+			memGrowth,
+			eventCount,
+		)
+
 		// Check for excessive growth (should be sub-linear)
 		expectedMaxGrowth := int64((cycle + 1) * 100 * 1024) // 100KB per cycle max
 		if memGrowth > expectedMaxGrowth {
-			t.Logf("Warning: Memory growth %d bytes exceeds expected %d bytes for cycle %d", 
+			t.Logf("Warning: Memory growth %d bytes exceeds expected %d bytes for cycle %d",
 				memGrowth, expectedMaxGrowth, cycle+1)
 		}
 	}
 
 	// Final memory measurement
 	runtime.GC()
-	var m2 runtime.MemStats  
+	var m2 runtime.MemStats
 	runtime.ReadMemStats(&m2)
 
 	finalGrowth := int64(0)
@@ -130,7 +142,11 @@ func TestMemoryGrowthUnderHighLoad(t *testing.T) {
 	// Memory growth should be reasonable (under 2MB for this workload)
 	maxAllowedGrowth := int64(2 * 1024 * 1024)
 	if finalGrowth > maxAllowedGrowth {
-		t.Errorf("Excessive memory growth: %d bytes (max allowed: %d bytes)", finalGrowth, maxAllowedGrowth)
+		t.Errorf(
+			"Excessive memory growth: %d bytes (max allowed: %d bytes)",
+			finalGrowth,
+			maxAllowedGrowth,
+		)
 	}
 
 	// Should have processed a reasonable number of events
@@ -139,7 +155,7 @@ func TestMemoryGrowthUnderHighLoad(t *testing.T) {
 	}
 }
 
-// TestChannelBufferOverflow tests behavior when event channels become full
+// TestChannelBufferOverflow tests behavior when event channels become full.
 func TestChannelBufferOverflow(t *testing.T) {
 	// Create watcher with very long debounce to prevent flushing
 	fw, err := NewFileWatcher(10 * time.Second)
@@ -156,15 +172,15 @@ func TestChannelBufferOverflow(t *testing.T) {
 	// Overflow the event channel
 	eventsToSend := 150 // More than channel capacity (100)
 	sentEvents := 0
-	
-	for i := 0; i < eventsToSend; i++ {
+
+	for range eventsToSend {
 		event := ChangeEvent{
 			Type:    EventTypeModified,
 			Path:    "/test/file.templ",
 			ModTime: time.Now(),
 			Size:    1024,
 		}
-		
+
 		select {
 		case fw.debouncer.events <- event:
 			sentEvents++
@@ -187,7 +203,7 @@ func TestChannelBufferOverflow(t *testing.T) {
 	}
 }
 
-// BenchmarkMemoryEfficiency benchmarks memory efficiency improvements
+// BenchmarkMemoryEfficiency benchmarks memory efficiency improvements.
 func BenchmarkMemoryEfficiency(b *testing.B) {
 	fw, err := NewFileWatcher(10 * time.Millisecond)
 	if err != nil {
@@ -203,7 +219,7 @@ func BenchmarkMemoryEfficiency(b *testing.B) {
 	b.ReportAllocs()
 
 	// Benchmark event processing with pooled objects
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		event := ChangeEvent{
 			Type:    EventTypeModified,
 			Path:    "/test/file" + string(rune(i%100)) + ".templ",
@@ -213,7 +229,7 @@ func BenchmarkMemoryEfficiency(b *testing.B) {
 
 		// Simulate the full event flow through debouncer
 		fw.debouncer.addEvent(event)
-		
+
 		// Occasionally flush to test pooling
 		if i%50 == 0 {
 			fw.debouncer.flush()

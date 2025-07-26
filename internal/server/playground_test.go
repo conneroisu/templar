@@ -96,7 +96,11 @@ func TestPlaygroundRender(t *testing.T) {
 			reqBody, err := json.Marshal(tt.request)
 			assert.NoError(t, err)
 
-			req := httptest.NewRequest(http.MethodPost, "/api/playground/render", bytes.NewReader(reqBody))
+			req := httptest.NewRequest(
+				http.MethodPost,
+				"/api/playground/render",
+				bytes.NewReader(reqBody),
+			)
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
@@ -244,8 +248,19 @@ func TestPlaygroundIndex(t *testing.T) {
 	// Setup
 	reg := registry.NewComponentRegistry()
 	components := []*types.ComponentInfo{
-		{Name: "Button", Package: "ui", Parameters: []types.ParameterInfo{{Name: "text", Type: "string"}}},
-		{Name: "Card", Package: "layout", Parameters: []types.ParameterInfo{{Name: "title", Type: "string"}, {Name: "content", Type: "string"}}},
+		{
+			Name:       "Button",
+			Package:    "ui",
+			Parameters: []types.ParameterInfo{{Name: "text", Type: "string"}},
+		},
+		{
+			Name:    "Card",
+			Package: "layout",
+			Parameters: []types.ParameterInfo{
+				{Name: "title", Type: "string"},
+				{Name: "content", Type: "string"},
+			},
+		},
 	}
 
 	for _, comp := range components {
@@ -318,7 +333,7 @@ func TestMockValueGeneration(t *testing.T) {
 	server := &PreviewServer{}
 
 	tests := []struct {
-		name     string
+		name      string
 		paramName string
 		paramType string
 		validate  func(interface{}) bool
@@ -329,7 +344,9 @@ func TestMockValueGeneration(t *testing.T) {
 			paramType: "string",
 			validate: func(v interface{}) bool {
 				s, ok := v.(string)
-				return ok && len(s) > 0 && (strings.Contains(s, "Title") || strings.Contains(s, "Sample"))
+
+				return ok && len(s) > 0 &&
+					(strings.Contains(s, "Title") || strings.Contains(s, "Sample"))
 			},
 		},
 		{
@@ -338,6 +355,7 @@ func TestMockValueGeneration(t *testing.T) {
 			paramType: "int",
 			validate: func(v interface{}) bool {
 				_, ok := v.(int)
+
 				return ok
 			},
 		},
@@ -347,6 +365,7 @@ func TestMockValueGeneration(t *testing.T) {
 			paramType: "bool",
 			validate: func(v interface{}) bool {
 				val, ok := v.(bool)
+
 				return ok && val == true // Should default to true for "active"
 			},
 		},
@@ -356,6 +375,7 @@ func TestMockValueGeneration(t *testing.T) {
 			paramType: "[]string",
 			validate: func(v interface{}) bool {
 				slice, ok := v.([]string)
+
 				return ok && len(slice) > 0
 			},
 		},
@@ -365,6 +385,7 @@ func TestMockValueGeneration(t *testing.T) {
 			paramType: "float64",
 			validate: func(v interface{}) bool {
 				_, ok := v.(float64)
+
 				return ok
 			},
 		},
@@ -373,18 +394,26 @@ func TestMockValueGeneration(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			value := server.generateMockValueForType(tt.paramName, tt.paramType)
-			assert.True(t, tt.validate(value), "Generated value %v did not pass validation for %s:%s", value, tt.paramName, tt.paramType)
+			assert.True(
+				t,
+				tt.validate(value),
+				"Generated value %v did not pass validation for %s:%s",
+				value,
+				tt.paramName,
+				tt.paramType,
+			)
 		})
 	}
 }
 
-// Helper function to find prop by name
+// Helper function to find prop by name.
 func findPropByName(props []PropDefinition, name string) *PropDefinition {
 	for _, prop := range props {
 		if prop.Name == name {
 			return &prop
 		}
 	}
+
 	return nil
 }
 
@@ -392,8 +421,13 @@ func TestViewportSizeHandling(t *testing.T) {
 	server := &PreviewServer{}
 
 	// Test with default viewport
-	html := server.wrapInPlaygroundLayout("TestComponent", "<div>Test</div>", "light", ViewportSize{})
-	assert.Contains(t, html, "1200") // Should default to 1200px width
+	html := server.wrapInPlaygroundLayout(
+		"TestComponent",
+		"<div>Test</div>",
+		"light",
+		ViewportSize{},
+	)
+	assert.Contains(t, html, "1200")    // Should default to 1200px width
 	assert.Contains(t, html, "Desktop") // Should default to Desktop
 
 	// Test with custom viewport

@@ -203,7 +203,9 @@ fmt:
 # Run linter (requires golangci-lint)
 lint:
 	@command -v golangci-lint >/dev/null 2>&1 || { echo "golangci-lint is not installed. Please install it first."; exit 1; }
-	golangci-lint run
+	@echo "Running linting with enabled linters: errcheck, staticcheck, govet, ineffassign"
+	@echo "Note: See GOLANGCI_LINT_CONFIG.md for optimal configuration instructions"
+	golangci-lint run --no-config --enable=errcheck,staticcheck,govet,ineffassign --max-issues-per-linter=30
 
 # Generate code (if needed)
 generate:

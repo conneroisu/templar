@@ -10,7 +10,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// MonitoringConfiguration represents the complete monitoring configuration
+// MonitoringConfiguration represents the complete monitoring configuration.
 type MonitoringConfiguration struct {
 	// Core monitoring settings
 	Enabled bool `yaml:"enabled" json:"enabled" env:"TEMPLAR_MONITORING_ENABLED"`
@@ -37,7 +37,7 @@ type MonitoringConfiguration struct {
 	Templar TemplarConfig `yaml:"templar" json:"templar"`
 }
 
-// LoggingConfig configures the logging system
+// LoggingConfig configures the logging system.
 type LoggingConfig struct {
 	Level           string        `yaml:"level" json:"level" env:"TEMPLAR_LOG_LEVEL"`
 	Format          string        `yaml:"format" json:"format" env:"TEMPLAR_LOG_FORMAT"`
@@ -51,7 +51,7 @@ type LoggingConfig struct {
 	CompressBackups bool          `yaml:"compress_backups" json:"compress_backups"`
 }
 
-// MetricsConfig configures the metrics collection system
+// MetricsConfig configures the metrics collection system.
 type MetricsConfig struct {
 	Enabled        bool          `yaml:"enabled" json:"enabled" env:"TEMPLAR_METRICS_ENABLED"`
 	OutputPath     string        `yaml:"output_path" json:"output_path" env:"TEMPLAR_METRICS_OUTPUT_PATH"`
@@ -67,7 +67,7 @@ type MetricsConfig struct {
 	SystemMetrics SystemMetricsConfig `yaml:"system_metrics" json:"system_metrics"`
 }
 
-// SystemMetricsConfig configures system metric collection
+// SystemMetricsConfig configures system metric collection.
 type SystemMetricsConfig struct {
 	Enabled            bool          `yaml:"enabled" json:"enabled"`
 	CollectionInterval time.Duration `yaml:"collection_interval" json:"collection_interval"`
@@ -78,7 +78,7 @@ type SystemMetricsConfig struct {
 	IncludeNetwork     bool          `yaml:"include_network" json:"include_network"`
 }
 
-// HealthConfig configures health monitoring
+// HealthConfig configures health monitoring.
 type HealthConfig struct {
 	Enabled          bool          `yaml:"enabled" json:"enabled" env:"TEMPLAR_HEALTH_ENABLED"`
 	CheckInterval    time.Duration `yaml:"check_interval" json:"check_interval"`
@@ -89,7 +89,7 @@ type HealthConfig struct {
 	Checks HealthChecksConfig `yaml:"checks" json:"checks"`
 }
 
-// HealthChecksConfig configures individual health checks
+// HealthChecksConfig configures individual health checks.
 type HealthChecksConfig struct {
 	Filesystem        HealthCheckConfig `yaml:"filesystem" json:"filesystem"`
 	Memory            HealthCheckConfig `yaml:"memory" json:"memory"`
@@ -99,7 +99,7 @@ type HealthChecksConfig struct {
 	CacheDirectory    HealthCheckConfig `yaml:"cache_directory" json:"cache_directory"`
 }
 
-// HealthCheckConfig configures a specific health check
+// HealthCheckConfig configures a specific health check.
 type HealthCheckConfig struct {
 	Enabled  bool          `yaml:"enabled" json:"enabled"`
 	Critical bool          `yaml:"critical" json:"critical"`
@@ -110,7 +110,7 @@ type HealthCheckConfig struct {
 	Parameters map[string]interface{} `yaml:"parameters" json:"parameters"`
 }
 
-// PerformanceConfig configures performance monitoring
+// PerformanceConfig configures performance monitoring.
 type PerformanceConfig struct {
 	Enabled          bool          `yaml:"enabled" json:"enabled" env:"TEMPLAR_PERFORMANCE_ENABLED"`
 	SampleRate       float64       `yaml:"sample_rate" json:"sample_rate"`
@@ -123,14 +123,14 @@ type PerformanceConfig struct {
 	Operations map[string]OperationConfig `yaml:"operations" json:"operations"`
 }
 
-// OperationConfig configures monitoring for specific operations
+// OperationConfig configures monitoring for specific operations.
 type OperationConfig struct {
 	Enabled    bool          `yaml:"enabled" json:"enabled"`
 	SampleRate float64       `yaml:"sample_rate" json:"sample_rate"`
 	Timeout    time.Duration `yaml:"timeout" json:"timeout"`
 }
 
-// AlertingConfig configures the alerting system
+// AlertingConfig configures the alerting system.
 type AlertingConfig struct {
 	Enabled  bool          `yaml:"enabled" json:"enabled" env:"TEMPLAR_ALERTING_ENABLED"`
 	Cooldown time.Duration `yaml:"cooldown" json:"cooldown"`
@@ -145,7 +145,7 @@ type AlertingConfig struct {
 	Thresholds AlertThresholdsConfig `yaml:"thresholds" json:"thresholds"`
 }
 
-// AlertRuleConfig configures an alert rule
+// AlertRuleConfig configures an alert rule.
 type AlertRuleConfig struct {
 	Name      string            `yaml:"name" json:"name"`
 	Component string            `yaml:"component" json:"component"`
@@ -160,7 +160,7 @@ type AlertRuleConfig struct {
 	Cooldown  time.Duration     `yaml:"cooldown" json:"cooldown"`
 }
 
-// AlertChannelsConfig configures alert delivery channels
+// AlertChannelsConfig configures alert delivery channels.
 type AlertChannelsConfig struct {
 	Log     LogChannelConfig     `yaml:"log" json:"log"`
 	Webhook WebhookChannelConfig `yaml:"webhook" json:"webhook"`
@@ -168,13 +168,13 @@ type AlertChannelsConfig struct {
 	Slack   SlackChannelConfig   `yaml:"slack" json:"slack"`
 }
 
-// LogChannelConfig configures log-based alerting
+// LogChannelConfig configures log-based alerting.
 type LogChannelConfig struct {
 	Enabled bool   `yaml:"enabled" json:"enabled"`
 	Level   string `yaml:"level" json:"level"`
 }
 
-// WebhookChannelConfig configures webhook alerting
+// WebhookChannelConfig configures webhook alerting.
 type WebhookChannelConfig struct {
 	Enabled bool              `yaml:"enabled" json:"enabled"`
 	URL     string            `yaml:"url" json:"url" env:"TEMPLAR_WEBHOOK_URL"`
@@ -182,7 +182,7 @@ type WebhookChannelConfig struct {
 	Headers map[string]string `yaml:"headers" json:"headers"`
 }
 
-// EmailChannelConfig configures email alerting
+// EmailChannelConfig configures email alerting.
 type EmailChannelConfig struct {
 	Enabled  bool     `yaml:"enabled" json:"enabled"`
 	SMTPHost string   `yaml:"smtp_host" json:"smtp_host" env:"TEMPLAR_SMTP_HOST"`
@@ -194,7 +194,7 @@ type EmailChannelConfig struct {
 	Subject  string   `yaml:"subject" json:"subject"`
 }
 
-// SlackChannelConfig configures Slack alerting
+// SlackChannelConfig configures Slack alerting.
 type SlackChannelConfig struct {
 	Enabled    bool   `yaml:"enabled" json:"enabled"`
 	WebhookURL string `yaml:"webhook_url" json:"webhook_url" env:"TEMPLAR_SLACK_WEBHOOK_URL"`
@@ -203,7 +203,7 @@ type SlackChannelConfig struct {
 	IconEmoji  string `yaml:"icon_emoji" json:"icon_emoji"`
 }
 
-// AlertThresholdsConfig defines default alert thresholds
+// AlertThresholdsConfig defines default alert thresholds.
 type AlertThresholdsConfig struct {
 	ErrorRate           float64       `yaml:"error_rate" json:"error_rate"`
 	ResponseTime        time.Duration `yaml:"response_time" json:"response_time"`
@@ -215,7 +215,7 @@ type AlertThresholdsConfig struct {
 	GCPauseTime         time.Duration `yaml:"gc_pause_time" json:"gc_pause_time"`
 }
 
-// HTTPConfig configures the monitoring HTTP server
+// HTTPConfig configures the monitoring HTTP server.
 type HTTPConfig struct {
 	Enabled      bool          `yaml:"enabled" json:"enabled" env:"TEMPLAR_HTTP_MONITORING_ENABLED"`
 	Host         string        `yaml:"host" json:"host" env:"TEMPLAR_HTTP_HOST"`
@@ -234,14 +234,14 @@ type HTTPConfig struct {
 	CORS HTTPCORSConfig `yaml:"cors" json:"cors"`
 }
 
-// HTTPTLSConfig configures TLS for the HTTP server
+// HTTPTLSConfig configures TLS for the HTTP server.
 type HTTPTLSConfig struct {
 	Enabled  bool   `yaml:"enabled" json:"enabled"`
 	CertFile string `yaml:"cert_file" json:"cert_file" env:"TEMPLAR_TLS_CERT_FILE"`
 	KeyFile  string `yaml:"key_file" json:"key_file" env:"TEMPLAR_TLS_KEY_FILE"`
 }
 
-// HTTPAuthConfig configures authentication for the HTTP server
+// HTTPAuthConfig configures authentication for the HTTP server.
 type HTTPAuthConfig struct {
 	Enabled  bool   `yaml:"enabled" json:"enabled"`
 	Type     string `yaml:"type" json:"type"` // "basic", "bearer", "api_key"
@@ -250,7 +250,7 @@ type HTTPAuthConfig struct {
 	APIKey   string `yaml:"api_key" json:"api_key" env:"TEMPLAR_AUTH_API_KEY"`
 }
 
-// HTTPCORSConfig configures CORS for the HTTP server
+// HTTPCORSConfig configures CORS for the HTTP server.
 type HTTPCORSConfig struct {
 	Enabled          bool     `yaml:"enabled" json:"enabled"`
 	AllowedOrigins   []string `yaml:"allowed_origins" json:"allowed_origins"`
@@ -259,7 +259,7 @@ type HTTPCORSConfig struct {
 	AllowCredentials bool     `yaml:"allow_credentials" json:"allow_credentials"`
 }
 
-// DefaultMonitoringConfiguration returns default monitoring configuration
+// DefaultMonitoringConfiguration returns default monitoring configuration.
 func DefaultMonitoringConfiguration() *MonitoringConfiguration {
 	return &MonitoringConfiguration{
 		Enabled: true,
@@ -304,12 +304,36 @@ func DefaultMonitoringConfiguration() *MonitoringConfiguration {
 			CheckTimeout:     10 * time.Second,
 			FailureThreshold: 3,
 			Checks: HealthChecksConfig{
-				Filesystem:        HealthCheckConfig{Enabled: true, Critical: true, Timeout: 5 * time.Second},
-				Memory:            HealthCheckConfig{Enabled: true, Critical: true, Timeout: 1 * time.Second},
-				Goroutines:        HealthCheckConfig{Enabled: true, Critical: false, Timeout: 1 * time.Second},
-				ComponentRegistry: HealthCheckConfig{Enabled: true, Critical: true, Timeout: 2 * time.Second},
-				TemplBinary:       HealthCheckConfig{Enabled: true, Critical: true, Timeout: 2 * time.Second},
-				CacheDirectory:    HealthCheckConfig{Enabled: true, Critical: false, Timeout: 2 * time.Second},
+				Filesystem: HealthCheckConfig{
+					Enabled:  true,
+					Critical: true,
+					Timeout:  5 * time.Second,
+				},
+				Memory: HealthCheckConfig{
+					Enabled:  true,
+					Critical: true,
+					Timeout:  1 * time.Second,
+				},
+				Goroutines: HealthCheckConfig{
+					Enabled:  true,
+					Critical: false,
+					Timeout:  1 * time.Second,
+				},
+				ComponentRegistry: HealthCheckConfig{
+					Enabled:  true,
+					Critical: true,
+					Timeout:  2 * time.Second,
+				},
+				TemplBinary: HealthCheckConfig{
+					Enabled:  true,
+					Critical: true,
+					Timeout:  2 * time.Second,
+				},
+				CacheDirectory: HealthCheckConfig{
+					Enabled:  true,
+					Critical: false,
+					Timeout:  2 * time.Second,
+				},
 			},
 		},
 
@@ -381,7 +405,7 @@ func DefaultMonitoringConfiguration() *MonitoringConfiguration {
 	}
 }
 
-// LoadConfiguration loads monitoring configuration from file and environment
+// LoadConfiguration loads monitoring configuration from file and environment.
 func LoadConfiguration(configPath string) (*MonitoringConfiguration, error) {
 	config := DefaultMonitoringConfiguration()
 
@@ -405,7 +429,7 @@ func LoadConfiguration(configPath string) (*MonitoringConfiguration, error) {
 	return config, nil
 }
 
-// loadConfigFromFile loads configuration from YAML file
+// loadConfigFromFile loads configuration from YAML file.
 func loadConfigFromFile(config *MonitoringConfiguration, path string) error {
 	// Clean and validate path
 	cleanPath := filepath.Clean(path)
@@ -425,7 +449,7 @@ func loadConfigFromFile(config *MonitoringConfiguration, path string) error {
 	return nil
 }
 
-// loadConfigFromEnv loads configuration from environment variables
+// loadConfigFromEnv loads configuration from environment variables.
 func loadConfigFromEnv(config *MonitoringConfiguration) error {
 	// Use reflection or manual mapping to load environment variables
 	// This is a simplified implementation
@@ -459,7 +483,7 @@ func loadConfigFromEnv(config *MonitoringConfiguration) error {
 	return nil
 }
 
-// validateConfiguration validates the configuration
+// validateConfiguration validates the configuration.
 func validateConfiguration(config *MonitoringConfiguration) error {
 	// Validate log level
 	validLogLevels := []string{"debug", "info", "warn", "error", "fatal"}
@@ -482,7 +506,10 @@ func validateConfiguration(config *MonitoringConfiguration) error {
 	if config.Metrics.Enabled && config.Metrics.OutputPath != "" {
 		dir := filepath.Dir(config.Metrics.OutputPath)
 		if strings.Contains(dir, "..") {
-			return fmt.Errorf("invalid metrics output path (contains path traversal): %s", config.Metrics.OutputPath)
+			return fmt.Errorf(
+				"invalid metrics output path (contains path traversal): %s",
+				config.Metrics.OutputPath,
+			)
 		}
 	}
 
@@ -499,7 +526,7 @@ func validateConfiguration(config *MonitoringConfiguration) error {
 	return nil
 }
 
-// SaveConfiguration saves configuration to YAML file
+// SaveConfiguration saves configuration to YAML file.
 func SaveConfiguration(config *MonitoringConfiguration, path string) error {
 	// Clean and validate path
 	cleanPath := filepath.Clean(path)
@@ -535,6 +562,7 @@ func contains(slice []string, item string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -547,5 +575,6 @@ func parseInt(s string) int {
 			return 0
 		}
 	}
+
 	return result
 }

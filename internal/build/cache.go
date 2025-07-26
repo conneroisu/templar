@@ -11,7 +11,7 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// BuildCache caches build results with LRU eviction and TTL
+// BuildCache caches build results with LRU eviction and TTL.
 type BuildCache struct {
 	entries     map[string]*CacheEntry
 	mutex       sync.RWMutex
@@ -22,17 +22,17 @@ type BuildCache struct {
 	head *CacheEntry
 	tail *CacheEntry
 	// Statistics tracking (atomic for thread safety)
-	hits       int64
-	misses     int64
-	sets       int64
-	deletes    int64
-	evictions  int64
+	hits      int64
+	misses    int64
+	sets      int64
+	deletes   int64
+	evictions int64
 }
 
-// Ensure BuildCache implements the interfaces.CacheStats interface
+// Ensure BuildCache implements the interfaces.CacheStats interface.
 var _ interfaces.CacheStats = (*BuildCache)(nil)
 
-// CacheEntry represents a cached build result
+// CacheEntry represents a cached build result.
 type CacheEntry struct {
 	Key        string
 	Value      []byte
@@ -41,14 +41,14 @@ type CacheEntry struct {
 	AccessedAt time.Time
 	Size       int64
 	// AST caching support
-	ASTData     []byte // Cached AST parsing results
-	Metadata    *CacheMetadata
+	ASTData  []byte // Cached AST parsing results
+	Metadata *CacheMetadata
 	// LRU doubly-linked list pointers
 	prev *CacheEntry
 	next *CacheEntry
 }
 
-// CacheMetadata stores additional metadata for cache entries
+// CacheMetadata stores additional metadata for cache entries.
 type CacheMetadata struct {
 	ComponentInfo *types.ComponentInfo `json:"component_info,omitempty"`
 	ParseTime     time.Duration        `json:"parse_time"`
@@ -56,7 +56,7 @@ type CacheMetadata struct {
 	Version       string               `json:"version"`
 }
 
-// ASTParseResult represents cached AST parsing results
+// ASTParseResult represents cached AST parsing results.
 type ASTParseResult struct {
 	Component    *types.ComponentInfo
 	Parameters   []types.ParameterInfo
@@ -65,7 +65,7 @@ type ASTParseResult struct {
 	CachedAt     time.Time
 }
 
-// NewBuildCache creates a new build cache
+// NewBuildCache creates a new build cache.
 func NewBuildCache(maxSize int64, ttl time.Duration) *BuildCache {
 	cache := &BuildCache{
 		entries: make(map[string]*CacheEntry),
@@ -82,7 +82,7 @@ func NewBuildCache(maxSize int64, ttl time.Duration) *BuildCache {
 	return cache
 }
 
-// Get retrieves a value from the cache
+// Get retrieves a value from the cache.
 func (bc *BuildCache) Get(key string) ([]byte, bool) {
 	bc.mutex.Lock()
 	defer bc.mutex.Unlock()
@@ -90,6 +90,7 @@ func (bc *BuildCache) Get(key string) ([]byte, bool) {
 	entry, exists := bc.entries[key]
 	if !exists {
 		atomic.AddInt64(&bc.misses, 1)
+
 		return nil, false
 	}
 
@@ -99,6 +100,7 @@ func (bc *BuildCache) Get(key string) ([]byte, bool) {
 		delete(bc.entries, key)
 		bc.currentSize -= entry.Size
 		atomic.AddInt64(&bc.misses, 1)
+
 		return nil, false
 	}
 
@@ -106,10 +108,11 @@ func (bc *BuildCache) Get(key string) ([]byte, bool) {
 	bc.moveToFront(entry)
 	entry.AccessedAt = time.Now()
 	atomic.AddInt64(&bc.hits, 1)
+
 	return entry.Value, true
 }
 
-// Set stores a value in the cache
+// Set stores a value in the cache.
 func (bc *BuildCache) Set(key string, value []byte) {
 	bc.mutex.Lock()
 	defer bc.mutex.Unlock()
@@ -124,6 +127,7 @@ func (bc *BuildCache) Set(key string, value []byte) {
 		bc.currentSize += sizeDiff
 		bc.moveToFront(existingEntry)
 		atomic.AddInt64(&bc.sets, 1)
+
 		return
 	}
 
@@ -149,7 +153,7 @@ func (bc *BuildCache) Set(key string, value []byte) {
 	atomic.AddInt64(&bc.sets, 1)
 }
 
-// evictIfNeeded evicts entries if cache would exceed max size
+// evictIfNeeded evicts entries if cache would exceed max size.
 func (bc *BuildCache) evictIfNeeded(newSize int64) {
 	if bc.currentSize+newSize <= bc.maxSize {
 		return
@@ -166,24 +170,24 @@ func (bc *BuildCache) evictIfNeeded(newSize int64) {
 	}
 }
 
-// getCurrentSize returns the current cache size
+// getCurrentSize returns the current cache size.
 func (bc *BuildCache) getCurrentSize() int64 {
 	return bc.currentSize
 }
 
-// Clear clears all cache entries and resets statistics
+// Clear clears all cache entries and resets statistics.
 func (bc *BuildCache) Clear() {
 	bc.mutex.Lock()
 	defer bc.mutex.Unlock()
-	
+
 	// Clear all entries
 	bc.entries = make(map[string]*CacheEntry)
 	bc.currentSize = 0
-	
+
 	// Reset LRU list
 	bc.head.next = bc.tail
 	bc.tail.prev = bc.head
-	
+
 	// Reset statistics
 	atomic.StoreInt64(&bc.hits, 0)
 	atomic.StoreInt64(&bc.misses, 0)
@@ -192,7 +196,7 @@ func (bc *BuildCache) Clear() {
 	atomic.StoreInt64(&bc.evictions, 0)
 }
 
-// GetStats returns cache statistics
+// GetStats returns cache statistics.
 func (bc *BuildCache) GetStats() (int, int64, int64) {
 	bc.mutex.RLock()
 	defer bc.mutex.RUnlock()
@@ -204,7 +208,7 @@ func (bc *BuildCache) GetStats() (int, int64, int64) {
 	return count, size, maxSize
 }
 
-// LRU doubly-linked list operations
+// LRU doubly-linked list operations.
 func (bc *BuildCache) addToFront(entry *CacheEntry) {
 	entry.prev = bc.head
 	entry.next = bc.head.next
@@ -223,7 +227,7 @@ func (bc *BuildCache) moveToFront(entry *CacheEntry) {
 }
 
 // GetHash retrieves a cached hash for a metadata key
-// This method is thread-safe and properly handles LRU updates
+// This method is thread-safe and properly handles LRU updates.
 func (bc *BuildCache) GetHash(key string) (string, bool) {
 	bc.mutex.Lock()
 	defer bc.mutex.Unlock()
@@ -238,17 +242,19 @@ func (bc *BuildCache) GetHash(key string) (string, bool) {
 		bc.removeFromList(entry)
 		delete(bc.entries, key)
 		bc.currentSize -= entry.Size
+
 		return "", false
 	}
 
 	// Move to front (mark as recently used) and update access time
 	bc.moveToFront(entry)
 	entry.AccessedAt = time.Now()
+
 	return entry.Hash, true
 }
 
 // SetHash stores a hash in the cache with a metadata key
-// This method is thread-safe and handles eviction properly
+// This method is thread-safe and handles eviction properly.
 func (bc *BuildCache) SetHash(key string, hash string) {
 	bc.mutex.Lock()
 	defer bc.mutex.Unlock()
@@ -265,6 +271,7 @@ func (bc *BuildCache) SetHash(key string, hash string) {
 		existingEntry.Size = entrySize
 		bc.currentSize += sizeDiff
 		bc.moveToFront(existingEntry)
+
 		return
 	}
 
@@ -289,24 +296,25 @@ func (bc *BuildCache) SetHash(key string, hash string) {
 
 // CacheStats interface implementation
 
-// GetSize returns the current cache size in bytes
+// GetSize returns the current cache size in bytes.
 func (bc *BuildCache) GetSize() int64 {
 	bc.mutex.RLock()
 	defer bc.mutex.RUnlock()
+
 	return bc.currentSize
 }
 
-// GetHits returns the number of cache hits
+// GetHits returns the number of cache hits.
 func (bc *BuildCache) GetHits() int64 {
 	return atomic.LoadInt64(&bc.hits)
 }
 
-// GetMisses returns the number of cache misses
+// GetMisses returns the number of cache misses.
 func (bc *BuildCache) GetMisses() int64 {
 	return atomic.LoadInt64(&bc.misses)
 }
 
-// GetHitRate returns the cache hit rate as a percentage (0.0 to 1.0)
+// GetHitRate returns the cache hit rate as a percentage (0.0 to 1.0).
 func (bc *BuildCache) GetHitRate() float64 {
 	hits := atomic.LoadInt64(&bc.hits)
 	misses := atomic.LoadInt64(&bc.misses)
@@ -314,15 +322,16 @@ func (bc *BuildCache) GetHitRate() float64 {
 	if total == 0 {
 		return 0.0
 	}
+
 	return float64(hits) / float64(total)
 }
 
-// GetEvictions returns the number of cache evictions
+// GetEvictions returns the number of cache evictions.
 func (bc *BuildCache) GetEvictions() int64 {
 	return atomic.LoadInt64(&bc.evictions)
 }
 
-// SetAST stores AST parsing results in the cache
+// SetAST stores AST parsing results in the cache.
 func (bc *BuildCache) SetAST(key string, astResult *ASTParseResult) error {
 	bc.mutex.Lock()
 	defer bc.mutex.Unlock()
@@ -360,7 +369,7 @@ func (bc *BuildCache) SetAST(key string, astResult *ASTParseResult) error {
 	return nil
 }
 
-// GetAST retrieves AST parsing results from the cache
+// GetAST retrieves AST parsing results from the cache.
 func (bc *BuildCache) GetAST(key string) (*ASTParseResult, bool) {
 	bc.mutex.Lock()
 	defer bc.mutex.Unlock()
@@ -368,6 +377,7 @@ func (bc *BuildCache) GetAST(key string) (*ASTParseResult, bool) {
 	entry, exists := bc.entries[key]
 	if !exists || entry.ASTData == nil {
 		atomic.AddInt64(&bc.misses, 1)
+
 		return nil, false
 	}
 
@@ -377,6 +387,7 @@ func (bc *BuildCache) GetAST(key string) (*ASTParseResult, bool) {
 		delete(bc.entries, key)
 		bc.currentSize -= entry.Size
 		atomic.AddInt64(&bc.misses, 1)
+
 		return nil, false
 	}
 
@@ -384,6 +395,7 @@ func (bc *BuildCache) GetAST(key string) (*ASTParseResult, bool) {
 	var astResult ASTParseResult
 	if err := json.Unmarshal(entry.ASTData, &astResult); err != nil {
 		atomic.AddInt64(&bc.misses, 1)
+
 		return nil, false
 	}
 
@@ -395,7 +407,7 @@ func (bc *BuildCache) GetAST(key string) (*ASTParseResult, bool) {
 	return &astResult, true
 }
 
-// SetWithMetadata stores a value with additional metadata
+// SetWithMetadata stores a value with additional metadata.
 func (bc *BuildCache) SetWithMetadata(key string, value []byte, metadata *CacheMetadata) {
 	bc.mutex.Lock()
 	defer bc.mutex.Unlock()
@@ -410,6 +422,7 @@ func (bc *BuildCache) SetWithMetadata(key string, value []byte, metadata *CacheM
 		existingEntry.Size = int64(len(value))
 		bc.currentSize += sizeDiff
 		bc.moveToFront(existingEntry)
+
 		return
 	}
 
@@ -432,7 +445,7 @@ func (bc *BuildCache) SetWithMetadata(key string, value []byte, metadata *CacheM
 	atomic.AddInt64(&bc.sets, 1)
 }
 
-// GetWithMetadata retrieves a value with its metadata
+// GetWithMetadata retrieves a value with its metadata.
 func (bc *BuildCache) GetWithMetadata(key string) ([]byte, *CacheMetadata, bool) {
 	bc.mutex.Lock()
 	defer bc.mutex.Unlock()
@@ -440,6 +453,7 @@ func (bc *BuildCache) GetWithMetadata(key string) ([]byte, *CacheMetadata, bool)
 	entry, exists := bc.entries[key]
 	if !exists {
 		atomic.AddInt64(&bc.misses, 1)
+
 		return nil, nil, false
 	}
 
@@ -449,6 +463,7 @@ func (bc *BuildCache) GetWithMetadata(key string) ([]byte, *CacheMetadata, bool)
 		delete(bc.entries, key)
 		bc.currentSize -= entry.Size
 		atomic.AddInt64(&bc.misses, 1)
+
 		return nil, nil, false
 	}
 
@@ -460,7 +475,7 @@ func (bc *BuildCache) GetWithMetadata(key string) ([]byte, *CacheMetadata, bool)
 	return entry.Value, entry.Metadata, true
 }
 
-// InvalidateByPattern removes cache entries matching a pattern
+// InvalidateByPattern removes cache entries matching a pattern.
 func (bc *BuildCache) InvalidateByPattern(pattern string) int {
 	bc.mutex.Lock()
 	defer bc.mutex.Unlock()
@@ -479,10 +494,11 @@ func (bc *BuildCache) InvalidateByPattern(pattern string) int {
 	}
 
 	atomic.AddInt64(&bc.deletes, int64(invalidated))
+
 	return invalidated
 }
 
-// GetCacheTypeStats returns statistics by cache type
+// GetCacheTypeStats returns statistics by cache type.
 func (bc *BuildCache) GetCacheTypeStats() map[string]int {
 	bc.mutex.RLock()
 	defer bc.mutex.RUnlock()

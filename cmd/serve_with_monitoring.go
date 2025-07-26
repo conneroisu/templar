@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -14,7 +15,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// serveWithMonitoringCmd demonstrates a complete integration of the monitoring system
+// serveWithMonitoringCmd demonstrates a complete integration of the monitoring system.
 var serveWithMonitoringCmd = &cobra.Command{
 	Use:   "serve-monitored",
 	Short: "Start development server with comprehensive monitoring",
@@ -35,9 +36,12 @@ var (
 )
 
 func init() {
-	serveWithMonitoringCmd.Flags().StringVar(&monitoringConfigPath, "monitoring-config", "", "Path to monitoring configuration file")
-	serveWithMonitoringCmd.Flags().BoolVar(&enableProfiling, "enable-profiling", false, "Enable Go profiling endpoints")
-	serveWithMonitoringCmd.Flags().IntVar(&metricsPort, "metrics-port", 8081, "Port for monitoring endpoints")
+	serveWithMonitoringCmd.Flags().
+		StringVar(&monitoringConfigPath, "monitoring-config", "", "Path to monitoring configuration file")
+	serveWithMonitoringCmd.Flags().
+		BoolVar(&enableProfiling, "enable-profiling", false, "Enable Go profiling endpoints")
+	serveWithMonitoringCmd.Flags().
+		IntVar(&metricsPort, "metrics-port", 8081, "Port for monitoring endpoints")
 }
 
 func runServeWithMonitoring(cmd *cobra.Command, args []string) error {
@@ -48,7 +52,7 @@ func runServeWithMonitoring(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to setup monitoring: %w", err)
 	}
-	defer monitor.GracefulShutdown(ctx)
+	defer func() { _ = monitor.GracefulShutdown(ctx) }()
 
 	// Create the application server with monitoring
 	server, err := createMonitoredServer(monitor)
@@ -100,75 +104,83 @@ func setupMonitoringSystem(ctx context.Context) (*monitoring.TemplarMonitor, err
 
 func registerServeHealthChecks(monitor *monitoring.TemplarMonitor) {
 	// Port availability check
-	portCheck := monitoring.NewHealthCheckFunc("port_availability", true, func(ctx context.Context) monitoring.HealthCheck {
-		start := time.Now()
-		port := 8080 // Default Templar port
+	portCheck := monitoring.NewHealthCheckFunc(
+		"port_availability",
+		true,
+		func(ctx context.Context) monitoring.HealthCheck {
+			start := time.Now()
+			port := 8080 // Default Templar port
 
-		// Try to bind to the port temporarily
-		listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-		if err != nil {
+			// Try to bind to the port temporarily
+			listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+			if err != nil {
+				return monitoring.HealthCheck{
+					Name:        "port_availability",
+					Status:      monitoring.HealthStatusUnhealthy,
+					Message:     fmt.Sprintf("Port %d is not available: %v", port, err),
+					LastChecked: time.Now(),
+					Duration:    time.Since(start),
+					Critical:    true,
+					Metadata: map[string]interface{}{
+						"port":  port,
+						"error": err.Error(),
+					},
+				}
+			}
+			listener.Close()
+
 			return monitoring.HealthCheck{
 				Name:        "port_availability",
-				Status:      monitoring.HealthStatusUnhealthy,
-				Message:     fmt.Sprintf("Port %d is not available: %v", port, err),
+				Status:      monitoring.HealthStatusHealthy,
+				Message:     fmt.Sprintf("Port %d is available", port),
 				LastChecked: time.Now(),
 				Duration:    time.Since(start),
 				Critical:    true,
 				Metadata: map[string]interface{}{
-					"port":  port,
-					"error": err.Error(),
+					"port": port,
 				},
 			}
-		}
-		listener.Close()
-
-		return monitoring.HealthCheck{
-			Name:        "port_availability",
-			Status:      monitoring.HealthStatusHealthy,
-			Message:     fmt.Sprintf("Port %d is available", port),
-			LastChecked: time.Now(),
-			Duration:    time.Since(start),
-			Critical:    true,
-			Metadata: map[string]interface{}{
-				"port": port,
-			},
-		}
-	})
+		},
+	)
 	monitor.RegisterHealthCheck(portCheck)
 
 	// Template directory check
-	templateCheck := monitoring.NewHealthCheckFunc("template_directory", false, func(ctx context.Context) monitoring.HealthCheck {
-		start := time.Now()
-		templateDirs := []string{"./components", "./views", "./layouts"}
+	templateCheck := monitoring.NewHealthCheckFunc(
+		"template_directory",
+		false,
+		func(ctx context.Context) monitoring.HealthCheck {
+			start := time.Now()
+			templateDirs := []string{"./components", "./views", "./layouts"}
 
-		for _, dir := range templateDirs {
-			if _, err := os.Stat(dir); err != nil {
-				return monitoring.HealthCheck{
-					Name:        "template_directory",
-					Status:      monitoring.HealthStatusDegraded,
-					Message:     fmt.Sprintf("Template directory not found: %s", dir),
-					LastChecked: time.Now(),
-					Duration:    time.Since(start),
-					Critical:    false,
-					Metadata: map[string]interface{}{
-						"missing_directory": dir,
-					},
+			for _, dir := range templateDirs {
+				if _, err := os.Stat(dir); err != nil {
+					return monitoring.HealthCheck{
+						Name:        "template_directory",
+						Status:      monitoring.HealthStatusDegraded,
+						Message:     "Template directory not found: " + dir,
+						LastChecked: time.Now(),
+						Duration:    time.Since(start),
+						Critical:    false,
+						Metadata: map[string]interface{}{
+							"missing_directory": dir,
+						},
+					}
 				}
 			}
-		}
 
-		return monitoring.HealthCheck{
-			Name:        "template_directory",
-			Status:      monitoring.HealthStatusHealthy,
-			Message:     "All template directories are accessible",
-			LastChecked: time.Now(),
-			Duration:    time.Since(start),
-			Critical:    false,
-			Metadata: map[string]interface{}{
-				"directories": templateDirs,
-			},
-		}
-	})
+			return monitoring.HealthCheck{
+				Name:        "template_directory",
+				Status:      monitoring.HealthStatusHealthy,
+				Message:     "All template directories are accessible",
+				LastChecked: time.Now(),
+				Duration:    time.Since(start),
+				Critical:    false,
+				Metadata: map[string]interface{}{
+					"directories": templateDirs,
+				},
+			}
+		},
+	)
 	monitor.RegisterHealthCheck(templateCheck)
 }
 
@@ -209,7 +221,8 @@ func addMonitoredRoutes(mux *http.ServeMux, monitor *monitoring.TemplarMonitor) 
 
 			w.Header().Set("Content-Type", "text/html")
 			html := generateHomePage(components)
-			w.Write([]byte(html))
+			_, _ = w.Write([]byte(html))
+
 			return nil
 		})
 
@@ -240,14 +253,21 @@ func addMonitoredRoutes(mux *http.ServeMux, monitor *monitoring.TemplarMonitor) 
 				"timestamp": "%s"
 			}`, components, len(components), time.Now().Format(time.RFC3339))
 
-			w.Write([]byte(response))
+			_, _ = w.Write([]byte(response))
+
 			return nil
 		})
 
 		if err != nil {
-			monitoring.LogComponentError(ctx, "scanner", "list_components", err, map[string]interface{}{
-				"endpoint": "/api/components",
-			})
+			monitoring.LogComponentError(
+				ctx,
+				"scanner",
+				"list_components",
+				err,
+				map[string]interface{}{
+					"endpoint": "/api/components",
+				},
+			)
 			http.Error(w, "Failed to scan components", http.StatusInternalServerError)
 		}
 	})
@@ -256,6 +276,7 @@ func addMonitoredRoutes(mux *http.ServeMux, monitor *monitoring.TemplarMonitor) 
 	mux.HandleFunc("/api/build", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+
 			return
 		}
 
@@ -270,25 +291,36 @@ func addMonitoredRoutes(mux *http.ServeMux, monitor *monitoring.TemplarMonitor) 
 				"endpoint": "/api/build",
 			})
 			http.Error(w, "Build failed", http.StatusInternalServerError)
+
 			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"status": "success", "message": "All components built successfully"}`))
+		_, _ = w.Write([]byte(`{"status": "success", "message": "All components built successfully"}`))
 	})
 
 	// WebSocket endpoint for live reload
 	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		err := monitor.TrackServerOperation(ctx, "websocket_connection", func(ctx context.Context) error {
-			return handleWebSocketConnection(ctx, w, r, monitor)
-		})
+		err := monitor.TrackServerOperation(
+			ctx,
+			"websocket_connection",
+			func(ctx context.Context) error {
+				return handleWebSocketConnection(ctx, w, r, monitor)
+			},
+		)
 
 		if err != nil {
-			monitoring.LogComponentError(ctx, "websocket", "connection", err, map[string]interface{}{
-				"remote_addr": r.RemoteAddr,
-			})
+			monitoring.LogComponentError(
+				ctx,
+				"websocket",
+				"connection",
+				err,
+				map[string]interface{}{
+					"remote_addr": r.RemoteAddr,
+				},
+			)
 		}
 	})
 
@@ -300,7 +332,10 @@ func addMonitoredRoutes(mux *http.ServeMux, monitor *monitoring.TemplarMonitor) 
 			status := getWatcherStatus(ctx, monitor)
 
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(status))
+			if _, err := w.Write([]byte(status)); err != nil {
+				return fmt.Errorf("failed to write status response: %w", err)
+			}
+
 			return nil
 		})
 
@@ -329,7 +364,12 @@ func buildAllComponents(ctx context.Context, monitor *monitoring.TemplarMonitor)
 	components := []string{"Button", "Card", "Modal", "Form", "Layout"}
 
 	// Create batch tracker for build operation
-	batchTracker := monitoring.NewBatchTracker(monitor.Monitor, monitor.GetLogger(), "build_system", len(components))
+	batchTracker := monitoring.NewBatchTracker(
+		monitor.Monitor,
+		monitor.GetLogger(),
+		"build_system",
+		len(components),
+	)
 
 	successCount := 0
 	for _, component := range components {
@@ -341,7 +381,7 @@ func buildAllComponents(ctx context.Context, monitor *monitoring.TemplarMonitor)
 
 			// Simulate occasional failure
 			if component == "Modal" {
-				return fmt.Errorf("modal component failed to compile")
+				return errors.New("modal component failed to compile")
 			}
 
 			duration := time.Since(start)
@@ -359,10 +399,16 @@ func buildAllComponents(ctx context.Context, monitor *monitoring.TemplarMonitor)
 			duration := 100 * time.Millisecond // Estimated failure time
 			monitor.RecordComponentBuilt(component, false, duration)
 
-			monitoring.LogComponentError(ctx, "build", "component_build", err, map[string]interface{}{
-				"component": component,
-				"duration":  duration,
-			})
+			monitoring.LogComponentError(
+				ctx,
+				"build",
+				"component_build",
+				err,
+				map[string]interface{}{
+					"component": component,
+					"duration":  duration,
+				},
+			)
 			// Continue with other components
 		}
 	}
@@ -377,7 +423,12 @@ func buildAllComponents(ctx context.Context, monitor *monitoring.TemplarMonitor)
 	return nil
 }
 
-func handleWebSocketConnection(ctx context.Context, w http.ResponseWriter, r *http.Request, monitor *monitoring.TemplarMonitor) error {
+func handleWebSocketConnection(
+	ctx context.Context,
+	w http.ResponseWriter,
+	r *http.Request,
+	monitor *monitoring.TemplarMonitor,
+) error {
 	// Simulate WebSocket upgrade (in real implementation, use gorilla/websocket)
 	monitor.RecordWebSocketEvent("connection_attempt", 1)
 
@@ -392,7 +443,7 @@ func handleWebSocketConnection(ctx context.Context, w http.ResponseWriter, r *ht
 	time.Sleep(100 * time.Millisecond)
 
 	w.Header().Set("Content-Type", "text/plain")
-	w.Write([]byte("WebSocket connection simulated"))
+	_, _ = w.Write([]byte("WebSocket connection simulated"))
 
 	return nil
 }
@@ -477,10 +528,15 @@ func generateComponentCards(components []string) string {
 			<a href="/preview?component=%s">Preview</a>
 		</div>`, component, component, component)
 	}
+
 	return cards
 }
 
-func runServerWithGracefulShutdown(ctx context.Context, server *http.Server, monitor *monitoring.TemplarMonitor) error {
+func runServerWithGracefulShutdown(
+	ctx context.Context,
+	server *http.Server,
+	monitor *monitoring.TemplarMonitor,
+) error {
 	// Start server in background
 	serverErr := make(chan error, 1)
 	go func() {
@@ -490,6 +546,7 @@ func runServerWithGracefulShutdown(ctx context.Context, server *http.Server, mon
 			if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 				return err
 			}
+
 			return nil
 		})
 
@@ -511,18 +568,30 @@ func runServerWithGracefulShutdown(ctx context.Context, server *http.Server, mon
 		defer cancel()
 
 		// Graceful server shutdown
-		err := monitor.TrackServerOperation(shutdownCtx, "shutdown_server", func(ctx context.Context) error {
-			return server.Shutdown(ctx)
-		})
+		err := monitor.TrackServerOperation(
+			shutdownCtx,
+			"shutdown_server",
+			func(ctx context.Context) error {
+				return server.Shutdown(ctx)
+			},
+		)
 
 		if err != nil {
-			monitoring.LogComponentError(shutdownCtx, "server", "shutdown", err, map[string]interface{}{
-				"timeout": "30s",
-			})
+			monitoring.LogComponentError(
+				shutdownCtx,
+				"server",
+				"shutdown",
+				err,
+				map[string]interface{}{
+					"timeout": "30s",
+				},
+			)
+
 			return fmt.Errorf("server shutdown failed: %w", err)
 		}
 
 		fmt.Println("Server stopped successfully")
+
 		return nil
 	}
 }

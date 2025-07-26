@@ -11,7 +11,7 @@ import (
 	"github.com/conneroisu/templar/internal/registry"
 )
 
-// TestEnhancedPluginManager tests the basic functionality of the enhanced plugin manager
+// TestEnhancedPluginManager tests the basic functionality of the enhanced plugin manager.
 func TestEnhancedPluginManager(t *testing.T) {
 	ctx := context.Background()
 
@@ -88,7 +88,7 @@ func TestEnhancedPluginManager(t *testing.T) {
 	}
 }
 
-// TestBuildPipelineAdapter tests the build pipeline adapter
+// TestBuildPipelineAdapter tests the build pipeline adapter.
 func TestBuildPipelineAdapter(t *testing.T) {
 	// Test build pipeline adapter
 	buildAdapter := NewBuildPipelineAdapter()
@@ -130,5 +130,15 @@ func (ml *MockLogger) Info(ctx context.Context, msg string, fields ...interface{
 func (ml *MockLogger) Warn(ctx context.Context, err error, msg string, fields ...interface{})  {}
 func (ml *MockLogger) Error(ctx context.Context, err error, msg string, fields ...interface{}) {}
 func (ml *MockLogger) Fatal(ctx context.Context, err error, msg string, fields ...interface{}) {}
-func (ml *MockLogger) With(fields ...interface{}) logging.Logger                               { return ml }
-func (ml *MockLogger) WithComponent(component string) logging.Logger                           { return ml }
+
+func (ml *MockLogger) With(
+	fields ...interface{},
+) logging.Logger {
+	return ml
+}
+
+func (ml *MockLogger) WithComponent(
+	component string,
+) logging.Logger {
+	return ml
+}

@@ -13,7 +13,7 @@ import (
 	"github.com/conneroisu/templar/internal/logging"
 )
 
-// HealthStatus represents the health status of a component
+// HealthStatus represents the health status of a component.
 type HealthStatus string
 
 const (
@@ -23,7 +23,7 @@ const (
 	HealthStatusUnknown   HealthStatus = "unknown"
 )
 
-// HealthCheck represents a single health check
+// HealthCheck represents a single health check.
 type HealthCheck struct {
 	Name        string                 `json:"name"`
 	Status      HealthStatus           `json:"status"`
@@ -34,37 +34,41 @@ type HealthCheck struct {
 	Critical    bool                   `json:"critical"`
 }
 
-// HealthChecker defines the interface for health check functions
+// HealthChecker defines the interface for health check functions.
 type HealthChecker interface {
 	Check(ctx context.Context) HealthCheck
 	Name() string
 	IsCritical() bool
 }
 
-// HealthCheckFunc is a function that implements HealthChecker
+// HealthCheckFunc is a function that implements HealthChecker.
 type HealthCheckFunc struct {
 	name     string
 	checkFn  func(ctx context.Context) HealthCheck
 	critical bool
 }
 
-// Check executes the health check function
+// Check executes the health check function.
 func (h *HealthCheckFunc) Check(ctx context.Context) HealthCheck {
 	return h.checkFn(ctx)
 }
 
-// Name returns the health check name
+// Name returns the health check name.
 func (h *HealthCheckFunc) Name() string {
 	return h.name
 }
 
-// IsCritical returns whether this check is critical
+// IsCritical returns whether this check is critical.
 func (h *HealthCheckFunc) IsCritical() bool {
 	return h.critical
 }
 
-// NewHealthCheckFunc creates a new health check function
-func NewHealthCheckFunc(name string, critical bool, checkFn func(ctx context.Context) HealthCheck) *HealthCheckFunc {
+// NewHealthCheckFunc creates a new health check function.
+func NewHealthCheckFunc(
+	name string,
+	critical bool,
+	checkFn func(ctx context.Context) HealthCheck,
+) *HealthCheckFunc {
 	return &HealthCheckFunc{
 		name:     name,
 		checkFn:  checkFn,
@@ -72,7 +76,7 @@ func NewHealthCheckFunc(name string, critical bool, checkFn func(ctx context.Con
 	}
 }
 
-// HealthMonitor manages and executes health checks
+// HealthMonitor manages and executes health checks.
 type HealthMonitor struct {
 	checks   map[string]HealthChecker
 	results  map[string]HealthCheck
@@ -84,7 +88,7 @@ type HealthMonitor struct {
 	wg       sync.WaitGroup
 }
 
-// HealthResponse represents the overall health response
+// HealthResponse represents the overall health response.
 type HealthResponse struct {
 	Status      HealthStatus           `json:"status"`
 	Timestamp   time.Time              `json:"timestamp"`
@@ -96,7 +100,7 @@ type HealthResponse struct {
 	Environment string                 `json:"environment,omitempty"`
 }
 
-// HealthSummary provides a summary of health check results
+// HealthSummary provides a summary of health check results.
 type HealthSummary struct {
 	Total     int `json:"total"`
 	Healthy   int `json:"healthy"`
@@ -106,7 +110,7 @@ type HealthSummary struct {
 	Critical  int `json:"critical"`
 }
 
-// SystemInfo provides system information
+// SystemInfo provides system information.
 type SystemInfo struct {
 	Hostname  string    `json:"hostname"`
 	Platform  string    `json:"platform"`
@@ -115,7 +119,7 @@ type SystemInfo struct {
 	PID       int       `json:"pid"`
 }
 
-// NewHealthMonitor creates a new health monitor
+// NewHealthMonitor creates a new health monitor.
 func NewHealthMonitor(logger logging.Logger) *HealthMonitor {
 	return &HealthMonitor{
 		checks:   make(map[string]HealthChecker),
@@ -127,7 +131,7 @@ func NewHealthMonitor(logger logging.Logger) *HealthMonitor {
 	}
 }
 
-// RegisterCheck registers a health check
+// RegisterCheck registers a health check.
 func (hm *HealthMonitor) RegisterCheck(checker HealthChecker) {
 	hm.mutex.Lock()
 	defer hm.mutex.Unlock()
@@ -138,7 +142,7 @@ func (hm *HealthMonitor) RegisterCheck(checker HealthChecker) {
 		"critical", checker.IsCritical())
 }
 
-// UnregisterCheck removes a health check
+// UnregisterCheck removes a health check.
 func (hm *HealthMonitor) UnregisterCheck(name string) {
 	hm.mutex.Lock()
 	defer hm.mutex.Unlock()
@@ -148,14 +152,14 @@ func (hm *HealthMonitor) UnregisterCheck(name string) {
 	hm.logger.Info(context.Background(), "Unregistered health check", "name", name)
 }
 
-// Start begins periodic health checking
+// Start begins periodic health checking.
 func (hm *HealthMonitor) Start() {
 	hm.wg.Add(1)
 	go hm.monitorLoop()
 	hm.logger.Info(context.Background(), "Health monitor started", "interval", hm.interval)
 }
 
-// Stop stops the health monitor
+// Stop stops the health monitor.
 func (hm *HealthMonitor) Stop() {
 	// Only close if not already closed
 	select {
@@ -168,7 +172,7 @@ func (hm *HealthMonitor) Stop() {
 	hm.logger.Info(context.Background(), "Health monitor stopped")
 }
 
-// monitorLoop runs the health check monitoring loop
+// monitorLoop runs the health check monitoring loop.
 func (hm *HealthMonitor) monitorLoop() {
 	defer hm.wg.Done()
 
@@ -188,7 +192,7 @@ func (hm *HealthMonitor) monitorLoop() {
 	}
 }
 
-// runHealthChecks executes all registered health checks
+// runHealthChecks executes all registered health checks.
 func (hm *HealthMonitor) runHealthChecks() {
 	hm.mutex.RLock()
 	checks := make(map[string]HealthChecker)
@@ -241,7 +245,7 @@ func (hm *HealthMonitor) runHealthChecks() {
 	hm.mutex.Unlock()
 }
 
-// GetHealth returns the current health status
+// GetHealth returns the current health status.
 func (hm *HealthMonitor) GetHealth() HealthResponse {
 	hm.mutex.RLock()
 	defer hm.mutex.RUnlock()
@@ -265,7 +269,7 @@ func (hm *HealthMonitor) GetHealth() HealthResponse {
 	}
 }
 
-// calculateSummary calculates health check summary
+// calculateSummary calculates health check summary.
 func (hm *HealthMonitor) calculateSummary(checks map[string]HealthCheck) HealthSummary {
 	summary := HealthSummary{
 		Total: len(checks),
@@ -291,7 +295,7 @@ func (hm *HealthMonitor) calculateSummary(checks map[string]HealthCheck) HealthS
 	return summary
 }
 
-// calculateOverallStatus determines the overall health status
+// calculateOverallStatus determines the overall health status.
 func (hm *HealthMonitor) calculateOverallStatus(checks map[string]HealthCheck) HealthStatus {
 	// If any critical check is unhealthy, overall status is unhealthy
 	for _, check := range checks {
@@ -318,7 +322,7 @@ func (hm *HealthMonitor) calculateOverallStatus(checks map[string]HealthCheck) H
 	return HealthStatusHealthy
 }
 
-// HTTPHandler returns an HTTP handler for health checks
+// HTTPHandler returns an HTTP handler for health checks.
 func (hm *HealthMonitor) HTTPHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		health := hm.GetHealth()
@@ -348,7 +352,7 @@ func (hm *HealthMonitor) HTTPHandler() http.HandlerFunc {
 
 // Predefined health checks
 
-// FileSystemHealthChecker checks file system accessibility
+// FileSystemHealthChecker checks file system accessibility.
 func FileSystemHealthChecker(path string) HealthChecker {
 	return NewHealthCheckFunc("filesystem", true, func(ctx context.Context) HealthCheck {
 		start := time.Now()
@@ -389,7 +393,7 @@ func FileSystemHealthChecker(path string) HealthChecker {
 	})
 }
 
-// MemoryHealthChecker checks memory usage
+// MemoryHealthChecker checks memory usage.
 func MemoryHealthChecker() HealthChecker {
 	return NewHealthCheckFunc("memory", true, func(ctx context.Context) HealthCheck {
 		start := time.Now()
@@ -431,7 +435,7 @@ func MemoryHealthChecker() HealthChecker {
 	})
 }
 
-// GoroutineHealthChecker checks for goroutine leaks
+// GoroutineHealthChecker checks for goroutine leaks.
 func GoroutineHealthChecker() HealthChecker {
 	return NewHealthCheckFunc("goroutines", false, func(ctx context.Context) HealthCheck {
 		start := time.Now()
@@ -487,5 +491,6 @@ func getEnvironment() string {
 	if env == "" {
 		env = "development"
 	}
+
 	return env
 }

@@ -51,7 +51,7 @@ type ParameterInfo struct {
 	Description string
 }
 
-// ComponentExample represents a usage example for a component
+// ComponentExample represents a usage example for a component.
 type ComponentExample struct {
 	// Name is the example identifier
 	Name string
@@ -63,7 +63,7 @@ type ComponentExample struct {
 	Code string
 }
 
-// EventType represents the type of component change event
+// EventType represents the type of component change event.
 type EventType string
 
 const (

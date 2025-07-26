@@ -22,7 +22,7 @@ import (
 	"github.com/conneroisu/templar/internal/validation"
 )
 
-// BenchmarkResult represents a single benchmark measurement
+// BenchmarkResult represents a single benchmark measurement.
 type BenchmarkResult struct {
 	Name        string    `json:"name"`
 	Iterations  int       `json:"iterations"`
@@ -36,7 +36,7 @@ type BenchmarkResult struct {
 	Environment string    `json:"environment,omitempty"`
 }
 
-// PerformanceBaseline represents historical performance data
+// PerformanceBaseline represents historical performance data.
 type PerformanceBaseline struct {
 	BenchmarkName string    `json:"benchmark_name"`
 	Samples       []float64 `json:"samples"`
@@ -49,7 +49,7 @@ type PerformanceBaseline struct {
 	SampleCount   int       `json:"sample_count"`
 }
 
-// RegressionThresholds defines acceptable performance degradation limits
+// RegressionThresholds defines acceptable performance degradation limits.
 type RegressionThresholds struct {
 	// Performance degradation threshold (e.g., 1.15 = 15% slower is acceptable)
 	SlownessThreshold float64 `json:"slowness_threshold"`
@@ -63,7 +63,7 @@ type RegressionThresholds struct {
 	ConfidenceLevel float64 `json:"confidence_level"`
 }
 
-// RegressionDetection contains regression analysis results
+// RegressionDetection contains regression analysis results.
 type RegressionDetection struct {
 	BenchmarkName     string  `json:"benchmark_name"`
 	IsRegression      bool    `json:"is_regression"`
@@ -77,7 +77,7 @@ type RegressionDetection struct {
 	RecommendedAction string  `json:"recommended_action"`
 }
 
-// PerformanceDetector handles performance regression detection
+// PerformanceDetector handles performance regression detection.
 type PerformanceDetector struct {
 	baselineDir          string
 	thresholds           RegressionThresholds
@@ -87,8 +87,11 @@ type PerformanceDetector struct {
 	statisticalValidator *StatisticalValidator
 }
 
-// NewPerformanceDetector creates a new performance detector
-func NewPerformanceDetector(baselineDir string, thresholds RegressionThresholds) *PerformanceDetector {
+// NewPerformanceDetector creates a new performance detector.
+func NewPerformanceDetector(
+	baselineDir string,
+	thresholds RegressionThresholds,
+) *PerformanceDetector {
 	// Create statistical validator with 95% confidence level and minimum 3 samples
 	statisticalValidator := NewStatisticalValidator(thresholds.ConfidenceLevel, 3)
 
@@ -100,19 +103,21 @@ func NewPerformanceDetector(baselineDir string, thresholds RegressionThresholds)
 	}
 }
 
-// SetGitInfo sets git commit and branch information
+// SetGitInfo sets git commit and branch information.
 func (pd *PerformanceDetector) SetGitInfo(commit, branch string) {
 	pd.gitCommit = commit
 	pd.gitBranch = branch
 }
 
-// ParseBenchmarkOutput parses Go benchmark output and returns structured results
+// ParseBenchmarkOutput parses Go benchmark output and returns structured results.
 func (pd *PerformanceDetector) ParseBenchmarkOutput(output string) ([]BenchmarkResult, error) {
 	var results []BenchmarkResult
 
 	// Regex to match Go benchmark output lines
 	// Example: BenchmarkComponentScanner_ScanDirectory/components-10-16         	    2204	    604432 ns/op	  261857 B/op	    5834 allocs/op
-	benchmarkRegex := regexp.MustCompile(`^Benchmark(\S+)\s+(\d+)\s+(\d+(?:\.\d+)?)\s+ns/op(?:\s+(\d+)\s+B/op)?(?:\s+(\d+)\s+allocs/op)?(?:\s+(\d+(?:\.\d+)?)\s+MB/s)?`)
+	benchmarkRegex := regexp.MustCompile(
+		`^Benchmark(\S+)\s+(\d+)\s+(\d+(?:\.\d+)?)\s+ns/op` +
+			`(?:\s+(\d+)\s+B/op)?(?:\s+(\d+)\s+allocs/op)?(?:\s+(\d+(?:\.\d+)?)\s+MB/s)?`)
 
 	scanner := bufio.NewScanner(strings.NewReader(output))
 	for scanner.Scan() {
@@ -175,7 +180,7 @@ func (pd *PerformanceDetector) ParseBenchmarkOutput(output string) ([]BenchmarkR
 	return results, nil
 }
 
-// UpdateBaselines updates performance baselines with new benchmark results
+// UpdateBaselines updates performance baselines with new benchmark results.
 func (pd *PerformanceDetector) UpdateBaselines(results []BenchmarkResult) error {
 	// Validate baseline directory path to prevent path traversal attacks
 	if err := pd.validateBaselineDirectory(); err != nil {
@@ -218,8 +223,10 @@ func (pd *PerformanceDetector) UpdateBaselines(results []BenchmarkResult) error 
 	return nil
 }
 
-// DetectRegressions analyzes benchmark results against baselines for regressions
-func (pd *PerformanceDetector) DetectRegressions(results []BenchmarkResult) ([]RegressionDetection, error) {
+// DetectRegressions analyzes benchmark results against baselines for regressions.
+func (pd *PerformanceDetector) DetectRegressions(
+	results []BenchmarkResult,
+) ([]RegressionDetection, error) {
 	var regressions []RegressionDetection
 
 	// Calculate total number of statistical comparisons for multiple testing correction
@@ -257,8 +264,12 @@ func (pd *PerformanceDetector) DetectRegressions(results []BenchmarkResult) ([]R
 	return regressions, nil
 }
 
-// detectPerformanceRegressionWithStats checks for execution time regressions with proper statistics
-func (pd *PerformanceDetector) detectPerformanceRegressionWithStats(result BenchmarkResult, baseline *PerformanceBaseline, numComparisons int) *RegressionDetection {
+// detectPerformanceRegressionWithStats checks for execution time regressions with proper statistics.
+func (pd *PerformanceDetector) detectPerformanceRegressionWithStats(
+	result BenchmarkResult,
+	baseline *PerformanceBaseline,
+	numComparisons int,
+) *RegressionDetection {
 	// Perform rigorous statistical analysis
 	statResult := pd.statisticalValidator.CalculateStatisticalConfidence(
 		result.NsPerOp,
@@ -294,21 +305,25 @@ func (pd *PerformanceDetector) detectPerformanceRegressionWithStats(result Bench
 	return nil
 }
 
-
-// regressionParams holds parameters for regression detection
+// regressionParams holds parameters for regression detection.
 type regressionParams struct {
-	metricValue     int64
-	suffix          string
-	meanMultiplier  float64
-	stdDevMultiplier float64
-	sampleScaling   float64
-	threshold       float64
-	regressionType  string
+	metricValue       int64
+	suffix            string
+	meanMultiplier    float64
+	stdDevMultiplier  float64
+	sampleScaling     float64
+	threshold         float64
+	regressionType    string
 	getRecommendation func(severity string, percentageChange float64) string
 }
 
-// detectRegressionWithStats is a helper function for memory and allocation regression detection
-func (pd *PerformanceDetector) detectRegressionWithStats(result BenchmarkResult, baseline *PerformanceBaseline, numComparisons int, params regressionParams) *RegressionDetection {
+// detectRegressionWithStats is a helper function for memory and allocation regression detection.
+func (pd *PerformanceDetector) detectRegressionWithStats(
+	result BenchmarkResult,
+	baseline *PerformanceBaseline,
+	numComparisons int,
+	params regressionParams,
+) *RegressionDetection {
 	if params.metricValue == 0 {
 		return nil // No data available
 	}
@@ -364,8 +379,12 @@ func (pd *PerformanceDetector) detectRegressionWithStats(result BenchmarkResult,
 	return nil
 }
 
-// detectMemoryRegressionWithStats checks for memory usage regressions with proper statistics
-func (pd *PerformanceDetector) detectMemoryRegressionWithStats(result BenchmarkResult, baseline *PerformanceBaseline, numComparisons int) *RegressionDetection {
+// detectMemoryRegressionWithStats checks for memory usage regressions with proper statistics.
+func (pd *PerformanceDetector) detectMemoryRegressionWithStats(
+	result BenchmarkResult,
+	baseline *PerformanceBaseline,
+	numComparisons int,
+) *RegressionDetection {
 	return pd.detectRegressionWithStats(result, baseline, numComparisons, regressionParams{
 		metricValue:       result.BytesPerOp,
 		suffix:            "_memory",
@@ -378,14 +397,17 @@ func (pd *PerformanceDetector) detectMemoryRegressionWithStats(result BenchmarkR
 	})
 }
 
-
-// detectAllocationRegressionWithStats checks for allocation count regressions with proper statistics
-func (pd *PerformanceDetector) detectAllocationRegressionWithStats(result BenchmarkResult, baseline *PerformanceBaseline, numComparisons int) *RegressionDetection {
+// detectAllocationRegressionWithStats checks for allocation count regressions with proper statistics.
+func (pd *PerformanceDetector) detectAllocationRegressionWithStats(
+	result BenchmarkResult,
+	baseline *PerformanceBaseline,
+	numComparisons int,
+) *RegressionDetection {
 	return pd.detectRegressionWithStats(result, baseline, numComparisons, regressionParams{
 		metricValue:       result.AllocsPerOp,
 		suffix:            "_allocs",
-		meanMultiplier:    0.75, // Conservative estimate
-		stdDevMultiplier:  0.05, // Assume 5% variance (allocations are typically more stable)
+		meanMultiplier:    0.75,  // Conservative estimate
+		stdDevMultiplier:  0.05,  // Assume 5% variance (allocations are typically more stable)
 		sampleScaling:     0.001, // Scale performance to approximate allocations
 		threshold:         pd.thresholds.AllocThreshold,
 		regressionType:    "allocations",
@@ -393,19 +415,18 @@ func (pd *PerformanceDetector) detectAllocationRegressionWithStats(result Benchm
 	})
 }
 
-
-// calculateSeverity determines regression severity based on threshold ratio
+// calculateSeverity determines regression severity based on threshold ratio.
 func (pd *PerformanceDetector) calculateSeverity(ratio, threshold float64) string {
 	if ratio > threshold*2.0 {
 		return "critical"
 	} else if ratio > threshold*1.15 {
 		return "major"
 	}
+
 	return "minor"
 }
 
-
-// calculateStatistics computes statistical measures for baseline samples
+// calculateStatistics computes statistical measures for baseline samples.
 func (pd *PerformanceDetector) calculateStatistics(baseline *PerformanceBaseline) {
 	if len(baseline.Samples) == 0 {
 		return
@@ -433,7 +454,7 @@ func (pd *PerformanceDetector) calculateStatistics(baseline *PerformanceBaseline
 	// Calculate standard deviation
 	var variance float64
 	for _, sample := range baseline.Samples {
-		variance += math.Pow(sample-baseline.Mean, 2)
+		variance += (sample - baseline.Mean) * (sample - baseline.Mean)
 	}
 	variance /= float64(len(baseline.Samples))
 	baseline.StdDev = math.Sqrt(variance)
@@ -443,7 +464,7 @@ func (pd *PerformanceDetector) calculateStatistics(baseline *PerformanceBaseline
 	baseline.Max = sorted[n-1]
 }
 
-// loadBaseline loads performance baseline from disk
+// loadBaseline loads performance baseline from disk.
 func (pd *PerformanceDetector) loadBaseline(benchmarkName string) (*PerformanceBaseline, error) {
 	filename := filepath.Join(pd.baselineDir, sanitizeFilename(benchmarkName)+".json")
 
@@ -460,7 +481,7 @@ func (pd *PerformanceDetector) loadBaseline(benchmarkName string) (*PerformanceB
 	return &baseline, nil
 }
 
-// validateBaselineDirectory validates baseline directory path to prevent path traversal attacks
+// validateBaselineDirectory validates baseline directory path to prevent path traversal attacks.
 func (pd *PerformanceDetector) validateBaselineDirectory() error {
 	// Validate the baseline directory path using the security validation package
 	if err := validation.ValidatePath(pd.baselineDir); err != nil {
@@ -485,7 +506,8 @@ func (pd *PerformanceDetector) validateBaselineDirectory() error {
 
 	// Ensure baseline directory is within current working directory or explicitly allowed subdirectories
 	if !strings.HasPrefix(absBaselineDir, absCwd) {
-		return fmt.Errorf("baseline directory '%s' is outside current working directory '%s'", pd.baselineDir, cwd)
+		return fmt.Errorf("baseline directory '%s' is outside current working directory '%s'",
+			pd.baselineDir, cwd)
 	}
 
 	// Additional security: prevent writing to parent directories
@@ -495,13 +517,14 @@ func (pd *PerformanceDetector) validateBaselineDirectory() error {
 	}
 
 	if strings.HasPrefix(relPath, "..") {
-		return fmt.Errorf("baseline directory contains parent directory traversal: %s", pd.baselineDir)
+		return fmt.Errorf("baseline directory contains parent directory traversal: %s",
+			pd.baselineDir)
 	}
 
 	return nil
 }
 
-// saveBaseline saves performance baseline to disk
+// saveBaseline saves performance baseline to disk.
 func (pd *PerformanceDetector) saveBaseline(baseline *PerformanceBaseline) error {
 	// Sanitize and validate the benchmark name
 	sanitizedName := sanitizeFilename(baseline.BenchmarkName)
@@ -529,50 +552,71 @@ func (pd *PerformanceDetector) saveBaseline(baseline *PerformanceBaseline) error
 	return nil
 }
 
-// getPerformanceRecommendation provides actionable recommendations for performance regressions
-func (pd *PerformanceDetector) getPerformanceRecommendation(severity string, percentageChange float64) string {
+// getPerformanceRecommendation provides actionable recommendations for performance regressions.
+func (pd *PerformanceDetector) getPerformanceRecommendation(
+	severity string,
+	percentageChange float64,
+) string {
 	switch severity {
 	case "critical":
-		return fmt.Sprintf("CRITICAL: %.1f%% performance degradation. Immediate investigation required. Consider reverting recent changes.", percentageChange)
+		return fmt.Sprintf("CRITICAL: %.1f%% performance degradation. "+
+			"Immediate investigation required. Consider reverting recent changes.", percentageChange)
 	case "major":
-		return fmt.Sprintf("MAJOR: %.1f%% performance degradation. Review recent commits for performance impact.", percentageChange)
+		return fmt.Sprintf("MAJOR: %.1f%% performance degradation. "+
+			"Review recent commits for performance impact.", percentageChange)
 	default:
-		return fmt.Sprintf("MINOR: %.1f%% performance degradation. Monitor for trends.", percentageChange)
+		return fmt.Sprintf(
+			"MINOR: %.1f%% performance degradation. Monitor for trends.",
+			percentageChange,
+		)
 	}
 }
 
-// getMemoryRecommendation provides actionable recommendations for memory regressions
-func (pd *PerformanceDetector) getMemoryRecommendation(severity string, percentageChange float64) string {
+// getMemoryRecommendation provides actionable recommendations for memory regressions.
+func (pd *PerformanceDetector) getMemoryRecommendation(
+	severity string,
+	percentageChange float64,
+) string {
 	switch severity {
 	case "critical":
-		return fmt.Sprintf("CRITICAL: %.1f%% memory increase. Check for memory leaks and excessive allocations.", percentageChange)
+		return fmt.Sprintf("CRITICAL: %.1f%% memory increase. "+
+			"Check for memory leaks and excessive allocations.", percentageChange)
 	case "major":
-		return fmt.Sprintf("MAJOR: %.1f%% memory increase. Review data structures and caching strategies.", percentageChange)
+		return fmt.Sprintf("MAJOR: %.1f%% memory increase. "+
+			"Review data structures and caching strategies.", percentageChange)
 	default:
-		return fmt.Sprintf("MINOR: %.1f%% memory increase. Consider memory optimization opportunities.", percentageChange)
+		return fmt.Sprintf("MINOR: %.1f%% memory increase. "+
+			"Consider memory optimization opportunities.", percentageChange)
 	}
 }
 
-// getAllocationRecommendation provides actionable recommendations for allocation regressions
-func (pd *PerformanceDetector) getAllocationRecommendation(severity string, percentageChange float64) string {
+// getAllocationRecommendation provides actionable recommendations for allocation regressions.
+func (pd *PerformanceDetector) getAllocationRecommendation(
+	severity string,
+	percentageChange float64,
+) string {
 	switch severity {
 	case "critical":
-		return fmt.Sprintf("CRITICAL: %.1f%% allocation increase. Implement object pooling and reduce unnecessary allocations.", percentageChange)
+		return fmt.Sprintf("CRITICAL: %.1f%% allocation increase. "+
+			"Implement object pooling and reduce unnecessary allocations.", percentageChange)
 	case "major":
-		return fmt.Sprintf("MAJOR: %.1f%% allocation increase. Review slice growth patterns and string concatenations.", percentageChange)
+		return fmt.Sprintf("MAJOR: %.1f%% allocation increase. "+
+			"Review slice growth patterns and string concatenations.", percentageChange)
 	default:
-		return fmt.Sprintf("MINOR: %.1f%% allocation increase. Consider allocation reduction techniques.", percentageChange)
+		return fmt.Sprintf("MINOR: %.1f%% allocation increase. "+
+			"Consider allocation reduction techniques.", percentageChange)
 	}
 }
 
-// sanitizeFilename creates a safe filename from benchmark name
+// sanitizeFilename creates a safe filename from benchmark name.
 func sanitizeFilename(name string) string {
 	// Replace unsafe characters with underscores
 	safe := regexp.MustCompile(`[^a-zA-Z0-9\-_.]`).ReplaceAllString(name, "_")
+
 	return strings.TrimSuffix(safe, "_")
 }
 
-// getEnvironment detects the current environment
+// getEnvironment detects the current environment.
 func getEnvironment() string {
 	if os.Getenv("CI") != "" {
 		return "ci"
@@ -580,10 +624,11 @@ func getEnvironment() string {
 	if os.Getenv("GITHUB_ACTIONS") != "" {
 		return "github-actions"
 	}
+
 	return "local"
 }
 
-// DefaultThresholds returns reasonable default regression thresholds
+// DefaultThresholds returns reasonable default regression thresholds.
 func DefaultThresholds() RegressionThresholds {
 	return RegressionThresholds{
 		SlownessThreshold: 1.15, // 15% performance degradation

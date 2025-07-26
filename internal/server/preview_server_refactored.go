@@ -2,37 +2,38 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"sync"
 
 	"github.com/conneroisu/templar/internal/config"
-	"github.com/conneroisu/templar/internal/errors"
+	templare "github.com/conneroisu/templar/internal/errors"
 	"github.com/conneroisu/templar/internal/interfaces"
 	"github.com/conneroisu/templar/internal/monitoring"
 	"github.com/conneroisu/templar/internal/renderer"
 )
 
 // RefactoredPreviewServer coordinates all server components following Single Responsibility Principle
-// This server acts as a composition root, orchestrating individual focused components
+// This server acts as a composition root, orchestrating individual focused components.
 type RefactoredPreviewServer struct {
 	// Configuration
 	config *config.Config
-	
+
 	// Core components (each with single responsibility)
 	httpRouter      *HTTPRouter
 	wsManager       *WebSocketManager
 	middlewareChain *MiddlewareChain
 	orchestrator    *ServiceOrchestrator
-	
+
 	// Lifecycle management
 	shutdownOnce sync.Once
 	isShutdown   bool
 	shutdownMu   sync.RWMutex
 }
 
-// NewRefactoredPreviewServer creates a new refactored server with full dependency injection
+// NewRefactoredPreviewServer creates a new refactored server with full dependency injection.
 func NewRefactoredPreviewServer(
 	cfg *config.Config,
 	registry interfaces.ComponentRegistry,
@@ -41,23 +42,22 @@ func NewRefactoredPreviewServer(
 	buildPipeline interfaces.BuildPipeline,
 	monitor *monitoring.TemplarMonitor,
 ) (*RefactoredPreviewServer, error) {
-	
 	// Create renderer
 	renderer := renderer.NewComponentRenderer(registry)
-	
+
 	// Create origin validator (implements OriginValidator interface)
 	originValidator := &ServerOriginValidator{config: cfg}
-	
+
 	// Create rate limiter
 	var rateLimiter *TokenBucketManager
 	securityConfig := SecurityConfigFromAppConfig(cfg)
 	if securityConfig.RateLimiting != nil && securityConfig.RateLimiting.Enabled {
 		rateLimiter = NewRateLimiter(securityConfig.RateLimiting, nil)
 	}
-	
+
 	// Create WebSocket manager
 	wsManager := NewWebSocketManager(originValidator, rateLimiter)
-	
+
 	// Create middleware chain
 	middlewareChain := NewMiddlewareChain(MiddlewareDependencies{
 		Config:          cfg,
@@ -65,7 +65,7 @@ func NewRefactoredPreviewServer(
 		Monitor:         monitor,
 		OriginValidator: originValidator,
 	})
-	
+
 	// Create service orchestrator
 	orchestrator := NewServiceOrchestrator(ServiceDependencies{
 		Config:        cfg,
@@ -77,7 +77,7 @@ func NewRefactoredPreviewServer(
 		Monitor:       monitor,
 		WSManager:     wsManager,
 	})
-	
+
 	// Create HTTP handlers adapter that implements HTTPHandlers interface
 	handlerAdapter := &ServerHandlerAdapter{
 		orchestrator: orchestrator,
@@ -86,10 +86,10 @@ func NewRefactoredPreviewServer(
 		renderer:     renderer,
 		config:       cfg,
 	}
-	
+
 	// Create HTTP router
 	httpRouter := NewHTTPRouter(cfg, handlerAdapter, middlewareChain)
-	
+
 	server := &RefactoredPreviewServer{
 		config:          cfg,
 		httpRouter:      httpRouter,
@@ -97,55 +97,56 @@ func NewRefactoredPreviewServer(
 		middlewareChain: middlewareChain,
 		orchestrator:    orchestrator,
 	}
-	
+
 	return server, nil
 }
 
-// Start starts all server components in coordinated fashion
+// Start starts all server components in coordinated fashion.
 func (s *RefactoredPreviewServer) Start(ctx context.Context) error {
 	s.shutdownMu.RLock()
 	if s.isShutdown {
 		s.shutdownMu.RUnlock()
-		return fmt.Errorf("server has been shut down")
+
+		return errors.New("server has been shut down")
 	}
 	s.shutdownMu.RUnlock()
-	
+
 	// Start service orchestrator (handles business logic coordination)
 	if err := s.orchestrator.Start(ctx); err != nil {
 		return fmt.Errorf("failed to start service orchestrator: %w", err)
 	}
-	
+
 	// Open browser if configured
 	if s.config.Server.Open {
-		url := fmt.Sprintf("http://%s", s.httpRouter.GetAddr())
+		url := "http://" + s.httpRouter.GetAddr()
 		s.orchestrator.OpenBrowser(url)
 	}
-	
+
 	log.Printf("🚀 Templar server starting on %s", s.httpRouter.GetAddr())
-	
+
 	// Start HTTP router (this blocks until shutdown)
 	return s.httpRouter.Start(ctx)
 }
 
-// Shutdown gracefully shuts down all server components
+// Shutdown gracefully shuts down all server components.
 func (s *RefactoredPreviewServer) Shutdown(ctx context.Context) error {
 	var shutdownErr error
-	
+
 	s.shutdownOnce.Do(func() {
 		s.shutdownMu.Lock()
 		s.isShutdown = true
 		s.shutdownMu.Unlock()
-		
+
 		log.Printf("Shutting down refactored preview server...")
-		
+
 		// Shutdown components in reverse order of startup
-		
+
 		// 1. HTTP router
 		if err := s.httpRouter.Shutdown(ctx); err != nil {
 			log.Printf("Error shutting down HTTP router: %v", err)
 			shutdownErr = err
 		}
-		
+
 		// 2. Service orchestrator
 		if err := s.orchestrator.Shutdown(ctx); err != nil {
 			log.Printf("Error shutting down service orchestrator: %v", err)
@@ -153,7 +154,7 @@ func (s *RefactoredPreviewServer) Shutdown(ctx context.Context) error {
 				shutdownErr = err
 			}
 		}
-		
+
 		// 3. WebSocket manager
 		if err := s.wsManager.Shutdown(ctx); err != nil {
 			log.Printf("Error shutting down WebSocket manager: %v", err)
@@ -161,63 +162,64 @@ func (s *RefactoredPreviewServer) Shutdown(ctx context.Context) error {
 				shutdownErr = err
 			}
 		}
-		
+
 		log.Printf("Refactored preview server shut down successfully")
 	})
-	
+
 	return shutdownErr
 }
 
-// GetBuildMetrics returns build metrics through the orchestrator
+// GetBuildMetrics returns build metrics through the orchestrator.
 func (s *RefactoredPreviewServer) GetBuildMetrics() interfaces.BuildMetrics {
 	return s.orchestrator.GetBuildMetrics()
 }
 
-// GetLastBuildErrors returns last build errors through the orchestrator
-func (s *RefactoredPreviewServer) GetLastBuildErrors() []*errors.ParsedError {
+// GetLastBuildErrors returns last build errors through the orchestrator.
+func (s *RefactoredPreviewServer) GetLastBuildErrors() []*templare.ParsedError {
 	return s.orchestrator.GetLastBuildErrors()
 }
 
-// IsShutdown returns whether the server has been shut down
+// IsShutdown returns whether the server has been shut down.
 func (s *RefactoredPreviewServer) IsShutdown() bool {
 	s.shutdownMu.RLock()
 	defer s.shutdownMu.RUnlock()
+
 	return s.isShutdown
 }
 
-// GetStatus returns comprehensive server status
+// GetStatus returns comprehensive server status.
 func (s *RefactoredPreviewServer) GetStatus() map[string]interface{} {
 	status := make(map[string]interface{})
-	
+
 	// Server status
 	status["server_shutdown"] = s.IsShutdown()
 	status["http_router_shutdown"] = s.httpRouter.IsShutdown()
 	status["websocket_manager_shutdown"] = s.wsManager.IsShutdown()
-	
+
 	// Service status from orchestrator
 	serviceStatus := s.orchestrator.GetServiceStatus()
 	for key, value := range serviceStatus {
 		status[key] = value
 	}
-	
+
 	// Component metrics
 	status["component_count"] = s.orchestrator.GetComponentCount()
 	status["websocket_clients"] = s.orchestrator.GetConnectedWebSocketClients()
-	
+
 	return status
 }
 
-// ServerOriginValidator implements OriginValidator interface for the server
+// ServerOriginValidator implements OriginValidator interface for the server.
 type ServerOriginValidator struct {
 	config *config.Config
 }
 
-// IsAllowedOrigin checks if the origin is allowed for WebSocket connections
+// IsAllowedOrigin checks if the origin is allowed for WebSocket connections.
 func (sov *ServerOriginValidator) IsAllowedOrigin(origin string) bool {
 	if origin == "" {
 		return true // Allow same-origin requests
 	}
-	
+
 	// Development environment allows more origins
 	if sov.config.Server.Environment == "development" {
 		allowedOrigins := []string{
@@ -226,21 +228,22 @@ func (sov *ServerOriginValidator) IsAllowedOrigin(origin string) bool {
 			"http://localhost:3000",
 			"http://127.0.0.1:3000",
 		}
-		
+
 		for _, allowed := range allowedOrigins {
 			if origin == allowed {
 				return true
 			}
 		}
 	}
-	
+
 	// Production: only allow same-origin
 	expectedOrigin := fmt.Sprintf("http://%s:%d", sov.config.Server.Host, sov.config.Server.Port)
+
 	return origin == expectedOrigin
 }
 
 // ServerHandlerAdapter adapts the server's handler methods to the HTTPHandlers interface
-// This allows clean separation between HTTP routing and business logic
+// This allows clean separation between HTTP routing and business logic.
 type ServerHandlerAdapter struct {
 	orchestrator *ServiceOrchestrator
 	wsManager    *WebSocketManager

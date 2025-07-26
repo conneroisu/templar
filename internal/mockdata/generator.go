@@ -1,3 +1,4 @@
+// Package mockdata provides intelligent mock data generation for component testing.
 package mockdata
 
 import (
@@ -10,20 +11,22 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// MockGenerator generates intelligent mock data based on parameter names and types
+// MockGenerator generates intelligent mock data based on parameter names and types.
 type MockGenerator struct {
 	rng *rand.Rand
 }
 
-// NewMockGenerator creates a new mock data generator
+// NewMockGenerator creates a new mock data generator.
 func NewMockGenerator() *MockGenerator {
 	return &MockGenerator{
 		rng: rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 }
 
-// GenerateForComponent generates mock data for all parameters of a component
-func (g *MockGenerator) GenerateForComponent(component *types.ComponentInfo) map[string]interface{} {
+// GenerateForComponent generates mock data for all parameters of a component.
+func (g *MockGenerator) GenerateForComponent(
+	component *types.ComponentInfo,
+) map[string]interface{} {
 	mockData := make(map[string]interface{})
 
 	for _, param := range component.Parameters {
@@ -33,7 +36,7 @@ func (g *MockGenerator) GenerateForComponent(component *types.ComponentInfo) map
 	return mockData
 }
 
-// generateForParameter generates mock data for a single parameter
+// generateForParameter generates mock data for a single parameter.
 func (g *MockGenerator) generateForParameter(param types.ParameterInfo) interface{} {
 	// Use default value if available
 	if param.Default != nil {
@@ -50,8 +53,8 @@ func (g *MockGenerator) generateForParameter(param types.ParameterInfo) interfac
 	return g.generateByType(param.Type)
 }
 
-// generateByNamePattern generates mock data based on parameter name patterns
-func (g *MockGenerator) generateByNamePattern(name, paramType string) interface{} {
+// generateByNamePattern generates mock data based on parameter name patterns.
+func (g *MockGenerator) generateByNamePattern(name, _ string) interface{} {
 	nameLower := strings.ToLower(name)
 
 	// Email patterns
@@ -94,19 +97,22 @@ func (g *MockGenerator) generateByNamePattern(name, paramType string) interface{
 	}
 
 	// Boolean patterns
-	if containsAny(nameLower, []string{"active", "enabled", "visible", "public", "featured", "selected"}) {
+	if containsAny(
+		nameLower,
+		[]string{"active", "enabled", "visible", "public", "featured", "selected"},
+	) {
 		return g.generateBoolean()
 	}
 
 	// Color patterns
-	if containsAny(nameLower, []string{"color", "colour", "background", "theme"}) {
+	if containsAny(nameLower, []string{"color", "background", "theme"}) {
 		return g.generateColor()
 	}
 
 	return nil
 }
 
-// generateByType generates mock data based on Go types
+// generateByType generates mock data based on Go types.
 func (g *MockGenerator) generateByType(paramType string) interface{} {
 	switch strings.ToLower(paramType) {
 	case "string":
@@ -123,6 +129,7 @@ func (g *MockGenerator) generateByType(paramType string) interface{} {
 		// Handle slice types
 		if strings.HasPrefix(paramType, "[]") {
 			elementType := strings.TrimPrefix(paramType, "[]")
+
 			return []interface{}{
 				g.generateByType(elementType),
 				g.generateByType(elementType),
@@ -141,7 +148,7 @@ func (g *MockGenerator) generateByType(paramType string) interface{} {
 	}
 }
 
-// Specific generators for different data types
+// Specific generators for different data types.
 func (g *MockGenerator) generateEmail() string {
 	domains := []string{"example.com", "test.org", "demo.net", "sample.io"}
 	names := []string{"john", "jane", "alex", "taylor", "jordan", "casey"}
@@ -154,7 +161,16 @@ func (g *MockGenerator) generateEmail() string {
 
 func (g *MockGenerator) generateName(context string) string {
 	firstNames := []string{"John", "Jane", "Alex", "Taylor", "Jordan", "Casey", "Morgan", "Riley"}
-	lastNames := []string{"Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis"}
+	lastNames := []string{
+		"Smith",
+		"Johnson",
+		"Williams",
+		"Brown",
+		"Jones",
+		"Garcia",
+		"Miller",
+		"Davis",
+	}
 	usernames := []string{"user123", "developer", "designer", "admin", "guest", "test_user"}
 
 	if strings.Contains(context, "first") {
@@ -185,7 +201,8 @@ func (g *MockGenerator) generateURL(context string) string {
 	if strings.Contains(context, "image") || strings.Contains(context, "avatar") {
 		sizes := []string{"150x150", "200x200", "300x300", "400x400"}
 		size := sizes[g.rng.Intn(len(sizes))]
-		return fmt.Sprintf("https://via.placeholder.com/%s", size)
+
+		return "https://via.placeholder.com/" + size
 	}
 
 	domains := []string{"example.com", "demo.org", "test.net", "sample.io"}
@@ -199,7 +216,14 @@ func (g *MockGenerator) generateURL(context string) string {
 }
 
 func (g *MockGenerator) generateTitle() string {
-	adjectives := []string{"Amazing", "Incredible", "Fantastic", "Outstanding", "Remarkable", "Excellent"}
+	adjectives := []string{
+		"Amazing",
+		"Incredible",
+		"Fantastic",
+		"Outstanding",
+		"Remarkable",
+		"Excellent",
+	}
 	nouns := []string{"Component", "Feature", "Design", "Experience", "Solution", "Product"}
 
 	adj := adjectives[g.rng.Intn(len(adjectives))]
@@ -216,16 +240,19 @@ func (g *MockGenerator) generateText(context string) string {
 			"Discover the power of this innovative solution that streamlines your workflow and improves productivity.",
 			"Experience seamless integration and exceptional performance with this cutting-edge component.",
 		}
+
 		return descriptions[g.rng.Intn(len(descriptions))]
 	}
 
 	if strings.Contains(context, "content") || strings.Contains(context, "body") {
 		contents := []string{
-			"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+			"Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
+				"Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
 			"Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
 			"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.",
 			"Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
 		}
+
 		return contents[g.rng.Intn(len(contents))]
 	}
 
@@ -236,6 +263,7 @@ func (g *MockGenerator) generateText(context string) string {
 			"We're excited to have you here.",
 			"Get started with our amazing features.",
 		}
+
 		return messages[g.rng.Intn(len(messages))]
 	}
 
@@ -291,23 +319,24 @@ func (g *MockGenerator) generateColor() string {
 	return colors[g.rng.Intn(len(colors))]
 }
 
-// Helper function to check if a string contains any of the given substrings
+// Helper function to check if a string contains any of the given substrings.
 func containsAny(str string, substrings []string) bool {
 	for _, substring := range substrings {
 		if strings.Contains(str, substring) {
 			return true
 		}
 	}
+
 	return false
 }
 
-// AdvancedMockGenerator provides more sophisticated mock data generation
+// AdvancedMockGenerator provides more sophisticated mock data generation.
 type AdvancedMockGenerator struct {
 	*MockGenerator
 	patterns map[string]*regexp.Regexp
 }
 
-// NewAdvancedMockGenerator creates a new advanced mock generator with regex patterns
+// NewAdvancedMockGenerator creates a new advanced mock generator with regex patterns.
 func NewAdvancedMockGenerator() *AdvancedMockGenerator {
 	patterns := map[string]*regexp.Regexp{
 		"phone":      regexp.MustCompile(`(?i)(phone|tel|mobile|cell)`),
@@ -324,8 +353,10 @@ func NewAdvancedMockGenerator() *AdvancedMockGenerator {
 	}
 }
 
-// GenerateForComponent generates advanced mock data with pattern matching
-func (g *AdvancedMockGenerator) GenerateForComponent(component *types.ComponentInfo) map[string]interface{} {
+// GenerateForComponent generates advanced mock data with pattern matching.
+func (g *AdvancedMockGenerator) GenerateForComponent(
+	component *types.ComponentInfo,
+) map[string]interface{} {
 	mockData := make(map[string]interface{})
 
 	for _, param := range component.Parameters {
@@ -354,9 +385,17 @@ func (g *AdvancedMockGenerator) generateByPattern(pattern string) interface{} {
 			g.rng.Intn(900)+100, g.rng.Intn(900)+100, g.rng.Intn(10000))
 	case "address":
 		streets := []string{"Main St", "Oak Ave", "Pine Rd", "Elm Dr", "Cedar Ln"}
+
 		return fmt.Sprintf("%d %s", g.rng.Intn(9999)+1, streets[g.rng.Intn(len(streets))])
 	case "company":
-		companies := []string{"TechCorp", "InnovateLLC", "FutureSystems", "NextGenSolutions", "DigitalDynamics"}
+		companies := []string{
+			"TechCorp",
+			"InnovateLLC",
+			"FutureSystems",
+			"NextGenSolutions",
+			"DigitalDynamics",
+		}
+
 		return companies[g.rng.Intn(len(companies))]
 	case "password":
 		return "••••••••" // Masked password
@@ -364,6 +403,7 @@ func (g *AdvancedMockGenerator) generateByPattern(pattern string) interface{} {
 		return fmt.Sprintf("%.1f%%", g.rng.Float64()*100)
 	case "currency":
 		currencies := []string{"USD", "EUR", "GBP", "CAD", "AUD"}
+
 		return currencies[g.rng.Intn(len(currencies))]
 	default:
 		return "Advanced mock data"

@@ -12,7 +12,7 @@ import (
 	"github.com/conneroisu/templar/internal/registry"
 )
 
-// AdaptiveOptimizer applies performance optimizations based on monitor recommendations
+// AdaptiveOptimizer applies performance optimizations based on monitor recommendations.
 type AdaptiveOptimizer struct {
 	monitor        *PerformanceMonitor
 	buildPipeline  *build.BuildPipeline
@@ -25,7 +25,7 @@ type AdaptiveOptimizer struct {
 	metrics        *OptimizerMetrics
 }
 
-// OptimizerConfig contains configuration for the adaptive optimizer
+// OptimizerConfig contains configuration for the adaptive optimizer.
 type OptimizerConfig struct {
 	EnableAutoApply       bool          `json:"enable_auto_apply"`
 	MaxActionsPerInterval int           `json:"max_actions_per_interval"`
@@ -37,7 +37,7 @@ type OptimizerConfig struct {
 	MaxBackoffDuration    time.Duration `json:"max_backoff_duration"`
 }
 
-// OptimizerMetrics tracks optimizer performance
+// OptimizerMetrics tracks optimizer performance.
 type OptimizerMetrics struct {
 	ActionsApplied        int64         `json:"actions_applied"`
 	ActionsSkipped        int64         `json:"actions_skipped"`
@@ -48,7 +48,7 @@ type OptimizerMetrics struct {
 	TotalOptimizationTime time.Duration `json:"total_optimization_time"`
 }
 
-// OptimizationResult represents the result of applying an optimization
+// OptimizationResult represents the result of applying an optimization.
 type OptimizationResult struct {
 	Success       bool               `json:"success"`
 	Action        Action             `json:"action"`
@@ -60,7 +60,7 @@ type OptimizationResult struct {
 	Timestamp     time.Time          `json:"timestamp"`
 }
 
-// WorkerScaler manages worker pool scaling
+// WorkerScaler manages worker pool scaling.
 type WorkerScaler struct {
 	currentWorkers int
 	targetWorkers  int
@@ -71,11 +71,15 @@ type WorkerScaler struct {
 	mu             sync.RWMutex
 }
 
-// CacheManager manages adaptive cache sizing
-type CacheManager struct {}
+// CacheManager manages adaptive cache sizing.
+type CacheManager struct{}
 
-// NewAdaptiveOptimizer creates a new adaptive optimizer
-func NewAdaptiveOptimizer(monitor *PerformanceMonitor, buildPipeline *build.BuildPipeline, registry *registry.ComponentRegistry) *AdaptiveOptimizer {
+// NewAdaptiveOptimizer creates a new adaptive optimizer.
+func NewAdaptiveOptimizer(
+	monitor *PerformanceMonitor,
+	buildPipeline *build.BuildPipeline,
+	registry *registry.ComponentRegistry,
+) *AdaptiveOptimizer {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	optimizer := &AdaptiveOptimizer{
@@ -92,18 +96,18 @@ func NewAdaptiveOptimizer(monitor *PerformanceMonitor, buildPipeline *build.Buil
 	return optimizer
 }
 
-// Start starts the adaptive optimizer
+// Start starts the adaptive optimizer.
 func (ao *AdaptiveOptimizer) Start() {
 	go ao.processRecommendations()
 	go ao.periodicOptimization()
 }
 
-// Stop stops the adaptive optimizer
+// Stop stops the adaptive optimizer.
 func (ao *AdaptiveOptimizer) Stop() {
 	ao.cancel()
 }
 
-// processRecommendations processes recommendations from the performance monitor
+// processRecommendations processes recommendations from the performance monitor.
 func (ao *AdaptiveOptimizer) processRecommendations() {
 	recommendations := ao.monitor.GetRecommendations()
 
@@ -117,7 +121,7 @@ func (ao *AdaptiveOptimizer) processRecommendations() {
 	}
 }
 
-// handleRecommendation handles a single recommendation
+// handleRecommendation handles a single recommendation.
 func (ao *AdaptiveOptimizer) handleRecommendation(recommendation Recommendation) {
 	ao.mu.Lock()
 	defer ao.mu.Unlock()
@@ -125,7 +129,9 @@ func (ao *AdaptiveOptimizer) handleRecommendation(recommendation Recommendation)
 	// Check if we should apply this recommendation
 	if !ao.shouldApplyRecommendation(recommendation) {
 		ao.metrics.ActionsSkipped++
-		log.Printf("Skipping recommendation: %s (reason: threshold/cooldown)", recommendation.Type)
+		log.Printf("Skipping recommendation: %s (reason: threshold/cooldown)",
+			recommendation.Type)
+
 		return
 	}
 
@@ -147,10 +153,12 @@ func (ao *AdaptiveOptimizer) handleRecommendation(recommendation Recommendation)
 		// Record when this action was applied
 		ao.appliedActions[recommendation.Type] = time.Now()
 
-		log.Printf("Applied optimization: %s (impact: %s)", recommendation.Type, result.Impact)
+		log.Printf("Applied optimization: %s (impact: %s)",
+			recommendation.Type, result.Impact)
 	} else {
 		ao.metrics.ActionsFailed++
-		log.Printf("Failed to apply optimization: %s (error: %s)", recommendation.Type, result.Error)
+		log.Printf("Failed to apply optimization: %s (error: %s)",
+			recommendation.Type, result.Error)
 	}
 
 	// Capture metrics after optimization (with a small delay)
@@ -161,7 +169,7 @@ func (ao *AdaptiveOptimizer) handleRecommendation(recommendation Recommendation)
 	}()
 }
 
-// shouldApplyRecommendation determines if a recommendation should be applied
+// shouldApplyRecommendation determines if a recommendation should be applied.
 func (ao *AdaptiveOptimizer) shouldApplyRecommendation(recommendation Recommendation) bool {
 	// Check if auto-apply is enabled
 	if !ao.config.EnableAutoApply {
@@ -196,7 +204,7 @@ func (ao *AdaptiveOptimizer) shouldApplyRecommendation(recommendation Recommenda
 	return true
 }
 
-// applyOptimization applies a specific optimization action
+// applyOptimization applies a specific optimization action.
 func (ao *AdaptiveOptimizer) applyOptimization(action Action) OptimizationResult {
 	startTime := time.Now()
 	result := OptimizationResult{
@@ -208,6 +216,7 @@ func (ao *AdaptiveOptimizer) applyOptimization(action Action) OptimizationResult
 		result.Success = true
 		result.Impact = "Dry run - no actual changes made"
 		result.Duration = time.Since(startTime)
+
 		return result
 	}
 
@@ -230,16 +239,18 @@ func (ao *AdaptiveOptimizer) applyOptimization(action Action) OptimizationResult
 	}
 
 	result.Duration = time.Since(startTime)
+
 	return result
 }
 
-// scaleWorkers scales the number of worker goroutines
+// scaleWorkers scales the number of worker goroutines.
 func (ao *AdaptiveOptimizer) scaleWorkers(action Action) OptimizationResult {
 	result := OptimizationResult{Action: action}
 
 	targetWorkers, ok := action.Parameters["target_workers"].(int)
 	if !ok {
 		result.Error = "Invalid target_workers parameter"
+
 		return result
 	}
 
@@ -265,7 +276,7 @@ func (ao *AdaptiveOptimizer) scaleWorkers(action Action) OptimizationResult {
 	return result
 }
 
-// adjustCacheSize adjusts cache size based on memory pressure
+// adjustCacheSize adjusts cache size based on memory pressure.
 func (ao *AdaptiveOptimizer) adjustCacheSize(action Action) OptimizationResult {
 	result := OptimizationResult{Action: action}
 
@@ -282,12 +293,13 @@ func (ao *AdaptiveOptimizer) adjustCacheSize(action Action) OptimizationResult {
 
 	// Apply cache size adjustment (placeholder - would integrate with actual cache)
 	result.Success = true
-	result.Impact = fmt.Sprintf("Reduced cache size by %.1fMB (%.1f%%)", reductionMB, reducePercent)
+	result.Impact = fmt.Sprintf("Reduced cache size by %.1fMB (%.1f%%)",
+		reductionMB, reducePercent)
 
 	return result
 }
 
-// optimizeGC triggers garbage collection optimization
+// optimizeGC triggers garbage collection optimization.
 func (ao *AdaptiveOptimizer) optimizeGC(action Action) OptimizationResult {
 	result := OptimizationResult{Action: action}
 
@@ -299,17 +311,19 @@ func (ao *AdaptiveOptimizer) optimizeGC(action Action) OptimizationResult {
 		if targetPercent > 0 && targetPercent <= 500 {
 			// Note: runtime.GCPercent is not available in newer Go versions
 			// In production, this would use debug.SetGCPercent()
-			result.Impact = fmt.Sprintf("Would adjust GC target to %d%%", targetPercent)
+			result.Impact = fmt.Sprintf("Would adjust GC target to %d%%",
+				targetPercent)
 		}
 	} else {
 		result.Impact = "Triggered garbage collection"
 	}
 
 	result.Success = true
+
 	return result
 }
 
-// adjustPollingRate adjusts file watching polling rate
+// adjustPollingRate adjusts file watching polling rate.
 func (ao *AdaptiveOptimizer) adjustPollingRate(action Action, increase bool) OptimizationResult {
 	result := OptimizationResult{Action: action}
 
@@ -320,11 +334,12 @@ func (ao *AdaptiveOptimizer) adjustPollingRate(action Action, increase bool) Opt
 	}
 
 	result.Success = true
-	result.Impact = fmt.Sprintf("Polling rate %s", direction)
+	result.Impact = "Polling rate " + direction
+
 	return result
 }
 
-// clearCache clears various caches to free memory
+// clearCache clears various caches to free memory.
 func (ao *AdaptiveOptimizer) clearCache(action Action) OptimizationResult {
 	result := OptimizationResult{Action: action}
 
@@ -336,10 +351,11 @@ func (ao *AdaptiveOptimizer) clearCache(action Action) OptimizationResult {
 
 	result.Success = true
 	result.Impact = fmt.Sprintf("Cleared %s cache(s)", cacheType)
+
 	return result
 }
 
-// captureCurrentMetrics captures current system metrics
+// captureCurrentMetrics captures current system metrics.
 func (ao *AdaptiveOptimizer) captureCurrentMetrics() map[string]float64 {
 	metrics := make(map[string]float64)
 
@@ -365,7 +381,7 @@ func (ao *AdaptiveOptimizer) captureCurrentMetrics() map[string]float64 {
 	return metrics
 }
 
-// calculateImpact calculates the impact of an optimization
+// calculateImpact calculates the impact of an optimization.
 func (ao *AdaptiveOptimizer) calculateImpact(result OptimizationResult) {
 	if !result.Success || result.MetricsBefore == nil || result.MetricsAfter == nil {
 		return
@@ -385,7 +401,8 @@ func (ao *AdaptiveOptimizer) calculateImpact(result OptimizationResult) {
 	totalImprovement := 0.0
 	count := 0
 	for _, improvement := range improvements {
-		if improvement > 0 { // Only count positive improvements
+		if improvement > 0 {
+			// Only count positive improvements
 			totalImprovement += improvement
 			count++
 		}
@@ -403,11 +420,12 @@ func (ao *AdaptiveOptimizer) calculateImpact(result OptimizationResult) {
 		}
 		ao.mu.Unlock()
 
-		log.Printf("Optimization impact: %.2f%% average improvement", avgImprovement)
+		log.Printf("Optimization impact: %.2f%% average improvement",
+			avgImprovement)
 	}
 }
 
-// periodicOptimization performs periodic system optimization
+// periodicOptimization performs periodic system optimization.
 func (ao *AdaptiveOptimizer) periodicOptimization() {
 	ticker := time.NewTicker(time.Minute * 15) // Every 15 minutes
 	defer ticker.Stop()
@@ -422,7 +440,7 @@ func (ao *AdaptiveOptimizer) periodicOptimization() {
 	}
 }
 
-// performPeriodicOptimization performs routine optimizations
+// performPeriodicOptimization performs routine optimizations.
 func (ao *AdaptiveOptimizer) performPeriodicOptimization() {
 	// Periodic garbage collection if memory usage is high
 	var m runtime.MemStats
@@ -457,13 +475,14 @@ func (ao *AdaptiveOptimizer) performPeriodicOptimization() {
 	})
 
 	ao.monitor.Record(Metric{
-		Type:  "optimizer_success_rate",
-		Value: float64(ao.metrics.ActionsSuccessful) / float64(ao.metrics.ActionsApplied) * 100,
-		Unit:  "percent",
+		Type: "optimizer_success_rate",
+		Value: float64(ao.metrics.ActionsSuccessful) /
+			float64(ao.metrics.ActionsApplied) * 100,
+		Unit: "percent",
 	})
 }
 
-// GetMetrics returns current optimizer metrics
+// GetMetrics returns current optimizer metrics.
 func (ao *AdaptiveOptimizer) GetMetrics() *OptimizerMetrics {
 	ao.mu.RLock()
 	defer ao.mu.RUnlock()
@@ -480,14 +499,14 @@ func (ao *AdaptiveOptimizer) GetMetrics() *OptimizerMetrics {
 	}
 }
 
-// UpdateConfig updates the optimizer configuration
+// UpdateConfig updates the optimizer configuration.
 func (ao *AdaptiveOptimizer) UpdateConfig(config *OptimizerConfig) {
 	ao.mu.Lock()
 	defer ao.mu.Unlock()
 	ao.config = config
 }
 
-// getDefaultOptimizerConfig returns default optimizer configuration
+// getDefaultOptimizerConfig returns default optimizer configuration.
 func getDefaultOptimizerConfig() *OptimizerConfig {
 	return &OptimizerConfig{
 		EnableAutoApply:       true,
@@ -500,7 +519,7 @@ func getDefaultOptimizerConfig() *OptimizerConfig {
 	}
 }
 
-// NewWorkerScaler creates a new worker scaler
+// NewWorkerScaler creates a new worker scaler.
 func NewWorkerScaler(initialWorkers, maxWorkers int) *WorkerScaler {
 	return &WorkerScaler{
 		currentWorkers: initialWorkers,
@@ -512,31 +531,35 @@ func NewWorkerScaler(initialWorkers, maxWorkers int) *WorkerScaler {
 	}
 }
 
-// Scale adjusts the number of workers
+// Scale adjusts the number of workers.
 func (ws *WorkerScaler) Scale(direction string, factor float64) int {
 	ws.mu.Lock()
 	defer ws.mu.Unlock()
 
 	switch direction {
 	case "up":
-		ws.targetWorkers = int(float64(ws.currentWorkers) * (1 + ws.scaleUpRate*factor))
+		ws.targetWorkers = int(float64(ws.currentWorkers) *
+			(1 + ws.scaleUpRate*factor))
 		if ws.targetWorkers > ws.maxWorkers {
 			ws.targetWorkers = ws.maxWorkers
 		}
 	case "down":
-		ws.targetWorkers = int(float64(ws.currentWorkers) * (1 - ws.scaleDownRate*factor))
+		ws.targetWorkers = int(float64(ws.currentWorkers) *
+			(1 - ws.scaleDownRate*factor))
 		if ws.targetWorkers < ws.minWorkers {
 			ws.targetWorkers = ws.minWorkers
 		}
 	}
 
 	ws.currentWorkers = ws.targetWorkers
+
 	return ws.currentWorkers
 }
 
-// GetCurrentWorkers returns the current number of workers
+// GetCurrentWorkers returns the current number of workers.
 func (ws *WorkerScaler) GetCurrentWorkers() int {
 	ws.mu.RLock()
 	defer ws.mu.RUnlock()
+
 	return ws.currentWorkers
 }

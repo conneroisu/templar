@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -44,7 +45,7 @@ func TestIntegration_WebSocketConnection(t *testing.T) {
 
 	go func() {
 		err := srv.Start(ctx)
-		if err != nil && err != http.ErrServerClosed {
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			t.Errorf("Server start failed: %v", err)
 		}
 	}()
@@ -87,7 +88,7 @@ func TestIntegration_ComponentRegistryWithFileWatcher(t *testing.T) {
 
 	go func() {
 		err := srv.Start(ctx)
-		if err != nil && err != http.ErrServerClosed {
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			t.Errorf("Server start failed: %v", err)
 		}
 	}()
@@ -148,7 +149,11 @@ func TestIntegration_ConfigurationLoading(t *testing.T) {
 			verify: func(t *testing.T, cfg *config.Config) {
 				assert.Equal(t, 8080, cfg.Server.Port)
 				assert.Equal(t, "localhost", cfg.Server.Host)
-				assert.Equal(t, []string{"./components", "./views", "./examples"}, cfg.Components.ScanPaths)
+				assert.Equal(
+					t,
+					[]string{"./components", "./views", "./examples"},
+					cfg.Components.ScanPaths,
+				)
 			},
 		},
 		{
@@ -197,7 +202,7 @@ func TestIntegration_ServerRoutes(t *testing.T) {
 	testServerSetupAndShutdown(t, 0)
 }
 
-// testServerSetupAndShutdown is a helper function to avoid code duplication
+// testServerSetupAndShutdown is a helper function to avoid code duplication.
 func testServerSetupAndShutdown(t *testing.T, port int) {
 	// Create a temporary directory for components
 	tempDir := t.TempDir()
@@ -233,7 +238,7 @@ templ TestComponent(title string) {
 
 	go func() {
 		err := srv.Start(ctx)
-		if err != nil && err != http.ErrServerClosed {
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			t.Errorf("Server start failed: %v", err)
 		}
 	}()
@@ -308,7 +313,7 @@ templ Component2(content string) {
 
 	go func() {
 		err := srv.Start(ctx)
-		if err != nil && err != http.ErrServerClosed {
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			t.Errorf("Server start failed: %v", err)
 		}
 	}()
@@ -339,7 +344,7 @@ func TestIntegration_ResourceCleanup(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create multiple servers to test resource cleanup
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		srv, err := server.New(cfg)
 		require.NoError(t, err)
 
@@ -348,7 +353,7 @@ func TestIntegration_ResourceCleanup(t *testing.T) {
 
 		go func() {
 			err := srv.Start(ctx)
-			if err != nil && err != http.ErrServerClosed {
+			if err != nil && !errors.Is(err, http.ErrServerClosed) {
 				t.Errorf("Server start failed: %v", err)
 			}
 		}()
@@ -416,7 +421,7 @@ templ TestComponent(title string) {
 
 	go func() {
 		err := srv.Start(ctx)
-		if err != nil && err != http.ErrServerClosed {
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			t.Errorf("Server start failed: %v", err)
 		}
 	}()

@@ -12,7 +12,7 @@ import (
 	"github.com/conneroisu/templar/internal/renderer"
 )
 
-// EnhancedPreviewSystem provides advanced component preview capabilities
+// EnhancedPreviewSystem provides advanced component preview capabilities.
 type EnhancedPreviewSystem struct {
 	registry *registry.ComponentRegistry
 	renderer *renderer.ComponentRenderer
@@ -38,7 +38,7 @@ type EnhancedPreviewSystem struct {
 	performanceMonitor *PreviewPerformanceMonitor
 }
 
-// PreviewConfig holds configuration for the preview system
+// PreviewConfig holds configuration for the preview system.
 type PreviewConfig struct {
 	// Preview server settings
 	Host     string
@@ -72,19 +72,19 @@ type PreviewConfig struct {
 	EnableMockData         bool
 }
 
-// TemplateManager handles preview templates and layouts
+// TemplateManager handles preview templates and layouts.
 type TemplateManager struct {
 	templates        map[string]*template.Template
 	layoutTemplates  map[string]string
 	partialTemplates map[string]string
 }
 
-// AssetManager handles static assets and bundling
+// AssetManager handles static assets and bundling.
 type AssetManager struct {
 	assets map[string]*Asset
 }
 
-// Asset represents a static asset
+// Asset represents a static asset.
 type Asset struct {
 	Path         string
 	Content      []byte
@@ -95,13 +95,13 @@ type Asset struct {
 	Compressed   bool
 }
 
-// LiveReloadManager handles live reload functionality
+// LiveReloadManager handles live reload functionality.
 type LiveReloadManager struct {
 	connections map[string]*LiveReloadConnection
 	broadcastCh chan LiveReloadEvent
 }
 
-// LiveReloadConnection represents a live reload WebSocket connection
+// LiveReloadConnection represents a live reload WebSocket connection.
 type LiveReloadConnection struct {
 	ID            string
 	SessionID     string
@@ -110,7 +110,7 @@ type LiveReloadConnection struct {
 	Subscriptions []string
 }
 
-// LiveReloadEvent represents a live reload event
+// LiveReloadEvent represents a live reload event.
 type LiveReloadEvent struct {
 	Type      string                 `json:"type"`
 	Target    string                 `json:"target,omitempty"`
@@ -118,7 +118,7 @@ type LiveReloadEvent struct {
 	Timestamp time.Time              `json:"timestamp"`
 }
 
-// SandboxManager provides component isolation and security
+// SandboxManager provides component isolation and security.
 type SandboxManager struct {
 	sandboxes    map[string]*ComponentSandbox
 	sandboxMutex sync.RWMutex
@@ -130,7 +130,7 @@ type SandboxManager struct {
 	resourceLimits *ResourceLimits
 }
 
-// ComponentSandbox isolates component execution
+// ComponentSandbox isolates component execution.
 type ComponentSandbox struct {
 	ID             string
 	ComponentName  string
@@ -147,7 +147,7 @@ type ComponentSandbox struct {
 	blockedURLs    []string
 }
 
-// ResourceLimits defines resource constraints for sandboxed components
+// ResourceLimits defines resource constraints for sandboxed components.
 type ResourceLimits struct {
 	MaxMemoryMB      int
 	MaxCPUPercent    float64
@@ -156,7 +156,7 @@ type ResourceLimits struct {
 	MaxNetworkCalls  int
 }
 
-// SessionManager manages preview sessions and state
+// SessionManager manages preview sessions and state.
 type SessionManager struct {
 	sessions     map[string]*PreviewSession
 	sessionMutex sync.RWMutex
@@ -166,7 +166,7 @@ type SessionManager struct {
 	maxSessions    int
 }
 
-// PreviewSession represents a user's preview session
+// PreviewSession represents a user's preview session.
 type PreviewSession struct {
 	ID           string
 	UserID       string
@@ -189,14 +189,14 @@ type PreviewSession struct {
 	Bookmarks []ComponentBookmark
 }
 
-// ViewportSize represents viewport dimensions
+// ViewportSize represents viewport dimensions.
 type ViewportSize struct {
 	Width  int     `json:"width"`
 	Height int     `json:"height"`
 	Scale  float64 `json:"scale"`
 }
 
-// PreviewHistoryEntry tracks component preview history
+// PreviewHistoryEntry tracks component preview history.
 type PreviewHistoryEntry struct {
 	ComponentName string                 `json:"component_name"`
 	Props         map[string]interface{} `json:"props"`
@@ -204,7 +204,7 @@ type PreviewHistoryEntry struct {
 	Title         string                 `json:"title"`
 }
 
-// ComponentBookmark allows users to save component configurations
+// ComponentBookmark allows users to save component configurations.
 type ComponentBookmark struct {
 	ID            string                 `json:"id"`
 	Name          string                 `json:"name"`
@@ -214,7 +214,7 @@ type ComponentBookmark struct {
 	CreatedAt     time.Time              `json:"created_at"`
 }
 
-// PreviewPerformanceMonitor tracks preview system performance
+// PreviewPerformanceMonitor tracks preview system performance.
 type PreviewPerformanceMonitor struct {
 	metrics      *PreviewMetrics
 	metricsMutex sync.RWMutex
@@ -227,7 +227,7 @@ type PreviewPerformanceMonitor struct {
 	requestCounts map[string]int64
 }
 
-// PreviewMetrics contains performance metrics
+// PreviewMetrics contains performance metrics.
 type PreviewMetrics struct {
 	TotalRenders      int64         `json:"total_renders"`
 	SuccessfulRenders int64         `json:"successful_renders"`
@@ -240,8 +240,12 @@ type PreviewMetrics struct {
 	LastUpdated       time.Time     `json:"last_updated"`
 }
 
-// NewEnhancedPreviewSystem creates a new enhanced preview system
-func NewEnhancedPreviewSystem(registry *registry.ComponentRegistry, renderer *renderer.ComponentRenderer, logger logging.Logger) *EnhancedPreviewSystem {
+// NewEnhancedPreviewSystem creates a new enhanced preview system.
+func NewEnhancedPreviewSystem(
+	registry *registry.ComponentRegistry,
+	renderer *renderer.ComponentRenderer,
+	logger logging.Logger,
+) *EnhancedPreviewSystem {
 	config := DefaultPreviewConfig()
 
 	templateManager := NewTemplateManager(config)
@@ -265,21 +269,22 @@ func NewEnhancedPreviewSystem(registry *registry.ComponentRegistry, renderer *re
 	}
 }
 
-// DefaultPreviewConfig returns default configuration
+// DefaultPreviewConfig returns default configuration.
 func DefaultPreviewConfig() *PreviewConfig {
 	return &PreviewConfig{
-		Host:                   "localhost",
-		Port:                   8080,
-		BasePath:               "/preview",
-		TemplateDir:            "./templates",
-		AssetsDir:              "./assets",
-		StaticAssetsDir:        "./static",
-		EnableLiveReload:       true,
-		LiveReloadPort:         8081,
-		HotReloadEnabled:       true,
-		EnableSandboxing:       true,
-		AllowedOrigins:         []string{"http://localhost:8080"},
-		CSPPolicy:              "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'",
+		Host:             "localhost",
+		Port:             8080,
+		BasePath:         "/preview",
+		TemplateDir:      "./templates",
+		AssetsDir:        "./assets",
+		StaticAssetsDir:  "./static",
+		EnableLiveReload: true,
+		LiveReloadPort:   8081,
+		HotReloadEnabled: true,
+		EnableSandboxing: true,
+		AllowedOrigins:   []string{"http://localhost:8080"},
+		CSPPolicy: "default-src 'self'; script-src 'self' 'unsafe-inline'; " +
+			"style-src 'self' 'unsafe-inline'",
 		EnableCaching:          true,
 		CacheTimeout:           5 * time.Minute,
 		MaxConcurrentRenders:   10,
@@ -290,7 +295,7 @@ func DefaultPreviewConfig() *PreviewConfig {
 	}
 }
 
-// Start starts the enhanced preview system
+// Start starts the enhanced preview system.
 func (eps *EnhancedPreviewSystem) Start(ctx context.Context) error {
 	// Start all subsystems
 	if err := eps.templateManager.Start(ctx); err != nil {
@@ -329,8 +334,13 @@ func (eps *EnhancedPreviewSystem) Start(ctx context.Context) error {
 	return nil
 }
 
-// PreviewComponent renders a component preview with enhanced features
-func (eps *EnhancedPreviewSystem) PreviewComponent(ctx context.Context, componentName string, props map[string]interface{}, options *PreviewOptions) (*PreviewResult, error) {
+// PreviewComponent renders a component preview with enhanced features.
+func (eps *EnhancedPreviewSystem) PreviewComponent(
+	ctx context.Context,
+	componentName string,
+	props map[string]interface{},
+	options *PreviewOptions,
+) (*PreviewResult, error) {
 	startTime := time.Now()
 	defer func() {
 		eps.performanceMonitor.RecordRender(time.Since(startTime), nil)
@@ -343,7 +353,8 @@ func (eps *EnhancedPreviewSystem) PreviewComponent(ctx context.Context, componen
 	var sandbox *ComponentSandbox
 	if eps.config.EnableSandboxing {
 		var err error
-		sandbox, err = eps.sandboxManager.CreateSandbox(componentName, options.IsolationLevel)
+		sandbox, err = eps.sandboxManager.CreateSandbox(componentName,
+			options.IsolationLevel)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create sandbox: %w", err)
 		}
@@ -351,9 +362,11 @@ func (eps *EnhancedPreviewSystem) PreviewComponent(ctx context.Context, componen
 	}
 
 	// Render component with enhanced features
-	result, err := eps.renderComponentEnhanced(ctx, componentName, props, options, session, sandbox)
+	result, err := eps.renderComponentEnhanced(ctx, componentName, props,
+		options, session, sandbox)
 	if err != nil {
 		eps.performanceMonitor.RecordRender(time.Since(startTime), err)
+
 		return nil, err
 	}
 
@@ -367,7 +380,7 @@ func (eps *EnhancedPreviewSystem) PreviewComponent(ctx context.Context, componen
 		ComponentName: componentName,
 		Props:         props,
 		Timestamp:     time.Now(),
-		Title:         fmt.Sprintf("%s Preview", componentName),
+		Title:         componentName + " Preview",
 	}
 	session.History = append(session.History, historyEntry)
 
@@ -385,7 +398,7 @@ func (eps *EnhancedPreviewSystem) PreviewComponent(ctx context.Context, componen
 	return result, nil
 }
 
-// PreviewOptions contains options for component preview
+// PreviewOptions contains options for component preview.
 type PreviewOptions struct {
 	SessionID      string
 	Theme          string
@@ -399,7 +412,7 @@ type PreviewOptions struct {
 	Layout         string
 }
 
-// PreviewResult contains the result of a component preview
+// PreviewResult contains the result of a component preview.
 type PreviewResult struct {
 	HTML             string             `json:"html"`
 	CSS              string             `json:"css"`
@@ -410,7 +423,7 @@ type PreviewResult struct {
 	LiveReloadScript string             `json:"live_reload_script,omitempty"`
 }
 
-// PreviewMetadata contains metadata about the preview
+// PreviewMetadata contains metadata about the preview.
 type PreviewMetadata struct {
 	ComponentName string                 `json:"component_name"`
 	Props         map[string]interface{} `json:"props"`
@@ -422,7 +435,7 @@ type PreviewMetadata struct {
 	Version       string                 `json:"version"`
 }
 
-// RenderPerformance contains performance metrics for the render
+// RenderPerformance contains performance metrics for the render.
 type RenderPerformance struct {
 	RenderTime    time.Duration `json:"render_time"`
 	TemplateTime  time.Duration `json:"template_time"`
@@ -431,7 +444,7 @@ type RenderPerformance struct {
 	MemoryUsed    int64         `json:"memory_used"`
 }
 
-// DebugInfo contains debugging information
+// DebugInfo contains debugging information.
 type DebugInfo struct {
 	ComponentTree  *ComponentTreeNode     `json:"component_tree"`
 	PropValidation []ValidationError      `json:"prop_validation"`
@@ -439,7 +452,7 @@ type DebugInfo struct {
 	AssetManifest  map[string]interface{} `json:"asset_manifest"`
 }
 
-// ComponentTreeNode represents a node in the component tree
+// ComponentTreeNode represents a node in the component tree.
 type ComponentTreeNode struct {
 	Name       string                 `json:"name"`
 	Props      map[string]interface{} `json:"props"`
@@ -448,7 +461,7 @@ type ComponentTreeNode struct {
 	MemoryUsed int64                  `json:"memory_used"`
 }
 
-// ValidationError represents a prop validation error
+// ValidationError represents a prop validation error.
 type ValidationError struct {
 	Property string `json:"property"`
 	Expected string `json:"expected"`
@@ -457,7 +470,7 @@ type ValidationError struct {
 	Severity string `json:"severity"`
 }
 
-// RenderStep represents a step in the rendering process
+// RenderStep represents a step in the rendering process.
 type RenderStep struct {
 	Step        string        `json:"step"`
 	Duration    time.Duration `json:"duration"`
@@ -465,7 +478,7 @@ type RenderStep struct {
 	Data        interface{}   `json:"data,omitempty"`
 }
 
-// Placeholder implementations for managers
+// Placeholder implementations for managers.
 func NewTemplateManager(config *PreviewConfig) *TemplateManager {
 	return &TemplateManager{
 		templates:        make(map[string]*template.Template),
@@ -518,7 +531,7 @@ func NewPreviewPerformanceMonitor() *PreviewPerformanceMonitor {
 	}
 }
 
-// Manager start methods (placeholder implementations)
+// Manager start methods (placeholder implementations).
 func (tm *TemplateManager) Start(ctx context.Context) error {
 	// Load and compile templates
 	return nil
@@ -548,19 +561,33 @@ func (ppm *PreviewPerformanceMonitor) Start(ctx context.Context) {
 	// Start performance monitoring
 }
 
-// Additional methods for core functionality
-func (eps *EnhancedPreviewSystem) renderComponentEnhanced(ctx context.Context, componentName string, props map[string]interface{}, options *PreviewOptions, session *PreviewSession, sandbox *ComponentSandbox) (*PreviewResult, error) {
+// Additional methods for core functionality.
+func (eps *EnhancedPreviewSystem) renderComponentEnhanced(
+	ctx context.Context,
+	componentName string,
+	props map[string]interface{},
+	options *PreviewOptions,
+	session *PreviewSession,
+	sandbox *ComponentSandbox,
+) (*PreviewResult, error) {
 	// Enhanced rendering implementation
 	return &PreviewResult{
-		HTML:        "<div>Enhanced preview placeholder</div>",
-		CSS:         "",
-		JavaScript:  "",
-		Metadata:    &PreviewMetadata{ComponentName: componentName, Props: props, GeneratedAt: time.Now()},
+		HTML:       "<div>Enhanced preview placeholder</div>",
+		CSS:        "",
+		JavaScript: "",
+		Metadata: &PreviewMetadata{
+			ComponentName: componentName,
+			Props:         props,
+			GeneratedAt:   time.Now(),
+		},
 		Performance: &RenderPerformance{RenderTime: time.Millisecond * 10},
 	}, nil
 }
 
-func (sesm *SessionManager) GetOrCreateSession(ctx context.Context, sessionID string) *PreviewSession {
+func (sesm *SessionManager) GetOrCreateSession(
+	ctx context.Context,
+	sessionID string,
+) *PreviewSession {
 	sesm.sessionMutex.Lock()
 	defer sesm.sessionMutex.Unlock()
 
@@ -583,14 +610,19 @@ func (sesm *SessionManager) GetOrCreateSession(ctx context.Context, sessionID st
 	}
 
 	sesm.sessions[sessionID] = session
+
 	return session
 }
 
-func (sm *SandboxManager) CreateSandbox(componentName string, isolationLevel int) (*ComponentSandbox, error) {
+func (sm *SandboxManager) CreateSandbox(
+	componentName string,
+	isolationLevel int,
+) (*ComponentSandbox, error) {
 	sm.sandboxMutex.Lock()
 	defer sm.sandboxMutex.Unlock()
 
-	sandboxID := fmt.Sprintf("sandbox_%s_%d", componentName, time.Now().UnixNano())
+	sandboxID := fmt.Sprintf("sandbox_%s_%d", componentName,
+		time.Now().UnixNano())
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 
 	sandbox := &ComponentSandbox{
@@ -605,6 +637,7 @@ func (sm *SandboxManager) CreateSandbox(componentName string, isolationLevel int
 	}
 
 	sm.sandboxes[sandboxID] = sandbox
+
 	return sandbox, nil
 }
 
@@ -647,11 +680,12 @@ func (ppm *PreviewPerformanceMonitor) RecordRender(duration time.Duration, err e
 	for _, t := range ppm.renderTimes {
 		total += t
 	}
-	ppm.metrics.AverageRenderTime = total / time.Duration(len(ppm.renderTimes))
+	ppm.metrics.AverageRenderTime = total /
+		time.Duration(len(ppm.renderTimes))
 	ppm.metrics.LastUpdated = time.Now()
 }
 
-// GetPreviewMetrics returns current preview system metrics
+// GetPreviewMetrics returns current preview system metrics.
 func (eps *EnhancedPreviewSystem) GetPreviewMetrics() *PreviewMetrics {
 	eps.performanceMonitor.metricsMutex.RLock()
 	defer eps.performanceMonitor.metricsMutex.RUnlock()
@@ -662,13 +696,14 @@ func (eps *EnhancedPreviewSystem) GetPreviewMetrics() *PreviewMetrics {
 	metrics.ActiveConnections = len(eps.liveReload.connections)
 
 	if metrics.TotalRenders > 0 {
-		metrics.ErrorRate = float64(metrics.FailedRenders) / float64(metrics.TotalRenders)
+		metrics.ErrorRate = float64(metrics.FailedRenders) /
+			float64(metrics.TotalRenders)
 	}
 
 	return &metrics
 }
 
-// Interface definitions for external dependencies
+// Interface definitions for external dependencies.
 type SessionStorage interface {
 	Store(sessionID string, session *PreviewSession) error
 	Load(sessionID string) (*PreviewSession, error)

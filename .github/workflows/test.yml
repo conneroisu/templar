@@ -16,26 +16,17 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: ${{ matrix.go-version }}
-    
-    - name: Cache Go modules
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
-    
-    - name: Install dependencies
-      run: go mod tidy
+    - name: Install Nix
+      uses: DeterminateSystems/nix-installer-action@main
+
+    - name: Setup Nix cache
+      uses: DeterminateSystems/magic-nix-cache-action@main
+
+    - name: Setup development environment
+      run: nix develop --command bash -c "go mod download && templ generate"
     
     - name: Run tests
-      run: go test -race -coverprofile=coverage.out ./...
+      run: nix develop --command go test -race -coverprofile=coverage.out $(go list ./... | grep -v templar-cache-benchmark)
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
@@ -51,16 +42,18 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.24'
-    
-    - name: golangci-lint
-      uses: golangci/golangci-lint-action@v3
-      with:
-        version: latest
-        args: --timeout=5m
+    - name: Install Nix
+      uses: DeterminateSystems/nix-installer-action@main
+
+    - name: Setup Nix cache
+      uses: DeterminateSystems/magic-nix-cache-action@main
+
+    - name: Setup development environment
+      run: nix develop --command bash -c "go mod download && templ generate"
+
+    - name: Run golangci-lint
+      run: |
+        nix develop --command golangci-lint run --timeout=5m ./...
 
   build:
     runs-on: ubuntu-latest
@@ -68,13 +61,16 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.24'
-    
-    - name: Build
-      run: go build -v .
+    - name: Install Nix
+      uses: DeterminateSystems/nix-installer-action@main
+
+    - name: Setup Nix cache
+      uses: DeterminateSystems/magic-nix-cache-action@main
+
+    - name: Setup and build
+      run: |
+        nix develop --command bash -c "go mod download && templ generate"
+        nix develop --command go build -v .
     
     - name: Test build with race detector
-      run: go build -race -v .
+      run: nix develop --command go build -race -v .

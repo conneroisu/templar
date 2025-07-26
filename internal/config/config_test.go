@@ -173,7 +173,7 @@ func TestTargetFiles(t *testing.T) {
 	assert.Equal(t, testFiles, config.TargetFiles)
 }
 
-// TestLoadWithEnvironment tests loading config with environment variables
+// TestLoadWithEnvironment tests loading config with environment variables.
 func TestLoadWithEnvironment(t *testing.T) {
 	// Save original environment
 	originalPort := os.Getenv("TEMPLAR_SERVER_PORT")
@@ -200,8 +200,8 @@ func TestLoadWithEnvironment(t *testing.T) {
 	viper.Reset()
 	viper.AutomaticEnv()
 	viper.SetEnvPrefix("TEMPLAR")
-	viper.BindEnv("server.port")
-	viper.BindEnv("server.host")
+	_ = viper.BindEnv("server.port")
+	_ = viper.BindEnv("server.host")
 
 	config, err := Load()
 	require.NoError(t, err)
@@ -211,7 +211,7 @@ func TestLoadWithEnvironment(t *testing.T) {
 	assert.NotNil(t, config)
 }
 
-// TestLoadDefaults tests the loadDefaults function
+// TestLoadDefaults tests the loadDefaults function.
 func TestLoadDefaults(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -250,8 +250,8 @@ func TestLoadDefaults(t *testing.T) {
 					ErrorOverlay: true,
 				},
 				Plugins: PluginsConfig{
-					DiscoveryPaths:   []string{"./plugins", "~/.templar/plugins"},
-					Configurations:   make(map[string]PluginConfigMap),
+					DiscoveryPaths: []string{"./plugins", "~/.templar/plugins"},
+					Configurations: make(map[string]PluginConfigMap),
 				},
 				Monitoring: MonitoringConfig{
 					Enabled:       true,
@@ -302,8 +302,8 @@ func TestLoadDefaults(t *testing.T) {
 					ErrorOverlay: true,
 				},
 				Plugins: PluginsConfig{
-					DiscoveryPaths:   []string{"./plugins", "~/.templar/plugins"},
-					Configurations:   make(map[string]PluginConfigMap),
+					DiscoveryPaths: []string{"./plugins", "~/.templar/plugins"},
+					Configurations: make(map[string]PluginConfigMap),
 				},
 				Monitoring: MonitoringConfig{
 					Enabled:       true,
@@ -321,9 +321,9 @@ func TestLoadDefaults(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Reset viper state
 			viper.Reset()
-			
+
 			loadDefaults(&tt.config)
-			
+
 			assert.Equal(t, tt.expected.Build, tt.config.Build)
 			assert.Equal(t, tt.expected.Server.Auth, tt.config.Server.Auth)
 			assert.Equal(t, tt.expected.Preview, tt.config.Preview)
@@ -336,7 +336,7 @@ func TestLoadDefaults(t *testing.T) {
 	}
 }
 
-// TestApplyOverrides tests the applyOverrides function
+// TestApplyOverrides tests the applyOverrides function.
 func TestApplyOverrides(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -416,10 +416,10 @@ func TestApplyOverrides(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.viperSetup()
-			
+
 			config := tt.inputConfig
 			applyOverrides(&config)
-			
+
 			tt.expected(&config)
 		})
 	}

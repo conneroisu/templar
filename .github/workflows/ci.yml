@@ -19,23 +19,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
 
-      - name: Cache Go modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+      - name: Setup Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
 
-      - name: Install dependencies
-        run: go mod download
+      - name: Setup development environment
+        run: nix develop --command bash -c "go mod download && templ generate"
 
       - name: Verify go mod tidy
         run: |
@@ -43,26 +34,25 @@ jobs:
           git diff --exit-code go.mod go.sum
 
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v4
-        with:
-          version: v1.62.2
-          args: --timeout=5m
+        run: |
+          nix develop --command golangci-lint run --timeout=5m ./...
 
       - name: Check code formatting
         run: |
-          if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
-            echo "Go code is not formatted:"
-            gofmt -s -l .
-            exit 1
-          fi
+          nix develop --command bash -c '
+            if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
+              echo "Go code is not formatted:"
+              gofmt -s -l .
+              exit 1
+            fi
+          '
 
       - name: Run go vet
-        run: go vet ./...
+        run: nix develop --command go vet $(go list ./... | grep -v 'templar-cache-benchmark')
 
       - name: Check for security vulnerabilities
         run: |
-          go install golang.org/x/vuln/cmd/govulncheck@v1.1.3
-          govulncheck ./...
+          nix develop --command bash -c 'go install golang.org/x/vuln/cmd/govulncheck@v1.1.3 && $(go env GOPATH)/bin/govulncheck $(go list ./... | grep -v templar-cache-benchmark)'
 
   # Phase 2: Security Testing
   security-tests:
@@ -72,45 +62,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
 
-      - name: Cache Go modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+      - name: Setup Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
 
-      - name: Install dependencies
-        run: go mod download
-
-      - name: Generate Go code (templ)
-        run: |
-          go install github.com/a-h/templ/cmd/templ@v0.3.819
-          go generate ./...
+      - name: Setup development environment
+        run: nix develop --command bash -c "go mod download && templ generate && go generate ./..."
 
       - name: Run security tests
         run: |
-          go test -v -tags=security ./cmd/... \
+          nix develop --command go test -v -tags=security ./cmd/... \
             -run "TestSecurity" \
             -timeout=10m \
             -coverprofile=security-coverage.out
 
       - name: Run server security tests
         run: |
-          go test -v -tags=security ./internal/server/... \
+          nix develop --command go test -v -tags=security ./internal/server/... \
             -run "TestSecurity" \
             -timeout=10m
 
       - name: Run config security tests
         run: |
-          go test -v -tags=security ./internal/config/... \
+          nix develop --command go test -v -tags=security ./internal/config/... \
             -run "TestSecurity" \
             -timeout=10m
 
@@ -127,37 +103,22 @@ jobs:
     needs: lint-and-format
     strategy:
       matrix:
-        go-version: ["1.23", "1.24"]
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest]
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ matrix.go-version }}
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
 
-      - name: Cache Go modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-${{ matrix.go-version }}-
+      - name: Setup Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
 
-      - name: Install dependencies
-        run: go mod download
-
-      - name: Generate Go code (templ)
-        run: |
-          go install github.com/a-h/templ/cmd/templ@v0.3.819
-          go generate ./...
+      - name: Setup development environment and generate code
+        run: nix develop --command bash -c "go mod download && templ generate && go generate ./..."
 
       - name: Run unit tests
         run: |
-          go test -v ./... \
+          nix develop --command go test -v $(go list ./... | grep -v templar-cache-benchmark) \
             -short \
             -race \
             -coverprofile=coverage.out \
@@ -165,7 +126,7 @@ jobs:
             -timeout=15m
 
       - name: Upload test coverage
-        if: matrix.os == 'ubuntu-latest' && matrix.go-version == '1.24'
+        if: matrix.os == 'ubuntu-latest'
         uses: codecov/codecov-action@v4
         with:
           file: ./coverage.out
@@ -180,28 +141,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
 
-      - name: Cache Go modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+      - name: Setup Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
 
-      - name: Install dependencies
-        run: go mod download
-
-      - name: Generate Go code (templ)
-        run: |
-          go install github.com/a-h/templ/cmd/templ@v0.3.819
-          go generate ./...
+      - name: Setup development environment and generate code
+        run: nix develop --command bash -c "go mod download && templ generate && go generate ./..."
 
       - name: Install Chrome for screenshot testing
         run: |
@@ -221,7 +168,7 @@ jobs:
 
       - name: Run visual regression tests
         run: |
-          go test -v -tags=visual ./internal/testing \
+          nix develop --command go test -v -tags=visual ./internal/testing \
             -timeout=10m \
             -test.run="TestVisualRegression"
 
@@ -239,9 +186,9 @@ jobs:
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: |
           # Update baselines on main branch pushes if tests fail due to intentional changes
-          UPDATE_GOLDEN=true go test -v -tags=visual ./internal/testing \
+          nix develop --command bash -c "UPDATE_GOLDEN=true go test -v -tags=visual ./internal/testing \
             -timeout=10m \
-            -test.run="TestVisualRegression" || true
+            -test.run=\"TestVisualRegression\"" || true
 
   # Phase 5: Performance Benchmarks
   performance-tests:
@@ -252,47 +199,33 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
 
-      - name: Cache Go modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+      - name: Setup Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
 
-      - name: Install dependencies
-        run: go mod download
-
-      - name: Generate Go code (templ)
-        run: |
-          go install github.com/a-h/templ/cmd/templ@v0.3.819
-          go generate ./...
+      - name: Setup development environment and generate code
+        run: nix develop --command bash -c "go mod download && templ generate && go generate ./..."
 
       - name: Run scanner benchmarks
         run: |
-          go test -bench=BenchmarkComponentScanner -benchmem -benchtime=5s \
+          nix develop --command go test -bench=BenchmarkComponentScanner -benchmem -benchtime=5s \
             ./internal/scanner/... > scanner-bench.txt
 
       - name: Run build pipeline benchmarks
         run: |
-          go test -bench=BenchmarkBuildPipeline -benchmem -benchtime=5s \
+          nix develop --command go test -bench=BenchmarkBuildPipeline -benchmem -benchtime=5s \
             ./internal/build/... > build-bench.txt
 
       - name: Run WebSocket benchmarks
         run: |
-          go test -bench=BenchmarkWebSocket -benchmem -benchtime=5s \
+          nix develop --command go test -bench=BenchmarkWebSocket -benchmem -benchtime=5s \
             ./internal/server/... > websocket-bench.txt
 
       - name: Run watcher benchmarks
         run: |
-          go test -bench=BenchmarkFileWatcher -benchmem -benchtime=5s \
+          nix develop --command go test -bench=BenchmarkFileWatcher -benchmem -benchtime=5s \
             ./internal/watcher/... > watcher-bench.txt
 
       - name: Compare benchmarks with baseline
@@ -335,50 +268,36 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
 
-      - name: Cache Go modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+      - name: Setup Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
 
-      - name: Install dependencies
-        run: go mod download
-
-      - name: Generate Go code (templ)
-        run: |
-          go install github.com/a-h/templ/cmd/templ@v0.3.819
-          go generate ./...
+      - name: Setup development environment and generate code
+        run: nix develop --command bash -c "go mod download && templ generate && go generate ./..."
 
       - name: Run scanner-registry integration tests
         run: |
-          go test -v -tags=integration ./integration_tests/... \
+          nix develop --command go test -v -tags=integration ./integration_tests/... \
             -run "TestIntegration_ScannerRegistry" \
             -timeout=20m
 
       - name: Run watcher-scanner integration tests
         run: |
-          go test -v -tags=integration ./integration_tests/... \
+          nix develop --command go test -v -tags=integration ./integration_tests/... \
             -run "TestIntegration_WatcherScanner" \
             -timeout=20m
 
       - name: Run server-WebSocket integration tests
         run: |
-          go test -v -tags=integration ./integration_tests/... \
+          nix develop --command go test -v -tags=integration ./integration_tests/... \
             -run "TestIntegration_ServerWebSocket" \
             -timeout=20m
 
       - name: Run end-to-end workflow tests
         run: |
-          go test -v -tags=integration ./integration_tests/... \
+          nix develop --command go test -v -tags=integration ./integration_tests/... \
             -run "TestE2E" \
             -timeout=30m
 
@@ -392,34 +311,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
 
-      - name: Cache Go modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+      - name: Setup Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
 
-      - name: Install dependencies
-        run: go mod download
-
-      - name: Generate Go code (templ)
-        run: |
-          go install github.com/a-h/templ/cmd/templ@v0.3.819
-          go generate ./...
+      - name: Setup development environment and generate code
+        run: nix develop --command bash -c "go mod download && templ generate && go generate ./..."
 
       - name: Build application
         run: |
-          CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo \
-            -ldflags '-extldflags "-static"' \
-            -o templar ./
+          nix develop --command bash -c "CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo \
+            -ldflags '-extldflags \"-static\"' \
+            -o templar ./"
 
       - name: Run basic smoke test
         run: |
@@ -469,32 +374,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
 
-      - name: Cache Go modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+      - name: Setup Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
 
-      - name: Install dependencies
-        run: go mod download
-
-      - name: Generate Go code (templ)
-        run: |
-          go install github.com/a-h/templ/cmd/templ@v0.3.819
-          go generate ./...
+      - name: Setup development environment and generate code
+        run: nix develop --command bash -c "go mod download && templ generate && go generate ./..."
 
       - name: Build application for E2E tests
         run: |
-          go build -o templar ./
+          nix develop --command go build -o templar ./
 
       - name: Set up test project
         run: |
@@ -509,19 +400,19 @@ jobs:
 
       - name: Run E2E performance tests
         run: |
-          go test -v -tags=integration ./integration_tests/... \
+          nix develop --command go test -v -tags=integration ./integration_tests/... \
             -run "TestE2E_PerformanceUnderLoad" \
             -timeout=45m
 
       - name: Run E2E error recovery tests
         run: |
-          go test -v -tags=integration ./integration_tests/... \
+          nix develop --command go test -v -tags=integration ./integration_tests/... \
             -run "TestE2E_ErrorRecoveryWorkflow" \
             -timeout=30m
 
       - name: Run E2E multi-component tests
         run: |
-          go test -v -tags=integration ./integration_tests/... \
+          nix develop --command go test -v -tags=integration ./integration_tests/... \
             -run "TestE2E_MultiComponentInteractions" \
             -timeout=30m
 

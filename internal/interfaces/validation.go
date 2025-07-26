@@ -10,7 +10,7 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// ValidationResult represents the result of interface validation
+// ValidationResult represents the result of interface validation.
 type ValidationResult struct {
 	Valid         bool
 	InterfaceName string
@@ -19,19 +19,19 @@ type ValidationResult struct {
 	Warnings      []string
 }
 
-// InterfaceValidator provides runtime validation of interface implementations
+// InterfaceValidator provides runtime validation of interface implementations.
 type InterfaceValidator struct {
 	results []ValidationResult
 }
 
-// NewInterfaceValidator creates a new interface validator
+// NewInterfaceValidator creates a new interface validator.
 func NewInterfaceValidator() *InterfaceValidator {
 	return &InterfaceValidator{
 		results: make([]ValidationResult, 0),
 	}
 }
 
-// ValidateComponentRegistry validates a ComponentRegistry implementation
+// ValidateComponentRegistry validates a ComponentRegistry implementation.
 func (v *InterfaceValidator) ValidateComponentRegistry(reg ComponentRegistry) ValidationResult {
 	result := ValidationResult{
 		Valid:         true,
@@ -53,7 +53,10 @@ func (v *InterfaceValidator) ValidateComponentRegistry(reg ComponentRegistry) Va
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("Register method panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("Register method panicked: %v", r),
+				)
 			}
 		}()
 		reg.Register(testComponent)
@@ -70,7 +73,10 @@ func (v *InterfaceValidator) ValidateComponentRegistry(reg ComponentRegistry) Va
 
 		retrieved, exists := reg.Get("ValidationTest")
 		if !exists {
-			result.Warnings = append(result.Warnings, "Get method did not find registered component")
+			result.Warnings = append(
+				result.Warnings,
+				"Get method did not find registered component",
+			)
 		} else if retrieved == nil {
 			result.Errors = append(result.Errors, "Get method returned nil component")
 			result.Valid = false
@@ -133,21 +139,28 @@ func (v *InterfaceValidator) ValidateComponentRegistry(reg ComponentRegistry) Va
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("DetectCircularDependencies method panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("DetectCircularDependencies method panicked: %v", r),
+				)
 			}
 		}()
 
 		cycles := reg.DetectCircularDependencies()
 		if cycles == nil {
-			result.Warnings = append(result.Warnings, "DetectCircularDependencies returned nil (should return empty slice)")
+			result.Warnings = append(
+				result.Warnings,
+				"DetectCircularDependencies returned nil (should return empty slice)",
+			)
 		}
 	}()
 
 	v.results = append(v.results, result)
+
 	return result
 }
 
-// ValidateFileWatcher validates a FileWatcher implementation
+// ValidateFileWatcher validates a FileWatcher implementation.
 func (v *InterfaceValidator) ValidateFileWatcher(watcher FileWatcher) ValidationResult {
 	result := ValidationResult{
 		Valid:         true,
@@ -162,7 +175,10 @@ func (v *InterfaceValidator) ValidateFileWatcher(watcher FileWatcher) Validation
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("AddFilter method panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("AddFilter method panicked: %v", r),
+				)
 			}
 		}()
 
@@ -175,7 +191,10 @@ func (v *InterfaceValidator) ValidateFileWatcher(watcher FileWatcher) Validation
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("AddHandler method panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("AddHandler method panicked: %v", r),
+				)
 			}
 		}()
 
@@ -201,7 +220,10 @@ func (v *InterfaceValidator) ValidateFileWatcher(watcher FileWatcher) Validation
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("AddRecursive method panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("AddRecursive method panicked: %v", r),
+				)
 			}
 		}()
 
@@ -214,7 +236,10 @@ func (v *InterfaceValidator) ValidateFileWatcher(watcher FileWatcher) Validation
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("Start/Stop methods panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("Start/Stop methods panicked: %v", r),
+				)
 			}
 		}()
 
@@ -222,14 +247,15 @@ func (v *InterfaceValidator) ValidateFileWatcher(watcher FileWatcher) Validation
 		defer cancel()
 
 		_ = watcher.Start(ctx)
-		watcher.Stop()
+		_ = watcher.Stop()
 	}()
 
 	v.results = append(v.results, result)
+
 	return result
 }
 
-// ValidateComponentScanner validates a ComponentScanner implementation
+// ValidateComponentScanner validates a ComponentScanner implementation.
 func (v *InterfaceValidator) ValidateComponentScanner(scanner ComponentScanner) ValidationResult {
 	result := ValidationResult{
 		Valid:         true,
@@ -244,7 +270,10 @@ func (v *InterfaceValidator) ValidateComponentScanner(scanner ComponentScanner) 
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("ScanFile method panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("ScanFile method panicked: %v", r),
+				)
 			}
 		}()
 
@@ -257,7 +286,10 @@ func (v *InterfaceValidator) ValidateComponentScanner(scanner ComponentScanner) 
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("ScanDirectory method panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("ScanDirectory method panicked: %v", r),
+				)
 			}
 		}()
 
@@ -266,10 +298,11 @@ func (v *InterfaceValidator) ValidateComponentScanner(scanner ComponentScanner) 
 	}()
 
 	v.results = append(v.results, result)
+
 	return result
 }
 
-// ValidateBuildPipeline validates a BuildPipeline implementation
+// ValidateBuildPipeline validates a BuildPipeline implementation.
 func (v *InterfaceValidator) ValidateBuildPipeline(pipeline BuildPipeline) ValidationResult {
 	result := ValidationResult{
 		Valid:         true,
@@ -290,13 +323,16 @@ func (v *InterfaceValidator) ValidateBuildPipeline(pipeline BuildPipeline) Valid
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("Start/Stop methods panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("Start/Stop methods panicked: %v", r),
+				)
 			}
 		}()
 
 		ctx := context.Background()
-		pipeline.Start(ctx)
-		defer pipeline.Stop()
+		_ = pipeline.Start(ctx)
+		defer func() { _ = pipeline.Stop() }()
 	}()
 
 	// Test AddCallback - should not panic
@@ -304,7 +340,10 @@ func (v *InterfaceValidator) ValidateBuildPipeline(pipeline BuildPipeline) Valid
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("AddCallback method panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("AddCallback method panicked: %v", r),
+				)
 			}
 		}()
 
@@ -321,7 +360,7 @@ func (v *InterfaceValidator) ValidateBuildPipeline(pipeline BuildPipeline) Valid
 			}
 		}()
 
-		pipeline.Build(testComponent)
+		_ = pipeline.Build(testComponent)
 	}()
 
 	// Test BuildWithPriority - should not panic
@@ -329,7 +368,10 @@ func (v *InterfaceValidator) ValidateBuildPipeline(pipeline BuildPipeline) Valid
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("BuildWithPriority method panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("BuildWithPriority method panicked: %v", r),
+				)
 			}
 		}()
 
@@ -341,7 +383,10 @@ func (v *InterfaceValidator) ValidateBuildPipeline(pipeline BuildPipeline) Valid
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("GetMetrics method panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("GetMetrics method panicked: %v", r),
+				)
 			}
 		}()
 
@@ -357,7 +402,10 @@ func (v *InterfaceValidator) ValidateBuildPipeline(pipeline BuildPipeline) Valid
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("GetCache method panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("GetCache method panicked: %v", r),
+				)
 			}
 		}()
 
@@ -373,7 +421,10 @@ func (v *InterfaceValidator) ValidateBuildPipeline(pipeline BuildPipeline) Valid
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("ClearCache method panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("ClearCache method panicked: %v", r),
+				)
 			}
 		}()
 
@@ -381,10 +432,11 @@ func (v *InterfaceValidator) ValidateBuildPipeline(pipeline BuildPipeline) Valid
 	}()
 
 	v.results = append(v.results, result)
+
 	return result
 }
 
-// ValidateFileFilter validates a FileFilter implementation
+// ValidateFileFilter validates a FileFilter implementation.
 func (v *InterfaceValidator) ValidateFileFilter(filter FileFilter) ValidationResult {
 	result := ValidationResult{
 		Valid:         true,
@@ -399,7 +451,10 @@ func (v *InterfaceValidator) ValidateFileFilter(filter FileFilter) ValidationRes
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("ShouldInclude method panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("ShouldInclude method panicked: %v", r),
+				)
 			}
 		}()
 
@@ -409,15 +464,16 @@ func (v *InterfaceValidator) ValidateFileFilter(filter FileFilter) ValidationRes
 	}()
 
 	v.results = append(v.results, result)
+
 	return result
 }
 
-// GetResults returns all validation results
+// GetResults returns all validation results.
 func (v *InterfaceValidator) GetResults() []ValidationResult {
 	return v.results
 }
 
-// GetSummary returns a summary of validation results
+// GetSummary returns a summary of validation results.
 func (v *InterfaceValidator) GetSummary() ValidationSummary {
 	summary := ValidationSummary{
 		TotalInterfaces: len(v.results),
@@ -437,7 +493,7 @@ func (v *InterfaceValidator) GetSummary() ValidationSummary {
 	return summary
 }
 
-// ValidationSummary provides a summary of validation results
+// ValidationSummary provides a summary of validation results.
 type ValidationSummary struct {
 	TotalInterfaces int
 	ValidInterfaces int
@@ -445,18 +501,18 @@ type ValidationSummary struct {
 	TotalWarnings   int
 }
 
-// IsValid returns true if all interfaces are valid
+// IsValid returns true if all interfaces are valid.
 func (s ValidationSummary) IsValid() bool {
 	return s.ValidInterfaces == s.TotalInterfaces
 }
 
-// String returns a string representation of the summary
+// String returns a string representation of the summary.
 func (s ValidationSummary) String() string {
 	return fmt.Sprintf("Interfaces: %d/%d valid, Errors: %d, Warnings: %d",
 		s.ValidInterfaces, s.TotalInterfaces, s.TotalErrors, s.TotalWarnings)
 }
 
-// ValidateAllInterfaces performs comprehensive validation of all interfaces
+// ValidateAllInterfaces performs comprehensive validation of all interfaces.
 func ValidateAllInterfaces(
 	registry ComponentRegistry,
 	watcher FileWatcher,
@@ -488,21 +544,22 @@ func ValidateAllInterfaces(
 	return validator.GetSummary()
 }
 
-// MemoryLeakChecker helps detect potential memory leaks in interface implementations
+// MemoryLeakChecker helps detect potential memory leaks in interface implementations.
 type MemoryLeakChecker struct {
 	initialMem runtime.MemStats
 	finalMem   runtime.MemStats
 }
 
-// NewMemoryLeakChecker creates a new memory leak checker
+// NewMemoryLeakChecker creates a new memory leak checker.
 func NewMemoryLeakChecker() *MemoryLeakChecker {
 	checker := &MemoryLeakChecker{}
 	runtime.GC()
 	runtime.ReadMemStats(&checker.initialMem)
+
 	return checker
 }
 
-// Check performs the memory leak check
+// Check performs the memory leak check.
 func (m *MemoryLeakChecker) Check() MemoryLeakResult {
 	runtime.GC()
 	runtime.ReadMemStats(&m.finalMem)
@@ -515,7 +572,7 @@ func (m *MemoryLeakChecker) Check() MemoryLeakResult {
 	}
 }
 
-// MemoryLeakResult represents the result of a memory leak check
+// MemoryLeakResult represents the result of a memory leak check.
 type MemoryLeakResult struct {
 	InitialAlloc uint64
 	FinalAlloc   uint64
@@ -523,13 +580,13 @@ type MemoryLeakResult struct {
 	NumGC        uint32
 }
 
-// HasSignificantLeak returns true if there's a significant memory increase
+// HasSignificantLeak returns true if there's a significant memory increase.
 func (r MemoryLeakResult) HasSignificantLeak() bool {
 	// Consider significant if allocation increased by more than 1MB
 	return r.AllocDelta > 1024*1024
 }
 
-// String returns a string representation of the memory leak result
+// String returns a string representation of the memory leak result.
 func (r MemoryLeakResult) String() string {
 	return fmt.Sprintf("Memory: %d -> %d bytes (delta: %+d), GC cycles: %d",
 		r.InitialAlloc, r.FinalAlloc, r.AllocDelta, r.NumGC)

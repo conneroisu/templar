@@ -30,11 +30,11 @@ Examples:
 }
 
 var (
-	tutorialQuick bool
+	tutorialQuick     bool
 	tutorialTopicFlag string
 )
 
-// tutorialTopic represents a tutorial section
+// tutorialTopic represents a tutorial section.
 type tutorialTopic struct {
 	Key         string
 	Title       string
@@ -43,38 +43,39 @@ type tutorialTopic struct {
 
 func init() {
 	rootCmd.AddCommand(tutorialCmd)
-	
+
 	tutorialCmd.Flags().BoolVar(&tutorialQuick, "quick", false, "Quick 5-minute tutorial overview")
-	tutorialCmd.Flags().StringVar(&tutorialTopicFlag, "topic", "", "Focus on specific topic (init, serve, preview, build, deploy)")
+	tutorialCmd.Flags().
+		StringVar(&tutorialTopicFlag, "topic", "", "Focus on specific topic (init, serve, preview, build, deploy)")
 }
 
 func runTutorial(cmd *cobra.Command, args []string) error {
 	tutorial := NewTutorial()
-	
+
 	if tutorialQuick {
 		return tutorial.RunQuick()
 	}
-	
+
 	if tutorialTopicFlag != "" {
 		return tutorial.RunTopic(tutorialTopicFlag)
 	}
-	
+
 	return tutorial.RunFull()
 }
 
-// Tutorial manages the interactive tutorial experience
+// Tutorial manages the interactive tutorial experience.
 type Tutorial struct {
 	reader *bufio.Reader
 }
 
-// NewTutorial creates a new tutorial instance
+// NewTutorial creates a new tutorial instance.
 func NewTutorial() *Tutorial {
 	return &Tutorial{
 		reader: bufio.NewReader(os.Stdin),
 	}
 }
 
-// RunFull runs the complete interactive tutorial
+// RunFull runs the complete interactive tutorial.
 func (t *Tutorial) RunFull() error {
 	fmt.Println("🎓 Welcome to Templar Tutorial!")
 	fmt.Println("==============================")
@@ -95,9 +96,9 @@ func (t *Tutorial) RunFull() error {
 	}
 	fmt.Println()
 
-	choice := t.askChoice("Which topic would you like to start with?", 
+	choice := t.askChoice("Which topic would you like to start with?",
 		[]string{"1", "2", "3", "4", "5", "all"}, "all")
-	
+
 	switch choice {
 	case "1":
 		return t.RunTopic("init")
@@ -116,7 +117,7 @@ func (t *Tutorial) RunFull() error {
 	}
 }
 
-// RunQuick runs a 5-minute overview
+// RunQuick runs a 5-minute overview.
 func (t *Tutorial) RunQuick() error {
 	fmt.Println("⚡ Quick Templar Tutorial (5 minutes)")
 	fmt.Println("====================================")
@@ -133,7 +134,7 @@ templar init --template=dashboard   # Use dashboard template
 templar init --minimal              # Minimal setup`,
 		},
 		{
-			"2. Start Development", 
+			"2. Start Development",
 			`templar serve -p 3000              # Start dev server on port 3000
 templar serve --no-open             # Don't auto-open browser
 templar watch -v                    # Watch files with verbose output`,
@@ -155,17 +156,18 @@ templar build --clean               # Clean before building`,
 	for _, section := range sections {
 		fmt.Printf("📝 %s\n", section.title)
 		fmt.Printf("%s\n\n", section.content)
-		
+
 		if !t.askBool("Continue to next section?", true) {
 			break
 		}
 	}
 
 	fmt.Println("🎉 Tutorial complete! Run 'templar tutorial' for detailed guidance.")
+
 	return nil
 }
 
-// RunTopic runs tutorial for a specific topic
+// RunTopic runs tutorial for a specific topic.
 func (t *Tutorial) RunTopic(topic string) error {
 	switch topic {
 	case "init":
@@ -179,7 +181,10 @@ func (t *Tutorial) RunTopic(topic string) error {
 	case "advanced":
 		return t.runAdvancedTopic()
 	default:
-		return fmt.Errorf("unknown topic: %s. Available: init, serve, preview, build, advanced", topic)
+		return fmt.Errorf(
+			"unknown topic: %s. Available: init, serve, preview, build, advanced",
+			topic,
+		)
 	}
 }
 
@@ -213,7 +218,7 @@ func (t *Tutorial) runInitTopic() error {
 	fmt.Println("  • Use --wizard for smart defaults based on your project structure")
 	fmt.Println("  • Templates include pre-built components for common use cases")
 	fmt.Println("  • Run 'templar init --help' to see all available templates")
-	
+
 	return nil
 }
 
@@ -243,7 +248,7 @@ func (t *Tutorial) runServeTopic() error {
 	fmt.Println()
 	fmt.Println("💡 Pro Tips:")
 	fmt.Println("  • Server automatically rebuilds on file changes")
-	fmt.Println("  • WebSocket connection provides instant updates") 
+	fmt.Println("  • WebSocket connection provides instant updates")
 	fmt.Println("  • Use different ports for multiple projects")
 	fmt.Println("  • Monitor logs for build errors and warnings")
 
@@ -311,7 +316,7 @@ func (t *Tutorial) runBuildTopic() error {
 	fmt.Println()
 	fmt.Println("💡 Pro Tips:")
 	fmt.Println("  • Production builds enable optimizations and minification")
-	fmt.Println("  • Analysis helps identify bundle size issues")  
+	fmt.Println("  • Analysis helps identify bundle size issues")
 	fmt.Println("  • Generate types for better IDE integration")
 	fmt.Println("  • Clean builds ensure consistent output")
 
@@ -334,7 +339,7 @@ func (t *Tutorial) runAdvancedTopic() error {
 			"Configuration Management:",
 			[]string{
 				"templar config wizard                 # Interactive configuration",
-				"templar config validate               # Validate .templar.yml", 
+				"templar config validate               # Validate .templar.yml",
 				"templar config show --format=json    # View current config",
 			},
 		},
@@ -376,20 +381,21 @@ func (t *Tutorial) runAllTopics(topics []*tutorialTopic) error {
 	for i, topic := range topics {
 		fmt.Printf("\n📚 Topic %d: %s\n", i+1, topic.Title)
 		fmt.Println(strings.Repeat("=", len(topic.Title)+15))
-		
+
 		if err := t.RunTopic(topic.Key); err != nil {
 			return err
 		}
-		
+
 		if i < len(topics)-1 {
 			if !t.askBool("Continue to next topic?", true) {
 				break
 			}
 		}
 	}
-	
+
 	fmt.Println("\n🎉 Tutorial complete!")
 	fmt.Println("For more help, run 'templar <command> --help' or visit the documentation.")
+
 	return nil
 }
 
@@ -432,7 +438,7 @@ func (t *Tutorial) askChoice(prompt string, choices []string, defaultValue strin
 
 		// Check if input is valid choice
 		for _, choice := range choices {
-			if strings.ToLower(input) == strings.ToLower(choice) {
+			if strings.EqualFold(input, choice) {
 				return choice
 			}
 		}

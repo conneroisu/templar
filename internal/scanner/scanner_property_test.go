@@ -246,11 +246,13 @@ func genRegistryOperations() gopter.Gen {
 		// Register operation
 		gen.Struct(reflect.TypeOf(RegistryOperation{}), map[string]gopter.Gen{
 			"Type": gen.Const("register"),
-			"Component": gen.PtrOf(gen.Struct(reflect.TypeOf(types.ComponentInfo{}), map[string]gopter.Gen{
-				"Name":     gen.RegexMatch(`^[A-Z][a-zA-Z0-9]*$`),
-				"Package":  gen.Const("components"),
-				"FilePath": gen.RegexMatch(`^[a-zA-Z0-9_/]+\.templ$`),
-			})),
+			"Component": gen.PtrOf(
+				gen.Struct(reflect.TypeOf(types.ComponentInfo{}), map[string]gopter.Gen{
+					"Name":     gen.RegexMatch(`^[A-Z][a-zA-Z0-9]*$`),
+					"Package":  gen.Const("components"),
+					"FilePath": gen.RegexMatch(`^[a-zA-Z0-9_/]+\.templ$`),
+				}),
+			),
 		}),
 		// Get operation
 		gen.Struct(reflect.TypeOf(RegistryOperation{}), map[string]gopter.Gen{

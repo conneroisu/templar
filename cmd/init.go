@@ -59,7 +59,8 @@ func init() {
 	initCmd.Flags().BoolVar(&initMinimal, "minimal", false, "Minimal setup without examples")
 	initCmd.Flags().BoolVar(&initExample, "example", false, "Include example components")
 	initCmd.Flags().StringVarP(&initTemplate, "template", "t", "", "Project template to use")
-	initCmd.Flags().BoolVar(&initWizard, "wizard", false, "Run configuration wizard during initialization")
+	initCmd.Flags().
+		BoolVar(&initWizard, "wizard", false, "Run configuration wizard during initialization")
 }
 
 func runInit(cmd *cobra.Command, args []string) error {

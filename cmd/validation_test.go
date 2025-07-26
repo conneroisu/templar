@@ -1,8 +1,9 @@
 package cmd
 
 import (
-	"github.com/conneroisu/templar/internal/validation"
 	"testing"
+
+	"github.com/conneroisu/templar/internal/validation"
 )
 
 func TestValidateArgument(t *testing.T) {
@@ -477,18 +478,18 @@ func TestValidateArguments(t *testing.T) {
 	}
 }
 
-// Benchmark tests to ensure validation doesn't impact performance
+// Benchmark tests to ensure validation doesn't impact performance.
 func BenchmarkValidateArgument(b *testing.B) {
 	arg := "components/button.templ"
-	for i := 0; i < b.N; i++ {
-		validateArgument(arg)
+	for range b.N {
+		_ = validateArgument(arg)
 	}
 }
 
 func BenchmarkValidateURL(b *testing.B) {
 	url := "http://localhost:8080/preview/Button"
-	for i := 0; i < b.N; i++ {
-		validation.ValidateURL(url)
+	for range b.N {
+		_ = validation.ValidateURL(url)
 	}
 }
 
@@ -499,7 +500,7 @@ func BenchmarkValidateArgumentsLarge(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		validateArguments(args)
+	for range b.N {
+		_ = validateArguments(args)
 	}
 }

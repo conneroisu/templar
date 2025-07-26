@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -267,12 +268,14 @@ func (s *PreviewServer) handleComponent(w http.ResponseWriter, r *http.Request) 
 	// Validate component name to prevent path traversal and injection attacks
 	if err := validateComponentName(componentName); err != nil {
 		http.Error(w, "Invalid component name: "+err.Error(), http.StatusBadRequest)
+
 		return
 	}
 
 	component, exists := s.registry.Get(componentName)
 	if !exists {
 		http.NotFound(w, r)
+
 		return
 	}
 
@@ -295,6 +298,7 @@ func (s *PreviewServer) handleTargetFiles(w http.ResponseWriter, r *http.Request
 	if len(s.config.TargetFiles) == 1 {
 		// Single file - try to find and render its first component
 		s.handleSingleFile(w, r, s.config.TargetFiles[0])
+
 		return
 	}
 
@@ -306,12 +310,18 @@ func (s *PreviewServer) handleSingleFile(w http.ResponseWriter, r *http.Request,
 	// Check if scanner is available
 	if s.scanner == nil {
 		http.Error(w, "Scanner not initialized", http.StatusInternalServerError)
+
 		return
 	}
 
 	// Scan the specific file to find components
 	if err := s.scanner.ScanFile(filename); err != nil {
-		http.Error(w, fmt.Sprintf("Error scanning file %s: %v", filename, err), http.StatusInternalServerError)
+		http.Error(
+			w,
+			fmt.Sprintf("Error scanning file %s: %v", filename, err),
+			http.StatusInternalServerError,
+		)
+
 		return
 	}
 
@@ -326,13 +336,15 @@ func (s *PreviewServer) handleSingleFile(w http.ResponseWriter, r *http.Request,
 	}
 
 	if len(fileComponents) == 0 {
-		http.Error(w, fmt.Sprintf("No components found in file %s", filename), http.StatusNotFound)
+		http.Error(w, "No components found in file "+filename, http.StatusNotFound)
+
 		return
 	}
 
 	// If only one component, render it directly
 	if len(fileComponents) == 1 {
 		s.renderSingleComponent(w, r, fileComponents[0])
+
 		return
 	}
 
@@ -344,6 +356,7 @@ func (s *PreviewServer) handleMultipleFiles(w http.ResponseWriter, r *http.Reque
 	// Check if scanner is available
 	if s.scanner == nil {
 		http.Error(w, "Scanner not initialized", http.StatusInternalServerError)
+
 		return
 	}
 
@@ -365,13 +378,19 @@ func (s *PreviewServer) handleRender(w http.ResponseWriter, r *http.Request) {
 
 	if componentName == "" {
 		http.Error(w, "Component name required", http.StatusBadRequest)
+
 		return
 	}
 
 	// Render the component
 	html, err := s.renderer.RenderComponent(componentName)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error rendering component %s: %v", componentName, err), http.StatusInternalServerError)
+		http.Error(
+			w,
+			fmt.Sprintf("Error rendering component %s: %v", componentName, err),
+			http.StatusInternalServerError,
+		)
+
 		return
 	}
 
@@ -387,11 +406,20 @@ func (s *PreviewServer) handleRender(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *PreviewServer) renderSingleComponent(w http.ResponseWriter, r *http.Request, component *types.ComponentInfo) {
+func (s *PreviewServer) renderSingleComponent(
+	w http.ResponseWriter,
+	r *http.Request,
+	component *types.ComponentInfo,
+) {
 	// Render the component directly
 	html, err := s.renderer.RenderComponent(component.Name)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error rendering component %s: %v", component.Name, err), http.StatusInternalServerError)
+		http.Error(
+			w,
+			fmt.Sprintf("Error rendering component %s: %v", component.Name, err),
+			http.StatusInternalServerError,
+		)
+
 		return
 	}
 
@@ -407,7 +435,12 @@ func (s *PreviewServer) renderSingleComponent(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func (s *PreviewServer) renderComponentSelection(w http.ResponseWriter, r *http.Request, components []*types.ComponentInfo, filename string) {
+func (s *PreviewServer) renderComponentSelection(
+	w http.ResponseWriter,
+	r *http.Request,
+	components []*types.ComponentInfo,
+	filename string,
+) {
 	html := fmt.Sprintf(`<!DOCTYPE html>
 <html>
 <head>
@@ -471,11 +504,11 @@ func (s *PreviewServer) renderFileSelection(w http.ResponseWriter, r *http.Reque
 	}
 }
 
-// validateComponentName validates component name to prevent security issues
+// validateComponentName validates component name to prevent security issues.
 func validateComponentName(name string) error {
 	// Reject empty names
 	if name == "" {
-		return fmt.Errorf("empty component name")
+		return errors.New("empty component name")
 	}
 
 	// Clean the name
@@ -483,16 +516,33 @@ func validateComponentName(name string) error {
 
 	// Reject names containing path traversal patterns
 	if strings.Contains(cleanName, "..") {
-		return fmt.Errorf("path traversal attempt detected")
+		return errors.New("path traversal attempt detected")
 	}
 
 	// Reject absolute paths
 	if filepath.IsAbs(cleanName) {
-		return fmt.Errorf("absolute path not allowed")
+		return errors.New("absolute path not allowed")
 	}
 
 	// Reject special characters that could be used in injection attacks (check first for security)
-	dangerousChars := []string{"<", ">", "\"", "'", "&", ";", "|", "$", "`", "(", ")", "{", "}", "[", "]", "\\"}
+	dangerousChars := []string{
+		"<",
+		">",
+		"\"",
+		"'",
+		"&",
+		";",
+		"|",
+		"$",
+		"`",
+		"(",
+		")",
+		"{",
+		"}",
+		"[",
+		"]",
+		"\\",
+	}
 	for _, char := range dangerousChars {
 		if strings.Contains(cleanName, char) {
 			return fmt.Errorf("dangerous character not allowed: %s", char)
@@ -501,12 +551,12 @@ func validateComponentName(name string) error {
 
 	// Reject names with path separators (should be simple component names)
 	if strings.ContainsRune(cleanName, os.PathSeparator) {
-		return fmt.Errorf("path separators not allowed in component name")
+		return errors.New("path separators not allowed in component name")
 	}
 
 	// Reject if name is too long (prevent buffer overflow attacks)
 	if len(cleanName) > 100 {
-		return fmt.Errorf("component name too long (max 100 characters)")
+		return errors.New("component name too long (max 100 characters)")
 	}
 
 	return nil

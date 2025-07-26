@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// FuzzValidateURL tests URL validation with various malicious and edge case inputs
+// FuzzValidateURL tests URL validation with various malicious and edge case inputs.
 func FuzzValidateURL(f *testing.F) {
 	// Seed with valid and invalid URLs
 	f.Add("http://localhost:8080")
@@ -43,6 +43,7 @@ func FuzzValidateURL(f *testing.F) {
 			parsed, parseErr := url.Parse(testURL)
 			if parseErr != nil {
 				t.Errorf("ValidateURL passed but URL.Parse failed for: %q", testURL)
+
 				return
 			}
 
@@ -52,10 +53,30 @@ func FuzzValidateURL(f *testing.F) {
 			}
 
 			// Ensure no command injection characters
-			dangerousChars := []string{";", "&", "|", "`", "$", "(", ")", "<", ">", "\"", "'", "\\", "\n", "\r", " "}
+			dangerousChars := []string{
+				";",
+				"&",
+				"|",
+				"`",
+				"$",
+				"(",
+				")",
+				"<",
+				">",
+				"\"",
+				"'",
+				"\\",
+				"\n",
+				"\r",
+				" ",
+			}
 			for _, char := range dangerousChars {
 				if strings.Contains(testURL, char) {
-					t.Errorf("ValidateURL passed for URL with dangerous character %q: %q", char, testURL)
+					t.Errorf(
+						"ValidateURL passed for URL with dangerous character %q: %q",
+						char,
+						testURL,
+					)
 				}
 			}
 
@@ -75,7 +96,7 @@ func FuzzValidateURL(f *testing.F) {
 	})
 }
 
-// FuzzURLParsing tests URL parsing edge cases that could bypass validation
+// FuzzURLParsing tests URL parsing edge cases that could bypass validation.
 func FuzzURLParsing(f *testing.F) {
 	// Seed with tricky URL patterns
 	f.Add("http://localhost:8080/../../../etc/passwd")
@@ -104,7 +125,10 @@ func FuzzURLParsing(f *testing.F) {
 		// If URL parsed successfully, check for dangerous patterns
 		if parsed.Host != "" {
 			// Check for control characters in hostname
-			if strings.ContainsAny(parsed.Host, "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f") {
+			if strings.ContainsAny(
+				parsed.Host,
+				"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f",
+			) {
 				t.Errorf("URL parsing allowed control characters in host: %q", parsed.Host)
 			}
 
@@ -121,7 +145,11 @@ func FuzzURLParsing(f *testing.F) {
 			// This is a dangerous URL that Go parsed - our ValidateURL should reject it
 			err := ValidateURL(testURL)
 			if err == nil {
-				t.Errorf("Our ValidateURL failed to reject dangerous path traversal URL: %q (path: %q)", testURL, parsed.Path)
+				t.Errorf(
+					"Our ValidateURL failed to reject dangerous path traversal URL: %q (path: %q)",
+					testURL,
+					parsed.Path,
+				)
 			}
 		}
 
@@ -136,7 +164,7 @@ func FuzzURLParsing(f *testing.F) {
 	})
 }
 
-// FuzzPathTraversal tests path traversal patterns in URLs
+// FuzzPathTraversal tests path traversal patterns in URLs.
 func FuzzPathTraversal(f *testing.F) {
 	// Seed with various path traversal patterns
 	f.Add("http://localhost:8080/../admin")
@@ -176,7 +204,7 @@ func FuzzPathTraversal(f *testing.F) {
 	})
 }
 
-// FuzzProtocolHandlers tests various protocol handlers that could bypass validation
+// FuzzProtocolHandlers tests various protocol handlers that could bypass validation.
 func FuzzProtocolHandlers(f *testing.F) {
 	// Seed with various protocol handlers
 	f.Add("javascript:alert('xss')")
@@ -211,7 +239,7 @@ func FuzzProtocolHandlers(f *testing.F) {
 	})
 }
 
-// FuzzCommandInjection tests command injection patterns in URLs
+// FuzzCommandInjection tests command injection patterns in URLs.
 func FuzzCommandInjection(f *testing.F) {
 	// Seed with command injection patterns
 	f.Add("http://localhost:8080; curl malicious.com")
@@ -232,10 +260,26 @@ func FuzzCommandInjection(f *testing.F) {
 
 		// All URLs with command injection patterns should be rejected
 		if err == nil {
-			dangerousPatterns := []string{";", "&", "|", "`", "$", "rm ", "curl ", "wget ", "nc ", "powershell", "cmd.exe"}
+			dangerousPatterns := []string{
+				";",
+				"&",
+				"|",
+				"`",
+				"$",
+				"rm ",
+				"curl ",
+				"wget ",
+				"nc ",
+				"powershell",
+				"cmd.exe",
+			}
 			for _, pattern := range dangerousPatterns {
 				if strings.Contains(injectionURL, pattern) {
-					t.Errorf("Validation allowed command injection pattern %q in URL: %q", pattern, injectionURL)
+					t.Errorf(
+						"Validation allowed command injection pattern %q in URL: %q",
+						pattern,
+						injectionURL,
+					)
 				}
 			}
 		}

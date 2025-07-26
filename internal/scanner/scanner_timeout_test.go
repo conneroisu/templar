@@ -21,7 +21,7 @@ func TestScannerTimeout(t *testing.T) {
 
 		// Create registry
 		reg := registry.NewComponentRegistry()
-		
+
 		// Create scanner with timeout config
 		scanner := NewComponentScanner(reg, cfg)
 
@@ -33,7 +33,7 @@ func TestScannerTimeout(t *testing.T) {
 	t.Run("scanner uses default timeout when no config", func(t *testing.T) {
 		// Create registry
 		reg := registry.NewComponentRegistry()
-		
+
 		// Create scanner without config
 		scanner := NewComponentScanner(reg)
 
@@ -45,21 +45,26 @@ func TestScannerTimeout(t *testing.T) {
 	t.Run("scanner respects context cancellation in directory scan", func(t *testing.T) {
 		// Create registry
 		reg := registry.NewComponentRegistry()
-		
+
 		// Create scanner
 		scanner := NewComponentScanner(reg)
-		
+
 		// Create a very short timeout context
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Millisecond)
 		defer cancel()
-		
+
 		// Wait for context to timeout
 		<-ctx.Done()
-		
+
 		// Test scanning with cancelled context
 		err := scanner.ScanDirectoryWithContext(ctx, ".")
 		assert.Error(t, err, "Should fail due to context timeout")
-		assert.Contains(t, err.Error(), "context deadline exceeded", "Error should mention context deadline")
+		assert.Contains(
+			t,
+			err.Error(),
+			"context deadline exceeded",
+			"Error should mention context deadline",
+		)
 	})
 
 	t.Run("timeout configuration validation", func(t *testing.T) {
@@ -113,7 +118,7 @@ func TestScannerTimeout(t *testing.T) {
 
 		// Create registry
 		reg := registry.NewComponentRegistry()
-		
+
 		// Create scanner with concurrency and timeout config
 		scanner := NewComponentScannerWithConcurrency(reg, 4, cfg)
 

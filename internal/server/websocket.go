@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/conneroisu/templar/internal/validation"
 	"github.com/coder/websocket"
+	"github.com/conneroisu/templar/internal/validation"
 )
 
 const (
@@ -24,13 +24,13 @@ const (
 	// Maximum message size allowed from peer.
 	maxMessageSize = 512
 
-	// Maximum number of concurrent WebSocket connections
+	// Maximum number of concurrent WebSocket connections.
 	maxConnections = 100
 
-	// Connection timeout for idle connections
+	// Connection timeout for idle connections.
 	connectionTimeout = 5 * time.Minute
 
-	// Rate limit: maximum messages per client per minute
+	// Rate limit: maximum messages per client per minute.
 	maxMessagesPerMinute = 60
 )
 
@@ -38,6 +38,7 @@ func (s *PreviewServer) handleWebSocket(w http.ResponseWriter, r *http.Request) 
 	// Validate origin before accepting connection
 	if !s.checkOrigin(r) {
 		http.Error(w, "Origin not allowed", http.StatusForbidden)
+
 		return
 	}
 
@@ -48,7 +49,12 @@ func (s *PreviewServer) handleWebSocket(w http.ResponseWriter, r *http.Request) 
 
 	if currentConnections >= maxConnections {
 		http.Error(w, "Too Many Connections", http.StatusTooManyRequests)
-		log.Printf("WebSocket connection rejected: limit exceeded (%d/%d)", currentConnections, maxConnections)
+		log.Printf(
+			"WebSocket connection rejected: limit exceeded (%d/%d)",
+			currentConnections,
+			maxConnections,
+		)
+
 		return
 	}
 
@@ -57,6 +63,7 @@ func (s *PreviewServer) handleWebSocket(w http.ResponseWriter, r *http.Request) 
 	})
 	if err != nil {
 		log.Printf("WebSocket upgrade error: %v", err)
+
 		return
 	}
 
@@ -76,7 +83,7 @@ func (s *PreviewServer) handleWebSocket(w http.ResponseWriter, r *http.Request) 
 	go client.readPump()
 }
 
-// checkOrigin validates the request origin for security
+// checkOrigin validates the request origin for security.
 func (s *PreviewServer) checkOrigin(r *http.Request) bool {
 	// Get the origin from the request
 	origin := r.Header.Get("Origin")
@@ -93,6 +100,7 @@ func (s *PreviewServer) checkOrigin(r *http.Request) bool {
 
 	// Use centralized validation
 	err := validation.ValidateOrigin(origin, allowedOrigins)
+
 	return err == nil
 }
 
@@ -166,7 +174,7 @@ func (s *PreviewServer) runWebSocketHub(ctx context.Context) {
 	}
 }
 
-// readPump pumps messages from the websocket connection
+// readPump pumps messages from the websocket connection.
 func (c *Client) readPump() {
 	defer func() {
 		c.server.unregister <- c.conn
@@ -183,6 +191,7 @@ func (c *Client) readPump() {
 		// Check for connection timeout
 		if time.Since(c.lastActivity) > connectionTimeout {
 			log.Printf("WebSocket connection timed out due to inactivity")
+
 			break
 		}
 
@@ -197,6 +206,7 @@ func (c *Client) readPump() {
 				websocket.CloseStatus(err) != websocket.StatusGoingAway {
 				log.Printf("WebSocket error: %v", err)
 			}
+
 			break
 		}
 
@@ -206,6 +216,7 @@ func (c *Client) readPump() {
 			if !c.rateLimiter.IsAllowed() {
 				log.Printf("WebSocket rate limit exceeded for client (sliding window)")
 				c.conn.Close(websocket.StatusPolicyViolation, "Rate limit exceeded")
+
 				break
 			}
 		}
@@ -215,7 +226,7 @@ func (c *Client) readPump() {
 	}
 }
 
-// writePump pumps messages to the websocket connection
+// writePump pumps messages to the websocket connection.
 func (c *Client) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
@@ -232,12 +243,14 @@ func (c *Client) writePump() {
 			if !ok {
 				c.conn.Close(websocket.StatusNormalClosure, "")
 				cancel()
+
 				return
 			}
 
 			if err := c.conn.Write(writeCtx, websocket.MessageText, message); err != nil {
 				log.Printf("WebSocket write error: %v", err)
 				cancel()
+
 				return
 			}
 			cancel()
@@ -246,6 +259,7 @@ func (c *Client) writePump() {
 			pingCtx, cancel := context.WithTimeout(ctx, writeWait)
 			if err := c.conn.Ping(pingCtx); err != nil {
 				cancel()
+
 				return
 			}
 			cancel()

@@ -145,16 +145,16 @@ func TestBuildCache_ConcurrentAccess(t *testing.T) {
 		var wg sync.WaitGroup
 
 		// Pre-populate cache
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			cache.Set(fmt.Sprintf("key%d", i), []byte(fmt.Sprintf("value%d", i)))
 		}
 
 		// Launch concurrent readers
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			wg.Add(1)
 			go func(id int) {
 				defer wg.Done()
-				for j := 0; j < 100; j++ {
+				for j := range 100 {
 					key := fmt.Sprintf("key%d", j%10)
 					cache.Get(key)
 				}
@@ -162,11 +162,11 @@ func TestBuildCache_ConcurrentAccess(t *testing.T) {
 		}
 
 		// Launch concurrent writers
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			wg.Add(1)
 			go func(id int) {
 				defer wg.Done()
-				for j := 0; j < 50; j++ {
+				for j := range 50 {
 					key := fmt.Sprintf("newkey%d_%d", id, j)
 					cache.Set(key, []byte(fmt.Sprintf("newvalue%d_%d", id, j)))
 				}
@@ -188,11 +188,11 @@ func TestBuildCache_ConcurrentAccess(t *testing.T) {
 		cache.Set("shared", []byte("value"))
 
 		// Many goroutines accessing the same key to test LRU race conditions
-		for i := 0; i < 20; i++ {
+		for range 20 {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				for j := 0; j < 100; j++ {
+				for range 100 {
 					cache.Get("shared") // This triggers LRU updates
 				}
 			}()
@@ -343,13 +343,13 @@ func TestBuildCache_Clear(t *testing.T) {
 	assert.True(t, found, "Cache should be functional after clear")
 }
 
-// Benchmark tests for performance validation
+// Benchmark tests for performance validation.
 func BenchmarkBuildCache_Set(b *testing.B) {
 	cache := NewBuildCache(1024*1024, time.Hour) // 1MB cache
 	value := make([]byte, 100)                   // 100 byte values
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		key := fmt.Sprintf("key%d", i)
 		cache.Set(key, value)
 	}
@@ -360,13 +360,13 @@ func BenchmarkBuildCache_Get(b *testing.B) {
 	value := make([]byte, 100)
 
 	// Pre-populate cache
-	for i := 0; i < 1000; i++ {
+	for i := range 1000 {
 		key := fmt.Sprintf("key%d", i)
 		cache.Set(key, value)
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		key := fmt.Sprintf("key%d", i%1000)
 		cache.Get(key)
 	}
@@ -377,13 +377,13 @@ func BenchmarkBuildCache_LRU_Updates(b *testing.B) {
 	value := make([]byte, 100)
 
 	// Fill cache to trigger LRU operations
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		key := fmt.Sprintf("key%d", i)
 		cache.Set(key, value)
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		// Access random entries to trigger LRU updates
 		key := fmt.Sprintf("key%d", i%100)
 		cache.Get(key)
@@ -395,7 +395,7 @@ func BenchmarkBuildCache_ConcurrentAccess_LRU(b *testing.B) {
 	value := make([]byte, 100)
 
 	// Pre-populate
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		key := fmt.Sprintf("key%d", i)
 		cache.Set(key, value)
 	}

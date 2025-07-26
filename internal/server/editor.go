@@ -3,7 +3,6 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -13,7 +12,7 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// EditorRequest represents a request to the interactive editor
+// EditorRequest represents a request to the interactive editor.
 type EditorRequest struct {
 	ComponentName string `json:"component_name"`
 	Content       string `json:"content"`
@@ -21,20 +20,20 @@ type EditorRequest struct {
 	FilePath      string `json:"file_path,omitempty"`
 }
 
-// EditorResponse represents a response from the interactive editor
+// EditorResponse represents a response from the interactive editor.
 type EditorResponse struct {
-	Success           bool                   `json:"success"`
-	Content           string                 `json:"content,omitempty"`
-	PreviewHTML       string                 `json:"preview_html,omitempty"`
-	Errors            []EditorError          `json:"errors,omitempty"`
-	Warnings          []EditorWarning        `json:"warnings,omitempty"`
-	Suggestions       []EditorSuggestion     `json:"suggestions,omitempty"`
-	ComponentMetadata *ComponentMetadata     `json:"metadata,omitempty"`
-	ParsedParameters  []types.ParameterInfo  `json:"parsed_parameters,omitempty"`
-	Message           string                 `json:"message,omitempty"`
+	Success           bool                  `json:"success"`
+	Content           string                `json:"content,omitempty"`
+	PreviewHTML       string                `json:"preview_html,omitempty"`
+	Errors            []EditorError         `json:"errors,omitempty"`
+	Warnings          []EditorWarning       `json:"warnings,omitempty"`
+	Suggestions       []EditorSuggestion    `json:"suggestions,omitempty"`
+	ComponentMetadata *ComponentMetadata    `json:"metadata,omitempty"`
+	ParsedParameters  []types.ParameterInfo `json:"parsed_parameters,omitempty"`
+	Message           string                `json:"message,omitempty"`
 }
 
-// EditorError represents an error in the editor
+// EditorError represents an error in the editor.
 type EditorError struct {
 	Line     int    `json:"line"`
 	Column   int    `json:"column"`
@@ -43,7 +42,7 @@ type EditorError struct {
 	Source   string `json:"source"`   // "syntax", "validation", "runtime"
 }
 
-// EditorWarning represents a warning in the editor
+// EditorWarning represents a warning in the editor.
 type EditorWarning struct {
 	Line    int    `json:"line"`
 	Column  int    `json:"column"`
@@ -51,7 +50,7 @@ type EditorWarning struct {
 	Code    string `json:"code"`
 }
 
-// EditorSuggestion represents a code suggestion
+// EditorSuggestion represents a code suggestion.
 type EditorSuggestion struct {
 	Label       string `json:"label"`
 	Kind        string `json:"kind"` // "snippet", "keyword", "function", "variable"
@@ -60,7 +59,7 @@ type EditorSuggestion struct {
 	Description string `json:"description"`
 }
 
-// FileRequest represents a file operation request
+// FileRequest represents a file operation request.
 type FileRequest struct {
 	Action   string `json:"action"` // "open", "save", "create", "delete", "list"
 	FilePath string `json:"file_path"`
@@ -68,16 +67,16 @@ type FileRequest struct {
 	Name     string `json:"name,omitempty"`
 }
 
-// FileResponse represents a file operation response
+// FileResponse represents a file operation response.
 type FileResponse struct {
-	Success bool        `json:"success"`
-	Content string      `json:"content,omitempty"`
-	Files   []FileInfo  `json:"files,omitempty"`
-	Error   string      `json:"error,omitempty"`
-	Message string      `json:"message,omitempty"`
+	Success bool       `json:"success"`
+	Content string     `json:"content,omitempty"`
+	Files   []FileInfo `json:"files,omitempty"`
+	Error   string     `json:"error,omitempty"`
+	Message string     `json:"message,omitempty"`
 }
 
-// FileInfo represents file information
+// FileInfo represents file information.
 type FileInfo struct {
 	Name         string    `json:"name"`
 	Path         string    `json:"path"`
@@ -87,16 +86,18 @@ type FileInfo struct {
 	IsComponent  bool      `json:"is_component"`
 }
 
-// handleEditorAPI handles the main editor API endpoint
+// handleEditorAPI handles the main editor API endpoint.
 func (s *PreviewServer) handleEditorAPI(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+
 		return
 	}
 
 	var req EditorRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid JSON request: "+err.Error(), http.StatusBadRequest)
+
 		return
 	}
 
@@ -114,6 +115,7 @@ func (s *PreviewServer) handleEditorAPI(w http.ResponseWriter, r *http.Request) 
 				}},
 			}
 			s.writeJSONResponse(w, response)
+
 			return
 		}
 	}
@@ -132,7 +134,7 @@ func (s *PreviewServer) handleEditorAPI(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-// handleEditorValidate validates templ content
+// handleEditorValidate validates templ content.
 func (s *PreviewServer) handleEditorValidate(w http.ResponseWriter, req EditorRequest) {
 	response := EditorResponse{Success: true}
 
@@ -155,7 +157,7 @@ func (s *PreviewServer) handleEditorValidate(w http.ResponseWriter, req EditorRe
 	s.writeJSONResponse(w, response)
 }
 
-// handleEditorPreview generates preview for templ content
+// handleEditorPreview generates preview for templ content.
 func (s *PreviewServer) handleEditorPreview(w http.ResponseWriter, req EditorRequest) {
 	response := EditorResponse{Success: true}
 
@@ -165,6 +167,7 @@ func (s *PreviewServer) handleEditorPreview(w http.ResponseWriter, req EditorReq
 		response.Success = false
 		response.Errors = errors
 		s.writeJSONResponse(w, response)
+
 		return
 	}
 
@@ -203,7 +206,7 @@ func (s *PreviewServer) handleEditorPreview(w http.ResponseWriter, req EditorReq
 	s.writeJSONResponse(w, response)
 }
 
-// handleEditorSave saves templ content to file
+// handleEditorSave saves templ content to file.
 func (s *PreviewServer) handleEditorSave(w http.ResponseWriter, req EditorRequest) {
 	response := EditorResponse{Success: true}
 
@@ -216,6 +219,7 @@ func (s *PreviewServer) handleEditorSave(w http.ResponseWriter, req EditorReques
 			Source:   "validation",
 		}}
 		s.writeJSONResponse(w, response)
+
 		return
 	}
 
@@ -226,6 +230,7 @@ func (s *PreviewServer) handleEditorSave(w http.ResponseWriter, req EditorReques
 		response.Errors = errors
 		response.Warnings = warnings
 		s.writeJSONResponse(w, response)
+
 		return
 	}
 
@@ -239,11 +244,12 @@ func (s *PreviewServer) handleEditorSave(w http.ResponseWriter, req EditorReques
 			Source:   "filesystem",
 		}}
 		s.writeJSONResponse(w, response)
+
 		return
 	}
 
 	// Write file
-	if err := ioutil.WriteFile(req.FilePath, []byte(req.Content), 0644); err != nil {
+	if err := os.WriteFile(req.FilePath, []byte(req.Content), 0644); err != nil {
 		response.Success = false
 		response.Errors = []EditorError{{
 			Message:  "Failed to save file: " + err.Error(),
@@ -252,7 +258,7 @@ func (s *PreviewServer) handleEditorSave(w http.ResponseWriter, req EditorReques
 		}}
 	} else {
 		response.Message = "File saved successfully"
-		
+
 		// Trigger component scan to update registry
 		go func() {
 			time.Sleep(100 * time.Millisecond) // Small delay to ensure file is written
@@ -263,7 +269,7 @@ func (s *PreviewServer) handleEditorSave(w http.ResponseWriter, req EditorReques
 	s.writeJSONResponse(w, response)
 }
 
-// handleEditorFormat formats templ content
+// handleEditorFormat formats templ content.
 func (s *PreviewServer) handleEditorFormat(w http.ResponseWriter, req EditorRequest) {
 	response := EditorResponse{Success: true}
 
@@ -275,16 +281,18 @@ func (s *PreviewServer) handleEditorFormat(w http.ResponseWriter, req EditorRequ
 	s.writeJSONResponse(w, response)
 }
 
-// handleFileAPI handles file operations
+// handleFileAPI handles file operations.
 func (s *PreviewServer) handleFileAPI(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+
 		return
 	}
 
 	var req FileRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid JSON request: "+err.Error(), http.StatusBadRequest)
+
 		return
 	}
 
@@ -308,7 +316,7 @@ func (s *PreviewServer) handleFileAPI(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleFileOpen opens a file for editing
+// handleFileOpen opens a file for editing.
 func (s *PreviewServer) handleFileOpen(w http.ResponseWriter, req FileRequest) {
 	response := FileResponse{Success: true}
 
@@ -317,11 +325,12 @@ func (s *PreviewServer) handleFileOpen(w http.ResponseWriter, req FileRequest) {
 		response.Success = false
 		response.Error = "Invalid file path"
 		s.writeJSONResponse(w, response)
+
 		return
 	}
 
 	// Read file content
-	content, err := ioutil.ReadFile(req.FilePath)
+	content, err := os.ReadFile(req.FilePath)
 	if err != nil {
 		response.Success = false
 		response.Error = "Failed to read file: " + err.Error()
@@ -332,7 +341,7 @@ func (s *PreviewServer) handleFileOpen(w http.ResponseWriter, req FileRequest) {
 	s.writeJSONResponse(w, response)
 }
 
-// handleFileSave saves a file
+// handleFileSave saves a file.
 func (s *PreviewServer) handleFileSave(w http.ResponseWriter, req FileRequest) {
 	response := FileResponse{Success: true}
 
@@ -341,11 +350,12 @@ func (s *PreviewServer) handleFileSave(w http.ResponseWriter, req FileRequest) {
 		response.Success = false
 		response.Error = "Invalid file path"
 		s.writeJSONResponse(w, response)
+
 		return
 	}
 
 	// Write file
-	if err := ioutil.WriteFile(req.FilePath, []byte(req.Content), 0644); err != nil {
+	if err := os.WriteFile(req.FilePath, []byte(req.Content), 0644); err != nil {
 		response.Success = false
 		response.Error = "Failed to save file: " + err.Error()
 	} else {
@@ -355,7 +365,7 @@ func (s *PreviewServer) handleFileSave(w http.ResponseWriter, req FileRequest) {
 	s.writeJSONResponse(w, response)
 }
 
-// handleFileCreate creates a new file
+// handleFileCreate creates a new file.
 func (s *PreviewServer) handleFileCreate(w http.ResponseWriter, req FileRequest) {
 	response := FileResponse{Success: true}
 
@@ -364,6 +374,7 @@ func (s *PreviewServer) handleFileCreate(w http.ResponseWriter, req FileRequest)
 		response.Success = false
 		response.Error = "Invalid file path"
 		s.writeJSONResponse(w, response)
+
 		return
 	}
 
@@ -372,6 +383,7 @@ func (s *PreviewServer) handleFileCreate(w http.ResponseWriter, req FileRequest)
 		response.Success = false
 		response.Error = "File already exists"
 		s.writeJSONResponse(w, response)
+
 		return
 	}
 
@@ -381,6 +393,7 @@ func (s *PreviewServer) handleFileCreate(w http.ResponseWriter, req FileRequest)
 		response.Success = false
 		response.Error = "Failed to create directory: " + err.Error()
 		s.writeJSONResponse(w, response)
+
 		return
 	}
 
@@ -390,7 +403,7 @@ func (s *PreviewServer) handleFileCreate(w http.ResponseWriter, req FileRequest)
 		content = s.generateDefaultTemplContent(req.Name)
 	}
 
-	if err := ioutil.WriteFile(req.FilePath, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(req.FilePath, []byte(content), 0644); err != nil {
 		response.Success = false
 		response.Error = "Failed to create file: " + err.Error()
 	} else {
@@ -400,7 +413,7 @@ func (s *PreviewServer) handleFileCreate(w http.ResponseWriter, req FileRequest)
 	s.writeJSONResponse(w, response)
 }
 
-// handleFileDelete deletes a file
+// handleFileDelete deletes a file.
 func (s *PreviewServer) handleFileDelete(w http.ResponseWriter, req FileRequest) {
 	response := FileResponse{Success: true}
 
@@ -409,6 +422,7 @@ func (s *PreviewServer) handleFileDelete(w http.ResponseWriter, req FileRequest)
 		response.Success = false
 		response.Error = "Invalid file path"
 		s.writeJSONResponse(w, response)
+
 		return
 	}
 
@@ -423,7 +437,7 @@ func (s *PreviewServer) handleFileDelete(w http.ResponseWriter, req FileRequest)
 	s.writeJSONResponse(w, response)
 }
 
-// handleFileList lists files in directory
+// handleFileList lists files in directory.
 func (s *PreviewServer) handleFileList(w http.ResponseWriter, req FileRequest) {
 	response := FileResponse{Success: true}
 
@@ -434,23 +448,28 @@ func (s *PreviewServer) handleFileList(w http.ResponseWriter, req FileRequest) {
 	}
 
 	// Read directory
-	entries, err := ioutil.ReadDir(dirPath)
+	entries, err := os.ReadDir(dirPath)
 	if err != nil {
 		response.Success = false
 		response.Error = "Failed to read directory: " + err.Error()
 		s.writeJSONResponse(w, response)
+
 		return
 	}
 
 	// Build file list
 	var files []FileInfo
 	for _, entry := range entries {
+		info, err := entry.Info()
+		if err != nil {
+			continue // Skip entries we can't get info for
+		}
 		fileInfo := FileInfo{
 			Name:         entry.Name(),
 			Path:         filepath.Join(dirPath, entry.Name()),
 			IsDirectory:  entry.IsDir(),
-			Size:         entry.Size(),
-			ModifiedTime: entry.ModTime(),
+			Size:         info.Size(),
+			ModifiedTime: info.ModTime(),
 			IsComponent:  strings.HasSuffix(entry.Name(), ".templ"),
 		}
 		files = append(files, fileInfo)
@@ -460,7 +479,7 @@ func (s *PreviewServer) handleFileList(w http.ResponseWriter, req FileRequest) {
 	s.writeJSONResponse(w, response)
 }
 
-// isValidFilePath validates file path for security
+// isValidFilePath validates file path for security.
 func (s *PreviewServer) isValidFilePath(filePath string) bool {
 	// Basic path validation - prevent directory traversal
 	if strings.Contains(filePath, "..") {
@@ -473,7 +492,7 @@ func (s *PreviewServer) isValidFilePath(filePath string) bool {
 	return strings.HasSuffix(filePath, ".templ") || strings.HasSuffix(filePath, ".go")
 }
 
-// generateDefaultTemplContent generates default content for new templ files
+// generateDefaultTemplContent generates default content for new templ files.
 func (s *PreviewServer) generateDefaultTemplContent(componentName string) string {
 	if componentName == "" {
 		componentName = "NewComponent"

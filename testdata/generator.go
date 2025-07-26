@@ -69,7 +69,7 @@ templ Modal%d(title string, visible bool) {
 		template := templates[i%len(templates)]
 		content := fmt.Sprintf(template, i)
 		filename := filepath.Join(testDir, fmt.Sprintf("component_%d.templ", i))
-		
+
 		if err := os.WriteFile(filename, []byte(content), 0644); err != nil {
 			return "", err
 		}
@@ -338,7 +338,7 @@ func (m *MockData) SampleComponents() []*registry.ComponentInfo {
 		},
 		{
 			Name:     "Card",
-			Package:  "components", 
+			Package:  "components",
 			FilePath: "card.templ",
 			Parameters: []registry.ParameterInfo{
 				{Name: "title", Type: "string"},
@@ -350,7 +350,7 @@ func (m *MockData) SampleComponents() []*registry.ComponentInfo {
 		{
 			Name:     "DataTable",
 			Package:  "components",
-			FilePath: "data_table.templ", 
+			FilePath: "data_table.templ",
 			Parameters: []registry.ParameterInfo{
 				{Name: "data", Type: "[]interface{}"},
 				{Name: "columns", Type: "[]string"},
@@ -374,7 +374,7 @@ func (m *MockData) SampleFormFields() []map[string]interface{} {
 		},
 		{
 			"name":        "email",
-			"type":        "email", 
+			"type":        "email",
 			"label":       "Email Address",
 			"required":    true,
 			"placeholder": "user@example.com",
@@ -440,12 +440,11 @@ func CleanupTestData(baseDir string) error {
 	}
 
 	for _, entry := range entries {
-		if entry.IsDir() && (
-			contains(entry.Name(), "test_") ||
+		if entry.IsDir() && (contains(entry.Name(), "test_") ||
 			contains(entry.Name(), "simple_test_") ||
 			contains(entry.Name(), "complex_test_") ||
 			contains(entry.Name(), "security_test_")) {
-			
+
 			fullPath := filepath.Join(baseDir, entry.Name())
 			if err := os.RemoveAll(fullPath); err != nil {
 				return err

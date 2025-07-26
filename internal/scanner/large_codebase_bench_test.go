@@ -9,10 +9,10 @@ import (
 	"github.com/conneroisu/templar/internal/registry"
 )
 
-// BenchmarkLargeCodebaseScanning benchmarks scanner performance on large codebases
+// BenchmarkLargeCodebaseScanning benchmarks scanner performance on large codebases.
 func BenchmarkLargeCodebaseScanning(b *testing.B) {
 	sizes := []int{100, 500, 1000, 2000, 5000}
-	
+
 	for _, size := range sizes {
 		b.Run(fmt.Sprintf("Components_%d", size), func(b *testing.B) {
 			benchmarkLargeCodebase(b, size)
@@ -24,63 +24,63 @@ func benchmarkLargeCodebase(b *testing.B, componentCount int) {
 	// Create test directory with realistic component structure
 	testDir := createRealisticCodebase(b, componentCount)
 	defer os.RemoveAll(testDir)
-	
+
 	b.ResetTimer()
 	b.ReportAllocs()
-	
-	for i := 0; i < b.N; i++ {
+
+	for range b.N {
 		reg := registry.NewComponentRegistry()
 		scanner := NewComponentScanner(reg)
-		
+
 		err := scanner.ScanDirectory(testDir)
 		if err != nil {
 			b.Fatal(err)
 		}
-		
+
 		// Verify we found the expected number of components
 		if reg.Count() == 0 {
 			b.Fatal("No components found")
 		}
-		
+
 		scanner.Close()
 	}
 }
 
-// createRealisticCodebase creates a directory structure that mimics a real project
+// createRealisticCodebase creates a directory structure that mimics a real project.
 func createRealisticCodebase(b *testing.B, componentCount int) string {
 	tempDir, err := os.MkdirTemp(".", "templar-large-codebase-*")
 	if err != nil {
 		b.Fatal(err)
 	}
-	
+
 	// Create realistic directory structure
 	dirs := []string{
 		"components/ui",
-		"components/forms", 
+		"components/forms",
 		"components/layout",
 		"pages",
 		"layouts",
 		"partials",
 	}
-	
+
 	for _, dir := range dirs {
 		if err := os.MkdirAll(filepath.Join(tempDir, dir), 0755); err != nil {
 			b.Fatal(err)
 		}
 	}
-	
+
 	// Distribute components across directories
 	componentsPerDir := componentCount / len(dirs)
 	remainder := componentCount % len(dirs)
-	
+
 	componentIndex := 0
 	for dirIdx, dir := range dirs {
 		count := componentsPerDir
 		if dirIdx < remainder {
 			count++ // Distribute remainder
 		}
-		
-		for i := 0; i < count; i++ {
+
+		for range count {
 			// Create varied component types
 			var content string
 			switch componentIndex % 6 {
@@ -97,15 +97,19 @@ func createRealisticCodebase(b *testing.B, componentCount int) string {
 			case 5:
 				content = generateRealisticModalComponent(componentIndex)
 			}
-			
-			filename := filepath.Join(tempDir, dir, fmt.Sprintf("component_%d.templ", componentIndex))
+
+			filename := filepath.Join(
+				tempDir,
+				dir,
+				fmt.Sprintf("component_%d.templ", componentIndex),
+			)
 			if err := os.WriteFile(filename, []byte(content), 0644); err != nil {
 				b.Fatal(err)
 			}
 			componentIndex++
 		}
 	}
-	
+
 	return tempDir
 }
 
@@ -369,26 +373,26 @@ templ Modal%d(title string, isOpen bool, onClose string) {
 }`, index, index)
 }
 
-// BenchmarkMemoryUsageStability tests memory usage remains stable under load
+// BenchmarkMemoryUsageStability tests memory usage remains stable under load.
 func BenchmarkMemoryUsageStability(b *testing.B) {
 	// Create a large codebase in current directory
 	testDir := createRealisticCodebase(b, 1000)
 	defer os.RemoveAll(testDir)
-	
+
 	b.ResetTimer()
 	b.ReportAllocs()
-	
-	for i := 0; i < b.N; i++ {
+
+	for i := range b.N {
 		reg := registry.NewComponentRegistry()
 		scanner := NewComponentScanner(reg)
-		
+
 		err := scanner.ScanDirectory(testDir)
 		if err != nil {
 			b.Fatal(err)
 		}
-		
+
 		scanner.Close()
-		
+
 		// Force GC to see if we're leaking memory
 		if i%10 == 0 {
 			b.StopTimer()

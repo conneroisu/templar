@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -19,7 +20,7 @@ var (
 	performanceThresholds performance.RegressionThresholds
 )
 
-// performanceCmd represents the performance command
+// performanceCmd represents the performance command.
 var performanceCmd = &cobra.Command{
 	Use:   "performance",
 	Short: "Performance monitoring and regression detection",
@@ -28,7 +29,7 @@ performance baselines. Includes benchmark execution, regression detection,
 and CI/CD integration capabilities.`,
 }
 
-// performanceCheckCmd handles performance regression detection
+// performanceCheckCmd handles performance regression detection.
 var performanceCheckCmd = &cobra.Command{
 	Use:   "check",
 	Short: "Run performance check and detect regressions",
@@ -37,7 +38,7 @@ and detects performance regressions with configurable thresholds.`,
 	RunE: runPerformanceCheck,
 }
 
-// performanceBaselineCmd manages performance baselines
+// performanceBaselineCmd manages performance baselines.
 var performanceBaselineCmd = &cobra.Command{
 	Use:   "baseline",
 	Short: "Manage performance baselines",
@@ -45,7 +46,7 @@ var performanceBaselineCmd = &cobra.Command{
 updates, and historical analysis.`,
 }
 
-// performanceBaselineCreateCmd creates new performance baselines
+// performanceBaselineCreateCmd creates new performance baselines.
 var performanceBaselineCreateCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create new performance baselines",
@@ -54,7 +55,7 @@ establishing reference performance metrics.`,
 	RunE: runPerformanceBaselineCreate,
 }
 
-// performanceBaselineListCmd lists existing baselines
+// performanceBaselineListCmd lists existing baselines.
 var performanceBaselineListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List performance baselines",
@@ -63,7 +64,7 @@ and last update timestamps.`,
 	RunE: runPerformanceBaselineList,
 }
 
-// performanceReportCmd generates performance reports
+// performanceReportCmd generates performance reports.
 var performanceReportCmd = &cobra.Command{
 	Use:   "report",
 	Short: "Generate performance reports",
@@ -84,20 +85,35 @@ func init() {
 	performanceBaselineCmd.AddCommand(performanceBaselineListCmd)
 
 	// Global performance flags
-	performanceCmd.PersistentFlags().StringSliceVar(&performancePackages, "packages", []string{"./..."}, "Go packages to benchmark")
-	performanceCmd.PersistentFlags().StringVar(&performanceFormat, "format", "text", "Output format (text, json, junit, github)")
-	performanceCmd.PersistentFlags().StringVar(&performanceOutput, "output", "", "Output file (defaults to stdout)")
-	performanceCmd.PersistentFlags().StringVar(&performanceBaseline, "baseline-dir", ".performance-baselines", "Directory to store performance baselines")
+	performanceCmd.PersistentFlags().
+		StringSliceVar(&performancePackages, "packages", []string{"./..."}, "Go packages to benchmark")
+	performanceCmd.PersistentFlags().
+		StringVar(&performanceFormat, "format", "text", "Output format (text, json, junit, github)")
+	performanceCmd.PersistentFlags().
+		StringVar(&performanceOutput, "output", "", "Output file (defaults to stdout)")
+	performanceCmd.PersistentFlags().
+		StringVar(&performanceBaseline, "baseline-dir", ".performance-baselines", "Directory to store performance baselines")
 
 	// Performance check specific flags
-	performanceCheckCmd.Flags().BoolVar(&performanceFailOn, "fail-on-critical", false, "Fail CI on critical regressions")
+	performanceCheckCmd.Flags().
+		BoolVar(&performanceFailOn, "fail-on-critical", false, "Fail CI on critical regressions")
 
 	// Threshold configuration flags
-	performanceCheckCmd.Flags().Float64Var(&performanceThresholds.SlownessThreshold, "slowness-threshold", 1.15, "Performance degradation threshold (e.g., 1.15 = 15% slower)")
-	performanceCheckCmd.Flags().Float64Var(&performanceThresholds.MemoryThreshold, "memory-threshold", 1.20, "Memory usage increase threshold (e.g., 1.20 = 20% more memory)")
-	performanceCheckCmd.Flags().Float64Var(&performanceThresholds.AllocThreshold, "alloc-threshold", 1.25, "Allocation increase threshold (e.g., 1.25 = 25% more allocations)")
-	performanceCheckCmd.Flags().IntVar(&performanceThresholds.MinSamples, "min-samples", 5, "Minimum samples required for regression detection")
-	performanceCheckCmd.Flags().Float64Var(&performanceThresholds.ConfidenceLevel, "confidence-level", 0.95, "Statistical confidence level (e.g., 0.95 = 95%)")
+	performanceCheckCmd.Flags().
+		Float64Var(&performanceThresholds.SlownessThreshold, "slowness-threshold", 1.15,
+			"Performance degradation threshold (e.g., 1.15 = 15% slower)")
+	performanceCheckCmd.Flags().
+		Float64Var(&performanceThresholds.MemoryThreshold, "memory-threshold", 1.20,
+			"Memory usage increase threshold (e.g., 1.20 = 20% more memory)")
+	performanceCheckCmd.Flags().
+		Float64Var(&performanceThresholds.AllocThreshold, "alloc-threshold", 1.25,
+			"Allocation increase threshold (e.g., 1.25 = 25% more allocations)")
+	performanceCheckCmd.Flags().
+		IntVar(&performanceThresholds.MinSamples, "min-samples", 5,
+			"Minimum samples required for regression detection")
+	performanceCheckCmd.Flags().
+		Float64Var(&performanceThresholds.ConfidenceLevel, "confidence-level", 0.95,
+			"Statistical confidence level (e.g., 0.95 = 95%)")
 
 	// Set default thresholds
 	performanceThresholds = performance.DefaultThresholds()
@@ -141,7 +157,7 @@ func runPerformanceBaselineCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(results) == 0 {
-		return fmt.Errorf("no benchmark results found")
+		return errors.New("no benchmark results found")
 	}
 
 	// Update baselines
@@ -150,6 +166,7 @@ func runPerformanceBaselineCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("✅ Created baselines for %d benchmarks in %s\n", len(results), performanceBaseline)
+
 	return nil
 }
 
@@ -164,6 +181,7 @@ func runPerformanceBaselineList(cmd *cobra.Command, args []string) error {
 
 	if len(entries) == 0 {
 		fmt.Println("No baselines found. Run 'templar performance baseline create' to create them.")
+
 		return nil
 	}
 
@@ -246,6 +264,7 @@ func getGitCommit() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return strings.TrimSpace(string(output)), nil
 }
 
@@ -255,5 +274,6 @@ func getGitBranch() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return strings.TrimSpace(string(output)), nil
 }

@@ -2,6 +2,7 @@ package plugins
 
 import (
 	"context"
+	stderrors "errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -17,7 +18,7 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// EnhancedPluginManager provides comprehensive plugin management with configuration integration
+// EnhancedPluginManager provides comprehensive plugin management with configuration integration.
 type EnhancedPluginManager struct {
 	*PluginManager // Embed the existing manager
 
@@ -44,7 +45,7 @@ type EnhancedPluginManager struct {
 	mu sync.RWMutex
 }
 
-// PluginState represents the current state of a plugin
+// PluginState represents the current state of a plugin.
 type PluginState string
 
 const (
@@ -57,7 +58,7 @@ const (
 	PluginStateError       PluginState = "error"
 )
 
-// EnhancedPluginInfo contains metadata about a discovered plugin
+// EnhancedPluginInfo contains metadata about a discovered plugin.
 type EnhancedPluginInfo struct {
 	Name        string                 `json:"name"`
 	Version     string                 `json:"version"`
@@ -74,7 +75,7 @@ type EnhancedPluginInfo struct {
 	Priority   int      `json:"priority,omitempty"`
 }
 
-// LoadedPlugin represents a plugin that has been loaded into memory
+// LoadedPlugin represents a plugin that has been loaded into memory.
 type LoadedPlugin struct {
 	Info     EnhancedPluginInfo
 	Instance Plugin
@@ -84,7 +85,7 @@ type LoadedPlugin struct {
 	LoadedAt time.Time
 }
 
-// Core system integration interfaces
+// Core system integration interfaces.
 type BuildPipelineIntegration interface {
 	RegisterPreBuildHook(plugin BuildPlugin) error
 	RegisterPostBuildHook(plugin BuildPlugin) error
@@ -101,7 +102,7 @@ type WatcherIntegration interface {
 	RemovePlugin(pluginName string) error
 }
 
-// NewEnhancedPluginManager creates a new enhanced plugin manager
+// NewEnhancedPluginManager creates a new enhanced plugin manager.
 func NewEnhancedPluginManager(
 	config *config.PluginsConfig,
 	logger logging.Logger,
@@ -134,7 +135,7 @@ func NewEnhancedPluginManager(
 	return manager
 }
 
-// SetIntegrations sets the core system integrations
+// SetIntegrations sets the core system integrations.
 func (epm *EnhancedPluginManager) SetIntegrations(
 	buildPipeline BuildPipelineIntegration,
 	server ServerIntegration,
@@ -148,7 +149,7 @@ func (epm *EnhancedPluginManager) SetIntegrations(
 	epm.watcher = watcher
 }
 
-// Initialize initializes the enhanced plugin manager and discovers plugins
+// Initialize initializes the enhanced plugin manager and discovers plugins.
 func (epm *EnhancedPluginManager) Initialize(ctx context.Context) error {
 	epm.mu.Lock()
 	defer epm.mu.Unlock()
@@ -172,14 +173,14 @@ func (epm *EnhancedPluginManager) Initialize(ctx context.Context) error {
 	return nil
 }
 
-// registerBuiltinPlugins registers the built-in plugins
+// registerBuiltinPlugins registers the built-in plugins.
 func (epm *EnhancedPluginManager) registerBuiltinPlugins(ctx context.Context) error {
 	// Built-in plugins will be registered via the SetBuiltinPlugins method
 	// to avoid import cycles
 	return nil
 }
 
-// SetBuiltinPlugins allows external registration of builtin plugins
+// SetBuiltinPlugins allows external registration of builtin plugins.
 func (epm *EnhancedPluginManager) SetBuiltinPlugins(plugins []Plugin) error {
 	ctx := context.Background()
 
@@ -192,8 +193,12 @@ func (epm *EnhancedPluginManager) SetBuiltinPlugins(plugins []Plugin) error {
 	return nil
 }
 
-// registerPlugin registers a plugin instance
-func (epm *EnhancedPluginManager) registerPlugin(ctx context.Context, plugin Plugin, source string) error {
+// registerPlugin registers a plugin instance.
+func (epm *EnhancedPluginManager) registerPlugin(
+	ctx context.Context,
+	plugin Plugin,
+	source string,
+) error {
 	name := plugin.Name()
 
 	// Create plugin info
@@ -229,8 +234,12 @@ func (epm *EnhancedPluginManager) registerPlugin(ctx context.Context, plugin Plu
 	return nil
 }
 
-// loadPlugin loads and initializes a plugin
-func (epm *EnhancedPluginManager) loadPlugin(ctx context.Context, plugin Plugin, info EnhancedPluginInfo) error {
+// loadPlugin loads and initializes a plugin.
+func (epm *EnhancedPluginManager) loadPlugin(
+	ctx context.Context,
+	plugin Plugin,
+	info EnhancedPluginInfo,
+) error {
 	name := plugin.Name()
 
 	// Get plugin configuration
@@ -239,12 +248,14 @@ func (epm *EnhancedPluginManager) loadPlugin(ctx context.Context, plugin Plugin,
 	// Initialize the plugin
 	if err := plugin.Initialize(ctx, pluginConfig); err != nil {
 		epm.pluginStates[name] = PluginStateError
+
 		return fmt.Errorf("failed to initialize plugin %s: %w", name, err)
 	}
 
 	// Register with base plugin manager
-	if err := epm.PluginManager.RegisterPlugin(plugin, pluginConfig); err != nil {
+	if err := epm.RegisterPlugin(plugin, pluginConfig); err != nil {
 		epm.pluginStates[name] = PluginStateError
+
 		return fmt.Errorf("failed to register plugin %s: %w", name, err)
 	}
 
@@ -272,7 +283,7 @@ func (epm *EnhancedPluginManager) loadPlugin(ctx context.Context, plugin Plugin,
 	return nil
 }
 
-// integratePlugin integrates a plugin with core systems
+// integratePlugin integrates a plugin with core systems.
 func (epm *EnhancedPluginManager) integratePlugin(plugin Plugin) error {
 	name := plugin.Name()
 
@@ -303,7 +314,7 @@ func (epm *EnhancedPluginManager) integratePlugin(plugin Plugin) error {
 	return nil
 }
 
-// getPluginConfig gets configuration for a specific plugin
+// getPluginConfig gets configuration for a specific plugin.
 func (epm *EnhancedPluginManager) getPluginConfig(pluginName string) PluginConfig {
 	// Start with default config
 	config := PluginConfig{
@@ -331,7 +342,7 @@ func (epm *EnhancedPluginManager) getPluginConfig(pluginName string) PluginConfi
 	return config
 }
 
-// getPluginInterfaces determines which interfaces a plugin implements
+// getPluginInterfaces determines which interfaces a plugin implements.
 func (epm *EnhancedPluginManager) getPluginInterfaces(plugin Plugin) []string {
 	var interfaces []string
 
@@ -353,7 +364,7 @@ func (epm *EnhancedPluginManager) getPluginInterfaces(plugin Plugin) []string {
 	return interfaces
 }
 
-// discoverPlugins discovers plugins from configured discovery paths
+// discoverPlugins discovers plugins from configured discovery paths.
 func (epm *EnhancedPluginManager) discoverPlugins(ctx context.Context) error {
 	for _, path := range epm.discoveryPaths {
 		if err := epm.discoverPluginsInPath(ctx, path); err != nil {
@@ -361,10 +372,11 @@ func (epm *EnhancedPluginManager) discoverPlugins(ctx context.Context) error {
 			// Continue with other paths
 		}
 	}
+
 	return nil
 }
 
-// discoverPluginsInPath discovers plugins in a specific path
+// discoverPluginsInPath discovers plugins in a specific path.
 func (epm *EnhancedPluginManager) discoverPluginsInPath(ctx context.Context, path string) error {
 	// Expand home directory
 	if strings.HasPrefix(path, "~/") {
@@ -396,7 +408,7 @@ func (epm *EnhancedPluginManager) discoverPluginsInPath(ctx context.Context, pat
 	})
 }
 
-// loadEnabledPlugins loads all plugins that should be enabled
+// loadEnabledPlugins loads all plugins that should be enabled.
 func (epm *EnhancedPluginManager) loadEnabledPlugins(ctx context.Context) error {
 	var errors []error
 
@@ -421,7 +433,7 @@ func (epm *EnhancedPluginManager) loadEnabledPlugins(ctx context.Context) error 
 	return nil
 }
 
-// EnablePlugin enables a plugin at runtime
+// EnablePlugin enables a plugin at runtime.
 func (epm *EnhancedPluginManager) EnablePlugin(ctx context.Context, name string) error {
 	epm.mu.Lock()
 	defer epm.mu.Unlock()
@@ -443,14 +455,14 @@ func (epm *EnhancedPluginManager) EnablePlugin(ctx context.Context, name string)
 	// If it's a builtin plugin that's not loaded, we need to load it
 	if info.Source == "builtin" {
 		// TODO: Reload builtin plugin
-		return fmt.Errorf("runtime enabling of builtin plugins not yet implemented")
+		return stderrors.New("runtime enabling of builtin plugins not yet implemented")
 	}
 
 	// TODO: Load external plugin
-	return fmt.Errorf("runtime enabling of external plugins not yet implemented")
+	return stderrors.New("runtime enabling of external plugins not yet implemented")
 }
 
-// DisablePlugin disables a plugin at runtime
+// DisablePlugin disables a plugin at runtime.
 func (epm *EnhancedPluginManager) DisablePlugin(ctx context.Context, name string) error {
 	epm.mu.Lock()
 	defer epm.mu.Unlock()
@@ -466,13 +478,13 @@ func (epm *EnhancedPluginManager) DisablePlugin(ctx context.Context, name string
 
 	// Remove from core system integrations
 	if epm.buildPipeline != nil {
-		epm.buildPipeline.RemovePlugin(name)
+		_ = epm.buildPipeline.RemovePlugin(name)
 	}
 	if epm.server != nil {
-		epm.server.RemovePlugin(name)
+		_ = epm.server.RemovePlugin(name)
 	}
 	if epm.watcher != nil {
-		epm.watcher.RemovePlugin(name)
+		_ = epm.watcher.RemovePlugin(name)
 	}
 
 	// Shutdown the plugin
@@ -484,7 +496,7 @@ func (epm *EnhancedPluginManager) DisablePlugin(ctx context.Context, name string
 	}
 
 	// Unregister from base manager
-	epm.PluginManager.UnregisterPlugin(name)
+	epm.UnregisterPlugin(name)
 
 	// Update state
 	loaded.State = PluginStateDisabled
@@ -496,7 +508,7 @@ func (epm *EnhancedPluginManager) DisablePlugin(ctx context.Context, name string
 	return nil
 }
 
-// GetPluginInfo returns information about all discovered plugins
+// GetPluginInfo returns information about all discovered plugins.
 func (epm *EnhancedPluginManager) GetPluginInfo() map[string]EnhancedPluginInfo {
 	epm.mu.RLock()
 	defer epm.mu.RUnlock()
@@ -509,7 +521,7 @@ func (epm *EnhancedPluginManager) GetPluginInfo() map[string]EnhancedPluginInfo 
 	return result
 }
 
-// GetLoadedPlugins returns information about all loaded plugins
+// GetLoadedPlugins returns information about all loaded plugins.
 func (epm *EnhancedPluginManager) GetLoadedPlugins() map[string]LoadedPlugin {
 	epm.mu.RLock()
 	defer epm.mu.RUnlock()
@@ -522,7 +534,7 @@ func (epm *EnhancedPluginManager) GetLoadedPlugins() map[string]LoadedPlugin {
 	return result
 }
 
-// GetPluginState returns the current state of a plugin
+// GetPluginState returns the current state of a plugin.
 func (epm *EnhancedPluginManager) GetPluginState(name string) PluginState {
 	epm.mu.RLock()
 	defer epm.mu.RUnlock()
@@ -534,8 +546,11 @@ func (epm *EnhancedPluginManager) GetPluginState(name string) PluginState {
 	return PluginStateUnknown
 }
 
-// ProcessComponent processes a component through all enabled component plugins
-func (epm *EnhancedPluginManager) ProcessComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error) {
+// ProcessComponent processes a component through all enabled component plugins.
+func (epm *EnhancedPluginManager) ProcessComponent(
+	ctx context.Context,
+	component *types.ComponentInfo,
+) (*types.ComponentInfo, error) {
 	// Get component plugins in priority order
 	plugins := epm.getComponentPluginsByPriority()
 
@@ -552,7 +567,7 @@ func (epm *EnhancedPluginManager) ProcessComponent(ctx context.Context, componen
 	return result, nil
 }
 
-// getComponentPluginsByPriority returns component plugins sorted by priority
+// getComponentPluginsByPriority returns component plugins sorted by priority.
 func (epm *EnhancedPluginManager) getComponentPluginsByPriority() []ComponentPlugin {
 	epm.mu.RLock()
 	defer epm.mu.RUnlock()
@@ -574,7 +589,7 @@ func (epm *EnhancedPluginManager) getComponentPluginsByPriority() []ComponentPlu
 	return plugins
 }
 
-// Shutdown gracefully shuts down all plugins
+// Shutdown gracefully shuts down all plugins.
 func (epm *EnhancedPluginManager) Shutdown(ctx context.Context) error {
 	epm.mu.Lock()
 	defer epm.mu.Unlock()

@@ -52,7 +52,7 @@ func TestErrorInjector_CountedInjection(t *testing.T) {
 	injector.InjectErrorCount("counted.operation", testErr, 3)
 
 	// First 3 calls should fail
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		if err := injector.ShouldFail("counted.operation"); err == nil {
 			t.Errorf("Expected call %d to fail", i+1)
 		}
@@ -96,7 +96,7 @@ func TestErrorInjector_Probability(t *testing.T) {
 	failures := 0
 	attempts := 100
 
-	for i := 0; i < attempts; i++ {
+	for range attempts {
 		if err := injector.ShouldFail("prob.operation"); err != nil {
 			failures++
 		}
@@ -174,9 +174,9 @@ func TestErrorInjector_Stats(t *testing.T) {
 	injector.InjectErrorOnce("op3", errors.New("error3"))
 
 	// Trigger some injections
-	injector.ShouldFail("op1")
-	injector.ShouldFail("op1")
-	injector.ShouldFail("op3") // This should exhaust the single injection
+	_ = injector.ShouldFail("op1")
+	_ = injector.ShouldFail("op1")
+	_ = injector.ShouldFail("op3") // This should exhaust the single injection
 
 	stats := injector.GetStats()
 
@@ -224,7 +224,7 @@ func TestScenarioManager_BasicScenario(t *testing.T) {
 	}
 
 	// Verify step1 fails twice
-	for i := 0; i < 2; i++ {
+	for i := range 2 {
 		if err := injector.ShouldFail("step1"); err == nil {
 			t.Errorf("Expected step1 to fail on attempt %d", i+1)
 		}
@@ -274,7 +274,7 @@ func TestScenarioManager_PredefinedScenarios(t *testing.T) {
 	manager.RegisterScenario(networkScenario)
 
 	// Stop build scenario first
-	manager.StopScenario("build_failure")
+	_ = manager.StopScenario("build_failure")
 
 	err = manager.ExecuteScenario("network_failure")
 	if err != nil {
@@ -323,13 +323,13 @@ func TestScenarioManager_ListScenarios(t *testing.T) {
 	}
 }
 
-// Benchmark tests for error injection performance
+// Benchmark tests for error injection performance.
 func BenchmarkErrorInjector_ShouldFail(b *testing.B) {
 	injector := NewErrorInjector()
 	injector.InjectError("bench.operation", errors.New("bench error"))
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		injector.ShouldFail("bench.operation")
 	}
 }
@@ -338,7 +338,7 @@ func BenchmarkErrorInjector_NoInjection(b *testing.B) {
 	injector := NewErrorInjector()
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		injector.ShouldFail("bench.operation")
 	}
 }
