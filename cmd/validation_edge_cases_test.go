@@ -595,7 +595,7 @@ func BenchmarkValidation_EdgeCases(b *testing.B) {
 		}
 		b.ResetTimer()
 		for range b.N {
-			validateCommand("templ", allowedCommands)
+			_ = validateCommand("templ", allowedCommands)
 		}
 	})
 }

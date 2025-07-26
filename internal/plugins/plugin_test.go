@@ -28,6 +28,7 @@ func (mp *MockPlugin) Initialize(ctx context.Context, config PluginConfig) error
 }
 func (mp *MockPlugin) Shutdown(ctx context.Context) error {
 	mp.shutdownCalled = true
+
 	return nil
 }
 func (mp *MockPlugin) Health() PluginHealth { return mp.health }

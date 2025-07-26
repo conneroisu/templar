@@ -840,7 +840,7 @@ func (s *ComponentScanner) processBatchWithWorkerPoolWithContext(
 
 	// Collect results with context checking
 	var scanErrors []error
-	for range len(files) {
+	for range files {
 		select {
 		case result := <-resultChan:
 			if result.err != nil {

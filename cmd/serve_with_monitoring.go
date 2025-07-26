@@ -332,7 +332,9 @@ func addMonitoredRoutes(mux *http.ServeMux, monitor *monitoring.TemplarMonitor) 
 			status := getWatcherStatus(ctx, monitor)
 
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(status))
+			if _, err := w.Write([]byte(status)); err != nil {
+				return fmt.Errorf("failed to write status response: %w", err)
+			}
 
 			return nil
 		})
@@ -441,7 +443,7 @@ func handleWebSocketConnection(
 	time.Sleep(100 * time.Millisecond)
 
 	w.Header().Set("Content-Type", "text/plain")
-	w.Write([]byte("WebSocket connection simulated"))
+	_, _ = w.Write([]byte("WebSocket connection simulated"))
 
 	return nil
 }
