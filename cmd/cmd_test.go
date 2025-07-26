@@ -14,6 +14,25 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	// File names and paths
+	TemplarConfigFile = ".templar.yml"
+	GoModFile         = "go.mod"
+	TestTemplFile     = "test.templ"
+	ComponentsDir     = "components"
+	TestComponentName = "TestComponent"
+
+	// Network
+	LocalhostAddress = "localhost"
+	DefaultPort      = 8080
+
+	// Test project name
+	TestProjectName = "test-project"
+
+	// Mock data values
+	MockText = "Mock Text"
+)
+
 func TestInitCommand(t *testing.T) {
 	// Create a temporary directory
 	tempDir := t.TempDir()
@@ -37,7 +56,7 @@ func TestInitCommand(t *testing.T) {
 
 	// Check that directories were created
 	expectedDirs := []string{
-		"components",
+		ComponentsDir,
 		"views",
 		"examples",
 		"static",
@@ -55,8 +74,8 @@ func TestInitCommand(t *testing.T) {
 	}
 
 	// Check that files were created
-	assert.FileExists(t, ".templar.yml")
-	assert.FileExists(t, "go.mod")
+	assert.FileExists(t, TemplarConfigFile)
+	assert.FileExists(t, GoModFile)
 	assert.FileExists(t, "components/button.templ")
 	assert.FileExists(t, "components/card.templ")
 	assert.FileExists(t, "views/layout.templ")
@@ -83,13 +102,13 @@ func TestInitCommandWithProjectName(t *testing.T) {
 	initTemplate = ""
 
 	// Test init command with project name
-	err = runInit(&cobra.Command{}, []string{"test-project"})
+	err = runInit(&cobra.Command{}, []string{TestProjectName})
 	require.NoError(t, err)
 
 	// Check that project directory was created
-	assert.DirExists(t, "test-project")
-	assert.FileExists(t, "test-project/.templar.yml")
-	assert.FileExists(t, "test-project/go.mod")
+	assert.DirExists(t, TestProjectName)
+	assert.FileExists(t, TestProjectName+"/"+TemplarConfigFile)
+	assert.FileExists(t, TestProjectName+"/"+GoModFile)
 }
 
 func TestInitCommandMinimal(t *testing.T) {
@@ -114,9 +133,9 @@ func TestInitCommandMinimal(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check that basic directories were created
-	assert.DirExists(t, "components")
-	assert.FileExists(t, ".templar.yml")
-	assert.FileExists(t, "go.mod")
+	assert.DirExists(t, ComponentsDir)
+	assert.FileExists(t, TemplarConfigFile)
+	assert.FileExists(t, GoModFile)
 
 	// Check that example components were NOT created
 	assert.NoFileExists(t, "components/button.templ")
@@ -153,7 +172,7 @@ func TestListCommand(t *testing.T) {
 	tempDir := t.TempDir()
 
 	// Create component files
-	componentDir := filepath.Join(tempDir, "components")
+	componentDir := filepath.Join(tempDir, ComponentsDir)
 	err := os.MkdirAll(componentDir, 0755)
 	require.NoError(t, err)
 
@@ -164,14 +183,14 @@ templ TestComponent(title string) {
 }
 `
 
-	err = os.WriteFile(filepath.Join(componentDir, "test.templ"), []byte(componentContent), 0644)
+	err = os.WriteFile(filepath.Join(componentDir, TestTemplFile), []byte(componentContent), 0644)
 	require.NoError(t, err)
 
 	// Set up viper configuration
 	viper.Reset()
 	viper.Set("components.scan_paths", []string{componentDir})
-	viper.Set("server.port", 8080)
-	viper.Set("server.host", "localhost")
+	viper.Set("server.port", DefaultPort)
+	viper.Set("server.host", LocalhostAddress)
 
 	// Reset flags
 	listFlags.Format = "table"
@@ -188,7 +207,7 @@ func TestListCommandJSON(t *testing.T) {
 	tempDir := t.TempDir()
 
 	// Create component files
-	componentDir := filepath.Join(tempDir, "components")
+	componentDir := filepath.Join(tempDir, ComponentsDir)
 	err := os.MkdirAll(componentDir, 0755)
 	require.NoError(t, err)
 
@@ -199,14 +218,14 @@ templ TestComponent(title string) {
 }
 `
 
-	err = os.WriteFile(filepath.Join(componentDir, "test.templ"), []byte(componentContent), 0644)
+	err = os.WriteFile(filepath.Join(componentDir, TestTemplFile), []byte(componentContent), 0644)
 	require.NoError(t, err)
 
 	// Set up viper configuration
 	viper.Reset()
 	viper.Set("components.scan_paths", []string{componentDir})
-	viper.Set("server.port", 8080)
-	viper.Set("server.host", "localhost")
+	viper.Set("server.port", DefaultPort)
+	viper.Set("server.host", LocalhostAddress)
 
 	// Set flags
 	listFlags.Format = "json"
@@ -247,7 +266,7 @@ func TestBuildCommand(t *testing.T) {
 			require.NoError(t, err)
 
 			// Create component files
-			componentDir := "components"
+			componentDir := ComponentsDir
 			err = os.MkdirAll(componentDir, 0755)
 			require.NoError(t, err)
 
@@ -259,7 +278,7 @@ templ TestComponent(title string) {
 `
 
 			err = os.WriteFile(
-				filepath.Join(componentDir, "test.templ"),
+				filepath.Join(componentDir, TestTemplFile),
 				[]byte(componentContent),
 				0644,
 			)
@@ -269,8 +288,8 @@ templ TestComponent(title string) {
 			viper.Reset()
 			viper.Set("components.scan_paths", []string{componentDir})
 			viper.Set("build.command", "echo 'build command executed'")
-			viper.Set("server.port", 8080)
-			viper.Set("server.host", "localhost")
+			viper.Set("server.port", DefaultPort)
+			viper.Set("server.host", LocalhostAddress)
 
 			// Set flags based on test case
 			buildOutput = ""
@@ -292,9 +311,9 @@ templ TestComponent(title string) {
 
 func TestGenerateMockData(t *testing.T) {
 	component := &types.ComponentInfo{
-		Name:     "TestComponent",
-		Package:  "components",
-		FilePath: "test.templ",
+		Name:     TestComponentName,
+		Package:  ComponentsDir,
+		FilePath: TestTemplFile,
 		Parameters: []types.ParameterInfo{
 			{Name: "title", Type: "string"},
 			{Name: "count", Type: "int"},
@@ -323,12 +342,12 @@ func TestGenerateMockValue(t *testing.T) {
 		paramType string
 		expected  interface{}
 	}{
-		{"string", "Mock Text"},
+		{"string", MockTextValue},
 		{"int", 42},
 		{"bool", true},
 		{"[]string", []string{"Item 1", "Item 2", "Item 3"}},
 		{"[]int", []int{1, 2, 3}},
-		{"unknown", "Mock Value"},
+		{"unknown", MockValue},
 	}
 
 	for _, test := range tests {
@@ -358,12 +377,12 @@ func TestServeCommand(t *testing.T) {
   port: 8080
   host: localhost
 components:
-  scan_paths: ["components"]`
-	err = os.WriteFile(filepath.Join(tempDir, ".templar.yml"), []byte(configContent), 0644)
+  scan_paths: ["` + ComponentsDir + `"]`
+	err = os.WriteFile(filepath.Join(tempDir, TemplarConfigFile), []byte(configContent), 0644)
 	require.NoError(t, err)
 
 	// Create component files
-	componentDir := "components"
+	componentDir := ComponentsDir
 	err = os.MkdirAll(componentDir, 0755)
 	require.NoError(t, err)
 
@@ -374,7 +393,7 @@ templ TestComponent(title string) {
 }
 `
 
-	err = os.WriteFile(filepath.Join(componentDir, "test.templ"), []byte(componentContent), 0644)
+	err = os.WriteFile(filepath.Join(componentDir, TestTemplFile), []byte(componentContent), 0644)
 	require.NoError(t, err)
 
 	// Test serve command with context cancellation (quick test)
@@ -412,12 +431,12 @@ func TestWatchCommand(t *testing.T) {
   port: 8080
   host: localhost
 components:
-  scan_paths: ["components"]`
-	err = os.WriteFile(filepath.Join(tempDir, ".templar.yml"), []byte(configContent), 0644)
+  scan_paths: ["` + ComponentsDir + `"]`
+	err = os.WriteFile(filepath.Join(tempDir, TemplarConfigFile), []byte(configContent), 0644)
 	require.NoError(t, err)
 
 	// Create component files
-	componentDir := "components"
+	componentDir := ComponentsDir
 	err = os.MkdirAll(componentDir, 0755)
 	require.NoError(t, err)
 
@@ -428,7 +447,7 @@ templ TestComponent(title string) {
 }
 `
 
-	err = os.WriteFile(filepath.Join(componentDir, "test.templ"), []byte(componentContent), 0644)
+	err = os.WriteFile(filepath.Join(componentDir, TestTemplFile), []byte(componentContent), 0644)
 	require.NoError(t, err)
 
 	// Reset watch flags
@@ -468,12 +487,12 @@ func TestPreviewCommand(t *testing.T) {
   port: 8080
   host: localhost
 components:
-  scan_paths: ["components"]`
-	err = os.WriteFile(filepath.Join(tempDir, ".templar.yml"), []byte(configContent), 0644)
+  scan_paths: ["` + ComponentsDir + `"]`
+	err = os.WriteFile(filepath.Join(tempDir, TemplarConfigFile), []byte(configContent), 0644)
 	require.NoError(t, err)
 
 	// Create component files
-	componentDir := "components"
+	componentDir := ComponentsDir
 	err = os.MkdirAll(componentDir, 0755)
 	require.NoError(t, err)
 
@@ -484,7 +503,7 @@ templ TestComponent(title string) {
 }
 `
 
-	err = os.WriteFile(filepath.Join(componentDir, "test.templ"), []byte(componentContent), 0644)
+	err = os.WriteFile(filepath.Join(componentDir, TestTemplFile), []byte(componentContent), 0644)
 	require.NoError(t, err)
 
 	// Preview flags are now handled via StandardFlags structure
@@ -495,7 +514,7 @@ templ TestComponent(title string) {
 	defer cancel()
 
 	go func() {
-		err := runPreview(&cobra.Command{}, []string{"TestComponent"})
+		err := runPreview(&cobra.Command{}, []string{TestComponentName})
 		// Preview might fail due to test environment, that's ok
 		_ = err
 	}()
@@ -512,7 +531,7 @@ func TestHealthCommand(t *testing.T) {
 
 	// Reset health flags
 	healthPort = 8080
-	healthHost = "localhost"
+	healthHost = LocalhostAddress
 	healthTimeout = 5 * time.Second
 	healthVerbose = false
 
@@ -580,7 +599,7 @@ server:
 development:
   hot_reload: true
 `
-	err = os.WriteFile(".templar.yml", []byte(config), 0644)
+	err = os.WriteFile(TemplarConfigFile, []byte(config), 0644)
 	require.NoError(t, err)
 
 	// Test doctor command execution

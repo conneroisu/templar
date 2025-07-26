@@ -20,6 +20,26 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Preview-specific constants
+const (
+	// Type aliases for backward compatibility
+	typeSliceString = TypeStringSlice
+	typeSliceInt    = TypeIntSlice
+)
+
+// Error message constants specific to preview command
+const (
+	errorInvalidFlags        = "invalid flags: %w"
+	errorParseProps          = "failed to parse component properties: %w"
+	errorLoadMockData        = "failed to load mock data: %w"
+	errorCreatePreviewServer = "failed to create preview server: %w"
+	errorReadMockFile        = "failed to read mock file: %w"
+	errorParseMockJSON       = "failed to parse mock data JSON: %w"
+	errorGenerateHTML        = "failed to generate preview HTML: %w"
+	errorCreatePreviewDir    = "failed to create preview directory: %w"
+	errorWritePreviewHTML    = "failed to write preview HTML: %w"
+)
+
 var previewCmd = &cobra.Command{
 	Use:     "preview <component>",
 	Aliases: []string{"p"},
@@ -60,13 +80,13 @@ func runPreview(cmd *cobra.Command, args []string) error {
 
 	// Validate flags
 	if err := previewFlags.ValidateFlags(); err != nil {
-		return fmt.Errorf("invalid flags: %w", err)
+		return fmt.Errorf(errorInvalidFlags, err)
 	}
 
 	// Load configuration
 	cfg, err := config.Load()
 	if err != nil {
-		return fmt.Errorf("failed to load configuration: %w", err)
+		return fmt.Errorf(ErrorLoadConfiguration, err)
 	}
 
 	// Override server config for preview using standardized flags
@@ -92,7 +112,7 @@ func runPreview(cmd *cobra.Command, args []string) error {
 		// Create enhanced error with suggestions
 		ctx := &templare.SuggestionContext{
 			Registry:       componentRegistry,
-			ConfigPath:     ".templar.yml",
+			ConfigPath:     TemplarConfig,
 			ComponentsPath: cfg.Components.ScanPaths,
 		}
 		suggestions := templare.ComponentNotFoundError(componentName, ctx)
@@ -112,7 +132,7 @@ func runPreview(cmd *cobra.Command, args []string) error {
 	// Parse component properties using standardized flag method
 	props, err := previewFlags.ParseProps()
 	if err != nil {
-		return fmt.Errorf("failed to parse component properties: %w", err)
+		return fmt.Errorf(errorParseProps, err)
 	}
 
 	// Load mock data if specified
@@ -120,7 +140,7 @@ func runPreview(cmd *cobra.Command, args []string) error {
 	if previewFlags.MockData != "" {
 		mockData, err = loadMockData(previewFlags.MockData)
 		if err != nil {
-			return fmt.Errorf("failed to load mock data: %w", err)
+			return fmt.Errorf(errorLoadMockData, err)
 		}
 	}
 
@@ -133,7 +153,7 @@ func runPreview(cmd *cobra.Command, args []string) error {
 	// Create preview-specific server
 	srv, err := createPreviewServer(cfg, component, props, mockData)
 	if err != nil {
-		return fmt.Errorf("failed to create preview server: %w", err)
+		return fmt.Errorf(errorCreatePreviewServer, err)
 	}
 
 	// Start server
@@ -163,12 +183,12 @@ func loadMockData(mockFile string) (map[string]interface{}, error) {
 
 	data, err := os.ReadFile(mockFile)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read mock file: %w", err)
+		return nil, fmt.Errorf(errorReadMockFile, err)
 	}
 
 	var mockData map[string]interface{}
 	if err := json.Unmarshal(data, &mockData); err != nil {
-		return nil, fmt.Errorf("failed to parse mock data JSON: %w", err)
+		return nil, fmt.Errorf(errorParseMockJSON, err)
 	}
 
 	return mockData, nil
@@ -190,24 +210,24 @@ func generateMockData(component *types.ComponentInfo) map[string]interface{} {
 // Legacy generateMockValue function kept for backward compatibility.
 func generateMockValue(paramType string) interface{} {
 	switch strings.ToLower(paramType) {
-	case "string":
-		return "Mock Text"
-	case "int", "int32", "int64":
+	case TypeString:
+		return MockTextValue
+	case TypeInt, TypeInt32, TypeInt64:
 		return 42
-	case "float32", "float64":
+	case TypeFloat32, TypeFloat64:
 		return 3.14
-	case "bool":
+	case TypeBool:
 		return true
-	case "[]string":
+	case TypeStringSlice:
 		return []string{"Item 1", "Item 2", "Item 3"}
-	case "[]int":
+	case TypeIntSlice:
 		return []int{1, 2, 3}
 	default:
-		if strings.HasPrefix(paramType, "[]") {
-			return []interface{}{"Mock Item"}
+		if strings.HasPrefix(paramType, TypeSlicePrefix) {
+			return []interface{}{MockItem}
 		}
 
-		return "Mock Value"
+		return MockValue
 	}
 }
 
@@ -224,7 +244,7 @@ func createPreviewServer(
 	// Create preview server
 	srv, err := server.New(cfg)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create server: %w", err)
+		return nil, fmt.Errorf(ErrorCreateServer, err)
 	}
 
 	// Create custom renderer for preview
@@ -233,18 +253,18 @@ func createPreviewServer(
 	// Generate preview HTML
 	html, err := generatePreviewHTML(component, props, mockData, previewRenderer)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate preview HTML: %w", err)
+		return nil, fmt.Errorf(errorGenerateHTML, err)
 	}
 
 	// Store preview HTML for serving
 	// In a real implementation, this would be integrated with the server
-	previewPath := filepath.Join(".templar", "preview.html")
+	previewPath := filepath.Join(TemplarDir, PreviewHTML)
 	if err := os.MkdirAll(filepath.Dir(previewPath), 0755); err != nil {
-		return nil, fmt.Errorf("failed to create preview directory: %w", err)
+		return nil, fmt.Errorf(errorCreatePreviewDir, err)
 	}
 
 	if err := os.WriteFile(previewPath, []byte(html), 0644); err != nil {
-		return nil, fmt.Errorf("failed to write preview HTML: %w", err)
+		return nil, fmt.Errorf(errorWritePreviewHTML, err)
 	}
 
 	return srv, nil
@@ -265,7 +285,7 @@ func generatePreviewHTML(
 	// Generate component HTML
 	componentHTML, err := renderer.RenderComponent(component.Name)
 	if err != nil {
-		return "", fmt.Errorf("failed to render component: %w", err)
+		return "", fmt.Errorf(ErrorRenderComponent, err)
 	}
 
 	// Create wrapper HTML
@@ -424,7 +444,7 @@ func validateMockFilePath(mockFile string) error {
 
 	// Limit file extension to JSON for security
 	ext := strings.ToLower(filepath.Ext(cleanPath))
-	if ext != ".json" {
+	if ext != JSONExtension {
 		return fmt.Errorf("only JSON files are allowed for mock data: %s", mockFile)
 	}
 
