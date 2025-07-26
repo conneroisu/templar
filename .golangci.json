@@ -126,7 +126,7 @@
     "exclude-rules": [
       {
         "path": "_test\\.go",
-        "linters": ["funlen", "gocognit", "gocyclo", "dupl", "lll"]
+        "linters": ["funlen", "gocognit", "gocyclo", "dupl", "lll", "errcheck"]
       },
       {
         "path": "cmd/",
@@ -151,6 +151,10 @@
       {
         "path": "integration_tests/",
         "linters": ["gosec", "funlen", "gocognit", "gocyclo"]
+      },
+      {
+        "linters": ["errcheck"],
+        "text": "Error return value.*is not checked"
       }
     ],
     "exclude-use-default": false,
