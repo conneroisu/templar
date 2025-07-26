@@ -471,7 +471,7 @@ func BenchmarkErrorHandling(b *testing.B) {
 		for i := range 10 {
 			fileName := fmt.Sprintf("invalid_%d.js", i)
 			filePath := filepath.Join(tempDir, fileName)
-			os.WriteFile(filePath, []byte(""), 0000) // No permissions
+			_ = os.WriteFile(filePath, []byte(""), 0000) // No permissions
 		}
 
 		ctx := context.Background()

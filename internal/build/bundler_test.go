@@ -71,7 +71,7 @@ func TestDiscoverAssets_EmptyDirectory(t *testing.T) {
 	// Change to temp directory for relative path discovery
 	originalWd, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(originalWd)
+	defer func() { _ = os.Chdir(originalWd) }()
 
 	err = os.Chdir(tmpDir)
 	require.NoError(t, err)
@@ -99,7 +99,7 @@ func TestDiscoverAssets_WithAssets(t *testing.T) {
 	// Change to temp directory for relative path discovery
 	originalWd, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(originalWd)
+	defer func() { _ = os.Chdir(originalWd) }()
 
 	err = os.Chdir(tmpDir)
 	require.NoError(t, err)
@@ -166,7 +166,7 @@ func TestDiscoverAssets_PathTraversalSecurity(t *testing.T) {
 	// Change to temp directory
 	originalWd, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(originalWd)
+	defer func() { _ = os.Chdir(originalWd) }()
 
 	err = os.Chdir(tmpDir)
 	require.NoError(t, err)

@@ -200,8 +200,8 @@ func TestLoadWithEnvironment(t *testing.T) {
 	viper.Reset()
 	viper.AutomaticEnv()
 	viper.SetEnvPrefix("TEMPLAR")
-	viper.BindEnv("server.port")
-	viper.BindEnv("server.host")
+	_ = viper.BindEnv("server.port")
+	_ = viper.BindEnv("server.host")
 
 	config, err := Load()
 	require.NoError(t, err)

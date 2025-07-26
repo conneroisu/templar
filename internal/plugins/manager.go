@@ -478,13 +478,13 @@ func (epm *EnhancedPluginManager) DisablePlugin(ctx context.Context, name string
 
 	// Remove from core system integrations
 	if epm.buildPipeline != nil {
-		epm.buildPipeline.RemovePlugin(name)
+		_ = epm.buildPipeline.RemovePlugin(name)
 	}
 	if epm.server != nil {
-		epm.server.RemovePlugin(name)
+		_ = epm.server.RemovePlugin(name)
 	}
 	if epm.watcher != nil {
-		epm.watcher.RemovePlugin(name)
+		_ = epm.watcher.RemovePlugin(name)
 	}
 
 	// Shutdown the plugin

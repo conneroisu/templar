@@ -257,7 +257,7 @@ func TestBuildValidator_NilInputs(t *testing.T) {
 		// Current implementation doesn't handle nil, but shouldn't panic
 		// This test documents the current behavior
 		assert.NotPanics(t, func() {
-			validator.Validate(ctx, nil, options)
+			_ = validator.Validate(ctx, nil, options)
 		})
 		_ = results
 		_ = err
@@ -269,7 +269,7 @@ func TestBuildValidator_NilInputs(t *testing.T) {
 
 		// Should not panic with nil context
 		assert.NotPanics(t, func() {
-			validator.Validate(context.TODO(), artifacts, options)
+			_ = validator.Validate(context.TODO(), artifacts, options)
 		})
 	})
 }

@@ -246,10 +246,10 @@ func TestWebhookChannel(t *testing.T) {
 	var receivedAlert Alert
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var payload map[string]interface{}
-		json.NewDecoder(r.Body).Decode(&payload)
+		_ = json.NewDecoder(r.Body).Decode(&payload)
 
 		alertData, _ := json.Marshal(payload["alert"])
-		json.Unmarshal(alertData, &receivedAlert)
+		_ = json.Unmarshal(alertData, &receivedAlert)
 
 		w.WriteHeader(http.StatusOK)
 	}))
@@ -438,7 +438,7 @@ func TestAlertIntegration(t *testing.T) {
 		logger := logging.NewLogger(logging.DefaultConfig())
 		monitor, err := NewMonitor(config, logger)
 		require.NoError(t, err)
-		defer monitor.Stop()
+		defer func() { _ = monitor.Stop() }()
 
 		// Create alert manager
 		alertManager := NewAlertManager(logger)
@@ -539,6 +539,6 @@ func BenchmarkAlertChannelSend(b *testing.B) {
 
 	b.ResetTimer()
 	for range b.N {
-		channel.Send(ctx, alert)
+		_ = channel.Send(ctx, alert)
 	}
 }

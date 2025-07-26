@@ -352,7 +352,7 @@ func (am *AlertManager) handleAlertsAPI(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response)
 }
 
 // handleActiveAlerts handles active alerts endpoint.
@@ -360,7 +360,7 @@ func (am *AlertManager) handleActiveAlerts(w http.ResponseWriter, r *http.Reques
 	alerts := am.GetActiveAlerts()
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(alerts)
+	_ = json.NewEncoder(w).Encode(alerts)
 }
 
 // handleAlertHistory handles alert history endpoint.
@@ -375,7 +375,7 @@ func (am *AlertManager) handleAlertHistory(w http.ResponseWriter, r *http.Reques
 	alerts := am.GetAlertHistory(hours)
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(alerts)
+	_ = json.NewEncoder(w).Encode(alerts)
 }
 
 // handleAlertRules handles alert rules endpoint.
@@ -388,7 +388,7 @@ func (am *AlertManager) handleAlertRules(w http.ResponseWriter, r *http.Request)
 	am.mutex.RUnlock()
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(rules)
+	_ = json.NewEncoder(w).Encode(rules)
 }
 
 // Utility functions

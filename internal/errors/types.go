@@ -255,7 +255,7 @@ func (h *ErrorHandler) handleTemplarError(ctx context.Context, err *TemplarError
 				"component", err.Component)
 		}
 		if h.notifier != nil {
-			h.notifier.NotifyError(ctx, err)
+			_ = h.notifier.NotifyError(ctx, err)
 		}
 	case ErrorTypeBuild:
 		if h.logger != nil {

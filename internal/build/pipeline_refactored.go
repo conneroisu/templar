@@ -167,7 +167,7 @@ func (rbp *RefactoredBuildPipeline) BuildWithPriority(component *types.Component
 		Timestamp: time.Now(),
 	}
 
-	rbp.queueManager.EnqueuePriority(task)
+	_ = rbp.queueManager.EnqueuePriority(task)
 }
 
 // AddCallback registers a callback for build completion events.
