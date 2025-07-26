@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -262,7 +263,7 @@ func TestPreviewServer_FileWatcherIntegration(t *testing.T) {
 	// This should not panic or error
 	err = server.Start(ctx)
 	// We expect context deadline exceeded since we're stopping early
-	if err != nil && err != context.DeadlineExceeded {
+	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
 		t.Errorf("Unexpected error: %v", err)
 	}
 }
