@@ -121,7 +121,7 @@ func init() {
 		BoolVar(&componentWithStyles, "with-styles", false, "Generate CSS styles")
 	componentCreateCmd.Flags().StringVar(&componentAuthor, "author", "", "Component author")
 	componentCreateCmd.Flags().StringVar(&componentProject, "project", "", "Project name")
-	componentCreateCmd.MarkFlagRequired("template")
+	_ = componentCreateCmd.MarkFlagRequired("template") // nolint:errcheck
 
 	// List command flags
 	componentListCmd.Flags().StringVar(&componentCategory, "category", "", "Filter by category")

@@ -23,7 +23,7 @@ The css command provides subcommands to:
 - Generate style guides
 - Manage theming and variables`,
 	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
+		_ = cmd.Help() // nolint:errcheck
 	},
 }
 
@@ -194,7 +194,7 @@ var cssThemeCmd = &cobra.Command{
 	Short: "Manage CSS theming and variables",
 	Long:  `Manage CSS theming, variables, and custom styling for the active framework.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
+		_ = cmd.Help() // nolint:errcheck
 	},
 }
 

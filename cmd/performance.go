@@ -111,7 +111,8 @@ func init() {
 		IntVar(&performanceThresholds.MinSamples, "min-samples", 5, 
 			"Minimum samples required for regression detection")
 	performanceCheckCmd.Flags().
-		Float64Var(&performanceThresholds.ConfidenceLevel, "confidence-level", 0.95, "Statistical confidence level (e.g., 0.95 = 95%)")
+		Float64Var(&performanceThresholds.ConfidenceLevel, "confidence-level", 0.95, 
+			"Statistical confidence level (e.g., 0.95 = 95%)")
 
 	// Set default thresholds
 	performanceThresholds = performance.DefaultThresholds()

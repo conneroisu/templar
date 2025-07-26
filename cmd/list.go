@@ -188,13 +188,21 @@ func outputYAML(components []*types.ComponentInfo) error {
 	}
 
 	encoder := yaml.NewEncoder(os.Stdout)
-	defer encoder.Close()
+	defer func() {
+		if err := encoder.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to close YAML encoder: %v\n", err)
+		}
+	}()
 	return encoder.Encode(output)
 }
 
 func outputTable(components []*types.ComponentInfo) error {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	defer w.Flush()
+	defer func() {
+		if err := w.Flush(); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to flush output: %v\n", err)
+		}
+	}()
 
 	// Write header
 	header := "NAME\tPACKAGE\tFILE\tFUNCTION"
