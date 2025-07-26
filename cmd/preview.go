@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/conneroisu/templar/internal/config"
-	"github.com/conneroisu/templar/internal/errors"
+	templare "github.com/conneroisu/templar/internal/errors"
 	"github.com/conneroisu/templar/internal/mockdata"
 	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/renderer"
@@ -90,13 +90,13 @@ func runPreview(cmd *cobra.Command, args []string) error {
 	component, exists := componentRegistry.Get(componentName)
 	if !exists {
 		// Create enhanced error with suggestions
-		ctx := &errors.SuggestionContext{
+		ctx := &templare.SuggestionContext{
 			Registry:       componentRegistry,
 			ConfigPath:     ".templar.yml",
 			ComponentsPath: cfg.Components.ScanPaths,
 		}
-		suggestions := errors.ComponentNotFoundError(componentName, ctx)
-		enhancedErr := errors.NewEnhancedError(
+		suggestions := templare.ComponentNotFoundError(componentName, ctx)
+		enhancedErr := templare.NewEnhancedError(
 			fmt.Sprintf("Component '%s' not found", componentName),
 			errors.New("component not found"),
 			suggestions,
