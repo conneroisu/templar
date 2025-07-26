@@ -93,8 +93,8 @@ func NewStaticSiteGenerator(cfg *config.Config, outputDir string) *StaticSiteGen
 
 // Generate creates static HTML files from templ components
 func (s *StaticSiteGenerator) Generate(
-	ctx context.Context, 
-	components []*types.ComponentInfo, 
+	ctx context.Context,
+	components []*types.ComponentInfo,
 	options StaticGenerationOptions,
 ) ([]string, error) {
 	generatedFiles := make([]string, 0)
@@ -163,8 +163,8 @@ func (s *StaticSiteGenerator) Generate(
 
 // generateComponentPage creates a static HTML page for a component
 func (s *StaticSiteGenerator) generateComponentPage(
-	ctx context.Context, 
-	component *types.ComponentInfo, 
+	ctx context.Context,
+	component *types.ComponentInfo,
 	options StaticGenerationOptions,
 ) ([]string, error) {
 	generatedFiles := make([]string, 0)
@@ -257,8 +257,8 @@ func (s *StaticSiteGenerator) generateCustomPage(ctx context.Context, page Custo
 
 // generateErrorPage creates error pages (404, 500, etc.)
 func (s *StaticSiteGenerator) generateErrorPage(
-	ctx context.Context, 
-	errorCode, templatePath string, 
+	ctx context.Context,
+	errorCode, templatePath string,
 	options StaticGenerationOptions,
 ) (string, error) {
 	pagePath := filepath.Join(s.outputDir, errorCode+".html")
@@ -281,8 +281,8 @@ func (s *StaticSiteGenerator) generateErrorPage(
 
 // generateSitemap creates an XML sitemap
 func (s *StaticSiteGenerator) generateSitemap(
-	ctx context.Context, 
-	generatedFiles []string, 
+	ctx context.Context,
+	generatedFiles []string,
 	options StaticGenerationOptions,
 ) (string, error) {
 	sitemapPath := filepath.Join(s.outputDir, "sitemap.xml")
@@ -352,8 +352,8 @@ func (s *StaticSiteGenerator) generateRobotsTxt(ctx context.Context, options Sta
 
 // generateIndexPage creates the main index page
 func (s *StaticSiteGenerator) generateIndexPage(
-	ctx context.Context, 
-	components []*types.ComponentInfo, 
+	ctx context.Context,
+	components []*types.ComponentInfo,
 	options StaticGenerationOptions,
 ) (string, error) {
 	indexPath := filepath.Join(s.outputDir, "index.html")
@@ -467,8 +467,8 @@ func (s *StaticSiteGenerator) renderComponentHTML(component *types.ComponentInfo
 
 // renderComponentVariant generates HTML for a component variant/example
 func (s *StaticSiteGenerator) renderComponentVariant(
-	component *types.ComponentInfo, 
-	example types.ComponentExample, 
+	component *types.ComponentInfo,
+	example types.ComponentExample,
 	options StaticGenerationOptions,
 ) (string, error) {
 	var html strings.Builder

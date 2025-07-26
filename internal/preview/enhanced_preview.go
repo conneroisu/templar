@@ -241,7 +241,11 @@ type PreviewMetrics struct {
 }
 
 // NewEnhancedPreviewSystem creates a new enhanced preview system
-func NewEnhancedPreviewSystem(registry *registry.ComponentRegistry, renderer *renderer.ComponentRenderer, logger logging.Logger) *EnhancedPreviewSystem {
+func NewEnhancedPreviewSystem(
+	registry *registry.ComponentRegistry,
+	renderer *renderer.ComponentRenderer,
+	logger logging.Logger,
+) *EnhancedPreviewSystem {
 	config := DefaultPreviewConfig()
 
 	templateManager := NewTemplateManager(config)
@@ -279,7 +283,8 @@ func DefaultPreviewConfig() *PreviewConfig {
 		HotReloadEnabled:       true,
 		EnableSandboxing:       true,
 		AllowedOrigins:         []string{"http://localhost:8080"},
-		CSPPolicy:              "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'",
+		CSPPolicy: "default-src 'self'; script-src 'self' 'unsafe-inline'; " +
+			"style-src 'self' 'unsafe-inline'",
 		EnableCaching:          true,
 		CacheTimeout:           5 * time.Minute,
 		MaxConcurrentRenders:   10,
@@ -330,7 +335,12 @@ func (eps *EnhancedPreviewSystem) Start(ctx context.Context) error {
 }
 
 // PreviewComponent renders a component preview with enhanced features
-func (eps *EnhancedPreviewSystem) PreviewComponent(ctx context.Context, componentName string, props map[string]interface{}, options *PreviewOptions) (*PreviewResult, error) {
+func (eps *EnhancedPreviewSystem) PreviewComponent(
+	ctx context.Context,
+	componentName string,
+	props map[string]interface{},
+	options *PreviewOptions,
+) (*PreviewResult, error) {
 	startTime := time.Now()
 	defer func() {
 		eps.performanceMonitor.RecordRender(time.Since(startTime), nil)
@@ -343,7 +353,8 @@ func (eps *EnhancedPreviewSystem) PreviewComponent(ctx context.Context, componen
 	var sandbox *ComponentSandbox
 	if eps.config.EnableSandboxing {
 		var err error
-		sandbox, err = eps.sandboxManager.CreateSandbox(componentName, options.IsolationLevel)
+		sandbox, err = eps.sandboxManager.CreateSandbox(componentName,
+			options.IsolationLevel)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create sandbox: %w", err)
 		}
@@ -351,7 +362,8 @@ func (eps *EnhancedPreviewSystem) PreviewComponent(ctx context.Context, componen
 	}
 
 	// Render component with enhanced features
-	result, err := eps.renderComponentEnhanced(ctx, componentName, props, options, session, sandbox)
+	result, err := eps.renderComponentEnhanced(ctx, componentName, props,
+		options, session, sandbox)
 	if err != nil {
 		eps.performanceMonitor.RecordRender(time.Since(startTime), err)
 		return nil, err
@@ -549,18 +561,32 @@ func (ppm *PreviewPerformanceMonitor) Start(ctx context.Context) {
 }
 
 // Additional methods for core functionality
-func (eps *EnhancedPreviewSystem) renderComponentEnhanced(ctx context.Context, componentName string, props map[string]interface{}, options *PreviewOptions, session *PreviewSession, sandbox *ComponentSandbox) (*PreviewResult, error) {
+func (eps *EnhancedPreviewSystem) renderComponentEnhanced(
+	ctx context.Context,
+	componentName string,
+	props map[string]interface{},
+	options *PreviewOptions,
+	session *PreviewSession,
+	sandbox *ComponentSandbox,
+) (*PreviewResult, error) {
 	// Enhanced rendering implementation
 	return &PreviewResult{
-		HTML:        "<div>Enhanced preview placeholder</div>",
-		CSS:         "",
-		JavaScript:  "",
-		Metadata:    &PreviewMetadata{ComponentName: componentName, Props: props, GeneratedAt: time.Now()},
+		HTML:       "<div>Enhanced preview placeholder</div>",
+		CSS:        "",
+		JavaScript: "",
+		Metadata: &PreviewMetadata{
+			ComponentName: componentName,
+			Props:         props,
+			GeneratedAt:   time.Now(),
+		},
 		Performance: &RenderPerformance{RenderTime: time.Millisecond * 10},
 	}, nil
 }
 
-func (sesm *SessionManager) GetOrCreateSession(ctx context.Context, sessionID string) *PreviewSession {
+func (sesm *SessionManager) GetOrCreateSession(
+	ctx context.Context,
+	sessionID string,
+) *PreviewSession {
 	sesm.sessionMutex.Lock()
 	defer sesm.sessionMutex.Unlock()
 
@@ -586,11 +612,15 @@ func (sesm *SessionManager) GetOrCreateSession(ctx context.Context, sessionID st
 	return session
 }
 
-func (sm *SandboxManager) CreateSandbox(componentName string, isolationLevel int) (*ComponentSandbox, error) {
+func (sm *SandboxManager) CreateSandbox(
+	componentName string,
+	isolationLevel int,
+) (*ComponentSandbox, error) {
 	sm.sandboxMutex.Lock()
 	defer sm.sandboxMutex.Unlock()
 
-	sandboxID := fmt.Sprintf("sandbox_%s_%d", componentName, time.Now().UnixNano())
+	sandboxID := fmt.Sprintf("sandbox_%s_%d", componentName,
+		time.Now().UnixNano())
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 
 	sandbox := &ComponentSandbox{
@@ -647,7 +677,8 @@ func (ppm *PreviewPerformanceMonitor) RecordRender(duration time.Duration, err e
 	for _, t := range ppm.renderTimes {
 		total += t
 	}
-	ppm.metrics.AverageRenderTime = total / time.Duration(len(ppm.renderTimes))
+	ppm.metrics.AverageRenderTime = total /
+		time.Duration(len(ppm.renderTimes))
 	ppm.metrics.LastUpdated = time.Now()
 }
 
@@ -662,7 +693,8 @@ func (eps *EnhancedPreviewSystem) GetPreviewMetrics() *PreviewMetrics {
 	metrics.ActiveConnections = len(eps.liveReload.connections)
 
 	if metrics.TotalRenders > 0 {
-		metrics.ErrorRate = float64(metrics.FailedRenders) / float64(metrics.TotalRenders)
+		metrics.ErrorRate = float64(metrics.FailedRenders) /
+			float64(metrics.TotalRenders)
 	}
 
 	return &metrics

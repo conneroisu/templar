@@ -75,7 +75,11 @@ type WorkerScaler struct {
 type CacheManager struct{}
 
 // NewAdaptiveOptimizer creates a new adaptive optimizer
-func NewAdaptiveOptimizer(monitor *PerformanceMonitor, buildPipeline *build.BuildPipeline, registry *registry.ComponentRegistry) *AdaptiveOptimizer {
+func NewAdaptiveOptimizer(
+	monitor *PerformanceMonitor,
+	buildPipeline *build.BuildPipeline,
+	registry *registry.ComponentRegistry,
+) *AdaptiveOptimizer {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	optimizer := &AdaptiveOptimizer{
@@ -125,7 +129,8 @@ func (ao *AdaptiveOptimizer) handleRecommendation(recommendation Recommendation)
 	// Check if we should apply this recommendation
 	if !ao.shouldApplyRecommendation(recommendation) {
 		ao.metrics.ActionsSkipped++
-		log.Printf("Skipping recommendation: %s (reason: threshold/cooldown)", recommendation.Type)
+		log.Printf("Skipping recommendation: %s (reason: threshold/cooldown)",
+			recommendation.Type)
 		return
 	}
 
@@ -147,10 +152,12 @@ func (ao *AdaptiveOptimizer) handleRecommendation(recommendation Recommendation)
 		// Record when this action was applied
 		ao.appliedActions[recommendation.Type] = time.Now()
 
-		log.Printf("Applied optimization: %s (impact: %s)", recommendation.Type, result.Impact)
+		log.Printf("Applied optimization: %s (impact: %s)",
+			recommendation.Type, result.Impact)
 	} else {
 		ao.metrics.ActionsFailed++
-		log.Printf("Failed to apply optimization: %s (error: %s)", recommendation.Type, result.Error)
+		log.Printf("Failed to apply optimization: %s (error: %s)",
+			recommendation.Type, result.Error)
 	}
 
 	// Capture metrics after optimization (with a small delay)
@@ -282,7 +289,8 @@ func (ao *AdaptiveOptimizer) adjustCacheSize(action Action) OptimizationResult {
 
 	// Apply cache size adjustment (placeholder - would integrate with actual cache)
 	result.Success = true
-	result.Impact = fmt.Sprintf("Reduced cache size by %.1fMB (%.1f%%)", reductionMB, reducePercent)
+	result.Impact = fmt.Sprintf("Reduced cache size by %.1fMB (%.1f%%)",
+		reductionMB, reducePercent)
 
 	return result
 }
@@ -299,7 +307,8 @@ func (ao *AdaptiveOptimizer) optimizeGC(action Action) OptimizationResult {
 		if targetPercent > 0 && targetPercent <= 500 {
 			// Note: runtime.GCPercent is not available in newer Go versions
 			// In production, this would use debug.SetGCPercent()
-			result.Impact = fmt.Sprintf("Would adjust GC target to %d%%", targetPercent)
+			result.Impact = fmt.Sprintf("Would adjust GC target to %d%%",
+				targetPercent)
 		}
 	} else {
 		result.Impact = "Triggered garbage collection"
@@ -385,7 +394,8 @@ func (ao *AdaptiveOptimizer) calculateImpact(result OptimizationResult) {
 	totalImprovement := 0.0
 	count := 0
 	for _, improvement := range improvements {
-		if improvement > 0 { // Only count positive improvements
+		if improvement > 0 {
+			// Only count positive improvements
 			totalImprovement += improvement
 			count++
 		}
@@ -403,7 +413,8 @@ func (ao *AdaptiveOptimizer) calculateImpact(result OptimizationResult) {
 		}
 		ao.mu.Unlock()
 
-		log.Printf("Optimization impact: %.2f%% average improvement", avgImprovement)
+		log.Printf("Optimization impact: %.2f%% average improvement",
+			avgImprovement)
 	}
 }
 
@@ -457,9 +468,10 @@ func (ao *AdaptiveOptimizer) performPeriodicOptimization() {
 	})
 
 	ao.monitor.Record(Metric{
-		Type:  "optimizer_success_rate",
-		Value: float64(ao.metrics.ActionsSuccessful) / float64(ao.metrics.ActionsApplied) * 100,
-		Unit:  "percent",
+		Type: "optimizer_success_rate",
+		Value: float64(ao.metrics.ActionsSuccessful) /
+			float64(ao.metrics.ActionsApplied) * 100,
+		Unit: "percent",
 	})
 }
 
@@ -519,12 +531,14 @@ func (ws *WorkerScaler) Scale(direction string, factor float64) int {
 
 	switch direction {
 	case "up":
-		ws.targetWorkers = int(float64(ws.currentWorkers) * (1 + ws.scaleUpRate*factor))
+		ws.targetWorkers = int(float64(ws.currentWorkers) *
+			(1 + ws.scaleUpRate*factor))
 		if ws.targetWorkers > ws.maxWorkers {
 			ws.targetWorkers = ws.maxWorkers
 		}
 	case "down":
-		ws.targetWorkers = int(float64(ws.currentWorkers) * (1 - ws.scaleDownRate*factor))
+		ws.targetWorkers = int(float64(ws.currentWorkers) *
+			(1 - ws.scaleDownRate*factor))
 		if ws.targetWorkers < ws.minWorkers {
 			ws.targetWorkers = ws.minWorkers
 		}

@@ -112,7 +112,9 @@ func (pd *PerformanceDetector) ParseBenchmarkOutput(output string) ([]BenchmarkR
 
 	// Regex to match Go benchmark output lines
 	// Example: BenchmarkComponentScanner_ScanDirectory/components-10-16         	    2204	    604432 ns/op	  261857 B/op	    5834 allocs/op
-	benchmarkRegex := regexp.MustCompile(`^Benchmark(\S+)\s+(\d+)\s+(\d+(?:\.\d+)?)\s+ns/op(?:\s+(\d+)\s+B/op)?(?:\s+(\d+)\s+allocs/op)?(?:\s+(\d+(?:\.\d+)?)\s+MB/s)?`)
+	benchmarkRegex := regexp.MustCompile(
+		`^Benchmark(\S+)\s+(\d+)\s+(\d+(?:\.\d+)?)\s+ns/op` +
+			`(?:\s+(\d+)\s+B/op)?(?:\s+(\d+)\s+allocs/op)?(?:\s+(\d+(?:\.\d+)?)\s+MB/s)?`)
 
 	scanner := bufio.NewScanner(strings.NewReader(output))
 	for scanner.Scan() {
@@ -258,7 +260,11 @@ func (pd *PerformanceDetector) DetectRegressions(results []BenchmarkResult) ([]R
 }
 
 // detectPerformanceRegressionWithStats checks for execution time regressions with proper statistics
-func (pd *PerformanceDetector) detectPerformanceRegressionWithStats(result BenchmarkResult, baseline *PerformanceBaseline, numComparisons int) *RegressionDetection {
+func (pd *PerformanceDetector) detectPerformanceRegressionWithStats(
+	result BenchmarkResult,
+	baseline *PerformanceBaseline,
+	numComparisons int,
+) *RegressionDetection {
 	// Perform rigorous statistical analysis
 	statResult := pd.statisticalValidator.CalculateStatisticalConfidence(
 		result.NsPerOp,
@@ -307,7 +313,12 @@ type regressionParams struct {
 }
 
 // detectRegressionWithStats is a helper function for memory and allocation regression detection
-func (pd *PerformanceDetector) detectRegressionWithStats(result BenchmarkResult, baseline *PerformanceBaseline, numComparisons int, params regressionParams) *RegressionDetection {
+func (pd *PerformanceDetector) detectRegressionWithStats(
+	result BenchmarkResult,
+	baseline *PerformanceBaseline,
+	numComparisons int,
+	params regressionParams,
+) *RegressionDetection {
 	if params.metricValue == 0 {
 		return nil // No data available
 	}
@@ -364,7 +375,11 @@ func (pd *PerformanceDetector) detectRegressionWithStats(result BenchmarkResult,
 }
 
 // detectMemoryRegressionWithStats checks for memory usage regressions with proper statistics
-func (pd *PerformanceDetector) detectMemoryRegressionWithStats(result BenchmarkResult, baseline *PerformanceBaseline, numComparisons int) *RegressionDetection {
+func (pd *PerformanceDetector) detectMemoryRegressionWithStats(
+	result BenchmarkResult,
+	baseline *PerformanceBaseline,
+	numComparisons int,
+) *RegressionDetection {
 	return pd.detectRegressionWithStats(result, baseline, numComparisons, regressionParams{
 		metricValue:       result.BytesPerOp,
 		suffix:            "_memory",
@@ -378,7 +393,11 @@ func (pd *PerformanceDetector) detectMemoryRegressionWithStats(result BenchmarkR
 }
 
 // detectAllocationRegressionWithStats checks for allocation count regressions with proper statistics
-func (pd *PerformanceDetector) detectAllocationRegressionWithStats(result BenchmarkResult, baseline *PerformanceBaseline, numComparisons int) *RegressionDetection {
+func (pd *PerformanceDetector) detectAllocationRegressionWithStats(
+	result BenchmarkResult,
+	baseline *PerformanceBaseline,
+	numComparisons int,
+) *RegressionDetection {
 	return pd.detectRegressionWithStats(result, baseline, numComparisons, regressionParams{
 		metricValue:       result.AllocsPerOp,
 		suffix:            "_allocs",
@@ -481,7 +500,8 @@ func (pd *PerformanceDetector) validateBaselineDirectory() error {
 
 	// Ensure baseline directory is within current working directory or explicitly allowed subdirectories
 	if !strings.HasPrefix(absBaselineDir, absCwd) {
-		return fmt.Errorf("baseline directory '%s' is outside current working directory '%s'", pd.baselineDir, cwd)
+		return fmt.Errorf("baseline directory '%s' is outside current working directory '%s'",
+			pd.baselineDir, cwd)
 	}
 
 	// Additional security: prevent writing to parent directories
@@ -491,7 +511,8 @@ func (pd *PerformanceDetector) validateBaselineDirectory() error {
 	}
 
 	if strings.HasPrefix(relPath, "..") {
-		return fmt.Errorf("baseline directory contains parent directory traversal: %s", pd.baselineDir)
+		return fmt.Errorf("baseline directory contains parent directory traversal: %s",
+			pd.baselineDir)
 	}
 
 	return nil
@@ -529,9 +550,11 @@ func (pd *PerformanceDetector) saveBaseline(baseline *PerformanceBaseline) error
 func (pd *PerformanceDetector) getPerformanceRecommendation(severity string, percentageChange float64) string {
 	switch severity {
 	case "critical":
-		return fmt.Sprintf("CRITICAL: %.1f%% performance degradation. Immediate investigation required. Consider reverting recent changes.", percentageChange)
+		return fmt.Sprintf("CRITICAL: %.1f%% performance degradation. "+
+			"Immediate investigation required. Consider reverting recent changes.", percentageChange)
 	case "major":
-		return fmt.Sprintf("MAJOR: %.1f%% performance degradation. Review recent commits for performance impact.", percentageChange)
+		return fmt.Sprintf("MAJOR: %.1f%% performance degradation. "+
+			"Review recent commits for performance impact.", percentageChange)
 	default:
 		return fmt.Sprintf("MINOR: %.1f%% performance degradation. Monitor for trends.", percentageChange)
 	}
@@ -541,11 +564,14 @@ func (pd *PerformanceDetector) getPerformanceRecommendation(severity string, per
 func (pd *PerformanceDetector) getMemoryRecommendation(severity string, percentageChange float64) string {
 	switch severity {
 	case "critical":
-		return fmt.Sprintf("CRITICAL: %.1f%% memory increase. Check for memory leaks and excessive allocations.", percentageChange)
+		return fmt.Sprintf("CRITICAL: %.1f%% memory increase. "+
+			"Check for memory leaks and excessive allocations.", percentageChange)
 	case "major":
-		return fmt.Sprintf("MAJOR: %.1f%% memory increase. Review data structures and caching strategies.", percentageChange)
+		return fmt.Sprintf("MAJOR: %.1f%% memory increase. "+
+			"Review data structures and caching strategies.", percentageChange)
 	default:
-		return fmt.Sprintf("MINOR: %.1f%% memory increase. Consider memory optimization opportunities.", percentageChange)
+		return fmt.Sprintf("MINOR: %.1f%% memory increase. "+
+			"Consider memory optimization opportunities.", percentageChange)
 	}
 }
 
@@ -553,11 +579,14 @@ func (pd *PerformanceDetector) getMemoryRecommendation(severity string, percenta
 func (pd *PerformanceDetector) getAllocationRecommendation(severity string, percentageChange float64) string {
 	switch severity {
 	case "critical":
-		return fmt.Sprintf("CRITICAL: %.1f%% allocation increase. Implement object pooling and reduce unnecessary allocations.", percentageChange)
+		return fmt.Sprintf("CRITICAL: %.1f%% allocation increase. "+
+			"Implement object pooling and reduce unnecessary allocations.", percentageChange)
 	case "major":
-		return fmt.Sprintf("MAJOR: %.1f%% allocation increase. Review slice growth patterns and string concatenations.", percentageChange)
+		return fmt.Sprintf("MAJOR: %.1f%% allocation increase. "+
+			"Review slice growth patterns and string concatenations.", percentageChange)
 	default:
-		return fmt.Sprintf("MINOR: %.1f%% allocation increase. Consider allocation reduction techniques.", percentageChange)
+		return fmt.Sprintf("MINOR: %.1f%% allocation increase. "+
+			"Consider allocation reduction techniques.", percentageChange)
 	}
 }
 
