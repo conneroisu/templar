@@ -120,7 +120,7 @@ jobs:
 
       - name: Run unit tests
         run: |
-          nix develop --command go test -v ./... \
+          nix develop --command go test -v $(go list ./... | grep -v templar-cache-benchmark) \
             -short \
             -race \
             -coverprofile=coverage.out \

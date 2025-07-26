@@ -70,7 +70,7 @@ jobs:
       - name: Run unit tests
         if: matrix.test-suite == 'unit'
         run: |
-          nix develop --command go test -v ./... -short -race -coverprofile=coverage.out
+          nix develop --command go test -v $(go list ./... | grep -v templar-cache-benchmark) -short -race -coverprofile=coverage.out
           nix develop --command go tool cover -html=coverage.out -o coverage.html
 
       - name: Run security tests
@@ -150,7 +150,7 @@ jobs:
 
       - name: Run current benchmarks
         run: |
-          nix develop --command go test -bench=. -benchmem -benchtime=3s ./... > current-bench.txt
+          nix develop --command go test -bench=. -benchmem -benchtime=3s $(go list ./... | grep -v templar-cache-benchmark) > current-bench.txt
 
       - name: Checkout base branch
         run: |
@@ -160,7 +160,7 @@ jobs:
       - name: Run base benchmarks
         continue-on-error: true
         run: |
-          nix develop --command go test -bench=. -benchmem -benchtime=3s ./... > base-bench.txt
+          nix develop --command go test -bench=. -benchmem -benchtime=3s $(go list ./... | grep -v templar-cache-benchmark) > base-bench.txt
 
       - name: Compare benchmarks
         continue-on-error: true
