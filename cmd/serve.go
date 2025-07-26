@@ -46,8 +46,8 @@ func init() {
 	serveFlags = AddEnhancedFlags(serveCmd, "server", "build", "output")
 
 	// Bind flags to viper for configuration integration
-	viper.BindPFlag("server.port", serveCmd.Flags().Lookup("port"))
-	viper.BindPFlag("server.host", serveCmd.Flags().Lookup("host"))
+	_ = viper.BindPFlag("server.port", serveCmd.Flags().Lookup("port"))
+	_ = viper.BindPFlag("server.host", serveCmd.Flags().Lookup("host"))
 	viper.BindPFlag("server.no-open", serveCmd.Flags().Lookup("no-open"))
 	viper.BindPFlag("build.watch", serveCmd.Flags().Lookup("watch"))
 }

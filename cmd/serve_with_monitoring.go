@@ -52,7 +52,7 @@ func runServeWithMonitoring(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to setup monitoring: %w", err)
 	}
-	defer monitor.GracefulShutdown(ctx)
+	defer func() { _ = monitor.GracefulShutdown(ctx) }()
 
 	// Create the application server with monitoring
 	server, err := createMonitoredServer(monitor)
@@ -221,7 +221,7 @@ func addMonitoredRoutes(mux *http.ServeMux, monitor *monitoring.TemplarMonitor) 
 
 			w.Header().Set("Content-Type", "text/html")
 			html := generateHomePage(components)
-			w.Write([]byte(html))
+			_, _ = w.Write([]byte(html))
 
 			return nil
 		})
@@ -253,7 +253,7 @@ func addMonitoredRoutes(mux *http.ServeMux, monitor *monitoring.TemplarMonitor) 
 				"timestamp": "%s"
 			}`, components, len(components), time.Now().Format(time.RFC3339))
 
-			w.Write([]byte(response))
+			_, _ = w.Write([]byte(response))
 
 			return nil
 		})
@@ -296,7 +296,7 @@ func addMonitoredRoutes(mux *http.ServeMux, monitor *monitoring.TemplarMonitor) 
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"status": "success", "message": "All components built successfully"}`))
+		_, _ = w.Write([]byte(`{"status": "success", "message": "All components built successfully"}`))
 	})
 
 	// WebSocket endpoint for live reload

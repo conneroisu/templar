@@ -63,7 +63,7 @@ func runWatch(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create file watcher: %w", err)
 	}
-	defer fileWatcher.Stop()
+	defer func() { _ = fileWatcher.Stop() }()
 
 	// Add filters using interface adapter
 	fileWatcher.AddFilter(interfaces.FileFilterFunc(watcher.TemplFilter))
