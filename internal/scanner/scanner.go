@@ -11,6 +11,7 @@ package scanner
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -27,7 +28,7 @@ import (
 	"time"
 
 	"github.com/conneroisu/templar/internal/config"
-	"github.com/conneroisu/templar/internal/errors"
+	templare "github.com/conneroisu/templar/internal/errors"
 	"github.com/conneroisu/templar/internal/interfaces"
 	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/types"

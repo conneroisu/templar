@@ -1,6 +1,7 @@
 package monitoring
 
 import (
+	"errors"
 	"context"
 	"encoding/json"
 	"fmt"

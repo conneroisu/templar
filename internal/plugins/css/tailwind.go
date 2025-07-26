@@ -1,6 +1,7 @@
 package css
 
 import (
+	"errors"
 	"context"
 	"fmt"
 	"os"

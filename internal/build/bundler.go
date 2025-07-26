@@ -1,6 +1,7 @@
 package build
 
 import (
+	"encoding/hex"
 	"context"
 	"crypto/sha256"
 	"encoding/json"

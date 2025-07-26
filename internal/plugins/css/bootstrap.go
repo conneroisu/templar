@@ -2,6 +2,7 @@ package css
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
