@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"encoding/json"
 	"fmt"
 	"net/http"

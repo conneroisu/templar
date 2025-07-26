@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"context"
 	"encoding/json"
 	"fmt"
