@@ -2,13 +2,14 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"sync"
 
 	"github.com/conneroisu/templar/internal/config"
-	"github.com/conneroisu/templar/internal/errors"
+	templare "github.com/conneroisu/templar/internal/errors"
 	"github.com/conneroisu/templar/internal/interfaces"
 	"github.com/conneroisu/templar/internal/monitoring"
 	"github.com/conneroisu/templar/internal/renderer"
@@ -174,7 +175,7 @@ func (s *RefactoredPreviewServer) GetBuildMetrics() interfaces.BuildMetrics {
 }
 
 // GetLastBuildErrors returns last build errors through the orchestrator.
-func (s *RefactoredPreviewServer) GetLastBuildErrors() []*errors.ParsedError {
+func (s *RefactoredPreviewServer) GetLastBuildErrors() []*templare.ParsedError {
 	return s.orchestrator.GetLastBuildErrors()
 }
 
