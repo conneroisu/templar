@@ -1,0 +1,9 @@
+{
+  "linters": {
+    "enable": [
+      "govet",
+      "ineffassign", 
+      "typecheck"
+    ]
+  }
+}

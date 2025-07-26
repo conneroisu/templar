@@ -823,14 +823,20 @@ func (e *DefaultHTMLElement) GetTextContent() string {
 func (e *DefaultHTMLElement) GetInnerHTML() string {
 	var result strings.Builder
 	for c := e.Node.FirstChild; c != nil; c = c.NextSibling {
-		html.Render(&result, c)
+		if err := html.Render(&result, c); err != nil {
+			// Log error but continue with partial content
+			continue
+		}
 	}
 	return result.String()
 }
 
 func (e *DefaultHTMLElement) GetOuterHTML() string {
 	var result strings.Builder
-	html.Render(&result, e.Node)
+	if err := html.Render(&result, e.Node); err != nil {
+		// Return empty string if rendering fails
+		return ""
+	}
 	return result.String()
 }
 

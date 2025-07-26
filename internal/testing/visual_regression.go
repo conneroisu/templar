@@ -746,7 +746,9 @@ func (vrt *VisualRegressionTester) StartTestServer(ctx context.Context) (*http.S
 
 	go func() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			// Handle server error
+			// Server error occurred, but we ignore it in test context
+			// Production code should handle this appropriately
+			return
 		}
 	}()
 

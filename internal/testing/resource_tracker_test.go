@@ -99,6 +99,7 @@ func TestResourceTracker_MemoryTracking(t *testing.T) {
 		allocation := make([]byte, 1024) // 1KB each
 		allocations = append(allocations, allocation)
 	}
+	_ = allocations // Keep allocations alive for memory tracking
 
 	// Take sample after allocation
 	usage := tracker.GetResourceUsage()

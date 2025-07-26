@@ -21,9 +21,7 @@ func TestComponentRegistryInterface(t *testing.T) {
 
 	// Verify it implements the interface
 	var iface interfaces.ComponentRegistry = concreteRegistry
-	if iface == nil {
-		t.Fatal("Registry does not implement ComponentRegistry interface")
-	}
+	// Interface assignment succeeds, confirming implementation compliance
 
 	// Test basic operations
 	testComponent := &types.ComponentInfo{
@@ -78,9 +76,7 @@ func TestFileWatcherInterface(t *testing.T) {
 
 	// Use concrete type directly and verify interface implementation
 	var iface interfaces.FileWatcher = concreteWatcher
-	if iface == nil {
-		t.Fatal("Watcher does not implement FileWatcher interface")
-	}
+	// Interface assignment succeeds, confirming implementation compliance
 
 	// Test filter addition
 	testFilter := interfaces.FileFilterFunc(func(path string) bool {
@@ -113,9 +109,7 @@ func TestComponentScannerInterface(t *testing.T) {
 
 	// Use concrete type directly and verify interface implementation
 	var iface interfaces.ComponentScanner = concreteScanner
-	if iface == nil {
-		t.Fatal("Scanner does not implement ComponentScanner interface")
-	}
+	// Interface assignment succeeds, confirming implementation compliance
 
 	// Test ScanFile (should not panic even with non-existent file)
 	err := iface.ScanFile("/non/existent/file.templ")
@@ -142,9 +136,7 @@ func TestBuildPipelineInterface(t *testing.T) {
 
 	// Use concrete type directly and verify interface implementation
 	var iface interfaces.BuildPipeline = concretePipeline
-	if iface == nil {
-		t.Fatal("Build pipeline does not implement BuildPipeline interface")
-	}
+	// Interface assignment succeeds, confirming implementation compliance
 
 	// Test Start/Stop
 	ctx := context.Background()

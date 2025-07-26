@@ -43,7 +43,8 @@ func TestDefaultAccessibilityEngine_AnalyzeMissingAltText(t *testing.T) {
 		EnableBrowserEngine: false,
 		DefaultTimeout:      10 * time.Second,
 	}
-	engine.Initialize(context.Background(), config)
+	err := engine.Initialize(context.Background(), config)
+	require.NoError(t, err)
 
 	htmlWithMissingAlt := `
 <!DOCTYPE html>
@@ -95,7 +96,8 @@ func TestDefaultAccessibilityEngine_AnalyzeMissingFormLabel(t *testing.T) {
 		EnableBrowserEngine: false,
 		DefaultTimeout:      10 * time.Second,
 	}
-	engine.Initialize(context.Background(), config)
+	err := engine.Initialize(context.Background(), config)
+	require.NoError(t, err)
 
 	htmlWithMissingLabel := `
 <!DOCTYPE html>
@@ -149,7 +151,8 @@ func TestDefaultAccessibilityEngine_AnalyzeMissingButtonText(t *testing.T) {
 		EnableBrowserEngine: false,
 		DefaultTimeout:      10 * time.Second,
 	}
-	engine.Initialize(context.Background(), config)
+	err := engine.Initialize(context.Background(), config)
+	require.NoError(t, err)
 
 	htmlWithMissingButtonText := `
 <!DOCTYPE html>
@@ -193,7 +196,8 @@ func TestDefaultAccessibilityEngine_AnalyzeHeadingStructure(t *testing.T) {
 		EnableBrowserEngine: false,
 		DefaultTimeout:      10 * time.Second,
 	}
-	engine.Initialize(context.Background(), config)
+	err := engine.Initialize(context.Background(), config)
+	require.NoError(t, err)
 
 	// Test proper heading structure
 	htmlWithProperHeadings := `
@@ -262,7 +266,8 @@ func TestDefaultAccessibilityEngine_AnalyzeDuplicateIDs(t *testing.T) {
 		EnableBrowserEngine: false,
 		DefaultTimeout:      10 * time.Second,
 	}
-	engine.Initialize(context.Background(), config)
+	err := engine.Initialize(context.Background(), config)
+	require.NoError(t, err)
 
 	htmlWithDuplicateIDs := `
 <!DOCTYPE html>
@@ -307,7 +312,8 @@ func TestDefaultAccessibilityEngine_AnalyzeMissingLangAttribute(t *testing.T) {
 		EnableBrowserEngine: false,
 		DefaultTimeout:      10 * time.Second,
 	}
-	engine.Initialize(context.Background(), config)
+	err := engine.Initialize(context.Background(), config)
+	require.NoError(t, err)
 
 	htmlWithoutLang := `
 <!DOCTYPE html>
@@ -367,7 +373,8 @@ func TestDefaultAccessibilityEngine_GetSuggestions(t *testing.T) {
 	logger := logging.NewTestLogger()
 	engine := NewDefaultAccessibilityEngine(logger)
 
-	engine.Initialize(context.Background(), EngineConfig{})
+	err := engine.Initialize(context.Background(), EngineConfig{})
+	require.NoError(t, err)
 
 	testCases := []struct {
 		rule                string
@@ -426,7 +433,8 @@ func TestDefaultAccessibilityEngine_AutoFix(t *testing.T) {
 	logger := logging.NewTestLogger()
 	engine := NewDefaultAccessibilityEngine(logger)
 
-	engine.Initialize(context.Background(), EngineConfig{})
+	err := engine.Initialize(context.Background(), EngineConfig{})
+	require.NoError(t, err)
 
 	originalHTML := `<html><head></head><body><p>Test content</p></body></html>`
 
@@ -465,7 +473,8 @@ func TestDefaultAccessibilityEngine_WCAGLevelFiltering(t *testing.T) {
 		EnableBrowserEngine: false,
 		DefaultTimeout:      10 * time.Second,
 	}
-	engine.Initialize(context.Background(), config)
+	err := engine.Initialize(context.Background(), config)
+	require.NoError(t, err)
 
 	// Get rules for different WCAG levels
 	levelARules := engine.getApplicableRules(WCAGLevelA, nil, nil)
@@ -508,7 +517,8 @@ func TestDefaultAccessibilityEngine_ReportGeneration(t *testing.T) {
 		EnableBrowserEngine: false,
 		DefaultTimeout:      10 * time.Second,
 	}
-	engine.Initialize(context.Background(), config)
+	err := engine.Initialize(context.Background(), config)
+	require.NoError(t, err)
 
 	// Complex HTML with multiple issues
 	complexHTML := `
@@ -652,7 +662,8 @@ func BenchmarkAccessibilityEngine_Analyze(b *testing.B) {
 		EnableBrowserEngine: false,
 		DefaultTimeout:      10 * time.Second,
 	}
-	engine.Initialize(context.Background(), config)
+	err := engine.Initialize(context.Background(), config)
+	require.NoError(t, err)
 
 	complexHTML := generateComplexHTML(100) // Generate HTML with 100 elements
 
