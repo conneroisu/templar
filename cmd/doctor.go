@@ -615,7 +615,10 @@ func checkFileSystemPermissions(ctx context.Context, report *DoctorReport) Diagn
 		result.Suggestion = "Check directory permissions or change to a writable directory"
 		return result
 	}
-	os.Remove(testFile) // Clean up
+	if err := os.Remove(testFile); err != nil {
+		// Non-critical, just log
+		fmt.Fprintf(os.Stderr, "Warning: failed to remove test file: %v\n", err)
+	}
 
 	// Check cache directory permissions
 	cacheDir := ".templar"

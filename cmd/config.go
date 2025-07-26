@@ -124,7 +124,10 @@ func runConfigWizard(cmd *cobra.Command, args []string) error {
 		fmt.Print("Do you want to overwrite it? (y/N): ")
 
 		var response string
-		fmt.Scanln(&response)
+		if _, err := fmt.Scanln(&response); err != nil {
+			fmt.Printf("Failed to read input: %v\n", err)
+			return err
+		}
 
 		if response != "y" && response != "Y" && response != "yes" && response != "Yes" {
 			fmt.Println("Configuration wizard cancelled.")
@@ -154,7 +157,10 @@ func runConfigWizard(cmd *cobra.Command, args []string) error {
 		fmt.Print("Continue anyway? (y/N): ")
 
 		var response string
-		fmt.Scanln(&response)
+		if _, err := fmt.Scanln(&response); err != nil {
+			fmt.Printf("Failed to read input: %v\n", err)
+			return err
+		}
 
 		if response != "y" && response != "Y" && response != "yes" && response != "Yes" {
 			fmt.Println("Configuration wizard cancelled.")

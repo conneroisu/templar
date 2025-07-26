@@ -15,23 +15,11 @@
       "min-len": 2,
       "min-occurrences": 2
     },
-    "depguard": {
-      "rules": {
-        "main": {
-          "deny": [
-            {
-              "pkg": "github.com/sirupsen/logrus",
-              "desc": "logging is allowed only by logutils.Log"
-            }
-          ]
-        }
-      }
-    },
     "misspell": {
       "locale": "US"
     },
     "lll": {
-      "line-length": 140
+      "line-length": 120
     },
     "nakedret": {
       "max-func-lines": 30
@@ -40,20 +28,6 @@
       "simple": true,
       "range-loops": true,
       "for-loops": false
-    },
-    "gocritic": {
-      "enabled-tags": [
-        "diagnostic",
-        "performance", 
-        "style"
-      ],
-      "disabled-checks": [
-        "dupImport",
-        "ifElseChain", 
-        "octalLiteral",
-        "whyNoLint",
-        "wrapperFunc"
-      ]
     },
     "funlen": {
       "lines": 100,
@@ -89,10 +63,22 @@
   "linters": {
     "disable-all": true,
     "enable": [
-      "staticcheck"
-    ],
-    "disable": [
-      "errcheck"
+      "bodyclose",
+      "dogsled",
+      "errcheck",
+      "goprintffuncname",
+      "govet",
+      "ineffassign",
+      "lll",
+      "nakedret",
+      "noctx",
+      "nolintlint",
+      "rowserrcheck",
+      "staticcheck",
+      "unconvert",
+      "whitespace",
+      "prealloc",
+      "nestif"
     ]
   },
   "issues": {
@@ -124,10 +110,6 @@
       {
         "path": "integration_tests/",
         "linters": ["gosec", "funlen", "gocognit", "gocyclo"]
-      },
-      {
-        "linters": ["errcheck"],
-        "text": "Error return value.*is not checked"
       }
     ],
     "exclude-use-default": false,

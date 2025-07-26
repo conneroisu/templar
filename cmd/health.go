@@ -113,7 +113,11 @@ func checkHTTPServer(status *HealthStatus) {
 		status.Overall = false
 		return
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to close response body: %v\n", err)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		status.Checks["http_server"] = Check{
@@ -157,8 +161,12 @@ func checkFileSystemAccess(status *HealthStatus) {
 		status.Overall = false
 		return
 	}
-	tmpFile.Close()
-	os.Remove(tmpFile.Name())
+	if err := tmpFile.Close(); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: failed to close temp file: %v\n", err)
+	}
+	if err := os.Remove(tmpFile.Name()); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: failed to remove temp file: %v\n", err)
+	}
 
 	status.Checks["filesystem"] = Check{
 		Status:  "healthy",

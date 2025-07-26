@@ -21,7 +21,7 @@ func TestInitCommand(t *testing.T) {
 	// Change to temp directory
 	oldDir, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(oldDir)
+	defer func() { _ = os.Chdir(oldDir) }()
 
 	err = os.Chdir(tempDir)
 	require.NoError(t, err)
@@ -72,7 +72,7 @@ func TestInitCommandWithProjectName(t *testing.T) {
 	// Change to temp directory
 	oldDir, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(oldDir)
+	defer func() { _ = os.Chdir(oldDir) }()
 
 	err = os.Chdir(tempDir)
 	require.NoError(t, err)
@@ -99,7 +99,7 @@ func TestInitCommandMinimal(t *testing.T) {
 	// Change to temp directory
 	oldDir, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(oldDir)
+	defer func() { _ = os.Chdir(oldDir) }()
 
 	err = os.Chdir(tempDir)
 	require.NoError(t, err)
@@ -130,7 +130,7 @@ func TestInitCommandWithTemplate(t *testing.T) {
 	// Change to temp directory
 	oldDir, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(oldDir)
+	defer func() { _ = os.Chdir(oldDir) }()
 
 	err = os.Chdir(tempDir)
 	require.NoError(t, err)
@@ -241,7 +241,7 @@ func TestBuildCommand(t *testing.T) {
 			// Change to temp directory
 			oldDir, err := os.Getwd()
 			require.NoError(t, err)
-			defer os.Chdir(oldDir)
+			defer func() { _ = os.Chdir(oldDir) }()
 
 			err = os.Chdir(tempDir)
 			require.NoError(t, err)
@@ -348,7 +348,7 @@ func TestServeCommand(t *testing.T) {
 	// Change to temp directory
 	oldDir, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(oldDir)
+	defer func() { _ = os.Chdir(oldDir) }()
 
 	err = os.Chdir(tempDir)
 	require.NoError(t, err)
@@ -402,7 +402,7 @@ func TestWatchCommand(t *testing.T) {
 	// Change to temp directory
 	oldDir, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(oldDir)
+	defer func() { _ = os.Chdir(oldDir) }()
 
 	err = os.Chdir(tempDir)
 	require.NoError(t, err)
@@ -458,7 +458,7 @@ func TestPreviewCommand(t *testing.T) {
 	// Change to temp directory
 	oldDir, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(oldDir)
+	defer func() { _ = os.Chdir(oldDir) }()
 
 	err = os.Chdir(tempDir)
 	require.NoError(t, err)
@@ -565,7 +565,7 @@ func TestDoctorCommand(t *testing.T) {
 	// Change to temp directory
 	oldDir, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(oldDir)
+	defer func() { _ = os.Chdir(oldDir) }()
 
 	err = os.Chdir(tempDir)
 	require.NoError(t, err)
