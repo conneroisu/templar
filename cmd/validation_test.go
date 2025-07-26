@@ -482,7 +482,7 @@ func TestValidateArguments(t *testing.T) {
 func BenchmarkValidateArgument(b *testing.B) {
 	arg := "components/button.templ"
 	for range b.N {
-		validateArgument(arg)
+		_ = validateArgument(arg)
 	}
 }
 
@@ -501,6 +501,6 @@ func BenchmarkValidateArgumentsLarge(b *testing.B) {
 
 	b.ResetTimer()
 	for range b.N {
-		validateArguments(args)
+		_ = validateArguments(args)
 	}
 }
