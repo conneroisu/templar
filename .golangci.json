@@ -39,7 +39,7 @@
     ],
     "exclusions": {
       "generated": "lax",
-      "paths": ["(^|/)vendor($|/)", "third_party$", "builtin$", "examples$"],
+      "paths": ["(^|/)vendor($|/)", "third_party$", "builtin$", "examples$", "\\.templar/", "\\.test-baselines/"],
       "presets": [
         "comments",
         "common-false-positives",

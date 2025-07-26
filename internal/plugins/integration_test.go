@@ -2,11 +2,12 @@ package plugins
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"testing"
 
-	"github.com/conneroisu/templar/internal/errors"
+	templarerrrors "github.com/conneroisu/templar/internal/errors"
 	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/types"
 	"github.com/stretchr/testify/assert"

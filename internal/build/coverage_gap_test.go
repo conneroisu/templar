@@ -1,11 +1,12 @@
 package build
 
 import (
+	"errors"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/conneroisu/templar/internal/errors"
+	templarerrrors "github.com/conneroisu/templar/internal/errors"
 	"github.com/conneroisu/templar/internal/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -98,9 +99,9 @@ func TestHandleBuildResult_Coverage(t *testing.T) {
 		}
 
 		// Create a mock ParsedError for testing
-		mockError := &errors.ParsedError{
-			Type:      errors.BuildErrorTypeTemplSyntax,
-			Severity:  errors.ErrorSeverityError,
+		mockError := &templarerrrors.ParsedError{
+			Type:      templarerrrors.BuildErrorTypeTemplSyntax,
+			Severity:  templarerrrors.ErrorSeverityError,
 			Component: "TestComponent",
 			File:      "/test/component.templ",
 			Line:      10,
@@ -113,7 +114,7 @@ func TestHandleBuildResult_Coverage(t *testing.T) {
 		result := BuildResult{
 			Component: component,
 			Error:     errors.New("build failed"),
-			ParsedErrors: []*errors.ParsedError{
+			ParsedErrors: []*templarerrrors.ParsedError{
 				mockError,
 			},
 			Duration: 100 * time.Millisecond,

@@ -226,7 +226,7 @@ func generateRealisticComponent(index int) string {
 	content.WriteString(")\n\n")
 
 	// Add multiple components per file for realism
-	for j := range 1 +  {
+	for j := range 3 {
 		suffix := ""
 		if j > 0 {
 			suffix = strconv.Itoa(j)

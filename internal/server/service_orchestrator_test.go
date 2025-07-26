@@ -2,12 +2,13 @@ package server
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/conneroisu/templar/internal/build"
 	"github.com/conneroisu/templar/internal/config"
-	"github.com/conneroisu/templar/internal/errors"
+	templarerrrors "github.com/conneroisu/templar/internal/errors"
 	"github.com/conneroisu/templar/internal/interfaces"
 	"github.com/conneroisu/templar/internal/renderer"
 	"github.com/conneroisu/templar/internal/types"
