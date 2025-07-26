@@ -559,14 +559,6 @@ func validatePluginsConfig(config *PluginsConfig) error {
 	return nil
 }
 
-func validateMonitoringConfig(config *MonitoringConfig) error {
-	validator := NewConfigValidator()
-	validator.validateMonitoring(config)
-	if len(validator.errors) > 0 {
-		return validator.combineErrors()
-	}
-	return nil
-}
 
 // validatePath for backward compatibility
 func validatePath(path string) error {

@@ -23,14 +23,6 @@ func createBenchConfig(b *testing.B) *config.Config {
 	}
 }
 
-// createBenchTempDir creates a temporary directory for testing
-func createBenchTempDir(b *testing.B) string {
-	tmpDir, err := os.MkdirTemp("", "bundler_bench_*")
-	if err != nil {
-		b.Fatal(err)
-	}
-	return tmpDir
-}
 
 // BenchmarkDiscoverAssets benchmarks asset discovery operations
 func BenchmarkDiscoverAssets(b *testing.B) {

@@ -324,7 +324,7 @@ func (so *ServiceOrchestrator) handleBuildResult(result build.BuildResult) {
 	// Track metrics if monitoring is enabled
 	if so.monitor != nil {
 		if len(result.ParsedErrors) > 0 {
-			so.monitor.RecordWebSocketEvent("build_error", int(len(result.ParsedErrors)))
+			so.monitor.RecordWebSocketEvent("build_error", len(result.ParsedErrors))
 		} else {
 			so.monitor.RecordWebSocketEvent("build_success", 1)
 		}

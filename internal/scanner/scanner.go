@@ -42,8 +42,6 @@ const (
 	smallFileThreshold = 4 * 1024
 	// Medium files (4KB - 256KB) - use content sampling
 	mediumFileThreshold = 256 * 1024
-	// Large files (> 256KB) - use hierarchical sampling
-	largeFileThreshold = 256 * 1024
 	// Content sample size for large files
 	contentSampleSize = 1024
 )

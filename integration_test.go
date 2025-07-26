@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -44,7 +45,7 @@ func TestIntegration_WebSocketConnection(t *testing.T) {
 
 	go func() {
 		err := srv.Start(ctx)
-		if err != nil && err != http.ErrServerClosed {
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			t.Errorf("Server start failed: %v", err)
 		}
 	}()
@@ -87,7 +88,7 @@ func TestIntegration_ComponentRegistryWithFileWatcher(t *testing.T) {
 
 	go func() {
 		err := srv.Start(ctx)
-		if err != nil && err != http.ErrServerClosed {
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			t.Errorf("Server start failed: %v", err)
 		}
 	}()
@@ -233,7 +234,7 @@ templ TestComponent(title string) {
 
 	go func() {
 		err := srv.Start(ctx)
-		if err != nil && err != http.ErrServerClosed {
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			t.Errorf("Server start failed: %v", err)
 		}
 	}()
@@ -308,7 +309,7 @@ templ Component2(content string) {
 
 	go func() {
 		err := srv.Start(ctx)
-		if err != nil && err != http.ErrServerClosed {
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			t.Errorf("Server start failed: %v", err)
 		}
 	}()
@@ -348,7 +349,7 @@ func TestIntegration_ResourceCleanup(t *testing.T) {
 
 		go func() {
 			err := srv.Start(ctx)
-			if err != nil && err != http.ErrServerClosed {
+			if err != nil && !errors.Is(err, http.ErrServerClosed) {
 				t.Errorf("Server start failed: %v", err)
 			}
 		}()
@@ -416,7 +417,7 @@ templ TestComponent(title string) {
 
 	go func() {
 		err := srv.Start(ctx)
-		if err != nil && err != http.ErrServerClosed {
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			t.Errorf("Server start failed: %v", err)
 		}
 	}()
