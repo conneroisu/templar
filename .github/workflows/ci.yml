@@ -54,7 +54,7 @@ jobs:
 
       - name: Check for security vulnerabilities
         run: |
-          nix develop --command bash -c 'go install golang.org/x/vuln/cmd/govulncheck@v1.1.3 && govulncheck ./...'
+          nix develop --command bash -c 'go install golang.org/x/vuln/cmd/govulncheck@v1.1.3 && $(go env GOPATH)/bin/govulncheck ./...'
 
   # Phase 2: Security Testing
   security-tests:
