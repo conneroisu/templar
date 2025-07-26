@@ -390,7 +390,7 @@ func (m *Monitor) registerDefaultHealthChecks() {
 func (m *Monitor) createLivenessHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		_, _ = w.Write([]byte("OK"))
 	}
 }
 
@@ -398,7 +398,7 @@ func (m *Monitor) createReadinessHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if m.health == nil {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("OK"))
+			_, _ = w.Write([]byte("OK"))
 
 			return
 		}
@@ -406,10 +406,10 @@ func (m *Monitor) createReadinessHandler() http.HandlerFunc {
 		health := m.health.GetHealth()
 		if health.Status == HealthStatusHealthy || health.Status == HealthStatusDegraded {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("OK"))
+			_, _ = w.Write([]byte("OK"))
 		} else {
 			w.WriteHeader(http.StatusServiceUnavailable)
-			w.Write([]byte("Not Ready"))
+			_, _ = w.Write([]byte("Not Ready"))
 		}
 	}
 }

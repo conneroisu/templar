@@ -117,9 +117,9 @@ func (mc *MetricsCollector) flushLoop() {
 	for {
 		select {
 		case <-ticker.C:
-			mc.FlushMetrics()
+			_ = mc.FlushMetrics()
 		case <-mc.stopChan:
-			mc.FlushMetrics() // Final flush
+			_ = mc.FlushMetrics() // Final flush
 
 			return
 		}

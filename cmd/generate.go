@@ -17,6 +17,37 @@ import (
 	"golang.org/x/text/language"
 )
 
+const (
+	// Generate format constants
+	formatGo    = "go"
+	formatTypes = "types"
+	formatMocks = "mocks"
+	formatDocs  = "docs"
+
+	// Type string constants
+	typeString  = "string"
+	typeInt     = "int"
+	typeInt32   = "int32"
+	typeInt64   = "int64"
+	typeFloat32 = "float32"
+	typeFloat64 = "float64"
+	typeBool    = "bool"
+
+	// Array type constants
+	typeStringSlice = "[]string"
+	typeIntSlice    = "[]int"
+
+	// TypeScript type constants
+	tsString  = "string"
+	tsNumber  = "number"
+	tsBoolean = "boolean"
+	tsAny     = "any"
+
+	// Documentation constants
+	optionalYes = "Yes"
+	optionalNo  = "No"
+)
+
 var (
 	generateAll    bool
 	generateFormat string

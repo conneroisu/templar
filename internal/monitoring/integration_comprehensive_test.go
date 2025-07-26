@@ -319,7 +319,7 @@ func TestComprehensiveMonitoringIntegration(t *testing.T) {
 		err = monitor.Start()
 		// May succeed or fail depending on system, but shouldn't panic
 		if err == nil {
-			monitor.Stop()
+			_ = monitor.Stop()
 		}
 
 		// Test monitor with disabled components
@@ -332,7 +332,7 @@ func TestComprehensiveMonitoringIntegration(t *testing.T) {
 
 		err = monitor.Start()
 		assert.NoError(t, err)
-		monitor.Stop()
+		_ = monitor.Stop()
 
 		// Test double start/stop
 		monitor, err = createMonitorFromConfig(config, logger)
@@ -437,7 +437,7 @@ func BenchmarkComprehensiveMonitoring(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	defer monitor.Stop()
+	defer func() { _ = monitor.Stop() }()
 
 	perfMonitor := NewPerformanceMonitor(monitor.metrics, logger)
 	ctx := context.Background()
@@ -486,7 +486,7 @@ func TestRealWorldScenarios(t *testing.T) {
 
 	err = monitor.Start()
 	require.NoError(t, err)
-	defer monitor.Stop()
+	defer func() { _ = monitor.Stop() }()
 
 	templatorMonitor := &TemplarMonitor{
 		Monitor:         monitor,

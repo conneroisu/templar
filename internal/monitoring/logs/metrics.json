@@ -3,25 +3,25 @@
     {
       "name": "templar_uptime_seconds",
       "type": "gauge",
-      "value": 3.193681544,
-      "timestamp": "2025-07-26T10:52:46.658906296-05:00",
+      "value": 3.232554724,
+      "timestamp": "2025-07-26T13:28:22.571864089-05:00",
       "help": "Application uptime in seconds"
     }
   ],
   "system": {
     "golang": {
-      "gc_pause_ns": 57142,
-      "gc_runs": 2,
-      "goroutines": 8,
-      "memory_alloc": 2780136,
-      "memory_heap_alloc": 2780136,
-      "memory_heap_sys": 7766016,
-      "memory_sys": 14505224,
-      "memory_total": 8125792
+      "gc_pause_ns": 5990192,
+      "gc_runs": 3,
+      "goroutines": 7,
+      "memory_alloc": 1109840,
+      "memory_heap_alloc": 1109840,
+      "memory_heap_sys": 7831552,
+      "memory_sys": 13980936,
+      "memory_total": 8806032
     },
     "process": {
-      "pid": 1166575
+      "pid": 135212
     }
   },
-  "timestamp": "2025-07-26T10:52:46.65898151-05:00"
+  "timestamp": "2025-07-26T13:28:22.571919915-05:00"
 }

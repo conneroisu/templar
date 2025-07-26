@@ -120,7 +120,7 @@ func BenchmarkComponentRenderer_Memory(b *testing.B) {
 		}
 
 		mockData := renderer.generateMockData(component)
-		renderer.generateGoCode(component, mockData)
+		_, _ = renderer.generateGoCode(component, mockData)
 	}
 }
 
@@ -147,7 +147,7 @@ func BenchmarkComponentRenderer_LargeComponent(b *testing.B) {
 	b.ResetTimer()
 	for range b.N {
 		mockData := renderer.generateMockData(component)
-		renderer.generateGoCode(component, mockData)
+		_, _ = renderer.generateGoCode(component, mockData)
 	}
 }
 
@@ -176,7 +176,7 @@ func BenchmarkComponentRenderer_ManyComponents(b *testing.B) {
 		component, exists := reg.Get(componentName)
 		if exists {
 			mockData := renderer.generateMockData(component)
-			renderer.generateGoCode(component, mockData)
+			_, _ = renderer.generateGoCode(component, mockData)
 		}
 	}
 }
@@ -197,7 +197,7 @@ func BenchmarkComponentRenderer_Concurrent(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			mockData := renderer.generateMockData(component)
-			renderer.generateGoCode(component, mockData)
+			_, _ = renderer.generateGoCode(component, mockData)
 		}
 	})
 }

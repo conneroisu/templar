@@ -27,7 +27,7 @@ func TestMonitoringMiddleware(t *testing.T) {
 	t.Run("successful request", func(t *testing.T) {
 		handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("OK"))
+			_, _ = w.Write([]byte("OK"))
 		}))
 
 		req := httptest.NewRequest(http.MethodGet, "/test", nil)
@@ -57,7 +57,7 @@ func TestMonitoringMiddleware(t *testing.T) {
 	t.Run("error request", func(t *testing.T) {
 		handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("Error"))
+			_, _ = w.Write([]byte("Error"))
 		}))
 
 		req := httptest.NewRequest(http.MethodPost, "/error", nil)
@@ -123,7 +123,7 @@ func TestResponseWriter(t *testing.T) {
 		recorder := httptest.NewRecorder()
 		wrapper := &responseWriter{ResponseWriter: recorder, statusCode: http.StatusOK}
 
-		wrapper.Write([]byte("test"))
+		_, _ = wrapper.Write([]byte("test"))
 		assert.Equal(t, http.StatusOK, wrapper.statusCode)
 	})
 }
