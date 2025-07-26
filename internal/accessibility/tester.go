@@ -63,8 +63,8 @@ func NewComponentAccessibilityTester(
 
 // TestComponent runs accessibility tests on a single component
 func (tester *ComponentAccessibilityTester) TestComponent(
-	ctx context.Context, 
-	componentName string, 
+	ctx context.Context,
+	componentName string,
 	props map[string]interface{},
 ) (*AccessibilityReport, error) {
 	start := time.Now()
@@ -122,8 +122,8 @@ func (tester *ComponentAccessibilityTester) TestComponent(
 
 // TestHTML runs accessibility tests on raw HTML content
 func (tester *ComponentAccessibilityTester) TestHTML(
-	ctx context.Context, 
-	html string, 
+	ctx context.Context,
+	html string,
 	config AuditConfiguration,
 ) (*AccessibilityReport, error) {
 	return tester.engine.Analyze(ctx, html, config)
@@ -131,8 +131,8 @@ func (tester *ComponentAccessibilityTester) TestHTML(
 
 // TestURL runs accessibility tests on a live web page
 func (tester *ComponentAccessibilityTester) TestURL(
-	ctx context.Context, 
-	url string, 
+	ctx context.Context,
+	url string,
 	config AuditConfiguration,
 ) (*AccessibilityReport, error) {
 	// For now, this would require a browser engine integration
@@ -181,7 +181,7 @@ func (tester *ComponentAccessibilityTester) TestAllComponents(ctx context.Contex
 
 // TestComponentWithMockData tests a component using mock data generation
 func (tester *ComponentAccessibilityTester) TestComponentWithMockData(
-	ctx context.Context, 
+	ctx context.Context,
 	componentName string,
 ) (*AccessibilityReport, error) {
 	component, exists := tester.registry.Get(componentName)
@@ -212,7 +212,7 @@ func (tester *ComponentAccessibilityTester) GetAccessibilityScoreForComponent(ct
 
 // GetAccessibilityInsights provides insights and recommendations for a component
 func (tester *ComponentAccessibilityTester) GetAccessibilityInsights(
-	ctx context.Context, 
+	ctx context.Context,
 	componentName string,
 ) (*AccessibilityInsights, error) {
 	report, err := tester.TestComponent(ctx, componentName, nil)
@@ -235,8 +235,8 @@ func (tester *ComponentAccessibilityTester) GetAccessibilityInsights(
 
 // renderComponentToHTML renders a component to HTML using the renderer
 func (tester *ComponentAccessibilityTester) renderComponentToHTML(
-	ctx context.Context, 
-	component *types.ComponentInfo, 
+	ctx context.Context,
+	component *types.ComponentInfo,
 	props map[string]interface{},
 ) (string, error) {
 	// Create a simple HTML wrapper for the component

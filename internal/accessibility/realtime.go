@@ -55,8 +55,8 @@ const (
 
 // NewRealtimeAccessibilityMonitor creates a new real-time accessibility monitor
 func NewRealtimeAccessibilityMonitor(
-	tester AccessibilityTester, 
-	logger logging.Logger, 
+	tester AccessibilityTester,
+	logger logging.Logger,
 	config RealtimeConfig,
 ) *RealtimeAccessibilityMonitor {
 	return &RealtimeAccessibilityMonitor{
@@ -296,8 +296,8 @@ func (monitor *RealtimeAccessibilityMonitor) generateCombinedSuggestions(violati
 
 // attemptAutoFixes tries to automatically fix accessibility issues
 func (monitor *RealtimeAccessibilityMonitor) attemptAutoFixes(
-	ctx context.Context, 
-	html string, 
+	ctx context.Context,
+	html string,
 	violations []AccessibilityViolation,
 ) []string {
 	fixedIssues := []string{}

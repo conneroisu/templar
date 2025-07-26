@@ -703,7 +703,13 @@ func (pfp *ParallelFileProcessor) DiscoverFiles(ctx context.Context, rootPaths [
 }
 
 // worker processes file discovery work
-func (pfp *ParallelFileProcessor) worker(ctx context.Context, pathCh <-chan string, resultCh chan<- *types.ComponentInfo, errorCh chan<- error, wg *sync.WaitGroup) {
+func (pfp *ParallelFileProcessor) worker(
+	ctx context.Context, 
+	pathCh <-chan string, 
+	resultCh chan<- *types.ComponentInfo, 
+	errorCh chan<- error, 
+	wg *sync.WaitGroup,
+) {
 	defer wg.Done()
 
 	for {
@@ -789,7 +795,11 @@ func (pfp *ParallelFileProcessor) extractPackage(path string) string {
 }
 
 // ProcessFilesBatch processes multiple files in parallel batches
-func (bp *BuildPipeline) ProcessFilesBatch(ctx context.Context, components []*types.ComponentInfo, batchSize int) (*FileDiscoveryResult, error) {
+func (bp *BuildPipeline) ProcessFilesBatch(
+	ctx context.Context, 
+	components []*types.ComponentInfo, 
+	batchSize int,
+) (*FileDiscoveryResult, error) {
 	start := time.Now()
 	var totalDiscovered, totalSkipped int64
 	var allErrors []error

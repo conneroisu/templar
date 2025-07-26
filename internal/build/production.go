@@ -146,7 +146,11 @@ func NewProductionBuildPipeline(cfg *config.Config, outputDir string) *Productio
 }
 
 // Build executes the complete production build pipeline
-func (p *ProductionBuildPipeline) Build(ctx context.Context, components []*types.ComponentInfo, options ProductionBuildOptions) (*BuildArtifacts, error) {
+func (p *ProductionBuildPipeline) Build(
+	ctx context.Context, 
+	components []*types.ComponentInfo, 
+	options ProductionBuildOptions,
+) (*BuildArtifacts, error) {
 	p.startTime = time.Now()
 	p.buildMetrics.StartTime = p.startTime
 
@@ -279,7 +283,11 @@ func (p *ProductionBuildPipeline) discoverAssets(ctx context.Context) (*AssetMan
 }
 
 // bundleAssets performs asset bundling and processing
-func (p *ProductionBuildPipeline) bundleAssets(ctx context.Context, manifest *AssetManifest, options ProductionBuildOptions) ([]string, error) {
+func (p *ProductionBuildPipeline) bundleAssets(
+	ctx context.Context, 
+	manifest *AssetManifest, 
+	options ProductionBuildOptions,
+) ([]string, error) {
 	bundlerOptions := BundlerOptions{
 		Minify:        options.Minification,
 		TreeShaking:   options.TreeShaking,
@@ -292,7 +300,11 @@ func (p *ProductionBuildPipeline) bundleAssets(ctx context.Context, manifest *As
 }
 
 // generateStaticSite creates static HTML files from components
-func (p *ProductionBuildPipeline) generateStaticSite(ctx context.Context, components []*types.ComponentInfo, options ProductionBuildOptions) ([]string, error) {
+func (p *ProductionBuildPipeline) generateStaticSite(
+	ctx context.Context, 
+	components []*types.ComponentInfo, 
+	options ProductionBuildOptions,
+) ([]string, error) {
 	generatorOptions := StaticGenerationOptions{
 		Prerendering: options.Prerendering,
 		CriticalCSS:  options.CriticalCSS,
@@ -355,13 +367,21 @@ func (p *ProductionBuildPipeline) validateBuild(ctx context.Context, artifacts *
 }
 
 // buildDockerImage creates a production Docker image
-func (p *ProductionBuildPipeline) buildDockerImage(ctx context.Context, artifacts *BuildArtifacts, options ProductionBuildOptions) (string, string, error) {
+func (p *ProductionBuildPipeline) buildDockerImage(
+	ctx context.Context, 
+	artifacts *BuildArtifacts, 
+	options ProductionBuildOptions,
+) (string, string, error) {
 	// Temporarily disabled Docker functionality
 	return "", "", fmt.Errorf("Docker functionality temporarily disabled")
 }
 
 // generateBuildReports creates analysis and performance reports
-func (p *ProductionBuildPipeline) generateBuildReports(ctx context.Context, artifacts *BuildArtifacts, options ProductionBuildOptions) error {
+func (p *ProductionBuildPipeline) generateBuildReports(
+	ctx context.Context, 
+	artifacts *BuildArtifacts, 
+	options ProductionBuildOptions,
+) error {
 	reportsDir := filepath.Join(p.outputDir, "reports")
 
 	// Bundle size analysis
