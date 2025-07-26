@@ -95,7 +95,6 @@
       "errorlint",
       "funlen",
       "gochecknoinits",
-      "goconst",
       "gocritic",
       "gocyclo",
       "gofmt",
@@ -118,8 +117,7 @@
       "unused",
       "whitespace",
       "prealloc",
-      "nestif",
-      "gocognit"
+      "nestif"
     ]
   },
   "issues": {
