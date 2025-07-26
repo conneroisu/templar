@@ -23,7 +23,6 @@ func createBenchConfig(b *testing.B) *config.Config {
 	}
 }
 
-
 // BenchmarkDiscoverAssets benchmarks asset discovery operations
 func BenchmarkDiscoverAssets(b *testing.B) {
 	// Create test directory with different numbers of files

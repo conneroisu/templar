@@ -64,7 +64,6 @@ type ScanJob struct {
 	result chan<- ScanResult
 }
 
-
 // BufferPool manages reusable byte buffers for file reading optimization
 type BufferPool struct {
 	pool sync.Pool
@@ -819,7 +818,6 @@ func (s *ComponentScanner) processBatchWithWorkerPoolWithContext(ctx context.Con
 	return nil
 }
 
-
 // processBatchSynchronous processes small batches synchronously for better performance
 func (s *ComponentScanner) processBatchSynchronous(files []string) error {
 	var scanErrors []error
@@ -1061,7 +1059,6 @@ func (s *ComponentScanner) parseTemplFileWithComponents(path string, content []b
 	return components, nil
 }
 
-
 // extractFromASTWithComponents extracts components from AST and returns them
 func (s *ComponentScanner) extractFromASTWithComponents(path string, astFile *ast.File, hash string, modTime time.Time) ([]*types.ComponentInfo, error) {
 	var components []*types.ComponentInfo
@@ -1093,7 +1090,6 @@ func (s *ComponentScanner) extractFromASTWithComponents(path string, astFile *as
 
 	return components, nil
 }
-
 
 func (s *ComponentScanner) isTemplComponent(fn *ast.FuncDecl) bool {
 	// Check if the function returns a templ.Component

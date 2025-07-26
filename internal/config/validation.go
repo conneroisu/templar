@@ -559,7 +559,6 @@ func validatePluginsConfig(config *PluginsConfig) error {
 	return nil
 }
 
-
 // validatePath for backward compatibility
 func validatePath(path string) error {
 	validator := NewConfigValidator()

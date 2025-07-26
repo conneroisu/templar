@@ -214,7 +214,7 @@ func IsFatalError(err error) bool {
 func ExtractCause(err error) error {
 	for err != nil {
 		var te *TemplarError
-	if errors.As(err, &te) {
+		if errors.As(err, &te) {
 			if te.Cause == nil {
 				return te
 			}

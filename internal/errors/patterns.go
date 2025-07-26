@@ -254,7 +254,7 @@ func GetErrorChain(err error) []error {
 	for err != nil {
 		chain = append(chain, err)
 		var te *TemplarError
-	if errors.As(err, &te) {
+		if errors.As(err, &te) {
 			err = te.Cause
 		} else if wrapper, ok := err.(interface{ Unwrap() error }); ok {
 			err = wrapper.Unwrap()

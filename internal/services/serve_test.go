@@ -239,4 +239,3 @@ func createTestServeConfig(tempDir string) *config.Config {
 		},
 	}
 }
-

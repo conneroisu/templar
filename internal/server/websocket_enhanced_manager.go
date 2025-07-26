@@ -241,10 +241,6 @@ func (em *EnhancedWebSocketManager) HandleWebSocket(w http.ResponseWriter, r *ht
 	em.WebSocketManager.HandleWebSocket(w, r)
 }
 
-
-
-
-
 // cleanupEnhancedClient performs comprehensive cleanup for enhanced clients
 func (em *EnhancedWebSocketManager) cleanupEnhancedClient(client *EnhancedClientInfo) {
 	if client == nil {
@@ -480,4 +476,3 @@ func (em *EnhancedWebSocketManager) Shutdown(ctx context.Context) error {
 func (em *EnhancedWebSocketManager) ForceMemoryCleanup() int {
 	return em.memoryManager.ForceCleanupStaleConnections()
 }
-
