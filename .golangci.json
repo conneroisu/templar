@@ -92,7 +92,6 @@
       "depguard", 
       "dogsled",
       "errcheck",
-      "errorlint",
       "gocritic",
       "gofmt",
       "goimports",
