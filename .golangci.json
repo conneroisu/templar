@@ -93,7 +93,6 @@
       "dogsled",
       "errcheck",
       "errorlint",
-      "funlen",
       "gochecknoinits",
       "gocritic",
       "gofmt",
