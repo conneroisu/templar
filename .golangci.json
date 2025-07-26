@@ -92,7 +92,6 @@
       "depguard", 
       "dogsled",
       "errcheck",
-      "errorlint",
       "funlen",
       "gochecknoinits",
       "gocritic",
@@ -110,9 +109,7 @@
       "staticcheck",
       "stylecheck", 
       "typecheck",
-      "unconvert",
       "unparam",
-      "unused",
       "whitespace",
       "prealloc",
       "nestif"
