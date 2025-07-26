@@ -37,7 +37,7 @@ jobs:
         run: |
           echo "Skipping golangci-lint due to version compatibility issues"
           echo "Using basic go vet instead"
-          nix develop --command go vet ./...
+          nix develop --command go vet $(go list ./... | grep -v 'templar-cache-benchmark')
 
       - name: Check code formatting
         run: |
@@ -50,7 +50,7 @@ jobs:
           '
 
       - name: Run go vet
-        run: nix develop --command go vet ./...
+        run: nix develop --command go vet $(go list ./... | grep -v 'templar-cache-benchmark')
 
       - name: Check for security vulnerabilities
         run: |

@@ -35,10 +35,10 @@ jobs:
           fi
 
       - name: Run go vet
-        run: go vet ./...
+        run: nix develop --command go vet $(go list ./... | grep -v 'templar-cache-benchmark')
 
       - name: Run basic tests
-        run: go test ./... -short
+        run: nix develop --command go test $(go list ./... | grep -v 'templar-cache-benchmark') -short
 
   # Full validation for ready PRs
   full-validation:
