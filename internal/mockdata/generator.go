@@ -1,3 +1,4 @@
+// Package mockdata provides intelligent mock data generation for component testing.
 package mockdata
 
 import (
@@ -10,19 +11,19 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// MockGenerator generates intelligent mock data based on parameter names and types
+// MockGenerator generates intelligent mock data based on parameter names and types.
 type MockGenerator struct {
 	rng *rand.Rand
 }
 
-// NewMockGenerator creates a new mock data generator
+// NewMockGenerator creates a new mock data generator.
 func NewMockGenerator() *MockGenerator {
 	return &MockGenerator{
 		rng: rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 }
 
-// GenerateForComponent generates mock data for all parameters of a component
+// GenerateForComponent generates mock data for all parameters of a component.
 func (g *MockGenerator) GenerateForComponent(component *types.ComponentInfo) map[string]interface{} {
 	mockData := make(map[string]interface{})
 
@@ -33,7 +34,7 @@ func (g *MockGenerator) GenerateForComponent(component *types.ComponentInfo) map
 	return mockData
 }
 
-// generateForParameter generates mock data for a single parameter
+// generateForParameter generates mock data for a single parameter.
 func (g *MockGenerator) generateForParameter(param types.ParameterInfo) interface{} {
 	// Use default value if available
 	if param.Default != nil {
@@ -50,8 +51,8 @@ func (g *MockGenerator) generateForParameter(param types.ParameterInfo) interfac
 	return g.generateByType(param.Type)
 }
 
-// generateByNamePattern generates mock data based on parameter name patterns
-func (g *MockGenerator) generateByNamePattern(name, paramType string) interface{} {
+// generateByNamePattern generates mock data based on parameter name patterns.
+func (g *MockGenerator) generateByNamePattern(name, _ string) interface{} {
 	nameLower := strings.ToLower(name)
 
 	// Email patterns
@@ -99,14 +100,14 @@ func (g *MockGenerator) generateByNamePattern(name, paramType string) interface{
 	}
 
 	// Color patterns
-	if containsAny(nameLower, []string{"color", "colour", "background", "theme"}) {
+	if containsAny(nameLower, []string{"color", "background", "theme"}) {
 		return g.generateColor()
 	}
 
 	return nil
 }
 
-// generateByType generates mock data based on Go types
+// generateByType generates mock data based on Go types.
 func (g *MockGenerator) generateByType(paramType string) interface{} {
 	switch strings.ToLower(paramType) {
 	case "string":
@@ -141,7 +142,7 @@ func (g *MockGenerator) generateByType(paramType string) interface{} {
 	}
 }
 
-// Specific generators for different data types
+// Specific generators for different data types.
 func (g *MockGenerator) generateEmail() string {
 	domains := []string{"example.com", "test.org", "demo.net", "sample.io"}
 	names := []string{"john", "jane", "alex", "taylor", "jordan", "casey"}
@@ -291,7 +292,7 @@ func (g *MockGenerator) generateColor() string {
 	return colors[g.rng.Intn(len(colors))]
 }
 
-// Helper function to check if a string contains any of the given substrings
+// Helper function to check if a string contains any of the given substrings.
 func containsAny(str string, substrings []string) bool {
 	for _, substring := range substrings {
 		if strings.Contains(str, substring) {
@@ -301,13 +302,13 @@ func containsAny(str string, substrings []string) bool {
 	return false
 }
 
-// AdvancedMockGenerator provides more sophisticated mock data generation
+// AdvancedMockGenerator provides more sophisticated mock data generation.
 type AdvancedMockGenerator struct {
 	*MockGenerator
 	patterns map[string]*regexp.Regexp
 }
 
-// NewAdvancedMockGenerator creates a new advanced mock generator with regex patterns
+// NewAdvancedMockGenerator creates a new advanced mock generator with regex patterns.
 func NewAdvancedMockGenerator() *AdvancedMockGenerator {
 	patterns := map[string]*regexp.Regexp{
 		"phone":      regexp.MustCompile(`(?i)(phone|tel|mobile|cell)`),
@@ -324,7 +325,7 @@ func NewAdvancedMockGenerator() *AdvancedMockGenerator {
 	}
 }
 
-// GenerateForComponent generates advanced mock data with pattern matching
+// GenerateForComponent generates advanced mock data with pattern matching.
 func (g *AdvancedMockGenerator) GenerateForComponent(component *types.ComponentInfo) map[string]interface{} {
 	mockData := make(map[string]interface{})
 

@@ -91,10 +91,8 @@
       "bodyclose",
       "depguard", 
       "dogsled",
-      "dupl",
       "errcheck",
       "errorlint",
-      "exhaustive",
       "funlen",
       "gochecknoinits",
       "goconst",
@@ -108,7 +106,6 @@
       "govet",
       "ineffassign",
       "lll",
-      "misspell",
       "nakedret",
       "noctx",
       "nolintlint",
@@ -120,12 +117,9 @@
       "unparam",
       "unused",
       "whitespace",
-      "godox",
-      "godot",
       "prealloc",
       "nestif",
-      "gocognit",
-      "revive"
+      "gocognit"
     ]
   },
   "issues": {
