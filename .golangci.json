@@ -95,7 +95,6 @@
       "gofmt",
       "goimports",
       "goprintffuncname",
-      "gosimple",
       "govet",
       "ineffassign",
       "lll",
