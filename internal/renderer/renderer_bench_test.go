@@ -66,7 +66,7 @@ func BenchmarkComponentRenderer_GenerateGoCode(b *testing.B) {
 
 	b.ResetTimer()
 	for range b.N {
-		renderer.generateGoCode(component, mockData)
+		_ = renderer.generateGoCode(component, mockData)
 	}
 }
 
@@ -97,7 +97,7 @@ func BenchmarkComponentRenderer_ValidateWorkDir(b *testing.B) {
 	b.ResetTimer()
 	for i := range b.N {
 		dir := validDirs[i%len(validDirs)]
-		renderer.validateWorkDir(dir)
+		_ = renderer.validateWorkDir(dir)
 	}
 }
 

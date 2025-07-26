@@ -33,7 +33,7 @@ func main() {
 	if err := monitor.Start(); err != nil {
 		log.Fatalf("Failed to start monitoring: %v", err)
 	}
-	defer monitor.Stop()
+	defer func() { _ = monitor.Stop() }()
 
 	// Register custom health checks
 	registerCustomHealthChecks(monitor)
@@ -153,7 +153,7 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 		</html>
 		`
 
-		w.Write([]byte(html))
+		_, _ = w.Write([]byte(html))
 
 		return nil
 	})
@@ -194,7 +194,7 @@ func handleComponent(w http.ResponseWriter, r *http.Request) {
 			"timestamp": "%s"
 		}`, components, len(components), time.Now().Format(time.RFC3339))
 
-			w.Write([]byte(response))
+			_, _ = w.Write([]byte(response))
 
 			return nil
 		},
@@ -279,7 +279,7 @@ func handleBuild(w http.ResponseWriter, r *http.Request) {
 			"timestamp": "%s"
 		}`, len(components), successCount, len(components)-successCount, time.Now().Format(time.RFC3339))
 
-			w.Write([]byte(response))
+			_, _ = w.Write([]byte(response))
 
 			return nil
 		},
@@ -306,7 +306,7 @@ func simulateBackgroundOperations() {
 	ctx := context.Background()
 
 	// Simulate file scanning
-	monitoring.TrackOperation(ctx, "scanner", "scan_files", func(ctx context.Context) error {
+	_ = monitoring.TrackOperation(ctx, "scanner", "scan_files", func(ctx context.Context) error {
 		monitoring.LogInfo(ctx, "scanner", "scan_files", "Scanning component files")
 		time.Sleep(50 * time.Millisecond)
 
