@@ -56,13 +56,11 @@ jobs:
       with:
         go-version: '1.24'
     
-    # Temporarily disabled due to golangci-lint v1.64.8 config schema incompatibility
-    # TODO: Fix .golangci.yml to be compatible with v1.64.8 JSON schema
-    # - name: golangci-lint
-    #   uses: golangci/golangci-lint-action@v6
-    #   with:
-    #     version: latest
-    #     args: --timeout=5m
+    - name: golangci-lint
+      uses: golangci/golangci-lint-action@v6
+      with:
+        version: latest
+        args: --timeout=5m
 
   build:
     runs-on: ubuntu-latest

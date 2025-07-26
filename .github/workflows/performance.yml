@@ -84,6 +84,7 @@ jobs:
     - name: Comment PR with performance results
       if: github.event_name == 'pull_request'
       uses: actions/github-script@v6
+      continue-on-error: true
       with:
         script: |
           const fs = require('fs');
@@ -115,12 +116,18 @@ jobs:
             
             </details>`;
             
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: body
-            });
+            try {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body
+              });
+              console.log('Performance report comment posted successfully');
+            } catch (error) {
+              console.log('Failed to post comment (likely permissions issue):', error.message);
+              console.log('Performance report generated successfully - see artifacts');
+            }
           }
           
     - name: Performance regression summary

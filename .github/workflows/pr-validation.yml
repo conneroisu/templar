@@ -85,7 +85,7 @@ jobs:
 
       - name: Run golangci-lint
         if: matrix.test-suite == 'unit'
-        uses: golangci/golangci-lint-action@v4
+        uses: golangci/golangci-lint-action@v6
         with:
           version: latest
           args: --timeout=5m

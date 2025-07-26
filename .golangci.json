@@ -1,98 +1,171 @@
 {
-  "formatters": {
-    "exclusions": {
-      "generated": "lax",
-      "paths": [
-        "third_party$",
-        "builtin$",
-        "examples$"
+  "run": {
+    "timeout": "5m",
+    "tests": true
+  },
+  "linters-settings": {
+    "gocyclo": {
+      "min-complexity": 15
+    },
+    "dupl": {
+      "threshold": 100
+    },
+    "goconst": {
+      "min-len": 2,
+      "min-occurrences": 2
+    },
+    "depguard": {
+      "rules": {
+        "main": {
+          "deny": [
+            {
+              "pkg": "github.com/sirupsen/logrus",
+              "desc": "logging is allowed only by logutils.Log"
+            }
+          ]
+        }
+      }
+    },
+    "misspell": {
+      "locale": "US"
+    },
+    "lll": {
+      "line-length": 140
+    },
+    "nakedret": {
+      "max-func-lines": 30
+    },
+    "prealloc": {
+      "simple": true,
+      "range-loops": true,
+      "for-loops": false
+    },
+    "gocritic": {
+      "enabled-tags": [
+        "diagnostic",
+        "performance", 
+        "style"
+      ],
+      "disabled-checks": [
+        "dupImport",
+        "ifElseChain", 
+        "octalLiteral",
+        "whyNoLint",
+        "wrapperFunc"
       ]
+    },
+    "funlen": {
+      "lines": 100,
+      "statements": 50
+    },
+    "gocognit": {
+      "min-complexity": 20
+    },
+    "nestif": {
+      "min-complexity": 4
+    },
+    "godox": {
+      "keywords": ["NOTE", "OPTIMIZE", "HACK"]
+    },
+    "dogsled": {
+      "max-blank-identifiers": 2
+    },
+    "whitespace": {
+      "multi-if": false,
+      "multi-func": false
+    },
+    "errorlint": {
+      "errorf": true
+    },
+    "exhaustive": {
+      "default-signifies-exhaustive": false
+    },
+    "godot": {
+      "scope": "declarations",
+      "capital": false
     }
   },
   "linters": {
+    "disable-all": true,
     "enable": [
-      "asasalint",
-      "exhaustive",
-      "godox",
-      "nlreturn",
-      "bidichk",
       "bodyclose",
+      "depguard", 
+      "dogsled",
       "dupl",
-      "gocritic",
-      "godot",
-      "errname",
-      "copyloopvar",
-      "errname",
-      "gosec",
+      "errcheck",
+      "errorlint",
+      "exhaustive",
+      "funlen",
+      "gochecknoinits",
       "goconst",
-      "intrange",
-      "perfsprint",
-      "usestdlibvars",
-      "gocheckcompilerdirectives",
-      "staticcheck",
-      "intrange",
-      "makezero",
+      "gocritic",
+      "gocyclo",
+      "gofmt",
+      "goimports",
+      "goprintffuncname",
+      "gosec",
+      "gosimple",
+      "govet",
+      "ineffassign",
+      "lll",
       "misspell",
-      "nosprintfhostport",
-      "revive",
+      "nakedret",
+      "noctx",
+      "nolintlint",
+      "rowserrcheck",
+      "staticcheck",
+      "stylecheck", 
+      "typecheck",
       "unconvert",
-      "usestdlibvars",
-      "wastedassign",
+      "unparam",
+      "unused",
       "whitespace",
-      "govet"
-    ],
-    "exclusions": {
-      "generated": "lax",
-      "paths": [
-        "(^|/)vendor($|/)",
-        "third_party$",
-        "builtin$",
-        "examples$"
-      ],
-      "presets": [
-        "comments",
-        "common-false-positives",
-        "legacy",
-        "std-error-handling"
-      ],
-      "linters": [
-        "gocognit",
-        "nestif"
-      ]
-    },
-    "settings": {
-      "revive": {
-        "enable-all-rules": false,
-        "rules": [
-          {
-            "exclude": [
-              "vendor/"
-            ],
-            "name": "blank-imports"
-          }
-        ]
-      },
-      "staticcheck": {
-        "checks": [
-          "-SA1019",
-          "all"
-        ]
-      }
-    }
-  },
-  "severity": {
-    "default": "warning",
-    "default-severity": "warning",
-    "rules": [
-      {
-        "linters": [
-          "goimports",
-          "intrange",
-          "usestdlibvars"
-        ],
-        "severity": "info"
-      }
+      "godox",
+      "godot",
+      "prealloc",
+      "nestif",
+      "gocognit",
+      "revive"
     ]
   },
-  "version": "2"
+  "issues": {
+    "exclude-rules": [
+      {
+        "path": "_test\\.go",
+        "linters": ["funlen", "gocognit", "gocyclo", "dupl", "lll"]
+      },
+      {
+        "path": "cmd/",
+        "linters": ["lll"]
+      },
+      {
+        "path": "internal/",
+        "text": "should not use dot imports"
+      },
+      {
+        "linters": ["staticcheck"],
+        "text": "SA9003:"
+      },
+      {
+        "linters": ["lll"],
+        "source": "^//go:generate "
+      },
+      {
+        "path": "_test\\.go",
+        "linters": ["gosec"]
+      },
+      {
+        "path": "integration_tests/",
+        "linters": ["gosec", "funlen", "gocognit", "gocyclo"]
+      }
+    ],
+    "exclude-use-default": false,
+    "exclude": [
+      "Error return value of .((os\\.)?std(out|err)\\..*|.*Close|.*Flush|os\\.Remove(All)?|.*print.*|os\\.(Un)?Setenv). is not checked",
+      "^(G104|G204|G304|G404):",
+      "unnecessaryDefer:"
+    ],
+    "max-issues-per-linter": 0,
+    "max-same-issues": 0
+  }
 }
