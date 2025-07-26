@@ -2,6 +2,7 @@
 package errors
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -230,7 +231,8 @@ func TestWithLocationInfo(t *testing.T) {
 	originalErr := fmt.Errorf("syntax error")
 	enhancedErr := WithLocationInfo(originalErr, "/components/button.templ", 42, 10)
 
-	templErr, ok := enhancedErr.(*TemplarError)
+	var templErr *TemplarError
+	ok := errors.As(enhancedErr, &templErr)
 	assert.True(t, ok)
 	assert.Equal(t, "/components/button.templ", templErr.FilePath)
 	assert.Equal(t, 42, templErr.Line)
@@ -241,7 +243,8 @@ func TestWithComponentInfo(t *testing.T) {
 	originalErr := fmt.Errorf("compilation failed")
 	enhancedErr := WithComponentInfo(originalErr, "HeaderComponent")
 
-	templErr, ok := enhancedErr.(*TemplarError)
+	var templErr *TemplarError
+	ok := errors.As(enhancedErr, &templErr)
 	assert.True(t, ok)
 	assert.Equal(t, "HeaderComponent", templErr.Component)
 }
@@ -254,7 +257,8 @@ func TestWithOperationContext(t *testing.T) {
 	}
 	enhancedErr := WithOperationContext(originalErr, "DATABASE_QUERY", context)
 
-	templErr, ok := enhancedErr.(*TemplarError)
+	var templErr *TemplarError
+	ok := errors.As(enhancedErr, &templErr)
 	assert.True(t, ok)
 	assert.Equal(t, "DATABASE_QUERY", templErr.Context["operation"])
 	assert.Equal(t, "SELECT * FROM users", templErr.Context["query"])

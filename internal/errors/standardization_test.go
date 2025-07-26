@@ -193,7 +193,8 @@ func TestErrorEnhancement(t *testing.T) {
 		t.Fatal("EnhanceError should not return nil")
 	}
 
-	templErr, ok := enhancedErr.(*TemplarError)
+	var templErr *TemplarError
+	ok := errors.As(enhancedErr, &templErr)
 	if !ok {
 		t.Fatal("EnhanceError should return TemplarError")
 	}

@@ -269,7 +269,8 @@ func GetErrorChain(err error) []error {
 func HasErrorCode(err error, code string) bool {
 	chain := GetErrorChain(err)
 	for _, e := range chain {
-		if te, ok := e.(*TemplarError); ok && te.Code == code {
+		var te *TemplarError
+		if errors.As(e, &te) && te.Code == code {
 			return true
 		}
 	}
@@ -280,7 +281,8 @@ func HasErrorCode(err error, code string) bool {
 func HasErrorType(err error, errType ErrorType) bool {
 	chain := GetErrorChain(err)
 	for _, e := range chain {
-		if te, ok := e.(*TemplarError); ok && te.Type == errType {
+		var te *TemplarError
+		if errors.As(e, &te) && te.Type == errType {
 			return true
 		}
 	}
