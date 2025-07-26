@@ -11,7 +11,7 @@ import (
 
 	"github.com/conneroisu/templar/internal/build"
 	"github.com/conneroisu/templar/internal/config"
-	"github.com/conneroisu/templar/internal/errors"
+	templare "github.com/conneroisu/templar/internal/errors"
 	"github.com/conneroisu/templar/internal/interfaces"
 	"github.com/conneroisu/templar/internal/monitoring"
 	"github.com/conneroisu/templar/internal/renderer"
@@ -55,7 +55,7 @@ type ServiceOrchestrator struct {
 	wsManager *WebSocketManager // WebSocket connection management
 
 	// Build state management - thread-safe build error tracking
-	lastBuildErrors []*errors.ParsedError // Latest build errors for clients
+	lastBuildErrors []*templare.ParsedError // Latest build errors for clients
 	buildMutex      sync.RWMutex          // Protects lastBuildErrors access
 
 	// Lifecycle management - coordinates shutdown across all services
@@ -427,7 +427,7 @@ func (so *ServiceOrchestrator) GetBuildMetrics() interfaces.BuildMetrics {
 }
 
 // GetLastBuildErrors returns the errors from the last build.
-func (so *ServiceOrchestrator) GetLastBuildErrors() []*errors.ParsedError {
+func (so *ServiceOrchestrator) GetLastBuildErrors() []*templare.ParsedError {
 	so.buildMutex.RLock()
 	defer so.buildMutex.RUnlock()
 
@@ -436,7 +436,7 @@ func (so *ServiceOrchestrator) GetLastBuildErrors() []*errors.ParsedError {
 		return nil
 	}
 
-	errorsCopy := make([]*errors.ParsedError, len(so.lastBuildErrors))
+	errorsCopy := make([]*templare.ParsedError, len(so.lastBuildErrors))
 	copy(errorsCopy, so.lastBuildErrors)
 
 	return errorsCopy
