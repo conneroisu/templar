@@ -2,6 +2,7 @@ package accessibility
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
