@@ -56,7 +56,7 @@ type ServiceOrchestrator struct {
 
 	// Build state management - thread-safe build error tracking
 	lastBuildErrors []*templare.ParsedError // Latest build errors for clients
-	buildMutex      sync.RWMutex          // Protects lastBuildErrors access
+	buildMutex      sync.RWMutex            // Protects lastBuildErrors access
 
 	// Lifecycle management - coordinates shutdown across all services
 	ctx          context.Context    // Cancellation context for all operations

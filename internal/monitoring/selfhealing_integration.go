@@ -1,8 +1,8 @@
 package monitoring
 
 import (
-	"errors"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"runtime"

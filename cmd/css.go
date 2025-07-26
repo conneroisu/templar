@@ -168,7 +168,9 @@ var cssStyleguideCmd = &cobra.Command{
 
 		activeFramework := manager.GetActiveFramework()
 		if activeFramework == "" {
-			return errors.New("no active CSS framework found. Run 'templar css setup <framework>' first")
+			return errors.New(
+				"no active CSS framework found. Run 'templar css setup <framework>' first",
+			)
 		}
 
 		fmt.Printf("Generating style guide for %s...\n", activeFramework)
@@ -222,7 +224,9 @@ var cssThemeExtractCmd = &cobra.Command{
 
 		activeFramework := manager.GetActiveFramework()
 		if activeFramework == "" {
-			return errors.New("no active CSS framework found. Run 'templar css setup <framework>' first")
+			return errors.New(
+				"no active CSS framework found. Run 'templar css setup <framework>' first",
+			)
 		}
 
 		fmt.Printf("Extracting variables from %s...\n", activeFramework)
@@ -336,7 +340,9 @@ The variables file should be in JSON format with variable names and values:
 
 		activeFramework := manager.GetActiveFramework()
 		if activeFramework == "" {
-			return errors.New("no active CSS framework found. Run 'templar css setup <framework>' first")
+			return errors.New(
+				"no active CSS framework found. Run 'templar css setup <framework>' first",
+			)
 		}
 
 		fmt.Printf("Generating custom theme for %s...\n", activeFramework)

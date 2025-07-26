@@ -1,7 +1,6 @@
 package build
 
 import (
-	"fmt"
 	"hash/crc32"
 	"strconv"
 	"testing"

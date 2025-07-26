@@ -1,9 +1,9 @@
 package build
 
 import (
-	"encoding/hex"
 	"context"
 	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"

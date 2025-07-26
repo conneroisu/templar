@@ -1,10 +1,10 @@
 package monitoring
 
 import (
-	"strconv"
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/conneroisu/templar/internal/logging"

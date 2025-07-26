@@ -212,6 +212,7 @@
           alejandra.enable = true; # Nix formatter
           gofmt.enable = true;
           golines.enable = true;
+          goimports.enable = true;
         };
       };
     in

@@ -3,7 +3,6 @@ package build
 import (
 	"crypto/md5"
 	"crypto/sha256"
-	"fmt"
 	"hash/crc32"
 	"hash/fnv"
 	"strconv"
