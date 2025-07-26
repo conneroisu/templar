@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -11,7 +12,8 @@ func Wrap(err error, errType ErrorType, code, message string) *TemplarError {
 	}
 
 	// If it's already a TemplarError, preserve its properties but update the message
-	if te, ok := err.(*TemplarError); ok {
+	var te *TemplarError
+	if errors.As(err, &te) {
 		return &TemplarError{
 			Type:        errType,
 			Code:        code,
@@ -100,7 +102,8 @@ func EnhanceError(err error, component, filePath string, line, column int) error
 		return nil
 	}
 
-	if te, ok := err.(*TemplarError); ok {
+	var te *TemplarError
+	if errors.As(err, &te) {
 		return te.WithComponent(component).WithLocation(filePath, line, column)
 	}
 
@@ -124,7 +127,8 @@ func FormatError(err error) string {
 		return ""
 	}
 
-	if te, ok := err.(*TemplarError); ok {
+	var te *TemplarError
+	if errors.As(err, &te) {
 		return te.Error()
 	}
 
@@ -137,7 +141,8 @@ func FormatErrorWithSuggestions(err error) string {
 		return ""
 	}
 
-	if ve, ok := err.(ValidationError); ok {
+	var ve ValidationError
+	if errors.As(err, &ve) {
 		result := ve.Error()
 		suggestions := ve.Suggestions()
 		if len(suggestions) > 0 {
@@ -154,7 +159,8 @@ func FormatErrorWithSuggestions(err error) string {
 
 // GetErrorContext extracts context information from a TemplarError
 func GetErrorContext(err error) map[string]interface{} {
-	if te, ok := err.(*TemplarError); ok {
+	var te *TemplarError
+	if errors.As(err, &te) {
 		context := make(map[string]interface{})
 		if te.Context != nil {
 			for k, v := range te.Context {
@@ -187,7 +193,8 @@ func GetErrorContext(err error) map[string]interface{} {
 
 // IsTemporaryError checks if an error is temporary and should be retried
 func IsTemporaryError(err error) bool {
-	if te, ok := err.(*TemplarError); ok {
+	var te *TemplarError
+	if errors.As(err, &te) {
 		// Build and validation errors are typically temporary
 		return te.Type == ErrorTypeBuild || te.Type == ErrorTypeValidation || te.Type == ErrorTypeNetwork
 	}
@@ -196,7 +203,8 @@ func IsTemporaryError(err error) bool {
 
 // IsFatalError checks if an error is fatal and should stop execution
 func IsFatalError(err error) bool {
-	if te, ok := err.(*TemplarError); ok {
+	var te *TemplarError
+	if errors.As(err, &te) {
 		return te.Type == ErrorTypeSecurity || te.Type == ErrorTypeInternal
 	}
 	return false
@@ -205,7 +213,8 @@ func IsFatalError(err error) bool {
 // ExtractCause extracts the root cause from a wrapped error
 func ExtractCause(err error) error {
 	for err != nil {
-		if te, ok := err.(*TemplarError); ok {
+		var te *TemplarError
+	if errors.As(err, &te) {
 			if te.Cause == nil {
 				return te
 			}

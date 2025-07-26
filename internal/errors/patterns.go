@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -211,7 +212,8 @@ func WithOperationContext(err error, operation string, context map[string]interf
 		return nil
 	}
 
-	if te, ok := err.(*TemplarError); ok {
+	var te *TemplarError
+	if errors.As(err, &te) {
 		if te.Context == nil {
 			te.Context = make(map[string]interface{})
 		}
@@ -251,7 +253,8 @@ func GetErrorChain(err error) []error {
 	var chain []error
 	for err != nil {
 		chain = append(chain, err)
-		if te, ok := err.(*TemplarError); ok {
+		var te *TemplarError
+	if errors.As(err, &te) {
 			err = te.Cause
 		} else if wrapper, ok := err.(interface{ Unwrap() error }); ok {
 			err = wrapper.Unwrap()

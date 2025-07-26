@@ -241,36 +241,3 @@ func createTestServeConfig(tempDir string) *config.Config {
 	}
 }
 
-func createTestServeComponents(tempDir string) error {
-	componentDir := filepath.Join(tempDir, "components")
-	if err := os.MkdirAll(componentDir, 0755); err != nil {
-		return err
-	}
-
-	buttonContent := `package components
-
-templ Button(text string, variant string) {
-	<button class={ "btn", "btn-" + variant } type="button">
-		{ text }
-	</button>
-}`
-
-	cardContent := `package components
-
-templ Card(title string, content string) {
-	<div class="card">
-		<div class="card-header">
-			<h3>{ title }</h3>
-		</div>
-		<div class="card-body">
-			<p>{ content }</p>
-		</div>
-	</div>
-}`
-
-	if err := os.WriteFile(filepath.Join(componentDir, "button.templ"), []byte(buttonContent), 0644); err != nil {
-		return err
-	}
-
-	return os.WriteFile(filepath.Join(componentDir, "card.templ"), []byte(cardContent), 0644)
-}

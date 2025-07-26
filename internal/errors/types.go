@@ -2,6 +2,7 @@ package errors
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -74,7 +75,8 @@ func (e *TemplarError) Unwrap() error {
 
 // Is implements error comparison
 func (e *TemplarError) Is(target error) bool {
-	if t, ok := target.(*TemplarError); ok {
+	var t *TemplarError
+	if errors.As(target, &t) {
 		return e.Type == t.Type && e.Code == t.Code
 	}
 	return false
@@ -172,7 +174,8 @@ func NewInternalError(code, message string, cause error) *TemplarError {
 
 // IsRecoverable checks if an error is recoverable
 func IsRecoverable(err error) bool {
-	if te, ok := err.(*TemplarError); ok {
+	var te *TemplarError
+	if errors.As(err, &te) {
 		return te.Recoverable
 	}
 	return false
@@ -180,7 +183,8 @@ func IsRecoverable(err error) bool {
 
 // IsSecurityError checks if an error is security-related
 func IsSecurityError(err error) bool {
-	if te, ok := err.(*TemplarError); ok {
+	var te *TemplarError
+	if errors.As(err, &te) {
 		return te.Type == ErrorTypeSecurity
 	}
 	return false
@@ -188,7 +192,8 @@ func IsSecurityError(err error) bool {
 
 // IsBuildError checks if an error is build-related
 func IsBuildError(err error) bool {
-	if te, ok := err.(*TemplarError); ok {
+	var te *TemplarError
+	if errors.As(err, &te) {
 		return te.Type == ErrorTypeBuild
 	}
 	return false
@@ -225,7 +230,8 @@ func (h *ErrorHandler) Handle(ctx context.Context, err error) {
 		return
 	}
 
-	if te, ok := err.(*TemplarError); ok {
+	var te *TemplarError
+	if errors.As(err, &te) {
 		h.handleTemplarError(ctx, te)
 	} else {
 		h.handleGenericError(ctx, err)
