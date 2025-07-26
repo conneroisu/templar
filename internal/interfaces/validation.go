@@ -222,7 +222,7 @@ func (v *InterfaceValidator) ValidateFileWatcher(watcher FileWatcher) Validation
 		defer cancel()
 
 		_ = watcher.Start(ctx)
-		watcher.Stop()
+		_ = watcher.Stop()
 	}()
 
 	v.results = append(v.results, result)
@@ -295,8 +295,8 @@ func (v *InterfaceValidator) ValidateBuildPipeline(pipeline BuildPipeline) Valid
 		}()
 
 		ctx := context.Background()
-		pipeline.Start(ctx)
-		defer pipeline.Stop()
+		_ = pipeline.Start(ctx)
+		defer func() { _ = pipeline.Stop() }()
 	}()
 
 	// Test AddCallback - should not panic
@@ -321,7 +321,7 @@ func (v *InterfaceValidator) ValidateBuildPipeline(pipeline BuildPipeline) Valid
 			}
 		}()
 
-		pipeline.Build(testComponent)
+		_ = pipeline.Build(testComponent)
 	}()
 
 	// Test BuildWithPriority - should not panic

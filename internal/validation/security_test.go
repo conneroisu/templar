@@ -446,14 +446,14 @@ func TestSecurityEdgeCases(t *testing.T) {
 func BenchmarkValidateArgument(b *testing.B) {
 	arg := "generate"
 	for i := 0; i < b.N; i++ {
-		ValidateArgument(arg)
+		_ = ValidateArgument(arg)
 	}
 }
 
 func BenchmarkValidatePath(b *testing.B) {
 	path := "./components/button.templ"
 	for i := 0; i < b.N; i++ {
-		ValidatePath(path)
+		_ = ValidatePath(path)
 	}
 }
 

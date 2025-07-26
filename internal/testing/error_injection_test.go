@@ -174,9 +174,9 @@ func TestErrorInjector_Stats(t *testing.T) {
 	injector.InjectErrorOnce("op3", errors.New("error3"))
 
 	// Trigger some injections
-	injector.ShouldFail("op1")
-	injector.ShouldFail("op1")
-	injector.ShouldFail("op3") // This should exhaust the single injection
+	_ = injector.ShouldFail("op1")
+	_ = injector.ShouldFail("op1")
+	_ = injector.ShouldFail("op3") // This should exhaust the single injection
 
 	stats := injector.GetStats()
 
@@ -274,7 +274,7 @@ func TestScenarioManager_PredefinedScenarios(t *testing.T) {
 	manager.RegisterScenario(networkScenario)
 
 	// Stop build scenario first
-	manager.StopScenario("build_failure")
+	_ = manager.StopScenario("build_failure")
 
 	err = manager.ExecuteScenario("network_failure")
 	if err != nil {
