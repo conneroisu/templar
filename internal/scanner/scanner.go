@@ -743,7 +743,7 @@ func (s *ComponentScanner) ScanDirectoryWithContext(ctx context.Context, dir str
 
 	// Validate directory path to prevent path traversal
 	if _, err := s.validatePath(dir); err != nil {
-		return errors.WrapValidation(err, errors.ErrCodeInvalidPath,
+		return templare.WrapValidation(err, templare.ErrCodeInvalidPath,
 			"directory path validation failed").
 			WithContext("directory", dir)
 	}
@@ -845,7 +845,7 @@ func (s *ComponentScanner) processBatchWithWorkerPoolWithContext(
 		case result := <-resultChan:
 			if result.err != nil {
 				// Enhance the error with file context
-				enhancedErr := errors.EnhanceError(result.err, "scanner", result.filePath, 0, 0)
+				enhancedErr := templare.EnhanceError(result.err, "scanner", result.filePath, 0, 0)
 				scanErrors = append(scanErrors, enhancedErr)
 			}
 		case <-ctx.Done():
@@ -857,7 +857,7 @@ func (s *ComponentScanner) processBatchWithWorkerPoolWithContext(
 	close(resultChan)
 
 	if len(scanErrors) > 0 {
-		return errors.CombineErrors(scanErrors...)
+		return templare.CombineErrors(scanErrors...)
 	}
 
 	return nil
@@ -869,13 +869,13 @@ func (s *ComponentScanner) processBatchSynchronous(files []string) error {
 
 	for _, file := range files {
 		if err := s.scanFileInternal(file); err != nil {
-			enhancedErr := errors.EnhanceError(err, "scanner", file, 0, 0)
+			enhancedErr := templare.EnhanceError(err, "scanner", file, 0, 0)
 			scanErrors = append(scanErrors, enhancedErr)
 		}
 	}
 
 	if len(scanErrors) > 0 {
-		return errors.CombineErrors(scanErrors...)
+		return templare.CombineErrors(scanErrors...)
 	}
 
 	return nil
@@ -1311,7 +1311,7 @@ func (s *ComponentScanner) validatePath(path string) (string, error) {
 		if strings.HasPrefix(absPath, os.TempDir()) {
 			// Still do basic security check for suspicious patterns
 			if strings.Contains(cleanPath, "..") {
-				return "", errors.ErrPathTraversal(path).
+				return "", templare.ErrPathTraversal(path).
 					WithContext("pattern", "contains '..' traversal")
 			}
 
@@ -1322,13 +1322,13 @@ func (s *ComponentScanner) validatePath(path string) (string, error) {
 	// Primary security check: ensure the path is within the current working directory
 	// This prevents directory traversal attacks that escape the working directory
 	if !strings.HasPrefix(absPath, cwd) {
-		return "", errors.ErrPathTraversal(path).WithContext("working_directory", cwd)
+		return "", templare.ErrPathTraversal(path).WithContext("working_directory", cwd)
 	}
 
 	// Secondary security check: reject paths with suspicious patterns
 	// This catches directory traversal attempts that stay within the working directory
 	if strings.Contains(cleanPath, "..") {
-		return "", errors.ErrPathTraversal(path).
+		return "", templare.ErrPathTraversal(path).
 			WithContext("pattern", "contains '..' traversal")
 	}
 
