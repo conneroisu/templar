@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/conneroisu/templar/internal/config"
-	templarerrrors "github.com/conneroisu/templar/internal/errors"
+	"github.com/conneroisu/templar/internal/errors"
 	"github.com/conneroisu/templar/internal/logging"
 	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/types"

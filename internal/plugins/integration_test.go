@@ -7,7 +7,7 @@ import (
 	"sync"
 	"testing"
 
-	templarerrrors "github.com/conneroisu/templar/internal/errors"
+	"github.com/conneroisu/templar/internal/errors"
 	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/types"
 	"github.com/stretchr/testify/assert"
