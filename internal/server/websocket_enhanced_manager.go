@@ -241,121 +241,9 @@ func (em *EnhancedWebSocketManager) HandleWebSocket(w http.ResponseWriter, r *ht
 	em.WebSocketManager.HandleWebSocket(w, r)
 }
 
-// Enhanced connection registration that integrates with memory management
-func (em *EnhancedWebSocketManager) registerEnhancedConnection(
-	conn *websocket.Conn,
-	remoteAddr string,
-) (*EnhancedClientInfo, error) {
-	// Register with memory manager for leak prevention
-	connInfo, err := em.memoryManager.RegisterConnection(conn, remoteAddr)
-	if err != nil {
-		return nil, fmt.Errorf("memory manager registration failed: %w", err)
-	}
 
-	// Create enhanced client info
-	enhanced := &EnhancedClientInfo{
-		ConnectionInfo:  connInfo,
-		MessageCount:    0,
-		BytesSent:       0,
-		BytesReceived:   0,
-		LastMessageTime: time.Now(),
-		ErrorCount:      0,
-		LastError:       nil,
-		AverageLatency:  0,
-		PingLatency:     0,
-		MemoryUsage:     estimateClientMemoryUsage(),
-	}
 
-	// Register in enhanced tracking
-	em.connectionsMux.Lock()
-	em.connections[connInfo.ID] = enhanced
-	em.connectionsMux.Unlock()
 
-	// Start enhanced client monitoring
-	go em.monitorEnhancedClient(enhanced)
-
-	return enhanced, nil
-}
-
-// unregisterEnhancedConnection cleans up enhanced connection tracking
-func (em *EnhancedWebSocketManager) unregisterEnhancedConnection(connID string) error {
-	// Remove from enhanced tracking
-	em.connectionsMux.Lock()
-	enhanced, exists := em.connections[connID]
-	if exists {
-		delete(em.connections, connID)
-	}
-	em.connectionsMux.Unlock()
-
-	// Unregister from memory manager
-	if exists {
-		if err := em.memoryManager.UnregisterConnection(connID); err != nil {
-			log.Printf("Memory manager unregistration failed for %s: %v", connID, err)
-		}
-
-		// Clean up enhanced client resources
-		em.cleanupEnhancedClient(enhanced)
-	}
-
-	return nil
-}
-
-// monitorEnhancedClient provides advanced monitoring for individual clients
-func (em *EnhancedWebSocketManager) monitorEnhancedClient(client *EnhancedClientInfo) {
-	ticker := time.NewTicker(30 * time.Second) // Monitor every 30 seconds
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-client.Context.Done():
-			return
-
-		case <-ticker.C:
-			em.updateClientMetrics(client)
-
-		case <-em.ctx.Done():
-			return
-		}
-	}
-}
-
-// updateClientMetrics updates performance metrics for a client
-func (em *EnhancedWebSocketManager) updateClientMetrics(client *EnhancedClientInfo) {
-	client.mutex.Lock()
-	defer client.mutex.Unlock()
-
-	// Update activity in memory manager
-	em.memoryManager.UpdateConnectionActivity(client.ID)
-
-	// Calculate performance metrics
-	now := time.Now()
-	connectionAge := now.Sub(client.CreatedAt)
-	_ = now.Sub(client.LastMessageTime) // timeSinceLastMessage (unused in current implementation)
-
-	// Update ping latency by sending ping and measuring response time
-	start := time.Now()
-	ctx, cancel := context.WithTimeout(client.Context, 5*time.Second)
-	if err := client.Conn.Ping(ctx); err == nil {
-		client.PingLatency = time.Since(start)
-	} else {
-		client.ErrorCount++
-		client.LastError = err
-		client.LastErrorTime = now
-	}
-	cancel()
-
-	// Log performance information periodically
-	if connectionAge.Minutes() > 1 && int(connectionAge.Minutes())%5 == 0 {
-		log.Printf("Client %s metrics: %d messages, %.2f KB sent, %.2f KB received, %v ping latency, %d errors",
-			client.ID[:8],
-			client.MessageCount,
-			float64(client.BytesSent)/1024,
-			float64(client.BytesReceived)/1024,
-			client.PingLatency,
-			client.ErrorCount,
-		)
-	}
-}
 
 // cleanupEnhancedClient performs comprehensive cleanup for enhanced clients
 func (em *EnhancedWebSocketManager) cleanupEnhancedClient(client *EnhancedClientInfo) {
@@ -593,9 +481,3 @@ func (em *EnhancedWebSocketManager) ForceMemoryCleanup() int {
 	return em.memoryManager.ForceCleanupStaleConnections()
 }
 
-// Helper function to estimate client memory usage
-func estimateClientMemoryUsage() int64 {
-	// Rough estimation of memory usage per client
-	// Includes: connection struct, channels, buffers, metrics
-	return 8192 // 8KB per client estimate
-}

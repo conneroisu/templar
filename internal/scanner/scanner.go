@@ -64,11 +64,6 @@ type ScanJob struct {
 	result chan<- ScanResult
 }
 
-// HashResult represents the result of asynchronous hash calculation
-type HashResult struct {
-	hash string
-	err  error
-}
 
 // BufferPool manages reusable byte buffers for file reading optimization
 type BufferPool struct {
@@ -824,15 +819,6 @@ func (s *ComponentScanner) processBatchWithWorkerPoolWithContext(ctx context.Con
 	return nil
 }
 
-// processBatchWithWorkerPool processes files using the persistent worker pool (backward compatible wrapper)
-func (s *ComponentScanner) processBatchWithWorkerPool(files []string) error {
-	// Use background context with timeout for backward compatibility
-	scanTimeout := s.getFileScanTimeout()
-	ctx, cancel := context.WithTimeout(context.Background(), scanTimeout)
-	defer cancel()
-
-	return s.processBatchWithWorkerPoolWithContext(ctx, files)
-}
 
 // processBatchSynchronous processes small batches synchronously for better performance
 func (s *ComponentScanner) processBatchSynchronous(files []string) error {
@@ -1075,20 +1061,6 @@ func (s *ComponentScanner) parseTemplFileWithComponents(path string, content []b
 	return components, nil
 }
 
-// parseTemplFile provides backward compatibility - delegates to the new component-returning version
-func (s *ComponentScanner) parseTemplFile(path string, content []byte, hash string, modTime time.Time) error {
-	components, err := s.parseTemplFileWithComponents(path, content, hash, modTime)
-	if err != nil {
-		return err
-	}
-
-	// Register all components
-	for _, component := range components {
-		s.registry.Register(component)
-	}
-
-	return nil
-}
 
 // extractFromASTWithComponents extracts components from AST and returns them
 func (s *ComponentScanner) extractFromASTWithComponents(path string, astFile *ast.File, hash string, modTime time.Time) ([]*types.ComponentInfo, error) {
@@ -1122,20 +1094,6 @@ func (s *ComponentScanner) extractFromASTWithComponents(path string, astFile *as
 	return components, nil
 }
 
-// extractFromAST provides backward compatibility - delegates to the new component-returning version
-func (s *ComponentScanner) extractFromAST(path string, astFile *ast.File, hash string, modTime time.Time) error {
-	components, err := s.extractFromASTWithComponents(path, astFile, hash, modTime)
-	if err != nil {
-		return err
-	}
-
-	// Register all components
-	for _, component := range components {
-		s.registry.Register(component)
-	}
-
-	return nil
-}
 
 func (s *ComponentScanner) isTemplComponent(fn *ast.FuncDecl) bool {
 	// Check if the function returns a templ.Component
