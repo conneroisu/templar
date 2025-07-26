@@ -3,6 +3,7 @@
 package validation
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"path/filepath"

@@ -1,6 +1,7 @@
 package scaffolding
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
