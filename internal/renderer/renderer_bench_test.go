@@ -66,7 +66,7 @@ func BenchmarkComponentRenderer_GenerateGoCode(b *testing.B) {
 
 	b.ResetTimer()
 	for range b.N {
-		_ = renderer.generateGoCode(component, mockData)
+		_, _ = renderer.generateGoCode(component, mockData)
 	}
 }
 
