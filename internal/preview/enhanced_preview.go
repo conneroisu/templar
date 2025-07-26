@@ -272,17 +272,17 @@ func NewEnhancedPreviewSystem(
 // DefaultPreviewConfig returns default configuration
 func DefaultPreviewConfig() *PreviewConfig {
 	return &PreviewConfig{
-		Host:                   "localhost",
-		Port:                   8080,
-		BasePath:               "/preview",
-		TemplateDir:            "./templates",
-		AssetsDir:              "./assets",
-		StaticAssetsDir:        "./static",
-		EnableLiveReload:       true,
-		LiveReloadPort:         8081,
-		HotReloadEnabled:       true,
-		EnableSandboxing:       true,
-		AllowedOrigins:         []string{"http://localhost:8080"},
+		Host:             "localhost",
+		Port:             8080,
+		BasePath:         "/preview",
+		TemplateDir:      "./templates",
+		AssetsDir:        "./assets",
+		StaticAssetsDir:  "./static",
+		EnableLiveReload: true,
+		LiveReloadPort:   8081,
+		HotReloadEnabled: true,
+		EnableSandboxing: true,
+		AllowedOrigins:   []string{"http://localhost:8080"},
 		CSPPolicy: "default-src 'self'; script-src 'self' 'unsafe-inline'; " +
 			"style-src 'self' 'unsafe-inline'",
 		EnableCaching:          true,

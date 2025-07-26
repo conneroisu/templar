@@ -1011,7 +1011,12 @@ func (s *ComponentScanner) readFileStreamingOptimized(file *os.File, size int64,
 // Backward compatibility method removed - unused
 
 // parseTemplFileWithComponents extracts components from templ files and returns them
-func (s *ComponentScanner) parseTemplFileWithComponents(path string, content []byte, hash string, modTime time.Time) ([]*types.ComponentInfo, error) {
+func (s *ComponentScanner) parseTemplFileWithComponents(
+	path string,
+	content []byte,
+	hash string,
+	modTime time.Time,
+) ([]*types.ComponentInfo, error) {
 	var components []*types.ComponentInfo
 	lines := strings.Split(string(content), "\n")
 	packageName := ""
@@ -1060,7 +1065,12 @@ func (s *ComponentScanner) parseTemplFileWithComponents(path string, content []b
 }
 
 // extractFromASTWithComponents extracts components from AST and returns them
-func (s *ComponentScanner) extractFromASTWithComponents(path string, astFile *ast.File, hash string, modTime time.Time) ([]*types.ComponentInfo, error) {
+func (s *ComponentScanner) extractFromASTWithComponents(
+	path string,
+	astFile *ast.File,
+	hash string,
+	modTime time.Time,
+) ([]*types.ComponentInfo, error) {
 	var components []*types.ComponentInfo
 
 	// Walk the AST to find function declarations that might be templ components

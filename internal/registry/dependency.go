@@ -174,7 +174,12 @@ func (da *DependencyAnalyzer) DetectCircularDependencies() [][]string {
 }
 
 // detectCycleDFS performs DFS to detect cycles
-func (da *DependencyAnalyzer) detectCycleDFS(component string, graph map[string][]string, visited, recStack map[string]bool, path []string) []string {
+func (da *DependencyAnalyzer) detectCycleDFS(
+	component string,
+	graph map[string][]string,
+	visited, recStack map[string]bool,
+	path []string,
+) []string {
 	visited[component] = true
 	recStack[component] = true
 	path = append(path, component)
