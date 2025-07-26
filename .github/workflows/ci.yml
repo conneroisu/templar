@@ -36,6 +36,9 @@ jobs:
 
       - name: Install dependencies
         run: go mod download
+      
+      - name: Install templ
+        run: go install github.com/a-h/templ/cmd/templ@latest
 
       - name: Verify go mod tidy
         run: |

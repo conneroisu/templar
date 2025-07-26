@@ -73,7 +73,7 @@ func (hrp *HotReloadPlugin) Shutdown(ctx context.Context) error {
 	for id, conn := range hrp.connections {
 		if err := conn.Close(); err != nil {
 			// Log error but continue cleanup
-			hrp.logger.Printf("Warning: failed to close connection %s: %v", id, err)
+			fmt.Printf("Warning: failed to close connection %s: %v\n", id, err)
 		}
 		delete(hrp.connections, id)
 	}
@@ -148,7 +148,7 @@ func (hrp *HotReloadPlugin) WebSocketHandler(
 		delete(hrp.connections, connID)
 		hrp.connMutex.Unlock()
 		if err := conn.Close(); err != nil {
-			hrp.logger.Printf("Warning: failed to close connection %s: %v", connID, err)
+			fmt.Printf("Warning: failed to close connection %s: %v\n", connID, err)
 		}
 	}()
 

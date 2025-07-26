@@ -176,7 +176,11 @@ func (g *ComponentGenerator) generateFile(filename, content string, ctx Template
 	if err != nil {
 		return fmt.Errorf("failed to create file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Warning: failed to close file: %v\n", err)
+		}
+	}()
 
 	// Execute template
 	if err := tmpl.Execute(file, ctx); err != nil {

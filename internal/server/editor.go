@@ -3,7 +3,6 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -243,7 +242,7 @@ func (s *PreviewServer) handleEditorSave(w http.ResponseWriter, req EditorReques
 	}
 
 	// Write file
-	if err := ioutil.WriteFile(req.FilePath, []byte(req.Content), 0644); err != nil {
+	if err := os.WriteFile(req.FilePath, []byte(req.Content), 0644); err != nil {
 		response.Success = false
 		response.Errors = []EditorError{{
 			Message:  "Failed to save file: " + err.Error(),
@@ -321,7 +320,7 @@ func (s *PreviewServer) handleFileOpen(w http.ResponseWriter, req FileRequest) {
 	}
 
 	// Read file content
-	content, err := ioutil.ReadFile(req.FilePath)
+	content, err := os.ReadFile(req.FilePath)
 	if err != nil {
 		response.Success = false
 		response.Error = "Failed to read file: " + err.Error()
@@ -345,7 +344,7 @@ func (s *PreviewServer) handleFileSave(w http.ResponseWriter, req FileRequest) {
 	}
 
 	// Write file
-	if err := ioutil.WriteFile(req.FilePath, []byte(req.Content), 0644); err != nil {
+	if err := os.WriteFile(req.FilePath, []byte(req.Content), 0644); err != nil {
 		response.Success = false
 		response.Error = "Failed to save file: " + err.Error()
 	} else {
@@ -390,7 +389,7 @@ func (s *PreviewServer) handleFileCreate(w http.ResponseWriter, req FileRequest)
 		content = s.generateDefaultTemplContent(req.Name)
 	}
 
-	if err := ioutil.WriteFile(req.FilePath, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(req.FilePath, []byte(content), 0644); err != nil {
 		response.Success = false
 		response.Error = "Failed to create file: " + err.Error()
 	} else {
@@ -434,7 +433,7 @@ func (s *PreviewServer) handleFileList(w http.ResponseWriter, req FileRequest) {
 	}
 
 	// Read directory
-	entries, err := ioutil.ReadDir(dirPath)
+	entries, err := os.ReadDir(dirPath)
 	if err != nil {
 		response.Success = false
 		response.Error = "Failed to read directory: " + err.Error()
