@@ -67,7 +67,7 @@ func TestComprehensiveMonitoringIntegration(t *testing.T) {
 		// Start monitoring
 		err = monitor.Start()
 		require.NoError(t, err)
-		defer monitor.Stop()
+		defer func() { _ = monitor.Stop() }()
 
 		// Create and setup alerting
 		alertManager := NewAlertManager(logger)
@@ -363,7 +363,7 @@ func TestComprehensiveMonitoringIntegration(t *testing.T) {
 
 		err = monitor.Start()
 		require.NoError(t, err)
-		defer monitor.Stop()
+		defer func() { _ = monitor.Stop() }()
 
 		perfMonitor := NewPerformanceMonitor(monitor.metrics, logger)
 
@@ -372,7 +372,7 @@ func TestComprehensiveMonitoringIntegration(t *testing.T) {
 		start := time.Now()
 
 		for range 1000 {
-			perfMonitor.TrackOperationWithContext(
+			_ = perfMonitor.TrackOperationWithContext(
 				ctx,
 				"high_load_test",
 				func(ctx context.Context) error {
@@ -446,7 +446,7 @@ func BenchmarkComprehensiveMonitoring(b *testing.B) {
 
 	b.Run("operation_tracking", func(b *testing.B) {
 		for range b.N {
-			perfMonitor.TrackOperationWithContext(
+			_ = perfMonitor.TrackOperationWithContext(
 				ctx,
 				"bench_operation",
 				func(ctx context.Context) error {
