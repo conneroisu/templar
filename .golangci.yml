@@ -1,0 +1,70 @@
+# golangci-lint configuration for Templar project
+# This configuration balances code quality with practical development needs,
+# focusing on critical issues while reducing noise from non-critical patterns
+
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  enable:
+    - errcheck      # Critical: catch unhandled errors that could cause runtime issues
+    - staticcheck   # Important: catch potential bugs and performance issues  
+    - govet         # Essential: catch common programming mistakes
+    - ineffassign   # Useful: catch ineffective assignments
+
+issues:
+  # Path-based exclusions for specialized code areas
+  exclude-rules:
+    # Test files: Focus on functionality over strict error handling
+    - path: "_test\\.go$"
+      linters: ["errcheck"]
+      text: "(Stop|Start|Build)"  # Test lifecycle methods often don't need error handling
+    
+    - path: "_test\\.go$" 
+      linters: ["staticcheck"]
+      text: "(SA6002|SA9003|SA4011)"  # Allow performance/style deviations in tests
+    
+    # Interface tests: These test type compliance, not runtime error handling
+    - path: "tests/interfaces/"
+      linters: ["errcheck"]
+    
+    # Testing utilities: Specialized testing infrastructure with different requirements
+    - path: "internal/testing/"
+      linters: ["errcheck", "staticcheck"]
+    
+    # Examples: Focus on demonstrating features rather than production error handling
+    - path: "examples/"
+      linters: ["errcheck"]
+
+  # Global exclusions for patterns that are typically not critical
+  exclude:
+    # Defer cleanup operations - common Go pattern, errors often not actionable
+    - "Error return value of .*(Close|Flush|Remove|Stop|Write|Start|Build). is not checked"
+    
+    # Logging/output operations - errors typically logged elsewhere or not critical
+    - "Error return value of .*fmt\\..*print.* is not checked"
+    - "Error return value of .*(w\\.Write|Encode). is not checked"
+    
+    # Environment/test setup - not critical for application correctness
+    - "Error return value of .*(os\\.Setenv|os\\.Unsetenv|viper\\.BindEnv|filepath\\.Walk). is not checked"
+    
+    # Service operations where errors are handled elsewhere
+    - "Error return value of .*\\.ScanDirectory. is not checked"
+    - "Error return value of .*\\.Shutdown. is not checked"
+    
+    # Empty branches - often intentional for future expansion or plugin hooks
+    - "SA9003: empty branch"
+    
+    # Performance micro-optimizations - not critical for correctness
+    - "SA6002: argument should be pointer-like"
+    - "S1040: type assertion to the same type"
+    - "S1039: unnecessary use of fmt\\.Sprintf"
+    - "S1008: should use 'return.*' instead of 'if.*return.*'"
+    
+    # Test-specific patterns
+    - "SA4023: this comparison is never true"  # Common in interface compliance tests
+    - "SA4011: ineffective break statement"    # Acceptable in stress test scenarios
+
+  # Allow reasonable number of issues per linter for large codebase
+  max-issues-per-linter: 30

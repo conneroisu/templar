@@ -50,7 +50,10 @@ func NewComponentAccessibilityTester(
 		LogLevel:            "info",
 	}
 
-	if err := engine.Initialize(context.Background(), engineConfig); err != nil {\n\t\t// Log initialization error but continue with default configuration\n\t\tlogger.Warn(context.Background(), err, \"Failed to initialize accessibility engine, using defaults\")\n\t}
+	if err := engine.Initialize(context.Background(), engineConfig); err != nil {
+		// Log initialization error but continue with default configuration
+		logger.Warn(context.Background(), err, "Failed to initialize accessibility engine, using defaults")
+	}
 
 	return &ComponentAccessibilityTester{
 		engine:   engine,
