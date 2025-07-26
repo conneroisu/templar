@@ -306,6 +306,7 @@ func testComponentRegistryContract(t *testing.T) {
 	}
 	if retrieved == nil {
 		t.Error("Expected retrieved component to be non-nil")
+		return
 	}
 	if retrieved.Name != "TestComponent" {
 		t.Errorf("Expected component name 'TestComponent', got '%s'", retrieved.Name)

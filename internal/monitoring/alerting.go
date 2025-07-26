@@ -393,7 +393,7 @@ func (am *AlertManager) handleAlertRules(w http.ResponseWriter, r *http.Request)
 // Utility functions
 
 func (am *AlertManager) getMetricKey(name string, labels map[string]string) string {
-	if labels == nil || len(labels) == 0 {
+	if len(labels) == 0 {
 		return name
 	}
 
