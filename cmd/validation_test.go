@@ -489,7 +489,7 @@ func BenchmarkValidateArgument(b *testing.B) {
 func BenchmarkValidateURL(b *testing.B) {
 	url := "http://localhost:8080/preview/Button"
 	for range b.N {
-		validation.ValidateURL(url)
+		_ = validation.ValidateURL(url)
 	}
 }
 

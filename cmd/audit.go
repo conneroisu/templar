@@ -563,6 +563,8 @@ func outputComponentSummary(report *accessibility.AccessibilityReport) {
 			errorCount++
 		case accessibility.SeverityWarning:
 			warningCount++
+		case accessibility.SeverityInfo:
+			// Info violations are informational only
 		}
 
 		if violation.Impact == accessibility.ImpactCritical {

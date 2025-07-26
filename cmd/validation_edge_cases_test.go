@@ -565,7 +565,7 @@ func BenchmarkValidation_EdgeCases(b *testing.B) {
 		arg := strings.Repeat("a", 10000) + ".templ"
 		b.ResetTimer()
 		for range b.N {
-			validateArgument(arg)
+			_ = validateArgument(arg)
 		}
 	})
 
@@ -573,7 +573,7 @@ func BenchmarkValidation_EdgeCases(b *testing.B) {
 		arg := "файл🚀НаМе.templ"
 		b.ResetTimer()
 		for range b.N {
-			validateArgument(arg)
+			_ = validateArgument(arg)
 		}
 	})
 
@@ -584,7 +584,7 @@ func BenchmarkValidation_EdgeCases(b *testing.B) {
 		}
 		b.ResetTimer()
 		for range b.N {
-			validateArguments(args)
+			_ = validateArguments(args)
 		}
 	})
 
