@@ -8,6 +8,7 @@
   "run": {
     "skip-dirs": [
       "templar-cache-benchmark.*",
+      "templar-cache-benchmark-*.bak",
       "\\.templar",
       "\\.test-baselines"
     ]

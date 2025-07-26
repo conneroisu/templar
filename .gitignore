@@ -40,3 +40,4 @@ logs/
 
 # Benchmark test data directories - contain malformed Go code for testing
 templar-cache-benchmark-*/
+templar-cache-benchmark-*.bak/
