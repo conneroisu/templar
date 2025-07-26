@@ -99,19 +99,19 @@ func init() {
 
 	// Threshold configuration flags
 	performanceCheckCmd.Flags().
-		Float64Var(&performanceThresholds.SlownessThreshold, "slowness-threshold", 1.15, 
+		Float64Var(&performanceThresholds.SlownessThreshold, "slowness-threshold", 1.15,
 			"Performance degradation threshold (e.g., 1.15 = 15% slower)")
 	performanceCheckCmd.Flags().
-		Float64Var(&performanceThresholds.MemoryThreshold, "memory-threshold", 1.20, 
+		Float64Var(&performanceThresholds.MemoryThreshold, "memory-threshold", 1.20,
 			"Memory usage increase threshold (e.g., 1.20 = 20% more memory)")
 	performanceCheckCmd.Flags().
-		Float64Var(&performanceThresholds.AllocThreshold, "alloc-threshold", 1.25, 
+		Float64Var(&performanceThresholds.AllocThreshold, "alloc-threshold", 1.25,
 			"Allocation increase threshold (e.g., 1.25 = 25% more allocations)")
 	performanceCheckCmd.Flags().
-		IntVar(&performanceThresholds.MinSamples, "min-samples", 5, 
+		IntVar(&performanceThresholds.MinSamples, "min-samples", 5,
 			"Minimum samples required for regression detection")
 	performanceCheckCmd.Flags().
-		Float64Var(&performanceThresholds.ConfidenceLevel, "confidence-level", 0.95, 
+		Float64Var(&performanceThresholds.ConfidenceLevel, "confidence-level", 0.95,
 			"Statistical confidence level (e.g., 0.95 = 95%)")
 
 	// Set default thresholds

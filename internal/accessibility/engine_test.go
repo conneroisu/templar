@@ -663,7 +663,7 @@ func BenchmarkAccessibilityEngine_Analyze(b *testing.B) {
 		DefaultTimeout:      10 * time.Second,
 	}
 	err := engine.Initialize(context.Background(), config)
-	require.NoError(t, err)
+	require.NoError(b, err)
 
 	complexHTML := generateComplexHTML(100) // Generate HTML with 100 elements
 

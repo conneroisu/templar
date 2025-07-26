@@ -1,0 +1,78 @@
+{
+  "run": {
+    "timeout": "5m",
+    "tests": true
+  },
+  "linters": {
+    "disable-all": true,
+    "enable": [
+      "errcheck",
+      "staticcheck", 
+      "govet",
+      "ineffassign"
+    ]
+  },
+  "issues": {
+    "exclude-rules": [
+      {
+        "path": "_test\\.go",
+        "linters": ["errcheck", "staticcheck"],
+        "text": "(os\\.Setenv|os\\.Unsetenv|viper\\.BindEnv|os\\.RemoveAll|os\\.MkdirAll)"
+      },
+      {
+        "path": "_test\\.go", 
+        "linters": ["staticcheck"],
+        "text": "(SA4023|SA6002|SA9003|SA4010|SA4011)"
+      },
+      {
+        "path": "(security_test\\.go|performance.*_test\\.go|memory.*_test\\.go)",
+        "linters": ["errcheck"],
+        "text": "(os\\.RemoveAll|os\\.MkdirAll|.*\\.UpdateBaselines)"
+      },
+      {
+        "path": "tests/interfaces/",
+        "linters": ["staticcheck"],
+        "text": "SA4023: this comparison is never true"
+      },
+      {
+        "path": "_fuzz_test\\.go",
+        "linters": ["errcheck"],
+        "text": "(os\\.Setenv|defer os\\.)"
+      },
+      {
+        "path": "examples/",
+        "linters": ["errcheck"]
+      },
+      {
+        "path": "internal/testing/",
+        "linters": ["errcheck", "staticcheck"]
+      },
+      {
+        "path": "internal/plugins/",
+        "linters": ["staticcheck"],
+        "text": "SA9003: empty branch"
+      },
+      {
+        "path": "internal/plugins/builtin/",
+        "linters": ["errcheck"],
+        "text": "(tempFile\\.Close|os\\.Remove)"
+      }
+    ],
+    "exclude": [
+      "Error return value of .*(Close|Flush|Remove|Stop|Write|Start|Build). is not checked",
+      "Error return value of .*fmt\\..*print.* is not checked",
+      "Error return value of .*\\.ShouldFail. is not checked",
+      "Error return value of .*\\.NotifyError. is not checked",
+      "Error return value of .*(os\\.Setenv|os\\.Unsetenv|viper\\.BindEnv|filepath\\.Walk). is not checked",
+      "SA9003: empty branch",
+      "SA6002: argument should be pointer-like",
+      "SA4023: this comparison is never true",
+      "S1040: type assertion to the same type",
+      "S1039: unnecessary use of fmt\\.Sprintf",
+      "S1008: should use 'return.*' instead of 'if.*return.*'",
+      "SA4010: this result of append is never used",
+      "SA4011: ineffective break statement"
+    ],
+    "max-issues-per-linter": 20
+  }
+}

@@ -211,14 +211,14 @@ func (ec *ErrorCollector) ErrorOverlay() string {
 					%s:%d:%d
 				</div>
 			</div>
-		`, 
-			severityColor, 
-			severityColor, 
-			err.Severity.String(), 
-			err.Timestamp.Format("15:04:05"), 
-			err.Message, 
-			err.File, 
-			err.Line, 
+		`,
+			severityColor,
+			severityColor,
+			err.Severity.String(),
+			err.Timestamp.Format("15:04:05"),
+			err.Message,
+			err.File,
+			err.Line,
 			err.Column)
 	}
 
