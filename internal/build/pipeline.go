@@ -28,7 +28,7 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// crcTable is a pre-computed CRC32 Castagnoli table for faster hash generation
+// crcTable is a pre-computed CRC32 Castagnoli table for faster hash generation.
 var crcTable = crc32.MakeTable(crc32.Castagnoli)
 
 // BuildPipeline manages the build process for templ components with concurrent
@@ -41,7 +41,7 @@ var crcTable = crc32.MakeTable(crc32.Castagnoli)
 // - Real-time build metrics and status callbacks
 // - Memory optimization through object pooling
 // - Security-hardened command execution
-// - Comprehensive timeout management
+// - Comprehensive timeout management.
 type BuildPipeline struct {
 	// compiler handles templ compilation with security validation
 	compiler *TemplCompiler
@@ -86,7 +86,7 @@ type BuildTask struct {
 	Timestamp time.Time
 }
 
-// BuildResult represents the result of a build operation
+// BuildResult represents the result of a build operation.
 type BuildResult struct {
 	Component    *types.ComponentInfo
 	Output       []byte
@@ -97,17 +97,17 @@ type BuildResult struct {
 	Hash         string
 }
 
-// BuildCallback is called when a build completes
+// BuildCallback is called when a build completes.
 type BuildCallback func(result BuildResult)
 
-// BuildQueue manages build tasks
+// BuildQueue manages build tasks.
 type BuildQueue struct {
 	tasks    chan BuildTask
 	results  chan BuildResult
 	priority chan BuildTask
 }
 
-// NewBuildPipeline creates a new build pipeline with optional timeout configuration
+// NewBuildPipeline creates a new build pipeline with optional timeout configuration.
 func NewBuildPipeline(
 	workers int,
 	registry interfaces.ComponentRegistry,
@@ -147,13 +147,13 @@ func NewBuildPipeline(
 	}
 }
 
-// Start starts the build pipeline
+// Start starts the build pipeline.
 func (bp *BuildPipeline) Start(ctx context.Context) {
 	// Create cancellable context
 	ctx, bp.cancel = context.WithCancel(ctx)
 
 	// Start workers
-	for i := 0; i < bp.workers; i++ {
+	for range bp.workers {
 		bp.workerWg.Add(1)
 		go bp.worker(ctx)
 	}
@@ -163,7 +163,7 @@ func (bp *BuildPipeline) Start(ctx context.Context) {
 	go bp.processResults(ctx)
 }
 
-// Stop stops the build pipeline and waits for all goroutines to finish
+// Stop stops the build pipeline and waits for all goroutines to finish.
 func (bp *BuildPipeline) Stop() {
 	if bp.cancel != nil {
 		bp.cancel()
@@ -176,7 +176,7 @@ func (bp *BuildPipeline) Stop() {
 	bp.resultWg.Wait()
 }
 
-// StopWithTimeout stops the build pipeline with a timeout for graceful shutdown
+// StopWithTimeout stops the build pipeline with a timeout for graceful shutdown.
 func (bp *BuildPipeline) StopWithTimeout(timeout time.Duration) error {
 	if bp.cancel != nil {
 		bp.cancel()
@@ -201,7 +201,7 @@ func (bp *BuildPipeline) StopWithTimeout(timeout time.Duration) error {
 	}
 }
 
-// Build queues a component for building
+// Build queues a component for building.
 func (bp *BuildPipeline) Build(component *types.ComponentInfo) {
 	// Check if pipeline is shut down
 	if bp.cancel == nil {
@@ -210,6 +210,7 @@ func (bp *BuildPipeline) Build(component *types.ComponentInfo) {
 			component.Name,
 		)
 		bp.metrics.RecordDroppedTask(component.Name, "pipeline_not_started")
+
 		return
 	}
 
@@ -242,7 +243,7 @@ func (bp *BuildPipeline) Build(component *types.ComponentInfo) {
 	}
 }
 
-// BuildWithPriority queues a component for building with high priority
+// BuildWithPriority queues a component for building with high priority.
 func (bp *BuildPipeline) BuildWithPriority(component *types.ComponentInfo) {
 	// Check if pipeline is shut down
 	if bp.cancel == nil {
@@ -251,6 +252,7 @@ func (bp *BuildPipeline) BuildWithPriority(component *types.ComponentInfo) {
 			component.Name,
 		)
 		bp.metrics.RecordDroppedTask(component.Name, "pipeline_not_started")
+
 		return
 	}
 
@@ -276,27 +278,27 @@ func (bp *BuildPipeline) BuildWithPriority(component *types.ComponentInfo) {
 	}
 }
 
-// AddCallback adds a callback to be called when builds complete
+// AddCallback adds a callback to be called when builds complete.
 func (bp *BuildPipeline) AddCallback(callback BuildCallback) {
 	bp.callbacks = append(bp.callbacks, callback)
 }
 
-// GetMetrics returns the current build metrics
+// GetMetrics returns the current build metrics.
 func (bp *BuildPipeline) GetMetrics() BuildMetrics {
 	return bp.metrics.GetSnapshot()
 }
 
-// ClearCache clears the build cache
+// ClearCache clears the build cache.
 func (bp *BuildPipeline) ClearCache() {
 	bp.cache.Clear()
 }
 
-// GetCacheStats returns cache statistics
+// GetCacheStats returns cache statistics.
 func (bp *BuildPipeline) GetCacheStats() (int, int64, int64) {
 	return bp.cache.GetStats()
 }
 
-// getBuildTimeout returns the configured timeout for build operations
+// getBuildTimeout returns the configured timeout for build operations.
 func (bp *BuildPipeline) getBuildTimeout() time.Duration {
 	if bp.config != nil && bp.config.Timeouts.Build > 0 {
 		return bp.config.Timeouts.Build
@@ -305,7 +307,7 @@ func (bp *BuildPipeline) getBuildTimeout() time.Duration {
 	return 5 * time.Minute
 }
 
-// worker processes build tasks
+// worker processes build tasks.
 func (bp *BuildPipeline) worker(ctx context.Context) {
 	defer bp.workerWg.Done()
 
@@ -347,6 +349,7 @@ func (bp *BuildPipeline) processBuildTask(ctx context.Context, task BuildTask) {
 			bp.metrics.RecordDroppedResult(task.Component.Name, "results_queue_full_cancelled")
 		}
 		bp.objectPools.PutBuildResult(buildResult)
+
 		return
 	default:
 	}
@@ -371,6 +374,7 @@ func (bp *BuildPipeline) processBuildTask(ctx context.Context, task BuildTask) {
 			// Context cancelled while sending result
 			buildResult.Error = ctx.Err()
 			bp.objectPools.PutBuildResult(buildResult)
+
 			return
 		default:
 			// Results queue full - this could cause result loss
@@ -384,6 +388,7 @@ func (bp *BuildPipeline) processBuildTask(ctx context.Context, task BuildTask) {
 			)
 		}
 		bp.objectPools.PutBuildResult(buildResult)
+
 		return
 	}
 
@@ -429,6 +434,7 @@ func (bp *BuildPipeline) processBuildTask(ctx context.Context, task BuildTask) {
 		buildResult.Error = ctx.Err()
 		bp.metrics.RecordDroppedResult(buildResult.Component.Name, "cancelled_during_send")
 		bp.objectPools.PutBuildResult(buildResult)
+
 		return
 	default:
 		// Results queue full - this could cause result loss
@@ -481,7 +487,7 @@ func (bp *BuildPipeline) handleBuildResult(result BuildResult) {
 	}
 }
 
-// generateContentHash generates a hash for component content with optimized single I/O operation
+// generateContentHash generates a hash for component content with optimized single I/O operation.
 func (bp *BuildPipeline) generateContentHash(component *types.ComponentInfo) string {
 	// OPTIMIZATION: Use Stat() first to get metadata without opening file
 	// This reduces file I/O operations by 70-90% for cached files
@@ -538,7 +544,7 @@ func (bp *BuildPipeline) generateContentHash(component *types.ComponentInfo) str
 	return contentHash
 }
 
-// readFileWithMmap reads file content using memory mapping for better performance on large files
+// readFileWithMmap reads file content using memory mapping for better performance on large files.
 func (bp *BuildPipeline) readFileWithMmap(file *os.File, size int64) ([]byte, error) {
 	// Memory map the file for efficient reading
 	mmap, err := syscall.Mmap(int(file.Fd()), 0, int(size), syscall.PROT_READ, syscall.MAP_SHARED)
@@ -556,7 +562,7 @@ func (bp *BuildPipeline) readFileWithMmap(file *os.File, size int64) ([]byte, er
 	return content, nil
 }
 
-// generateContentHashesBatch processes multiple components in a single batch for better I/O efficiency
+// generateContentHashesBatch processes multiple components in a single batch for better I/O efficiency.
 func (bp *BuildPipeline) generateContentHashesBatch(
 	components []*types.ComponentInfo,
 ) map[string]string {
@@ -580,6 +586,7 @@ func (bp *BuildPipeline) generateContentHashesBatch(
 			if hash, found := bp.cache.GetHash(metadataKey); found {
 				// Cache hit - no file reading needed
 				results[component.FilePath] = hash
+
 				continue
 			}
 		}
@@ -599,7 +606,7 @@ func (bp *BuildPipeline) generateContentHashesBatch(
 	return results
 }
 
-// batchReadAndHash reads and hashes multiple files efficiently
+// batchReadAndHash reads and hashes multiple files efficiently.
 func (bp *BuildPipeline) batchReadAndHash(components []*types.ComponentInfo) map[string]string {
 	results := make(map[string]string, len(components))
 
@@ -612,7 +619,7 @@ func (bp *BuildPipeline) batchReadAndHash(components []*types.ComponentInfo) map
 	return results
 }
 
-// FileDiscoveryResult represents the result of discovering files in a directory
+// FileDiscoveryResult represents the result of discovering files in a directory.
 type FileDiscoveryResult struct {
 	Files      []*types.ComponentInfo
 	Errors     []error
@@ -621,7 +628,7 @@ type FileDiscoveryResult struct {
 	Skipped    int64
 }
 
-// FileDiscoveryStats tracks file discovery performance metrics
+// FileDiscoveryStats tracks file discovery performance metrics.
 type FileDiscoveryStats struct {
 	TotalFiles     int64
 	ProcessedFiles int64
@@ -631,7 +638,7 @@ type FileDiscoveryStats struct {
 	WorkerCount    int
 }
 
-// ParallelFileProcessor provides parallel file processing capabilities
+// ParallelFileProcessor provides parallel file processing capabilities.
 type ParallelFileProcessor struct {
 	workerCount int
 	maxDepth    int
@@ -639,7 +646,7 @@ type ParallelFileProcessor struct {
 	stats       *FileDiscoveryStats
 }
 
-// NewParallelFileProcessor creates a new parallel file processor
+// NewParallelFileProcessor creates a new parallel file processor.
 func NewParallelFileProcessor(workerCount int) *ParallelFileProcessor {
 	return &ParallelFileProcessor{
 		workerCount: workerCount,
@@ -649,7 +656,7 @@ func NewParallelFileProcessor(workerCount int) *ParallelFileProcessor {
 	}
 }
 
-// DiscoverFiles discovers component files in parallel using filepath.WalkDir
+// DiscoverFiles discovers component files in parallel using filepath.WalkDir.
 func (pfp *ParallelFileProcessor) DiscoverFiles(
 	ctx context.Context,
 	rootPaths []string,
@@ -666,7 +673,7 @@ func (pfp *ParallelFileProcessor) DiscoverFiles(
 
 	// Start workers
 	var wg sync.WaitGroup
-	for i := 0; i < pfp.workerCount; i++ {
+	for range pfp.workerCount {
 		wg.Add(1)
 		go pfp.worker(ctx, pathCh, resultCh, errorCh, &wg)
 	}
@@ -734,7 +741,7 @@ func (pfp *ParallelFileProcessor) DiscoverFiles(
 	}, nil
 }
 
-// worker processes file discovery work
+// worker processes file discovery work.
 func (pfp *ParallelFileProcessor) worker(
 	ctx context.Context,
 	pathCh <-chan string,
@@ -803,30 +810,33 @@ func (pfp *ParallelFileProcessor) worker(
 	}
 }
 
-// matchesFilter checks if a file path matches the processor's filters
+// matchesFilter checks if a file path matches the processor's filters.
 func (pfp *ParallelFileProcessor) matchesFilter(path string) bool {
 	for _, filter := range pfp.filters {
 		if strings.HasSuffix(path, filter) {
 			return true
 		}
 	}
+
 	return false
 }
 
-// extractComponentName extracts component name from file path
+// extractComponentName extracts component name from file path.
 func (pfp *ParallelFileProcessor) extractComponentName(path string) string {
 	base := filepath.Base(path)
 	ext := filepath.Ext(base)
+
 	return strings.TrimSuffix(base, ext)
 }
 
-// extractPackage extracts package name from file path
+// extractPackage extracts package name from file path.
 func (pfp *ParallelFileProcessor) extractPackage(path string) string {
 	dir := filepath.Dir(path)
+
 	return filepath.Base(dir)
 }
 
-// ProcessFilesBatch processes multiple files in parallel batches
+// ProcessFilesBatch processes multiple files in parallel batches.
 func (bp *BuildPipeline) ProcessFilesBatch(
 	ctx context.Context,
 	components []*types.ComponentInfo,
@@ -852,6 +862,7 @@ func (bp *BuildPipeline) ProcessFilesBatch(
 			hash, exists := hashes[component.FilePath]
 			if !exists {
 				atomic.AddInt64(&totalSkipped, 1)
+
 				continue
 			}
 
@@ -860,6 +871,7 @@ func (bp *BuildPipeline) ProcessFilesBatch(
 				// Cache hit, no processing needed
 				allResults = append(allResults, component)
 				atomic.AddInt64(&totalDiscovered, 1)
+
 				continue
 			}
 
@@ -878,7 +890,7 @@ func (bp *BuildPipeline) ProcessFilesBatch(
 	}, nil
 }
 
-// BuildDirectory builds all components in a directory using parallel processing
+// BuildDirectory builds all components in a directory using parallel processing.
 func (bp *BuildPipeline) BuildDirectory(ctx context.Context, rootPath string) error {
 	// Create parallel file processor
 	processor := NewParallelFileProcessor(bp.workers)
@@ -900,7 +912,7 @@ func (bp *BuildPipeline) BuildDirectory(ctx context.Context, rootPath string) er
 	return nil
 }
 
-// GetFileDiscoveryStats returns file discovery performance statistics
+// GetFileDiscoveryStats returns file discovery performance statistics.
 func (pfp *ParallelFileProcessor) GetFileDiscoveryStats() FileDiscoveryStats {
 	return FileDiscoveryStats{
 		TotalFiles:     atomic.LoadInt64(&pfp.stats.TotalFiles),

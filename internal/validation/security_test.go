@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-// Helper function for validation tests to reduce code duplication
+// Helper function for validation tests to reduce code duplication.
 func runValidationTests(
 	t *testing.T,
 	testName string,
@@ -411,7 +411,7 @@ func TestSanitizeInput(t *testing.T) {
 	}
 }
 
-// Security-focused edge case tests
+// Security-focused edge case tests.
 func TestSecurityEdgeCases(t *testing.T) {
 	t.Run("Path traversal variations", func(t *testing.T) {
 		// Test various path traversal techniques
@@ -447,24 +447,24 @@ func TestSecurityEdgeCases(t *testing.T) {
 	})
 }
 
-// Benchmark tests for performance validation
+// Benchmark tests for performance validation.
 func BenchmarkValidateArgument(b *testing.B) {
 	arg := "generate"
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = ValidateArgument(arg)
 	}
 }
 
 func BenchmarkValidatePath(b *testing.B) {
 	path := "./components/button.templ"
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = ValidatePath(path)
 	}
 }
 
 func BenchmarkSanitizeInput(b *testing.B) {
 	input := "Hello World with some\x00null\x01bytes"
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		SanitizeInput(input)
 	}
 }

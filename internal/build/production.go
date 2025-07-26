@@ -29,7 +29,7 @@ type ProductionBuildPipeline struct {
 	buildMetrics *ProductionBuildMetrics
 }
 
-// ProductionBuildOptions defines configuration for production builds
+// ProductionBuildOptions defines configuration for production builds.
 type ProductionBuildOptions struct {
 	OutputDir        string `json:"output_dir"`
 	StaticGeneration bool   `json:"static_generation"`
@@ -61,7 +61,7 @@ type ProductionBuildOptions struct {
 	CustomOptions map[string]interface{} `json:"custom_options,omitempty"`
 }
 
-// ProductionBuildMetrics tracks production build performance and results
+// ProductionBuildMetrics tracks production build performance and results.
 type ProductionBuildMetrics struct {
 	StartTime time.Time     `json:"start_time"`
 	EndTime   time.Time     `json:"end_time"`
@@ -101,7 +101,7 @@ type ProductionBuildMetrics struct {
 	Warnings []string `json:"warnings,omitempty"`
 }
 
-// BuildArtifacts represents the output of a production build
+// BuildArtifacts represents the output of a production build.
 type BuildArtifacts struct {
 	// Core artifacts
 	StaticFiles    []string `json:"static_files"`
@@ -126,7 +126,7 @@ type BuildArtifacts struct {
 	PerformanceReport string `json:"performance_report,omitempty"`
 }
 
-// NewProductionBuildPipeline creates a new production build pipeline
+// NewProductionBuildPipeline creates a new production build pipeline.
 func NewProductionBuildPipeline(cfg *config.Config, outputDir string) *ProductionBuildPipeline {
 	staticDir := filepath.Join(outputDir, "static")
 	assetsDir := filepath.Join(outputDir, "assets")
@@ -145,7 +145,7 @@ func NewProductionBuildPipeline(cfg *config.Config, outputDir string) *Productio
 	}
 }
 
-// Build executes the complete production build pipeline
+// Build executes the complete production build pipeline.
 func (p *ProductionBuildPipeline) Build(
 	ctx context.Context,
 	components []*types.ComponentInfo,
@@ -239,7 +239,7 @@ func (p *ProductionBuildPipeline) Build(
 	return artifacts, nil
 }
 
-// createOutputDirectories ensures all necessary output directories exist
+// createOutputDirectories ensures all necessary output directories exist.
 func (p *ProductionBuildPipeline) createOutputDirectories() error {
 	dirs := []string{
 		p.outputDir,
@@ -262,7 +262,7 @@ func (p *ProductionBuildPipeline) createOutputDirectories() error {
 	return nil
 }
 
-// generateTemplates runs templ generation for all components
+// generateTemplates runs templ generation for all components.
 func (p *ProductionBuildPipeline) generateTemplates(
 	ctx context.Context,
 	components []*types.ComponentInfo,
@@ -280,12 +280,12 @@ func (p *ProductionBuildPipeline) generateTemplates(
 	return nil
 }
 
-// discoverAssets scans the project for assets that need processing
+// discoverAssets scans the project for assets that need processing.
 func (p *ProductionBuildPipeline) discoverAssets(ctx context.Context) (*AssetManifest, error) {
 	return p.bundler.DiscoverAssets(ctx)
 }
 
-// bundleAssets performs asset bundling and processing
+// bundleAssets performs asset bundling and processing.
 func (p *ProductionBuildPipeline) bundleAssets(
 	ctx context.Context,
 	manifest *AssetManifest,
@@ -302,7 +302,7 @@ func (p *ProductionBuildPipeline) bundleAssets(
 	return p.bundler.Bundle(ctx, manifest, bundlerOptions)
 }
 
-// generateStaticSite creates static HTML files from components
+// generateStaticSite creates static HTML files from components.
 func (p *ProductionBuildPipeline) generateStaticSite(
 	ctx context.Context,
 	components []*types.ComponentInfo,
@@ -318,7 +318,7 @@ func (p *ProductionBuildPipeline) generateStaticSite(
 	return p.generator.Generate(ctx, components, generatorOptions)
 }
 
-// optimizeAssets performs post-bundle optimization
+// optimizeAssets performs post-bundle optimization.
 func (p *ProductionBuildPipeline) optimizeAssets(
 	ctx context.Context,
 	options ProductionBuildOptions,
@@ -333,7 +333,7 @@ func (p *ProductionBuildPipeline) optimizeAssets(
 	return p.optimizer.Optimize(ctx, p.assetsDir, optimizerOptions)
 }
 
-// generateAssetManifest creates a manifest file for asset references
+// generateAssetManifest creates a manifest file for asset references.
 func (p *ProductionBuildPipeline) generateAssetManifest(
 	ctx context.Context,
 	artifacts *BuildArtifacts,
@@ -351,7 +351,7 @@ func (p *ProductionBuildPipeline) generateAssetManifest(
 	return manifestPath, writeJSONFile(manifestPath, manifest)
 }
 
-// validateBuild performs quality checks on the build output
+// validateBuild performs quality checks on the build output.
 func (p *ProductionBuildPipeline) validateBuild(
 	ctx context.Context,
 	artifacts *BuildArtifacts,
@@ -379,17 +379,17 @@ func (p *ProductionBuildPipeline) validateBuild(
 	return nil
 }
 
-// buildDockerImage creates a production Docker image
+// buildDockerImage creates a production Docker image.
 func (p *ProductionBuildPipeline) buildDockerImage(
 	ctx context.Context,
 	artifacts *BuildArtifacts,
 	options ProductionBuildOptions,
 ) (string, string, error) {
 	// Temporarily disabled Docker functionality
-	return "", "", fmt.Errorf("docker functionality temporarily disabled")
+	return "", "", errors.New("docker functionality temporarily disabled")
 }
 
-// generateBuildReports creates analysis and performance reports
+// generateBuildReports creates analysis and performance reports.
 func (p *ProductionBuildPipeline) generateBuildReports(
 	ctx context.Context,
 	artifacts *BuildArtifacts,
@@ -414,12 +414,12 @@ func (p *ProductionBuildPipeline) generateBuildReports(
 	return nil
 }
 
-// GetMetrics returns the current build metrics
+// GetMetrics returns the current build metrics.
 func (p *ProductionBuildPipeline) GetMetrics() *ProductionBuildMetrics {
 	return p.buildMetrics
 }
 
-// GetDefaultProductionOptions returns sensible defaults for production builds
+// GetDefaultProductionOptions returns sensible defaults for production builds.
 func GetDefaultProductionOptions() ProductionBuildOptions {
 	return ProductionBuildOptions{
 		OutputDir:        "dist",

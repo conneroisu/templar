@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// cssCmd represents the css command for managing CSS frameworks
+// cssCmd represents the css command for managing CSS frameworks.
 var cssCmd = &cobra.Command{
 	Use:   "css",
 	Short: "Manage CSS framework integration",
@@ -27,7 +27,7 @@ The css command provides subcommands to:
 	},
 }
 
-// cssListCmd lists available CSS frameworks
+// cssListCmd lists available CSS frameworks.
 var cssListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List available CSS frameworks",
@@ -48,6 +48,7 @@ var cssListCmd = &cobra.Command{
 
 		if len(frameworks) == 0 {
 			fmt.Println("No CSS frameworks available")
+
 			return nil
 		}
 
@@ -77,7 +78,7 @@ var cssListCmd = &cobra.Command{
 	},
 }
 
-// cssSetupCmd sets up a CSS framework
+// cssSetupCmd sets up a CSS framework.
 var cssSetupCmd = &cobra.Command{
 	Use:   "setup [framework]",
 	Short: "Setup a CSS framework",
@@ -142,7 +143,7 @@ Examples:
 	},
 }
 
-// cssStyleguideCmd generates a style guide
+// cssStyleguideCmd generates a style guide.
 var cssStyleguideCmd = &cobra.Command{
 	Use:   "styleguide",
 	Short: "Generate a CSS framework style guide",
@@ -166,9 +167,7 @@ var cssStyleguideCmd = &cobra.Command{
 
 		activeFramework := manager.GetActiveFramework()
 		if activeFramework == "" {
-			return fmt.Errorf(
-				"no active CSS framework found. Run 'templar css setup <framework>' first",
-			)
+			return errors.New("no active CSS framework found. Run 'templar css setup <framework>' first")
 		}
 
 		fmt.Printf("Generating style guide for %s...\n", activeFramework)
@@ -188,7 +187,7 @@ var cssStyleguideCmd = &cobra.Command{
 	},
 }
 
-// cssThemeCmd manages theming
+// cssThemeCmd manages theming.
 var cssThemeCmd = &cobra.Command{
 	Use:   "theme",
 	Short: "Manage CSS theming and variables",
@@ -198,7 +197,7 @@ var cssThemeCmd = &cobra.Command{
 	},
 }
 
-// cssThemeExtractCmd extracts CSS variables
+// cssThemeExtractCmd extracts CSS variables.
 var cssThemeExtractCmd = &cobra.Command{
 	Use:   "extract",
 	Short: "Extract CSS variables from framework",
@@ -222,9 +221,7 @@ var cssThemeExtractCmd = &cobra.Command{
 
 		activeFramework := manager.GetActiveFramework()
 		if activeFramework == "" {
-			return fmt.Errorf(
-				"no active CSS framework found. Run 'templar css setup <framework>' first",
-			)
+			return errors.New("no active CSS framework found. Run 'templar css setup <framework>' first")
 		}
 
 		fmt.Printf("Extracting variables from %s...\n", activeFramework)
@@ -243,6 +240,7 @@ var cssThemeExtractCmd = &cobra.Command{
 
 		if len(variables) == 0 {
 			fmt.Println("No variables found to extract")
+
 			return nil
 		}
 
@@ -272,7 +270,7 @@ var cssThemeExtractCmd = &cobra.Command{
 	},
 }
 
-// cssThemeGenerateCmd generates a custom theme
+// cssThemeGenerateCmd generates a custom theme.
 var cssThemeGenerateCmd = &cobra.Command{
 	Use:   "generate [variables-file]",
 	Short: "Generate a custom theme from variables",
@@ -337,9 +335,7 @@ The variables file should be in JSON format with variable names and values:
 
 		activeFramework := manager.GetActiveFramework()
 		if activeFramework == "" {
-			return fmt.Errorf(
-				"no active CSS framework found. Run 'templar css setup <framework>' first",
-			)
+			return errors.New("no active CSS framework found. Run 'templar css setup <framework>' first")
 		}
 
 		fmt.Printf("Generating custom theme for %s...\n", activeFramework)
@@ -360,7 +356,7 @@ The variables file should be in JSON format with variable names and values:
 	},
 }
 
-// cssValidateCmd validates CSS framework configuration
+// cssValidateCmd validates CSS framework configuration.
 var cssValidateCmd = &cobra.Command{
 	Use:   "validate [framework]",
 	Short: "Validate CSS framework configuration",
@@ -384,7 +380,7 @@ var cssValidateCmd = &cobra.Command{
 		} else {
 			frameworkName = manager.GetActiveFramework()
 			if frameworkName == "" {
-				return fmt.Errorf("no framework specified and no active framework found")
+				return errors.New("no framework specified and no active framework found")
 			}
 		}
 
@@ -392,6 +388,7 @@ var cssValidateCmd = &cobra.Command{
 
 		if err := manager.ValidateFramework(frameworkName); err != nil {
 			fmt.Printf("❌ Validation failed: %v\n", err)
+
 			return nil
 		}
 

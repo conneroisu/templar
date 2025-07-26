@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// TemplarMonitor provides Templar-specific monitoring integration
+// TemplarMonitor provides Templar-specific monitoring integration.
 type TemplarMonitor struct {
 	*Monitor
 	scannerTracker  *OperationTracker
@@ -21,7 +21,7 @@ type TemplarMonitor struct {
 	registryTracker *OperationTracker
 }
 
-// NewTemplarMonitor creates a Templar-specific monitor with all integrations
+// NewTemplarMonitor creates a Templar-specific monitor with all integrations.
 func NewTemplarMonitor(configPath string) (*TemplarMonitor, error) {
 	// Load configuration from file if provided
 	config := DefaultMonitorConfig()
@@ -56,7 +56,7 @@ func NewTemplarMonitor(configPath string) (*TemplarMonitor, error) {
 	return templatorMonitor, nil
 }
 
-// registerTemplarHealthChecks registers health checks specific to Templar components
+// registerTemplarHealthChecks registers health checks specific to Templar components.
 func (tm *TemplarMonitor) registerTemplarHealthChecks() {
 	// Component registry health check
 	registryCheck := NewHealthCheckFunc(
@@ -171,7 +171,7 @@ func (tm *TemplarMonitor) registerTemplarHealthChecks() {
 
 // Component operation tracking methods
 
-// TrackScanOperation tracks component scanning operations
+// TrackScanOperation tracks component scanning operations.
 func (tm *TemplarMonitor) TrackScanOperation(
 	ctx context.Context,
 	operation string,
@@ -180,7 +180,7 @@ func (tm *TemplarMonitor) TrackScanOperation(
 	return tm.scannerTracker.TrackOperation(ctx, operation, fn)
 }
 
-// TrackBuildOperation tracks build operations
+// TrackBuildOperation tracks build operations.
 func (tm *TemplarMonitor) TrackBuildOperation(
 	ctx context.Context,
 	operation string,
@@ -189,7 +189,7 @@ func (tm *TemplarMonitor) TrackBuildOperation(
 	return tm.buildTracker.TrackOperation(ctx, operation, fn)
 }
 
-// TrackServerOperation tracks server operations
+// TrackServerOperation tracks server operations.
 func (tm *TemplarMonitor) TrackServerOperation(
 	ctx context.Context,
 	operation string,
@@ -198,7 +198,7 @@ func (tm *TemplarMonitor) TrackServerOperation(
 	return tm.serverTracker.TrackOperation(ctx, operation, fn)
 }
 
-// TrackWatcherOperation tracks file watcher operations
+// TrackWatcherOperation tracks file watcher operations.
 func (tm *TemplarMonitor) TrackWatcherOperation(
 	ctx context.Context,
 	operation string,
@@ -207,7 +207,7 @@ func (tm *TemplarMonitor) TrackWatcherOperation(
 	return tm.watcherTracker.TrackOperation(ctx, operation, fn)
 }
 
-// TrackRendererOperation tracks renderer operations
+// TrackRendererOperation tracks renderer operations.
 func (tm *TemplarMonitor) TrackRendererOperation(
 	ctx context.Context,
 	operation string,
@@ -216,7 +216,7 @@ func (tm *TemplarMonitor) TrackRendererOperation(
 	return tm.rendererTracker.TrackOperation(ctx, operation, fn)
 }
 
-// TrackRegistryOperation tracks registry operations
+// TrackRegistryOperation tracks registry operations.
 func (tm *TemplarMonitor) TrackRegistryOperation(
 	ctx context.Context,
 	operation string,
@@ -227,7 +227,7 @@ func (tm *TemplarMonitor) TrackRegistryOperation(
 
 // Component-specific metrics
 
-// RecordComponentScanned records a component scan event
+// RecordComponentScanned records a component scan event.
 func (tm *TemplarMonitor) RecordComponentScanned(componentType, componentName string) {
 	if tm.appMetrics != nil {
 		tm.appMetrics.ComponentScanned(componentType)
@@ -238,7 +238,7 @@ func (tm *TemplarMonitor) RecordComponentScanned(componentType, componentName st
 	}
 }
 
-// RecordComponentBuilt records a component build event
+// RecordComponentBuilt records a component build event.
 func (tm *TemplarMonitor) RecordComponentBuilt(
 	componentName string,
 	success bool,
@@ -264,7 +264,7 @@ func (tm *TemplarMonitor) RecordComponentBuilt(
 	}
 }
 
-// RecordFileWatchEvent records a file watch event
+// RecordFileWatchEvent records a file watch event.
 func (tm *TemplarMonitor) RecordFileWatchEvent(eventType, filePath string) {
 	if tm.appMetrics != nil {
 		tm.appMetrics.FileWatcherEvent(eventType)
@@ -277,7 +277,7 @@ func (tm *TemplarMonitor) RecordFileWatchEvent(eventType, filePath string) {
 	}
 }
 
-// RecordWebSocketEvent records WebSocket events
+// RecordWebSocketEvent records WebSocket events.
 func (tm *TemplarMonitor) RecordWebSocketEvent(eventType string, clientCount int) {
 	if tm.appMetrics != nil {
 		tm.appMetrics.WebSocketConnection(eventType)
@@ -285,7 +285,7 @@ func (tm *TemplarMonitor) RecordWebSocketEvent(eventType string, clientCount int
 	}
 }
 
-// RecordCacheEvent records cache hit/miss events
+// RecordCacheEvent records cache hit/miss events.
 func (tm *TemplarMonitor) RecordCacheEvent(operation string, hit bool, itemKey string) {
 	if tm.appMetrics != nil {
 		tm.appMetrics.CacheOperation(operation, hit)
@@ -304,7 +304,7 @@ func (tm *TemplarMonitor) RecordCacheEvent(operation string, hit bool, itemKey s
 
 // HTTP Middleware factory for Templar server
 
-// CreateTemplarMiddleware creates HTTP middleware with Templar-specific tracking
+// CreateTemplarMiddleware creates HTTP middleware with Templar-specific tracking.
 func (tm *TemplarMonitor) CreateTemplarMiddleware() func(http.Handler) http.Handler {
 	baseMiddleware := MonitoringMiddleware(tm.Monitor)
 
@@ -341,7 +341,7 @@ func (tm *TemplarMonitor) CreateTemplarMiddleware() func(http.Handler) http.Hand
 
 // Configuration and setup helpers
 
-// SetupTemplarMonitoring sets up monitoring for a Templar application
+// SetupTemplarMonitoring sets up monitoring for a Templar application.
 func SetupTemplarMonitoring(configPath string) (*TemplarMonitor, error) {
 	monitor, err := NewTemplarMonitor(configPath)
 	if err != nil {
@@ -359,7 +359,7 @@ func SetupTemplarMonitoring(configPath string) (*TemplarMonitor, error) {
 	return monitor, nil
 }
 
-// TemplarConfig represents Templar-specific monitoring configuration
+// TemplarConfig represents Templar-specific monitoring configuration.
 type TemplarConfig struct {
 	MonitorConfig    `yaml:",inline"`
 	ComponentPaths   []string `yaml:"component_paths" json:"component_paths"`
@@ -370,7 +370,7 @@ type TemplarConfig struct {
 	WebSocketEnabled bool     `yaml:"websocket_enabled" json:"websocket_enabled"`
 }
 
-// DefaultTemplarConfig returns default Templar monitoring configuration
+// DefaultTemplarConfig returns default Templar monitoring configuration.
 func DefaultTemplarConfig() TemplarConfig {
 	return TemplarConfig{
 		MonitorConfig: DefaultMonitorConfig(),
@@ -389,7 +389,7 @@ func DefaultTemplarConfig() TemplarConfig {
 
 // Startup and shutdown helpers
 
-// GracefulShutdown handles graceful shutdown of Templar monitoring
+// GracefulShutdown handles graceful shutdown of Templar monitoring.
 func (tm *TemplarMonitor) GracefulShutdown(ctx context.Context) error {
 	tm.GetLogger().Info(ctx, "Starting graceful shutdown of monitoring system")
 
@@ -406,12 +406,13 @@ func (tm *TemplarMonitor) GracefulShutdown(ctx context.Context) error {
 	}
 
 	tm.GetLogger().Info(ctx, "Monitoring system shutdown complete")
+
 	return nil
 }
 
 // Utility functions for common monitoring patterns
 
-// MonitorComponentOperation is a convenience function for monitoring component operations
+// MonitorComponentOperation is a convenience function for monitoring component operations.
 func MonitorComponentOperation(
 	ctx context.Context,
 	component, operation string,
@@ -443,7 +444,7 @@ func MonitorComponentOperation(
 	return err
 }
 
-// LogComponentError logs component-specific errors with proper categorization
+// LogComponentError logs component-specific errors with proper categorization.
 func LogComponentError(
 	ctx context.Context,
 	component, operation string,

@@ -61,6 +61,7 @@ func TestInitService_InitProject(t *testing.T) {
 
 			if tt.wantErr {
 				assert.Error(t, err)
+
 				return
 			}
 
@@ -263,6 +264,7 @@ go 1.21
 
 			if tt.wantErr {
 				assert.Error(t, err)
+
 				return
 			}
 

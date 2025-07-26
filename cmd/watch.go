@@ -200,7 +200,7 @@ func runCustomCommand(command string) error {
 	return nil
 }
 
-// validateCustomCommand validates custom commands with a security-focused allowlist
+// validateCustomCommand validates custom commands with a security-focused allowlist.
 func validateCustomCommand(command string, args []string) error {
 	// Allowlist of essential development commands only (security-hardened)
 	allowedCommands := map[string]bool{
@@ -232,7 +232,7 @@ func validateCustomCommand(command string, args []string) error {
 	return nil
 }
 
-// validateCommandSpecific provides enhanced validation for specific commands
+// validateCommandSpecific provides enhanced validation for specific commands.
 func validateCommandSpecific(command string, args []string) error {
 	switch command {
 	case "git":
@@ -242,13 +242,14 @@ func validateCommandSpecific(command string, args []string) error {
 	case "go":
 		return validateGoCommand(args)
 	}
+
 	return nil
 }
 
-// validateGitCommand ensures git commands are safe (read-only operations)
+// validateGitCommand ensures git commands are safe (read-only operations).
 func validateGitCommand(args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("git command requires arguments")
+		return errors.New("git command requires arguments")
 	}
 
 	// Allow only safe, read-only git operations
@@ -276,10 +277,10 @@ func validateGitCommand(args []string) error {
 	return nil
 }
 
-// validatePackageManagerCommand ensures package manager commands are safe
+// validatePackageManagerCommand ensures package manager commands are safe.
 func validatePackageManagerCommand(args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("package manager command requires arguments")
+		return errors.New("package manager command requires arguments")
 	}
 
 	// Allow common build/development operations
@@ -306,10 +307,10 @@ func validatePackageManagerCommand(args []string) error {
 	return nil
 }
 
-// validateGoCommand ensures go commands are safe
+// validateGoCommand ensures go commands are safe.
 func validateGoCommand(args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("go command requires arguments")
+		return errors.New("go command requires arguments")
 	}
 
 	// Allow common development operations

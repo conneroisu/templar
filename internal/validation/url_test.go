@@ -209,7 +209,7 @@ func TestValidateURL(t *testing.T) {
 	}
 }
 
-// TestValidateURL_SecurityFocus tests specific security-focused scenarios
+// TestValidateURL_SecurityFocus tests specific security-focused scenarios.
 func TestValidateURL_SecurityFocus(t *testing.T) {
 	// Test various command injection patterns that might be attempted
 	maliciousURLs := []string{
@@ -235,7 +235,7 @@ func TestValidateURL_SecurityFocus(t *testing.T) {
 	}
 
 	for i, maliciousURL := range maliciousURLs {
-		testName := "malicious_" + fmt.Sprintf("%d", i)
+		testName := "malicious_" + strconv.Itoa(i)
 		t.Run(testName, func(t *testing.T) {
 			err := ValidateURL(maliciousURL)
 			if err == nil {
@@ -245,7 +245,7 @@ func TestValidateURL_SecurityFocus(t *testing.T) {
 	}
 }
 
-// TestValidateURL_Performance tests the performance characteristics of validation
+// TestValidateURL_Performance tests the performance characteristics of validation.
 func TestValidateURL_Performance(t *testing.T) {
 	longURL := "https://example.com/" + strings.Repeat("a", 10000)
 
@@ -263,7 +263,7 @@ func TestValidateURL_Performance(t *testing.T) {
 	}
 }
 
-// BenchmarkValidateURL benchmarks the URL validation function
+// BenchmarkValidateURL benchmarks the URL validation function.
 func BenchmarkValidateURL(b *testing.B) {
 	testURLs := []string{
 		"http://localhost:8080",
@@ -273,7 +273,7 @@ func BenchmarkValidateURL(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		for _, url := range testURLs {
 			_ = ValidateURL(url)
 		}

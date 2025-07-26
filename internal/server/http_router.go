@@ -25,7 +25,7 @@ import (
 // - mux must never be nil after construction
 // - handlers must never be nil after construction
 // - httpServer is nil only before Start() or after Shutdown()
-// - isShutdown is write-protected by serverMutex
+// - isShutdown is write-protected by serverMutex.
 type HTTPRouter struct {
 	config     *config.Config // Configuration for server binding and behavior
 	httpServer *http.Server   // Underlying HTTP server instance (nil until Start())
@@ -40,7 +40,7 @@ type HTTPRouter struct {
 }
 
 // HTTPHandlers interface defines all HTTP handler dependencies
-// This allows for clean dependency injection and testability
+// This allows for clean dependency injection and testability.
 type HTTPHandlers interface {
 	// WebSocket handlers
 	HandleWebSocket(w http.ResponseWriter, r *http.Request)
@@ -77,7 +77,7 @@ type HTTPHandlers interface {
 	HandleTargetFiles(w http.ResponseWriter, r *http.Request)
 }
 
-// MiddlewareProvider interface for middleware chain injection
+// MiddlewareProvider interface for middleware chain injection.
 type MiddlewareProvider interface {
 	Apply(handler http.Handler) http.Handler
 }
@@ -99,7 +99,7 @@ type MiddlewareProvider interface {
 //
 // Panics:
 // - If any required dependency is nil
-// - If config contains invalid values
+// - If config contains invalid values.
 func NewHTTPRouter(
 	config *config.Config,
 	handlers HTTPHandlers,
@@ -161,7 +161,7 @@ func NewHTTPRouter(
 }
 
 // registerRoutes registers all HTTP routes with their handlers
-// Centralized route registration following REST API conventions
+// Centralized route registration following REST API conventions.
 func (r *HTTPRouter) registerRoutes() {
 	// WebSocket endpoint
 	r.mux.HandleFunc("/ws", r.handlers.HandleWebSocket)
@@ -221,11 +221,11 @@ func (r *HTTPRouter) registerRoutes() {
 //
 // Thread Safety:
 // - Safe for concurrent calls (though multiple calls don't make sense)
-// - Uses read lock for server access to avoid blocking shutdown
+// - Uses read lock for server access to avoid blocking shutdown.
 func (r *HTTPRouter) Start(ctx context.Context) error {
 	// Precondition checks
 	if ctx == nil {
-		return fmt.Errorf("HTTPRouter.Start: context cannot be nil")
+		return errors.New("HTTPRouter.Start: context cannot be nil")
 	}
 
 	// Thread-safe access to server instance
@@ -236,12 +236,12 @@ func (r *HTTPRouter) Start(ctx context.Context) error {
 
 	// Assertion: server must be initialized by constructor
 	if server == nil {
-		return fmt.Errorf("HTTPRouter.Start: server not initialized (call NewHTTPRouter first)")
+		return errors.New("HTTPRouter.Start: server not initialized (call NewHTTPRouter first)")
 	}
 
 	// Cannot start an already shut down router
 	if isShutdown {
-		return fmt.Errorf("HTTPRouter.Start: router has been shut down")
+		return errors.New("HTTPRouter.Start: router has been shut down")
 	}
 
 	// Start server in separate goroutine to enable context-based cancellation
@@ -265,6 +265,7 @@ func (r *HTTPRouter) Start(ctx context.Context) error {
 		// Use background context to avoid cancellation during shutdown
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
+
 		return r.Shutdown(shutdownCtx)
 
 	case err := <-errChan:
@@ -291,11 +292,11 @@ func (r *HTTPRouter) Start(ctx context.Context) error {
 // Implementation Notes:
 // - Uses write lock to ensure atomic state transition
 // - Sets isShutdown flag to prevent future operations
-// - Delegates actual shutdown to http.Server.Shutdown for proper connection draining
+// - Delegates actual shutdown to http.Server.Shutdown for proper connection draining.
 func (r *HTTPRouter) Shutdown(ctx context.Context) error {
 	// Precondition checks
 	if ctx == nil {
-		return fmt.Errorf("HTTPRouter.Shutdown: context cannot be nil")
+		return errors.New("HTTPRouter.Shutdown: context cannot be nil")
 	}
 
 	// Acquire write lock for atomic shutdown state transition
@@ -327,7 +328,7 @@ func (r *HTTPRouter) Shutdown(ctx context.Context) error {
 	return nil
 }
 
-// GetAddr returns the server address
+// GetAddr returns the server address.
 func (r *HTTPRouter) GetAddr() string {
 	r.serverMutex.RLock()
 	defer r.serverMutex.RUnlock()
@@ -339,19 +340,20 @@ func (r *HTTPRouter) GetAddr() string {
 	return fmt.Sprintf("%s:%d", r.config.Server.Host, r.config.Server.Port)
 }
 
-// IsShutdown returns whether the router has been shut down
+// IsShutdown returns whether the router has been shut down.
 func (r *HTTPRouter) IsShutdown() bool {
 	r.serverMutex.RLock()
 	defer r.serverMutex.RUnlock()
+
 	return r.isShutdown
 }
 
-// RegisterHealthCheck adds a health check route for monitoring
+// RegisterHealthCheck adds a health check route for monitoring.
 func (r *HTTPRouter) RegisterHealthCheck(path string, handler http.HandlerFunc) {
 	r.mux.HandleFunc(path, handler)
 }
 
-// RegisterCustomRoute allows adding custom routes for plugins or extensions
+// RegisterCustomRoute allows adding custom routes for plugins or extensions.
 func (r *HTTPRouter) RegisterCustomRoute(pattern string, handler http.HandlerFunc) {
 	r.mux.HandleFunc(pattern, handler)
 }

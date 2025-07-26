@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// MetricType represents different types of performance metrics
+// MetricType represents different types of performance metrics.
 type MetricType string
 
 const (
@@ -22,7 +22,7 @@ const (
 	MetricTypeErrorRate     MetricType = "error_rate"
 )
 
-// Metric represents a single performance measurement
+// Metric represents a single performance measurement.
 type Metric struct {
 	Type      MetricType        `json:"type"`
 	Value     float64           `json:"value"`
@@ -32,7 +32,7 @@ type Metric struct {
 	Threshold float64           `json:"threshold,omitempty"`
 }
 
-// MetricCollector collects and stores performance metrics
+// MetricCollector collects and stores performance metrics.
 type MetricCollector struct {
 	metrics     []Metric
 	maxMetrics  int
@@ -41,7 +41,7 @@ type MetricCollector struct {
 	subscribers []chan<- Metric
 }
 
-// MetricAggregate stores aggregated metric data with efficient percentile calculation
+// MetricAggregate stores aggregated metric data with efficient percentile calculation.
 type MetricAggregate struct {
 	Count          int64                 `json:"count"`
 	Sum            float64               `json:"sum"`
@@ -54,7 +54,7 @@ type MetricAggregate struct {
 	maxSize        int
 }
 
-// PerformanceMonitor monitors system performance and provides adaptive optimizations
+// PerformanceMonitor monitors system performance and provides adaptive optimizations.
 type PerformanceMonitor struct {
 	collector         *MetricCollector
 	lockFreeCollector *LockFreeMetricCollector // High-performance lock-free alternative
@@ -68,7 +68,7 @@ type PerformanceMonitor struct {
 	useLockFree       bool // Enable/disable lock-free mode
 }
 
-// AdaptiveConfig contains configuration for adaptive optimization
+// AdaptiveConfig contains configuration for adaptive optimization.
 type AdaptiveConfig struct {
 	EnableAutoOptimization bool                   `json:"enable_auto_optimization"`
 	OptimizationRules      []OptimizationRule     `json:"optimization_rules"`
@@ -77,7 +77,7 @@ type AdaptiveConfig struct {
 	SamplingRates          map[MetricType]float64 `json:"sampling_rates"`
 }
 
-// OptimizationRule defines when and how to optimize system performance
+// OptimizationRule defines when and how to optimize system performance.
 type OptimizationRule struct {
 	Name        string    `json:"name"`
 	Condition   Condition `json:"condition"`
@@ -86,7 +86,7 @@ type OptimizationRule struct {
 	CooldownMin int       `json:"cooldown_minutes"`
 }
 
-// Condition defines when an optimization should be triggered
+// Condition defines when an optimization should be triggered.
 type Condition struct {
 	MetricType MetricType    `json:"metric_type"`
 	Operator   string        `json:"operator"` // >, <, >=, <=, ==
@@ -94,13 +94,13 @@ type Condition struct {
 	Duration   time.Duration `json:"duration"` // How long condition must be true
 }
 
-// Action defines what optimization to perform
+// Action defines what optimization to perform.
 type Action struct {
 	Type       ActionType             `json:"type"`
 	Parameters map[string]interface{} `json:"parameters"`
 }
 
-// ActionType represents different optimization actions
+// ActionType represents different optimization actions.
 type ActionType string
 
 const (
@@ -113,7 +113,7 @@ const (
 	ActionRestartComponent ActionType = "restart_component"
 )
 
-// ResourceLimits defines system resource limits
+// ResourceLimits defines system resource limits.
 type ResourceLimits struct {
 	MaxMemoryMB    int `json:"max_memory_mb"`
 	MaxGoroutines  int `json:"max_goroutines"`
@@ -122,7 +122,7 @@ type ResourceLimits struct {
 	MaxCacheSizeMB int `json:"max_cache_size_mb"`
 }
 
-// Recommendation represents a performance optimization recommendation
+// Recommendation represents a performance optimization recommendation.
 type Recommendation struct {
 	Type        string    `json:"type"`
 	Priority    int       `json:"priority"`
@@ -134,7 +134,7 @@ type Recommendation struct {
 	CreatedAt   time.Time `json:"created_at"`
 }
 
-// NewMetricCollector creates a new metric collector
+// NewMetricCollector creates a new metric collector.
 func NewMetricCollector(maxMetrics int) *MetricCollector {
 	return &MetricCollector{
 		metrics:     make([]Metric, 0, maxMetrics),
@@ -144,7 +144,7 @@ func NewMetricCollector(maxMetrics int) *MetricCollector {
 	}
 }
 
-// Record records a new metric
+// Record records a new metric.
 func (mc *MetricCollector) Record(metric Metric) {
 	mc.mu.Lock()
 	defer mc.mu.Unlock()
@@ -176,17 +176,18 @@ func (mc *MetricCollector) Record(metric Metric) {
 	}
 }
 
-// Subscribe subscribes to metric updates
+// Subscribe subscribes to metric updates.
 func (mc *MetricCollector) Subscribe() <-chan Metric {
 	mc.mu.Lock()
 	defer mc.mu.Unlock()
 
 	ch := make(chan Metric, 100) // Buffered channel
 	mc.subscribers = append(mc.subscribers, ch)
+
 	return ch
 }
 
-// GetMetrics returns all metrics within the time range
+// GetMetrics returns all metrics within the time range.
 func (mc *MetricCollector) GetMetrics(metricType MetricType, since time.Time) []Metric {
 	mc.mu.RLock()
 	defer mc.mu.RUnlock()
@@ -197,10 +198,11 @@ func (mc *MetricCollector) GetMetrics(metricType MetricType, since time.Time) []
 			result = append(result, metric)
 		}
 	}
+
 	return result
 }
 
-// GetAggregate returns aggregated data for a metric type
+// GetAggregate returns aggregated data for a metric type.
 func (mc *MetricCollector) GetAggregate(metricType MetricType) *MetricAggregate {
 	mc.mu.RLock()
 	defer mc.mu.RUnlock()
@@ -219,10 +221,11 @@ func (mc *MetricCollector) GetAggregate(metricType MetricType) *MetricAggregate 
 			maxSize:        agg.maxSize,
 		}
 	}
+
 	return nil
 }
 
-// updateAggregate updates aggregate statistics for a metric
+// updateAggregate updates aggregate statistics for a metric.
 func (mc *MetricCollector) updateAggregate(metric Metric) {
 	agg, exists := mc.aggregates[metric.Type]
 	if !exists {
@@ -253,7 +256,7 @@ func (mc *MetricCollector) updateAggregate(metric Metric) {
 	agg.P99 = agg.percentileCalc.GetP99()
 }
 
-// NewPerformanceMonitor creates a new performance monitor
+// NewPerformanceMonitor creates a new performance monitor.
 func NewPerformanceMonitor(interval time.Duration) *PerformanceMonitor {
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -275,18 +278,18 @@ func NewPerformanceMonitor(interval time.Duration) *PerformanceMonitor {
 	return monitor
 }
 
-// Start starts the performance monitoring
+// Start starts the performance monitoring.
 func (pm *PerformanceMonitor) Start() {
 	go pm.collectSystemMetrics()
 	go pm.analyzeMetrics()
 }
 
-// Stop stops the performance monitoring
+// Stop stops the performance monitoring.
 func (pm *PerformanceMonitor) Stop() {
 	pm.cancel()
 }
 
-// Record records a metric
+// Record records a metric.
 func (pm *PerformanceMonitor) Record(metric Metric) {
 	if pm.useLockFree {
 		pm.lockFreeCollector.Record(metric)
@@ -295,12 +298,12 @@ func (pm *PerformanceMonitor) Record(metric Metric) {
 	}
 }
 
-// GetRecommendations returns the recommendations channel
+// GetRecommendations returns the recommendations channel.
 func (pm *PerformanceMonitor) GetRecommendations() <-chan Recommendation {
 	return pm.recommendations
 }
 
-// GetMetrics returns metrics for a specific type and time range
+// GetMetrics returns metrics for a specific type and time range.
 func (pm *PerformanceMonitor) GetMetrics(metricType MetricType, since time.Time) []Metric {
 	if pm.useLockFree {
 		return pm.lockFreeCollector.GetMetrics(metricType, since)
@@ -309,7 +312,7 @@ func (pm *PerformanceMonitor) GetMetrics(metricType MetricType, since time.Time)
 	}
 }
 
-// GetAggregate returns aggregated metrics
+// GetAggregate returns aggregated metrics.
 func (pm *PerformanceMonitor) GetAggregate(metricType MetricType) *MetricAggregate {
 	if pm.useLockFree {
 		return pm.lockFreeCollector.GetAggregate(metricType)
@@ -318,21 +321,22 @@ func (pm *PerformanceMonitor) GetAggregate(metricType MetricType) *MetricAggrega
 	}
 }
 
-// SetLockFree enables or disables lock-free mode
+// SetLockFree enables or disables lock-free mode.
 func (pm *PerformanceMonitor) SetLockFree(enabled bool) {
 	pm.mu.Lock()
 	defer pm.mu.Unlock()
 	pm.useLockFree = enabled
 }
 
-// IsLockFreeEnabled returns whether lock-free mode is enabled
+// IsLockFreeEnabled returns whether lock-free mode is enabled.
 func (pm *PerformanceMonitor) IsLockFreeEnabled() bool {
 	pm.mu.RLock()
 	defer pm.mu.RUnlock()
+
 	return pm.useLockFree
 }
 
-// collectSystemMetrics collects system-level performance metrics
+// collectSystemMetrics collects system-level performance metrics.
 func (pm *PerformanceMonitor) collectSystemMetrics() {
 	ticker := time.NewTicker(pm.interval)
 	defer ticker.Stop()
@@ -349,7 +353,7 @@ func (pm *PerformanceMonitor) collectSystemMetrics() {
 	}
 }
 
-// collectMemoryMetrics collects memory usage metrics
+// collectMemoryMetrics collects memory usage metrics.
 func (pm *PerformanceMonitor) collectMemoryMetrics() {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
@@ -377,7 +381,7 @@ func (pm *PerformanceMonitor) collectMemoryMetrics() {
 	})
 }
 
-// collectGoroutineMetrics collects goroutine metrics
+// collectGoroutineMetrics collects goroutine metrics.
 func (pm *PerformanceMonitor) collectGoroutineMetrics() {
 	numGoroutines := runtime.NumGoroutine()
 
@@ -388,7 +392,7 @@ func (pm *PerformanceMonitor) collectGoroutineMetrics() {
 	})
 }
 
-// collectCPUMetrics collects CPU usage metrics (simplified)
+// collectCPUMetrics collects CPU usage metrics (simplified).
 func (pm *PerformanceMonitor) collectCPUMetrics() {
 	numCPU := runtime.NumCPU()
 
@@ -400,7 +404,7 @@ func (pm *PerformanceMonitor) collectCPUMetrics() {
 	})
 }
 
-// analyzeMetrics analyzes collected metrics and generates recommendations
+// analyzeMetrics analyzes collected metrics and generates recommendations.
 func (pm *PerformanceMonitor) analyzeMetrics() {
 	ticker := time.NewTicker(pm.interval * 5) // Analyze every 5 intervals
 	defer ticker.Stop()
@@ -415,7 +419,7 @@ func (pm *PerformanceMonitor) analyzeMetrics() {
 	}
 }
 
-// generateRecommendations analyzes metrics and generates optimization recommendations
+// generateRecommendations analyzes metrics and generates optimization recommendations.
 func (pm *PerformanceMonitor) generateRecommendations() {
 	pm.mu.RLock()
 	config := pm.adaptiveConfig
@@ -505,7 +509,7 @@ func (pm *PerformanceMonitor) generateRecommendations() {
 	}
 }
 
-// calculateOptimalWorkers calculates the optimal number of workers based on current metrics
+// calculateOptimalWorkers calculates the optimal number of workers based on current metrics.
 func (pm *PerformanceMonitor) calculateOptimalWorkers() int {
 	cpuCores := runtime.NumCPU()
 	currentGoroutines := runtime.NumGoroutine()
@@ -527,7 +531,7 @@ func (pm *PerformanceMonitor) calculateOptimalWorkers() int {
 	return optimal
 }
 
-// getDefaultThresholds returns default performance thresholds
+// getDefaultThresholds returns default performance thresholds.
 func getDefaultThresholds() map[MetricType]float64 {
 	return map[MetricType]float64{
 		MetricTypeBuildTime:     5000,              // 5 seconds
@@ -539,7 +543,7 @@ func getDefaultThresholds() map[MetricType]float64 {
 	}
 }
 
-// getDefaultAdaptiveConfig returns default adaptive configuration
+// getDefaultAdaptiveConfig returns default adaptive configuration.
 func getDefaultAdaptiveConfig() *AdaptiveConfig {
 	return &AdaptiveConfig{
 		EnableAutoOptimization: true,

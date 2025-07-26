@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestBuildMetrics_InterfaceCompliance validates that BuildMetrics implements interfaces.BuildMetrics
+// TestBuildMetrics_InterfaceCompliance validates that BuildMetrics implements interfaces.BuildMetrics.
 func TestBuildMetrics_InterfaceCompliance(t *testing.T) {
 	metrics := NewBuildMetrics()
 
@@ -30,7 +30,7 @@ func TestBuildMetrics_InterfaceCompliance(t *testing.T) {
 	assert.Equal(t, 0.0, metrics.GetSuccessRate())
 }
 
-// TestNewBuildMetrics validates proper initialization
+// TestNewBuildMetrics validates proper initialization.
 func TestNewBuildMetrics(t *testing.T) {
 	metrics := NewBuildMetrics()
 
@@ -51,7 +51,7 @@ func TestNewBuildMetrics(t *testing.T) {
 	assert.Equal(t, int32(0), atomic.LoadInt32(&metrics.PeakConcurrency))
 }
 
-// TestBuildMetrics_RecordBuild validates build recording functionality
+// TestBuildMetrics_RecordBuild validates build recording functionality.
 func TestBuildMetrics_RecordBuild(t *testing.T) {
 	metrics := NewBuildMetrics()
 
@@ -94,7 +94,7 @@ func TestBuildMetrics_RecordBuild(t *testing.T) {
 	})
 }
 
-// TestBuildMetrics_RateCalculations validates rate calculation methods
+// TestBuildMetrics_RateCalculations validates rate calculation methods.
 func TestBuildMetrics_RateCalculations(t *testing.T) {
 	metrics := NewBuildMetrics()
 
@@ -143,7 +143,7 @@ func TestBuildMetrics_RateCalculations(t *testing.T) {
 	})
 }
 
-// TestBuildMetrics_DroppedTasks validates task/result dropping functionality
+// TestBuildMetrics_DroppedTasks validates task/result dropping functionality.
 func TestBuildMetrics_DroppedTasks(t *testing.T) {
 	metrics := NewBuildMetrics()
 
@@ -174,7 +174,7 @@ func TestBuildMetrics_DroppedTasks(t *testing.T) {
 	})
 }
 
-// TestBuildMetrics_ParallelProcessing validates parallel processing metrics
+// TestBuildMetrics_ParallelProcessing validates parallel processing metrics.
 func TestBuildMetrics_ParallelProcessing(t *testing.T) {
 	metrics := NewBuildMetrics()
 
@@ -212,7 +212,7 @@ func TestBuildMetrics_ParallelProcessing(t *testing.T) {
 	})
 }
 
-// TestBuildMetrics_ASTCaching validates AST caching metrics
+// TestBuildMetrics_ASTCaching validates AST caching metrics.
 func TestBuildMetrics_ASTCaching(t *testing.T) {
 	metrics := NewBuildMetrics()
 
@@ -237,7 +237,7 @@ func TestBuildMetrics_ASTCaching(t *testing.T) {
 	})
 }
 
-// TestBuildMetrics_MemoryPooling validates memory pool metrics
+// TestBuildMetrics_MemoryPooling validates memory pool metrics.
 func TestBuildMetrics_MemoryPooling(t *testing.T) {
 	metrics := NewBuildMetrics()
 
@@ -262,7 +262,7 @@ func TestBuildMetrics_MemoryPooling(t *testing.T) {
 	})
 }
 
-// TestBuildMetrics_GetSnapshot validates snapshot functionality
+// TestBuildMetrics_GetSnapshot validates snapshot functionality.
 func TestBuildMetrics_GetSnapshot(t *testing.T) {
 	metrics := NewBuildMetrics()
 
@@ -292,7 +292,7 @@ func TestBuildMetrics_GetSnapshot(t *testing.T) {
 	assert.Equal(t, int64(2), metrics.GetBuildCount()) // Original updated
 }
 
-// TestBuildMetrics_Reset validates reset functionality
+// TestBuildMetrics_Reset validates reset functionality.
 func TestBuildMetrics_Reset(t *testing.T) {
 	metrics := NewBuildMetrics()
 
@@ -336,7 +336,7 @@ func TestBuildMetrics_Reset(t *testing.T) {
 	assert.Equal(t, int32(0), atomic.LoadInt32(&metrics.PeakConcurrency))
 }
 
-// TestBuildMetrics_ConcurrentAccess validates thread safety
+// TestBuildMetrics_ConcurrentAccess validates thread safety.
 func TestBuildMetrics_ConcurrentAccess(t *testing.T) {
 	metrics := NewBuildMetrics()
 	const numGoroutines = 10
@@ -346,10 +346,10 @@ func TestBuildMetrics_ConcurrentAccess(t *testing.T) {
 	wg.Add(numGoroutines * 5) // 5 different operation types
 
 	// Concurrent build recording
-	for i := 0; i < numGoroutines; i++ {
+	for range numGoroutines {
 		go func() {
 			defer wg.Done()
-			for j := 0; j < operationsPerGoroutine; j++ {
+			for j := range operationsPerGoroutine {
 				result := BuildResult{
 					Duration: time.Duration(j) * time.Millisecond,
 					Error:    nil,
@@ -361,30 +361,30 @@ func TestBuildMetrics_ConcurrentAccess(t *testing.T) {
 	}
 
 	// Concurrent task dropping
-	for i := 0; i < numGoroutines; i++ {
+	for i := range numGoroutines {
 		go func(id int) {
 			defer wg.Done()
-			for j := 0; j < operationsPerGoroutine; j++ {
+			for j := range operationsPerGoroutine {
 				metrics.RecordDroppedTask(fmt.Sprintf("Component%d_%d", id, j), "queue_full")
 			}
 		}(i)
 	}
 
 	// Concurrent parallel processing recording
-	for i := 0; i < numGoroutines; i++ {
+	for range numGoroutines {
 		go func() {
 			defer wg.Done()
-			for j := 0; j < operationsPerGoroutine; j++ {
+			for j := range operationsPerGoroutine {
 				metrics.RecordParallelProcessing(time.Duration(j)*time.Millisecond, int32(j%8+1))
 			}
 		}()
 	}
 
 	// Concurrent AST cache operations
-	for i := 0; i < numGoroutines; i++ {
+	for range numGoroutines {
 		go func() {
 			defer wg.Done()
-			for j := 0; j < operationsPerGoroutine; j++ {
+			for j := range operationsPerGoroutine {
 				if j%2 == 0 {
 					metrics.RecordASTCacheHit()
 				} else {
@@ -395,10 +395,10 @@ func TestBuildMetrics_ConcurrentAccess(t *testing.T) {
 	}
 
 	// Concurrent pool operations
-	for i := 0; i < numGoroutines; i++ {
+	for range numGoroutines {
 		go func() {
 			defer wg.Done()
-			for j := 0; j < operationsPerGoroutine; j++ {
+			for j := range operationsPerGoroutine {
 				if j%3 == 0 {
 					metrics.RecordPoolHit(int64(j * 10))
 				} else {
@@ -435,7 +435,7 @@ func TestBuildMetrics_ConcurrentAccess(t *testing.T) {
 	assert.True(t, peak > 0, "Peak concurrency should be greater than 0")
 }
 
-// TestBuildMetrics_PerformanceSummary validates comprehensive summary generation
+// TestBuildMetrics_PerformanceSummary validates comprehensive summary generation.
 func TestBuildMetrics_PerformanceSummary(t *testing.T) {
 	metrics := NewBuildMetrics()
 
@@ -497,7 +497,7 @@ func TestBuildMetrics_PerformanceSummary(t *testing.T) {
 	assert.Equal(t, int64(1), reasons["queue_full"])
 }
 
-// TestBuildMetrics_EdgeCases validates edge case handling
+// TestBuildMetrics_EdgeCases validates edge case handling.
 func TestBuildMetrics_EdgeCases(t *testing.T) {
 	t.Run("division by zero protection", func(t *testing.T) {
 		metrics := NewBuildMetrics()
@@ -521,7 +521,7 @@ func TestBuildMetrics_EdgeCases(t *testing.T) {
 		wg.Add(numGoroutines)
 
 		// Concurrent peak concurrency updates
-		for i := 0; i < numGoroutines; i++ {
+		for i := range numGoroutines {
 			go func(concurrency int32) {
 				defer wg.Done()
 				metrics.RecordParallelProcessing(time.Millisecond, concurrency)

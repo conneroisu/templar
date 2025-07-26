@@ -65,6 +65,7 @@ func TestFileWatcherAddHandler(t *testing.T) {
 	handlerCalled := false
 	handler := func(events []ChangeEvent) error {
 		handlerCalled = true
+
 		return nil
 	}
 
@@ -125,6 +126,7 @@ func TestFileWatcherStartStop(t *testing.T) {
 		eventMutex.Lock()
 		eventReceived = true
 		eventMutex.Unlock()
+
 		return nil
 	})
 
@@ -359,6 +361,7 @@ func TestFileWatcherConcurrency(t *testing.T) {
 		eventMutex.Lock()
 		eventCount += len(events)
 		eventMutex.Unlock()
+
 		return nil
 	})
 
@@ -371,7 +374,7 @@ func TestFileWatcherConcurrency(t *testing.T) {
 	time.Sleep(50 * time.Millisecond)
 
 	// Create multiple files concurrently
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()

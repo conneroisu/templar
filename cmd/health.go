@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// HealthStatus represents the health check response
+// HealthStatus represents the health check response.
 type HealthStatus struct {
 	Status    string           `json:"status"`
 	Timestamp time.Time        `json:"timestamp"`
@@ -19,7 +19,7 @@ type HealthStatus struct {
 	Overall   bool             `json:"overall"`
 }
 
-// Check represents an individual health check result
+// Check represents an individual health check result.
 type Check struct {
 	Status  string `json:"status"`
 	Message string `json:"message,omitempty"`
@@ -89,13 +89,13 @@ func runHealthCheck(cmd *cobra.Command, args []string) error {
 	}
 
 	if !status.Overall {
-		return fmt.Errorf("health checks failed")
+		return errors.New("health checks failed")
 	}
 
 	return nil
 }
 
-// checkHTTPServer verifies the HTTP server is responding
+// checkHTTPServer verifies the HTTP server is responding.
 func checkHTTPServer(status *HealthStatus) {
 	client := &http.Client{
 		Timeout: healthTimeout,
@@ -111,6 +111,7 @@ func checkHTTPServer(status *HealthStatus) {
 			Healthy: false,
 		}
 		status.Overall = false
+
 		return
 	}
 	defer func() {
@@ -126,6 +127,7 @@ func checkHTTPServer(status *HealthStatus) {
 			Healthy: false,
 		}
 		status.Overall = false
+
 		return
 	}
 
@@ -136,7 +138,7 @@ func checkHTTPServer(status *HealthStatus) {
 	}
 }
 
-// checkFileSystemAccess verifies basic file system access
+// checkFileSystemAccess verifies basic file system access.
 func checkFileSystemAccess(status *HealthStatus) {
 	// Check current directory access
 	_, err := os.Getwd()
@@ -147,6 +149,7 @@ func checkFileSystemAccess(status *HealthStatus) {
 			Healthy: false,
 		}
 		status.Overall = false
+
 		return
 	}
 
@@ -159,6 +162,7 @@ func checkFileSystemAccess(status *HealthStatus) {
 			Healthy: false,
 		}
 		status.Overall = false
+
 		return
 	}
 	if err := tmpFile.Close(); err != nil {
@@ -175,7 +179,7 @@ func checkFileSystemAccess(status *HealthStatus) {
 	}
 }
 
-// checkBuildTools verifies required build tools are available
+// checkBuildTools verifies required build tools are available.
 func checkBuildTools(status *HealthStatus) {
 	// Check for templ binary
 	_, err := exec.LookPath("templ")
@@ -194,7 +198,7 @@ func checkBuildTools(status *HealthStatus) {
 	}
 }
 
-// checkComponentDirectories verifies component directories are accessible
+// checkComponentDirectories verifies component directories are accessible.
 func checkComponentDirectories(status *HealthStatus) {
 	// Check common component directories
 	commonDirs := []string{"./components", "./views", "./examples"}

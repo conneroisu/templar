@@ -10,7 +10,7 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// validateTemplContent validates templ file content for syntax errors
+// validateTemplContent validates templ file content for syntax errors.
 func (s *PreviewServer) validateTemplContent(content string) ([]EditorError, []EditorWarning) {
 	var errors []EditorError
 	var warnings []EditorWarning
@@ -35,7 +35,7 @@ func (s *PreviewServer) validateTemplContent(content string) ([]EditorError, []E
 	return errors, warnings
 }
 
-// validateTemplSyntax validates basic templ syntax
+// validateTemplSyntax validates basic templ syntax.
 func (s *PreviewServer) validateTemplSyntax(content string) []EditorError {
 	var errors []EditorError
 	lines := strings.Split(content, "\n")
@@ -71,6 +71,7 @@ func (s *PreviewServer) validateTemplSyntax(content string) []EditorError {
 			inTemplFunc = true
 			templFuncStart = lineNum
 			braceCount = strings.Count(line, "{") - strings.Count(line, "}")
+
 			continue
 		}
 
@@ -81,6 +82,7 @@ func (s *PreviewServer) validateTemplSyntax(content string) []EditorError {
 			// Check for templ function end
 			if braceCount == 0 && templEndRegex.MatchString(trimmed) {
 				inTemplFunc = false
+
 				continue
 			}
 		}
@@ -106,7 +108,7 @@ func (s *PreviewServer) validateTemplSyntax(content string) []EditorError {
 	return errors
 }
 
-// validateTemplExpressions validates expressions within templ functions
+// validateTemplExpressions validates expressions within templ functions.
 func (s *PreviewServer) validateTemplExpressions(line string, lineNum int) []EditorError {
 	var errors []EditorError
 
@@ -128,7 +130,7 @@ func (s *PreviewServer) validateTemplExpressions(line string, lineNum int) []Edi
 			errors = append(errors, EditorError{
 				Line:     lineNum,
 				Column:   column,
-				Message:  fmt.Sprintf("Invalid Go expression: %s", expr),
+				Message:  "Invalid Go expression: " + expr,
 				Severity: "error",
 				Source:   "syntax",
 			})
@@ -138,7 +140,7 @@ func (s *PreviewServer) validateTemplExpressions(line string, lineNum int) []Edi
 	return errors
 }
 
-// isValidGoExpression performs basic Go expression validation
+// isValidGoExpression performs basic Go expression validation.
 func (s *PreviewServer) isValidGoExpression(expr string) bool {
 	// Simple heuristic validation
 	expr = strings.TrimSpace(expr)
@@ -150,10 +152,11 @@ func (s *PreviewServer) isValidGoExpression(expr string) bool {
 
 	// Try to parse as a Go expression
 	_, err := parser.ParseExpr(expr)
+
 	return err == nil
 }
 
-// validateGoSyntax validates Go syntax in templ content
+// validateGoSyntax validates Go syntax in templ content.
 func (s *PreviewServer) validateGoSyntax(content string) []EditorError {
 	var errors []EditorError
 
@@ -181,7 +184,7 @@ func (s *PreviewServer) validateGoSyntax(content string) []EditorError {
 	return errors
 }
 
-// extractGoCode extracts Go code from templ content for parsing
+// extractGoCode extracts Go code from templ content for parsing.
 func (s *PreviewServer) extractGoCode(content string) string {
 	lines := strings.Split(content, "\n")
 	var goLines []string
@@ -193,6 +196,7 @@ func (s *PreviewServer) extractGoCode(content string) string {
 		// Include package declaration and imports
 		if strings.HasPrefix(trimmed, "package ") || strings.HasPrefix(trimmed, "import ") {
 			goLines = append(goLines, line)
+
 			continue
 		}
 
@@ -202,6 +206,7 @@ func (s *PreviewServer) extractGoCode(content string) string {
 			// Convert templ function to Go function for parsing
 			funcDecl := s.convertTemplFuncToGo(line)
 			goLines = append(goLines, funcDecl)
+
 			continue
 		}
 
@@ -210,6 +215,7 @@ func (s *PreviewServer) extractGoCode(content string) string {
 			strings.Count(line, "}") >= strings.Count(line, "{") {
 			inTemplFunc = false
 			goLines = append(goLines, "}")
+
 			continue
 		}
 
@@ -222,7 +228,7 @@ func (s *PreviewServer) extractGoCode(content string) string {
 	return strings.Join(goLines, "\n")
 }
 
-// convertTemplFuncToGo converts templ function declaration to Go function
+// convertTemplFuncToGo converts templ function declaration to Go function.
 func (s *PreviewServer) convertTemplFuncToGo(line string) string {
 	// Extract function name and parameters
 	templFuncRegex := regexp.MustCompile(`templ\s+(\w+)\s*\(([^)]*)\)`)
@@ -239,7 +245,7 @@ func (s *PreviewServer) convertTemplFuncToGo(line string) string {
 	return fmt.Sprintf("func %s(%s) {", funcName, params)
 }
 
-// validateTemplStructure validates overall template structure
+// validateTemplStructure validates overall template structure.
 func (s *PreviewServer) validateTemplStructure(content string) ([]EditorError, []EditorWarning) {
 	var errors []EditorError
 	var warnings []EditorWarning
@@ -285,7 +291,7 @@ func (s *PreviewServer) validateTemplStructure(content string) ([]EditorError, [
 	return errors, warnings
 }
 
-// validateHTMLContent validates HTML content within templates
+// validateHTMLContent validates HTML content within templates.
 func (s *PreviewServer) validateHTMLContent(content string) []EditorWarning {
 	var warnings []EditorWarning
 	lines := strings.Split(content, "\n")
@@ -305,7 +311,7 @@ func (s *PreviewServer) validateHTMLContent(content string) []EditorWarning {
 	return warnings
 }
 
-// validateHTMLTags validates HTML tags in a line
+// validateHTMLTags validates HTML tags in a line.
 func (s *PreviewServer) validateHTMLTags(line string, lineNum int) []EditorWarning {
 	var warnings []EditorWarning
 
@@ -322,7 +328,7 @@ func (s *PreviewServer) validateHTMLTags(line string, lineNum int) []EditorWarni
 	return warnings
 }
 
-// validateAccessibility validates accessibility concerns
+// validateAccessibility validates accessibility concerns.
 func (s *PreviewServer) validateAccessibility(line string, lineNum int) []EditorWarning {
 	var warnings []EditorWarning
 
@@ -340,7 +346,7 @@ func (s *PreviewServer) validateAccessibility(line string, lineNum int) []Editor
 	return warnings
 }
 
-// parseTemplParameters extracts component parameters from templ content
+// parseTemplParameters extracts component parameters from templ content.
 func (s *PreviewServer) parseTemplParameters(content string) ([]types.ParameterInfo, error) {
 	var parameters []types.ParameterInfo
 
@@ -366,7 +372,7 @@ func (s *PreviewServer) parseTemplParameters(content string) ([]types.ParameterI
 	return parameters, nil
 }
 
-// parseGoParameters parses Go function parameters
+// parseGoParameters parses Go function parameters.
 func (s *PreviewServer) parseGoParameters(paramStr string) []types.ParameterInfo {
 	var parameters []types.ParameterInfo
 
@@ -396,7 +402,7 @@ func (s *PreviewServer) parseGoParameters(paramStr string) []types.ParameterInfo
 	return parameters
 }
 
-// formatTemplContent formats templ content (basic formatting)
+// formatTemplContent formats templ content (basic formatting).
 func (s *PreviewServer) formatTemplContent(content string) string {
 	lines := strings.Split(content, "\n")
 	var formatted []string
@@ -408,6 +414,7 @@ func (s *PreviewServer) formatTemplContent(content string) string {
 		// Skip empty lines
 		if trimmed == "" {
 			formatted = append(formatted, "")
+
 			continue
 		}
 
@@ -429,7 +436,7 @@ func (s *PreviewServer) formatTemplContent(content string) string {
 	return strings.Join(formatted, "\n")
 }
 
-// generateEditorSuggestions generates code suggestions for editor
+// generateEditorSuggestions generates code suggestions for editor.
 func (s *PreviewServer) generateEditorSuggestions(content string) []EditorSuggestion {
 	var suggestions []EditorSuggestion
 
@@ -473,7 +480,7 @@ func (s *PreviewServer) generateEditorSuggestions(content string) []EditorSugges
 	return suggestions
 }
 
-// renderTemplContentWithProps renders template content with props for preview
+// renderTemplContentWithProps renders template content with props for preview.
 func (s *PreviewServer) renderTemplContentWithProps(
 	content string,
 	props map[string]interface{},
@@ -498,7 +505,7 @@ func (s *PreviewServer) renderTemplContentWithProps(
 	return html, nil
 }
 
-// formatPropsForDisplay formats props for display in preview
+// formatPropsForDisplay formats props for display in preview.
 func (s *PreviewServer) formatPropsForDisplay(props map[string]interface{}) string {
 	if len(props) == 0 {
 		return "{}"

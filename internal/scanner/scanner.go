@@ -33,20 +33,20 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// crcTable is a pre-computed CRC32 Castagnoli table for faster hash generation
+// crcTable is a pre-computed CRC32 Castagnoli table for faster hash generation.
 var crcTable = crc32.MakeTable(crc32.Castagnoli)
 
-// Hash generation strategy constants
+// Hash generation strategy constants.
 const (
-	// Small files (< 4KB) - use full content CRC32
+	// Small files (< 4KB) - use full content CRC32.
 	smallFileThreshold = 4 * 1024
-	// Medium files (4KB - 256KB) - use content sampling
+	// Medium files (4KB - 256KB) - use content sampling.
 	mediumFileThreshold = 256 * 1024
-	// Content sample size for large files
+	// Content sample size for large files.
 	contentSampleSize = 1024
 )
 
-// FileHashStrategy represents different hashing approaches
+// FileHashStrategy represents different hashing approaches.
 type FileHashStrategy int
 
 const (
@@ -64,12 +64,12 @@ type ScanJob struct {
 	result chan<- ScanResult
 }
 
-// BufferPool manages reusable byte buffers for file reading optimization
+// BufferPool manages reusable byte buffers for file reading optimization.
 type BufferPool struct {
 	pool sync.Pool
 }
 
-// NewBufferPool creates a new buffer pool with initial buffer size
+// NewBufferPool creates a new buffer pool with initial buffer size.
 func NewBufferPool() *BufferPool {
 	return &BufferPool{
 		pool: sync.Pool{
@@ -81,12 +81,12 @@ func NewBufferPool() *BufferPool {
 	}
 }
 
-// Get retrieves a buffer from the pool
+// Get retrieves a buffer from the pool.
 func (bp *BufferPool) Get() []byte {
 	return bp.pool.Get().([]byte)[:0] // Reset length but keep capacity
 }
 
-// Put returns a buffer to the pool
+// Put returns a buffer to the pool.
 func (bp *BufferPool) Put(buf []byte) {
 	// Only pool reasonably-sized buffers to avoid memory leaks
 	if cap(buf) <= 1024*1024 { // 1MB limit
@@ -146,7 +146,7 @@ type ScanWorker struct {
 // - File change detection using CRC32 hashing
 // - Optimized path validation with cached working directory
 // - Buffer pooling for memory optimization in large codebases
-// - Component metadata caching with LRU eviction for performance
+// - Component metadata caching with LRU eviction for performance.
 type ComponentScanner struct {
 	// registry receives discovered components and broadcasts change events
 	registry *registry.ComponentRegistry
@@ -168,10 +168,10 @@ type ComponentScanner struct {
 	config *config.Config
 }
 
-// Interface compliance verification - ComponentScanner implements interfaces.ComponentScanner
+// Interface compliance verification - ComponentScanner implements interfaces.ComponentScanner.
 var _ interfaces.ComponentScanner = (*ComponentScanner)(nil)
 
-// ASTParseJob represents a parsing job for the AST parsing pool
+// ASTParseJob represents a parsing job for the AST parsing pool.
 type ASTParseJob struct {
 	filePath string
 	content  []byte
@@ -179,14 +179,14 @@ type ASTParseJob struct {
 	result   chan<- ASTParseResult
 }
 
-// ASTParseResult contains the result of AST parsing
+// ASTParseResult contains the result of AST parsing.
 type ASTParseResult struct {
 	astFile  *ast.File
 	err      error
 	filePath string
 }
 
-// ASTParsingPool manages concurrent AST parsing to avoid blocking worker threads
+// ASTParsingPool manages concurrent AST parsing to avoid blocking worker threads.
 type ASTParsingPool struct {
 	workers   int
 	jobChan   chan ASTParseJob
@@ -194,7 +194,7 @@ type ASTParsingPool struct {
 	wg        sync.WaitGroup
 }
 
-// NewASTParsingPool creates a new AST parsing pool with specified worker count
+// NewASTParsingPool creates a new AST parsing pool with specified worker count.
 func NewASTParsingPool(workers int) *ASTParsingPool {
 	if workers <= 0 {
 		workers = runtime.NumCPU() / 2 // Use half CPU cores for AST parsing
@@ -210,7 +210,7 @@ func NewASTParsingPool(workers int) *ASTParsingPool {
 	}
 
 	// Start worker goroutines
-	for i := 0; i < workers; i++ {
+	for range workers {
 		pool.wg.Add(1)
 		go pool.worker()
 	}
@@ -218,7 +218,7 @@ func NewASTParsingPool(workers int) *ASTParsingPool {
 	return pool
 }
 
-// worker processes AST parsing jobs
+// worker processes AST parsing jobs.
 func (p *ASTParsingPool) worker() {
 	defer p.wg.Done()
 
@@ -250,7 +250,7 @@ func (p *ASTParsingPool) worker() {
 	}
 }
 
-// ParseAsync submits an AST parsing job and returns a result channel
+// ParseAsync submits an AST parsing job and returns a result channel.
 func (p *ASTParsingPool) ParseAsync(
 	filePath string,
 	content []byte,
@@ -261,6 +261,7 @@ func (p *ASTParsingPool) ParseAsync(
 	// For very large files, use optimized parsing approach
 	if len(content) > 1024*1024 { // 1MB threshold
 		go p.parseLargeFileAsync(filePath, content, fileSet, result)
+
 		return result
 	}
 
@@ -277,15 +278,16 @@ func (p *ASTParsingPool) ParseAsync(
 		go func() {
 			result <- ASTParseResult{
 				astFile:  nil,
-				err:      fmt.Errorf("AST parsing pool is closed"),
+				err:      errors.New("AST parsing pool is closed"),
 				filePath: filePath,
 			}
 		}()
+
 		return result
 	}
 }
 
-// parseLargeFileAsync handles large file parsing with memory optimization
+// parseLargeFileAsync handles large file parsing with memory optimization.
 func (p *ASTParsingPool) parseLargeFileAsync(
 	filePath string,
 	content []byte,
@@ -310,14 +312,14 @@ func (p *ASTParsingPool) parseLargeFileAsync(
 	}
 }
 
-// Close shuts down the AST parsing pool
+// Close shuts down the AST parsing pool.
 func (p *ASTParsingPool) Close() {
 	close(p.closeChan)
 	close(p.jobChan)
 	p.wg.Wait()
 }
 
-// pathValidationCache caches expensive filesystem operations for optimal performance
+// pathValidationCache caches expensive filesystem operations for optimal performance.
 type pathValidationCache struct {
 	// mu protects concurrent access to cache fields
 	mu sync.RWMutex
@@ -327,7 +329,7 @@ type pathValidationCache struct {
 	initialized bool
 }
 
-// CachedComponentMetadata stores pre-parsed component information for cache optimization
+// CachedComponentMetadata stores pre-parsed component information for cache optimization.
 type CachedComponentMetadata struct {
 	// Components is a slice of all components found in the file
 	Components []*types.ComponentInfo
@@ -337,7 +339,7 @@ type CachedComponentMetadata struct {
 	ParsedAt time.Time
 }
 
-// ScannerMetrics tracks performance metrics during scanning operations
+// ScannerMetrics tracks performance metrics during scanning operations.
 type ScannerMetrics struct {
 	// FilesProcessed is the total number of files processed
 	FilesProcessed int64
@@ -355,7 +357,7 @@ type ScannerMetrics struct {
 	ConcurrentJobs int64
 }
 
-// MetadataCache implements a simple LRU cache for component metadata
+// MetadataCache implements a simple LRU cache for component metadata.
 type MetadataCache struct {
 	mu      sync.RWMutex
 	entries map[string]*MetadataCacheEntry
@@ -366,7 +368,7 @@ type MetadataCache struct {
 	tail *MetadataCacheEntry
 }
 
-// MetadataCacheEntry represents a cached metadata entry with LRU pointers
+// MetadataCacheEntry represents a cached metadata entry with LRU pointers.
 type MetadataCacheEntry struct {
 	Key       string
 	Data      []byte
@@ -376,7 +378,7 @@ type MetadataCacheEntry struct {
 	next *MetadataCacheEntry
 }
 
-// NewMetadataCache creates a new metadata cache
+// NewMetadataCache creates a new metadata cache.
 func NewMetadataCache(maxSize int, ttl time.Duration) *MetadataCache {
 	cache := &MetadataCache{
 		entries: make(map[string]*MetadataCacheEntry),
@@ -393,7 +395,7 @@ func NewMetadataCache(maxSize int, ttl time.Duration) *MetadataCache {
 	return cache
 }
 
-// Get retrieves data from cache
+// Get retrieves data from cache.
 func (mc *MetadataCache) Get(key string) ([]byte, bool) {
 	mc.mu.Lock()
 	defer mc.mu.Unlock()
@@ -407,15 +409,17 @@ func (mc *MetadataCache) Get(key string) ([]byte, bool) {
 	if time.Since(entry.CreatedAt) > mc.ttl {
 		mc.removeFromList(entry)
 		delete(mc.entries, key)
+
 		return nil, false
 	}
 
 	// Move to front (most recently used)
 	mc.moveToFront(entry)
+
 	return entry.Data, true
 }
 
-// Set stores data in cache
+// Set stores data in cache.
 func (mc *MetadataCache) Set(key string, data []byte) {
 	mc.mu.Lock()
 	defer mc.mu.Unlock()
@@ -425,6 +429,7 @@ func (mc *MetadataCache) Set(key string, data []byte) {
 		existingEntry.Data = data
 		existingEntry.CreatedAt = time.Now()
 		mc.moveToFront(existingEntry)
+
 		return
 	}
 
@@ -444,7 +449,7 @@ func (mc *MetadataCache) Set(key string, data []byte) {
 	mc.addToFront(entry)
 }
 
-// Clear removes all entries
+// Clear removes all entries.
 func (mc *MetadataCache) Clear() {
 	mc.mu.Lock()
 	defer mc.mu.Unlock()
@@ -454,7 +459,7 @@ func (mc *MetadataCache) Clear() {
 	mc.tail.prev = mc.head
 }
 
-// LRU operations
+// LRU operations.
 func (mc *MetadataCache) addToFront(entry *MetadataCacheEntry) {
 	entry.prev = mc.head
 	entry.next = mc.head.next
@@ -480,7 +485,7 @@ func (mc *MetadataCache) evictLRU() {
 	}
 }
 
-// NewComponentScanner creates a new component scanner with optimal worker pool
+// NewComponentScanner creates a new component scanner with optimal worker pool.
 func NewComponentScanner(
 	registry *registry.ComponentRegistry,
 	cfg ...*config.Config,
@@ -488,7 +493,7 @@ func NewComponentScanner(
 	return NewComponentScannerWithConcurrency(registry, 0, cfg...) // 0 = auto-detect optimal
 }
 
-// NewComponentScannerWithConcurrency creates a new component scanner with configurable concurrency
+// NewComponentScannerWithConcurrency creates a new component scanner with configurable concurrency.
 func NewComponentScannerWithConcurrency(
 	registry *registry.ComponentRegistry,
 	maxWorkers int,
@@ -538,7 +543,7 @@ func NewComponentScannerWithConcurrency(
 	return scanner
 }
 
-// getFileScanTimeout returns the configured timeout for file scanning operations
+// getFileScanTimeout returns the configured timeout for file scanning operations.
 func (s *ComponentScanner) getFileScanTimeout() time.Duration {
 	if s.config != nil && s.config.Timeouts.FileScan > 0 {
 		return s.config.Timeouts.FileScan
@@ -547,7 +552,7 @@ func (s *ComponentScanner) getFileScanTimeout() time.Duration {
 	return 30 * time.Second
 }
 
-// NewWorkerPool creates a new worker pool for scanning operations
+// NewWorkerPool creates a new worker pool for scanning operations.
 func NewWorkerPool(workerCount int, scanner *ComponentScanner) *WorkerPool {
 	pool := &WorkerPool{
 		jobQueue:    make(chan ScanJob, workerCount*2), // Buffer for work-stealing efficiency
@@ -558,7 +563,7 @@ func NewWorkerPool(workerCount int, scanner *ComponentScanner) *WorkerPool {
 
 	// Start persistent workers
 	pool.workers = make([]*ScanWorker, workerCount)
-	for i := 0; i < workerCount; i++ {
+	for i := range workerCount {
 		worker := &ScanWorker{
 			id:       i,
 			jobQueue: pool.jobQueue,
@@ -572,7 +577,7 @@ func NewWorkerPool(workerCount int, scanner *ComponentScanner) *WorkerPool {
 	return pool
 }
 
-// start begins the worker's processing loop
+// start begins the worker's processing loop.
 func (w *ScanWorker) start() {
 	for {
 		select {
@@ -589,7 +594,7 @@ func (w *ScanWorker) start() {
 	}
 }
 
-// Stop gracefully shuts down the worker pool
+// Stop gracefully shuts down the worker pool.
 func (p *WorkerPool) Stop() {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -610,26 +615,28 @@ func (p *WorkerPool) Stop() {
 	close(p.jobQueue)
 }
 
-// GetRegistry returns the component registry
+// GetRegistry returns the component registry.
 func (s *ComponentScanner) GetRegistry() interfaces.ComponentRegistry {
 	return s.registry
 }
 
-// GetWorkerCount returns the number of active workers in the pool
+// GetWorkerCount returns the number of active workers in the pool.
 func (s *ComponentScanner) GetWorkerCount() int {
 	if s.workerPool == nil {
 		return 0
 	}
 	s.workerPool.mu.RLock()
 	defer s.workerPool.mu.RUnlock()
+
 	return s.workerPool.workerCount
 }
 
-// GetMetrics returns a copy of the current scanner metrics
+// GetMetrics returns a copy of the current scanner metrics.
 func (s *ComponentScanner) GetMetrics() ScannerMetrics {
 	if s.metrics == nil {
 		return ScannerMetrics{}
 	}
+
 	return ScannerMetrics{
 		FilesProcessed:  atomic.LoadInt64(&s.metrics.FilesProcessed),
 		ComponentsFound: atomic.LoadInt64(&s.metrics.ComponentsFound),
@@ -641,7 +648,7 @@ func (s *ComponentScanner) GetMetrics() ScannerMetrics {
 	}
 }
 
-// ResetMetrics clears all scanner metrics
+// ResetMetrics clears all scanner metrics.
 func (s *ComponentScanner) ResetMetrics() {
 	if s.metrics == nil {
 		return
@@ -655,7 +662,7 @@ func (s *ComponentScanner) ResetMetrics() {
 	s.metrics.TotalScanTime = 0
 }
 
-// Close gracefully shuts down the scanner and its worker pool
+// Close gracefully shuts down the scanner and its worker pool.
 func (s *ComponentScanner) Close() error {
 	if s.astParsingPool != nil {
 		s.astParsingPool.Close()
@@ -666,10 +673,11 @@ func (s *ComponentScanner) Close() error {
 	if s.metadataCache != nil {
 		s.metadataCache.Clear()
 	}
+
 	return nil
 }
 
-// getCachedMetadata attempts to retrieve cached component metadata for a file
+// getCachedMetadata attempts to retrieve cached component metadata for a file.
 func (s *ComponentScanner) getCachedMetadata(
 	filePath, fileHash string,
 ) (*CachedComponentMetadata, bool) {
@@ -687,6 +695,7 @@ func (s *ComponentScanner) getCachedMetadata(
 	if err := json.Unmarshal(cachedData, &metadata); err != nil {
 		// Cache corruption - remove invalid entry
 		s.metadataCache.Set(cacheKey, nil)
+
 		return nil, false
 	}
 
@@ -698,7 +707,7 @@ func (s *ComponentScanner) getCachedMetadata(
 	return &metadata, true
 }
 
-// setCachedMetadata stores component metadata in the cache
+// setCachedMetadata stores component metadata in the cache.
 func (s *ComponentScanner) setCachedMetadata(
 	filePath, fileHash string,
 	components []*types.ComponentInfo,
@@ -723,7 +732,7 @@ func (s *ComponentScanner) setCachedMetadata(
 	s.metadataCache.Set(cacheKey, data)
 }
 
-// ScanDirectory scans a directory for templ components using optimized worker pool with timeout support
+// ScanDirectory scans a directory for templ components using optimized worker pool with timeout support.
 func (s *ComponentScanner) ScanDirectoryWithContext(ctx context.Context, dir string) error {
 	start := time.Now()
 
@@ -772,7 +781,7 @@ func (s *ComponentScanner) ScanDirectoryWithContext(ctx context.Context, dir str
 	return err
 }
 
-// ScanDirectory scans a directory for templ components (backward compatible wrapper)
+// ScanDirectory scans a directory for templ components (backward compatible wrapper).
 func (s *ComponentScanner) ScanDirectory(dir string) error {
 	// Create a timeout context for the scan operation
 	scanTimeout := s.getFileScanTimeout()
@@ -782,7 +791,7 @@ func (s *ComponentScanner) ScanDirectory(dir string) error {
 	return s.ScanDirectoryWithContext(ctx, dir)
 }
 
-// processBatchWithWorkerPoolWithContext processes files using the persistent worker pool with optimized batching and context support
+// processBatchWithWorkerPoolWithContext processes files using the persistent worker pool with optimized batching and context support.
 func (s *ComponentScanner) processBatchWithWorkerPoolWithContext(
 	ctx context.Context,
 	files []string,
@@ -830,7 +839,7 @@ func (s *ComponentScanner) processBatchWithWorkerPoolWithContext(
 
 	// Collect results with context checking
 	var scanErrors []error
-	for i := 0; i < len(files); i++ {
+	for range len(files) {
 		select {
 		case result := <-resultChan:
 			if result.err != nil {
@@ -853,7 +862,7 @@ func (s *ComponentScanner) processBatchWithWorkerPoolWithContext(
 	return nil
 }
 
-// processBatchSynchronous processes small batches synchronously for better performance
+// processBatchSynchronous processes small batches synchronously for better performance.
 func (s *ComponentScanner) processBatchSynchronous(files []string) error {
 	var scanErrors []error
 
@@ -872,17 +881,17 @@ func (s *ComponentScanner) processBatchSynchronous(files []string) error {
 }
 
 // ScanDirectoryParallel is deprecated in favor of the optimized ScanDirectory
-// Kept for backward compatibility
+// Kept for backward compatibility.
 func (s *ComponentScanner) ScanDirectoryParallel(dir string, workers int) error {
 	return s.ScanDirectory(dir) // Use optimized version
 }
 
-// ScanFile scans a single file for templ components (optimized)
+// ScanFile scans a single file for templ components (optimized).
 func (s *ComponentScanner) ScanFile(path string) error {
 	return s.scanFileInternal(path)
 }
 
-// scanFileInternal is the optimized internal scanning method used by workers
+// scanFileInternal is the optimized internal scanning method used by workers.
 func (s *ComponentScanner) scanFileInternal(path string) error {
 	// Validate and clean the path to prevent directory traversal
 	cleanPath, err := s.validatePath(path)
@@ -1009,7 +1018,7 @@ func (s *ComponentScanner) scanFileInternal(path string) error {
 
 // readFileStreaming removed - replaced by readFileStreamingOptimized
 
-// readFileStreamingOptimized reads large files using pooled buffers for better memory efficiency
+// readFileStreamingOptimized reads large files using pooled buffers for better memory efficiency.
 func (s *ComponentScanner) readFileStreamingOptimized(
 	file *os.File,
 	size int64,
@@ -1037,6 +1046,7 @@ func (s *ComponentScanner) readFileStreamingOptimized(
 			if err == io.EOF {
 				break
 			}
+
 			return nil, err
 		}
 		if n < chunkSize {
@@ -1049,7 +1059,7 @@ func (s *ComponentScanner) readFileStreamingOptimized(
 
 // Backward compatibility method removed - unused
 
-// parseTemplFileWithComponents extracts components from templ files and returns them
+// parseTemplFileWithComponents extracts components from templ files and returns them.
 func (s *ComponentScanner) parseTemplFileWithComponents(
 	path string,
 	content []byte,
@@ -1103,7 +1113,7 @@ func (s *ComponentScanner) parseTemplFileWithComponents(
 	return components, nil
 }
 
-// extractFromASTWithComponents extracts components from AST and returns them
+// extractFromASTWithComponents extracts components from AST and returns them.
 func (s *ComponentScanner) extractFromASTWithComponents(
 	path string,
 	astFile *ast.File,
@@ -1134,6 +1144,7 @@ func (s *ComponentScanner) extractFromASTWithComponents(
 				}
 			}
 		}
+
 		return true
 	})
 
@@ -1261,7 +1272,7 @@ func extractParameters(line string) []types.ParameterInfo {
 	return params
 }
 
-// sanitizeIdentifier removes dangerous characters from identifiers
+// sanitizeIdentifier removes dangerous characters from identifiers.
 func sanitizeIdentifier(identifier string) string {
 	// Only allow alphanumeric characters and underscores for identifiers
 	var cleaned strings.Builder
@@ -1270,6 +1281,7 @@ func sanitizeIdentifier(identifier string) string {
 			cleaned.WriteRune(r)
 		}
 	}
+
 	return cleaned.String()
 }
 
@@ -1301,6 +1313,7 @@ func (s *ComponentScanner) validatePath(path string) (string, error) {
 				return "", errors.ErrPathTraversal(path).
 					WithContext("pattern", "contains '..' traversal")
 			}
+
 			return cleanPath, nil
 		}
 	}
@@ -1329,6 +1342,7 @@ func (s *ComponentScanner) getCachedWorkingDir() (string, error) {
 	if s.pathCache.initialized {
 		cwd := s.pathCache.currentWorkingDir
 		s.pathCache.mu.RUnlock()
+
 		return cwd, nil
 	}
 	s.pathCache.mu.RUnlock()
@@ -1370,14 +1384,14 @@ func (s *ComponentScanner) InvalidatePathCache() {
 	s.pathCache.currentWorkingDir = ""
 }
 
-// isInTestMode detects if we're running in test mode by checking the call stack
+// isInTestMode detects if we're running in test mode by checking the call stack.
 func (s *ComponentScanner) isInTestMode() bool {
 	// Get the call stack
 	pc := make([]uintptr, 10)
 	n := runtime.Callers(1, pc)
 
 	// Check each frame in the call stack
-	for i := 0; i < n; i++ {
+	for i := range n {
 		fn := runtime.FuncForPC(pc[i])
 		if fn == nil {
 			continue
@@ -1415,7 +1429,7 @@ func (s *ComponentScanner) walkDirectoryConcurrent(rootDir string) ([]string, er
 	return s.walkDirectoryParallel(rootDir)
 }
 
-// walkDirectoryParallel implements concurrent directory discovery
+// walkDirectoryParallel implements concurrent directory discovery.
 func (s *ComponentScanner) walkDirectoryParallel(rootDir string) ([]string, error) {
 	// Use a simple approach: collect all directories first, then process them concurrently
 
@@ -1428,6 +1442,7 @@ func (s *ComponentScanner) walkDirectoryParallel(rootDir string) ([]string, erro
 		if d.IsDir() && !s.shouldSkipDirectory(d.Name()) {
 			allDirs = append(allDirs, path)
 		}
+
 		return nil
 	})
 
@@ -1442,7 +1457,7 @@ func (s *ComponentScanner) walkDirectoryParallel(rootDir string) ([]string, erro
 
 	// Start workers
 	var wg sync.WaitGroup
-	for w := 0; w < maxWorkers; w++ {
+	for range maxWorkers {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -1480,7 +1495,7 @@ func (s *ComponentScanner) walkDirectoryParallel(rootDir string) ([]string, erro
 	return allFiles, nil
 }
 
-// walkDirectoryOptimized implements an optimized sequential walk with directory skipping
+// walkDirectoryOptimized implements an optimized sequential walk with directory skipping.
 func (s *ComponentScanner) walkDirectoryOptimized(rootDir string) ([]string, error) {
 	var files []string
 
@@ -1509,7 +1524,7 @@ func (s *ComponentScanner) walkDirectoryOptimized(rootDir string) ([]string, err
 	return files, err
 }
 
-// processSingleDirectory processes a single directory and returns files and subdirectories
+// processSingleDirectory processes a single directory and returns files and subdirectories.
 func (s *ComponentScanner) processSingleDirectory(dir string) ([]string, []string, error) {
 	var files []string
 	var subdirs []string
@@ -1541,7 +1556,7 @@ func (s *ComponentScanner) processSingleDirectory(dir string) ([]string, []strin
 	return files, subdirs, nil
 }
 
-// shouldSkipDirectory determines if a directory should be skipped for performance
+// shouldSkipDirectory determines if a directory should be skipped for performance.
 func (s *ComponentScanner) shouldSkipDirectory(name string) bool {
 	skipDirs := map[string]bool{
 		".git":         true,
@@ -1560,7 +1575,7 @@ func (s *ComponentScanner) shouldSkipDirectory(name string) bool {
 	return skipDirs[name]
 }
 
-// HashingStrategy contains information about the hash generation approach used
+// HashingStrategy contains information about the hash generation approach used.
 type HashingStrategy struct {
 	Strategy     FileHashStrategy
 	SamplePoints int
@@ -1568,7 +1583,7 @@ type HashingStrategy struct {
 	FileSize     int64
 }
 
-// generateOptimizedHash creates an optimized hash based on file size and content characteristics
+// generateOptimizedHash creates an optimized hash based on file size and content characteristics.
 func (s *ComponentScanner) generateOptimizedHash(
 	content []byte,
 	fileInfo os.FileInfo,
@@ -1622,7 +1637,7 @@ func (s *ComponentScanner) generateOptimizedHash(
 	return strconv.FormatUint(uint64(combinedHash), 16), strategy
 }
 
-// generateAlternativeHash creates an alternative hash for collision detection
+// generateAlternativeHash creates an alternative hash for collision detection.
 func (s *ComponentScanner) generateAlternativeHash(content []byte) uint32 {
 	if len(content) == 0 {
 		return 0
@@ -1632,15 +1647,16 @@ func (s *ComponentScanner) generateAlternativeHash(content []byte) uint32 {
 	return crc32.ChecksumIEEE(content[:min(len(content), 4096)])
 }
 
-// min returns the minimum of two integers
+// min returns the minimum of two integers.
 func min(a, b int) int {
 	if a < b {
 		return a
 	}
+
 	return b
 }
 
-// generateSampledHash creates a hash from strategic content samples
+// generateSampledHash creates a hash from strategic content samples.
 func (s *ComponentScanner) generateSampledHash(content []byte) uint32 {
 	if len(content) == 0 {
 		return 0
@@ -1677,7 +1693,7 @@ func (s *ComponentScanner) generateSampledHash(content []byte) uint32 {
 	return crc32.Checksum(samples, crcTable)
 }
 
-// generateHierarchicalHash creates a hierarchical hash for large files
+// generateHierarchicalHash creates a hierarchical hash for large files.
 func (s *ComponentScanner) generateHierarchicalHash(content []byte, fileInfo os.FileInfo) uint32 {
 	if len(content) == 0 {
 		return 0
@@ -1711,9 +1727,10 @@ func (s *ComponentScanner) generateHierarchicalHash(content []byte, fileInfo os.
 	return crc32.Checksum(keyContent, crcTable)
 }
 
-// generateMetadataHash creates a hash from file metadata
+// generateMetadataHash creates a hash from file metadata.
 func (s *ComponentScanner) generateMetadataHash(fileInfo os.FileInfo) uint32 {
 	// Combine file size and modification time for metadata hash
 	metadata := fmt.Sprintf("%d:%d", fileInfo.Size(), fileInfo.ModTime().Unix())
+
 	return crc32.ChecksumIEEE([]byte(metadata))
 }

@@ -38,7 +38,7 @@ var (
 	auditGuidanceOnly    bool
 )
 
-// auditCmd represents the audit command
+// auditCmd represents the audit command.
 var auditCmd = &cobra.Command{
 	Use:   "audit [component-name]",
 	Short: "Run accessibility audit on components",
@@ -240,6 +240,7 @@ func runAllComponentsAudit(
 		report, err := tester.TestComponent(ctx, component.Name, nil)
 		if err != nil {
 			logger.Warn(ctx, err, "Failed to audit component", "component", component.Name)
+
 			continue
 		}
 
@@ -336,7 +337,7 @@ func applyAutoFixes(
 		return len(autoFixableViolations), nil
 	}
 
-	return 0, fmt.Errorf("auto-fix not supported for this tester type")
+	return 0, errors.New("auto-fix not supported for this tester type")
 }
 
 func outputAuditResults(reports []*accessibility.AccessibilityReport, logger logging.Logger) error {
@@ -370,11 +371,13 @@ func outputJSON(reports []*accessibility.AccessibilityReport) error {
 
 func outputHTML(reports []*accessibility.AccessibilityReport) error {
 	html := generateHTMLReport(reports)
+
 	return writeOutput(html)
 }
 
 func outputMarkdown(reports []*accessibility.AccessibilityReport) error {
 	markdown := generateMarkdownReport(reports)
+
 	return writeOutput(markdown)
 }
 
@@ -384,6 +387,7 @@ func outputConsole(reports []*accessibility.AccessibilityReport, logger logging.
 
 	if len(reports) == 0 {
 		fmt.Println("No components audited.")
+
 		return nil
 	}
 
@@ -497,6 +501,7 @@ func outputComponentDetails(report *accessibility.AccessibilityReport) {
 
 	if len(report.Violations) == 0 {
 		fmt.Printf("   ✅ No accessibility issues found\n\n")
+
 		return
 	}
 
@@ -624,15 +629,17 @@ func writeOutput(content string) error {
 		}
 
 		fmt.Printf("Report written to: %s\n", auditOutputFile)
+
 		return nil
 	}
 
 	// Write to stdout
 	fmt.Print(content)
+
 	return nil
 }
 
-// Helper functions
+// Helper functions.
 func parseWCAGLevel(level string) accessibility.WCAGLevel {
 	switch strings.ToUpper(level) {
 	case "A":
@@ -816,7 +823,7 @@ func getComponentCompletions(toComplete string) []string {
 	return []string{}
 }
 
-// showGuidanceOnly displays accessibility guidance without running an audit
+// showGuidanceOnly displays accessibility guidance without running an audit.
 func showGuidanceOnly(componentName string) error {
 	guide := accessibility.NewAccessibilityGuide()
 
@@ -890,7 +897,7 @@ func showGuidanceOnly(componentName string) error {
 	return nil
 }
 
-// showGuidanceForViolations displays guidance for specific accessibility violations
+// showGuidanceForViolations displays guidance for specific accessibility violations.
 func showGuidanceForViolations(violations []accessibility.AccessibilityViolation) {
 	if !auditShowGuidance || len(violations) == 0 {
 		return

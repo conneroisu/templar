@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestComprehensiveMonitoringIntegration tests the complete monitoring system
+// TestComprehensiveMonitoringIntegration tests the complete monitoring system.
 func TestComprehensiveMonitoringIntegration(t *testing.T) {
 	// Create temporary directory for test outputs
 	tmpDir := t.TempDir()
@@ -107,13 +107,14 @@ func TestComprehensiveMonitoringIntegration(t *testing.T) {
 		ctx := context.Background()
 
 		// Test scanner operations
-		for i := 0; i < 5; i++ {
+		for range 5 {
 			err := templatorMonitor.TrackScanOperation(
 				ctx,
 				"scan_components",
 				func(ctx context.Context) error {
 					time.Sleep(10 * time.Millisecond)
 					templatorMonitor.RecordComponentScanned("button", "Button")
+
 					return nil
 				},
 			)
@@ -121,7 +122,7 @@ func TestComprehensiveMonitoringIntegration(t *testing.T) {
 		}
 
 		// Test build operations (with some failures)
-		for i := 0; i < 7; i++ {
+		for i := range 7 {
 			componentName := "TestComponent"
 			start := time.Now()
 
@@ -135,6 +136,7 @@ func TestComprehensiveMonitoringIntegration(t *testing.T) {
 					if i >= 5 {
 						return assert.AnError
 					}
+
 					return nil
 				},
 			)
@@ -145,16 +147,17 @@ func TestComprehensiveMonitoringIntegration(t *testing.T) {
 		}
 
 		// Test performance monitoring
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			err := perfMonitor.TrackOperation("test_operation", func() error {
 				time.Sleep(5 * time.Millisecond)
+
 				return nil
 			})
 			assert.NoError(t, err)
 		}
 
 		// Test file watcher events
-		for i := 0; i < 3; i++ {
+		for range 3 {
 			templatorMonitor.RecordFileWatchEvent("modified", "./test.templ")
 		}
 
@@ -167,7 +170,7 @@ func TestComprehensiveMonitoringIntegration(t *testing.T) {
 		templatorMonitor.RecordCacheEvent("get", false, "component:Modal")
 
 		// Generate some error metrics to trigger alerts
-		for i := 0; i < 5; i++ {
+		for range 5 {
 			monitor.metrics.Counter("test_errors_total", nil)
 		}
 
@@ -368,12 +371,13 @@ func TestComprehensiveMonitoringIntegration(t *testing.T) {
 		ctx := context.Background()
 		start := time.Now()
 
-		for i := 0; i < 1000; i++ {
+		for range 1000 {
 			perfMonitor.TrackOperationWithContext(
 				ctx,
 				"high_load_test",
 				func(ctx context.Context) error {
 					time.Sleep(1 * time.Millisecond)
+
 					return nil
 				},
 			)
@@ -390,7 +394,7 @@ func TestComprehensiveMonitoringIntegration(t *testing.T) {
 	})
 }
 
-// createMonitorFromConfig creates a monitor from configuration (helper function)
+// createMonitorFromConfig creates a monitor from configuration (helper function).
 func createMonitorFromConfig(
 	config *MonitoringConfiguration,
 	logger logging.Logger,
@@ -417,7 +421,7 @@ func createMonitorFromConfig(
 	return NewMonitor(monitorConfig, logger)
 }
 
-// Benchmark tests for performance validation
+// Benchmark tests for performance validation.
 func BenchmarkComprehensiveMonitoring(b *testing.B) {
 	logger := logging.NewLogger(logging.DefaultConfig())
 
@@ -441,7 +445,7 @@ func BenchmarkComprehensiveMonitoring(b *testing.B) {
 	b.ResetTimer()
 
 	b.Run("operation_tracking", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			perfMonitor.TrackOperationWithContext(
 				ctx,
 				"bench_operation",
@@ -453,7 +457,7 @@ func BenchmarkComprehensiveMonitoring(b *testing.B) {
 	})
 
 	b.Run("metrics_recording", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for i := range b.N {
 			monitor.metrics.Counter("bench_counter", nil)
 			monitor.metrics.Gauge("bench_gauge", float64(i), nil)
 			monitor.metrics.Histogram("bench_histogram", float64(i%100), nil)
@@ -461,13 +465,13 @@ func BenchmarkComprehensiveMonitoring(b *testing.B) {
 	})
 
 	b.Run("health_checks", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			monitor.health.runHealthChecks()
 		}
 	})
 }
 
-// TestRealWorldScenarios tests realistic usage patterns
+// TestRealWorldScenarios tests realistic usage patterns.
 func TestRealWorldScenarios(t *testing.T) {
 	tmpDir := t.TempDir()
 	logger := logging.NewLogger(logging.DefaultConfig())
@@ -506,6 +510,7 @@ func TestRealWorldScenarios(t *testing.T) {
 				for _, comp := range components {
 					templatorMonitor.RecordComponentScanned("template", comp)
 				}
+
 				return nil
 			},
 		)
@@ -526,6 +531,7 @@ func TestRealWorldScenarios(t *testing.T) {
 					if comp == "Modal" {
 						return assert.AnError
 					}
+
 					return nil
 				},
 			)
@@ -545,6 +551,7 @@ func TestRealWorldScenarios(t *testing.T) {
 			func(ctx context.Context) error {
 				// Simulate file watcher startup
 				time.Sleep(50 * time.Millisecond)
+
 				return nil
 			},
 		)
@@ -558,13 +565,14 @@ func TestRealWorldScenarios(t *testing.T) {
 		}
 
 		// 5. Simulate server operations
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			err := templatorMonitor.TrackServerOperation(
 				ctx,
 				"handle_request",
 				func(ctx context.Context) error {
 					// Simulate request processing
 					time.Sleep(5 * time.Millisecond)
+
 					return nil
 				},
 			)
@@ -634,6 +642,7 @@ func TestRealWorldScenarios(t *testing.T) {
 		for _, metric := range metrics {
 			if metric.Name == "test_errors_total" {
 				foundErrorMetrics = true
+
 				break
 			}
 		}

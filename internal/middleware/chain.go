@@ -37,7 +37,7 @@ import (
 // - config must never be nil after construction
 // - middlewares slice is never nil (can be empty)
 // - middleware execution order is deterministic
-// - Apply() is safe for concurrent access (read-only operation)
+// - Apply() is safe for concurrent access (read-only operation).
 type MiddlewareChain struct {
 	config          *config.Config             // Application configuration for middleware behavior
 	rateLimiter     *RateLimiter               // Global rate limiter (optional)
@@ -46,10 +46,10 @@ type MiddlewareChain struct {
 	middlewares     []Middleware               // Ordered list of middleware functions
 }
 
-// Middleware represents a single middleware function
+// Middleware represents a single middleware function.
 type Middleware func(http.Handler) http.Handler
 
-// MiddlewareDependencies contains all dependencies needed for middleware construction
+// MiddlewareDependencies contains all dependencies needed for middleware construction.
 type MiddlewareDependencies struct {
 	Config          *config.Config
 	RateLimiter     *RateLimiter
@@ -79,7 +79,7 @@ type MiddlewareDependencies struct {
 // - Fully configured MiddlewareChain ready for Apply()
 //
 // Panics:
-// - If required dependencies are nil or invalid
+// - If required dependencies are nil or invalid.
 func NewMiddlewareChain(deps MiddlewareDependencies) *MiddlewareChain {
 	// Critical dependency validation - these are required for safe operation
 	if deps.Config == nil {
@@ -118,7 +118,7 @@ func NewMiddlewareChain(deps MiddlewareDependencies) *MiddlewareChain {
 	return chain
 }
 
-// buildDefaultStack constructs the standard middleware stack
+// buildDefaultStack constructs the standard middleware stack.
 func (mc *MiddlewareChain) buildDefaultStack() {
 	// Order matters: middlewares are executed in reverse order (last added, first executed)
 
@@ -150,15 +150,16 @@ func (mc *MiddlewareChain) buildDefaultStack() {
 	mc.AddMiddleware(AuthMiddleware(&mc.config.Server.Auth))
 }
 
-// AddMiddleware adds a middleware to the chain
+// AddMiddleware adds a middleware to the chain.
 func (mc *MiddlewareChain) AddMiddleware(middleware Middleware) {
 	mc.middlewares = append(mc.middlewares, middleware)
 }
 
-// AddMiddlewareAt inserts a middleware at a specific position in the chain
+// AddMiddlewareAt inserts a middleware at a specific position in the chain.
 func (mc *MiddlewareChain) AddMiddlewareAt(index int, middleware Middleware) {
 	if index < 0 || index > len(mc.middlewares) {
 		mc.middlewares = append(mc.middlewares, middleware)
+
 		return
 	}
 
@@ -167,12 +168,13 @@ func (mc *MiddlewareChain) AddMiddlewareAt(index int, middleware Middleware) {
 	mc.middlewares[index] = middleware
 }
 
-// RemoveMiddleware removes a specific middleware by comparison
+// RemoveMiddleware removes a specific middleware by comparison.
 func (mc *MiddlewareChain) RemoveMiddleware(targetMiddleware Middleware) {
 	for i, middleware := range mc.middlewares {
 		// Simple address comparison - could be enhanced with interface-based matching
 		if &middleware == &targetMiddleware {
 			mc.middlewares = append(mc.middlewares[:i], mc.middlewares[i+1:]...)
+
 			break
 		}
 	}
@@ -208,7 +210,7 @@ func (mc *MiddlewareChain) RemoveMiddleware(targetMiddleware Middleware) {
 // - New http.Handler with complete middleware chain applied
 //
 // Panics:
-// - If handler is nil (programming error)
+// - If handler is nil (programming error).
 func (mc *MiddlewareChain) Apply(handler http.Handler) http.Handler {
 	// Precondition validation
 	if handler == nil {
@@ -250,7 +252,7 @@ func (mc *MiddlewareChain) Apply(handler http.Handler) http.Handler {
 	return wrappedHandler
 }
 
-// createLoggingMiddleware creates the logging and request tracking middleware
+// createLoggingMiddleware creates the logging and request tracking middleware.
 func (mc *MiddlewareChain) createLoggingMiddleware() Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -272,7 +274,7 @@ func (mc *MiddlewareChain) createLoggingMiddleware() Middleware {
 	}
 }
 
-// createCORSMiddleware creates the CORS handling middleware
+// createCORSMiddleware creates the CORS handling middleware.
 func (mc *MiddlewareChain) createCORSMiddleware() Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -294,6 +296,7 @@ func (mc *MiddlewareChain) createCORSMiddleware() Middleware {
 			// Handle preflight requests
 			if r.Method == http.MethodOptions {
 				w.WriteHeader(http.StatusOK)
+
 				return
 			}
 
@@ -303,35 +306,37 @@ func (mc *MiddlewareChain) createCORSMiddleware() Middleware {
 	}
 }
 
-// shouldEnableRateLimit determines if rate limiting should be enabled
+// shouldEnableRateLimit determines if rate limiting should be enabled.
 func (mc *MiddlewareChain) shouldEnableRateLimit() bool {
 	securityConfig := SecurityConfigFromAppConfig(mc.config)
 	rateLimitConfig := securityConfig.RateLimiting
+
 	return rateLimitConfig != nil && rateLimitConfig.Enabled
 }
 
-// createRateLimiter creates a new rate limiter instance
+// createRateLimiter creates a new rate limiter instance.
 func (mc *MiddlewareChain) createRateLimiter() *RateLimiter {
 	// Create a basic rate limit config
 	rateConfig := RateLimit{
 		RequestsPerMinute: 60,
 		BurstLimit:        10,
 	}
+
 	return NewRateLimiter(rateConfig)
 }
 
-// GetMiddlewareCount returns the number of middlewares in the chain
+// GetMiddlewareCount returns the number of middlewares in the chain.
 func (mc *MiddlewareChain) GetMiddlewareCount() int {
 	return len(mc.middlewares)
 }
 
-// Reset clears all middlewares and rebuilds the default stack
+// Reset clears all middlewares and rebuilds the default stack.
 func (mc *MiddlewareChain) Reset() {
 	mc.middlewares = make([]Middleware, 0)
 	mc.buildDefaultStack()
 }
 
-// Clone creates a copy of the middleware chain
+// Clone creates a copy of the middleware chain.
 func (mc *MiddlewareChain) Clone() *MiddlewareChain {
 	clone := &MiddlewareChain{
 		config:          mc.config,
@@ -346,7 +351,7 @@ func (mc *MiddlewareChain) Clone() *MiddlewareChain {
 	return clone
 }
 
-// MiddlewareConfig provides configuration for middleware components
+// MiddlewareConfig provides configuration for middleware components.
 type MiddlewareConfig struct {
 	EnableLogging     bool
 	EnableCORS        bool
@@ -357,7 +362,7 @@ type MiddlewareConfig struct {
 	CustomMiddlewares []Middleware
 }
 
-// NewCustomMiddlewareChain creates a middleware chain with custom configuration
+// NewCustomMiddlewareChain creates a middleware chain with custom configuration.
 func NewCustomMiddlewareChain(
 	deps MiddlewareDependencies,
 	config MiddlewareConfig,
@@ -407,7 +412,7 @@ func NewCustomMiddlewareChain(
 	return chain
 }
 
-// DebugMiddlewares logs information about all middlewares in the chain (for debugging)
+// DebugMiddlewares logs information about all middlewares in the chain (for debugging).
 func (mc *MiddlewareChain) DebugMiddlewares() {
 	log.Printf("Middleware chain contains %d middlewares:", len(mc.middlewares))
 	for i := range mc.middlewares {

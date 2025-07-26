@@ -13,7 +13,7 @@ import (
 	"golang.org/x/text/language"
 )
 
-// PlaygroundRequest represents a request to the interactive playground
+// PlaygroundRequest represents a request to the interactive playground.
 type PlaygroundRequest struct {
 	ComponentName string                 `json:"component_name"`
 	Props         map[string]interface{} `json:"props"`
@@ -23,7 +23,7 @@ type PlaygroundRequest struct {
 	GenerateCode  bool                   `json:"generate_code,omitempty"`
 }
 
-// PlaygroundResponse represents a response from the interactive playground
+// PlaygroundResponse represents a response from the interactive playground.
 type PlaygroundResponse struct {
 	HTML              string                 `json:"html"`
 	GeneratedCode     string                 `json:"generated_code,omitempty"`
@@ -34,7 +34,7 @@ type PlaygroundResponse struct {
 	Error             string                 `json:"error,omitempty"`
 }
 
-// PropDefinition describes a component property
+// PropDefinition describes a component property.
 type PropDefinition struct {
 	Name        string      `json:"name"`
 	Type        string      `json:"type"`
@@ -44,14 +44,14 @@ type PropDefinition struct {
 	Examples    []string    `json:"examples,omitempty"`
 }
 
-// ViewportSize represents viewport dimensions for responsive testing
+// ViewportSize represents viewport dimensions for responsive testing.
 type ViewportSize struct {
 	Width  int    `json:"width"`
 	Height int    `json:"height"`
 	Name   string `json:"name,omitempty"`
 }
 
-// ComponentMetadata provides additional information about the component
+// ComponentMetadata provides additional information about the component.
 type ComponentMetadata struct {
 	Name           string   `json:"name"`
 	Package        string   `json:"package"`
@@ -63,16 +63,18 @@ type ComponentMetadata struct {
 	ViewportPreset string   `json:"viewport_preset,omitempty"`
 }
 
-// handlePlaygroundRender handles interactive component playground rendering
+// handlePlaygroundRender handles interactive component playground rendering.
 func (s *PreviewServer) handlePlaygroundRender(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+
 		return
 	}
 
 	var req PlaygroundRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid JSON request: "+err.Error(), http.StatusBadRequest)
+
 		return
 	}
 
@@ -80,6 +82,7 @@ func (s *PreviewServer) handlePlaygroundRender(w http.ResponseWriter, r *http.Re
 	if err := validateComponentName(req.ComponentName); err != nil {
 		response := PlaygroundResponse{Error: "Invalid component name: " + err.Error()}
 		s.writeJSONResponse(w, response)
+
 		return
 	}
 
@@ -90,6 +93,7 @@ func (s *PreviewServer) handlePlaygroundRender(w http.ResponseWriter, r *http.Re
 			Error: fmt.Sprintf("Component '%s' not found", req.ComponentName),
 		}
 		s.writeJSONResponse(w, response)
+
 		return
 	}
 
@@ -103,6 +107,7 @@ func (s *PreviewServer) handlePlaygroundRender(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		response := PlaygroundResponse{Error: "Render error: " + err.Error()}
 		s.writeJSONResponse(w, response)
+
 		return
 	}
 
@@ -126,17 +131,19 @@ func (s *PreviewServer) handlePlaygroundRender(w http.ResponseWriter, r *http.Re
 	s.writeJSONResponse(w, response)
 }
 
-// handlePlaygroundComponent serves the interactive playground UI
+// handlePlaygroundComponent serves the interactive playground UI.
 func (s *PreviewServer) handlePlaygroundComponent(w http.ResponseWriter, r *http.Request) {
 	componentName := strings.TrimPrefix(r.URL.Path, "/playground/")
 	if componentName == "" {
 		s.handlePlaygroundIndex(w, r)
+
 		return
 	}
 
 	// Validate component name
 	if err := validateComponentName(componentName); err != nil {
 		http.Error(w, "Invalid component name: "+err.Error(), http.StatusBadRequest)
+
 		return
 	}
 
@@ -144,6 +151,7 @@ func (s *PreviewServer) handlePlaygroundComponent(w http.ResponseWriter, r *http
 	component, exists := s.registry.Get(componentName)
 	if !exists {
 		http.NotFound(w, r)
+
 		return
 	}
 
@@ -153,7 +161,7 @@ func (s *PreviewServer) handlePlaygroundComponent(w http.ResponseWriter, r *http
 	w.Write([]byte(html))
 }
 
-// handlePlaygroundIndex serves the main playground page with component list
+// handlePlaygroundIndex serves the main playground page with component list.
 func (s *PreviewServer) handlePlaygroundIndex(w http.ResponseWriter, r *http.Request) {
 	components := s.registry.GetAll()
 	html := s.generatePlaygroundIndexHTML(components)
@@ -161,17 +169,18 @@ func (s *PreviewServer) handlePlaygroundIndex(w http.ResponseWriter, r *http.Req
 	w.Write([]byte(html))
 }
 
-// renderComponentWithProps renders a component with custom props
+// renderComponentWithProps renders a component with custom props.
 func (s *PreviewServer) renderComponentWithProps(
 	componentName string,
 	props map[string]interface{},
 ) (string, error) {
 	// Create a temporary renderer with custom mock data
 	renderer := s.createCustomRenderer(props)
+
 	return renderer.RenderComponent(componentName)
 }
 
-// generateIntelligentMockData creates contextually appropriate mock data
+// generateIntelligentMockData creates contextually appropriate mock data.
 func (s *PreviewServer) generateIntelligentMockData(
 	component *types.ComponentInfo,
 ) map[string]interface{} {
@@ -184,7 +193,7 @@ func (s *PreviewServer) generateIntelligentMockData(
 	return mockData
 }
 
-// generateMockValueForType generates appropriate mock values based on parameter name and type
+// generateMockValueForType generates appropriate mock values based on parameter name and type.
 func (s *PreviewServer) generateMockValueForType(paramName, paramType string) interface{} {
 	paramLower := strings.ToLower(paramName)
 
@@ -201,11 +210,11 @@ func (s *PreviewServer) generateMockValueForType(paramName, paramType string) in
 		return s.generateMockFloat(paramLower)
 	default:
 		// For complex types, return a JSON-serializable placeholder
-		return fmt.Sprintf("mock_%s", paramName)
+		return "mock_" + paramName
 	}
 }
 
-// generateMockString creates contextually appropriate mock strings
+// generateMockString creates contextually appropriate mock strings.
 func (s *PreviewServer) generateMockString(paramName string) string {
 	contextualValues := map[string][]string{
 		"title": {"Sample Title", "Welcome to Templar", "Interactive Component"},
@@ -251,10 +260,10 @@ func (s *PreviewServer) generateMockString(paramName string) string {
 		return "https://via.placeholder.com/300x200"
 	}
 
-	return fmt.Sprintf("Sample %s", cases.Title(language.English).String(paramName))
+	return "Sample " + cases.Title(language.English).String(paramName)
 }
 
-// generateMockInt creates appropriate integer values
+// generateMockInt creates appropriate integer values.
 func (s *PreviewServer) generateMockInt(paramName string) int {
 	contextualValues := map[string]int{
 		"width":    300,
@@ -281,7 +290,7 @@ func (s *PreviewServer) generateMockInt(paramName string) int {
 	return 42 // Universal answer
 }
 
-// generateMockBool creates appropriate boolean values
+// generateMockBool creates appropriate boolean values.
 func (s *PreviewServer) generateMockBool(paramName string) bool {
 	// Default to true for these commonly positive attributes
 	positiveDefaults := []string{
@@ -310,7 +319,7 @@ func (s *PreviewServer) generateMockBool(paramName string) bool {
 	return true // Default optimistic
 }
 
-// generateMockStringSlice creates arrays of contextual strings
+// generateMockStringSlice creates arrays of contextual strings.
 func (s *PreviewServer) generateMockStringSlice(paramName string) []string {
 	contextualValues := map[string][]string{
 		"tags":       {"React", "TypeScript", "CSS", "JavaScript"},
@@ -334,7 +343,7 @@ func (s *PreviewServer) generateMockStringSlice(paramName string) []string {
 	return []string{"Item 1", "Item 2", "Item 3"}
 }
 
-// generateMockFloat creates appropriate float values
+// generateMockFloat creates appropriate float values.
 func (s *PreviewServer) generateMockFloat(paramName string) float64 {
 	contextualValues := map[string]float64{
 		"scale":      1.0,
@@ -355,7 +364,7 @@ func (s *PreviewServer) generateMockFloat(paramName string) float64 {
 	return 3.14159 // When in doubt, π
 }
 
-// extractPropDefinitions extracts property definitions from component
+// extractPropDefinitions extracts property definitions from component.
 func (s *PreviewServer) extractPropDefinitions(component *types.ComponentInfo) []PropDefinition {
 	props := make([]PropDefinition, 0, len(component.Parameters))
 
@@ -374,7 +383,7 @@ func (s *PreviewServer) extractPropDefinitions(component *types.ComponentInfo) [
 	return props
 }
 
-// generatePropDescription creates helpful descriptions for properties
+// generatePropDescription creates helpful descriptions for properties.
 func (s *PreviewServer) generatePropDescription(name, propType string) string {
 	descriptions := map[string]string{
 		"title":       "The main heading or title text",
@@ -397,7 +406,7 @@ func (s *PreviewServer) generatePropDescription(name, propType string) string {
 	return fmt.Sprintf("The %s property of type %s", name, propType)
 }
 
-// generatePropExamples creates example values for properties
+// generatePropExamples creates example values for properties.
 func (s *PreviewServer) generatePropExamples(name, propType string) []string {
 	switch propType {
 	case "string":
@@ -413,7 +422,7 @@ func (s *PreviewServer) generatePropExamples(name, propType string) []string {
 	}
 }
 
-// getStringExamples returns contextual string examples
+// getStringExamples returns contextual string examples.
 func (s *PreviewServer) getStringExamples(name string) []string {
 	examples := map[string][]string{
 		"title":   {`"Welcome"`, `"Dashboard"`, `"Settings"`},
@@ -430,7 +439,7 @@ func (s *PreviewServer) getStringExamples(name string) []string {
 	return []string{fmt.Sprintf(`"Sample %s"`, name), fmt.Sprintf(`"Another %s"`, name)}
 }
 
-// getIntExamples returns contextual integer examples
+// getIntExamples returns contextual integer examples.
 func (s *PreviewServer) getIntExamples(name string) []string {
 	examples := map[string][]string{
 		"width":  {"300", "400", "500"},
@@ -447,7 +456,7 @@ func (s *PreviewServer) getIntExamples(name string) []string {
 	return []string{"1", "10", "42"}
 }
 
-// generateMockDataSuggestions creates suggestions for mock data
+// generateMockDataSuggestions creates suggestions for mock data.
 func (s *PreviewServer) generateMockDataSuggestions(
 	component *types.ComponentInfo,
 ) map[string]interface{} {
@@ -460,7 +469,7 @@ func (s *PreviewServer) generateMockDataSuggestions(
 	return suggestions
 }
 
-// generateMultipleMockValues creates multiple example values
+// generateMultipleMockValues creates multiple example values.
 func (s *PreviewServer) generateMultipleMockValues(name, propType string) interface{} {
 	switch propType {
 	case "string":
@@ -470,6 +479,7 @@ func (s *PreviewServer) generateMultipleMockValues(name, propType string) interf
 			// Remove quotes from JSON string examples
 			values[i] = strings.Trim(ex, `"`)
 		}
+
 		return values
 	case "int", "int64", "int32":
 		examples := s.getIntExamples(name)
@@ -479,6 +489,7 @@ func (s *PreviewServer) generateMultipleMockValues(name, propType string) interf
 				values[i] = val
 			}
 		}
+
 		return values
 	case "bool":
 		return []bool{true, false}
@@ -493,7 +504,7 @@ func (s *PreviewServer) generateMultipleMockValues(name, propType string) interf
 	}
 }
 
-// buildComponentMetadata creates metadata about the component
+// buildComponentMetadata creates metadata about the component.
 func (s *PreviewServer) buildComponentMetadata(component *types.ComponentInfo) *ComponentMetadata {
 	return &ComponentMetadata{
 		Name:         component.Name,
@@ -505,14 +516,14 @@ func (s *PreviewServer) buildComponentMetadata(component *types.ComponentInfo) *
 	}
 }
 
-// extractDocComments extracts documentation from component
+// extractDocComments extracts documentation from component.
 func (s *PreviewServer) extractDocComments(component *types.ComponentInfo) string {
 	// This would parse the actual file to extract doc comments
 	// For now, return a placeholder
 	return fmt.Sprintf("Component %s provides interactive UI functionality.", component.Name)
 }
 
-// generateComponentCode creates code showing current component usage
+// generateComponentCode creates code showing current component usage.
 func (s *PreviewServer) generateComponentCode(
 	componentName string,
 	props map[string]interface{},
@@ -536,7 +547,7 @@ func (s *PreviewServer) generateComponentCode(
 	return code.String()
 }
 
-// formatPropForCode formats a property value for code display
+// formatPropForCode formats a property value for code display.
 func (s *PreviewServer) formatPropForCode(key string, value interface{}) string {
 	switch v := value.(type) {
 	case string:
@@ -552,13 +563,14 @@ func (s *PreviewServer) formatPropForCode(key string, value interface{}) string 
 		for i, item := range v {
 			items[i] = fmt.Sprintf(`"%s"`, item)
 		}
+
 		return fmt.Sprintf(`%s: []string{%s}`, key, strings.Join(items, ", "))
 	default:
 		return fmt.Sprintf(`%s: %v`, key, v)
 	}
 }
 
-// createCustomRenderer creates a renderer with custom mock data
+// createCustomRenderer creates a renderer with custom mock data.
 func (s *PreviewServer) createCustomRenderer(props map[string]interface{}) *CustomMockRenderer {
 	return &CustomMockRenderer{
 		baseRenderer: s.renderer,
@@ -566,20 +578,20 @@ func (s *PreviewServer) createCustomRenderer(props map[string]interface{}) *Cust
 	}
 }
 
-// CustomMockRenderer extends the base renderer with custom prop injection
+// CustomMockRenderer extends the base renderer with custom prop injection.
 type CustomMockRenderer struct {
 	baseRenderer *renderer.ComponentRenderer
 	customProps  map[string]interface{}
 }
 
-// RenderComponent renders with injected props (mock implementation for playground)
+// RenderComponent renders with injected props (mock implementation for playground).
 func (cmr *CustomMockRenderer) RenderComponent(componentName string) (string, error) {
 	// For the playground, we generate mock HTML based on the component name and props
 	// This allows the playground to work without actual templ compilation
 	return cmr.generateMockHTML(componentName, cmr.customProps)
 }
 
-// generateMockHTML creates mock HTML representation of a component
+// generateMockHTML creates mock HTML representation of a component.
 func (cmr *CustomMockRenderer) generateMockHTML(
 	componentName string,
 	props map[string]interface{},
@@ -674,7 +686,7 @@ func (cmr *CustomMockRenderer) generateMockHTML(
 	return html.String(), nil
 }
 
-// writeJSONResponse writes a JSON response
+// writeJSONResponse writes a JSON response.
 func (s *PreviewServer) writeJSONResponse(w http.ResponseWriter, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(data); err != nil {

@@ -11,7 +11,7 @@ import (
 	"github.com/coder/websocket"
 )
 
-// BenchmarkWebSocketBroadcasting compares original vs optimized broadcasting performance
+// BenchmarkWebSocketBroadcasting compares original vs optimized broadcasting performance.
 func BenchmarkWebSocketBroadcasting(b *testing.B) {
 	clientCounts := []int{10, 50, 100, 500, 1000}
 
@@ -26,14 +26,14 @@ func BenchmarkWebSocketBroadcasting(b *testing.B) {
 	}
 }
 
-// benchmarkOriginalBroadcast simulates the original broadcasting approach
+// benchmarkOriginalBroadcast simulates the original broadcasting approach.
 func benchmarkOriginalBroadcast(b *testing.B, clientCount int) {
 	// Simulate original approach with map iteration and slice allocations
 	clients := make(map[*websocket.Conn]*Client)
 	var clientsMutex sync.RWMutex
 
 	// Create mock clients
-	for i := 0; i < clientCount; i++ {
+	for range clientCount {
 		client := &Client{
 			send: make(chan []byte, 256),
 		}
@@ -46,7 +46,7 @@ func benchmarkOriginalBroadcast(b *testing.B, clientCount int) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		// Original broadcasting logic (from websocket.go line 136-164)
 		clientsMutex.RLock()
 		var failedClients []*websocket.Conn // New allocation every broadcast!
@@ -74,7 +74,7 @@ func benchmarkOriginalBroadcast(b *testing.B, clientCount int) {
 	}
 }
 
-// benchmarkOptimizedBroadcast tests the optimized broadcasting approach
+// benchmarkOptimizedBroadcast tests the optimized broadcasting approach.
 func benchmarkOptimizedBroadcast(b *testing.B, clientCount int) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -83,7 +83,7 @@ func benchmarkOptimizedBroadcast(b *testing.B, clientCount int) {
 	defer hub.Shutdown()
 
 	// Create optimized clients
-	for i := 0; i < clientCount; i++ {
+	for range clientCount {
 		client := &OptimizedClient{
 			conn:         &websocket.Conn{}, // Mock connection
 			server:       nil,               // Not needed for benchmark
@@ -104,13 +104,13 @@ func benchmarkOptimizedBroadcast(b *testing.B, clientCount int) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		// Optimized broadcasting using pre-allocated structures
 		hub.optimizedBroadcast(message)
 	}
 }
 
-// BenchmarkRingBufferVsChannel compares ring buffer vs channel performance
+// BenchmarkRingBufferVsChannel compares ring buffer vs channel performance.
 func BenchmarkRingBufferVsChannel(b *testing.B) {
 	message := []byte("test message for ring buffer vs channel comparison")
 
@@ -120,7 +120,7 @@ func BenchmarkRingBufferVsChannel(b *testing.B) {
 		b.ResetTimer()
 		b.ReportAllocs()
 
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			if !ring.Push(message) {
 				// Buffer full, pop one message
 				ring.Pop()
@@ -135,7 +135,7 @@ func BenchmarkRingBufferVsChannel(b *testing.B) {
 		b.ResetTimer()
 		b.ReportAllocs()
 
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			select {
 			case ch <- message:
 			default:
@@ -147,13 +147,13 @@ func BenchmarkRingBufferVsChannel(b *testing.B) {
 	})
 }
 
-// BenchmarkClientPoolOperations tests client pool add/remove performance
+// BenchmarkClientPoolOperations tests client pool add/remove performance.
 func BenchmarkClientPoolOperations(b *testing.B) {
 	pool := NewClientPool()
 
 	b.Run("AddClient", func(b *testing.B) {
 		clients := make([]*OptimizedClient, b.N)
-		for i := 0; i < b.N; i++ {
+		for i := range b.N {
 			clients[i] = &OptimizedClient{
 				conn:     &websocket.Conn{},
 				sendRing: NewRingBuffer(DefaultRingBufferSize),
@@ -164,7 +164,7 @@ func BenchmarkClientPoolOperations(b *testing.B) {
 		b.ResetTimer()
 		b.ReportAllocs()
 
-		for i := 0; i < b.N; i++ {
+		for i := range b.N {
 			pool.AddClient(clients[i])
 		}
 	})
@@ -172,7 +172,7 @@ func BenchmarkClientPoolOperations(b *testing.B) {
 	b.Run("RemoveClient", func(b *testing.B) {
 		// Pre-populate pool
 		clientIDs := make([]uint64, b.N)
-		for i := 0; i < b.N; i++ {
+		for i := range b.N {
 			client := &OptimizedClient{
 				conn:     &websocket.Conn{},
 				sendRing: NewRingBuffer(DefaultRingBufferSize),
@@ -185,13 +185,13 @@ func BenchmarkClientPoolOperations(b *testing.B) {
 		b.ResetTimer()
 		b.ReportAllocs()
 
-		for i := 0; i < b.N; i++ {
+		for i := range b.N {
 			pool.RemoveClient(clientIDs[i])
 		}
 	})
 }
 
-// BenchmarkBroadcastPooling tests the efficiency of object pooling
+// BenchmarkBroadcastPooling tests the efficiency of object pooling.
 func BenchmarkBroadcastPooling(b *testing.B) {
 	broadcastPool := NewBroadcastPool()
 
@@ -199,13 +199,13 @@ func BenchmarkBroadcastPooling(b *testing.B) {
 		b.ResetTimer()
 		b.ReportAllocs()
 
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			// Get from pool
 			slice := broadcastPool.clientSlicePool.Get().([]*OptimizedClient)
 			slice = slice[:0]
 
 			// Simulate usage
-			for j := 0; j < 100; j++ {
+			for range 100 {
 				slice = append(slice, &OptimizedClient{})
 			}
 
@@ -218,12 +218,12 @@ func BenchmarkBroadcastPooling(b *testing.B) {
 		b.ResetTimer()
 		b.ReportAllocs()
 
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			// Allocate new slice every time
 			slice := make([]*OptimizedClient, 0, 100)
 
 			// Simulate usage
-			for j := 0; j < 100; j++ {
+			for range 100 {
 				slice = append(slice, &OptimizedClient{})
 			}
 
@@ -233,7 +233,7 @@ func BenchmarkBroadcastPooling(b *testing.B) {
 	})
 }
 
-// BenchmarkBackpressureHandling tests backpressure performance
+// BenchmarkBackpressureHandling tests backpressure performance.
 func BenchmarkBackpressureHandling(b *testing.B) {
 	backpressure := NewBackpressureManager()
 	client := &OptimizedClient{
@@ -242,7 +242,7 @@ func BenchmarkBackpressureHandling(b *testing.B) {
 	}
 
 	// Fill buffer to trigger backpressure
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		client.sendRing.Push([]byte("filler message"))
 	}
 
@@ -254,7 +254,7 @@ func BenchmarkBackpressureHandling(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		// Simulate shouldDropMessage logic
 		queueSize := client.sendRing.Size()
 		utilization := float64(queueSize) / float64(client.sendRing.size)
@@ -276,7 +276,7 @@ func BenchmarkBackpressureHandling(b *testing.B) {
 	}
 }
 
-// BenchmarkMemoryUsage measures memory usage of different approaches
+// BenchmarkMemoryUsage measures memory usage of different approaches.
 func BenchmarkMemoryUsage(b *testing.B) {
 	b.Run("OriginalApproach", func(b *testing.B) {
 		var m1, m2 runtime.MemStats
@@ -284,10 +284,10 @@ func BenchmarkMemoryUsage(b *testing.B) {
 		runtime.ReadMemStats(&m1)
 
 		// Simulate original approach memory usage
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			// Allocate slice for failed clients (original memory bomb)
 			failedClients := make([]*websocket.Conn, 0, 100)
-			for j := 0; j < 50; j++ {
+			for range 50 {
 				failedClients = append(failedClients, &websocket.Conn{})
 			}
 
@@ -310,13 +310,13 @@ func BenchmarkMemoryUsage(b *testing.B) {
 		// Use optimized pooled approach
 		pool := NewBroadcastPool()
 
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			// Get pre-allocated slice from pool
 			failedClients := pool.clientSlicePool.Get().([]*OptimizedClient)
 			failedClients = failedClients[:0]
 
 			// Simulate operations
-			for j := 0; j < 50; j++ {
+			for range 50 {
 				failedClients = append(failedClients, &OptimizedClient{})
 			}
 
@@ -330,7 +330,7 @@ func BenchmarkMemoryUsage(b *testing.B) {
 	})
 }
 
-// BenchmarkConcurrentBroadcasts tests performance under concurrent load
+// BenchmarkConcurrentBroadcasts tests performance under concurrent load.
 func BenchmarkConcurrentBroadcasts(b *testing.B) {
 	const (
 		clientCount          = 500
@@ -343,7 +343,7 @@ func BenchmarkConcurrentBroadcasts(b *testing.B) {
 		var clientsMutex sync.RWMutex
 
 		// Create clients
-		for i := 0; i < clientCount; i++ {
+		for range clientCount {
 			client := &Client{
 				send: make(chan []byte, 256),
 			}
@@ -353,15 +353,15 @@ func BenchmarkConcurrentBroadcasts(b *testing.B) {
 		b.ResetTimer()
 		b.ReportAllocs()
 
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			var wg sync.WaitGroup
 
-			for g := 0; g < goroutineCount; g++ {
+			for range goroutineCount {
 				wg.Add(1)
 				go func() {
 					defer wg.Done()
 
-					for m := 0; m < messagesPerGoroutine; m++ {
+					for m := range messagesPerGoroutine {
 						message := []byte(fmt.Sprintf("concurrent message %d", m))
 
 						clientsMutex.RLock()
@@ -400,7 +400,7 @@ func BenchmarkConcurrentBroadcasts(b *testing.B) {
 		defer hub.Shutdown()
 
 		// Create clients
-		for i := 0; i < clientCount; i++ {
+		for range clientCount {
 			client := &OptimizedClient{
 				conn:     &websocket.Conn{},
 				sendRing: NewRingBuffer(DefaultRingBufferSize),
@@ -413,15 +413,15 @@ func BenchmarkConcurrentBroadcasts(b *testing.B) {
 		b.ResetTimer()
 		b.ReportAllocs()
 
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			var wg sync.WaitGroup
 
-			for g := 0; g < goroutineCount; g++ {
+			for range goroutineCount {
 				wg.Add(1)
 				go func() {
 					defer wg.Done()
 
-					for m := 0; m < messagesPerGoroutine; m++ {
+					for m := range messagesPerGoroutine {
 						message := &BroadcastMessage{
 							Data:      []byte(fmt.Sprintf("concurrent message %d", m)),
 							Priority:  PriorityNormal,
@@ -438,7 +438,7 @@ func BenchmarkConcurrentBroadcasts(b *testing.B) {
 	})
 }
 
-// TestOptimizedWebSocketMetrics validates that metrics are properly tracked
+// TestOptimizedWebSocketMetrics validates that metrics are properly tracked.
 func TestOptimizedWebSocketMetrics(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -448,7 +448,7 @@ func TestOptimizedWebSocketMetrics(t *testing.T) {
 
 	// Add some clients
 	clientCount := 10
-	for i := 0; i < clientCount; i++ {
+	for range clientCount {
 		client := &OptimizedClient{
 			conn:     &websocket.Conn{},
 			sendRing: NewRingBuffer(DefaultRingBufferSize),
@@ -459,7 +459,7 @@ func TestOptimizedWebSocketMetrics(t *testing.T) {
 	}
 
 	// Perform some broadcasts
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		message := &BroadcastMessage{
 			Data:      []byte(fmt.Sprintf("test message %d", i)),
 			Priority:  PriorityNormal,
@@ -490,7 +490,7 @@ func TestOptimizedWebSocketMetrics(t *testing.T) {
 	t.Logf("Metrics: %+v", metrics)
 }
 
-// TestRingBufferOperations validates ring buffer functionality
+// TestRingBufferOperations validates ring buffer functionality.
 func TestRingBufferOperations(t *testing.T) {
 	ring := NewRingBuffer(8) // Small size for testing
 
@@ -514,7 +514,7 @@ func TestRingBufferOperations(t *testing.T) {
 	}
 
 	// Test buffer full condition (size-1 capacity to distinguish full from empty)
-	for i := 0; i < 7; i++ { // Can only fill 7 out of 8 slots
+	for i := range 7 { // Can only fill 7 out of 8 slots
 		if !ring.Push([]byte(fmt.Sprintf("message %d", i))) {
 			t.Errorf("Failed to push message %d to ring buffer", i)
 		}

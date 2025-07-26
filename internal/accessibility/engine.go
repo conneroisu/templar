@@ -10,14 +10,14 @@ import (
 	"golang.org/x/net/html"
 )
 
-// DefaultAccessibilityEngine implements the AccessibilityEngine interface
+// DefaultAccessibilityEngine implements the AccessibilityEngine interface.
 type DefaultAccessibilityEngine struct {
 	config EngineConfig
 	rules  map[string]AccessibilityRule
 	logger logging.Logger
 }
 
-// NewDefaultAccessibilityEngine creates a new accessibility engine
+// NewDefaultAccessibilityEngine creates a new accessibility engine.
 func NewDefaultAccessibilityEngine(logger logging.Logger) *DefaultAccessibilityEngine {
 	return &DefaultAccessibilityEngine{
 		rules:  make(map[string]AccessibilityRule),
@@ -25,7 +25,7 @@ func NewDefaultAccessibilityEngine(logger logging.Logger) *DefaultAccessibilityE
 	}
 }
 
-// Initialize sets up the accessibility engine with configuration
+// Initialize sets up the accessibility engine with configuration.
 func (engine *DefaultAccessibilityEngine) Initialize(
 	ctx context.Context,
 	config EngineConfig,
@@ -42,7 +42,7 @@ func (engine *DefaultAccessibilityEngine) Initialize(
 			Description: customRule.Description,
 			Impact:      string(customRule.Impact),
 			Tags:        customRule.Tags,
-			HelpURL:     fmt.Sprintf("https://templar.dev/accessibility/rules/%s", customRule.ID),
+			HelpURL:     "https://templar.dev/accessibility/rules/" + customRule.ID,
 		}
 	}
 
@@ -53,7 +53,7 @@ func (engine *DefaultAccessibilityEngine) Initialize(
 	return nil
 }
 
-// Analyze performs accessibility analysis on HTML content
+// Analyze performs accessibility analysis on HTML content.
 func (engine *DefaultAccessibilityEngine) Analyze(
 	ctx context.Context,
 	htmlContent string,
@@ -98,6 +98,7 @@ func (engine *DefaultAccessibilityEngine) Analyze(
 		ruleViolations, err := engine.checkRule(ctx, rule, elements, config)
 		if err != nil {
 			engine.logger.Warn(ctx, err, "Error checking accessibility rule", "rule", rule.ID)
+
 			continue
 		}
 
@@ -126,7 +127,7 @@ func (engine *DefaultAccessibilityEngine) Analyze(
 	return report, nil
 }
 
-// GetSuggestions generates actionable suggestions for violations
+// GetSuggestions generates actionable suggestions for violations.
 func (engine *DefaultAccessibilityEngine) GetSuggestions(
 	ctx context.Context,
 	violation AccessibilityViolation,
@@ -233,7 +234,7 @@ func (engine *DefaultAccessibilityEngine) GetSuggestions(
 	return suggestions, nil
 }
 
-// AutoFix attempts to automatically fix simple accessibility issues
+// AutoFix attempts to automatically fix simple accessibility issues.
 func (engine *DefaultAccessibilityEngine) AutoFix(
 	ctx context.Context,
 	htmlContent string,
@@ -275,13 +276,14 @@ func (engine *DefaultAccessibilityEngine) AutoFix(
 	return fixed, nil
 }
 
-// Shutdown gracefully shuts down the accessibility engine
+// Shutdown gracefully shuts down the accessibility engine.
 func (engine *DefaultAccessibilityEngine) Shutdown(ctx context.Context) error {
 	engine.logger.Info(ctx, "Accessibility engine shutdown")
+
 	return nil
 }
 
-// loadDefaultRules loads the default WCAG accessibility rules
+// loadDefaultRules loads the default WCAG accessibility rules.
 func (engine *DefaultAccessibilityEngine) loadDefaultRules() {
 	rules := []AccessibilityRule{
 		{
@@ -361,7 +363,7 @@ func (engine *DefaultAccessibilityEngine) loadDefaultRules() {
 	}
 }
 
-// extractElements converts HTML nodes to our internal element representation
+// extractElements converts HTML nodes to our internal element representation.
 func (engine *DefaultAccessibilityEngine) extractElements(node *html.Node) []HTMLElement {
 	elements := []HTMLElement{}
 
@@ -376,10 +378,11 @@ func (engine *DefaultAccessibilityEngine) extractElements(node *html.Node) []HTM
 	}
 
 	traverse(node)
+
 	return elements
 }
 
-// getApplicableRules returns rules applicable for the given configuration
+// getApplicableRules returns rules applicable for the given configuration.
 func (engine *DefaultAccessibilityEngine) getApplicableRules(
 	level WCAGLevel,
 	includeRules, excludeRules []string,
@@ -406,7 +409,7 @@ func (engine *DefaultAccessibilityEngine) getApplicableRules(
 	return applicable
 }
 
-// isRuleApplicableForLevel checks if a rule applies to the given WCAG level
+// isRuleApplicableForLevel checks if a rule applies to the given WCAG level.
 func (engine *DefaultAccessibilityEngine) isRuleApplicableForLevel(
 	rule AccessibilityRule,
 	level WCAGLevel,
@@ -424,7 +427,7 @@ func (engine *DefaultAccessibilityEngine) isRuleApplicableForLevel(
 	}
 }
 
-// checkRule runs a specific accessibility rule against elements
+// checkRule runs a specific accessibility rule against elements.
 func (engine *DefaultAccessibilityEngine) checkRule(
 	ctx context.Context,
 	rule AccessibilityRule,
@@ -518,7 +521,7 @@ func (engine *DefaultAccessibilityEngine) checkRule(
 				for _, element := range elementsWithId {
 					violations = append(
 						violations,
-						engine.createViolation(rule, element, fmt.Sprintf("Duplicate ID: %s", id)),
+						engine.createViolation(rule, element, "Duplicate ID: "+id),
 					)
 				}
 			}
@@ -528,7 +531,7 @@ func (engine *DefaultAccessibilityEngine) checkRule(
 	return violations, nil
 }
 
-// createViolation creates a new accessibility violation
+// createViolation creates a new accessibility violation.
 func (engine *DefaultAccessibilityEngine) createViolation(
 	rule AccessibilityRule,
 	element HTMLElement,
@@ -561,7 +564,7 @@ func (engine *DefaultAccessibilityEngine) createViolation(
 	return violation
 }
 
-// Helper functions
+// Helper functions.
 func (engine *DefaultAccessibilityEngine) getSeverityFromImpact(impact string) ViolationSeverity {
 	switch impact {
 	case string(ImpactCritical):
@@ -620,6 +623,7 @@ func (engine *DefaultAccessibilityEngine) canAutoFix(ruleID string) bool {
 		"missing-lang-attribute",
 		"missing-title-element",
 	}
+
 	return contains(autoFixableRules, ruleID)
 }
 
@@ -650,6 +654,7 @@ func (engine *DefaultAccessibilityEngine) hasAssociatedLabel(
 
 	// Check if wrapped in label
 	parent := element.GetParent()
+
 	return parent != nil && parent.TagName() == "label"
 }
 
@@ -759,23 +764,26 @@ func (engine *DefaultAccessibilityEngine) generateSummary(
 	return summary
 }
 
-// Utility functions
+// Utility functions.
 func contains(slice []string, item string) bool {
 	for _, s := range slice {
 		if s == item {
 			return true
 		}
 	}
+
 	return false
 }
 
 func isFormControl(tagName string) bool {
 	formControls := []string{"input", "textarea", "select", "button"}
+
 	return contains(formControls, tagName)
 }
 
 func isHeading(tagName string) bool {
 	headings := []string{"h1", "h2", "h3", "h4", "h5", "h6"}
+
 	return contains(headings, tagName)
 }
 
@@ -787,7 +795,7 @@ func generateViolationID() string {
 	return fmt.Sprintf("violation_%d", time.Now().UnixNano())
 }
 
-// DefaultHTMLElement implements HTMLElement interface for html.Node
+// DefaultHTMLElement implements HTMLElement interface for html.Node.
 type DefaultHTMLElement struct {
 	Node *html.Node
 }
@@ -802,6 +810,7 @@ func (e *DefaultHTMLElement) GetAttribute(name string) (string, bool) {
 			return attr.Val, true
 		}
 	}
+
 	return "", false
 }
 
@@ -817,6 +826,7 @@ func (e *DefaultHTMLElement) GetTextContent() string {
 		}
 	}
 	traverse(e.Node)
+
 	return text.String()
 }
 
@@ -828,6 +838,7 @@ func (e *DefaultHTMLElement) GetInnerHTML() string {
 			continue
 		}
 	}
+
 	return result.String()
 }
 
@@ -837,6 +848,7 @@ func (e *DefaultHTMLElement) GetOuterHTML() string {
 		// Return empty string if rendering fails
 		return ""
 	}
+
 	return result.String()
 }
 
@@ -844,6 +856,7 @@ func (e *DefaultHTMLElement) GetParent() HTMLElement {
 	if e.Node.Parent != nil {
 		return &DefaultHTMLElement{Node: e.Node.Parent}
 	}
+
 	return nil
 }
 
@@ -854,6 +867,7 @@ func (e *DefaultHTMLElement) GetChildren() []HTMLElement {
 			children = append(children, &DefaultHTMLElement{Node: c})
 		}
 	}
+
 	return children
 }
 
@@ -869,8 +883,10 @@ func (e *DefaultHTMLElement) QuerySelectorAll(selector string) []HTMLElement {
 func (e *DefaultHTMLElement) HasClass(className string) bool {
 	if class, hasClass := e.GetAttribute("class"); hasClass {
 		classes := strings.Fields(class)
+
 		return contains(classes, className)
 	}
+
 	return false
 }
 
@@ -886,6 +902,7 @@ func (e *DefaultHTMLElement) IsVisible() bool {
 		return !strings.Contains(style, "display:none") &&
 			!strings.Contains(style, "visibility:hidden")
 	}
+
 	return true
 }
 
@@ -929,6 +946,7 @@ func (e *DefaultHTMLElement) GetAriaRole() string {
 				return "radio"
 			}
 		}
+
 		return "textbox"
 	case "h1", "h2", "h3", "h4", "h5", "h6":
 		return "heading"

@@ -93,6 +93,7 @@ func TestBuildService_Build(t *testing.T) {
 
 			if tt.wantErr {
 				assert.Error(t, err)
+
 				return
 			}
 
@@ -111,6 +112,7 @@ func TestBuildService_Build(t *testing.T) {
 				for _, expectedErr := range expectedErrors {
 					if assert.Contains(t, err.Error(), expectedErr) {
 						foundExpected = true
+
 						break
 					}
 				}

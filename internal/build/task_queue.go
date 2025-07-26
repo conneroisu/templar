@@ -52,6 +52,7 @@ func (tqm *TaskQueueManager) Enqueue(task interface{}) error {
 	tqm.mu.RLock()
 	if tqm.closed {
 		tqm.mu.RUnlock()
+
 		return ErrQueueClosed
 	}
 	tqm.mu.RUnlock()
@@ -77,6 +78,7 @@ func (tqm *TaskQueueManager) EnqueuePriority(task interface{}) error {
 	tqm.mu.RLock()
 	if tqm.closed {
 		tqm.mu.RUnlock()
+
 		return ErrQueueClosed
 	}
 	tqm.mu.RUnlock()
@@ -146,6 +148,7 @@ func (tqm *TaskQueueManager) PublishResult(result interface{}) error {
 	tqm.mu.RLock()
 	if tqm.closed {
 		tqm.mu.RUnlock()
+
 		return ErrQueueClosed
 	}
 	tqm.mu.RUnlock()
@@ -218,7 +221,7 @@ type QueueStats struct {
 	Closed         bool
 }
 
-// Queue error definitions
+// Queue error definitions.
 var (
 	ErrQueueClosed     = &QueueError{Code: "QUEUE_CLOSED", Message: "task queue has been closed"}
 	ErrQueueFull       = &QueueError{Code: "QUEUE_FULL", Message: "task queue is full"}
@@ -242,5 +245,5 @@ func (qe *QueueError) Error() string {
 	return qe.Message
 }
 
-// Verify that TaskQueueManager implements the TaskQueue interface
+// Verify that TaskQueueManager implements the TaskQueue interface.
 var _ interfaces.TaskQueue = (*TaskQueueManager)(nil)

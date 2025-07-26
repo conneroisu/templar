@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// MockOriginValidator implements OriginValidator interface for testing
+// MockOriginValidator implements OriginValidator interface for testing.
 type MockOriginValidator struct {
 	AllowedOrigins []string
 	AllowAll       bool
@@ -24,13 +24,14 @@ func (m *MockOriginValidator) IsAllowedOrigin(origin string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
 // Note: MockTokenBucketManager removed since current WebSocketManager implementation
 // uses simplified rate limiting that always allows requests
 
-// TestNewWebSocketManager_ValidInputs tests successful construction
+// TestNewWebSocketManager_ValidInputs tests successful construction.
 func TestNewWebSocketManager_ValidInputs(t *testing.T) {
 	validator := &MockOriginValidator{AllowAll: true}
 	var rateLimiter *TokenBucketManager = nil // Use nil for this test
@@ -79,7 +80,7 @@ func TestNewWebSocketManager_ValidInputs(t *testing.T) {
 	manager.Shutdown(context.Background())
 }
 
-// TestNewWebSocketManager_NilOriginValidator tests panic on nil origin validator
+// TestNewWebSocketManager_NilOriginValidator tests panic on nil origin validator.
 func TestNewWebSocketManager_NilOriginValidator(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
@@ -90,7 +91,7 @@ func TestNewWebSocketManager_NilOriginValidator(t *testing.T) {
 	NewWebSocketManager(nil, nil)
 }
 
-// TestNewWebSocketManager_NilRateLimiter tests construction with nil rate limiter (should be allowed)
+// TestNewWebSocketManager_NilRateLimiter tests construction with nil rate limiter (should be allowed).
 func TestNewWebSocketManager_NilRateLimiter(t *testing.T) {
 	validator := &MockOriginValidator{AllowAll: true}
 
@@ -105,14 +106,14 @@ func TestNewWebSocketManager_NilRateLimiter(t *testing.T) {
 	}
 }
 
-// TestWebSocketManager_HandleWebSocket_InvalidParameters tests parameter validation
+// TestWebSocketManager_HandleWebSocket_InvalidParameters tests parameter validation.
 func TestWebSocketManager_HandleWebSocket_InvalidParameters(t *testing.T) {
 	validator := &MockOriginValidator{AllowAll: true}
 	manager := NewWebSocketManager(validator, nil)
 	defer manager.Shutdown(context.Background())
 
 	// Test nil ResponseWriter
-	req := httptest.NewRequest("GET", "/ws", nil)
+	req := httptest.NewRequest(http.MethodGet, "/ws", nil)
 	manager.HandleWebSocket(nil, req)
 
 	// Test nil Request
@@ -120,7 +121,7 @@ func TestWebSocketManager_HandleWebSocket_InvalidParameters(t *testing.T) {
 	manager.HandleWebSocket(recorder, nil)
 }
 
-// TestWebSocketManager_HandleWebSocket_ShutdownState tests handling during shutdown
+// TestWebSocketManager_HandleWebSocket_ShutdownState tests handling during shutdown.
 func TestWebSocketManager_HandleWebSocket_ShutdownState(t *testing.T) {
 	validator := &MockOriginValidator{AllowAll: true}
 	manager := NewWebSocketManager(validator, nil)
@@ -129,7 +130,7 @@ func TestWebSocketManager_HandleWebSocket_ShutdownState(t *testing.T) {
 	manager.Shutdown(context.Background())
 
 	// Try to handle WebSocket connection
-	req := httptest.NewRequest("GET", "/ws", nil)
+	req := httptest.NewRequest(http.MethodGet, "/ws", nil)
 	recorder := httptest.NewRecorder()
 
 	manager.HandleWebSocket(recorder, req)
@@ -140,7 +141,7 @@ func TestWebSocketManager_HandleWebSocket_ShutdownState(t *testing.T) {
 	}
 }
 
-// TestWebSocketManager_HandleWebSocket_OriginValidation tests origin validation
+// TestWebSocketManager_HandleWebSocket_OriginValidation tests origin validation.
 func TestWebSocketManager_HandleWebSocket_OriginValidation(t *testing.T) {
 	// Create validator that allows specific origins
 	validator := &MockOriginValidator{
@@ -174,7 +175,7 @@ func TestWebSocketManager_HandleWebSocket_OriginValidation(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req := httptest.NewRequest("GET", "/ws", nil)
+			req := httptest.NewRequest(http.MethodGet, "/ws", nil)
 			if tc.origin != "" {
 				req.Header.Set("Origin", tc.origin)
 			}
@@ -189,7 +190,7 @@ func TestWebSocketManager_HandleWebSocket_OriginValidation(t *testing.T) {
 	}
 }
 
-// TestWebSocketManager_HandleWebSocket_RateLimiting tests rate limiting
+// TestWebSocketManager_HandleWebSocket_RateLimiting tests rate limiting.
 func TestWebSocketManager_HandleWebSocket_RateLimiting(t *testing.T) {
 	validator := &MockOriginValidator{AllowAll: true}
 
@@ -197,7 +198,7 @@ func TestWebSocketManager_HandleWebSocket_RateLimiting(t *testing.T) {
 	manager := NewWebSocketManager(validator, nil)
 	defer manager.Shutdown(context.Background())
 
-	req := httptest.NewRequest("GET", "/ws", nil)
+	req := httptest.NewRequest(http.MethodGet, "/ws", nil)
 	recorder := httptest.NewRecorder()
 
 	manager.HandleWebSocket(recorder, req)
@@ -212,7 +213,7 @@ func TestWebSocketManager_HandleWebSocket_RateLimiting(t *testing.T) {
 	}
 }
 
-// TestWebSocketManager_BroadcastMessage tests message broadcasting
+// TestWebSocketManager_BroadcastMessage tests message broadcasting.
 func TestWebSocketManager_BroadcastMessage(t *testing.T) {
 	validator := &MockOriginValidator{AllowAll: true}
 	manager := NewWebSocketManager(validator, nil)
@@ -231,7 +232,7 @@ func TestWebSocketManager_BroadcastMessage(t *testing.T) {
 	// Verify message was queued (hard to test directly, but should not error)
 }
 
-// TestWebSocketManager_GetConnectedClients tests client counting
+// TestWebSocketManager_GetConnectedClients tests client counting.
 func TestWebSocketManager_GetConnectedClients(t *testing.T) {
 	validator := &MockOriginValidator{AllowAll: true}
 	manager := NewWebSocketManager(validator, nil)
@@ -244,7 +245,7 @@ func TestWebSocketManager_GetConnectedClients(t *testing.T) {
 	}
 }
 
-// TestWebSocketManager_GetClients tests client map retrieval
+// TestWebSocketManager_GetClients tests client map retrieval.
 func TestWebSocketManager_GetClients(t *testing.T) {
 	validator := &MockOriginValidator{AllowAll: true}
 	manager := NewWebSocketManager(validator, nil)
@@ -259,7 +260,7 @@ func TestWebSocketManager_GetClients(t *testing.T) {
 	}
 }
 
-// TestWebSocketManager_Shutdown tests graceful shutdown
+// TestWebSocketManager_Shutdown tests graceful shutdown.
 func TestWebSocketManager_Shutdown(t *testing.T) {
 	validator := &MockOriginValidator{AllowAll: true}
 	manager := NewWebSocketManager(validator, nil)
@@ -284,7 +285,7 @@ func TestWebSocketManager_Shutdown(t *testing.T) {
 	}
 }
 
-// TestWebSocketManager_ValidateWebSocketRequest tests request validation
+// TestWebSocketManager_ValidateWebSocketRequest tests request validation.
 func TestWebSocketManager_ValidateWebSocketRequest(t *testing.T) {
 	validator := &MockOriginValidator{
 		AllowedOrigins: []string{"https://example.com"},
@@ -317,7 +318,7 @@ func TestWebSocketManager_ValidateWebSocketRequest(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req := httptest.NewRequest("GET", "/ws", nil)
+			req := httptest.NewRequest(http.MethodGet, "/ws", nil)
 			if tc.origin != "" {
 				req.Header.Set("Origin", tc.origin)
 			}
@@ -330,7 +331,7 @@ func TestWebSocketManager_ValidateWebSocketRequest(t *testing.T) {
 	}
 }
 
-// TestWebSocketManager_GetClientIP tests client IP extraction
+// TestWebSocketManager_GetClientIP tests client IP extraction.
 func TestWebSocketManager_GetClientIP(t *testing.T) {
 	validator := &MockOriginValidator{AllowAll: true}
 	manager := NewWebSocketManager(validator, nil)
@@ -369,7 +370,7 @@ func TestWebSocketManager_GetClientIP(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req := httptest.NewRequest("GET", "/ws", nil)
+			req := httptest.NewRequest(http.MethodGet, "/ws", nil)
 
 			if tc.xForwardedFor != "" {
 				req.Header.Set("X-Forwarded-For", tc.xForwardedFor)
@@ -389,7 +390,7 @@ func TestWebSocketManager_GetClientIP(t *testing.T) {
 	}
 }
 
-// BenchmarkWebSocketManager_BroadcastMessage benchmarks message broadcasting
+// BenchmarkWebSocketManager_BroadcastMessage benchmarks message broadcasting.
 func BenchmarkWebSocketManager_BroadcastMessage(b *testing.B) {
 	validator := &MockOriginValidator{AllowAll: true}
 	manager := NewWebSocketManager(validator, nil)
@@ -402,19 +403,19 @@ func BenchmarkWebSocketManager_BroadcastMessage(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		manager.BroadcastMessage(message)
 	}
 }
 
-// BenchmarkWebSocketManager_GetConnectedClients benchmarks client counting
+// BenchmarkWebSocketManager_GetConnectedClients benchmarks client counting.
 func BenchmarkWebSocketManager_GetConnectedClients(b *testing.B) {
 	validator := &MockOriginValidator{AllowAll: true}
 	manager := NewWebSocketManager(validator, nil)
 	defer manager.Shutdown(context.Background())
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		manager.GetConnectedClients()
 	}
 }

@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// BuildError represents a build error
+// BuildError represents a build error.
 type BuildError struct {
 	Component string
 	File      string
@@ -17,7 +17,7 @@ type BuildError struct {
 	Timestamp time.Time
 }
 
-// ErrorSeverity represents the severity of an error
+// ErrorSeverity represents the severity of an error.
 type ErrorSeverity int
 
 const (
@@ -27,7 +27,7 @@ const (
 	ErrorSeverityFatal
 )
 
-// String returns the string representation of the severity
+// String returns the string representation of the severity.
 func (s ErrorSeverity) String() string {
 	switch s {
 	case ErrorSeverityInfo:
@@ -43,19 +43,19 @@ func (s ErrorSeverity) String() string {
 	}
 }
 
-// Error implements the error interface
+// Error implements the error interface.
 func (be *BuildError) Error() string {
 	return fmt.Sprintf("%s:%d:%d: %s: %s", be.File, be.Line, be.Column, be.Severity, be.Message)
 }
 
-// ErrorCollector collects and manages build errors and general errors
+// ErrorCollector collects and manages build errors and general errors.
 type ErrorCollector struct {
 	buildErrors []BuildError
 	errors      []error
 	mutex       sync.RWMutex
 }
 
-// NewErrorCollector creates a new error collector
+// NewErrorCollector creates a new error collector.
 func NewErrorCollector() *ErrorCollector {
 	return &ErrorCollector{
 		buildErrors: make([]BuildError, 0),
@@ -63,7 +63,7 @@ func NewErrorCollector() *ErrorCollector {
 	}
 }
 
-// Add adds a build error to the collector
+// Add adds a build error to the collector.
 func (ec *ErrorCollector) Add(err BuildError) {
 	ec.mutex.Lock()
 	defer ec.mutex.Unlock()
@@ -71,7 +71,7 @@ func (ec *ErrorCollector) Add(err BuildError) {
 	ec.buildErrors = append(ec.buildErrors, err)
 }
 
-// AddError adds a general error to the collector
+// AddError adds a general error to the collector.
 func (ec *ErrorCollector) AddError(err error) {
 	if err == nil {
 		return
@@ -81,17 +81,18 @@ func (ec *ErrorCollector) AddError(err error) {
 	ec.errors = append(ec.errors, err)
 }
 
-// GetErrors returns all collected build errors
+// GetErrors returns all collected build errors.
 func (ec *ErrorCollector) GetErrors() []BuildError {
 	ec.mutex.RLock()
 	defer ec.mutex.RUnlock()
 	// Return a copy to avoid race conditions
 	result := make([]BuildError, len(ec.buildErrors))
 	copy(result, ec.buildErrors)
+
 	return result
 }
 
-// GetAllErrors returns all collected errors (build and general)
+// GetAllErrors returns all collected errors (build and general).
 func (ec *ErrorCollector) GetAllErrors() []error {
 	ec.mutex.RLock()
 	defer ec.mutex.RUnlock()
@@ -109,14 +110,15 @@ func (ec *ErrorCollector) GetAllErrors() []error {
 	return allErrors
 }
 
-// HasErrors returns true if there are any errors
+// HasErrors returns true if there are any errors.
 func (ec *ErrorCollector) HasErrors() bool {
 	ec.mutex.RLock()
 	defer ec.mutex.RUnlock()
+
 	return len(ec.buildErrors) > 0 || len(ec.errors) > 0
 }
 
-// Clear clears all errors
+// Clear clears all errors.
 func (ec *ErrorCollector) Clear() {
 	ec.mutex.Lock()
 	defer ec.mutex.Unlock()
@@ -124,7 +126,7 @@ func (ec *ErrorCollector) Clear() {
 	ec.errors = ec.errors[:0]
 }
 
-// GetErrorsByFile returns errors for a specific file
+// GetErrorsByFile returns errors for a specific file.
 func (ec *ErrorCollector) GetErrorsByFile(file string) []BuildError {
 	ec.mutex.RLock()
 	defer ec.mutex.RUnlock()
@@ -134,10 +136,11 @@ func (ec *ErrorCollector) GetErrorsByFile(file string) []BuildError {
 			fileErrors = append(fileErrors, err)
 		}
 	}
+
 	return fileErrors
 }
 
-// GetErrorsByComponent returns errors for a specific component
+// GetErrorsByComponent returns errors for a specific component.
 func (ec *ErrorCollector) GetErrorsByComponent(component string) []BuildError {
 	ec.mutex.RLock()
 	defer ec.mutex.RUnlock()
@@ -147,10 +150,11 @@ func (ec *ErrorCollector) GetErrorsByComponent(component string) []BuildError {
 			componentErrors = append(componentErrors, err)
 		}
 	}
+
 	return componentErrors
 }
 
-// ErrorOverlay generates HTML for error overlay
+// ErrorOverlay generates HTML for error overlay.
 func (ec *ErrorCollector) ErrorOverlay() string {
 	if !ec.HasErrors() {
 		return ""
@@ -232,7 +236,7 @@ func (ec *ErrorCollector) ErrorOverlay() string {
 	return html
 }
 
-// ParseTemplError parses templ compiler error output
+// ParseTemplError parses templ compiler error output.
 func ParseTemplError(output []byte, component string) []BuildError {
 	var errors []BuildError
 
@@ -255,5 +259,6 @@ func ParseTemplError(output []byte, component string) []BuildError {
 	}
 
 	errors = append(errors, err)
+
 	return errors
 }

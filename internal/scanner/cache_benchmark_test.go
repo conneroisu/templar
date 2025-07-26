@@ -11,7 +11,7 @@ import (
 	"github.com/conneroisu/templar/internal/registry"
 )
 
-// BenchmarkScannerWithoutCache benchmarks scanner performance without caching
+// BenchmarkScannerWithoutCache benchmarks scanner performance without caching.
 func BenchmarkScannerWithoutCache(b *testing.B) {
 	tempDir, cleanup := createLargeTestStructure(b, 100)
 	defer cleanup()
@@ -23,7 +23,7 @@ func BenchmarkScannerWithoutCache(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		err := scanner.ScanDirectory(tempDir)
 		if err != nil {
 			b.Fatal(err)
@@ -34,7 +34,7 @@ func BenchmarkScannerWithoutCache(b *testing.B) {
 	}
 }
 
-// BenchmarkScannerWithCache benchmarks scanner performance with metadata caching
+// BenchmarkScannerWithCache benchmarks scanner performance with metadata caching.
 func BenchmarkScannerWithCache(b *testing.B) {
 	tempDir, cleanup := createLargeTestStructure(b, 100)
 	defer cleanup()
@@ -44,7 +44,7 @@ func BenchmarkScannerWithCache(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		err := scanner.ScanDirectory(tempDir)
 		if err != nil {
 			b.Fatal(err)
@@ -55,7 +55,7 @@ func BenchmarkScannerWithCache(b *testing.B) {
 	}
 }
 
-// BenchmarkScannerCacheHitRate measures cache effectiveness
+// BenchmarkScannerCacheHitRate measures cache effectiveness.
 func BenchmarkScannerCacheHitRate(b *testing.B) {
 	tempDir, cleanup := createLargeTestStructure(b, 50)
 	defer cleanup()
@@ -71,7 +71,7 @@ func BenchmarkScannerCacheHitRate(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		reg = registry.NewComponentRegistry()
 		scanner.registry = reg
 
@@ -89,7 +89,7 @@ func BenchmarkScannerCacheHitRate(b *testing.B) {
 	}
 }
 
-// BenchmarkComponentMetadataCache benchmarks the cache operations themselves
+// BenchmarkComponentMetadataCache benchmarks the cache operations themselves.
 func BenchmarkComponentMetadataCache(b *testing.B) {
 	cache := NewMetadataCache(1000, time.Hour)
 
@@ -99,20 +99,20 @@ func BenchmarkComponentMetadataCache(b *testing.B) {
 	)
 
 	b.Run("Set", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for i := range b.N {
 			key := fmt.Sprintf("test:%d", i%100)
 			cache.Set(key, testData)
 		}
 	})
 
 	// Populate cache for Get benchmarks
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		key := fmt.Sprintf("test:%d", i)
 		cache.Set(key, testData)
 	}
 
 	b.Run("Get_Hit", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for i := range b.N {
 			key := fmt.Sprintf("test:%d", i%100)
 			_, found := cache.Get(key)
 			if !found {
@@ -122,7 +122,7 @@ func BenchmarkComponentMetadataCache(b *testing.B) {
 	})
 
 	b.Run("Get_Miss", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for i := range b.N {
 			key := fmt.Sprintf("miss:%d", i)
 			_, found := cache.Get(key)
 			if found {
@@ -132,7 +132,7 @@ func BenchmarkComponentMetadataCache(b *testing.B) {
 	})
 }
 
-// BenchmarkScannerScaling tests performance at different scales
+// BenchmarkScannerScaling tests performance at different scales.
 func BenchmarkScannerScaling(b *testing.B) {
 	scales := []int{10, 50, 100, 200}
 
@@ -146,7 +146,7 @@ func BenchmarkScannerScaling(b *testing.B) {
 
 			b.ResetTimer()
 
-			for i := 0; i < b.N; i++ {
+			for i := range b.N {
 				err := scanner.ScanDirectory(tempDir)
 				if err != nil {
 					b.Fatal(err)
@@ -165,7 +165,7 @@ func BenchmarkScannerScaling(b *testing.B) {
 	}
 }
 
-// createLargeTestStructure creates a test directory with many component files
+// createLargeTestStructure creates a test directory with many component files.
 func createLargeTestStructure(tb testing.TB, numFiles int) (string, func()) {
 	// Create test directory in current working directory to avoid path validation issues
 	tempDir, err := os.MkdirTemp(".", "templar-cache-benchmark-*")
@@ -189,7 +189,7 @@ func createLargeTestStructure(tb testing.TB, numFiles int) (string, func()) {
 	}
 
 	// Create component files with realistic content
-	for i := 0; i < numFiles; i++ {
+	for i := range numFiles {
 		dir := dirs[i%len(dirs)]
 		filename := filepath.Join(tempDir, dir, fmt.Sprintf("component%d.templ", i))
 
@@ -204,7 +204,7 @@ func createLargeTestStructure(tb testing.TB, numFiles int) (string, func()) {
 	return tempDir, func() { os.RemoveAll(tempDir) }
 }
 
-// generateRealisticComponent creates realistic templ component content
+// generateRealisticComponent creates realistic templ component content.
 func generateRealisticComponent(index int) string {
 	componentTypes := []string{
 		"Button", "Card", "Modal", "Form", "Input", "Select", "Table", "Header", "Footer", "Sidebar",
@@ -226,10 +226,10 @@ func generateRealisticComponent(index int) string {
 	content.WriteString(")\n\n")
 
 	// Add multiple components per file for realism
-	for j := 0; j < 1+(index%3); j++ {
+	for j := range 1 +  {
 		suffix := ""
 		if j > 0 {
-			suffix = fmt.Sprintf("%d", j)
+			suffix = strconv.Itoa(j)
 		}
 
 		// Generate different parameter patterns
@@ -250,7 +250,7 @@ func generateRealisticComponent(index int) string {
 				"templ %s%s%s(%s) {\n",
 				componentType,
 				suffix,
-				fmt.Sprintf("%d", index),
+				strconv.Itoa(index),
 				params,
 			),
 		)
@@ -279,7 +279,7 @@ func generateRealisticComponent(index int) string {
 	return content.String()
 }
 
-// TestCacheEffectiveness verifies that caching actually improves performance
+// TestCacheEffectiveness verifies that caching actually improves performance.
 func TestCacheEffectiveness(t *testing.T) {
 	tempDir, cleanup := createLargeTestStructure(t, 50)
 	defer cleanup()

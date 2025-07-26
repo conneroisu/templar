@@ -8,7 +8,7 @@ import (
 	"github.com/conneroisu/templar/internal/logging"
 )
 
-// SetupComprehensiveHealthSystem creates a complete health monitoring and self-healing system
+// SetupComprehensiveHealthSystem creates a complete health monitoring and self-healing system.
 func SetupComprehensiveHealthSystem(
 	deps *ComprehensiveDependencies,
 ) (*ComprehensiveHealthSystem, error) {
@@ -52,7 +52,7 @@ func SetupComprehensiveHealthSystem(
 	}, nil
 }
 
-// ComprehensiveDependencies contains all dependencies needed for the complete health system
+// ComprehensiveDependencies contains all dependencies needed for the complete health system.
 type ComprehensiveDependencies struct {
 	Config        *config.Config
 	Logger        logging.Logger
@@ -62,7 +62,7 @@ type ComprehensiveDependencies struct {
 	FileWatcher   interfaces.FileWatcher
 }
 
-// ComprehensiveHealthSystem combines all health monitoring components
+// ComprehensiveHealthSystem combines all health monitoring components.
 type ComprehensiveHealthSystem struct {
 	HealthMonitor     *HealthMonitor
 	SelfHealingSystem *SelfHealingSystem
@@ -70,19 +70,19 @@ type ComprehensiveHealthSystem struct {
 	Config            *config.Config
 }
 
-// Start starts all components of the health system
+// Start starts all components of the health system.
 func (chs *ComprehensiveHealthSystem) Start() {
 	chs.HealthMonitor.Start()
 	chs.SelfHealingSystem.Start()
 }
 
-// Stop stops all components of the health system
+// Stop stops all components of the health system.
 func (chs *ComprehensiveHealthSystem) Stop() {
 	chs.SelfHealingSystem.Stop()
 	chs.HealthMonitor.Stop()
 }
 
-// HTTPHandler returns an HTTP handler for health-related endpoints
+// HTTPHandler returns an HTTP handler for health-related endpoints.
 func (chs *ComprehensiveHealthSystem) HTTPHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Route health-related requests
@@ -99,7 +99,7 @@ func (chs *ComprehensiveHealthSystem) HTTPHandler() http.HandlerFunc {
 	}
 }
 
-// AddToServerMux adds health endpoints to an existing HTTP server mux
+// AddToServerMux adds health endpoints to an existing HTTP server mux.
 func (chs *ComprehensiveHealthSystem) AddToServerMux(mux *http.ServeMux) {
 	// Standard health endpoint (existing endpoint, enhanced)
 	mux.HandleFunc("/health", chs.HealthMonitor.HTTPHandler())
@@ -113,29 +113,31 @@ func (chs *ComprehensiveHealthSystem) AddToServerMux(mux *http.ServeMux) {
 	mux.HandleFunc("/api/health/recovery", chs.Dashboard.ServeHTTP)
 }
 
-// GetHealthStatus returns the current health status
+// GetHealthStatus returns the current health status.
 func (chs *ComprehensiveHealthSystem) GetHealthStatus() HealthResponse {
 	return chs.HealthMonitor.GetHealth()
 }
 
-// GetRecoveryHistory returns the current recovery history
+// GetRecoveryHistory returns the current recovery history.
 func (chs *ComprehensiveHealthSystem) GetRecoveryHistory() map[string]*RecoveryHistory {
 	return chs.SelfHealingSystem.GetRecoveryHistory()
 }
 
-// IsHealthy returns true if all critical health checks are passing
+// IsHealthy returns true if all critical health checks are passing.
 func (chs *ComprehensiveHealthSystem) IsHealthy() bool {
 	health := chs.HealthMonitor.GetHealth()
+
 	return health.Status == HealthStatusHealthy
 }
 
-// IsDegraded returns true if the system is in a degraded state
+// IsDegraded returns true if the system is in a degraded state.
 func (chs *ComprehensiveHealthSystem) IsDegraded() bool {
 	health := chs.HealthMonitor.GetHealth()
+
 	return health.Status == HealthStatusDegraded
 }
 
-// GetSystemSummary returns a human-readable summary of system health
+// GetSystemSummary returns a human-readable summary of system health.
 func (chs *ComprehensiveHealthSystem) GetSystemSummary() string {
 	health := chs.HealthMonitor.GetHealth()
 
@@ -151,19 +153,19 @@ func (chs *ComprehensiveHealthSystem) GetSystemSummary() string {
 	}
 }
 
-// ForceHealthCheck triggers an immediate health check of all registered checks
+// ForceHealthCheck triggers an immediate health check of all registered checks.
 func (chs *ComprehensiveHealthSystem) ForceHealthCheck() {
 	// The health monitor doesn't expose a public method to force checks
 	// This would need to be added to the HealthMonitor interface
 	// For now, we'll just return the current status
 }
 
-// RegisterCustomHealthCheck allows adding application-specific health checks
+// RegisterCustomHealthCheck allows adding application-specific health checks.
 func (chs *ComprehensiveHealthSystem) RegisterCustomHealthCheck(checker HealthChecker) {
 	chs.HealthMonitor.RegisterCheck(checker)
 }
 
-// RegisterCustomRecoveryRule allows adding application-specific recovery rules
+// RegisterCustomRecoveryRule allows adding application-specific recovery rules.
 func (chs *ComprehensiveHealthSystem) RegisterCustomRecoveryRule(rule *RecoveryRule) {
 	chs.SelfHealingSystem.RegisterRecoveryRule(rule)
 }

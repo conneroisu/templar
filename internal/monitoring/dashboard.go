@@ -11,7 +11,7 @@ import (
 	"github.com/conneroisu/templar/internal/logging"
 )
 
-// DashboardData represents data for the health dashboard
+// DashboardData represents data for the health dashboard.
 type DashboardData struct {
 	Health          HealthResponse              `json:"health"`
 	RecoveryHistory map[string]*RecoveryHistory `json:"recovery_history"`
@@ -19,7 +19,7 @@ type DashboardData struct {
 	Timestamp       time.Time                   `json:"timestamp"`
 }
 
-// SystemMetrics provides additional system metrics for the dashboard
+// SystemMetrics provides additional system metrics for the dashboard.
 type SystemMetrics struct {
 	CPUUsage       float64       `json:"cpu_usage"`
 	MemoryUsage    float64       `json:"memory_usage"`
@@ -30,14 +30,14 @@ type SystemMetrics struct {
 	Uptime         time.Duration `json:"uptime"`
 }
 
-// HealthDashboard provides a web interface for monitoring system health
+// HealthDashboard provides a web interface for monitoring system health.
 type HealthDashboard struct {
 	healthMonitor     *HealthMonitor
 	selfHealingSystem *SelfHealingSystem
 	logger            logging.Logger
 }
 
-// NewHealthDashboard creates a new health dashboard
+// NewHealthDashboard creates a new health dashboard.
 func NewHealthDashboard(
 	healthMonitor *HealthMonitor,
 	selfHealingSystem *SelfHealingSystem,
@@ -50,7 +50,7 @@ func NewHealthDashboard(
 	}
 }
 
-// ServeHTTP handles HTTP requests for the health dashboard
+// ServeHTTP handles HTTP requests for the health dashboard.
 func (hd *HealthDashboard) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Path {
 	case "/health-dashboard":
@@ -64,7 +64,7 @@ func (hd *HealthDashboard) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleDashboardHTML serves the HTML dashboard page
+// handleDashboardHTML serves the HTML dashboard page.
 func (hd *HealthDashboard) handleDashboardHTML(w http.ResponseWriter, r *http.Request) {
 	tmpl := `
 <!DOCTYPE html>
@@ -249,6 +249,7 @@ func (hd *HealthDashboard) handleDashboardHTML(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		hd.logger.Error(context.Background(), err, "Failed to parse dashboard template")
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+
 		return
 	}
 
@@ -259,10 +260,11 @@ func (hd *HealthDashboard) handleDashboardHTML(w http.ResponseWriter, r *http.Re
 	}
 }
 
-// handleDashboardAPI serves JSON data for the dashboard
+// handleDashboardAPI serves JSON data for the dashboard.
 func (hd *HealthDashboard) handleDashboardAPI(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+
 		return
 	}
 
@@ -275,7 +277,7 @@ func (hd *HealthDashboard) handleDashboardAPI(w http.ResponseWriter, r *http.Req
 	}
 }
 
-// handleRecoveryAPI handles recovery-related API requests
+// handleRecoveryAPI handles recovery-related API requests.
 func (hd *HealthDashboard) handleRecoveryAPI(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
@@ -295,7 +297,7 @@ func (hd *HealthDashboard) handleRecoveryAPI(w http.ResponseWriter, r *http.Requ
 	}
 }
 
-// getDashboardData collects all data for the dashboard
+// getDashboardData collects all data for the dashboard.
 func (hd *HealthDashboard) getDashboardData() DashboardData {
 	health := hd.healthMonitor.GetHealth()
 
@@ -316,7 +318,7 @@ func (hd *HealthDashboard) getDashboardData() DashboardData {
 	}
 }
 
-// getSystemMetrics collects current system metrics
+// getSystemMetrics collects current system metrics.
 func (hd *HealthDashboard) getSystemMetrics() SystemMetrics {
 	var mem runtime.MemStats
 	runtime.ReadMemStats(&mem)

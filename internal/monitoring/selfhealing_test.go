@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// mockLogger implements logging.Logger for testing
+// mockLogger implements logging.Logger for testing.
 type mockLogger struct {
 	logs []string
 	mu   sync.Mutex
@@ -60,10 +60,11 @@ func (m *mockLogger) GetLogs() []string {
 	defer m.mu.Unlock()
 	result := make([]string, len(m.logs))
 	copy(result, m.logs)
+
 	return result
 }
 
-// mockHealthChecker implements HealthChecker for testing
+// mockHealthChecker implements HealthChecker for testing.
 type mockHealthChecker struct {
 	name     string
 	status   HealthStatus
@@ -98,7 +99,7 @@ func (m *mockHealthChecker) IsCritical() bool {
 	return m.critical
 }
 
-// mockRecoveryAction implements RecoveryAction for testing
+// mockRecoveryAction implements RecoveryAction for testing.
 type mockRecoveryAction struct {
 	name        string
 	description string
@@ -131,6 +132,7 @@ func (m *mockRecoveryAction) Description() string {
 func (m *mockRecoveryAction) WasExecuted() bool {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
 	return m.executed
 }
 
@@ -187,7 +189,7 @@ func TestSelfHealingSystem_BasicRecovery(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Trigger recovery by running the monitoring loop multiple times
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		selfHealing.checkAndRecover()
 		time.Sleep(50 * time.Millisecond)
 	}
@@ -293,6 +295,7 @@ func TestSelfHealingSystem_MaxAttempts(t *testing.T) {
 	recoveryAction := NewRecoveryActionFunc("counting_recovery", "Count executions",
 		func(ctx context.Context, check HealthCheck) error {
 			executionCount++
+
 			return nil
 		})
 
@@ -313,7 +316,7 @@ func TestSelfHealingSystem_MaxAttempts(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Trigger multiple recovery attempts
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		selfHealing.checkAndRecover()
 		time.Sleep(200 * time.Millisecond) // Wait for cooldown
 	}
@@ -349,6 +352,7 @@ func TestSelfHealingSystem_SuccessfulRecovery(t *testing.T) {
 	recoveryAction := NewRecoveryActionFunc("fix_checker", "Fix the checker",
 		func(ctx context.Context, check HealthCheck) error {
 			checker.fail = false // "Fix" the issue
+
 			return nil
 		})
 

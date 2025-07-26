@@ -7,7 +7,7 @@ import (
 	"github.com/conneroisu/templar/internal/registry"
 )
 
-// ErrorSuggestion represents a suggestion for fixing an error
+// ErrorSuggestion represents a suggestion for fixing an error.
 type ErrorSuggestion struct {
 	Title       string
 	Description string
@@ -15,7 +15,7 @@ type ErrorSuggestion struct {
 	Example     string
 }
 
-// SuggestionContext provides context for generating suggestions
+// SuggestionContext provides context for generating suggestions.
 type SuggestionContext struct {
 	Registry          *registry.ComponentRegistry
 	AvailableCommands []string
@@ -24,7 +24,7 @@ type SuggestionContext struct {
 	LastKnownError    string
 }
 
-// ComponentNotFoundError generates suggestions for component not found errors
+// ComponentNotFoundError generates suggestions for component not found errors.
 func ComponentNotFoundError(componentName string, ctx *SuggestionContext) []ErrorSuggestion {
 	suggestions := []ErrorSuggestion{
 		{
@@ -77,6 +77,7 @@ func ComponentNotFoundError(componentName string, ctx *SuggestionContext) []Erro
 						Description: "Similar component found",
 						Command:     "templar preview " + comp.Name,
 					})
+
 					break
 				}
 			}
@@ -86,7 +87,7 @@ func ComponentNotFoundError(componentName string, ctx *SuggestionContext) []Erro
 	return suggestions
 }
 
-// BuildFailureError generates suggestions for build failures
+// BuildFailureError generates suggestions for build failures.
 func BuildFailureError(buildOutput string, ctx *SuggestionContext) []ErrorSuggestion {
 	suggestions := []ErrorSuggestion{
 		{
@@ -130,7 +131,7 @@ func BuildFailureError(buildOutput string, ctx *SuggestionContext) []ErrorSugges
 	return suggestions
 }
 
-// ServerStartError generates suggestions for server startup failures
+// ServerStartError generates suggestions for server startup failures.
 func ServerStartError(err error, port int, ctx *SuggestionContext) []ErrorSuggestion {
 	suggestions := []ErrorSuggestion{}
 
@@ -174,7 +175,7 @@ func ServerStartError(err error, port int, ctx *SuggestionContext) []ErrorSugges
 	return suggestions
 }
 
-// ConfigurationErrorSuggestions generates suggestions for configuration issues
+// ConfigurationErrorSuggestions generates suggestions for configuration issues.
 func ConfigurationErrorSuggestions(
 	configError string,
 	configPath string,
@@ -212,7 +213,7 @@ func ConfigurationErrorSuggestions(
 	return suggestions
 }
 
-// WebSocketErrorSuggestions generates suggestions for WebSocket connection issues
+// WebSocketErrorSuggestions generates suggestions for WebSocket connection issues.
 func WebSocketErrorSuggestions(err error, ctx *SuggestionContext) []ErrorSuggestion {
 	suggestions := []ErrorSuggestion{
 		{
@@ -249,7 +250,7 @@ func WebSocketErrorSuggestions(err error, ctx *SuggestionContext) []ErrorSuggest
 	return suggestions
 }
 
-// FormatSuggestions formats suggestions into a user-friendly string
+// FormatSuggestions formats suggestions into a user-friendly string.
 func FormatSuggestions(title string, suggestions []ErrorSuggestion) string {
 	if len(suggestions) == 0 {
 		return title
@@ -276,24 +277,24 @@ func FormatSuggestions(title string, suggestions []ErrorSuggestion) string {
 	return output.String()
 }
 
-// EnhancedError wraps an error with suggestions
+// EnhancedError wraps an error with suggestions.
 type EnhancedError struct {
 	OriginalError error
 	Title         string
 	Suggestions   []ErrorSuggestion
 }
 
-// Error implements the error interface
+// Error implements the error interface.
 func (e *EnhancedError) Error() string {
 	return FormatSuggestions(e.Title, e.Suggestions)
 }
 
-// Unwrap returns the original error
+// Unwrap returns the original error.
 func (e *EnhancedError) Unwrap() error {
 	return e.OriginalError
 }
 
-// NewEnhancedError creates a new enhanced error with suggestions
+// NewEnhancedError creates a new enhanced error with suggestions.
 func NewEnhancedError(
 	title string,
 	originalError error,

@@ -15,7 +15,7 @@ import (
 )
 
 // RefactoredPreviewServer coordinates all server components following Single Responsibility Principle
-// This server acts as a composition root, orchestrating individual focused components
+// This server acts as a composition root, orchestrating individual focused components.
 type RefactoredPreviewServer struct {
 	// Configuration
 	config *config.Config
@@ -32,7 +32,7 @@ type RefactoredPreviewServer struct {
 	shutdownMu   sync.RWMutex
 }
 
-// NewRefactoredPreviewServer creates a new refactored server with full dependency injection
+// NewRefactoredPreviewServer creates a new refactored server with full dependency injection.
 func NewRefactoredPreviewServer(
 	cfg *config.Config,
 	registry interfaces.ComponentRegistry,
@@ -41,7 +41,6 @@ func NewRefactoredPreviewServer(
 	buildPipeline interfaces.BuildPipeline,
 	monitor *monitoring.TemplarMonitor,
 ) (*RefactoredPreviewServer, error) {
-
 	// Create renderer
 	renderer := renderer.NewComponentRenderer(registry)
 
@@ -101,12 +100,13 @@ func NewRefactoredPreviewServer(
 	return server, nil
 }
 
-// Start starts all server components in coordinated fashion
+// Start starts all server components in coordinated fashion.
 func (s *RefactoredPreviewServer) Start(ctx context.Context) error {
 	s.shutdownMu.RLock()
 	if s.isShutdown {
 		s.shutdownMu.RUnlock()
-		return fmt.Errorf("server has been shut down")
+
+		return errors.New("server has been shut down")
 	}
 	s.shutdownMu.RUnlock()
 
@@ -117,7 +117,7 @@ func (s *RefactoredPreviewServer) Start(ctx context.Context) error {
 
 	// Open browser if configured
 	if s.config.Server.Open {
-		url := fmt.Sprintf("http://%s", s.httpRouter.GetAddr())
+		url := "http://" + s.httpRouter.GetAddr()
 		s.orchestrator.OpenBrowser(url)
 	}
 
@@ -127,7 +127,7 @@ func (s *RefactoredPreviewServer) Start(ctx context.Context) error {
 	return s.httpRouter.Start(ctx)
 }
 
-// Shutdown gracefully shuts down all server components
+// Shutdown gracefully shuts down all server components.
 func (s *RefactoredPreviewServer) Shutdown(ctx context.Context) error {
 	var shutdownErr error
 
@@ -168,24 +168,25 @@ func (s *RefactoredPreviewServer) Shutdown(ctx context.Context) error {
 	return shutdownErr
 }
 
-// GetBuildMetrics returns build metrics through the orchestrator
+// GetBuildMetrics returns build metrics through the orchestrator.
 func (s *RefactoredPreviewServer) GetBuildMetrics() interfaces.BuildMetrics {
 	return s.orchestrator.GetBuildMetrics()
 }
 
-// GetLastBuildErrors returns last build errors through the orchestrator
+// GetLastBuildErrors returns last build errors through the orchestrator.
 func (s *RefactoredPreviewServer) GetLastBuildErrors() []*errors.ParsedError {
 	return s.orchestrator.GetLastBuildErrors()
 }
 
-// IsShutdown returns whether the server has been shut down
+// IsShutdown returns whether the server has been shut down.
 func (s *RefactoredPreviewServer) IsShutdown() bool {
 	s.shutdownMu.RLock()
 	defer s.shutdownMu.RUnlock()
+
 	return s.isShutdown
 }
 
-// GetStatus returns comprehensive server status
+// GetStatus returns comprehensive server status.
 func (s *RefactoredPreviewServer) GetStatus() map[string]interface{} {
 	status := make(map[string]interface{})
 
@@ -207,12 +208,12 @@ func (s *RefactoredPreviewServer) GetStatus() map[string]interface{} {
 	return status
 }
 
-// ServerOriginValidator implements OriginValidator interface for the server
+// ServerOriginValidator implements OriginValidator interface for the server.
 type ServerOriginValidator struct {
 	config *config.Config
 }
 
-// IsAllowedOrigin checks if the origin is allowed for WebSocket connections
+// IsAllowedOrigin checks if the origin is allowed for WebSocket connections.
 func (sov *ServerOriginValidator) IsAllowedOrigin(origin string) bool {
 	if origin == "" {
 		return true // Allow same-origin requests
@@ -236,11 +237,12 @@ func (sov *ServerOriginValidator) IsAllowedOrigin(origin string) bool {
 
 	// Production: only allow same-origin
 	expectedOrigin := fmt.Sprintf("http://%s:%d", sov.config.Server.Host, sov.config.Server.Port)
+
 	return origin == expectedOrigin
 }
 
 // ServerHandlerAdapter adapts the server's handler methods to the HTTPHandlers interface
-// This allows clean separation between HTTP routing and business logic
+// This allows clean separation between HTTP routing and business logic.
 type ServerHandlerAdapter struct {
 	orchestrator *ServiceOrchestrator
 	wsManager    *WebSocketManager

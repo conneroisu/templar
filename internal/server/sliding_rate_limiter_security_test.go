@@ -6,13 +6,13 @@ import (
 	"time"
 )
 
-// TestExponentialBackoffSecurity tests the security properties of exponential backoff
+// TestExponentialBackoffSecurity tests the security properties of exponential backoff.
 func TestExponentialBackoffSecurity(t *testing.T) {
 	t.Run("PreventsBurstAttackWithExponentialBackoff", func(t *testing.T) {
 		limiter := NewSlidingWindowRateLimiter(3, 100*time.Millisecond)
 
 		// First burst - fill the window
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			if !limiter.IsAllowed() {
 				t.Fatalf("Request %d should be allowed", i+1)
 			}
@@ -95,7 +95,7 @@ func TestExponentialBackoffSecurity(t *testing.T) {
 		limiter := NewSlidingWindowRateLimiter(1, 50*time.Millisecond)
 
 		// Trigger many violations to test max backoff
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			limiter.IsAllowed() // Should be rejected after first one
 		}
 
@@ -109,13 +109,13 @@ func TestExponentialBackoffSecurity(t *testing.T) {
 }
 
 // TestWindowBoundaryAttackPrevention tests that the enhanced rate limiter prevents
-// sophisticated attacks that try to exploit window boundaries
+// sophisticated attacks that try to exploit window boundaries.
 func TestWindowBoundaryAttackPrevention(t *testing.T) {
 	t.Run("PreventsBurstAtWindowReset", func(t *testing.T) {
 		limiter := NewSlidingWindowRateLimiter(5, 100*time.Millisecond)
 
 		// First burst - use up the window
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			if !limiter.IsAllowed() {
 				t.Fatalf("Request %d should be allowed", i+1)
 			}
@@ -185,7 +185,7 @@ func TestWindowBoundaryAttackPrevention(t *testing.T) {
 	})
 }
 
-// TestConcurrentBackoffSafety tests that the backoff mechanism is thread-safe
+// TestConcurrentBackoffSafety tests that the backoff mechanism is thread-safe.
 func TestConcurrentBackoffSafety(t *testing.T) {
 	limiter := NewSlidingWindowRateLimiter(5, 100*time.Millisecond)
 	var wg sync.WaitGroup
@@ -197,12 +197,12 @@ func TestConcurrentBackoffSafety(t *testing.T) {
 	numGoroutines := 10
 	requestsPerGoroutine := 20
 
-	for i := 0; i < numGoroutines; i++ {
+	for i := range numGoroutines {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
 
-			for j := 0; j < requestsPerGoroutine; j++ {
+			for range requestsPerGoroutine {
 				if limiter.IsAllowed() {
 					mutex.Lock()
 					allowedCount++
@@ -241,7 +241,7 @@ func TestConcurrentBackoffSafety(t *testing.T) {
 		allowedCount, rejectedCount, violationCount)
 }
 
-// TestBackoffTimingAccuracy tests that backoff timing is accurate
+// TestBackoffTimingAccuracy tests that backoff timing is accurate.
 func TestBackoffTimingAccuracy(t *testing.T) {
 	limiter := NewSlidingWindowRateLimiter(1, 50*time.Millisecond)
 
@@ -273,7 +273,7 @@ func TestBackoffTimingAccuracy(t *testing.T) {
 	}
 }
 
-// TestViolationInfoConsistency tests that violation tracking is consistent
+// TestViolationInfoConsistency tests that violation tracking is consistent.
 func TestViolationInfoConsistency(t *testing.T) {
 	limiter := NewSlidingWindowRateLimiter(2, 100*time.Millisecond)
 

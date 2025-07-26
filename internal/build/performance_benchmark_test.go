@@ -10,7 +10,7 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// BenchmarkFileIOOptimization benchmarks the file I/O performance improvements
+// BenchmarkFileIOOptimization benchmarks the file I/O performance improvements.
 func BenchmarkFileIOOptimization(b *testing.B) {
 	// Create test files
 	tempDir := b.TempDir()
@@ -22,13 +22,13 @@ func BenchmarkFileIOOptimization(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		// Test batch hash generation
 		_ = pipeline.generateContentHashesBatch(components)
 	}
 }
 
-// BenchmarkSingleFileIO benchmarks single file hash generation
+// BenchmarkSingleFileIO benchmarks single file hash generation.
 func BenchmarkSingleFileIO(b *testing.B) {
 	// Create test file
 	tempDir := b.TempDir()
@@ -40,12 +40,12 @@ func BenchmarkSingleFileIO(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = pipeline.generateContentHash(components[0])
 	}
 }
 
-// BenchmarkBatchFileIO benchmarks batch file hash generation
+// BenchmarkBatchFileIO benchmarks batch file hash generation.
 func BenchmarkBatchFileIO(b *testing.B) {
 	// Create test files
 	tempDir := b.TempDir()
@@ -57,12 +57,12 @@ func BenchmarkBatchFileIO(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = pipeline.generateContentHashesBatch(components)
 	}
 }
 
-// BenchmarkLargeFilesMmap benchmarks memory-mapped file reading for large files
+// BenchmarkLargeFilesMmap benchmarks memory-mapped file reading for large files.
 func BenchmarkLargeFilesMmap(b *testing.B) {
 	// Create large test file (>64KB)
 	tempDir := b.TempDir()
@@ -74,16 +74,16 @@ func BenchmarkLargeFilesMmap(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = pipeline.generateContentHash(components[0])
 	}
 }
 
-// createTestComponents creates test component files
+// createTestComponents creates test component files.
 func createTestComponents(t testing.TB, tempDir string, count int) []*types.ComponentInfo {
 	var components []*types.ComponentInfo
 
-	for i := 0; i < count; i++ {
+	for i := range count {
 		filePath := filepath.Join(tempDir, fmt.Sprintf("component%d.templ", i))
 		content := `package components
 
@@ -109,7 +109,7 @@ templ TestComponent() {
 	return components
 }
 
-// createLargeTestComponents creates large test component files for mmap testing
+// createLargeTestComponents creates large test component files for mmap testing.
 func createLargeTestComponents(
 	t testing.TB,
 	tempDir string,
@@ -137,7 +137,7 @@ templ LargeComponent() {
 }
 `
 
-	for i := 0; i < count; i++ {
+	for i := range count {
 		filePath := filepath.Join(tempDir, fmt.Sprintf("large_component%d.templ", i))
 
 		if err := os.WriteFile(filePath, []byte(baseContent), 0644); err != nil {
@@ -154,7 +154,7 @@ templ LargeComponent() {
 	return components
 }
 
-// TestPerformanceImprovement validates that our optimizations provide measurable performance gains
+// TestPerformanceImprovement validates that our optimizations provide measurable performance gains.
 func TestPerformanceImprovement(t *testing.T) {
 	// Create test files
 	tempDir := t.TempDir()

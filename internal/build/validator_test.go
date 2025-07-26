@@ -330,7 +330,7 @@ func TestBuildValidator_ConcurrentValidation(t *testing.T) {
 	// Test concurrent validation calls
 	done := make(chan bool, 10)
 
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		go func(workerID int) {
 			defer func() { done <- true }()
 
@@ -358,12 +358,12 @@ func TestBuildValidator_ConcurrentValidation(t *testing.T) {
 	}
 
 	// Wait for all workers
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		<-done
 	}
 }
 
-// Benchmark tests for validator performance
+// Benchmark tests for validator performance.
 func BenchmarkBuildValidator_Validate(b *testing.B) {
 	cfg := &config.Config{}
 	validator := NewBuildValidator(cfg)
@@ -377,13 +377,13 @@ func BenchmarkBuildValidator_Validate(b *testing.B) {
 	}
 
 	// Fill with test data
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		artifacts.StaticFiles[i] = fmt.Sprintf("static%d.html", i)
 	}
-	for i := 0; i < 50; i++ {
+	for i := range 50 {
 		artifacts.BundledAssets[i] = fmt.Sprintf("bundle%d.js", i)
 	}
-	for i := 0; i < 200; i++ {
+	for i := range 200 {
 		artifacts.GeneratedPages[i] = fmt.Sprintf("page%d.html", i)
 	}
 
@@ -396,7 +396,7 @@ func BenchmarkBuildValidator_Validate(b *testing.B) {
 	ctx := context.Background()
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, err := validator.Validate(ctx, artifacts, options)
 		if err != nil {
 			b.Fatal(err)
@@ -422,7 +422,7 @@ func BenchmarkBuildValidator_ValidateSmall(b *testing.B) {
 	ctx := context.Background()
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, err := validator.Validate(ctx, artifacts, options)
 		if err != nil {
 			b.Fatal(err)
@@ -430,7 +430,7 @@ func BenchmarkBuildValidator_ValidateSmall(b *testing.B) {
 	}
 }
 
-// Test helper to create mock BuildArtifacts
+// Test helper to create mock BuildArtifacts.
 func createMockBuildArtifacts(size int) *BuildArtifacts {
 	artifacts := &BuildArtifacts{
 		StaticFiles:    make([]string, size),
@@ -440,15 +440,15 @@ func createMockBuildArtifacts(size int) *BuildArtifacts {
 		BundleAnalysis: "analysis.json",
 	}
 
-	for i := 0; i < size; i++ {
+	for i := range size {
 		artifacts.StaticFiles[i] = fmt.Sprintf("static%d.html", i)
 	}
 
-	for i := 0; i < size/2; i++ {
+	for i := range size / 2 {
 		artifacts.BundledAssets[i] = fmt.Sprintf("bundle%d.js", i)
 	}
 
-	for i := 0; i < size*2; i++ {
+	for i := range size * 2 {
 		artifacts.GeneratedPages[i] = fmt.Sprintf("page%d.html", i)
 	}
 

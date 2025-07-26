@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// BuildInfo contains version and build information
+// BuildInfo contains version and build information.
 type BuildInfo struct {
 	Version   string    `json:"version"`
 	GitCommit string    `json:"git_commit"`
@@ -18,22 +18,22 @@ type BuildInfo struct {
 	BuildUser string    `json:"build_user,omitempty"`
 }
 
-// These variables are set at build time using -ldflags
+// These variables are set at build time using -ldflags.
 var (
-	// Version is the semantic version of the application
+	// Version is the semantic version of the application.
 	Version = "dev"
 
-	// GitCommit is the git commit hash when the binary was built
+	// GitCommit is the git commit hash when the binary was built.
 	GitCommit = "unknown"
 
-	// BuildTime is the time when the binary was built (RFC3339 format)
+	// BuildTime is the time when the binary was built (RFC3339 format).
 	BuildTime = "unknown"
 
-	// BuildUser is the user who built the binary
+	// BuildUser is the user who built the binary.
 	BuildUser = "unknown"
 )
 
-// GetBuildInfo returns comprehensive build information
+// GetBuildInfo returns comprehensive build information.
 func GetBuildInfo() *BuildInfo {
 	buildTime := parseISOTime(BuildTime)
 
@@ -47,7 +47,7 @@ func GetBuildInfo() *BuildInfo {
 	}
 }
 
-// GetVersion returns the application version
+// GetVersion returns the application version.
 func GetVersion() string {
 	if Version != "" && Version != "dev" {
 		return Version
@@ -62,7 +62,7 @@ func GetVersion() string {
 		// Look for version in build settings
 		for _, setting := range info.Settings {
 			if setting.Key == "vcs.revision" && len(setting.Value) >= 7 {
-				return fmt.Sprintf("dev-%s", setting.Value[:7])
+				return "dev-" + setting.Value[:7]
 			}
 		}
 	}
@@ -70,7 +70,7 @@ func GetVersion() string {
 	return "dev"
 }
 
-// GetGitCommit returns the git commit hash
+// GetGitCommit returns the git commit hash.
 func GetGitCommit() string {
 	if GitCommit != "" && GitCommit != "unknown" {
 		return GitCommit
@@ -88,12 +88,12 @@ func GetGitCommit() string {
 	return "unknown"
 }
 
-// GetBuildTime returns the build time
+// GetBuildTime returns the build time.
 func GetBuildTime() time.Time {
 	return parseISOTime(BuildTime)
 }
 
-// GetShortVersion returns a short version string suitable for display
+// GetShortVersion returns a short version string suitable for display.
 func GetShortVersion() string {
 	version := GetVersion()
 	commit := GetGitCommit()
@@ -103,44 +103,46 @@ func GetShortVersion() string {
 		if version != "dev" {
 			return fmt.Sprintf("%s (%s)", version, shortCommit)
 		}
-		return fmt.Sprintf("dev-%s", shortCommit)
+
+		return "dev-" + shortCommit
 	}
 
 	return version
 }
 
-// GetDetailedVersion returns a detailed version string with all build info
+// GetDetailedVersion returns a detailed version string with all build info.
 func GetDetailedVersion() string {
 	info := GetBuildInfo()
 
 	var parts []string
-	parts = append(parts, fmt.Sprintf("Version: %s", info.Version))
+	parts = append(parts, "Version: "+info.Version)
 
 	if info.GitCommit != "unknown" {
-		parts = append(parts, fmt.Sprintf("Commit: %s", info.GitCommit))
+		parts = append(parts, "Commit: "+info.GitCommit)
 	}
 
 	if !info.BuildTime.IsZero() {
-		parts = append(parts, fmt.Sprintf("Built: %s", info.BuildTime.Format(time.RFC3339)))
+		parts = append(parts, "Built: "+info.BuildTime.Format(time.RFC3339))
 	}
 
-	parts = append(parts, fmt.Sprintf("Go: %s", info.GoVersion))
-	parts = append(parts, fmt.Sprintf("Platform: %s", info.Platform))
+	parts = append(parts, "Go: "+info.GoVersion)
+	parts = append(parts, "Platform: "+info.Platform)
 
 	if info.BuildUser != "unknown" && info.BuildUser != "" {
-		parts = append(parts, fmt.Sprintf("User: %s", info.BuildUser))
+		parts = append(parts, "User: "+info.BuildUser)
 	}
 
 	return strings.Join(parts, "\n")
 }
 
-// IsRelease returns true if this is a release build (not dev)
+// IsRelease returns true if this is a release build (not dev).
 func IsRelease() bool {
 	version := GetVersion()
+
 	return version != "dev" && !strings.HasPrefix(version, "dev-")
 }
 
-// IsDirty returns true if the working directory was dirty when built
+// IsDirty returns true if the working directory was dirty when built.
 func IsDirty() bool {
 	if info, ok := debug.ReadBuildInfo(); ok {
 		for _, setting := range info.Settings {
@@ -149,10 +151,11 @@ func IsDirty() bool {
 			}
 		}
 	}
+
 	return false
 }
 
-// parseISOTime parses an ISO 8601 time string, returns zero time on error
+// parseISOTime parses an ISO 8601 time string, returns zero time on error.
 func parseISOTime(timeStr string) time.Time {
 	if timeStr == "" || timeStr == "unknown" {
 		return time.Time{}

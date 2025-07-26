@@ -13,7 +13,7 @@ import (
 	"github.com/conneroisu/templar/internal/monitoring"
 )
 
-// Example demonstrating comprehensive monitoring integration
+// Example demonstrating comprehensive monitoring integration.
 func main() {
 	// Setup monitoring
 	config := monitoring.MonitoringConfig{
@@ -85,7 +85,7 @@ func main() {
 	fmt.Println("Server exited")
 }
 
-// registerCustomHealthChecks demonstrates registering custom health checks
+// registerCustomHealthChecks demonstrates registering custom health checks.
 func registerCustomHealthChecks(monitor *monitoring.Monitor) {
 	// Component health check
 	componentChecker := monitoring.ComponentHealthChecker("example_component", func() error {
@@ -116,7 +116,7 @@ func registerCustomHealthChecks(monitor *monitoring.Monitor) {
 	monitor.RegisterHealthCheck(wsChecker)
 }
 
-// handleHome demonstrates basic request handling
+// handleHome demonstrates basic request handling.
 func handleHome(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -153,6 +153,7 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 		`
 
 		w.Write([]byte(html))
+
 		return nil
 	})
 
@@ -162,7 +163,7 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleComponent demonstrates component operation tracking
+// handleComponent demonstrates component operation tracking.
 func handleComponent(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -193,6 +194,7 @@ func handleComponent(w http.ResponseWriter, r *http.Request) {
 		}`, components, len(components), time.Now().Format(time.RFC3339))
 
 			w.Write([]byte(response))
+
 			return nil
 		},
 	)
@@ -209,7 +211,7 @@ func handleComponent(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleBuild demonstrates build operation tracking with batch processing
+// handleBuild demonstrates build operation tracking with batch processing.
 func handleBuild(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -224,7 +226,7 @@ func handleBuild(w http.ResponseWriter, r *http.Request) {
 			// Create batch tracker
 			monitor := monitoring.GetGlobalMonitor()
 			if monitor == nil {
-				return fmt.Errorf("monitor not available")
+				return errors.New("monitor not available")
 			}
 
 			batchTracker := monitoring.NewBatchTracker(
@@ -246,6 +248,7 @@ func handleBuild(w http.ResponseWriter, r *http.Request) {
 					}
 
 					successCount++
+
 					return nil
 				})
 
@@ -276,6 +279,7 @@ func handleBuild(w http.ResponseWriter, r *http.Request) {
 		}`, len(components), successCount, len(components)-successCount, time.Now().Format(time.RFC3339))
 
 			w.Write([]byte(response))
+
 			return nil
 		},
 	)
@@ -286,7 +290,7 @@ func handleBuild(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// simulateActivity demonstrates background monitoring
+// simulateActivity demonstrates background monitoring.
 func simulateActivity() {
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
@@ -296,7 +300,7 @@ func simulateActivity() {
 	}
 }
 
-// simulateBackgroundOperations demonstrates various monitoring scenarios
+// simulateBackgroundOperations demonstrates various monitoring scenarios.
 func simulateBackgroundOperations() {
 	ctx := context.Background()
 
@@ -304,6 +308,7 @@ func simulateBackgroundOperations() {
 	monitoring.TrackOperation(ctx, "scanner", "scan_files", func(ctx context.Context) error {
 		monitoring.LogInfo(ctx, "scanner", "scan_files", "Scanning component files")
 		time.Sleep(50 * time.Millisecond)
+
 		return nil
 	})
 
@@ -327,7 +332,7 @@ func simulateBackgroundOperations() {
 	// Simulate occasional errors
 	if time.Now().Unix()%10 == 0 { // Every 10th cycle
 		monitoring.LogError(ctx, "background_worker", "cleanup",
-			fmt.Errorf("temporary cleanup error"),
+			errors.New("temporary cleanup error"),
 			"Cleanup operation failed",
 			"retry_after", "30s")
 	}

@@ -10,7 +10,7 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// FuzzTemplateParser tests the template parser with various inputs
+// FuzzTemplateParser tests the template parser with various inputs.
 func FuzzTemplateParser(f *testing.F) {
 	// Seed with known good templates
 	f.Add(`package components
@@ -131,7 +131,7 @@ templ Valid() {
 	})
 }
 
-// FuzzDirectoryScanning tests directory scanning with various path inputs
+// FuzzDirectoryScanning tests directory scanning with various path inputs.
 func FuzzDirectoryScanning(f *testing.F) {
 	// Seed with valid directory patterns
 	f.Add("./components")
@@ -186,7 +186,7 @@ func FuzzDirectoryScanning(f *testing.F) {
 	})
 }
 
-// FuzzComponentValidation tests component validation with various inputs
+// FuzzComponentValidation tests component validation with various inputs.
 func FuzzComponentValidation(f *testing.F) {
 	// Seed with valid component data
 	f.Add("Button", "components", "button.templ", "text", "string")

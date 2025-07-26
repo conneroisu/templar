@@ -13,7 +13,7 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// StaticSiteGenerator handles generation of static HTML files from templ components
+// StaticSiteGenerator handles generation of static HTML files from templ components.
 type StaticSiteGenerator struct {
 	config        *config.Config
 	outputDir     string
@@ -21,7 +21,7 @@ type StaticSiteGenerator struct {
 	layoutCache   map[string]string
 }
 
-// StaticGenerationOptions configures static site generation
+// StaticGenerationOptions configures static site generation.
 type StaticGenerationOptions struct {
 	Prerendering bool   `json:"prerendering"`
 	CriticalCSS  bool   `json:"critical_css"`
@@ -50,7 +50,7 @@ type StaticGenerationOptions struct {
 	Version   string    `json:"version,omitempty"`
 }
 
-// CustomPage represents a custom static page to generate
+// CustomPage represents a custom static page to generate.
 type CustomPage struct {
 	Path        string                 `json:"path"`
 	Template    string                 `json:"template"`
@@ -60,7 +60,7 @@ type CustomPage struct {
 	Layout      string                 `json:"layout,omitempty"`
 }
 
-// StaticPage represents a generated static page
+// StaticPage represents a generated static page.
 type StaticPage struct {
 	Path         string            `json:"path"`
 	Title        string            `json:"title"`
@@ -73,7 +73,7 @@ type StaticPage struct {
 	Metadata     map[string]string `json:"metadata,omitempty"`
 }
 
-// SitemapEntry represents an entry in the sitemap
+// SitemapEntry represents an entry in the sitemap.
 type SitemapEntry struct {
 	URL          string    `json:"url"`
 	LastModified time.Time `json:"last_modified"`
@@ -81,7 +81,7 @@ type SitemapEntry struct {
 	Priority     float64   `json:"priority"`
 }
 
-// NewStaticSiteGenerator creates a new static site generator
+// NewStaticSiteGenerator creates a new static site generator.
 func NewStaticSiteGenerator(cfg *config.Config, outputDir string) *StaticSiteGenerator {
 	return &StaticSiteGenerator{
 		config:        cfg,
@@ -91,7 +91,7 @@ func NewStaticSiteGenerator(cfg *config.Config, outputDir string) *StaticSiteGen
 	}
 }
 
-// Generate creates static HTML files from templ components
+// Generate creates static HTML files from templ components.
 func (s *StaticSiteGenerator) Generate(
 	ctx context.Context,
 	components []*types.ComponentInfo,
@@ -165,7 +165,7 @@ func (s *StaticSiteGenerator) Generate(
 	return generatedFiles, nil
 }
 
-// generateComponentPage creates a static HTML page for a component
+// generateComponentPage creates a static HTML page for a component.
 func (s *StaticSiteGenerator) generateComponentPage(
 	ctx context.Context,
 	component *types.ComponentInfo,
@@ -236,7 +236,7 @@ func (s *StaticSiteGenerator) generateComponentPage(
 	return generatedFiles, nil
 }
 
-// generateCustomPage creates a custom static page
+// generateCustomPage creates a custom static page.
 func (s *StaticSiteGenerator) generateCustomPage(
 	ctx context.Context,
 	page CustomPage,
@@ -292,7 +292,7 @@ func (s *StaticSiteGenerator) generateErrorPage(
 	return pagePath, nil
 }
 
-// generateSitemap creates an XML sitemap
+// generateSitemap creates an XML sitemap.
 func (s *StaticSiteGenerator) generateSitemap(
 	ctx context.Context,
 	generatedFiles []string,
@@ -342,7 +342,7 @@ func (s *StaticSiteGenerator) generateSitemap(
 	return sitemapPath, nil
 }
 
-// generateRobotsTxt creates a robots.txt file
+// generateRobotsTxt creates a robots.txt file.
 func (s *StaticSiteGenerator) generateRobotsTxt(
 	ctx context.Context,
 	options StaticGenerationOptions,
@@ -368,7 +368,7 @@ func (s *StaticSiteGenerator) generateRobotsTxt(
 	return robotsPath, nil
 }
 
-// generateIndexPage creates the main index page
+// generateIndexPage creates the main index page.
 func (s *StaticSiteGenerator) generateIndexPage(
 	ctx context.Context,
 	components []*types.ComponentInfo,
@@ -394,7 +394,7 @@ func (s *StaticSiteGenerator) generateIndexPage(
 
 // HTML Generation Methods
 
-// renderComponentHTML generates HTML for a component page
+// renderComponentHTML generates HTML for a component page.
 func (s *StaticSiteGenerator) renderComponentHTML(
 	component *types.ComponentInfo,
 	options StaticGenerationOptions,
@@ -505,7 +505,7 @@ func (s *StaticSiteGenerator) renderComponentHTML(
 	return html.String(), nil
 }
 
-// renderComponentVariant generates HTML for a component variant/example
+// renderComponentVariant generates HTML for a component variant/example.
 func (s *StaticSiteGenerator) renderComponentVariant(
 	component *types.ComponentInfo,
 	example types.ComponentExample,
@@ -554,7 +554,7 @@ func (s *StaticSiteGenerator) renderComponentVariant(
 	return html.String(), nil
 }
 
-// renderCustomPageHTML generates HTML for a custom page
+// renderCustomPageHTML generates HTML for a custom page.
 func (s *StaticSiteGenerator) renderCustomPageHTML(
 	page CustomPage,
 	options StaticGenerationOptions,
@@ -604,7 +604,7 @@ func (s *StaticSiteGenerator) renderCustomPageHTML(
 	return html.String(), nil
 }
 
-// generateErrorPageHTML creates HTML for error pages
+// generateErrorPageHTML creates HTML for error pages.
 func (s *StaticSiteGenerator) generateErrorPageHTML(
 	errorCode, templatePath string,
 	options StaticGenerationOptions,
@@ -642,7 +642,7 @@ func (s *StaticSiteGenerator) generateErrorPageHTML(
 	return html.String()
 }
 
-// generateComponentCatalogHTML creates the main component catalog page
+// generateComponentCatalogHTML creates the main component catalog page.
 func (s *StaticSiteGenerator) generateComponentCatalogHTML(
 	components []*types.ComponentInfo,
 	options StaticGenerationOptions,
@@ -699,17 +699,18 @@ func (s *StaticSiteGenerator) generateComponentCatalogHTML(
 
 // Helper methods
 
-// getComponentPagePath generates the page path for a component
+// getComponentPagePath generates the page path for a component.
 func (s *StaticSiteGenerator) getComponentPagePath(component *types.ComponentInfo) string {
 	// Create a clean URL path
 	sanitizedName := s.sanitizeFileName(component.Name)
 	if component.Package != "" && component.Package != "main" {
 		return fmt.Sprintf("%s/%s.html", component.Package, sanitizedName)
 	}
-	return fmt.Sprintf("%s.html", sanitizedName)
+
+	return sanitizedName + ".html"
 }
 
-// sanitizeFileName creates a safe filename from a string
+// sanitizeFileName creates a safe filename from a string.
 func (s *StaticSiteGenerator) sanitizeFileName(name string) string {
 	// Convert to lowercase and replace non-alphanumeric with hyphens
 	sanitized := strings.ToLower(name)
@@ -727,7 +728,7 @@ func (s *StaticSiteGenerator) sanitizeFileName(name string) string {
 	return strings.Trim(result.String(), "-")
 }
 
-// minifyHTML performs basic HTML minification
+// minifyHTML performs basic HTML minification.
 func (s *StaticSiteGenerator) minifyHTML(html string) string {
 	// Basic minification - remove extra whitespace
 	lines := strings.Split(html, "\n")
@@ -749,7 +750,7 @@ func (s *StaticSiteGenerator) minifyHTML(html string) string {
 	return result
 }
 
-// extractCriticalCSS extracts critical CSS for a component (placeholder)
+// extractCriticalCSS extracts critical CSS for a component (placeholder).
 func (s *StaticSiteGenerator) extractCriticalCSS(component *types.ComponentInfo) string {
 	// Placeholder implementation
 	// In a real implementation, this would analyze the component and extract
@@ -757,7 +758,7 @@ func (s *StaticSiteGenerator) extractCriticalCSS(component *types.ComponentInfo)
 	return "/* Critical CSS for " + component.Name + " */"
 }
 
-// generateComponentJSON creates a JSON representation of a component
+// generateComponentJSON creates a JSON representation of a component.
 func (s *StaticSiteGenerator) generateComponentJSON(
 	component *types.ComponentInfo,
 	options StaticGenerationOptions,

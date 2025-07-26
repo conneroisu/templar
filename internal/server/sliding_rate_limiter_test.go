@@ -10,7 +10,7 @@ func TestSlidingWindowRateLimiter_BasicFunctionality(t *testing.T) {
 	limiter := NewSlidingWindowRateLimiter(5, time.Minute)
 
 	// Should allow first 5 requests
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		if !limiter.IsAllowed() {
 			t.Errorf("Request %d should be allowed", i+1)
 		}
@@ -31,7 +31,7 @@ func TestSlidingWindowRateLimiter_WindowSliding(t *testing.T) {
 	limiter := NewSlidingWindowRateLimiter(3, 100*time.Millisecond)
 
 	// Use all 3 requests
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		if !limiter.IsAllowed() {
 			t.Errorf("Request %d should be allowed", i+1)
 		}
@@ -46,7 +46,7 @@ func TestSlidingWindowRateLimiter_WindowSliding(t *testing.T) {
 	time.Sleep(1200 * time.Millisecond)
 
 	// Should be allowed again after both window slide and backoff expiry
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		if !limiter.IsAllowed() {
 			t.Errorf("Request %d after window slide and backoff expiry should be allowed", i+1)
 		}
@@ -57,7 +57,7 @@ func TestSlidingWindowRateLimiter_PreventsBypassAttack(t *testing.T) {
 	limiter := NewSlidingWindowRateLimiter(5, 100*time.Millisecond)
 
 	// Fill the bucket
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		if !limiter.IsAllowed() {
 			t.Errorf("Request %d should be allowed", i+1)
 		}
@@ -88,7 +88,7 @@ func TestSlidingWindowRateLimiter_ConcurrentAccess(t *testing.T) {
 	var mutex sync.Mutex
 
 	// Simulate 200 concurrent requests
-	for i := 0; i < 200; i++ {
+	for range 200 {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -122,7 +122,7 @@ func TestSlidingWindowRateLimiter_Reset(t *testing.T) {
 	limiter := NewSlidingWindowRateLimiter(3, time.Minute)
 
 	// Use all requests
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		limiter.IsAllowed()
 	}
 
@@ -171,12 +171,12 @@ func TestSlidingWindowRateLimiter_TimeUntilReset(t *testing.T) {
 	}
 }
 
-// Benchmark tests to ensure performance
+// Benchmark tests to ensure performance.
 func BenchmarkSlidingWindowRateLimiter_IsAllowed(b *testing.B) {
 	limiter := NewSlidingWindowRateLimiter(1000, time.Minute)
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		limiter.IsAllowed()
 	}
 }
@@ -192,7 +192,7 @@ func BenchmarkSlidingWindowRateLimiter_Concurrent(b *testing.B) {
 	})
 }
 
-// TestWebSocketRateLimiterInterface ensures our sliding window rate limiter implements the interface
+// TestWebSocketRateLimiterInterface ensures our sliding window rate limiter implements the interface.
 func TestWebSocketRateLimiterInterface(t *testing.T) {
 	var _ WebSocketRateLimiter = (*SlidingWindowRateLimiter)(nil)
 }

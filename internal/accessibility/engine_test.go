@@ -500,6 +500,7 @@ func TestDefaultAccessibilityEngine_WCAGLevelFiltering(t *testing.T) {
 		for _, tag := range rule.Tags {
 			if tag == "wcag2a" {
 				hasWCAG2A = true
+
 				break
 			}
 		}
@@ -634,7 +635,7 @@ func TestDefaultHTMLElement_Implementation(t *testing.T) {
 	assert.Contains(t, accessibleName, "Test content")
 }
 
-// Helper functions for tests
+// Helper functions for tests.
 func parseHTML(htmlContent string) (*html.Node, error) {
 	return html.Parse(strings.NewReader(htmlContent))
 }
@@ -653,7 +654,7 @@ func findFirstElementByTag(node *html.Node, tagName string) *html.Node {
 	return nil
 }
 
-// Benchmark tests
+// Benchmark tests.
 func BenchmarkAccessibilityEngine_Analyze(b *testing.B) {
 	logger := logging.NewTestLogger()
 	engine := NewDefaultAccessibilityEngine(logger)
@@ -675,7 +676,7 @@ func BenchmarkAccessibilityEngine_Analyze(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, err := engine.Analyze(context.Background(), complexHTML, auditConfig)
 		if err != nil {
 			b.Fatal(err)
@@ -687,7 +688,7 @@ func generateComplexHTML(elementCount int) string {
 	var html strings.Builder
 	html.WriteString(`<!DOCTYPE html><html lang="en"><head><title>Test</title></head><body>`)
 
-	for i := 0; i < elementCount; i++ {
+	for i := range elementCount {
 		html.WriteString(fmt.Sprintf(`<div id="element-%d" class="test-class">`, i))
 
 		if i%3 == 0 {
@@ -704,5 +705,6 @@ func generateComplexHTML(elementCount int) string {
 	}
 
 	html.WriteString(`</body></html>`)
+
 	return html.String()
 }

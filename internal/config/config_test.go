@@ -173,7 +173,7 @@ func TestTargetFiles(t *testing.T) {
 	assert.Equal(t, testFiles, config.TargetFiles)
 }
 
-// TestLoadWithEnvironment tests loading config with environment variables
+// TestLoadWithEnvironment tests loading config with environment variables.
 func TestLoadWithEnvironment(t *testing.T) {
 	// Save original environment
 	originalPort := os.Getenv("TEMPLAR_SERVER_PORT")
@@ -211,7 +211,7 @@ func TestLoadWithEnvironment(t *testing.T) {
 	assert.NotNil(t, config)
 }
 
-// TestLoadDefaults tests the loadDefaults function
+// TestLoadDefaults tests the loadDefaults function.
 func TestLoadDefaults(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -336,7 +336,7 @@ func TestLoadDefaults(t *testing.T) {
 	}
 }
 
-// TestApplyOverrides tests the applyOverrides function
+// TestApplyOverrides tests the applyOverrides function.
 func TestApplyOverrides(t *testing.T) {
 	tests := []struct {
 		name        string

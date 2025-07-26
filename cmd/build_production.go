@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// buildProductionCmd represents the production build command
+// buildProductionCmd represents the production build command.
 var buildProductionCmd = &cobra.Command{
 	Use:   "production",
 	Short: "Build for production deployment",
@@ -139,7 +139,7 @@ func runProductionBuildCommand(cmd *cobra.Command, args []string) error {
 
 	components := componentRegistry.GetAll()
 	if len(components) == 0 {
-		return fmt.Errorf("no components found to build")
+		return errors.New("no components found to build")
 	}
 	fmt.Printf("Found %d components\n", len(components))
 

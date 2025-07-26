@@ -10,7 +10,7 @@ import (
 )
 
 func TestServiceError(t *testing.T) {
-	err := ServiceError("BUILD", "COMPILE", "compilation failed", fmt.Errorf("original error"))
+	err := ServiceError("BUILD", "COMPILE", "compilation failed", errors.New("original error"))
 
 	assert.NotNil(t, err)
 	assert.Equal(t, ErrorTypeInternal, err.Type)
@@ -22,7 +22,7 @@ func TestServiceError(t *testing.T) {
 }
 
 func TestInitError(t *testing.T) {
-	originalErr := fmt.Errorf("directory not found")
+	originalErr := errors.New("directory not found")
 	err := InitError("VALIDATE_DIR", "project directory validation failed", originalErr)
 
 	assert.NotNil(t, err)
@@ -42,7 +42,7 @@ func TestBuildServiceError(t *testing.T) {
 }
 
 func TestServeServiceError(t *testing.T) {
-	err := ServeServiceError("START_SERVER", "server startup failed", fmt.Errorf("port in use"))
+	err := ServeServiceError("START_SERVER", "server startup failed", errors.New("port in use"))
 
 	assert.NotNil(t, err)
 	assert.Equal(t, "ERR_SERVE_START_SERVER", err.Code)
@@ -52,7 +52,7 @@ func TestServeServiceError(t *testing.T) {
 }
 
 func TestDataError(t *testing.T) {
-	err := DataError("READ", "user.json", "file access denied", fmt.Errorf("permission denied"))
+	err := DataError("READ", "user.json", "file access denied", errors.New("permission denied"))
 
 	assert.NotNil(t, err)
 	assert.Equal(t, ErrorTypeIO, err.Type)
@@ -62,7 +62,7 @@ func TestDataError(t *testing.T) {
 }
 
 func TestFileOperationError(t *testing.T) {
-	err := FileOperationError("WRITE", "/tmp/test.txt", "disk full", fmt.Errorf("no space left"))
+	err := FileOperationError("WRITE", "/tmp/test.txt", "disk full", errors.New("no space left"))
 
 	assert.NotNil(t, err)
 	assert.Equal(t, ErrorTypeIO, err.Type)
@@ -87,7 +87,7 @@ func TestNetworkError(t *testing.T) {
 		"CONNECT",
 		"api.example.com:443",
 		"connection timeout",
-		fmt.Errorf("timeout"),
+		errors.New("timeout"),
 	)
 
 	assert.NotNil(t, err)
@@ -103,7 +103,7 @@ func TestWebSocketError(t *testing.T) {
 		"SEND_MESSAGE",
 		"client-123",
 		"client disconnected",
-		fmt.Errorf("broken pipe"),
+		errors.New("broken pipe"),
 	)
 
 	assert.NotNil(t, err)
@@ -114,7 +114,7 @@ func TestWebSocketError(t *testing.T) {
 }
 
 func TestServerError(t *testing.T) {
-	err := ServerError("BIND_PORT", "failed to bind to port 8080", fmt.Errorf("address in use"))
+	err := ServerError("BIND_PORT", "failed to bind to port 8080", errors.New("address in use"))
 
 	assert.NotNil(t, err)
 	assert.Equal(t, ErrorTypeNetwork, err.Type)
@@ -128,7 +128,7 @@ func TestComponentError(t *testing.T) {
 		"Button",
 		"/components/button.templ",
 		"syntax error",
-		fmt.Errorf("unexpected token"),
+		errors.New("unexpected token"),
 	)
 
 	assert.NotNil(t, err)
@@ -147,7 +147,7 @@ func TestScannerError(t *testing.T) {
 		"DIRECTORY",
 		"/components",
 		"access denied",
-		fmt.Errorf("permission denied"),
+		errors.New("permission denied"),
 	)
 
 	assert.NotNil(t, err)
@@ -167,7 +167,7 @@ func TestRegistryError(t *testing.T) {
 }
 
 func TestCLIError(t *testing.T) {
-	err := CLIError("SERVE", "invalid port number", fmt.Errorf("not a number"))
+	err := CLIError("SERVE", "invalid port number", errors.New("not a number"))
 
 	assert.NotNil(t, err)
 	assert.Equal(t, ErrorTypeValidation, err.Type)
@@ -258,7 +258,7 @@ func TestPathValidationError(t *testing.T) {
 }
 
 func TestWithLocationInfo(t *testing.T) {
-	originalErr := fmt.Errorf("syntax error")
+	originalErr := errors.New("syntax error")
 	enhancedErr := WithLocationInfo(originalErr, "/components/button.templ", 42, 10)
 
 	var templErr *TemplarError
@@ -270,7 +270,7 @@ func TestWithLocationInfo(t *testing.T) {
 }
 
 func TestWithComponentInfo(t *testing.T) {
-	originalErr := fmt.Errorf("compilation failed")
+	originalErr := errors.New("compilation failed")
 	enhancedErr := WithComponentInfo(originalErr, "HeaderComponent")
 
 	var templErr *TemplarError
@@ -280,7 +280,7 @@ func TestWithComponentInfo(t *testing.T) {
 }
 
 func TestWithOperationContext(t *testing.T) {
-	originalErr := fmt.Errorf("database error")
+	originalErr := errors.New("database error")
 	context := map[string]interface{}{
 		"query":    "SELECT * FROM users",
 		"duration": "1.5s",
@@ -301,7 +301,7 @@ func TestWithOperationContext_NilError(t *testing.T) {
 }
 
 func TestGetRootCause(t *testing.T) {
-	rootErr := fmt.Errorf("connection refused")
+	rootErr := errors.New("connection refused")
 	wrappedErr := fmt.Errorf("database error: %w", rootErr)
 	templErr := WrapBuild(wrappedErr, "ERR_DB_CONNECT", "database connection failed", "database")
 
@@ -311,7 +311,7 @@ func TestGetRootCause(t *testing.T) {
 }
 
 func TestGetErrorChain(t *testing.T) {
-	rootErr := fmt.Errorf("connection refused")
+	rootErr := errors.New("connection refused")
 	wrappedErr := fmt.Errorf("database error: %w", rootErr)
 	templErr := WrapBuild(wrappedErr, "ERR_DB_CONNECT", "database connection failed", "database")
 
@@ -322,7 +322,7 @@ func TestGetErrorChain(t *testing.T) {
 }
 
 func TestHasErrorCode(t *testing.T) {
-	err := NewBuildError("ERR_COMPILE", "compilation failed", fmt.Errorf("syntax error"))
+	err := NewBuildError("ERR_COMPILE", "compilation failed", errors.New("syntax error"))
 
 	assert.True(t, HasErrorCode(err, "ERR_COMPILE"))
 	assert.False(t, HasErrorCode(err, "ERR_NETWORK"))
@@ -341,13 +341,13 @@ func TestErrorChainingConsistency(t *testing.T) {
 		name string
 		err  *TemplarError
 	}{
-		{"ServiceError", ServiceError("TEST", "OP", "message", fmt.Errorf("cause"))},
-		{"InitError", InitError("OP", "message", fmt.Errorf("cause"))},
-		{"BuildServiceError", BuildServiceError("OP", "message", fmt.Errorf("cause"))},
-		{"ServeServiceError", ServeServiceError("OP", "message", fmt.Errorf("cause"))},
-		{"NetworkError", NetworkError("OP", "endpoint", "message", fmt.Errorf("cause"))},
-		{"ComponentError", ComponentError("OP", "comp", "path", "message", fmt.Errorf("cause"))},
-		{"CLIError", CLIError("CMD", "message", fmt.Errorf("cause"))},
+		{"ServiceError", ServiceError("TEST", "OP", "message", errors.New("cause"))},
+		{"InitError", InitError("OP", "message", errors.New("cause"))},
+		{"BuildServiceError", BuildServiceError("OP", "message", errors.New("cause"))},
+		{"ServeServiceError", ServeServiceError("OP", "message", errors.New("cause"))},
+		{"NetworkError", NetworkError("OP", "endpoint", "message", errors.New("cause"))},
+		{"ComponentError", ComponentError("OP", "comp", "path", "message", errors.New("cause"))},
+		{"CLIError", CLIError("CMD", "message", errors.New("cause"))},
 		{"SecurityViolation", SecurityViolation("OP", "detail", map[string]interface{}{})},
 	}
 
@@ -381,12 +381,12 @@ func TestErrorPatternConsistency(t *testing.T) {
 	assert.Equal(t, "SERVE", serveErr.Component)
 }
 
-// Benchmark tests for error creation performance
+// Benchmark tests for error creation performance.
 func BenchmarkServiceError(b *testing.B) {
-	cause := fmt.Errorf("original error")
+	cause := errors.New("original error")
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = ServiceError("BUILD", "COMPILE", "compilation failed", cause)
 	}
 }
@@ -398,18 +398,18 @@ func BenchmarkSecurityViolation(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = SecurityViolation("UNAUTHORIZED_ACCESS", "unauthorized access attempt", context)
 	}
 }
 
 func BenchmarkErrorChainTraversal(b *testing.B) {
-	rootErr := fmt.Errorf("connection refused")
+	rootErr := errors.New("connection refused")
 	wrappedErr := fmt.Errorf("database error: %w", rootErr)
 	templErr := WrapBuild(wrappedErr, "ERR_DB_CONNECT", "database connection failed", "database")
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = GetErrorChain(templErr)
 	}
 }

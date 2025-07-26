@@ -12,7 +12,7 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// ComponentAccessibilityTester implements AccessibilityTester for testing components
+// ComponentAccessibilityTester implements AccessibilityTester for testing components.
 type ComponentAccessibilityTester struct {
 	engine   AccessibilityEngine
 	registry interfaces.ComponentRegistry
@@ -21,7 +21,7 @@ type ComponentAccessibilityTester struct {
 	config   TesterConfig
 }
 
-// TesterConfig contains configuration for the accessibility tester
+// TesterConfig contains configuration for the accessibility tester.
 type TesterConfig struct {
 	DefaultWCAGLevel   WCAGLevel     `json:"default_wcag_level"`
 	DefaultTimeout     time.Duration `json:"default_timeout"`
@@ -31,7 +31,7 @@ type TesterConfig struct {
 	MaxConcurrentTests int           `json:"max_concurrent_tests"`
 }
 
-// NewComponentAccessibilityTester creates a new accessibility tester
+// NewComponentAccessibilityTester creates a new accessibility tester.
 func NewComponentAccessibilityTester(
 	registry interfaces.ComponentRegistry,
 	renderer *renderer.ComponentRenderer,
@@ -64,7 +64,7 @@ func NewComponentAccessibilityTester(
 	}
 }
 
-// TestComponent runs accessibility tests on a single component
+// TestComponent runs accessibility tests on a single component.
 func (tester *ComponentAccessibilityTester) TestComponent(
 	ctx context.Context,
 	componentName string,
@@ -123,7 +123,7 @@ func (tester *ComponentAccessibilityTester) TestComponent(
 	return report, nil
 }
 
-// TestHTML runs accessibility tests on raw HTML content
+// TestHTML runs accessibility tests on raw HTML content.
 func (tester *ComponentAccessibilityTester) TestHTML(
 	ctx context.Context,
 	html string,
@@ -132,7 +132,7 @@ func (tester *ComponentAccessibilityTester) TestHTML(
 	return tester.engine.Analyze(ctx, html, config)
 }
 
-// TestURL runs accessibility tests on a live web page
+// TestURL runs accessibility tests on a live web page.
 func (tester *ComponentAccessibilityTester) TestURL(
 	ctx context.Context,
 	url string,
@@ -140,28 +140,30 @@ func (tester *ComponentAccessibilityTester) TestURL(
 ) (*AccessibilityReport, error) {
 	// For now, this would require a browser engine integration
 	// This is a placeholder for future browser-based testing
-	return nil, fmt.Errorf("URL testing not yet implemented - requires browser engine")
+	return nil, errors.New("URL testing not yet implemented - requires browser engine")
 }
 
-// GetAvailableRules returns all available accessibility rules
+// GetAvailableRules returns all available accessibility rules.
 func (tester *ComponentAccessibilityTester) GetAvailableRules() []AccessibilityRule {
 	engine := tester.engine.(*DefaultAccessibilityEngine)
 	rules := []AccessibilityRule{}
 	for _, rule := range engine.rules {
 		rules = append(rules, rule)
 	}
+
 	return rules
 }
 
-// GetRulesByWCAGLevel returns rules for a specific WCAG level
+// GetRulesByWCAGLevel returns rules for a specific WCAG level.
 func (tester *ComponentAccessibilityTester) GetRulesByWCAGLevel(
 	level WCAGLevel,
 ) []AccessibilityRule {
 	engine := tester.engine.(*DefaultAccessibilityEngine)
+
 	return engine.getApplicableRules(level, nil, nil)
 }
 
-// TestAllComponents runs accessibility tests on all registered components
+// TestAllComponents runs accessibility tests on all registered components.
 func (tester *ComponentAccessibilityTester) TestAllComponents(
 	ctx context.Context,
 ) (map[string]*AccessibilityReport, error) {
@@ -182,6 +184,7 @@ func (tester *ComponentAccessibilityTester) TestAllComponents(
 		report, err := tester.TestComponent(ctx, component.Name, defaultProps)
 		if err != nil {
 			tester.logger.Warn(ctx, err, "Failed to test component", "component", component.Name)
+
 			continue
 		}
 
@@ -191,7 +194,7 @@ func (tester *ComponentAccessibilityTester) TestAllComponents(
 	return reports, nil
 }
 
-// TestComponentWithMockData tests a component using mock data generation
+// TestComponentWithMockData tests a component using mock data generation.
 func (tester *ComponentAccessibilityTester) TestComponentWithMockData(
 	ctx context.Context,
 	componentName string,
@@ -207,7 +210,7 @@ func (tester *ComponentAccessibilityTester) TestComponentWithMockData(
 	return tester.TestComponent(ctx, componentName, mockProps)
 }
 
-// AutoFix attempts to automatically fix accessibility issues in HTML
+// AutoFix attempts to automatically fix accessibility issues in HTML.
 func (tester *ComponentAccessibilityTester) AutoFix(
 	ctx context.Context,
 	html string,
@@ -216,7 +219,7 @@ func (tester *ComponentAccessibilityTester) AutoFix(
 	return tester.engine.AutoFix(ctx, html, violations)
 }
 
-// GetAccessibilityScoreForComponent returns a simplified accessibility score
+// GetAccessibilityScoreForComponent returns a simplified accessibility score.
 func (tester *ComponentAccessibilityTester) GetAccessibilityScoreForComponent(
 	ctx context.Context,
 	componentName string,
@@ -229,7 +232,7 @@ func (tester *ComponentAccessibilityTester) GetAccessibilityScoreForComponent(
 	return report.Summary.OverallScore, nil
 }
 
-// GetAccessibilityInsights provides insights and recommendations for a component
+// GetAccessibilityInsights provides insights and recommendations for a component.
 func (tester *ComponentAccessibilityTester) GetAccessibilityInsights(
 	ctx context.Context,
 	componentName string,
@@ -252,7 +255,7 @@ func (tester *ComponentAccessibilityTester) GetAccessibilityInsights(
 	return insights, nil
 }
 
-// renderComponentToHTML renders a component to HTML using the renderer
+// renderComponentToHTML renders a component to HTML using the renderer.
 func (tester *ComponentAccessibilityTester) renderComponentToHTML(
 	ctx context.Context,
 	component *types.ComponentInfo,
@@ -283,7 +286,7 @@ func (tester *ComponentAccessibilityTester) renderComponentToHTML(
 	return fmt.Sprintf(wrapper, componentHTML), nil
 }
 
-// generateMockHTML creates mock HTML for testing based on component name patterns
+// generateMockHTML creates mock HTML for testing based on component name patterns.
 func (tester *ComponentAccessibilityTester) generateMockHTML(
 	component *types.ComponentInfo,
 	props map[string]interface{},
@@ -299,6 +302,7 @@ func (tester *ComponentAccessibilityTester) generateMockHTML(
 				text = str
 			}
 		}
+
 		return fmt.Sprintf(`<button type="button">%s</button>`, text)
 
 	case strings.Contains(name, "form"):
@@ -346,7 +350,7 @@ func (tester *ComponentAccessibilityTester) generateMockHTML(
 	}
 }
 
-// getDefaultPropsForComponent returns default props for a component
+// getDefaultPropsForComponent returns default props for a component.
 func (tester *ComponentAccessibilityTester) getDefaultPropsForComponent(
 	component *types.ComponentInfo,
 ) map[string]interface{} {
@@ -356,19 +360,19 @@ func (tester *ComponentAccessibilityTester) getDefaultPropsForComponent(
 	for _, param := range component.Parameters {
 		switch strings.ToLower(param.Name) {
 		case "text", "title", "label":
-			props[param.Name] = fmt.Sprintf("Test %s", param.Name)
+			props[param.Name] = "Test " + param.Name
 		case "variant", "type":
 			props[param.Name] = "default"
 		case "disabled", "required":
 			props[param.Name] = false
 		case "placeholder":
-			props[param.Name] = fmt.Sprintf("Enter %s", param.Name)
+			props[param.Name] = "Enter " + param.Name
 		case "href", "url", "link":
 			props[param.Name] = "#"
 		case "alt", "alttext":
 			props[param.Name] = "Alt text description"
 		case "id":
-			props[param.Name] = fmt.Sprintf("%s-test-id", strings.ToLower(component.Name))
+			props[param.Name] = strings.ToLower(component.Name) + "-test-id"
 		default:
 			// Use default value if available
 			if param.Default != nil {
@@ -380,7 +384,7 @@ func (tester *ComponentAccessibilityTester) getDefaultPropsForComponent(
 	return props
 }
 
-// generateMockPropsForComponent generates realistic mock data for component props
+// generateMockPropsForComponent generates realistic mock data for component props.
 func (tester *ComponentAccessibilityTester) generateMockPropsForComponent(
 	component *types.ComponentInfo,
 ) map[string]interface{} {
@@ -406,7 +410,7 @@ func (tester *ComponentAccessibilityTester) generateMockPropsForComponent(
 	return props
 }
 
-// generateMockString generates mock strings based on parameter name patterns
+// generateMockString generates mock strings based on parameter name patterns.
 func (tester *ComponentAccessibilityTester) generateMockString(paramName string) string {
 	name := strings.ToLower(paramName)
 
@@ -424,7 +428,7 @@ func (tester *ComponentAccessibilityTester) generateMockString(paramName string)
 	case strings.Contains(name, "href"), strings.Contains(name, "url"):
 		return "#test-link"
 	case strings.Contains(name, "id"):
-		return fmt.Sprintf("test-%s", name)
+		return "test-" + name
 	case strings.Contains(name, "class"):
 		return "test-class"
 	case strings.Contains(name, "name"):
@@ -434,7 +438,7 @@ func (tester *ComponentAccessibilityTester) generateMockString(paramName string)
 	}
 }
 
-// Helper methods for insights
+// Helper methods for insights.
 func (tester *ComponentAccessibilityTester) getHighestCompliantLevel(
 	report *AccessibilityReport,
 ) WCAGLevel {
@@ -447,6 +451,7 @@ func (tester *ComponentAccessibilityTester) getHighestCompliantLevel(
 	if report.Summary.WCAGCompliance.LevelA.Status == StatusCompliant {
 		return WCAGLevelA
 	}
+
 	return WCAGLevelA // Default
 }
 
@@ -464,6 +469,7 @@ func (tester *ComponentAccessibilityTester) getCriticalIssues(
 			})
 		}
 	}
+
 	return issues
 }
 
@@ -481,6 +487,7 @@ func (tester *ComponentAccessibilityTester) getQuickWins(
 			})
 		}
 	}
+
 	return issues
 }
 
@@ -523,6 +530,7 @@ func (tester *ComponentAccessibilityTester) getNextSteps(report *AccessibilityRe
 			steps,
 			"Great! No accessibility violations found. Consider testing with screen reader.",
 		)
+
 		return steps
 	}
 
@@ -589,7 +597,7 @@ func (tester *ComponentAccessibilityTester) isQuickFix(violation AccessibilityVi
 	return false
 }
 
-// AccessibilityInsights provides high-level insights about component accessibility
+// AccessibilityInsights provides high-level insights about component accessibility.
 type AccessibilityInsights struct {
 	ComponentName   string               `json:"component_name"`
 	OverallScore    float64              `json:"overall_score"`
@@ -600,7 +608,7 @@ type AccessibilityInsights struct {
 	NextSteps       []string             `json:"next_steps"`
 }
 
-// AccessibilityIssue represents a specific issue with fix effort estimation
+// AccessibilityIssue represents a specific issue with fix effort estimation.
 type AccessibilityIssue struct {
 	Rule        string          `json:"rule"`
 	Description string          `json:"description"`
@@ -608,7 +616,7 @@ type AccessibilityIssue struct {
 	FixEffort   FixEffort       `json:"fix_effort"`
 }
 
-// FixEffort represents the estimated effort to fix an accessibility issue
+// FixEffort represents the estimated effort to fix an accessibility issue.
 type FixEffort string
 
 const (

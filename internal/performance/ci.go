@@ -10,14 +10,14 @@ import (
 	"time"
 )
 
-// CIIntegration handles CI/CD pipeline integration for performance monitoring
+// CIIntegration handles CI/CD pipeline integration for performance monitoring.
 type CIIntegration struct {
 	detector         *PerformanceDetector
 	outputFormat     string // "json", "junit", "github", "text"
 	failOnRegression bool
 }
 
-// NewCIIntegration creates a new CI integration
+// NewCIIntegration creates a new CI integration.
 func NewCIIntegration(
 	detector *PerformanceDetector,
 	outputFormat string,
@@ -30,7 +30,7 @@ func NewCIIntegration(
 	}
 }
 
-// RunPerformanceCheck executes full performance check for CI/CD
+// RunPerformanceCheck executes full performance check for CI/CD.
 func (ci *CIIntegration) RunPerformanceCheck(benchmarkPackages []string, outputFile string) error {
 	// Step 1: Run benchmarks
 	fmt.Println("🔍 Running performance benchmarks...")
@@ -47,6 +47,7 @@ func (ci *CIIntegration) RunPerformanceCheck(benchmarkPackages []string, outputF
 
 	if len(results) == 0 {
 		fmt.Println("⚠️  No benchmark results found")
+
 		return nil
 	}
 
@@ -82,20 +83,22 @@ func (ci *CIIntegration) RunPerformanceCheck(benchmarkPackages []string, outputF
 	}
 
 	fmt.Printf("✅ Performance check completed. Found %d regressions\n", len(regressions))
+
 	return nil
 }
 
-// validatePackagePaths validates package paths to prevent command injection
+// validatePackagePaths validates package paths to prevent command injection.
 func validatePackagePaths(packages []string) error {
 	for _, pkg := range packages {
 		if err := validateSinglePackagePath(pkg); err != nil {
 			return fmt.Errorf("invalid package path '%s': %w", pkg, err)
 		}
 	}
+
 	return nil
 }
 
-// validateSinglePackagePath validates a single package path
+// validateSinglePackagePath validates a single package path.
 func validateSinglePackagePath(pkg string) error {
 	// Check for dangerous characters that could enable command injection
 	dangerousChars := []string{
@@ -111,23 +114,23 @@ func validateSinglePackagePath(pkg string) error {
 
 	// Check for path traversal attempts
 	if strings.Contains(pkg, "..") {
-		return fmt.Errorf("path traversal detected")
+		return errors.New("path traversal detected")
 	}
 
 	// Ensure package path is relative and within allowed directories
 	if filepath.IsAbs(pkg) {
-		return fmt.Errorf("absolute paths not allowed")
+		return errors.New("absolute paths not allowed")
 	}
 
 	// Additional validation: must start with ./ or be a simple path
 	if !strings.HasPrefix(pkg, "./") && !isSimplePackagePath(pkg) {
-		return fmt.Errorf("invalid package path format")
+		return errors.New("invalid package path format")
 	}
 
 	return nil
 }
 
-// isSimplePackagePath checks if path is a simple Go package path
+// isSimplePackagePath checks if path is a simple Go package path.
 func isSimplePackagePath(path string) bool {
 	// Allow simple package paths like "internal/build"
 	for _, char := range path {
@@ -138,10 +141,11 @@ func isSimplePackagePath(path string) bool {
 			return false
 		}
 	}
+
 	return true
 }
 
-// runBenchmarks executes Go benchmarks and returns output
+// runBenchmarks executes Go benchmarks and returns output.
 func (ci *CIIntegration) runBenchmarks(packages []string) (string, error) {
 	// Validate package paths to prevent command injection
 	if err := validatePackagePaths(packages); err != nil {
@@ -161,7 +165,7 @@ func (ci *CIIntegration) runBenchmarks(packages []string) (string, error) {
 	return string(output), nil
 }
 
-// PerformanceReport contains comprehensive performance analysis
+// PerformanceReport contains comprehensive performance analysis.
 type PerformanceReport struct {
 	Timestamp   time.Time             `json:"timestamp"`
 	GitCommit   string                `json:"git_commit,omitempty"`
@@ -172,7 +176,7 @@ type PerformanceReport struct {
 	Summary     ReportSummary         `json:"summary"`
 }
 
-// ReportSummary provides high-level performance metrics
+// ReportSummary provides high-level performance metrics.
 type ReportSummary struct {
 	TotalBenchmarks     int     `json:"total_benchmarks"`
 	RegressionsFound    int     `json:"regressions_found"`
@@ -184,7 +188,7 @@ type ReportSummary struct {
 	OverallHealthScore  float64 `json:"overall_health_score"` // 0-100 scale
 }
 
-// GenerateReport creates comprehensive performance report
+// GenerateReport creates comprehensive performance report.
 func (ci *CIIntegration) GenerateReport(
 	results []BenchmarkResult,
 	regressions []RegressionDetection,
@@ -202,7 +206,7 @@ func (ci *CIIntegration) GenerateReport(
 	}
 }
 
-// calculateSummary computes report summary statistics
+// calculateSummary computes report summary statistics.
 func (ci *CIIntegration) calculateSummary(
 	results []BenchmarkResult,
 	regressions []RegressionDetection,
@@ -256,7 +260,7 @@ func (ci *CIIntegration) calculateSummary(
 	return summary
 }
 
-// OutputResults outputs performance report in the specified format
+// OutputResults outputs performance report in the specified format.
 func (ci *CIIntegration) OutputResults(report PerformanceReport, outputFile string) error {
 	switch ci.outputFormat {
 	case "json":
@@ -272,7 +276,7 @@ func (ci *CIIntegration) OutputResults(report PerformanceReport, outputFile stri
 	}
 }
 
-// outputJSON outputs report in JSON format
+// outputJSON outputs report in JSON format.
 func (ci *CIIntegration) outputJSON(report PerformanceReport, outputFile string) error {
 	data, err := json.MarshalIndent(report, "", "  ")
 	if err != nil {
@@ -284,10 +288,11 @@ func (ci *CIIntegration) outputJSON(report PerformanceReport, outputFile string)
 	}
 
 	fmt.Println(string(data))
+
 	return nil
 }
 
-// outputText outputs report in human-readable text format
+// outputText outputs report in human-readable text format.
 func (ci *CIIntegration) outputText(report PerformanceReport, outputFile string) error {
 	var output strings.Builder
 
@@ -295,7 +300,7 @@ func (ci *CIIntegration) outputText(report PerformanceReport, outputFile string)
 	output.WriteString("=====================\n\n")
 
 	// Summary
-	output.WriteString(fmt.Sprintf("📊 Summary:\n"))
+	output.WriteString("📊 Summary:\n")
 	output.WriteString(fmt.Sprintf("  • Total Benchmarks: %d\n", report.Summary.TotalBenchmarks))
 	output.WriteString(fmt.Sprintf("  • Regressions Found: %d\n", report.Summary.RegressionsFound))
 	output.WriteString(
@@ -371,7 +376,7 @@ func (ci *CIIntegration) outputText(report PerformanceReport, outputFile string)
 			count = len(sortedResults)
 		}
 
-		for i := 0; i < count; i++ {
+		for i := range count {
 			result := sortedResults[i]
 			output.WriteString(
 				fmt.Sprintf("  %d. %s: %.2f ns/op", i+1, result.Name, result.NsPerOp),
@@ -396,10 +401,11 @@ func (ci *CIIntegration) outputText(report PerformanceReport, outputFile string)
 	}
 
 	fmt.Print(result)
+
 	return nil
 }
 
-// outputGitHub outputs report in GitHub Actions format
+// outputGitHub outputs report in GitHub Actions format.
 func (ci *CIIntegration) outputGitHub(report PerformanceReport, outputFile string) error {
 	var output strings.Builder
 
@@ -438,10 +444,11 @@ func (ci *CIIntegration) outputGitHub(report PerformanceReport, outputFile strin
 	}
 
 	fmt.Print(result)
+
 	return nil
 }
 
-// outputJUnit outputs report in JUnit XML format for CI integration
+// outputJUnit outputs report in JUnit XML format for CI integration.
 func (ci *CIIntegration) outputJUnit(report PerformanceReport, outputFile string) error {
 	var output strings.Builder
 
@@ -473,6 +480,7 @@ func (ci *CIIntegration) outputJUnit(report PerformanceReport, outputFile string
 				output.WriteString("</failure>\n")
 				output.WriteString("  ")
 				hasRegression = true
+
 				break
 			}
 		}
@@ -494,10 +502,11 @@ func (ci *CIIntegration) outputJUnit(report PerformanceReport, outputFile string
 	}
 
 	fmt.Print(result)
+
 	return nil
 }
 
-// countCriticalRegressions counts critical regressions for CI failure logic
+// countCriticalRegressions counts critical regressions for CI failure logic.
 func (ci *CIIntegration) countCriticalRegressions(regressions []RegressionDetection) int {
 	count := 0
 	for _, regression := range regressions {
@@ -505,10 +514,11 @@ func (ci *CIIntegration) countCriticalRegressions(regressions []RegressionDetect
 			count++
 		}
 	}
+
 	return count
 }
 
-// SetupGitHubActionsWorkflow creates a GitHub Actions workflow for performance monitoring
+// SetupGitHubActionsWorkflow creates a GitHub Actions workflow for performance monitoring.
 func (ci *CIIntegration) SetupGitHubActionsWorkflow(workflowDir string) error {
 	workflowContent := `name: Performance Regression Detection
 

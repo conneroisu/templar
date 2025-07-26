@@ -14,14 +14,14 @@ import (
 
 // Missing type stubs - these would need proper implementation for production use
 
-// MemoryLeakPreventionManager manages WebSocket connection memory leaks
+// MemoryLeakPreventionManager manages WebSocket connection memory leaks.
 type MemoryLeakPreventionManager struct {
 	maxConnections int
 	connections    map[string]*ConnectionInfo
 	mutex          sync.RWMutex
 }
 
-// ConnectionInfo holds connection metadata
+// ConnectionInfo holds connection metadata.
 type ConnectionInfo struct {
 	ID        string
 	CreatedAt time.Time
@@ -30,7 +30,7 @@ type ConnectionInfo struct {
 	Conn      *websocket.Conn
 }
 
-// WebSocketMemoryMetrics holds WebSocket memory metrics
+// WebSocketMemoryMetrics holds WebSocket memory metrics.
 type WebSocketMemoryMetrics struct {
 	ActiveConnections int
 	TotalConnections  int
@@ -38,7 +38,7 @@ type WebSocketMemoryMetrics struct {
 	MemoryUsageBytes  int64
 }
 
-// NewMemoryLeakPreventionManager creates a new memory manager stub
+// NewMemoryLeakPreventionManager creates a new memory manager stub.
 func NewMemoryLeakPreventionManager(cfg *config.Config) *MemoryLeakPreventionManager {
 	return &MemoryLeakPreventionManager{
 		maxConnections: 100,
@@ -46,7 +46,7 @@ func NewMemoryLeakPreventionManager(cfg *config.Config) *MemoryLeakPreventionMan
 	}
 }
 
-// RegisterConnection registers a connection stub
+// RegisterConnection registers a connection stub.
 func (m *MemoryLeakPreventionManager) RegisterConnection(
 	conn *websocket.Conn,
 	remoteAddr string,
@@ -66,20 +66,21 @@ func (m *MemoryLeakPreventionManager) RegisterConnection(
 	return info, nil
 }
 
-// UnregisterConnection unregisters a connection stub
+// UnregisterConnection unregisters a connection stub.
 func (m *MemoryLeakPreventionManager) UnregisterConnection(connID string) error {
 	m.mutex.Lock()
 	delete(m.connections, connID)
 	m.mutex.Unlock()
+
 	return nil
 }
 
-// UpdateConnectionActivity updates connection activity stub
+// UpdateConnectionActivity updates connection activity stub.
 func (m *MemoryLeakPreventionManager) UpdateConnectionActivity(connID string) {
 	// Stub implementation
 }
 
-// GetMemoryMetrics returns memory metrics stub
+// GetMemoryMetrics returns memory metrics stub.
 func (m *MemoryLeakPreventionManager) GetMemoryMetrics() WebSocketMemoryMetrics {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
@@ -92,17 +93,17 @@ func (m *MemoryLeakPreventionManager) GetMemoryMetrics() WebSocketMemoryMetrics 
 	}
 }
 
-// IsHealthy returns if the manager is healthy stub
+// IsHealthy returns if the manager is healthy stub.
 func (m *MemoryLeakPreventionManager) IsHealthy() bool {
 	return true
 }
 
-// Shutdown shuts down the manager stub
+// Shutdown shuts down the manager stub.
 func (m *MemoryLeakPreventionManager) Shutdown(ctx context.Context) error {
 	return nil
 }
 
-// ForceCleanupStaleConnections cleans up stale connections stub
+// ForceCleanupStaleConnections cleans up stale connections stub.
 func (m *MemoryLeakPreventionManager) ForceCleanupStaleConnections() int {
 	return 0
 }
@@ -123,7 +124,7 @@ func (m *MemoryLeakPreventionManager) ForceCleanupStaleConnections() int {
 // - Connection timeout enforcement with activity monitoring
 // - Periodic cleanup of stale and abandoned connections
 // - Resource limit enforcement to prevent unbounded growth
-// - Comprehensive metrics for leak detection and monitoring
+// - Comprehensive metrics for leak detection and monitoring.
 type EnhancedWebSocketManager struct {
 	// Original WebSocket functionality
 	*WebSocketManager
@@ -144,7 +145,7 @@ type EnhancedWebSocketManager struct {
 	enhancedMetrics *EnhancedWebSocketMetrics // Advanced metrics collection
 }
 
-// EnhancedClientInfo extends ConnectionInfo with additional WebSocket-specific data
+// EnhancedClientInfo extends ConnectionInfo with additional WebSocket-specific data.
 type EnhancedClientInfo struct {
 	*ConnectionInfo // Base connection information
 
@@ -169,7 +170,7 @@ type EnhancedClientInfo struct {
 	mutex sync.RWMutex // Protects client info updates
 }
 
-// EnhancedWebSocketMetrics provides comprehensive WebSocket performance and health metrics
+// EnhancedWebSocketMetrics provides comprehensive WebSocket performance and health metrics.
 type EnhancedWebSocketMetrics struct {
 	// Base metrics from memory manager
 	*WebSocketMemoryMetrics
@@ -196,7 +197,7 @@ type EnhancedWebSocketMetrics struct {
 	mutex sync.RWMutex // Protects metrics updates
 }
 
-// NewEnhancedWebSocketManager creates a comprehensive WebSocket manager with memory leak prevention
+// NewEnhancedWebSocketManager creates a comprehensive WebSocket manager with memory leak prevention.
 func NewEnhancedWebSocketManager(
 	originValidator OriginValidator,
 	rateLimiter *TokenBucketManager,
@@ -232,11 +233,12 @@ func NewEnhancedWebSocketManager(
 	return enhanced
 }
 
-// HandleWebSocket handles WebSocket connections with comprehensive memory leak prevention
+// HandleWebSocket handles WebSocket connections with comprehensive memory leak prevention.
 func (em *EnhancedWebSocketManager) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	// Check if manager is shut down
 	if em.isShutdown {
 		http.Error(w, "Service Unavailable", http.StatusServiceUnavailable)
+
 		return
 	}
 
@@ -244,7 +246,7 @@ func (em *EnhancedWebSocketManager) HandleWebSocket(w http.ResponseWriter, r *ht
 	em.WebSocketManager.HandleWebSocket(w, r)
 }
 
-// cleanupEnhancedClient performs comprehensive cleanup for enhanced clients
+// cleanupEnhancedClient performs comprehensive cleanup for enhanced clients.
 func (em *EnhancedWebSocketManager) cleanupEnhancedClient(client *EnhancedClientInfo) {
 	if client == nil {
 		return
@@ -269,7 +271,7 @@ func (em *EnhancedWebSocketManager) cleanupEnhancedClient(client *EnhancedClient
 	)
 }
 
-// startEnhancedMonitoring starts advanced monitoring and metrics collection
+// startEnhancedMonitoring starts advanced monitoring and metrics collection.
 func (em *EnhancedWebSocketManager) startEnhancedMonitoring() {
 	ticker := time.NewTicker(1 * time.Minute) // Update metrics every minute
 	defer ticker.Stop()
@@ -285,7 +287,7 @@ func (em *EnhancedWebSocketManager) startEnhancedMonitoring() {
 	}
 }
 
-// updateEnhancedMetrics calculates and updates comprehensive metrics
+// updateEnhancedMetrics calculates and updates comprehensive metrics.
 func (em *EnhancedWebSocketManager) updateEnhancedMetrics() {
 	// Get base memory metrics
 	memoryMetrics := em.memoryManager.GetMemoryMetrics()
@@ -351,7 +353,7 @@ func (em *EnhancedWebSocketManager) updateEnhancedMetrics() {
 	}
 }
 
-// calculateHealthScore computes overall system health score
+// calculateHealthScore computes overall system health score.
 func (em *EnhancedWebSocketManager) calculateHealthScore(
 	memoryMetrics *WebSocketMemoryMetrics,
 	errorRate float64,
@@ -399,7 +401,7 @@ func (em *EnhancedWebSocketManager) calculateHealthScore(
 	return score
 }
 
-// GetEnhancedMetrics returns comprehensive WebSocket metrics
+// GetEnhancedMetrics returns comprehensive WebSocket metrics.
 func (em *EnhancedWebSocketManager) GetEnhancedMetrics() EnhancedWebSocketMetrics {
 	em.enhancedMetrics.mutex.RLock()
 	defer em.enhancedMetrics.mutex.RUnlock()
@@ -421,12 +423,12 @@ func (em *EnhancedWebSocketManager) GetEnhancedMetrics() EnhancedWebSocketMetric
 	}
 }
 
-// GetMemoryManager returns the memory leak prevention manager for direct access
+// GetMemoryManager returns the memory leak prevention manager for direct access.
 func (em *EnhancedWebSocketManager) GetMemoryManager() *MemoryLeakPreventionManager {
 	return em.memoryManager
 }
 
-// IsHealthy returns whether the enhanced manager is healthy
+// IsHealthy returns whether the enhanced manager is healthy.
 func (em *EnhancedWebSocketManager) IsHealthy() bool {
 	if em.isShutdown {
 		return false
@@ -441,13 +443,14 @@ func (em *EnhancedWebSocketManager) IsHealthy() bool {
 
 		// Check enhanced metrics
 		metrics := em.GetEnhancedMetrics()
+
 		return metrics.HealthScore > 70.0 && metrics.ErrorRate < 5.0
 	}
 
 	return false
 }
 
-// Shutdown gracefully shuts down the enhanced WebSocket manager
+// Shutdown gracefully shuts down the enhanced WebSocket manager.
 func (em *EnhancedWebSocketManager) Shutdown(ctx context.Context) error {
 	var shutdownErr error
 
@@ -488,7 +491,7 @@ func (em *EnhancedWebSocketManager) Shutdown(ctx context.Context) error {
 	return shutdownErr
 }
 
-// ForceMemoryCleanup immediately cleans up stale connections and resources
+// ForceMemoryCleanup immediately cleans up stale connections and resources.
 func (em *EnhancedWebSocketManager) ForceMemoryCleanup() int {
 	return em.memoryManager.ForceCleanupStaleConnections()
 }

@@ -10,7 +10,7 @@ func BenchmarkErrorCollector_Add(b *testing.B) {
 	collector := NewErrorCollector()
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		err := BuildError{
 			Component: fmt.Sprintf("Component%d", i),
 			File:      fmt.Sprintf("file%d.go", i),
@@ -27,7 +27,7 @@ func BenchmarkErrorCollector_GetErrors(b *testing.B) {
 	collector := NewErrorCollector()
 
 	// Pre-populate with errors
-	for i := 0; i < 1000; i++ {
+	for i := range 1000 {
 		err := BuildError{
 			Component: fmt.Sprintf("Component%d", i),
 			File:      fmt.Sprintf("file%d.go", i),
@@ -40,7 +40,7 @@ func BenchmarkErrorCollector_GetErrors(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		collector.GetErrors()
 	}
 }
@@ -49,7 +49,7 @@ func BenchmarkErrorCollector_GetErrorsByFile(b *testing.B) {
 	collector := NewErrorCollector()
 
 	// Pre-populate with errors across multiple files
-	for i := 0; i < 1000; i++ {
+	for i := range 1000 {
 		err := BuildError{
 			Component: fmt.Sprintf("Component%d", i),
 			File:      fmt.Sprintf("file%d.go", i%10), // 10 different files
@@ -62,7 +62,7 @@ func BenchmarkErrorCollector_GetErrorsByFile(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		collector.GetErrorsByFile(fmt.Sprintf("file%d.go", i%10))
 	}
 }
@@ -71,7 +71,7 @@ func BenchmarkErrorCollector_GetErrorsByComponent(b *testing.B) {
 	collector := NewErrorCollector()
 
 	// Pre-populate with errors across multiple components
-	for i := 0; i < 1000; i++ {
+	for i := range 1000 {
 		err := BuildError{
 			Component: fmt.Sprintf("Component%d", i%20), // 20 different components
 			File:      fmt.Sprintf("file%d.go", i),
@@ -84,7 +84,7 @@ func BenchmarkErrorCollector_GetErrorsByComponent(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		collector.GetErrorsByComponent(fmt.Sprintf("Component%d", i%20))
 	}
 }
@@ -93,7 +93,7 @@ func BenchmarkErrorCollector_ErrorOverlay(b *testing.B) {
 	collector := NewErrorCollector()
 
 	// Pre-populate with errors
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		err := BuildError{
 			Component: fmt.Sprintf("Component%d", i),
 			File:      fmt.Sprintf("file%d.go", i),
@@ -107,18 +107,18 @@ func BenchmarkErrorCollector_ErrorOverlay(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		collector.ErrorOverlay()
 	}
 }
 
 func BenchmarkErrorCollector_Clear(b *testing.B) {
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		collector := NewErrorCollector()
 
 		// Add some errors
-		for j := 0; j < 100; j++ {
+		for j := range 100 {
 			err := BuildError{
 				Component: fmt.Sprintf("Component%d", j),
 				File:      fmt.Sprintf("file%d.go", j),
@@ -137,7 +137,7 @@ func BenchmarkErrorCollector_Memory(b *testing.B) {
 
 	collector := NewErrorCollector()
 
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		err := BuildError{
 			Component: fmt.Sprintf("Component%d", i),
 			File:      fmt.Sprintf("file%d.go", i),
@@ -157,7 +157,7 @@ unexpected token 'func' at line 15, column 1
 missing '}' at line 20, column 10`)
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		ParseTemplError(errorOutput, "TestComponent")
 	}
 }
@@ -174,7 +174,7 @@ func BenchmarkBuildError_Error(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = err.Error()
 	}
 }
@@ -188,7 +188,7 @@ func BenchmarkErrorSeverity_String(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		severity := severities[i%len(severities)]
 		_ = severity.String()
 	}

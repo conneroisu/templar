@@ -10,7 +10,7 @@ import (
 	"github.com/conneroisu/templar/internal/config"
 )
 
-// FrameworkManager manages CSS framework integration and setup
+// FrameworkManager manages CSS framework integration and setup.
 type FrameworkManager struct {
 	registry        *FrameworkRegistry
 	config          *config.Config
@@ -18,7 +18,7 @@ type FrameworkManager struct {
 	activeFramework string
 }
 
-// NewFrameworkManager creates a new framework manager
+// NewFrameworkManager creates a new framework manager.
 func NewFrameworkManager(cfg *config.Config, projectPath string) *FrameworkManager {
 	return &FrameworkManager{
 		registry:    NewFrameworkRegistry(),
@@ -27,7 +27,7 @@ func NewFrameworkManager(cfg *config.Config, projectPath string) *FrameworkManag
 	}
 }
 
-// Initialize initializes the framework manager and registers built-in frameworks
+// Initialize initializes the framework manager and registers built-in frameworks.
 func (m *FrameworkManager) Initialize(ctx context.Context) error {
 	// Register built-in frameworks
 	if err := m.registerBuiltinFrameworks(); err != nil {
@@ -47,7 +47,7 @@ func (m *FrameworkManager) Initialize(ctx context.Context) error {
 	return nil
 }
 
-// registerBuiltinFrameworks registers the built-in CSS framework plugins
+// registerBuiltinFrameworks registers the built-in CSS framework plugins.
 func (m *FrameworkManager) registerBuiltinFrameworks() error {
 	// Register Tailwind CSS
 	tailwind := NewTailwindPlugin()
@@ -70,7 +70,7 @@ func (m *FrameworkManager) registerBuiltinFrameworks() error {
 	return nil
 }
 
-// SetupFramework sets up a CSS framework with the given configuration
+// SetupFramework sets up a CSS framework with the given configuration.
 func (m *FrameworkManager) SetupFramework(
 	ctx context.Context,
 	frameworkName string,
@@ -142,7 +142,7 @@ func (m *FrameworkManager) SetupFramework(
 	return nil
 }
 
-// FrameworkSetupConfig represents setup configuration for a framework
+// FrameworkSetupConfig represents setup configuration for a framework.
 type FrameworkSetupConfig struct {
 	InstallMethod  string                 `json:"install_method"`
 	Version        string                 `json:"version,omitempty"`
@@ -154,7 +154,7 @@ type FrameworkSetupConfig struct {
 	Options        map[string]interface{} `json:"options,omitempty"`
 }
 
-// GetAvailableFrameworks returns a list of available CSS frameworks
+// GetAvailableFrameworks returns a list of available CSS frameworks.
 func (m *FrameworkManager) GetAvailableFrameworks() []FrameworkInfo {
 	var frameworks []FrameworkInfo
 
@@ -169,12 +169,12 @@ func (m *FrameworkManager) GetAvailableFrameworks() []FrameworkInfo {
 	return frameworks
 }
 
-// GetActiveFramework returns the currently active framework
+// GetActiveFramework returns the currently active framework.
 func (m *FrameworkManager) GetActiveFramework() string {
 	return m.activeFramework
 }
 
-// ProcessCSS processes CSS for the active framework
+// ProcessCSS processes CSS for the active framework.
 func (m *FrameworkManager) ProcessCSS(
 	ctx context.Context,
 	input []byte,
@@ -192,7 +192,7 @@ func (m *FrameworkManager) ProcessCSS(
 	return plugin.ProcessCSS(ctx, input, options)
 }
 
-// ExtractClasses extracts CSS classes from content for the active framework
+// ExtractClasses extracts CSS classes from content for the active framework.
 func (m *FrameworkManager) ExtractClasses(content string) ([]string, error) {
 	if m.activeFramework == "" {
 		return nil, nil
@@ -206,7 +206,7 @@ func (m *FrameworkManager) ExtractClasses(content string) ([]string, error) {
 	return plugin.ExtractClasses(content)
 }
 
-// OptimizeCSS optimizes CSS for the active framework
+// OptimizeCSS optimizes CSS for the active framework.
 func (m *FrameworkManager) OptimizeCSS(
 	ctx context.Context,
 	css []byte,
@@ -224,7 +224,7 @@ func (m *FrameworkManager) OptimizeCSS(
 	return plugin.OptimizeCSS(ctx, css, usedClasses)
 }
 
-// ExtractVariables extracts CSS variables from the active framework
+// ExtractVariables extracts CSS variables from the active framework.
 func (m *FrameworkManager) ExtractVariables(css []byte) (map[string]string, error) {
 	if m.activeFramework == "" {
 		return nil, nil
@@ -238,10 +238,10 @@ func (m *FrameworkManager) ExtractVariables(css []byte) (map[string]string, erro
 	return plugin.ExtractVariables(css)
 }
 
-// GenerateTheme generates a theme with custom variables
+// GenerateTheme generates a theme with custom variables.
 func (m *FrameworkManager) GenerateTheme(variables map[string]string) ([]byte, error) {
 	if m.activeFramework == "" {
-		return nil, fmt.Errorf("no active framework for theme generation")
+		return nil, errors.New("no active framework for theme generation")
 	}
 
 	plugin, exists := m.registry.Get(m.activeFramework)
@@ -252,10 +252,10 @@ func (m *FrameworkManager) GenerateTheme(variables map[string]string) ([]byte, e
 	return plugin.GenerateTheme(variables)
 }
 
-// GenerateStyleGuide generates a style guide for the active framework
+// GenerateStyleGuide generates a style guide for the active framework.
 func (m *FrameworkManager) GenerateStyleGuide(ctx context.Context) ([]byte, error) {
 	if m.activeFramework == "" {
-		return nil, fmt.Errorf("no active framework for style guide generation")
+		return nil, errors.New("no active framework for style guide generation")
 	}
 
 	plugin, exists := m.registry.Get(m.activeFramework)
@@ -266,7 +266,7 @@ func (m *FrameworkManager) GenerateStyleGuide(ctx context.Context) ([]byte, erro
 	return plugin.GenerateStyleGuide(ctx)
 }
 
-// GetFrameworkConfig returns the configuration for a framework
+// GetFrameworkConfig returns the configuration for a framework.
 func (m *FrameworkManager) GetFrameworkConfig(frameworkName string) (FrameworkConfig, error) {
 	config, exists := m.registry.GetConfig(frameworkName)
 	if !exists {
@@ -279,7 +279,7 @@ func (m *FrameworkManager) GetFrameworkConfig(frameworkName string) (FrameworkCo
 	return config, nil
 }
 
-// ValidateFramework validates the configuration and setup of a framework
+// ValidateFramework validates the configuration and setup of a framework.
 func (m *FrameworkManager) ValidateFramework(frameworkName string) error {
 	plugin, exists := m.registry.Get(frameworkName)
 	if !exists {
@@ -312,7 +312,7 @@ func (m *FrameworkManager) ValidateFramework(frameworkName string) error {
 	return nil
 }
 
-// GetComponentTemplates returns available component templates for a framework
+// GetComponentTemplates returns available component templates for a framework.
 func (m *FrameworkManager) GetComponentTemplates(
 	frameworkName string,
 ) ([]ComponentTemplate, error) {
@@ -326,7 +326,7 @@ func (m *FrameworkManager) GetComponentTemplates(
 	return m.getBuiltinTemplates(frameworkName), nil
 }
 
-// getBuiltinTemplates returns built-in component templates for a framework
+// getBuiltinTemplates returns built-in component templates for a framework.
 func (m *FrameworkManager) getBuiltinTemplates(frameworkName string) []ComponentTemplate {
 	switch strings.ToLower(frameworkName) {
 	case "tailwind":
@@ -340,7 +340,7 @@ func (m *FrameworkManager) getBuiltinTemplates(frameworkName string) []Component
 	}
 }
 
-// updateProjectConfig updates the project configuration with framework settings
+// updateProjectConfig updates the project configuration with framework settings.
 func (m *FrameworkManager) updateProjectConfig(
 	frameworkName string,
 	frameworkConfig FrameworkConfig,
@@ -375,7 +375,7 @@ func (m *FrameworkManager) updateProjectConfig(
 	return nil
 }
 
-// SwitchFramework switches to a different CSS framework
+// SwitchFramework switches to a different CSS framework.
 func (m *FrameworkManager) SwitchFramework(ctx context.Context, frameworkName string) error {
 	plugin, exists := m.registry.Get(frameworkName)
 	if !exists {
@@ -402,7 +402,7 @@ func (m *FrameworkManager) SwitchFramework(ctx context.Context, frameworkName st
 	return nil
 }
 
-// RemoveFramework removes a CSS framework from the project
+// RemoveFramework removes a CSS framework from the project.
 func (m *FrameworkManager) RemoveFramework(ctx context.Context, frameworkName string) error {
 	plugin, exists := m.registry.Get(frameworkName)
 	if !exists {

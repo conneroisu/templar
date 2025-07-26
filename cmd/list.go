@@ -98,6 +98,7 @@ func runList(cmd *cobra.Command, args []string) error {
 
 	if len(components) == 0 {
 		fmt.Println("No components found.")
+
 		return nil
 	}
 
@@ -155,6 +156,7 @@ func outputListJSON(components []*types.ComponentInfo) error {
 
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", "  ")
+
 	return encoder.Encode(output)
 }
 
@@ -193,6 +195,7 @@ func outputYAML(components []*types.ComponentInfo) error {
 			fmt.Fprintf(os.Stderr, "Warning: failed to close YAML encoder: %v\n", err)
 		}
 	}()
+
 	return encoder.Encode(output)
 }
 

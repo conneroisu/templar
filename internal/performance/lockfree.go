@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// LockFreeMetricCollector provides lock-free metric collection with minimal contention
+// LockFreeMetricCollector provides lock-free metric collection with minimal contention.
 type LockFreeMetricCollector struct {
 	// High-frequency write path (lock-free)
 	metricBuffer *LockFreeRingBuffer
@@ -25,7 +25,7 @@ type LockFreeMetricCollector struct {
 	maxMetrics int64
 }
 
-// LockFreeAggregate stores aggregated metric data using atomic operations
+// LockFreeAggregate stores aggregated metric data using atomic operations.
 type LockFreeAggregate struct {
 	// Atomic counters and values
 	count int64  // atomic
@@ -44,7 +44,7 @@ type LockFreeAggregate struct {
 	lastUpdate int64  // atomic (unix nano)
 }
 
-// LockFreeRingBuffer implements a lock-free ring buffer for metrics
+// LockFreeRingBuffer implements a lock-free ring buffer for metrics.
 type LockFreeRingBuffer struct {
 	buffer   []Metric
 	mask     int64 // buffer size - 1 (for power of 2 sizes)
@@ -53,12 +53,12 @@ type LockFreeRingBuffer struct {
 	size     int64 // buffer size (power of 2)
 }
 
-// MetricBatch represents a batch of metrics for efficient processing
+// MetricBatch represents a batch of metrics for efficient processing.
 type MetricBatch struct {
 	// Note: metrics field removed as unused
 }
 
-// NewLockFreeMetricCollector creates a new lock-free metric collector
+// NewLockFreeMetricCollector creates a new lock-free metric collector.
 func NewLockFreeMetricCollector(maxMetrics int) *LockFreeMetricCollector {
 	// Ensure buffer size is power of 2 for efficient masking
 	bufferSize := nextPowerOf2(maxMetrics)
@@ -75,7 +75,7 @@ func NewLockFreeMetricCollector(maxMetrics int) *LockFreeMetricCollector {
 	return collector
 }
 
-// NewLockFreeRingBuffer creates a new lock-free ring buffer
+// NewLockFreeRingBuffer creates a new lock-free ring buffer.
 func NewLockFreeRingBuffer(size int) *LockFreeRingBuffer {
 	// Ensure size is power of 2
 	size = nextPowerOf2(size)
@@ -87,7 +87,7 @@ func NewLockFreeRingBuffer(size int) *LockFreeRingBuffer {
 	}
 }
 
-// Record records a new metric using lock-free operations
+// Record records a new metric using lock-free operations.
 func (lfc *LockFreeMetricCollector) Record(metric Metric) {
 	// Add timestamp if not set (lock-free)
 	if metric.Timestamp.IsZero() {
@@ -104,7 +104,7 @@ func (lfc *LockFreeMetricCollector) Record(metric Metric) {
 	lfc.notifySubscribers(metric)
 }
 
-// Write writes a metric to the ring buffer using lock-free operations
+// Write writes a metric to the ring buffer using lock-free operations.
 func (rb *LockFreeRingBuffer) Write(metric Metric) {
 	// Get write position atomically
 	pos := atomic.AddInt64(&rb.writePos, 1) - 1
@@ -128,7 +128,7 @@ func (rb *LockFreeRingBuffer) Write(metric Metric) {
 	}
 }
 
-// updateAggregateAtomic updates metric aggregates using atomic operations
+// updateAggregateAtomic updates metric aggregates using atomic operations.
 func (lfc *LockFreeMetricCollector) updateAggregateAtomic(metric Metric) {
 	// Get or create aggregate for this metric type
 	aggInterface, loaded := lfc.aggregateMap.LoadOrStore(metric.Type, &LockFreeAggregate{
@@ -216,7 +216,7 @@ func (lfc *LockFreeMetricCollector) updateAggregateAtomic(metric Metric) {
 	agg.percMutex.Unlock()
 }
 
-// notifySubscribers notifies all subscribers with minimal lock contention
+// notifySubscribers notifies all subscribers with minimal lock contention.
 func (lfc *LockFreeMetricCollector) notifySubscribers(metric Metric) {
 	// Load current subscribers atomically
 	subscribers := lfc.subscribers.Load().([]chan<- Metric)
@@ -231,7 +231,7 @@ func (lfc *LockFreeMetricCollector) notifySubscribers(metric Metric) {
 	}
 }
 
-// Subscribe subscribes to metric updates with minimal locking
+// Subscribe subscribes to metric updates with minimal locking.
 func (lfc *LockFreeMetricCollector) Subscribe() <-chan Metric {
 	lfc.subscriberMutex.Lock()
 	defer lfc.subscriberMutex.Unlock()
@@ -250,7 +250,7 @@ func (lfc *LockFreeMetricCollector) Subscribe() <-chan Metric {
 	return ch
 }
 
-// GetMetrics returns metrics within time range using lock-free read
+// GetMetrics returns metrics within time range using lock-free read.
 func (lfc *LockFreeMetricCollector) GetMetrics(metricType MetricType, since time.Time) []Metric {
 	// Read from ring buffer
 	writePos := atomic.LoadInt64(&lfc.metricBuffer.writePos)
@@ -265,7 +265,7 @@ func (lfc *LockFreeMetricCollector) GetMetrics(metricType MetricType, since time
 	}
 
 	// Read metrics from buffer
-	for i := int64(0); i < available; i++ {
+	for i := range available {
 		pos := (readPos + i) & lfc.metricBuffer.mask
 		metric := lfc.metricBuffer.buffer[pos]
 
@@ -277,7 +277,7 @@ func (lfc *LockFreeMetricCollector) GetMetrics(metricType MetricType, since time
 	return result
 }
 
-// GetAggregate returns aggregated data using atomic reads
+// GetAggregate returns aggregated data using atomic reads.
 func (lfc *LockFreeMetricCollector) GetAggregate(metricType MetricType) *MetricAggregate {
 	aggInterface, exists := lfc.aggregateMap.Load(metricType)
 	if !exists {
@@ -308,7 +308,7 @@ func (lfc *LockFreeMetricCollector) GetAggregate(metricType MetricType) *MetricA
 	}
 }
 
-// GetSize returns the current number of metrics in the buffer
+// GetSize returns the current number of metrics in the buffer.
 func (lfc *LockFreeMetricCollector) GetSize() int64 {
 	writePos := atomic.LoadInt64(&lfc.metricBuffer.writePos)
 	readPos := atomic.LoadInt64(&lfc.metricBuffer.readPos)
@@ -324,7 +324,7 @@ func (lfc *LockFreeMetricCollector) GetSize() int64 {
 	return size
 }
 
-// nextPowerOf2 returns the next power of 2 greater than or equal to n
+// nextPowerOf2 returns the next power of 2 greater than or equal to n.
 func nextPowerOf2(n int) int {
 	if n <= 1 {
 		return 2
@@ -341,25 +341,27 @@ func nextPowerOf2(n int) int {
 
 // Additional helper methods for benchmarking and testing
 
-// GetBufferUtilization returns the buffer utilization percentage
+// GetBufferUtilization returns the buffer utilization percentage.
 func (lfc *LockFreeMetricCollector) GetBufferUtilization() float64 {
 	size := lfc.GetSize()
+
 	return float64(size) / float64(lfc.metricBuffer.size) * 100.0
 }
 
-// GetMetricTypes returns all currently tracked metric types
+// GetMetricTypes returns all currently tracked metric types.
 func (lfc *LockFreeMetricCollector) GetMetricTypes() []MetricType {
 	var types []MetricType
 
 	lfc.aggregateMap.Range(func(key, value interface{}) bool {
 		types = append(types, key.(MetricType))
+
 		return true
 	})
 
 	return types
 }
 
-// FlushMetrics forces an update of all cached percentile values
+// FlushMetrics forces an update of all cached percentile values.
 func (lfc *LockFreeMetricCollector) FlushMetrics() {
 	lfc.aggregateMap.Range(func(key, value interface{}) bool {
 		agg := value.(*LockFreeAggregate)

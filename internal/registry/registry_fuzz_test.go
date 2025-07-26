@@ -8,7 +8,7 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// FuzzComponentRegistration tests component registration with various inputs
+// FuzzComponentRegistration tests component registration with various inputs.
 func FuzzComponentRegistration(f *testing.F) {
 	// Seed with various component registration scenarios
 	f.Add(
@@ -78,7 +78,7 @@ func FuzzComponentRegistration(f *testing.F) {
 	})
 }
 
-// FuzzComponentSearch tests component search with various queries
+// FuzzComponentSearch tests component search with various queries.
 func FuzzComponentSearch(f *testing.F) {
 	// Seed with various search patterns
 	f.Add("Button")
@@ -136,7 +136,7 @@ func FuzzComponentSearch(f *testing.F) {
 	})
 }
 
-// FuzzComponentParameters tests component parameter parsing
+// FuzzComponentParameters tests component parameter parsing.
 func FuzzComponentParameters(f *testing.F) {
 	// Seed with various parameter patterns
 	f.Add("text\x00string")
@@ -206,7 +206,7 @@ func FuzzComponentParameters(f *testing.F) {
 	})
 }
 
-// FuzzComponentDependencies tests component dependency handling
+// FuzzComponentDependencies tests component dependency handling.
 func FuzzComponentDependencies(f *testing.F) {
 	// Seed with various dependency patterns
 	f.Add("Button\x00Card\x00Form")

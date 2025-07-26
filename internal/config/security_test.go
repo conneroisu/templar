@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestValidateServerConfig_Security tests server configuration security validation
+// TestValidateServerConfig_Security tests server configuration security validation.
 func TestValidateServerConfig_Security(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -120,7 +120,7 @@ func TestValidateServerConfig_Security(t *testing.T) {
 	}
 }
 
-// TestValidateBuildConfig_Security tests build configuration security validation
+// TestValidateBuildConfig_Security tests build configuration security validation.
 func TestValidateBuildConfig_Security(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -189,7 +189,7 @@ func TestValidateBuildConfig_Security(t *testing.T) {
 	}
 }
 
-// TestValidateComponentsConfig_Security tests components configuration security validation
+// TestValidateComponentsConfig_Security tests components configuration security validation.
 func TestValidateComponentsConfig_Security(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -255,7 +255,7 @@ func TestValidateComponentsConfig_Security(t *testing.T) {
 	}
 }
 
-// TestValidatePath_Security tests path validation security
+// TestValidatePath_Security tests path validation security.
 func TestValidatePath_Security(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -328,7 +328,7 @@ func TestValidatePath_Security(t *testing.T) {
 	}
 }
 
-// TestSecurityRegression_ConfigSecurity verifies configuration security
+// TestSecurityRegression_ConfigSecurity verifies configuration security.
 func TestSecurityRegression_ConfigSecurity(t *testing.T) {
 	t.Run("prevent config-based command injection", func(t *testing.T) {
 		maliciousConfigs := []ServerConfig{

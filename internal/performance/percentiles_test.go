@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// TestSkipList_BasicOperations tests basic skip list functionality
+// TestSkipList_BasicOperations tests basic skip list functionality.
 func TestSkipList_BasicOperations(t *testing.T) {
 	sl := NewSkipList()
 
@@ -43,7 +43,7 @@ func TestSkipList_BasicOperations(t *testing.T) {
 	}
 }
 
-// TestSkipList_PercentileCalculation tests percentile calculation accuracy
+// TestSkipList_PercentileCalculation tests percentile calculation accuracy.
 func TestSkipList_PercentileCalculation(t *testing.T) {
 	sl := NewSkipList()
 
@@ -77,7 +77,7 @@ func TestSkipList_PercentileCalculation(t *testing.T) {
 	}
 }
 
-// TestPercentileCalculator_BasicFunctionality tests the percentile calculator
+// TestPercentileCalculator_BasicFunctionality tests the percentile calculator.
 func TestPercentileCalculator_BasicFunctionality(t *testing.T) {
 	pc := NewPercentileCalculator(100)
 
@@ -111,7 +111,7 @@ func TestPercentileCalculator_BasicFunctionality(t *testing.T) {
 	}
 }
 
-// TestPercentileCalculator_RingBufferEviction tests FIFO eviction behavior
+// TestPercentileCalculator_RingBufferEviction tests FIFO eviction behavior.
 func TestPercentileCalculator_RingBufferEviction(t *testing.T) {
 	maxSize := 5
 	pc := NewPercentileCalculator(maxSize)
@@ -141,7 +141,7 @@ func TestPercentileCalculator_RingBufferEviction(t *testing.T) {
 	}
 }
 
-// TestPercentileCalculator_AccuracyVsStandardSort compares with standard sorting
+// TestPercentileCalculator_AccuracyVsStandardSort compares with standard sorting.
 func TestPercentileCalculator_AccuracyVsStandardSort(t *testing.T) {
 	pc := NewPercentileCalculator(1000)
 
@@ -163,6 +163,7 @@ func TestPercentileCalculator_AccuracyVsStandardSort(t *testing.T) {
 		if index >= len(data) {
 			index = len(data) - 1
 		}
+
 		return data[index]
 	}
 
@@ -181,7 +182,7 @@ func TestPercentileCalculator_AccuracyVsStandardSort(t *testing.T) {
 	}
 }
 
-// BenchmarkPercentileCalculator_OldVsNew compares performance
+// BenchmarkPercentileCalculator_OldVsNew compares performance.
 func BenchmarkPercentileCalculator_OldVsNew(t *testing.B) {
 	// Old O(n²) method simulation - single calculation
 	oldCalculatePercentiles := func(values []float64) (float64, float64) {
@@ -224,7 +225,7 @@ func BenchmarkPercentileCalculator_OldVsNew(t *testing.B) {
 	}
 
 	t.Run("Old_O(n²)_Single_Calculation", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			oldCalculatePercentiles(values)
 		}
 	})
@@ -237,7 +238,7 @@ func BenchmarkPercentileCalculator_OldVsNew(t *testing.B) {
 		}
 
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			pc.GetP95()
 			pc.GetP99()
 		}
@@ -249,7 +250,7 @@ func BenchmarkPercentileCalculator_OldVsNew(t *testing.B) {
 		rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for i := range b.N {
 			// Add a new value
 			allValues = append(allValues, rng.Float64()*1000)
 
@@ -265,7 +266,7 @@ func BenchmarkPercentileCalculator_OldVsNew(t *testing.B) {
 		rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for i := range b.N {
 			// Add a new value
 			pc.AddValue(rng.Float64() * 1000)
 
@@ -278,7 +279,7 @@ func BenchmarkPercentileCalculator_OldVsNew(t *testing.B) {
 	})
 }
 
-// BenchmarkPercentileCalculator_ScalingPerformance tests performance at different scales
+// BenchmarkPercentileCalculator_ScalingPerformance tests performance at different scales.
 func BenchmarkPercentileCalculator_ScalingPerformance(t *testing.B) {
 	sizes := []int{100, 500, 1000, 5000, 10000}
 
@@ -290,7 +291,7 @@ func BenchmarkPercentileCalculator_ScalingPerformance(t *testing.B) {
 		}
 
 		t.Run(fmt.Sprintf("Size_%d", size), func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
+			for range b.N {
 				pc := NewPercentileCalculator(size)
 				for _, v := range values {
 					pc.AddValue(v)
@@ -302,18 +303,18 @@ func BenchmarkPercentileCalculator_ScalingPerformance(t *testing.B) {
 	}
 }
 
-// BenchmarkPercentileCalculator_IncrementalUpdates tests incremental update performance
+// BenchmarkPercentileCalculator_IncrementalUpdates tests incremental update performance.
 func BenchmarkPercentileCalculator_IncrementalUpdates(t *testing.B) {
 	pc := NewPercentileCalculator(10000)
 
 	// Pre-populate with some data
 	rng := rand.New(rand.NewSource(42))
-	for i := 0; i < 1000; i++ {
+	for range 1000 {
 		pc.AddValue(rng.Float64() * 1000)
 	}
 
 	t.ResetTimer()
-	for i := 0; i < t.N; i++ {
+	for i := range t.N {
 		pc.AddValue(rng.Float64() * 1000)
 		if i%100 == 0 { // Calculate percentiles periodically
 			pc.GetP95()
@@ -322,7 +323,7 @@ func BenchmarkPercentileCalculator_IncrementalUpdates(t *testing.B) {
 	}
 }
 
-// TestPercentileCalculator_ConcurrentAccess tests thread safety
+// TestPercentileCalculator_ConcurrentAccess tests thread safety.
 func TestPercentileCalculator_ConcurrentAccess(t *testing.T) {
 	pc := NewPercentileCalculator(1000)
 
@@ -330,7 +331,7 @@ func TestPercentileCalculator_ConcurrentAccess(t *testing.T) {
 
 	// Writer goroutine
 	go func() {
-		for i := 0; i < 1000; i++ {
+		for i := range 1000 {
 			pc.AddValue(float64(i))
 		}
 		done <- true
@@ -338,7 +339,7 @@ func TestPercentileCalculator_ConcurrentAccess(t *testing.T) {
 
 	// Reader goroutine
 	go func() {
-		for i := 0; i < 100; i++ {
+		for range 100 {
 			pc.GetP95()
 			pc.GetP99()
 			time.Sleep(time.Microsecond)
@@ -356,7 +357,7 @@ func TestPercentileCalculator_ConcurrentAccess(t *testing.T) {
 	}
 }
 
-// TestPercentileCalculator_MemoryEfficiency tests memory footprint
+// TestPercentileCalculator_MemoryEfficiency tests memory footprint.
 func TestPercentileCalculator_MemoryEfficiency(t *testing.T) {
 	sizes := []int{100, 1000, 10000}
 
@@ -364,7 +365,7 @@ func TestPercentileCalculator_MemoryEfficiency(t *testing.T) {
 		pc := NewPercentileCalculator(size)
 
 		// Fill the calculator
-		for i := 0; i < size; i++ {
+		for i := range size {
 			pc.AddValue(float64(i))
 		}
 

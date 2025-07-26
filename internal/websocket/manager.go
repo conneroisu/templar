@@ -32,7 +32,7 @@ import (
 // - clients map access always protected by clientsMutex
 // - channels remain open until Shutdown() is called
 // - ctx and cancel are never nil after construction
-// - isShutdown transitions from false to true exactly once
+// - isShutdown transitions from false to true exactly once.
 type WebSocketManager struct {
 	// Connection management - protected by clientsMutex
 	clients      map[*websocket.Conn]*Client // Active WebSocket connections
@@ -57,7 +57,7 @@ type WebSocketManager struct {
 	isShutdown   bool               // Indicates shutdown state (write-protected)
 }
 
-// OriginValidator interface for WebSocket origin validation
+// OriginValidator interface for WebSocket origin validation.
 type OriginValidator interface {
 	IsAllowedOrigin(origin string) bool
 }
@@ -82,7 +82,7 @@ type OriginValidator interface {
 // - Creates channels for async communication
 //
 // Panics:
-// - If originValidator is nil (required for security)
+// - If originValidator is nil (required for security).
 func NewWebSocketManager(
 	originValidator OriginValidator,
 	rateLimiter RateLimiter,
@@ -156,7 +156,7 @@ func NewWebSocketManager(
 // Security Responses:
 // - 403 Forbidden: Invalid origin or failed security validation
 // - 429 Too Many Requests: Rate limit exceeded
-// - 400 Bad Request: WebSocket upgrade failed
+// - 400 Bad Request: WebSocket upgrade failed.
 func (wm *WebSocketManager) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	// Precondition checks
 	if w == nil || r == nil {
@@ -168,12 +168,14 @@ func (wm *WebSocketManager) HandleWebSocket(w http.ResponseWriter, r *http.Reque
 		if w != nil {
 			http.Error(w, "Bad Request", http.StatusBadRequest)
 		}
+
 		return
 	}
 
 	// Check if manager is shut down
 	if wm.isShutdown {
 		http.Error(w, "Service Unavailable", http.StatusServiceUnavailable)
+
 		return
 	}
 
@@ -184,6 +186,7 @@ func (wm *WebSocketManager) HandleWebSocket(w http.ResponseWriter, r *http.Reque
 			r.RemoteAddr,
 		)
 		http.Error(w, "Forbidden", http.StatusForbidden)
+
 		return
 	}
 
@@ -192,6 +195,7 @@ func (wm *WebSocketManager) HandleWebSocket(w http.ResponseWriter, r *http.Reque
 	if wm.rateLimiter != nil && !wm.checkRateLimit(clientIP) {
 		log.Printf("WebSocket connection rejected: rate limit exceeded for IP %s", clientIP)
 		http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
+
 		return
 	}
 
@@ -224,6 +228,7 @@ func (wm *WebSocketManager) HandleWebSocket(w http.ResponseWriter, r *http.Reque
 		if err := conn.Close(websocket.StatusInternalError, "Internal server error"); err != nil {
 			fmt.Printf("Warning: failed to close WebSocket connection after send channel creation failure: %v\n", err)
 		}
+
 		return
 	}
 
@@ -238,6 +243,7 @@ func (wm *WebSocketManager) HandleWebSocket(w http.ResponseWriter, r *http.Reque
 		if err := conn.Close(websocket.StatusServiceRestart, "Server shutting down"); err != nil {
 			fmt.Printf("Warning: failed to close WebSocket connection during shutdown: %v\n", err)
 		}
+
 		return
 	default:
 		// Registration channel full - should not happen with proper buffer size
@@ -245,6 +251,7 @@ func (wm *WebSocketManager) HandleWebSocket(w http.ResponseWriter, r *http.Reque
 		if err := conn.Close(websocket.StatusTryAgainLater, "Server busy"); err != nil {
 			fmt.Printf("Warning: failed to close WebSocket connection when server busy: %v\n", err)
 		}
+
 		return
 	}
 
@@ -255,12 +262,13 @@ func (wm *WebSocketManager) HandleWebSocket(w http.ResponseWriter, r *http.Reque
 	log.Printf("WebSocket client connected successfully from %s", clientIP)
 }
 
-// validateWebSocketRequest validates the WebSocket upgrade request
+// validateWebSocketRequest validates the WebSocket upgrade request.
 func (wm *WebSocketManager) validateWebSocketRequest(r *http.Request) bool {
 	// Check origin validation
 	origin := r.Header.Get("Origin")
 	if origin != "" && !wm.originValidator.IsAllowedOrigin(origin) {
 		log.Printf("WebSocket connection rejected: invalid origin %s", origin)
+
 		return false
 	}
 
@@ -268,7 +276,7 @@ func (wm *WebSocketManager) validateWebSocketRequest(r *http.Request) bool {
 	return true
 }
 
-// getClientIP extracts client IP from request
+// getClientIP extracts client IP from request.
 func (wm *WebSocketManager) getClientIP(r *http.Request) string {
 	// Check X-Forwarded-For header first
 	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
@@ -284,7 +292,7 @@ func (wm *WebSocketManager) getClientIP(r *http.Request) string {
 	return r.RemoteAddr
 }
 
-// runHub manages client connections and broadcasting
+// runHub manages client connections and broadcasting.
 func (wm *WebSocketManager) runHub() {
 	for {
 		select {
@@ -303,7 +311,7 @@ func (wm *WebSocketManager) runHub() {
 	}
 }
 
-// registerClient adds a new client to the manager
+// registerClient adds a new client to the manager.
 func (wm *WebSocketManager) registerClient(client *Client) {
 	wm.clientsMutex.Lock()
 	wm.clients[client.conn] = client
@@ -312,7 +320,7 @@ func (wm *WebSocketManager) registerClient(client *Client) {
 	log.Printf("WebSocket client connected. Total clients: %d", len(wm.clients))
 }
 
-// unregisterClient removes a client from the manager
+// unregisterClient removes a client from the manager.
 func (wm *WebSocketManager) unregisterClient(conn *websocket.Conn) {
 	wm.clientsMutex.Lock()
 	client, exists := wm.clients[conn]
@@ -330,7 +338,7 @@ func (wm *WebSocketManager) unregisterClient(conn *websocket.Conn) {
 	}
 }
 
-// broadcastToClients sends a message to all connected clients
+// broadcastToClients sends a message to all connected clients.
 func (wm *WebSocketManager) broadcastToClients(message []byte) {
 	wm.clientsMutex.RLock()
 	clients := make([]*Client, 0, len(wm.clients))
@@ -352,7 +360,7 @@ func (wm *WebSocketManager) broadcastToClients(message []byte) {
 	}
 }
 
-// handleClient manages the lifecycle of a WebSocket client
+// handleClient manages the lifecycle of a WebSocket client.
 func (wm *WebSocketManager) handleClient(client *Client) {
 	defer func() {
 		wm.unregister <- client.conn
@@ -365,7 +373,7 @@ func (wm *WebSocketManager) handleClient(client *Client) {
 	wm.readFromClient(client)
 }
 
-// readFromClient handles reading messages from a WebSocket client
+// readFromClient handles reading messages from a WebSocket client.
 func (wm *WebSocketManager) readFromClient(client *Client) {
 	defer func() {
 		if err := client.conn.Close(websocket.StatusNormalClosure, ""); err != nil {
@@ -385,6 +393,7 @@ func (wm *WebSocketManager) readFromClient(client *Client) {
 			} else {
 				log.Printf("WebSocket read error: %v", err)
 			}
+
 			break
 		}
 
@@ -394,6 +403,7 @@ func (wm *WebSocketManager) readFromClient(client *Client) {
 		// Rate limiting check
 		if client.rateLimiter != nil && !wm.checkClientRateLimit(client.rateLimiter) {
 			log.Printf("WebSocket message rate limit exceeded for client")
+
 			break
 		}
 
@@ -402,7 +412,7 @@ func (wm *WebSocketManager) readFromClient(client *Client) {
 	}
 }
 
-// writeToClient handles writing messages to a WebSocket client
+// writeToClient handles writing messages to a WebSocket client.
 func (wm *WebSocketManager) writeToClient(client *Client) {
 	ticker := time.NewTicker(54 * time.Second) // Ping interval
 	defer ticker.Stop()
@@ -425,6 +435,7 @@ func (wm *WebSocketManager) writeToClient(client *Client) {
 
 			if err != nil {
 				log.Printf("WebSocket write error: %v", err)
+
 				return
 			}
 
@@ -436,6 +447,7 @@ func (wm *WebSocketManager) writeToClient(client *Client) {
 
 			if err != nil {
 				log.Printf("WebSocket ping error: %v", err)
+
 				return
 			}
 
@@ -445,7 +457,7 @@ func (wm *WebSocketManager) writeToClient(client *Client) {
 	}
 }
 
-// processClientMessage processes incoming messages from clients
+// processClientMessage processes incoming messages from clients.
 func (wm *WebSocketManager) processClientMessage(client *Client, message []byte) {
 	// Basic message logging - can be extended for specific message types
 	log.Printf("Received WebSocket message from client: %d bytes", len(message))
@@ -453,11 +465,12 @@ func (wm *WebSocketManager) processClientMessage(client *Client, message []byte)
 	// Future: Add message routing logic here
 }
 
-// BroadcastMessage sends a message to all connected WebSocket clients
+// BroadcastMessage sends a message to all connected WebSocket clients.
 func (wm *WebSocketManager) BroadcastMessage(message UpdateMessage) {
 	data, err := json.Marshal(message)
 	if err != nil {
 		log.Printf("Failed to marshal broadcast message: %v", err)
+
 		return
 	}
 
@@ -470,14 +483,15 @@ func (wm *WebSocketManager) BroadcastMessage(message UpdateMessage) {
 	}
 }
 
-// GetConnectedClients returns the number of connected clients
+// GetConnectedClients returns the number of connected clients.
 func (wm *WebSocketManager) GetConnectedClients() int {
 	wm.clientsMutex.RLock()
 	defer wm.clientsMutex.RUnlock()
+
 	return len(wm.clients)
 }
 
-// GetClients returns a copy of all connected clients for monitoring
+// GetClients returns a copy of all connected clients for monitoring.
 func (wm *WebSocketManager) GetClients() map[string]*Client {
 	wm.clientsMutex.RLock()
 	defer wm.clientsMutex.RUnlock()
@@ -491,7 +505,7 @@ func (wm *WebSocketManager) GetClients() map[string]*Client {
 	return clients
 }
 
-// Shutdown gracefully shuts down the WebSocket manager
+// Shutdown gracefully shuts down the WebSocket manager.
 func (wm *WebSocketManager) Shutdown(ctx context.Context) error {
 	var shutdownErr error
 
@@ -530,38 +544,38 @@ func (wm *WebSocketManager) Shutdown(ctx context.Context) error {
 	return shutdownErr
 }
 
-// IsShutdown returns whether the WebSocket manager has been shut down
+// IsShutdown returns whether the WebSocket manager has been shut down.
 func (wm *WebSocketManager) IsShutdown() bool {
 	return wm.isShutdown
 }
 
-// checkRateLimit checks if the client IP is within rate limits
+// checkRateLimit checks if the client IP is within rate limits.
 func (wm *WebSocketManager) checkRateLimit(clientIP string) bool {
 	// Simple rate limiting check - can be enhanced with actual implementation
 	return true // For now, allow all requests
 }
 
-// createClientRateLimiter creates a rate limiter for a specific client
+// createClientRateLimiter creates a rate limiter for a specific client.
 func (wm *WebSocketManager) createClientRateLimiter(clientIP string) RateLimiter {
 	// Return a simple rate limiter implementation
 	return &SimpleRateLimiter{}
 }
 
-// checkClientRateLimit checks if a client's rate limiter allows the request
+// checkClientRateLimit checks if a client's rate limiter allows the request.
 func (wm *WebSocketManager) checkClientRateLimit(limiter RateLimiter) bool {
 	// Simple implementation - always allow for now
 	return limiter.Allow()
 }
 
-// SimpleRateLimiter provides a basic rate limiter implementation
+// SimpleRateLimiter provides a basic rate limiter implementation.
 type SimpleRateLimiter struct{}
 
-// Allow implements the RateLimiter interface
+// Allow implements the RateLimiter interface.
 func (s *SimpleRateLimiter) Allow() bool {
 	return true
 }
 
-// Reset implements the RateLimiter interface
+// Reset implements the RateLimiter interface.
 func (s *SimpleRateLimiter) Reset() {
 	// No state to reset in the simple implementation
 }

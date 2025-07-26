@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// serveWithMonitoringCmd demonstrates a complete integration of the monitoring system
+// serveWithMonitoringCmd demonstrates a complete integration of the monitoring system.
 var serveWithMonitoringCmd = &cobra.Command{
 	Use:   "serve-monitored",
 	Short: "Start development server with comprehensive monitoring",
@@ -156,7 +156,7 @@ func registerServeHealthChecks(monitor *monitoring.TemplarMonitor) {
 					return monitoring.HealthCheck{
 						Name:        "template_directory",
 						Status:      monitoring.HealthStatusDegraded,
-						Message:     fmt.Sprintf("Template directory not found: %s", dir),
+						Message:     "Template directory not found: " + dir,
 						LastChecked: time.Now(),
 						Duration:    time.Since(start),
 						Critical:    false,
@@ -221,6 +221,7 @@ func addMonitoredRoutes(mux *http.ServeMux, monitor *monitoring.TemplarMonitor) 
 			w.Header().Set("Content-Type", "text/html")
 			html := generateHomePage(components)
 			w.Write([]byte(html))
+
 			return nil
 		})
 
@@ -252,6 +253,7 @@ func addMonitoredRoutes(mux *http.ServeMux, monitor *monitoring.TemplarMonitor) 
 			}`, components, len(components), time.Now().Format(time.RFC3339))
 
 			w.Write([]byte(response))
+
 			return nil
 		})
 
@@ -273,6 +275,7 @@ func addMonitoredRoutes(mux *http.ServeMux, monitor *monitoring.TemplarMonitor) 
 	mux.HandleFunc("/api/build", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+
 			return
 		}
 
@@ -287,6 +290,7 @@ func addMonitoredRoutes(mux *http.ServeMux, monitor *monitoring.TemplarMonitor) 
 				"endpoint": "/api/build",
 			})
 			http.Error(w, "Build failed", http.StatusInternalServerError)
+
 			return
 		}
 
@@ -328,6 +332,7 @@ func addMonitoredRoutes(mux *http.ServeMux, monitor *monitoring.TemplarMonitor) 
 
 			w.Header().Set("Content-Type", "application/json")
 			w.Write([]byte(status))
+
 			return nil
 		})
 
@@ -373,7 +378,7 @@ func buildAllComponents(ctx context.Context, monitor *monitoring.TemplarMonitor)
 
 			// Simulate occasional failure
 			if component == "Modal" {
-				return fmt.Errorf("modal component failed to compile")
+				return errors.New("modal component failed to compile")
 			}
 
 			duration := time.Since(start)
@@ -520,6 +525,7 @@ func generateComponentCards(components []string) string {
 			<a href="/preview?component=%s">Preview</a>
 		</div>`, component, component, component)
 	}
+
 	return cards
 }
 
@@ -537,6 +543,7 @@ func runServerWithGracefulShutdown(
 			if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 				return err
 			}
+
 			return nil
 		})
 
@@ -576,10 +583,12 @@ func runServerWithGracefulShutdown(
 					"timeout": "30s",
 				},
 			)
+
 			return fmt.Errorf("server shutdown failed: %w", err)
 		}
 
 		fmt.Println("Server stopped successfully")
+
 		return nil
 	}
 }

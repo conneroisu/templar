@@ -498,7 +498,7 @@ func TestAuthenticateBasic(t *testing.T) {
 	}
 }
 
-// Helper function for string contains check
+// Helper function for string contains check.
 func containsString(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||
 		(len(s) > len(substr) && s[:len(substr)] == substr) ||
@@ -512,5 +512,6 @@ func containsSubstring(s, substr string) bool {
 			return true
 		}
 	}
+
 	return false
 }

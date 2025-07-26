@@ -10,13 +10,13 @@ import (
 	"time"
 )
 
-// SkipListNode represents a node in the skip list
+// SkipListNode represents a node in the skip list.
 type SkipListNode struct {
 	value float64
 	next  []*SkipListNode
 }
 
-// SkipList implements a probabilistic data structure for efficient percentile calculation
+// SkipList implements a probabilistic data structure for efficient percentile calculation.
 type SkipList struct {
 	header   *SkipListNode
 	level    int
@@ -27,7 +27,7 @@ type SkipList struct {
 	mu       sync.RWMutex
 }
 
-// PercentileCalculator provides efficient percentile calculation with O(log n) operations
+// PercentileCalculator provides efficient percentile calculation with O(log n) operations.
 type PercentileCalculator struct {
 	skipList *SkipList
 	maxSize  int
@@ -36,7 +36,7 @@ type PercentileCalculator struct {
 	full     bool
 }
 
-// NewSkipList creates a new skip list with optimal parameters for percentile calculation
+// NewSkipList creates a new skip list with optimal parameters for percentile calculation.
 func NewSkipList() *SkipList {
 	const maxLevel = 16     // Optimal for up to 65536 elements
 	const probability = 0.5 // Standard skip list probability
@@ -56,7 +56,7 @@ func NewSkipList() *SkipList {
 	return sl
 }
 
-// NewPercentileCalculator creates a new efficient percentile calculator
+// NewPercentileCalculator creates a new efficient percentile calculator.
 func NewPercentileCalculator(maxSize int) *PercentileCalculator {
 	return &PercentileCalculator{
 		skipList: NewSkipList(),
@@ -67,16 +67,17 @@ func NewPercentileCalculator(maxSize int) *PercentileCalculator {
 	}
 }
 
-// randomLevel generates a random level for new nodes using geometric distribution
+// randomLevel generates a random level for new nodes using geometric distribution.
 func (sl *SkipList) randomLevel() int {
 	level := 1
 	for level < sl.maxLevel && sl.rng.Float64() < sl.p {
 		level++
 	}
+
 	return level
 }
 
-// Insert adds a value to the skip list in O(log n) time
+// Insert adds a value to the skip list in O(log n) time.
 func (sl *SkipList) Insert(value float64) {
 	sl.mu.Lock()
 	defer sl.mu.Unlock()
@@ -110,7 +111,7 @@ func (sl *SkipList) Insert(value float64) {
 	}
 
 	// Update pointers
-	for i := 0; i < newLevel; i++ {
+	for i := range newLevel {
 		newNode.next[i] = update[i].next[i]
 		update[i].next[i] = newNode
 	}
@@ -118,7 +119,7 @@ func (sl *SkipList) Insert(value float64) {
 	sl.size++
 }
 
-// Delete removes a value from the skip list in O(log n) time
+// Delete removes a value from the skip list in O(log n) time.
 func (sl *SkipList) Delete(value float64) bool {
 	sl.mu.Lock()
 	defer sl.mu.Unlock()
@@ -142,7 +143,7 @@ func (sl *SkipList) Delete(value float64) bool {
 	}
 
 	// Update pointers to remove node
-	for i := 0; i < len(current.next); i++ {
+	for i := range len(current.next) {
 		update[i].next[i] = current.next[i]
 	}
 
@@ -152,10 +153,11 @@ func (sl *SkipList) Delete(value float64) bool {
 	}
 
 	sl.size--
+
 	return true
 }
 
-// GetPercentile calculates the percentile value in O(log n) time
+// GetPercentile calculates the percentile value in O(log n) time.
 func (sl *SkipList) GetPercentile(percentile float64) float64 {
 	sl.mu.RLock()
 	defer sl.mu.RUnlock()
@@ -179,17 +181,19 @@ func (sl *SkipList) GetPercentile(percentile float64) float64 {
 	if current != nil {
 		return current.value
 	}
+
 	return 0
 }
 
-// Size returns the number of elements in the skip list
+// Size returns the number of elements in the skip list.
 func (sl *SkipList) Size() int {
 	sl.mu.RLock()
 	defer sl.mu.RUnlock()
+
 	return sl.size
 }
 
-// AddValue adds a new value to the percentile calculator with FIFO eviction
+// AddValue adds a new value to the percentile calculator with FIFO eviction.
 func (pc *PercentileCalculator) AddValue(value float64) {
 	// Handle FIFO eviction for ring buffer behavior
 	if pc.full {
@@ -210,27 +214,27 @@ func (pc *PercentileCalculator) AddValue(value float64) {
 	}
 }
 
-// GetPercentile calculates the specified percentile efficiently
+// GetPercentile calculates the specified percentile efficiently.
 func (pc *PercentileCalculator) GetPercentile(percentile float64) float64 {
 	return pc.skipList.GetPercentile(percentile)
 }
 
-// GetP95 returns the 95th percentile
+// GetP95 returns the 95th percentile.
 func (pc *PercentileCalculator) GetP95() float64 {
 	return pc.GetPercentile(95.0)
 }
 
-// GetP99 returns the 99th percentile
+// GetP99 returns the 99th percentile.
 func (pc *PercentileCalculator) GetP99() float64 {
 	return pc.GetPercentile(99.0)
 }
 
-// GetSize returns the current number of values
+// GetSize returns the current number of values.
 func (pc *PercentileCalculator) GetSize() int {
 	return pc.skipList.Size()
 }
 
-// Clear removes all values from the calculator
+// Clear removes all values from the calculator.
 func (pc *PercentileCalculator) Clear() {
 	pc.skipList = NewSkipList()
 	pc.writePos = 0
@@ -238,7 +242,7 @@ func (pc *PercentileCalculator) Clear() {
 	// Values slice is reused
 }
 
-// GetAll returns all values in sorted order (for testing/debugging)
+// GetAll returns all values in sorted order (for testing/debugging).
 func (pc *PercentileCalculator) GetAll() []float64 {
 	pc.skipList.mu.RLock()
 	defer pc.skipList.mu.RUnlock()
@@ -249,10 +253,11 @@ func (pc *PercentileCalculator) GetAll() []float64 {
 		result = append(result, current.value)
 		current = current.next[0]
 	}
+
 	return result
 }
 
-// MemoryFootprint returns approximate memory usage in bytes
+// MemoryFootprint returns approximate memory usage in bytes.
 func (pc *PercentileCalculator) MemoryFootprint() int {
 	size := pc.skipList.Size()
 	// More realistic estimation:

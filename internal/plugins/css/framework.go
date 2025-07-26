@@ -8,7 +8,7 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// CSSFrameworkPlugin defines the interface for CSS framework plugins
+// CSSFrameworkPlugin defines the interface for CSS framework plugins.
 type CSSFrameworkPlugin interface {
 	// Plugin base interface
 	GetName() string
@@ -42,7 +42,7 @@ type CSSFrameworkPlugin interface {
 	GenerateStyleGuide(ctx context.Context) ([]byte, error)
 }
 
-// FrameworkConfig represents configuration for a CSS framework
+// FrameworkConfig represents configuration for a CSS framework.
 type FrameworkConfig struct {
 	// Framework identification
 	Name    string `json:"name" yaml:"name"`
@@ -72,7 +72,7 @@ type FrameworkConfig struct {
 	Options map[string]interface{} `json:"options,omitempty" yaml:"options,omitempty"`
 }
 
-// ProcessingOptions defines CSS processing options
+// ProcessingOptions defines CSS processing options.
 type ProcessingOptions struct {
 	// Input/Output
 	InputPath  string `json:"input_path,omitempty"`
@@ -92,7 +92,7 @@ type ProcessingOptions struct {
 	Environment string `json:"environment"` // "development", "production"
 }
 
-// OptimizationConfig defines CSS optimization settings
+// OptimizationConfig defines CSS optimization settings.
 type OptimizationConfig struct {
 	Enabled      bool `json:"enabled" yaml:"enabled"`
 	Purge        bool `json:"purge" yaml:"purge"`
@@ -106,7 +106,7 @@ type OptimizationConfig struct {
 	PurgeContent   []string `json:"purge_content,omitempty" yaml:"purge_content,omitempty"`
 }
 
-// ThemingConfig defines theming and variable extraction settings
+// ThemingConfig defines theming and variable extraction settings.
 type ThemingConfig struct {
 	Enabled          bool `json:"enabled" yaml:"enabled"`
 	ExtractVariables bool `json:"extract_variables" yaml:"extract_variables"`
@@ -131,7 +131,7 @@ type ThemingConfig struct {
 	OutputFile   string `json:"output_file,omitempty" yaml:"output_file,omitempty"`
 }
 
-// DevServerConfig defines development server configuration for CSS frameworks
+// DevServerConfig defines development server configuration for CSS frameworks.
 type DevServerConfig struct {
 	// Hot reload settings
 	HotReload   bool     `json:"hot_reload"`
@@ -152,7 +152,7 @@ type DevServerConfig struct {
 	DevOptions map[string]interface{} `json:"dev_options,omitempty"`
 }
 
-// ComponentTemplate represents a framework-specific component template
+// ComponentTemplate represents a framework-specific component template.
 type ComponentTemplate struct {
 	Name        string                `json:"name"`
 	Framework   string                `json:"framework"`
@@ -168,7 +168,7 @@ type ComponentTemplate struct {
 	Requirements []string          `json:"requirements,omitempty"` // Dependencies or plugins needed
 }
 
-// TemplateExample represents an example usage of a component template
+// TemplateExample represents an example usage of a component template.
 type TemplateExample struct {
 	Name        string                 `json:"name"`
 	Description string                 `json:"description"`
@@ -176,7 +176,7 @@ type TemplateExample struct {
 	Preview     string                 `json:"preview,omitempty"`
 }
 
-// FrameworkInfo provides metadata about a CSS framework
+// FrameworkInfo provides metadata about a CSS framework.
 type FrameworkInfo struct {
 	Name          string `json:"name"`
 	DisplayName   string `json:"display_name"`
@@ -202,13 +202,13 @@ type FrameworkInfo struct {
 	SourceExtensions []string `json:"source_extensions"`
 }
 
-// FrameworkRegistry manages available CSS frameworks
+// FrameworkRegistry manages available CSS frameworks.
 type FrameworkRegistry struct {
 	frameworks map[string]CSSFrameworkPlugin
 	configs    map[string]FrameworkConfig
 }
 
-// NewFrameworkRegistry creates a new framework registry
+// NewFrameworkRegistry creates a new framework registry.
 func NewFrameworkRegistry() *FrameworkRegistry {
 	return &FrameworkRegistry{
 		frameworks: make(map[string]CSSFrameworkPlugin),
@@ -216,11 +216,11 @@ func NewFrameworkRegistry() *FrameworkRegistry {
 	}
 }
 
-// Register registers a CSS framework plugin
+// Register registers a CSS framework plugin.
 func (r *FrameworkRegistry) Register(plugin CSSFrameworkPlugin) error {
 	name := plugin.GetFrameworkName()
 	if name == "" {
-		return fmt.Errorf("framework plugin must have a name")
+		return errors.New("framework plugin must have a name")
 	}
 
 	if _, exists := r.frameworks[name]; exists {
@@ -228,25 +228,28 @@ func (r *FrameworkRegistry) Register(plugin CSSFrameworkPlugin) error {
 	}
 
 	r.frameworks[name] = plugin
+
 	return nil
 }
 
-// Get retrieves a framework plugin by name
+// Get retrieves a framework plugin by name.
 func (r *FrameworkRegistry) Get(name string) (CSSFrameworkPlugin, bool) {
 	plugin, exists := r.frameworks[name]
+
 	return plugin, exists
 }
 
-// List returns all registered framework names
+// List returns all registered framework names.
 func (r *FrameworkRegistry) List() []string {
 	names := make([]string, 0, len(r.frameworks))
 	for name := range r.frameworks {
 		names = append(names, name)
 	}
+
 	return names
 }
 
-// GetFrameworkInfo returns information about a framework
+// GetFrameworkInfo returns information about a framework.
 func (r *FrameworkRegistry) GetFrameworkInfo(name string) (*FrameworkInfo, error) {
 	plugin, exists := r.frameworks[name]
 	if !exists {
@@ -264,18 +267,19 @@ func (r *FrameworkRegistry) GetFrameworkInfo(name string) (*FrameworkInfo, error
 	return info, nil
 }
 
-// SetConfig sets configuration for a framework
+// SetConfig sets configuration for a framework.
 func (r *FrameworkRegistry) SetConfig(frameworkName string, config FrameworkConfig) {
 	r.configs[frameworkName] = config
 }
 
-// GetConfig gets configuration for a framework
+// GetConfig gets configuration for a framework.
 func (r *FrameworkRegistry) GetConfig(frameworkName string) (FrameworkConfig, bool) {
 	config, exists := r.configs[frameworkName]
+
 	return config, exists
 }
 
-// DetectFramework attempts to detect which CSS framework is being used
+// DetectFramework attempts to detect which CSS framework is being used.
 func (r *FrameworkRegistry) DetectFramework(projectPath string) ([]string, error) {
 	var detected []string
 
@@ -296,6 +300,7 @@ func (r *FrameworkRegistry) DetectFramework(projectPath string) ([]string, error
 			configPath := filepath.Join(projectPath, file)
 			if fileExists(configPath) {
 				detected = append(detected, framework)
+
 				break
 			}
 		}
@@ -304,26 +309,27 @@ func (r *FrameworkRegistry) DetectFramework(projectPath string) ([]string, error
 	return detected, nil
 }
 
-// fileExists checks if a file exists
+// fileExists checks if a file exists.
 func fileExists(path string) bool {
 	if _, err := filepath.EvalSymlinks(path); err != nil {
 		return false
 	}
+
 	return true
 }
 
-// ValidateFrameworkConfig validates a framework configuration
+// ValidateFrameworkConfig validates a framework configuration.
 func ValidateFrameworkConfig(config FrameworkConfig) error {
 	if config.Name == "" {
-		return fmt.Errorf("framework name is required")
+		return errors.New("framework name is required")
 	}
 
 	if config.OutputPath == "" {
-		return fmt.Errorf("output path is required")
+		return errors.New("output path is required")
 	}
 
 	if len(config.SourcePaths) == 0 {
-		return fmt.Errorf("at least one source path is required")
+		return errors.New("at least one source path is required")
 	}
 
 	// Validate install method
@@ -333,6 +339,7 @@ func ValidateFrameworkConfig(config FrameworkConfig) error {
 		for _, method := range validMethods {
 			if config.InstallMethod == method {
 				valid = true
+
 				break
 			}
 		}

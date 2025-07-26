@@ -57,6 +57,7 @@ func analyzePackage(pkgPath string) []string {
 				imports = append(imports, importPath)
 			}
 		}
+
 		return nil
 	})
 
@@ -73,6 +74,7 @@ func contains(slice []string, item string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -128,6 +130,7 @@ func checkIndirectCircular(
 			for i, pkg := range path {
 				if pkg == currentPkg {
 					cycleStart = i
+
 					break
 				}
 			}
@@ -136,6 +139,7 @@ func checkIndirectCircular(
 				fmt.Printf("INDIRECT CIRCULAR: %s\n", strings.Join(cycle, " -> "))
 			}
 		}
+
 		return
 	}
 

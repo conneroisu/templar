@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// Wrap wraps an error with additional context, creating a TemplarError if the input is not already one
+// Wrap wraps an error with additional context, creating a TemplarError if the input is not already one.
 func Wrap(err error, errType ErrorType, code, message string) *TemplarError {
 	if err == nil {
 		return nil
@@ -37,7 +37,7 @@ func Wrap(err error, errType ErrorType, code, message string) *TemplarError {
 	}
 }
 
-// WrapWithContext wraps an error with context information
+// WrapWithContext wraps an error with context information.
 func WrapWithContext(
 	err error,
 	errType ErrorType,
@@ -48,60 +48,66 @@ func WrapWithContext(
 	if templErr != nil {
 		templErr.Context = context
 	}
+
 	return templErr
 }
 
-// WrapBuild wraps an error as a build error with component context
+// WrapBuild wraps an error as a build error with component context.
 func WrapBuild(err error, code, message, component string) *TemplarError {
 	templErr := Wrap(err, ErrorTypeBuild, code, message)
 	if templErr != nil {
 		templErr.Component = component
 	}
+
 	return templErr
 }
 
-// WrapValidation wraps an error as a validation error
+// WrapValidation wraps an error as a validation error.
 func WrapValidation(err error, code, message string) *TemplarError {
 	return Wrap(err, ErrorTypeValidation, code, message)
 }
 
-// WrapSecurity wraps an error as a security error (non-recoverable)
+// WrapSecurity wraps an error as a security error (non-recoverable).
 func WrapSecurity(err error, code, message string) *TemplarError {
 	templErr := Wrap(err, ErrorTypeSecurity, code, message)
 	if templErr != nil {
 		templErr.Recoverable = false
 	}
+
 	return templErr
 }
 
-// WrapIO wraps an error as an I/O error
+// WrapIO wraps an error as an I/O error.
 func WrapIO(err error, code, message string) *TemplarError {
 	templErr := Wrap(err, ErrorTypeIO, code, message)
 	if templErr != nil {
 		templErr.Recoverable = false
 	}
+
 	return templErr
 }
 
-// WrapConfig wraps an error as a configuration error
+// WrapConfig wraps an error as a configuration error.
 func WrapConfig(err error, code, message string) *TemplarError {
 	templErr := Wrap(err, ErrorTypeConfig, code, message)
 	if templErr != nil {
 		templErr.Recoverable = false
 	}
+
 	return templErr
 }
 
-// WrapInternal wraps an error as an internal error
+// WrapInternal wraps an error as an internal error.
 func WrapInternal(err error, code, message string) *TemplarError {
 	templErr := Wrap(err, ErrorTypeInternal, code, message)
 	if templErr != nil {
 		templErr.Recoverable = false
 	}
+
 	return templErr
 }
 
-// EnhanceError adds debugging context to an existing error
+// EnhanceError adds debugging context to an existing error.
 func EnhanceError(err error, component, filePath string, line, column int) error {
 	if err == nil {
 		return nil
@@ -126,7 +132,7 @@ func EnhanceError(err error, component, filePath string, line, column int) error
 	}
 }
 
-// FormatError formats an error for user display
+// FormatError formats an error for user display.
 func FormatError(err error) string {
 	if err == nil {
 		return ""
@@ -140,7 +146,7 @@ func FormatError(err error) string {
 	return err.Error()
 }
 
-// FormatErrorWithSuggestions formats an error with suggestions for ValidationError types
+// FormatErrorWithSuggestions formats an error with suggestions for ValidationError types.
 func FormatErrorWithSuggestions(err error) string {
 	if err == nil {
 		return ""
@@ -153,16 +159,17 @@ func FormatErrorWithSuggestions(err error) string {
 		if len(suggestions) > 0 {
 			result += "\n\nSuggestions:"
 			for _, suggestion := range suggestions {
-				result += fmt.Sprintf("\n  • %s", suggestion)
+				result += "\n  • " + suggestion
 			}
 		}
+
 		return result
 	}
 
 	return FormatError(err)
 }
 
-// GetErrorContext extracts context information from a TemplarError
+// GetErrorContext extracts context information from a TemplarError.
 func GetErrorContext(err error) map[string]interface{} {
 	var te *TemplarError
 	if errors.As(err, &te) {
@@ -187,6 +194,7 @@ func GetErrorContext(err error) map[string]interface{} {
 		context["type"] = string(te.Type)
 		context["code"] = te.Code
 		context["recoverable"] = te.Recoverable
+
 		return context
 	}
 
@@ -196,7 +204,7 @@ func GetErrorContext(err error) map[string]interface{} {
 	}
 }
 
-// IsTemporaryError checks if an error is temporary and should be retried
+// IsTemporaryError checks if an error is temporary and should be retried.
 func IsTemporaryError(err error) bool {
 	var te *TemplarError
 	if errors.As(err, &te) {
@@ -204,19 +212,21 @@ func IsTemporaryError(err error) bool {
 		return te.Type == ErrorTypeBuild || te.Type == ErrorTypeValidation ||
 			te.Type == ErrorTypeNetwork
 	}
+
 	return false
 }
 
-// IsFatalError checks if an error is fatal and should stop execution
+// IsFatalError checks if an error is fatal and should stop execution.
 func IsFatalError(err error) bool {
 	var te *TemplarError
 	if errors.As(err, &te) {
 		return te.Type == ErrorTypeSecurity || te.Type == ErrorTypeInternal
 	}
+
 	return false
 }
 
-// ExtractCause extracts the root cause from a wrapped error
+// ExtractCause extracts the root cause from a wrapped error.
 func ExtractCause(err error) error {
 	for err != nil {
 		var te *TemplarError
@@ -229,10 +239,11 @@ func ExtractCause(err error) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
-// CollectErrors helper for common error collection patterns
+// CollectErrors helper for common error collection patterns.
 func CollectErrors(errs ...error) []error {
 	var collected []error
 	for _, err := range errs {
@@ -240,20 +251,22 @@ func CollectErrors(errs ...error) []error {
 			collected = append(collected, err)
 		}
 	}
+
 	return collected
 }
 
-// FirstError returns the first non-nil error from a list
+// FirstError returns the first non-nil error from a list.
 func FirstError(errs ...error) error {
 	for _, err := range errs {
 		if err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
-// CombineErrors combines multiple errors into a single error with context
+// CombineErrors combines multiple errors into a single error with context.
 func CombineErrors(errs ...error) error {
 	nonNilErrs := CollectErrors(errs...)
 	if len(nonNilErrs) == 0 {

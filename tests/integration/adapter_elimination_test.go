@@ -12,7 +12,7 @@ import (
 )
 
 // TestAdapterEliminationSuccess validates that concrete types implement interfaces
-// directly without needing adapters, verifying successful elimination of adapter anti-pattern
+// directly without needing adapters, verifying successful elimination of adapter anti-pattern.
 func TestAdapterEliminationSuccess(t *testing.T) {
 	t.Run("ComponentRegistry", func(t *testing.T) {
 		// Create concrete registry
@@ -98,7 +98,7 @@ func TestAdapterEliminationSuccess(t *testing.T) {
 }
 
 // TestNoAdapterAntiPatternRequired validates that we can use concrete types directly
-// as interface implementations without any wrapper or adapter layer
+// as interface implementations without any wrapper or adapter layer.
 func TestNoAdapterAntiPatternRequired(t *testing.T) {
 	// Create all concrete implementations
 	reg := registry.NewComponentRegistry()
@@ -150,7 +150,7 @@ func TestNoAdapterAntiPatternRequired(t *testing.T) {
 }
 
 // TestInterfaceSegregationPrinciple validates that interfaces follow ISP
-// ensuring concrete types only implement methods they actually need (no fat interfaces)
+// ensuring concrete types only implement methods they actually need (no fat interfaces).
 func TestInterfaceSegregationPrinciple(t *testing.T) {
 	t.Run("ProperInterfaceSegregation", func(t *testing.T) {
 		// Create file watcher
@@ -176,12 +176,12 @@ func TestInterfaceSegregationPrinciple(t *testing.T) {
 	})
 }
 
-// TestMemoryLeakComplianceWithoutAdapters ensures no memory leaks with direct interface usage
+// TestMemoryLeakComplianceWithoutAdapters ensures no memory leaks with direct interface usage.
 func TestMemoryLeakComplianceWithoutAdapters(t *testing.T) {
 	checker := interfaces.NewMemoryLeakChecker()
 
 	// Create and exercise interfaces multiple times to detect leaks
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		reg := registry.NewComponentRegistry()
 
 		fw, err := watcher.NewFileWatcher(10 * time.Millisecond)
@@ -212,7 +212,7 @@ func TestMemoryLeakComplianceWithoutAdapters(t *testing.T) {
 	}
 }
 
-// TestAdapterPackageEliminationSuccess validates that adapter package is completely removed
+// TestAdapterPackageEliminationSuccess validates that adapter package is completely removed.
 func TestAdapterPackageEliminationSuccess(t *testing.T) {
 	// This test ensures the adapter package was successfully removed
 	// If this test compiles and runs, it means we're not importing the adapter package

@@ -9,7 +9,7 @@ import (
 	"unicode/utf8"
 )
 
-// FuzzBenchmarkParser tests the benchmark parser with random input
+// FuzzBenchmarkParser tests the benchmark parser with random input.
 func FuzzBenchmarkParser(f *testing.F) {
 	detector := NewPerformanceDetector("fuzz_test_baselines", DefaultThresholds())
 	defer func() {
@@ -85,7 +85,7 @@ func FuzzBenchmarkParser(f *testing.F) {
 	})
 }
 
-// FuzzPackagePathValidation tests package path validation with random input
+// FuzzPackagePathValidation tests package path validation with random input.
 func FuzzPackagePathValidation(f *testing.F) {
 	// Seed corpus with various package path formats
 	f.Add("./internal/build")
@@ -131,7 +131,7 @@ func FuzzPackagePathValidation(f *testing.F) {
 	})
 }
 
-// FuzzBaselineOperations tests baseline file operations with random input
+// FuzzBaselineOperations tests baseline file operations with random input.
 func FuzzBaselineOperations(f *testing.F) {
 	// Seed corpus with various baseline directory names
 	f.Add("test_baselines")
@@ -173,7 +173,7 @@ func FuzzBaselineOperations(f *testing.F) {
 	})
 }
 
-// FuzzBenchmarkName tests benchmark name sanitization
+// FuzzBenchmarkName tests benchmark name sanitization.
 func FuzzBenchmarkName(f *testing.F) {
 	// Seed corpus with various benchmark names
 	f.Add("BenchmarkTest")
@@ -226,7 +226,7 @@ func FuzzBenchmarkName(f *testing.F) {
 	})
 }
 
-// Helper function to remove directories safely
+// Helper function to remove directories safely.
 func removeDirectory(dir string) error {
 	// Additional safety check before removal
 	if dir == "" || dir == "/" || dir == "." || dir == ".." {
@@ -237,7 +237,7 @@ func removeDirectory(dir string) error {
 	return nil // We don't actually remove in fuzz tests to avoid side effects
 }
 
-// Helper function to check for dangerous characters
+// Helper function to check for dangerous characters.
 func containsDangerousChars(input string) bool {
 	dangerousChars := []string{
 		"/", "\\", "\x00", "\n", "\r", ";", "|", "&", "`", "$",

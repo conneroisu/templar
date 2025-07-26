@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/pflag"
 )
 
-// StandardFlags provides consistent flag definitions across commands
+// StandardFlags provides consistent flag definitions across commands.
 type StandardFlags struct {
 	// Server flags (consistent across serve, preview commands)
 	Port   int    `flag:"port,p" desc:"Port to serve on" default:"8080"`
@@ -36,7 +36,7 @@ type StandardFlags struct {
 	Quiet   bool   `flag:"quiet,q" desc:"Suppress non-essential output" default:"false"`
 }
 
-// AddStandardFlags adds standard flags to a command
+// AddStandardFlags adds standard flags to a command.
 func AddStandardFlags(cmd *cobra.Command, flagTypes ...string) *StandardFlags {
 	flags := &StandardFlags{}
 
@@ -88,7 +88,7 @@ func addOutputFlags(cmd *cobra.Command, flags *StandardFlags) {
 	cmd.Flags().BoolVarP(&flags.Quiet, "quiet", "q", false, "Suppress non-essential output")
 }
 
-// ParseProps parses component properties with support for file references
+// ParseProps parses component properties with support for file references.
 func (f *StandardFlags) ParseProps() (map[string]interface{}, error) {
 	var props map[string]interface{}
 
@@ -133,12 +133,12 @@ func (f *StandardFlags) ParseProps() (map[string]interface{}, error) {
 	return make(map[string]interface{}), nil
 }
 
-// ShouldOpenBrowser returns whether to open browser based on flags
+// ShouldOpenBrowser returns whether to open browser based on flags.
 func (f *StandardFlags) ShouldOpenBrowser() bool {
 	return !f.NoOpen
 }
 
-// ValidateFlags validates flag combinations and values
+// ValidateFlags validates flag combinations and values.
 func (f *StandardFlags) ValidateFlags() error {
 	// Port validation
 	if f.Port < 1 || f.Port > 65535 {
@@ -147,12 +147,12 @@ func (f *StandardFlags) ValidateFlags() error {
 
 	// Host validation
 	if f.Host == "" {
-		return fmt.Errorf("host cannot be empty")
+		return errors.New("host cannot be empty")
 	}
 
 	// Props validation
 	if f.Props != "" && f.PropsFile != "" {
-		return fmt.Errorf("cannot specify both --props and --props-file")
+		return errors.New("cannot specify both --props and --props-file")
 	}
 
 	// Output format validation
@@ -162,6 +162,7 @@ func (f *StandardFlags) ValidateFlags() error {
 		for _, format := range validFormats {
 			if f.Format == format {
 				valid = true
+
 				break
 			}
 		}
@@ -173,13 +174,13 @@ func (f *StandardFlags) ValidateFlags() error {
 
 	// Quiet and verbose are mutually exclusive
 	if f.Quiet && f.Verbose {
-		return fmt.Errorf("cannot specify both --quiet and --verbose")
+		return errors.New("cannot specify both --quiet and --verbose")
 	}
 
 	return nil
 }
 
-// SetViperBindings binds flags to viper configuration keys
+// SetViperBindings binds flags to viper configuration keys.
 func SetViperBindings(cmd *cobra.Command, bindings map[string]string) {
 	for flagName, configKey := range bindings {
 		if flag := cmd.Flags().Lookup(flagName); flag != nil {
@@ -189,7 +190,7 @@ func SetViperBindings(cmd *cobra.Command, bindings map[string]string) {
 	}
 }
 
-// AddFlagValidation adds validation for a specific flag
+// AddFlagValidation adds validation for a specific flag.
 func AddFlagValidation(cmd *cobra.Command, flagName string, validator func(string) error) {
 	flag := cmd.Flags().Lookup(flagName)
 	if flag == nil {
@@ -219,10 +220,11 @@ func (v *validatingValue) Set(val string) error {
 			return err
 		}
 	}
+
 	return v.originalSet(val)
 }
 
-// Port validation helper
+// Port validation helper.
 func ValidatePort(portStr string) error {
 	port, err := strconv.Atoi(portStr)
 	if err != nil {
@@ -236,7 +238,7 @@ func ValidatePort(portStr string) error {
 	return nil
 }
 
-// File existence validation helper
+// File existence validation helper.
 func ValidateFileExists(filename string) error {
 	if filename == "" {
 		return nil // Empty is valid for optional files
@@ -249,7 +251,7 @@ func ValidateFileExists(filename string) error {
 	return nil
 }
 
-// JSON validation helper
+// JSON validation helper.
 func ValidateJSON(jsonStr string) error {
 	if jsonStr == "" {
 		return nil
@@ -263,17 +265,17 @@ func ValidateJSON(jsonStr string) error {
 	return nil
 }
 
-// FuzzyMatch provides suggestions for mistyped flags or values
+// FuzzyMatch provides suggestions for mistyped flags or values.
 type FuzzyMatch struct {
 	options []string
 }
 
-// NewFuzzyMatch creates a new fuzzy matcher with the given options
+// NewFuzzyMatch creates a new fuzzy matcher with the given options.
 func NewFuzzyMatch(options []string) *FuzzyMatch {
 	return &FuzzyMatch{options: options}
 }
 
-// FindSuggestion finds the closest match using Levenshtein distance
+// FindSuggestion finds the closest match using Levenshtein distance.
 func (f *FuzzyMatch) FindSuggestion(input string) (string, bool) {
 	if input == "" || len(f.options) == 0 {
 		return "", false
@@ -294,7 +296,7 @@ func (f *FuzzyMatch) FindSuggestion(input string) (string, bool) {
 	return bestMatch, bestMatch != ""
 }
 
-// levenshteinDistance calculates the edit distance between two strings
+// levenshteinDistance calculates the edit distance between two strings.
 func levenshteinDistance(a, b string) int {
 	if len(a) == 0 {
 		return len(b)
@@ -337,10 +339,11 @@ func min(a, b, c int) int {
 	if b <= c {
 		return b
 	}
+
 	return c
 }
 
-// ValidateFormatWithSuggestion validates format with fuzzy suggestions
+// ValidateFormatWithSuggestion validates format with fuzzy suggestions.
 func ValidateFormatWithSuggestion(format string, validFormats []string) error {
 	if format == "" {
 		return nil
@@ -364,7 +367,7 @@ func ValidateFormatWithSuggestion(format string, validFormats []string) error {
 		format, strings.Join(validFormats, ", "))
 }
 
-// ValidateTemplateWithSuggestion validates template names with suggestions
+// ValidateTemplateWithSuggestion validates template names with suggestions.
 func ValidateTemplateWithSuggestion(template string, validTemplates []string) error {
 	if template == "" {
 		return nil
@@ -388,7 +391,7 @@ func ValidateTemplateWithSuggestion(template string, validTemplates []string) er
 		template, strings.Join(validTemplates, ", "))
 }
 
-// EnhancedStandardFlags extends StandardFlags with better validation and consistency
+// EnhancedStandardFlags extends StandardFlags with better validation and consistency.
 type EnhancedStandardFlags struct {
 	*StandardFlags
 
@@ -401,14 +404,14 @@ type EnhancedStandardFlags struct {
 	Help     bool   `flag:"help,h" desc:"Show help information" default:"false"`
 }
 
-// NewEnhancedStandardFlags creates enhanced standard flags
+// NewEnhancedStandardFlags creates enhanced standard flags.
 func NewEnhancedStandardFlags() *EnhancedStandardFlags {
 	return &EnhancedStandardFlags{
 		StandardFlags: &StandardFlags{},
 	}
 }
 
-// AddEnhancedFlags adds enhanced standard flags to a command
+// AddEnhancedFlags adds enhanced standard flags to a command.
 func AddEnhancedFlags(cmd *cobra.Command, flagTypes ...string) *EnhancedStandardFlags {
 	flags := NewEnhancedStandardFlags()
 
@@ -479,7 +482,7 @@ func addCommonFlags(cmd *cobra.Command, flags *EnhancedStandardFlags) {
 	cmd.Flags().BoolVarP(&flags.Force, "force", "F", false, "Force operation, skip confirmations")
 }
 
-// ValidateEnhancedFlags validates all enhanced flags with better error messages
+// ValidateEnhancedFlags validates all enhanced flags with better error messages.
 func (f *EnhancedStandardFlags) ValidateEnhancedFlags() error {
 	// Validate base flags first
 	if err := f.ValidateFlags(); err != nil {
@@ -495,7 +498,7 @@ func (f *EnhancedStandardFlags) ValidateEnhancedFlags() error {
 	}
 
 	if f.DryRun && f.Force {
-		return fmt.Errorf("cannot use --dry-run and --force together")
+		return errors.New("cannot use --dry-run and --force together")
 	}
 
 	return nil

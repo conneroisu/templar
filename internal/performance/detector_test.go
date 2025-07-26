@@ -283,7 +283,7 @@ func TestPerformanceDetector_MaxSamplesLimit(t *testing.T) {
 
 	// Create results with more than max samples (100)
 	var results []BenchmarkResult
-	for i := 0; i < 150; i++ {
+	for i := range 150 {
 		results = append(results, BenchmarkResult{
 			Name:      "TestBenchmark",
 			NsPerOp:   float64(1000 + i),
@@ -409,7 +409,7 @@ func TestPerformanceDetector_MultipleRegressionTypes(t *testing.T) {
 	}
 }
 
-// Benchmark tests for the performance detector itself
+// Benchmark tests for the performance detector itself.
 func BenchmarkPerformanceDetector_ParseBenchmarkOutput(b *testing.B) {
 	detector := NewPerformanceDetector("test", DefaultThresholds())
 
@@ -420,7 +420,7 @@ func BenchmarkPerformanceDetector_ParseBenchmarkOutput(b *testing.B) {
 	) // 50 lines of benchmark output
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, err := detector.ParseBenchmarkOutput(benchmarkOutput)
 		if err != nil {
 			b.Fatal(err)
@@ -439,7 +439,7 @@ func BenchmarkPerformanceDetector_UpdateBaselines(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		err := detector.UpdateBaselines(results)
 		if err != nil {
 			b.Fatal(err)
@@ -467,7 +467,7 @@ func BenchmarkPerformanceDetector_DetectRegressions(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, err := detector.DetectRegressions(currentResults)
 		if err != nil {
 			b.Fatal(err)

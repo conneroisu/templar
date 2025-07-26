@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// TestValidateBaselineDirectory_PathTraversal tests path traversal prevention
+// TestValidateBaselineDirectory_PathTraversal tests path traversal prevention.
 func TestValidateBaselineDirectory_PathTraversal(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -78,6 +78,7 @@ func TestValidateBaselineDirectory_PathTraversal(t *testing.T) {
 						"Expected error for baseline directory %s, but got none",
 						tt.baselineDir,
 					)
+
 					return
 				}
 				if tt.errorMsg != "" && !containsErrorMessage(err.Error(), tt.errorMsg) {
@@ -96,7 +97,7 @@ func TestValidateBaselineDirectory_PathTraversal(t *testing.T) {
 	}
 }
 
-// TestSaveBaseline_PathValidation tests path validation in baseline saving
+// TestSaveBaseline_PathValidation tests path validation in baseline saving.
 func TestSaveBaseline_PathValidation(t *testing.T) {
 	// Create temporary directory for test
 	tempDir, err := os.MkdirTemp("", "templar-security-test")
@@ -161,6 +162,7 @@ func TestSaveBaseline_PathValidation(t *testing.T) {
 			if tt.shouldError {
 				if err == nil {
 					t.Errorf("Expected error for benchmark name %s, but got none", tt.benchmarkName)
+
 					return
 				}
 				if tt.errorMsg != "" && !containsErrorMessage(err.Error(), tt.errorMsg) {
@@ -179,7 +181,7 @@ func TestSaveBaseline_PathValidation(t *testing.T) {
 	}
 }
 
-// TestUpdateBaselines_SecurityValidation tests comprehensive security in baseline updates
+// TestUpdateBaselines_SecurityValidation tests comprehensive security in baseline updates.
 func TestUpdateBaselines_SecurityValidation(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -223,6 +225,7 @@ func TestUpdateBaselines_SecurityValidation(t *testing.T) {
 						"Expected error for baseline directory %s, but got none",
 						tt.baselineDir,
 					)
+
 					return
 				}
 				if tt.errorMsg != "" && !containsErrorMessage(err.Error(), tt.errorMsg) {
@@ -244,6 +247,7 @@ func TestUpdateBaselines_SecurityValidation(t *testing.T) {
 					info, err := os.Stat(expectedFile)
 					if err != nil {
 						t.Errorf("Expected baseline file to be created, got error: %v", err)
+
 						return
 					}
 
@@ -257,7 +261,7 @@ func TestUpdateBaselines_SecurityValidation(t *testing.T) {
 	}
 }
 
-// TestFilePermissions_Security tests that created files have secure permissions
+// TestFilePermissions_Security tests that created files have secure permissions.
 func TestFilePermissions_Security(t *testing.T) {
 	// Create temporary directory for test
 	tempDir, err := os.MkdirTemp("", "templar-permissions-test")
@@ -307,7 +311,7 @@ func TestFilePermissions_Security(t *testing.T) {
 	}
 }
 
-// TestSymlinkAttack_Prevention tests prevention of symlink-based attacks
+// TestSymlinkAttack_Prevention tests prevention of symlink-based attacks.
 func TestSymlinkAttack_Prevention(t *testing.T) {
 	// Create temporary directory for test
 	tempDir, err := os.MkdirTemp("", "templar-symlink-test")
@@ -335,7 +339,7 @@ func TestSymlinkAttack_Prevention(t *testing.T) {
 	}
 }
 
-// Helper function to check if error message contains expected substring
+// Helper function to check if error message contains expected substring.
 func containsErrorMessage(errorMsg, expectedSubstring string) bool {
 	return len(expectedSubstring) == 0 ||
 		len(errorMsg) > 0 &&
@@ -345,7 +349,7 @@ func containsErrorMessage(errorMsg, expectedSubstring string) bool {
 				containsSubstring(errorMsg, expectedSubstring))
 }
 
-// Helper function to check substring containment
+// Helper function to check substring containment.
 func containsSubstring(s, substr string) bool {
 	if len(substr) == 0 {
 		return true
@@ -358,5 +362,6 @@ func containsSubstring(s, substr string) bool {
 			return true
 		}
 	}
+
 	return false
 }

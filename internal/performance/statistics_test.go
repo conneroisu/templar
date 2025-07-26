@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-// TestStatisticalValidator_BasicConfidenceCalculation tests basic statistical confidence
+// TestStatisticalValidator_BasicConfidenceCalculation tests basic statistical confidence.
 func TestStatisticalValidator_BasicConfidenceCalculation(t *testing.T) {
 	validator := NewStatisticalValidator(0.95, 3)
 
@@ -139,7 +139,7 @@ func TestStatisticalValidator_BasicConfidenceCalculation(t *testing.T) {
 	}
 }
 
-// TestStatisticalValidator_TDistributionVsNormal tests t-distribution vs normal distribution usage
+// TestStatisticalValidator_TDistributionVsNormal tests t-distribution vs normal distribution usage.
 func TestStatisticalValidator_TDistributionVsNormal(t *testing.T) {
 	validator := NewStatisticalValidator(0.95, 3)
 
@@ -160,7 +160,7 @@ func TestStatisticalValidator_TDistributionVsNormal(t *testing.T) {
 
 	// Large sample should use z-test
 	largeSampleValues := make([]float64, 50)
-	for i := 0; i < 50; i++ {
+	for i := range 50 {
 		largeSampleValues[i] = 100.0 + float64(i%10) // Values from 100-109
 	}
 
@@ -189,7 +189,7 @@ func TestStatisticalValidator_TDistributionVsNormal(t *testing.T) {
 	}
 }
 
-// TestStatisticalValidator_MultipleComparisonCorrection tests Bonferroni correction
+// TestStatisticalValidator_MultipleComparisonCorrection tests Bonferroni correction.
 func TestStatisticalValidator_MultipleComparisonCorrection(t *testing.T) {
 	validator := NewStatisticalValidator(0.95, 3)
 
@@ -232,7 +232,7 @@ func TestStatisticalValidator_MultipleComparisonCorrection(t *testing.T) {
 	}
 }
 
-// TestStatisticalValidator_ConfidenceIntervals tests confidence interval calculation
+// TestStatisticalValidator_ConfidenceIntervals tests confidence interval calculation.
 func TestStatisticalValidator_ConfidenceIntervals(t *testing.T) {
 	validator := NewStatisticalValidator(0.95, 3)
 
@@ -274,7 +274,7 @@ func TestStatisticalValidator_ConfidenceIntervals(t *testing.T) {
 	}
 }
 
-// TestStatisticalValidator_EffectSizeClassification tests Cohen's d effect size calculation
+// TestStatisticalValidator_EffectSizeClassification tests Cohen's d effect size calculation.
 func TestStatisticalValidator_EffectSizeClassification(t *testing.T) {
 	validator := NewStatisticalValidator(0.95, 3)
 
@@ -344,7 +344,7 @@ func TestStatisticalValidator_EffectSizeClassification(t *testing.T) {
 	}
 }
 
-// TestStatisticalValidator_EdgeCases tests statistical validator edge cases
+// TestStatisticalValidator_EdgeCases tests statistical validator edge cases.
 func TestStatisticalValidator_EdgeCases(t *testing.T) {
 	validator := NewStatisticalValidator(0.95, 3)
 
@@ -410,7 +410,7 @@ func TestStatisticalValidator_EdgeCases(t *testing.T) {
 	}
 }
 
-// TestStatisticalValidator_PowerAnalysis tests statistical power calculations
+// TestStatisticalValidator_PowerAnalysis tests statistical power calculations.
 func TestStatisticalValidator_PowerAnalysis(t *testing.T) {
 	validator := NewStatisticalValidator(0.95, 3)
 
@@ -469,7 +469,7 @@ func TestStatisticalValidator_PowerAnalysis(t *testing.T) {
 	}
 }
 
-// TestStatisticalValidator_IntegrationWithDetector tests integration with performance detector
+// TestStatisticalValidator_IntegrationWithDetector tests integration with performance detector.
 func TestStatisticalValidator_IntegrationWithDetector(t *testing.T) {
 	// Create a detector with proper statistical validation
 	detector := NewPerformanceDetector("test_stats_integration", DefaultThresholds())
@@ -506,6 +506,7 @@ func TestStatisticalValidator_IntegrationWithDetector(t *testing.T) {
 	// Should detect the clear regression with high confidence
 	if len(regressions) == 0 {
 		t.Error("Expected to detect regression, but none found")
+
 		return
 	}
 

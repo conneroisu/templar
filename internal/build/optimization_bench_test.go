@@ -17,7 +17,7 @@ func BenchmarkRealisticBuildPipeline(b *testing.B) {
 
 	// Create test components
 	components := make([]*types.ComponentInfo, numComponents)
-	for i := 0; i < numComponents; i++ {
+	for i := range numComponents {
 		components[i] = &types.ComponentInfo{
 			Name:     "Component",
 			Package:  "components",
@@ -29,11 +29,11 @@ func BenchmarkRealisticBuildPipeline(b *testing.B) {
 		b.ReportAllocs()
 		b.ResetTimer()
 
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			// Simulate build pipeline without pools
 			results := make([]BuildResult, 0, numComponents)
 
-			for j := 0; j < numComponents; j++ {
+			for j := range numComponents {
 				// Simulate build output (typical templ generate output size)
 				output := make([]byte, 2048) // 2KB typical output
 				for k := range output {
@@ -61,18 +61,18 @@ func BenchmarkRealisticBuildPipeline(b *testing.B) {
 		pools := NewObjectPools()
 		b.ResetTimer()
 
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			// Simulate build pipeline with pools
 			results := make([]*BuildResult, 0, numComponents)
 
-			for j := 0; j < numComponents; j++ {
+			for j := range numComponents {
 				result := pools.GetBuildResult()
 				result.Component = components[j%len(components)]
 
 				// Use pooled output buffer more efficiently - avoid copying
 				output := pools.GetOutputBuffer()
 				// Simulate build output
-				for k := 0; k < 2048; k++ {
+				for k := range 2048 {
 					output = append(output, byte(k%256))
 				}
 				// Use the buffer directly instead of copying
@@ -103,15 +103,15 @@ func BenchmarkConcurrentWorkerPool(b *testing.B) {
 		b.ReportAllocs()
 		b.ResetTimer()
 
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			var wg sync.WaitGroup
 
-			for w := 0; w < numWorkers; w++ {
+			for w := range numWorkers {
 				wg.Add(1)
 				go func() {
 					defer wg.Done()
 
-					for t := 0; t < tasksPerWorker; t++ {
+					for range tasksPerWorker {
 						// Simulate worker without pooling
 						worker := &BuildWorker{
 							ID:    w,
@@ -145,15 +145,15 @@ func BenchmarkConcurrentWorkerPool(b *testing.B) {
 		workerPool := NewWorkerPool()
 		b.ResetTimer()
 
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			var wg sync.WaitGroup
 
-			for w := 0; w < numWorkers; w++ {
+			for w := range numWorkers {
 				wg.Add(1)
 				go func() {
 					defer wg.Done()
 
-					for t := 0; t < tasksPerWorker; t++ {
+					for range tasksPerWorker {
 						// Get worker from pool
 						worker := workerPool.GetWorker()
 						worker.ID = w
@@ -181,7 +181,7 @@ func BenchmarkLargeSliceOperations(b *testing.B) {
 
 	// Create test data
 	components := make([]*types.ComponentInfo, numComponents)
-	for i := 0; i < numComponents; i++ {
+	for i := range numComponents {
 		components[i] = &types.ComponentInfo{
 			Name:     "Component" + string(rune(i)),
 			Package:  "components",
@@ -193,7 +193,7 @@ func BenchmarkLargeSliceOperations(b *testing.B) {
 		b.ReportAllocs()
 		b.ResetTimer()
 
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			// Simulate component scanning without pools
 			scannedComponents := make([]*types.ComponentInfo, 0, numComponents)
 			filteredComponents := make([]*types.ComponentInfo, 0, numComponents/2)
@@ -208,7 +208,7 @@ func BenchmarkLargeSliceOperations(b *testing.B) {
 			}
 
 			// Simulate error collection
-			for j := 0; j < 5; j++ {
+			for range 5 {
 				errorMessages = append(errorMessages, "error message")
 			}
 
@@ -222,7 +222,7 @@ func BenchmarkLargeSliceOperations(b *testing.B) {
 		slicePools := NewSlicePools()
 		b.ResetTimer()
 
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			// Get slices from pools
 			scannedComponents := slicePools.GetComponentInfoSlice()
 			filteredComponents := slicePools.GetComponentInfoSlice()
@@ -237,7 +237,7 @@ func BenchmarkLargeSliceOperations(b *testing.B) {
 			}
 
 			// Simulate error collection
-			for j := 0; j < 5; j++ {
+			for range 5 {
 				errorMessages = append(errorMessages, "error message")
 			}
 
@@ -259,8 +259,8 @@ func BenchmarkMemoryPressure(b *testing.B) {
 	b.Run("High Allocation Pressure Without Pools", func(b *testing.B) {
 		b.ReportAllocs()
 
-		for i := 0; i < b.N; i++ {
-			for j := 0; j < iterations; j++ {
+		for range b.N {
+			for j := range iterations {
 				// Simulate frequent allocations
 				result := &BuildResult{
 					Component: &types.ComponentInfo{Name: "Test"},
@@ -286,8 +286,8 @@ func BenchmarkMemoryPressure(b *testing.B) {
 		b.ReportAllocs()
 		pools := NewObjectPools()
 
-		for i := 0; i < b.N; i++ {
-			for j := 0; j < iterations; j++ {
+		for range b.N {
+			for j := range iterations {
 				// Use pools for allocations
 				result := pools.GetBuildResult()
 				result.Component = &types.ComponentInfo{Name: "Test"}
@@ -317,7 +317,7 @@ func BenchmarkBuildPipelineRealistic(b *testing.B) {
 	b.Run("Standard Pipeline", func(b *testing.B) {
 		b.ReportAllocs()
 
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			pipeline := NewBuildPipeline(4, reg)
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 
@@ -325,7 +325,7 @@ func BenchmarkBuildPipelineRealistic(b *testing.B) {
 			pipeline.Start(ctx)
 
 			// Simulate 10 build tasks
-			for j := 0; j < 10; j++ {
+			for range 10 {
 				component := &types.ComponentInfo{
 					Name:     "TestComponent",
 					Package:  "components",
@@ -348,7 +348,7 @@ func BenchmarkBuildPipelineRealistic(b *testing.B) {
 	})
 }
 
-// Memory usage measurement helpers
+// Memory usage measurement helpers.
 func BenchmarkMemoryUsageComparison(b *testing.B) {
 	const numObjects = 1000
 
@@ -358,9 +358,9 @@ func BenchmarkMemoryUsageComparison(b *testing.B) {
 		runtime.GC()
 		runtime.ReadMemStats(&m1)
 
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			objects := make([]*BuildResult, numObjects)
-			for j := 0; j < numObjects; j++ {
+			for j := range numObjects {
 				objects[j] = &BuildResult{
 					Component: &types.ComponentInfo{Name: "Test"},
 					Output:    make([]byte, 512),
@@ -380,9 +380,9 @@ func BenchmarkMemoryUsageComparison(b *testing.B) {
 		runtime.GC()
 		runtime.ReadMemStats(&m1)
 
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			objects := make([]*BuildResult, numObjects)
-			for j := 0; j < numObjects; j++ {
+			for j := range numObjects {
 				result := pools.GetBuildResult()
 				result.Component = &types.ComponentInfo{Name: "Test"}
 				result.Output = make([]byte, 512)

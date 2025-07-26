@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Helper function to verify parsed error results
+// Helper function to verify parsed error results.
 func verifyParsedErrors(t *testing.T, parser *ErrorParser, testCase struct {
 	name           string
 	output         string
@@ -44,7 +44,7 @@ func verifyParsedErrors(t *testing.T, parser *ErrorParser, testCase struct {
 	}
 }
 
-// TestParseError_TemplPatterns tests templ error parsing patterns
+// TestParseError_TemplPatterns tests templ error parsing patterns.
 func TestParseError_TemplPatterns(t *testing.T) {
 	parser := NewErrorParser()
 
@@ -107,7 +107,7 @@ func TestParseError_TemplPatterns(t *testing.T) {
 	}
 }
 
-// TestParseError_GoPatterns tests Go error parsing patterns
+// TestParseError_GoPatterns tests Go error parsing patterns.
 func TestParseError_GoPatterns(t *testing.T) {
 	parser := NewErrorParser()
 
@@ -200,7 +200,7 @@ func TestParseError_GoPatterns(t *testing.T) {
 	}
 }
 
-// TestParseError_MalformedOutput tests handling of malformed output
+// TestParseError_MalformedOutput tests handling of malformed output.
 func TestParseError_MalformedOutput(t *testing.T) {
 	parser := NewErrorParser()
 
@@ -276,7 +276,7 @@ func TestParseError_MalformedOutput(t *testing.T) {
 	}
 }
 
-// TestParseError_UnicodeHandling tests Unicode handling in error messages
+// TestParseError_UnicodeHandling tests Unicode handling in error messages.
 func TestParseError_UnicodeHandling(t *testing.T) {
 	parser := NewErrorParser()
 
@@ -337,7 +337,7 @@ func TestParseError_UnicodeHandling(t *testing.T) {
 	}
 }
 
-// TestParseError_LineNumberExtraction tests edge cases in line number extraction
+// TestParseError_LineNumberExtraction tests edge cases in line number extraction.
 func TestParseError_LineNumberExtraction(t *testing.T) {
 	parser := NewErrorParser()
 
@@ -402,7 +402,7 @@ func TestParseError_LineNumberExtraction(t *testing.T) {
 	}
 }
 
-// TestParseError_ErrorMessageFormatting tests error message formatting
+// TestParseError_ErrorMessageFormatting tests error message formatting.
 func TestParseError_ErrorMessageFormatting(t *testing.T) {
 	parser := NewErrorParser()
 
@@ -450,7 +450,7 @@ func TestParseError_ErrorMessageFormatting(t *testing.T) {
 	}
 }
 
-// TestParseError_MultilineOutput tests parsing of multiline output
+// TestParseError_MultilineOutput tests parsing of multiline output.
 func TestParseError_MultilineOutput(t *testing.T) {
 	parser := NewErrorParser()
 
@@ -499,7 +499,7 @@ Build failed with issues`
 	)
 }
 
-// TestParseError_ContextLines tests context line extraction
+// TestParseError_ContextLines tests context line extraction.
 func TestParseError_ContextLines(t *testing.T) {
 	parser := NewErrorParser()
 
@@ -520,6 +520,7 @@ line 5`
 	for _, err := range errors {
 		if err.File == "file.go" && err.Line == 3 {
 			mainError = err
+
 			break
 		}
 	}
@@ -539,7 +540,7 @@ line 5`
 	assert.Contains(t, mainError.Context[4], "line 5")
 }
 
-// TestParseError_Integration tests integration with real templ compiler output
+// TestParseError_Integration tests integration with real templ compiler output.
 func TestParseError_Integration(t *testing.T) {
 	parser := NewErrorParser()
 
@@ -564,7 +565,7 @@ exit status 1`
 	assert.NotEmpty(t, err.Suggestion)
 }
 
-// TestParsedError_FormatError tests error formatting
+// TestParsedError_FormatError tests error formatting.
 func TestParsedError_FormatError(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -643,7 +644,7 @@ func TestParsedError_FormatError(t *testing.T) {
 	}
 }
 
-// TestFormatErrorsForBrowser tests HTML error formatting
+// TestFormatErrorsForBrowser tests HTML error formatting.
 func TestFormatErrorsForBrowser(t *testing.T) {
 	errors := []*ParsedError{
 		{
@@ -696,7 +697,7 @@ func TestFormatErrorsForBrowser(t *testing.T) {
 	assert.Contains(t, html, "context-current")
 }
 
-// TestFormatErrorsForBrowser_Empty tests empty error list
+// TestFormatErrorsForBrowser_Empty tests empty error list.
 func TestFormatErrorsForBrowser_Empty(t *testing.T) {
 	html := FormatErrorsForBrowser([]*ParsedError{})
 	assert.Empty(t, html, "Empty error list should return empty string")
@@ -705,7 +706,7 @@ func TestFormatErrorsForBrowser_Empty(t *testing.T) {
 	assert.Empty(t, html, "Nil error list should return empty string")
 }
 
-// TestErrorParser_TypeAndSeverityStrings tests error type and severity string methods
+// TestErrorParser_TypeAndSeverityStrings tests error type and severity string methods.
 func TestErrorParser_TypeAndSeverityStrings(t *testing.T) {
 	tests := []struct {
 		errorType BuildErrorType
@@ -747,7 +748,7 @@ func TestErrorParser_TypeAndSeverityStrings(t *testing.T) {
 	}
 }
 
-// TestParseError_HelperFunctions tests min and max helper functions
+// TestParseError_HelperFunctions tests min and max helper functions.
 func TestParseError_HelperFunctions(t *testing.T) {
 	// Test max function
 	assert.Equal(t, 5, max(3, 5))
@@ -762,7 +763,7 @@ func TestParseError_HelperFunctions(t *testing.T) {
 	assert.Equal(t, -1, min(-1, 1))
 }
 
-// TestParseError_EdgeCases tests various edge cases
+// TestParseError_EdgeCases tests various edge cases.
 func TestParseError_EdgeCases(t *testing.T) {
 	parser := NewErrorParser()
 
@@ -811,13 +812,13 @@ func TestParseError_EdgeCases(t *testing.T) {
 	}
 }
 
-// Benchmark tests for performance
+// Benchmark tests for performance.
 func BenchmarkParseError_SingleError(b *testing.B) {
 	parser := NewErrorParser()
 	output := "components/button.templ:15:8: unexpected token"
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = parser.ParseError(output)
 	}
 }
@@ -827,7 +828,7 @@ func BenchmarkParseError_MultipleErrors(b *testing.B) {
 	output := strings.Repeat("file.go:1:1: error\n", 100)
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = parser.ParseError(output)
 	}
 }
@@ -848,7 +849,7 @@ func BenchmarkFormatErrorsForBrowser(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = FormatErrorsForBrowser(errors)
 	}
 }

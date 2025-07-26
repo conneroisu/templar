@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// TestEnhancedMemoryPooling tests that the new memory pools work correctly
+// TestEnhancedMemoryPooling tests that the new memory pools work correctly.
 func TestEnhancedMemoryPooling(t *testing.T) {
 	fw, err := NewFileWatcher(10 * time.Millisecond)
 	if err != nil {
@@ -20,7 +20,7 @@ func TestEnhancedMemoryPooling(t *testing.T) {
 	eventBatchPool.Put(initialBatch)
 
 	// Add many events to trigger multiple pool operations
-	for i := 0; i < 200; i++ {
+	for i := range 200 {
 		event := ChangeEvent{
 			Type:    EventTypeModified,
 			Path:    "/test/file" + string(rune(i%20)) + ".templ",
@@ -43,7 +43,7 @@ func TestEnhancedMemoryPooling(t *testing.T) {
 	eventBatchPool.Put(testBatch)
 }
 
-// TestBatchProcessing tests that events are processed in batches efficiently
+// TestBatchProcessing tests that events are processed in batches efficiently.
 func TestBatchProcessing(t *testing.T) {
 	fw, err := NewFileWatcher(100 * time.Millisecond) // Longer delay to control batching
 	if err != nil {
@@ -61,6 +61,7 @@ func TestBatchProcessing(t *testing.T) {
 		batchesReceived++
 		totalEventsReceived += len(events)
 		t.Logf("Received batch %d with %d events", batchesReceived, len(events))
+
 		return nil
 	})
 
@@ -76,7 +77,7 @@ func TestBatchProcessing(t *testing.T) {
 	maxBatchSize := fw.debouncer.maxBatchSize
 	eventsToAdd := maxBatchSize + 10
 
-	for i := 0; i < eventsToAdd; i++ {
+	for i := range eventsToAdd {
 		event := ChangeEvent{
 			Type:    EventTypeModified,
 			Path:    "/test/batch_file" + string(rune(i)) + ".templ",
@@ -107,7 +108,7 @@ func TestBatchProcessing(t *testing.T) {
 	}
 }
 
-// TestLRUEviction tests that old events are evicted properly
+// TestLRUEviction tests that old events are evicted properly.
 func TestLRUEviction(t *testing.T) {
 	fw, err := NewFileWatcher(1 * time.Second) // Long delay to prevent flushing
 	if err != nil {
@@ -118,7 +119,7 @@ func TestLRUEviction(t *testing.T) {
 	// Fill up the pending queue beyond max capacity
 	eventsToAdd := MaxPendingEvents + 200
 
-	for i := 0; i < eventsToAdd; i++ {
+	for i := range eventsToAdd {
 		event := ChangeEvent{
 			Type:    EventTypeModified,
 			Path:    "/test/eviction_file" + string(rune(i)) + ".templ",
@@ -146,7 +147,7 @@ func TestLRUEviction(t *testing.T) {
 	}
 }
 
-// TestBackpressureHandling tests that backpressure is handled gracefully
+// TestBackpressureHandling tests that backpressure is handled gracefully.
 func TestBackpressureHandling(t *testing.T) {
 	fw, err := NewFileWatcher(1 * time.Millisecond)
 	if err != nil {
@@ -159,6 +160,7 @@ func TestBackpressureHandling(t *testing.T) {
 	fw.AddHandler(func(events []ChangeEvent) error {
 		processedCount += len(events)
 		time.Sleep(20 * time.Millisecond) // Moderate processing delay
+
 		return nil
 	})
 
@@ -172,7 +174,7 @@ func TestBackpressureHandling(t *testing.T) {
 
 	// Flood the system with events
 	eventsToAdd := 500
-	for i := 0; i < eventsToAdd; i++ {
+	for i := range eventsToAdd {
 		event := ChangeEvent{
 			Type:    EventTypeModified,
 			Path:    "/test/backpressure_file" + string(rune(i%10)) + ".templ",
@@ -206,7 +208,7 @@ func TestBackpressureHandling(t *testing.T) {
 	}
 }
 
-// TestMemoryGrowthPrevention tests that memory doesn't grow unbounded
+// TestMemoryGrowthPrevention tests that memory doesn't grow unbounded.
 func TestMemoryGrowthPrevention(t *testing.T) {
 	fw, err := NewFileWatcher(1 * time.Millisecond)
 	if err != nil {
@@ -220,9 +222,9 @@ func TestMemoryGrowthPrevention(t *testing.T) {
 	})
 
 	// Monitor stats over multiple cycles
-	for cycle := 0; cycle < 10; cycle++ {
+	for cycle := range 10 {
 		// Add many events
-		for i := 0; i < 100; i++ {
+		for i := range 100 {
 			event := ChangeEvent{
 				Type:    EventTypeModified,
 				Path:    "/test/growth_file" + string(rune(i%5)) + ".templ",
@@ -248,7 +250,7 @@ func TestMemoryGrowthPrevention(t *testing.T) {
 	}
 }
 
-// TestStatsAccuracy tests that statistics are accurate
+// TestStatsAccuracy tests that statistics are accurate.
 func TestStatsAccuracy(t *testing.T) {
 	fw, err := NewFileWatcher(10 * time.Millisecond)
 	if err != nil {
@@ -267,7 +269,7 @@ func TestStatsAccuracy(t *testing.T) {
 
 	// Add some events
 	eventsAdded := 10
-	for i := 0; i < eventsAdded; i++ {
+	for i := range eventsAdded {
 		event := ChangeEvent{
 			Type:    EventTypeModified,
 			Path:    "/test/stats_file" + string(rune(i)) + ".templ",
@@ -294,7 +296,7 @@ func TestStatsAccuracy(t *testing.T) {
 	}
 }
 
-// BenchmarkEnhancedWatcher benchmarks the enhanced watcher implementation
+// BenchmarkEnhancedWatcher benchmarks the enhanced watcher implementation.
 func BenchmarkEnhancedWatcher(b *testing.B) {
 	fw, err := NewFileWatcher(1 * time.Millisecond)
 	if err != nil {
@@ -309,7 +311,7 @@ func BenchmarkEnhancedWatcher(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		event := ChangeEvent{
 			Type:    EventTypeModified,
 			Path:    "/test/bench_file" + string(rune(i%100)) + ".templ",

@@ -8,7 +8,7 @@ import (
 	"github.com/conneroisu/templar/internal/config"
 )
 
-// MockOriginValidatorForMiddleware provides mock origin validation for middleware tests
+// MockOriginValidatorForMiddleware provides mock origin validation for middleware tests.
 type MockOriginValidatorForMiddleware struct {
 	AllowedOrigins []string
 	AllowAll       bool
@@ -23,10 +23,11 @@ func (m *MockOriginValidatorForMiddleware) IsAllowedOrigin(origin string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
-// MockTokenBucketManagerForMiddleware provides mock rate limiting for middleware tests
+// MockTokenBucketManagerForMiddleware provides mock rate limiting for middleware tests.
 type MockTokenBucketManagerForMiddleware struct {
 	AllowRequests bool
 }
@@ -42,7 +43,7 @@ func (m *MockTokenBucketManagerForMiddleware) Stop() {
 	// Mock implementation
 }
 
-// createTestMiddlewareDependencies creates valid dependencies for testing
+// createTestMiddlewareDependencies creates valid dependencies for testing.
 func createTestMiddlewareDependencies() MiddlewareDependencies {
 	return MiddlewareDependencies{
 		Config: &config.Config{
@@ -57,7 +58,7 @@ func createTestMiddlewareDependencies() MiddlewareDependencies {
 	}
 }
 
-// TestNewMiddlewareChain_ValidInputs tests successful construction
+// TestNewMiddlewareChain_ValidInputs tests successful construction.
 func TestNewMiddlewareChain_ValidInputs(t *testing.T) {
 	deps := createTestMiddlewareDependencies()
 
@@ -100,7 +101,7 @@ func TestNewMiddlewareChain_ValidInputs(t *testing.T) {
 	}
 }
 
-// TestNewMiddlewareChain_NilConfig tests panic on nil config
+// TestNewMiddlewareChain_NilConfig tests panic on nil config.
 func TestNewMiddlewareChain_NilConfig(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
@@ -113,7 +114,7 @@ func TestNewMiddlewareChain_NilConfig(t *testing.T) {
 	NewMiddlewareChain(deps)
 }
 
-// TestNewMiddlewareChain_NilOriginValidator tests panic on nil origin validator
+// TestNewMiddlewareChain_NilOriginValidator tests panic on nil origin validator.
 func TestNewMiddlewareChain_NilOriginValidator(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
@@ -126,7 +127,7 @@ func TestNewMiddlewareChain_NilOriginValidator(t *testing.T) {
 	NewMiddlewareChain(deps)
 }
 
-// TestNewMiddlewareChain_EmptyEnvironment tests panic on empty environment
+// TestNewMiddlewareChain_EmptyEnvironment tests panic on empty environment.
 func TestNewMiddlewareChain_EmptyEnvironment(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
@@ -139,7 +140,7 @@ func TestNewMiddlewareChain_EmptyEnvironment(t *testing.T) {
 	NewMiddlewareChain(deps)
 }
 
-// TestMiddlewareChain_Apply_ValidHandler tests successful middleware application
+// TestMiddlewareChain_Apply_ValidHandler tests successful middleware application.
 func TestMiddlewareChain_Apply_ValidHandler(t *testing.T) {
 	deps := createTestMiddlewareDependencies()
 	chain := NewMiddlewareChain(deps)
@@ -159,7 +160,7 @@ func TestMiddlewareChain_Apply_ValidHandler(t *testing.T) {
 	}
 
 	// Test the wrapped handler
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest(http.MethodGet, "/test", nil)
 	recorder := httptest.NewRecorder()
 
 	wrappedHandler.ServeHTTP(recorder, req)
@@ -170,7 +171,7 @@ func TestMiddlewareChain_Apply_ValidHandler(t *testing.T) {
 	}
 }
 
-// TestMiddlewareChain_Apply_NilHandler tests panic on nil handler
+// TestMiddlewareChain_Apply_NilHandler tests panic on nil handler.
 func TestMiddlewareChain_Apply_NilHandler(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
@@ -183,7 +184,7 @@ func TestMiddlewareChain_Apply_NilHandler(t *testing.T) {
 	chain.Apply(nil)
 }
 
-// TestMiddlewareChain_AddMiddleware tests adding custom middleware
+// TestMiddlewareChain_AddMiddleware tests adding custom middleware.
 func TestMiddlewareChain_AddMiddleware(t *testing.T) {
 	deps := createTestMiddlewareDependencies()
 	chain := NewMiddlewareChain(deps)
@@ -212,7 +213,7 @@ func TestMiddlewareChain_AddMiddleware(t *testing.T) {
 	})
 
 	wrappedHandler := chain.Apply(testHandler)
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest(http.MethodGet, "/test", nil)
 	recorder := httptest.NewRecorder()
 
 	wrappedHandler.ServeHTTP(recorder, req)
@@ -223,7 +224,7 @@ func TestMiddlewareChain_AddMiddleware(t *testing.T) {
 	}
 }
 
-// TestMiddlewareChain_Reset tests resetting middleware chain
+// TestMiddlewareChain_Reset tests resetting middleware chain.
 func TestMiddlewareChain_Reset(t *testing.T) {
 	deps := createTestMiddlewareDependencies()
 	chain := NewMiddlewareChain(deps)
@@ -249,7 +250,7 @@ func TestMiddlewareChain_Reset(t *testing.T) {
 	}
 }
 
-// TestMiddlewareChain_Clone tests cloning middleware chain
+// TestMiddlewareChain_Clone tests cloning middleware chain.
 func TestMiddlewareChain_Clone(t *testing.T) {
 	deps := createTestMiddlewareDependencies()
 	original := NewMiddlewareChain(deps)
@@ -286,7 +287,7 @@ func TestMiddlewareChain_Clone(t *testing.T) {
 	}
 }
 
-// TestMiddlewareChain_CORSMiddleware tests CORS middleware functionality
+// TestMiddlewareChain_CORSMiddleware tests CORS middleware functionality.
 func TestMiddlewareChain_CORSMiddleware(t *testing.T) {
 	testCases := []struct {
 		name               string
@@ -342,6 +343,7 @@ func TestMiddlewareChain_CORSMiddleware(t *testing.T) {
 				for _, allowed := range tc.allowedOrigins {
 					if tc.origin == allowed {
 						deps.OriginValidator.(*MockOriginValidatorForMiddleware).AllowAll = true
+
 						break
 					}
 				}
@@ -354,7 +356,7 @@ func TestMiddlewareChain_CORSMiddleware(t *testing.T) {
 			})
 
 			wrappedHandler := chain.Apply(testHandler)
-			req := httptest.NewRequest("GET", "/test", nil)
+			req := httptest.NewRequest(http.MethodGet, "/test", nil)
 			if tc.origin != "" {
 				req.Header.Set("Origin", tc.origin)
 			}
@@ -374,7 +376,7 @@ func TestMiddlewareChain_CORSMiddleware(t *testing.T) {
 	}
 }
 
-// TestMiddlewareChain_OptionsRequest tests CORS preflight handling
+// TestMiddlewareChain_OptionsRequest tests CORS preflight handling.
 func TestMiddlewareChain_OptionsRequest(t *testing.T) {
 	deps := createTestMiddlewareDependencies()
 	chain := NewMiddlewareChain(deps)
@@ -386,7 +388,7 @@ func TestMiddlewareChain_OptionsRequest(t *testing.T) {
 	})
 
 	wrappedHandler := chain.Apply(testHandler)
-	req := httptest.NewRequest("OPTIONS", "/test", nil)
+	req := httptest.NewRequest(http.MethodOptions, "/test", nil)
 	recorder := httptest.NewRecorder()
 
 	wrappedHandler.ServeHTTP(recorder, req)
@@ -405,7 +407,7 @@ func TestMiddlewareChain_OptionsRequest(t *testing.T) {
 	}
 }
 
-// TestNewCustomMiddlewareChain tests custom middleware chain creation
+// TestNewCustomMiddlewareChain tests custom middleware chain creation.
 func TestNewCustomMiddlewareChain(t *testing.T) {
 	deps := createTestMiddlewareDependencies()
 
@@ -432,7 +434,7 @@ func TestNewCustomMiddlewareChain(t *testing.T) {
 	}
 }
 
-// TestMiddlewareChain_WithMonitoring tests middleware chain with monitoring
+// TestMiddlewareChain_WithMonitoring tests middleware chain with monitoring.
 func TestMiddlewareChain_WithMonitoring(t *testing.T) {
 	deps := createTestMiddlewareDependencies()
 
@@ -448,7 +450,7 @@ func TestMiddlewareChain_WithMonitoring(t *testing.T) {
 	})
 
 	wrappedHandler := chain.Apply(testHandler)
-	req := httptest.NewRequest("GET", "/test", nil)
+	req := httptest.NewRequest(http.MethodGet, "/test", nil)
 	recorder := httptest.NewRecorder()
 
 	wrappedHandler.ServeHTTP(recorder, req)
@@ -458,7 +460,7 @@ func TestMiddlewareChain_WithMonitoring(t *testing.T) {
 	}
 }
 
-// BenchmarkMiddlewareChain_Apply benchmarks middleware application
+// BenchmarkMiddlewareChain_Apply benchmarks middleware application.
 func BenchmarkMiddlewareChain_Apply(b *testing.B) {
 	deps := createTestMiddlewareDependencies()
 	chain := NewMiddlewareChain(deps)
@@ -468,15 +470,15 @@ func BenchmarkMiddlewareChain_Apply(b *testing.B) {
 	})
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		wrappedHandler := chain.Apply(testHandler)
-		req := httptest.NewRequest("GET", "/test", nil)
+		req := httptest.NewRequest(http.MethodGet, "/test", nil)
 		recorder := httptest.NewRecorder()
 		wrappedHandler.ServeHTTP(recorder, req)
 	}
 }
 
-// BenchmarkMiddlewareChain_AddMiddleware benchmarks middleware addition
+// BenchmarkMiddlewareChain_AddMiddleware benchmarks middleware addition.
 func BenchmarkMiddlewareChain_AddMiddleware(b *testing.B) {
 	deps := createTestMiddlewareDependencies()
 	chain := NewMiddlewareChain(deps)
@@ -486,7 +488,7 @@ func BenchmarkMiddlewareChain_AddMiddleware(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		// Reset chain to avoid growing indefinitely
 		if i%1000 == 0 {
 			chain.Reset()

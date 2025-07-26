@@ -46,6 +46,7 @@ func TestMonitoringMiddleware(t *testing.T) {
 				if metric.Labels["method"] == "GET" && metric.Labels["status"] == "200" {
 					assert.Equal(t, 1.0, metric.Value)
 					found = true
+
 					break
 				}
 			}
@@ -74,6 +75,7 @@ func TestMonitoringMiddleware(t *testing.T) {
 				if metric.Labels["method"] == "POST" && metric.Labels["status"] == "500" {
 					assert.Equal(t, 1.0, metric.Value)
 					found = true
+
 					break
 				}
 			}
@@ -99,6 +101,7 @@ func TestMonitoringMiddleware(t *testing.T) {
 			if metric.Name == "templar_http_request_duration_seconds_count" {
 				assert.Equal(t, 1.0, metric.Value)
 				found = true
+
 				break
 			}
 		}
@@ -296,6 +299,7 @@ func TestLoggingIntegration(t *testing.T) {
 		for _, metric := range metrics {
 			if metric.Name == "templar_log_entries_total" && metric.Labels["level"] == "INFO" {
 				found = true
+
 				break
 			}
 		}
@@ -321,6 +325,7 @@ func TestOperationTracker(t *testing.T) {
 			"test_operation",
 			func(ctx context.Context) error {
 				executed = true
+
 				return nil
 			},
 		)
@@ -335,6 +340,7 @@ func TestOperationTracker(t *testing.T) {
 			if metric.Name == "templar_test_component_test_operation_duration_seconds_count" {
 				assert.Equal(t, 1.0, metric.Value)
 				found = true
+
 				break
 			}
 		}
@@ -360,6 +366,7 @@ func TestOperationTracker(t *testing.T) {
 			if metric.Name == "templar_errors_total" &&
 				metric.Labels["category"] == "test_component" {
 				found = true
+
 				break
 			}
 		}
@@ -379,7 +386,7 @@ func TestBatchTracker(t *testing.T) {
 		tracker := NewBatchTracker(monitor, logger, "test_component", 5)
 
 		// Process items
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			err := tracker.TrackItem(context.Background(), fmt.Sprintf("item_%d", i), func() error {
 				return nil
 			})
@@ -487,6 +494,7 @@ func TestGlobalFunctions(t *testing.T) {
 			"global_operation",
 			func(ctx context.Context) error {
 				executed = true
+
 				return nil
 			},
 		)
@@ -558,7 +566,7 @@ func BenchmarkMonitoringMiddleware(b *testing.B) {
 	}))
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		req := httptest.NewRequest(http.MethodGet, "/test", nil)
 		recorder := httptest.NewRecorder()
 		handler.ServeHTTP(recorder, req)
@@ -576,7 +584,7 @@ func BenchmarkOperationTracking(b *testing.B) {
 	tracker := NewOperationTracker(monitor, logger, "benchmark_component")
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		err := tracker.TrackOperation(
 			context.Background(),
 			"benchmark_operation",

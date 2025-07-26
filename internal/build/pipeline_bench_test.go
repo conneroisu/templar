@@ -9,7 +9,7 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// createTestComponent creates a test component for benchmarking
+// createTestComponent creates a test component for benchmarking.
 func createTestComponent(name string, complexity string) *types.ComponentInfo {
 	var parameters []types.ParameterInfo
 
@@ -41,17 +41,17 @@ func createTestComponent(name string, complexity string) *types.ComponentInfo {
 		Package:    "components",
 		FilePath:   fmt.Sprintf("components/%s.templ", name),
 		Parameters: parameters,
-		Hash:       fmt.Sprintf("hash_%s", name),
+		Hash:       "hash_" + name,
 		LastMod:    time.Now(),
 	}
 }
 
-// createTestCacheEntry creates a test cache entry
+// createTestCacheEntry creates a test cache entry.
 func createTestCacheEntry(size int) []byte {
 	return make([]byte, size)
 }
 
-// BenchmarkBuildPipeline_Build benchmarks component building performance
+// BenchmarkBuildPipeline_Build benchmarks component building performance.
 func BenchmarkBuildPipeline_Build(b *testing.B) {
 	workerCounts := []int{1, 2, 4, 8}
 	complexities := []string{"simple", "medium", "complex"}
@@ -68,7 +68,7 @@ func BenchmarkBuildPipeline_Build(b *testing.B) {
 				b.ResetTimer()
 				b.ReportAllocs()
 
-				for i := 0; i < b.N; i++ {
+				for range b.N {
 					pipeline.Build(component)
 				}
 			})
@@ -76,7 +76,7 @@ func BenchmarkBuildPipeline_Build(b *testing.B) {
 	}
 }
 
-// BenchmarkBuildPipeline_ConcurrentBuilds benchmarks concurrent build performance
+// BenchmarkBuildPipeline_ConcurrentBuilds benchmarks concurrent build performance.
 func BenchmarkBuildPipeline_ConcurrentBuilds(b *testing.B) {
 	reg := NewMockComponentRegistry()
 	pipeline := NewBuildPipeline(4, reg)
@@ -84,7 +84,7 @@ func BenchmarkBuildPipeline_ConcurrentBuilds(b *testing.B) {
 
 	// Create test components
 	components := make([]*types.ComponentInfo, 100)
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		complexity := []string{"simple", "medium", "complex"}[i%3]
 		components[i] = createTestComponent(fmt.Sprintf("Component%d", i), complexity)
 	}
@@ -102,7 +102,7 @@ func BenchmarkBuildPipeline_ConcurrentBuilds(b *testing.B) {
 	})
 }
 
-// BenchmarkBuildCache_Operations benchmarks cache operations
+// BenchmarkBuildCache_Operations benchmarks cache operations.
 func BenchmarkBuildCache_Operations(b *testing.B) {
 	maxMemory := 100 * 1024 * 1024 // 100MB
 
@@ -117,7 +117,7 @@ func BenchmarkBuildCache_Operations(b *testing.B) {
 				b.ResetTimer()
 				b.ReportAllocs()
 
-				for i := 0; i < b.N; i++ {
+				for i := range b.N {
 					key := fmt.Sprintf("key_%d", i)
 					cache.Set(key, entry)
 				}
@@ -129,7 +129,7 @@ func BenchmarkBuildCache_Operations(b *testing.B) {
 		cache := newTestCache(int64(maxMemory), time.Hour)
 
 		// Pre-populate cache
-		for i := 0; i < 500; i++ {
+		for i := range 500 {
 			key := fmt.Sprintf("key_%d", i)
 			entry := createTestCacheEntry(1024)
 			cache.Set(key, entry)
@@ -138,7 +138,7 @@ func BenchmarkBuildCache_Operations(b *testing.B) {
 		b.ResetTimer()
 		b.ReportAllocs()
 
-		for i := 0; i < b.N; i++ {
+		for i := range b.N {
 			key := fmt.Sprintf("key_%d", i%500)
 			_, _ = cache.Get(key)
 		}
@@ -148,7 +148,7 @@ func BenchmarkBuildCache_Operations(b *testing.B) {
 		cache := newTestCache(int64(maxMemory), time.Hour)
 
 		// Pre-populate cache
-		for i := 0; i < 250; i++ {
+		for i := range 250 {
 			key := fmt.Sprintf("key_%d", i)
 			entry := createTestCacheEntry(1024)
 			cache.Set(key, entry)
@@ -157,7 +157,7 @@ func BenchmarkBuildCache_Operations(b *testing.B) {
 		b.ResetTimer()
 		b.ReportAllocs()
 
-		for i := 0; i < b.N; i++ {
+		for i := range b.N {
 			key := fmt.Sprintf("key_%d", i)
 
 			// 80% reads, 20% writes
@@ -171,7 +171,7 @@ func BenchmarkBuildCache_Operations(b *testing.B) {
 	})
 }
 
-// BenchmarkBuildCache_Eviction benchmarks cache eviction performance
+// BenchmarkBuildCache_Eviction benchmarks cache eviction performance.
 func BenchmarkBuildCache_Eviction(b *testing.B) {
 	b.Run("LRU_Eviction", func(b *testing.B) {
 		// Small cache to force evictions
@@ -180,7 +180,7 @@ func BenchmarkBuildCache_Eviction(b *testing.B) {
 		b.ResetTimer()
 		b.ReportAllocs()
 
-		for i := 0; i < b.N; i++ {
+		for i := range b.N {
 			key := fmt.Sprintf("key_%d", i)
 			entry := createTestCacheEntry(10 * 1024) // 10KB per entry
 			cache.Set(key, entry)
@@ -194,7 +194,7 @@ func BenchmarkBuildCache_Eviction(b *testing.B) {
 		b.ResetTimer()
 		b.ReportAllocs()
 
-		for i := 0; i < b.N; i++ {
+		for i := range b.N {
 			key := fmt.Sprintf("key_%d", i)
 			entry := createTestCacheEntry(5 * 1024) // 5KB per entry
 			cache.Set(key, entry)
@@ -202,12 +202,12 @@ func BenchmarkBuildCache_Eviction(b *testing.B) {
 	})
 }
 
-// BenchmarkBuildCache_ConcurrentAccess benchmarks concurrent cache access
+// BenchmarkBuildCache_ConcurrentAccess benchmarks concurrent cache access.
 func BenchmarkBuildCache_ConcurrentAccess(b *testing.B) {
 	cache := newTestCache(10*1024*1024, time.Hour) // 10MB
 
 	// Pre-populate cache
-	for i := 0; i < 500; i++ {
+	for i := range 500 {
 		key := fmt.Sprintf("key_%d", i)
 		entry := createTestCacheEntry(1024)
 		cache.Set(key, entry)
@@ -233,7 +233,7 @@ func BenchmarkBuildCache_ConcurrentAccess(b *testing.B) {
 	})
 }
 
-// BenchmarkBuildPipeline_WorkerPoolPerformance benchmarks worker pool efficiency
+// BenchmarkBuildPipeline_WorkerPoolPerformance benchmarks worker pool efficiency.
 func BenchmarkBuildPipeline_WorkerPoolPerformance(b *testing.B) {
 	workerCounts := []int{1, 2, 4, 8, 16}
 	taskCounts := []int{10, 100, 1000}
@@ -244,13 +244,13 @@ func BenchmarkBuildPipeline_WorkerPoolPerformance(b *testing.B) {
 				b.ResetTimer()
 				b.ReportAllocs()
 
-				for i := 0; i < b.N; i++ {
+				for range b.N {
 					reg := NewMockComponentRegistry()
 					pipeline := NewBuildPipeline(workers, reg)
 
 					// Submit tasks
 					var wg sync.WaitGroup
-					for j := 0; j < tasks; j++ {
+					for j := range tasks {
 						wg.Add(1)
 						go func(taskID int) {
 							defer wg.Done()
@@ -270,7 +270,7 @@ func BenchmarkBuildPipeline_WorkerPoolPerformance(b *testing.B) {
 	}
 }
 
-// BenchmarkBuildPipeline_MemoryUsage benchmarks memory usage patterns
+// BenchmarkBuildPipeline_MemoryUsage benchmarks memory usage patterns.
 func BenchmarkBuildPipeline_MemoryUsage(b *testing.B) {
 	b.Run("SmallWorkload", func(b *testing.B) {
 		benchmarkPipelineMemoryUsage(b, 2, 10)
@@ -289,13 +289,13 @@ func benchmarkPipelineMemoryUsage(b *testing.B, workers int, componentCount int)
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		reg := NewMockComponentRegistry()
 		pipeline := NewBuildPipeline(workers, reg)
 
 		// Create and process components
 		components := make([]*types.ComponentInfo, componentCount)
-		for j := 0; j < componentCount; j++ {
+		for j := range componentCount {
 			complexity := []string{"simple", "medium", "complex"}[j%3]
 			components[j] = createTestComponent(fmt.Sprintf("Component%d", j), complexity)
 		}
@@ -315,7 +315,7 @@ func benchmarkPipelineMemoryUsage(b *testing.B, workers int, componentCount int)
 	}
 }
 
-// BenchmarkBuildCache_MemoryEfficiency benchmarks cache memory efficiency
+// BenchmarkBuildCache_MemoryEfficiency benchmarks cache memory efficiency.
 func BenchmarkBuildCache_MemoryEfficiency(b *testing.B) {
 	memorySizes := []int{
 		1 * 1024 * 1024,   // 1MB
@@ -331,7 +331,7 @@ func BenchmarkBuildCache_MemoryEfficiency(b *testing.B) {
 			b.ReportAllocs()
 
 			entrySize := 1024 // 1KB per entry
-			for i := 0; i < b.N; i++ {
+			for i := range b.N {
 				key := fmt.Sprintf("key_%d", i)
 				entry := createTestCacheEntry(entrySize)
 				cache.Set(key, entry)
@@ -340,7 +340,7 @@ func BenchmarkBuildCache_MemoryEfficiency(b *testing.B) {
 	}
 }
 
-// BenchmarkBuildResult_Serialization benchmarks build result serialization
+// BenchmarkBuildResult_Serialization benchmarks build result serialization.
 func BenchmarkBuildResult_Serialization(b *testing.B) {
 	resultSizes := []string{"small", "medium", "large"}
 
@@ -366,7 +366,7 @@ func BenchmarkBuildResult_Serialization(b *testing.B) {
 			b.ResetTimer()
 			b.ReportAllocs()
 
-			for i := 0; i < b.N; i++ {
+			for range b.N {
 				// Simulate serialization/deserialization overhead
 				_ = len(result.Output)
 				_ = result.Error

@@ -10,7 +10,7 @@ import (
 	"github.com/conneroisu/templar/internal/logging"
 )
 
-// RealtimeAccessibilityMonitor provides real-time accessibility warnings during preview
+// RealtimeAccessibilityMonitor provides real-time accessibility warnings during preview.
 type RealtimeAccessibilityMonitor struct {
 	tester        AccessibilityTester
 	logger        logging.Logger
@@ -19,7 +19,7 @@ type RealtimeAccessibilityMonitor struct {
 	config        RealtimeConfig
 }
 
-// RealtimeConfig configures real-time accessibility monitoring
+// RealtimeConfig configures real-time accessibility monitoring.
 type RealtimeConfig struct {
 	EnableRealTimeWarnings  bool              `json:"enable_real_time_warnings"`
 	WarningSeverityLevel    ViolationSeverity `json:"warning_severity_level"`
@@ -29,7 +29,7 @@ type RealtimeConfig struct {
 	ShowSuccessMessages     bool              `json:"show_success_messages"`
 }
 
-// AccessibilityUpdate represents a real-time accessibility update
+// AccessibilityUpdate represents a real-time accessibility update.
 type AccessibilityUpdate struct {
 	Type           UpdateType                `json:"type"`
 	ComponentName  string                    `json:"component_name"`
@@ -42,7 +42,7 @@ type AccessibilityUpdate struct {
 	AutoFixApplied bool                      `json:"auto_fix_applied,omitempty"`
 }
 
-// UpdateType represents different types of accessibility updates
+// UpdateType represents different types of accessibility updates.
 type UpdateType string
 
 const (
@@ -53,7 +53,7 @@ const (
 	UpdateTypeInfo    UpdateType = "info"
 )
 
-// NewRealtimeAccessibilityMonitor creates a new real-time accessibility monitor
+// NewRealtimeAccessibilityMonitor creates a new real-time accessibility monitor.
 func NewRealtimeAccessibilityMonitor(
 	tester AccessibilityTester,
 	logger logging.Logger,
@@ -67,7 +67,7 @@ func NewRealtimeAccessibilityMonitor(
 	}
 }
 
-// Subscribe subscribes to real-time accessibility updates
+// Subscribe subscribes to real-time accessibility updates.
 func (monitor *RealtimeAccessibilityMonitor) Subscribe(
 	subscriberID string,
 ) <-chan AccessibilityUpdate {
@@ -87,7 +87,7 @@ func (monitor *RealtimeAccessibilityMonitor) Subscribe(
 	return ch
 }
 
-// Unsubscribe removes a subscriber from real-time updates
+// Unsubscribe removes a subscriber from real-time updates.
 func (monitor *RealtimeAccessibilityMonitor) Unsubscribe(subscriberID string) {
 	monitor.subscribersMu.Lock()
 	defer monitor.subscribersMu.Unlock()
@@ -104,7 +104,7 @@ func (monitor *RealtimeAccessibilityMonitor) Unsubscribe(subscriberID string) {
 	}
 }
 
-// CheckComponent performs real-time accessibility check on a component
+// CheckComponent performs real-time accessibility check on a component.
 func (monitor *RealtimeAccessibilityMonitor) CheckComponent(
 	ctx context.Context,
 	componentName string,
@@ -117,7 +117,7 @@ func (monitor *RealtimeAccessibilityMonitor) CheckComponent(
 	go monitor.performCheck(ctx, componentName, props)
 }
 
-// performCheck performs the actual accessibility check in a goroutine
+// performCheck performs the actual accessibility check in a goroutine.
 func (monitor *RealtimeAccessibilityMonitor) performCheck(
 	ctx context.Context,
 	componentName string,
@@ -135,6 +135,7 @@ func (monitor *RealtimeAccessibilityMonitor) performCheck(
 			"component",
 			componentName,
 		)
+
 		return
 	}
 
@@ -156,7 +157,7 @@ func (monitor *RealtimeAccessibilityMonitor) performCheck(
 				ComponentName: componentName,
 				Timestamp:     time.Now(),
 				OverallScore:  report.Summary.OverallScore,
-				Message:       fmt.Sprintf("✅ No accessibility issues found in %s", componentName),
+				Message:       "✅ No accessibility issues found in " + componentName,
 			}
 		} else {
 			return // Don't send success updates if disabled
@@ -199,7 +200,7 @@ func (monitor *RealtimeAccessibilityMonitor) performCheck(
 		"duration", time.Since(start))
 }
 
-// filterViolationsBySeverity filters violations based on configured severity level
+// filterViolationsBySeverity filters violations based on configured severity level.
 func (monitor *RealtimeAccessibilityMonitor) filterViolationsBySeverity(
 	violations []AccessibilityViolation,
 ) []AccessibilityViolation {
@@ -224,7 +225,7 @@ func (monitor *RealtimeAccessibilityMonitor) filterViolationsBySeverity(
 	return filtered
 }
 
-// getUpdateTypeFromViolations determines the update type based on violation severity
+// getUpdateTypeFromViolations determines the update type based on violation severity.
 func (monitor *RealtimeAccessibilityMonitor) getUpdateTypeFromViolations(
 	violations []AccessibilityViolation,
 ) UpdateType {
@@ -250,7 +251,7 @@ func (monitor *RealtimeAccessibilityMonitor) getUpdateTypeFromViolations(
 	return UpdateTypeInfo
 }
 
-// generateUpdateMessage creates a user-friendly message for the update
+// generateUpdateMessage creates a user-friendly message for the update.
 func (monitor *RealtimeAccessibilityMonitor) generateUpdateMessage(
 	componentName string,
 	violations []AccessibilityViolation,
@@ -290,7 +291,7 @@ func (monitor *RealtimeAccessibilityMonitor) generateUpdateMessage(
 	return fmt.Sprintf("ℹ️ %s has %d accessibility issue(s)", componentName, len(violations))
 }
 
-// generateCombinedSuggestions creates combined suggestions from multiple violations
+// generateCombinedSuggestions creates combined suggestions from multiple violations.
 func (monitor *RealtimeAccessibilityMonitor) generateCombinedSuggestions(
 	violations []AccessibilityViolation,
 ) []AccessibilitySuggestion {
@@ -320,7 +321,7 @@ func (monitor *RealtimeAccessibilityMonitor) generateCombinedSuggestions(
 	}
 
 	// Sort by priority (lower number = higher priority)
-	for i := 0; i < len(suggestions)-1; i++ {
+	for i := range len(suggestions) - 1 {
 		for j := i + 1; j < len(suggestions); j++ {
 			if suggestions[i].Priority > suggestions[j].Priority {
 				suggestions[i], suggestions[j] = suggestions[j], suggestions[i]
@@ -337,7 +338,7 @@ func (monitor *RealtimeAccessibilityMonitor) generateCombinedSuggestions(
 	return suggestions
 }
 
-// attemptAutoFixes tries to automatically fix accessibility issues
+// attemptAutoFixes tries to automatically fix accessibility issues.
 func (monitor *RealtimeAccessibilityMonitor) attemptAutoFixes(
 	ctx context.Context,
 	html string,
@@ -362,6 +363,7 @@ func (monitor *RealtimeAccessibilityMonitor) attemptAutoFixes(
 		fixedHTML, err := engine.engine.AutoFix(ctx, html, autoFixableViolations)
 		if err != nil {
 			monitor.logger.Warn(ctx, err, "Failed to apply auto-fixes")
+
 			return fixedIssues
 		}
 
@@ -375,7 +377,7 @@ func (monitor *RealtimeAccessibilityMonitor) attemptAutoFixes(
 	return fixedIssues
 }
 
-// broadcastUpdate sends an update to all subscribers
+// broadcastUpdate sends an update to all subscribers.
 func (monitor *RealtimeAccessibilityMonitor) broadcastUpdate(update AccessibilityUpdate) {
 	monitor.subscribersMu.RLock()
 	defer monitor.subscribersMu.RUnlock()
@@ -388,6 +390,7 @@ func (monitor *RealtimeAccessibilityMonitor) broadcastUpdate(update Accessibilit
 	updateJSON, err := json.Marshal(update)
 	if err != nil {
 		monitor.logger.Error(context.Background(), err, "Failed to marshal accessibility update")
+
 		return
 	}
 
@@ -412,7 +415,7 @@ func (monitor *RealtimeAccessibilityMonitor) broadcastUpdate(update Accessibilit
 	_ = updateJSON // Use the JSON for WebSocket transmission in integration
 }
 
-// StartPeriodicChecks starts periodic accessibility checks for active components
+// StartPeriodicChecks starts periodic accessibility checks for active components.
 func (monitor *RealtimeAccessibilityMonitor) StartPeriodicChecks(
 	ctx context.Context,
 	activeComponents map[string]map[string]interface{},
@@ -432,6 +435,7 @@ func (monitor *RealtimeAccessibilityMonitor) StartPeriodicChecks(
 		select {
 		case <-ctx.Done():
 			monitor.logger.Info(ctx, "Stopped periodic accessibility checks")
+
 			return
 		case <-ticker.C:
 			for componentName, props := range activeComponents {
@@ -442,7 +446,7 @@ func (monitor *RealtimeAccessibilityMonitor) StartPeriodicChecks(
 	}
 }
 
-// GetAccessibilityStatus returns the current accessibility status for all monitored components
+// GetAccessibilityStatus returns the current accessibility status for all monitored components.
 func (monitor *RealtimeAccessibilityMonitor) GetAccessibilityStatus(
 	ctx context.Context,
 ) (*AccessibilityStatus, error) {
@@ -460,7 +464,7 @@ func (monitor *RealtimeAccessibilityMonitor) GetAccessibilityStatus(
 	return status, nil
 }
 
-// AccessibilityStatus represents the overall accessibility monitoring status
+// AccessibilityStatus represents the overall accessibility monitoring status.
 type AccessibilityStatus struct {
 	MonitoringEnabled bool                                    `json:"monitoring_enabled"`
 	ActiveSubscribers int                                     `json:"active_subscribers"`
@@ -469,7 +473,7 @@ type AccessibilityStatus struct {
 	ComponentStatuses map[string]ComponentAccessibilityStatus `json:"component_statuses"`
 }
 
-// ComponentAccessibilityStatus represents the accessibility status of a single component
+// ComponentAccessibilityStatus represents the accessibility status of a single component.
 type ComponentAccessibilityStatus struct {
 	ComponentName      string    `json:"component_name"`
 	LastChecked        time.Time `json:"last_checked"`
@@ -480,7 +484,7 @@ type ComponentAccessibilityStatus struct {
 	Status             string    `json:"status"` // "healthy", "warning", "error"
 }
 
-// Shutdown gracefully shuts down the real-time monitor
+// Shutdown gracefully shuts down the real-time monitor.
 func (monitor *RealtimeAccessibilityMonitor) Shutdown() {
 	monitor.subscribersMu.Lock()
 	defer monitor.subscribersMu.Unlock()

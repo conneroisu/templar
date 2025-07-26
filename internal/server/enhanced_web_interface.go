@@ -9,19 +9,19 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// EnhancedWebInterface provides interactive component editing in the main web interface
+// EnhancedWebInterface provides interactive component editing in the main web interface.
 type EnhancedWebInterface struct {
 	server *PreviewServer
 }
 
-// NewEnhancedWebInterface creates a new enhanced web interface
+// NewEnhancedWebInterface creates a new enhanced web interface.
 func NewEnhancedWebInterface(server *PreviewServer) *EnhancedWebInterface {
 	return &EnhancedWebInterface{
 		server: server,
 	}
 }
 
-// handleComponentEditor handles the enhanced component editor interface
+// handleComponentEditor handles the enhanced component editor interface.
 func (s *PreviewServer) handleComponentEditor(w http.ResponseWriter, r *http.Request) {
 	// Extract component name from path
 	path := strings.TrimPrefix(r.URL.Path, "/editor/")
@@ -30,6 +30,7 @@ func (s *PreviewServer) handleComponentEditor(w http.ResponseWriter, r *http.Req
 	// Validate component name
 	if err := validateComponentName(componentName); err != nil {
 		http.Error(w, "Invalid component name: "+err.Error(), http.StatusBadRequest)
+
 		return
 	}
 
@@ -37,6 +38,7 @@ func (s *PreviewServer) handleComponentEditor(w http.ResponseWriter, r *http.Req
 	component, exists := s.registry.Get(componentName)
 	if !exists {
 		http.NotFound(w, r)
+
 		return
 	}
 
@@ -46,10 +48,11 @@ func (s *PreviewServer) handleComponentEditor(w http.ResponseWriter, r *http.Req
 	w.Write([]byte(html))
 }
 
-// handleInlineEditor handles AJAX requests for inline prop editing
+// handleInlineEditor handles AJAX requests for inline prop editing.
 func (s *PreviewServer) handleInlineEditor(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+
 		return
 	}
 
@@ -61,6 +64,7 @@ func (s *PreviewServer) handleInlineEditor(w http.ResponseWriter, r *http.Reques
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid JSON request: "+err.Error(), http.StatusBadRequest)
+
 		return
 	}
 
@@ -68,6 +72,7 @@ func (s *PreviewServer) handleInlineEditor(w http.ResponseWriter, r *http.Reques
 	if err := validateComponentName(req.ComponentName); err != nil {
 		response := map[string]interface{}{"error": "Invalid component name: " + err.Error()}
 		s.writeJSONResponse(w, response)
+
 		return
 	}
 
@@ -78,6 +83,7 @@ func (s *PreviewServer) handleInlineEditor(w http.ResponseWriter, r *http.Reques
 			"error": fmt.Sprintf("Component '%s' not found", req.ComponentName),
 		}
 		s.writeJSONResponse(w, response)
+
 		return
 	}
 
@@ -93,7 +99,7 @@ func (s *PreviewServer) handleInlineEditor(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-// handleInlineRender renders component with props for inline preview
+// handleInlineRender renders component with props for inline preview.
 func (s *PreviewServer) handleInlineRender(
 	w http.ResponseWriter,
 	component *types.ComponentInfo,
@@ -104,6 +110,7 @@ func (s *PreviewServer) handleInlineRender(
 	if err != nil {
 		response := map[string]interface{}{"error": "Render error: " + err.Error()}
 		s.writeJSONResponse(w, response)
+
 		return
 	}
 
@@ -114,7 +121,7 @@ func (s *PreviewServer) handleInlineRender(
 	s.writeJSONResponse(w, response)
 }
 
-// handleInlineValidate validates props against component schema
+// handleInlineValidate validates props against component schema.
 func (s *PreviewServer) handleInlineValidate(
 	w http.ResponseWriter,
 	component *types.ComponentInfo,
@@ -129,7 +136,7 @@ func (s *PreviewServer) handleInlineValidate(
 	s.writeJSONResponse(w, response)
 }
 
-// handleInlineSuggest provides prop suggestions and autocompletion
+// handleInlineSuggest provides prop suggestions and autocompletion.
 func (s *PreviewServer) handleInlineSuggest(
 	w http.ResponseWriter,
 	component *types.ComponentInfo,
@@ -143,7 +150,7 @@ func (s *PreviewServer) handleInlineSuggest(
 	s.writeJSONResponse(w, response)
 }
 
-// validateComponentProps validates props against component parameter definitions
+// validateComponentProps validates props against component parameter definitions.
 func (s *PreviewServer) validateComponentProps(
 	component *types.ComponentInfo,
 	props map[string]interface{},
@@ -176,6 +183,7 @@ func (s *PreviewServer) validateComponentProps(
 				Message:  fmt.Sprintf("Unknown parameter '%s'", propName),
 				Severity: "warning",
 			})
+
 			continue
 		}
 
@@ -198,7 +206,7 @@ func (s *PreviewServer) validateComponentProps(
 	return errors
 }
 
-// findParameterByName finds a parameter by name in component definition
+// findParameterByName finds a parameter by name in component definition.
 func (s *PreviewServer) findParameterByName(
 	component *types.ComponentInfo,
 	name string,
@@ -208,14 +216,16 @@ func (s *PreviewServer) findParameterByName(
 			return &component.Parameters[i]
 		}
 	}
+
 	return nil
 }
 
-// isCompatibleType checks if value type is compatible with expected type
+// isCompatibleType checks if value type is compatible with expected type.
 func (s *PreviewServer) isCompatibleType(value interface{}, expectedType string) bool {
 	switch expectedType {
 	case "string":
 		_, ok := value.(string)
+
 		return ok
 	case "int", "int32", "int64":
 		switch value.(type) {
@@ -226,6 +236,7 @@ func (s *PreviewServer) isCompatibleType(value interface{}, expectedType string)
 		}
 	case "bool":
 		_, ok := value.(bool)
+
 		return ok
 	case "[]string":
 		if slice, ok := value.([]interface{}); ok {
@@ -234,8 +245,10 @@ func (s *PreviewServer) isCompatibleType(value interface{}, expectedType string)
 					return false
 				}
 			}
+
 			return true
 		}
+
 		return false
 	case "float64", "float32":
 		switch value.(type) {
@@ -250,7 +263,7 @@ func (s *PreviewServer) isCompatibleType(value interface{}, expectedType string)
 	}
 }
 
-// generatePropSuggestions generates contextual suggestions for props
+// generatePropSuggestions generates contextual suggestions for props.
 func (s *PreviewServer) generatePropSuggestions(
 	component *types.ComponentInfo,
 	currentProps map[string]interface{},
@@ -270,14 +283,14 @@ func (s *PreviewServer) generatePropSuggestions(
 	return suggestions
 }
 
-// handleEnhancedIndex serves the enhanced main interface
+// handleEnhancedIndex serves the enhanced main interface.
 func (s *PreviewServer) handleEnhancedIndex(w http.ResponseWriter, r *http.Request) {
 	html := s.generateEnhancedIndexHTML()
 	w.Header().Set("Content-Type", "text/html")
 	w.Write([]byte(html))
 }
 
-// ValidationError represents a prop validation error (already defined in playground.go)
+// ValidationError represents a prop validation error (already defined in playground.go).
 type ValidationError struct {
 	Property string `json:"property"`
 	Expected string `json:"expected"`

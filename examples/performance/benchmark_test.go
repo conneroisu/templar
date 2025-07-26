@@ -16,7 +16,7 @@ func BenchmarkButtonRender(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		var buf strings.Builder
 		_ = components.Button(props).Render(context.Background(), &buf)
 	}
@@ -42,7 +42,7 @@ func BenchmarkCardRender(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		var buf strings.Builder
 		_ = components.Card(props).Render(context.Background(), &buf)
 	}
@@ -58,7 +58,7 @@ func BenchmarkFormFieldRender(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		var buf strings.Builder
 		_ = components.FormField(props).Render(context.Background(), &buf)
 	}
@@ -75,7 +75,7 @@ func BenchmarkMultipleComponents(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		var buf strings.Builder
 		_ = components.Button(buttonProps).Render(context.Background(), &buf)
 		buf.Reset()
@@ -90,7 +90,7 @@ func BenchmarkStringBuilderReuse(b *testing.B) {
 	var buf strings.Builder
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		buf.Reset()
 		_ = components.Button(props).Render(context.Background(), &buf)
 	}
@@ -107,7 +107,7 @@ func BenchmarkMemoryUsage(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		var buf strings.Builder
 		_ = components.Card(props).Render(context.Background(), &buf)
 	}

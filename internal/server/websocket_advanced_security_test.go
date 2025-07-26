@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestWebSocketConnectionHijacking tests various connection hijacking attack scenarios
+// TestWebSocketConnectionHijacking tests various connection hijacking attack scenarios.
 func TestWebSocketConnectionHijacking(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -40,6 +40,7 @@ func TestWebSocketConnectionHijacking(t *testing.T) {
 				req.Header.Set("Origin", "http://localhost:3000")
 				req.Header.Set("Cookie", "session=admin123; csrf=bypassed")
 				req.Header.Set("X-Forwarded-For", "127.0.0.1")
+
 				return req, nil
 			},
 			expectBlock: true,
@@ -59,6 +60,7 @@ func TestWebSocketConnectionHijacking(t *testing.T) {
 				req.Header.Set("Origin", "http://malicious.com")
 				req.Header.Set("X-CSRF-Token", "fake_token")
 				req.Header.Set("Referer", "http://malicious.com/attack")
+
 				return req, nil
 			},
 			expectBlock: true,
@@ -77,6 +79,7 @@ func TestWebSocketConnectionHijacking(t *testing.T) {
 				}
 				req.Header.Set("Origin", "http://localhost:3000")
 				req.Header.Set("Host", "localhost:3000\r\nX-Injected: evil")
+
 				return req, nil
 			},
 			expectBlock: true,
@@ -96,6 +99,7 @@ func TestWebSocketConnectionHijacking(t *testing.T) {
 				req.Header.Set("Origin", "http://localhost:3000")
 				req.Header.Set("Connection", "Upgrade, keep-alive")
 				req.Header.Set("Upgrade", "websocket\r\nContent-Length: 100")
+
 				return req, nil
 			},
 			expectBlock: true,
@@ -162,7 +166,7 @@ func TestWebSocketConnectionHijacking(t *testing.T) {
 	}
 }
 
-// TestWebSocketProtocolDowngradeAttacks tests protocol downgrade attack prevention
+// TestWebSocketProtocolDowngradeAttacks tests protocol downgrade attack prevention.
 func TestWebSocketProtocolDowngradeAttacks(t *testing.T) {
 	cfg := &config.Config{
 		Server: config.ServerConfig{
@@ -272,7 +276,7 @@ func TestWebSocketProtocolDowngradeAttacks(t *testing.T) {
 	}
 }
 
-// TestWebSocketRateLimitingEdgeCases tests rate limiting edge cases and bypass attempts
+// TestWebSocketRateLimitingEdgeCases tests rate limiting edge cases and bypass attempts.
 func TestWebSocketRateLimitingEdgeCases(t *testing.T) {
 	cfg := &config.Config{
 		Server: config.ServerConfig{
@@ -313,7 +317,7 @@ func TestWebSocketRateLimitingEdgeCases(t *testing.T) {
 				defer cancel()
 
 				blocked := 0
-				for i := 0; i < 100; i++ {
+				for range 100 {
 					conn, resp, err := websocket.Dial(
 						ctx,
 						strings.Replace(testServer.URL, "http://", "ws://", 1),
@@ -402,7 +406,7 @@ func TestWebSocketRateLimitingEdgeCases(t *testing.T) {
 				defer testServer.Close()
 
 				blocked := 0
-				for i := 0; i < 50; i++ {
+				for range 50 {
 					ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 
 					conn, resp, err := websocket.Dial(
@@ -421,6 +425,7 @@ func TestWebSocketRateLimitingEdgeCases(t *testing.T) {
 					if err != nil {
 						blocked++
 						cancel()
+
 						continue
 					}
 
@@ -449,7 +454,7 @@ func TestWebSocketRateLimitingEdgeCases(t *testing.T) {
 	}
 }
 
-// TestWebSocketChaosTestingNetworkFailures tests WebSocket behavior under network failures
+// TestWebSocketChaosTestingNetworkFailures tests WebSocket behavior under network failures.
 func TestWebSocketChaosTestingNetworkFailures(t *testing.T) {
 	cfg := &config.Config{
 		Server: config.ServerConfig{
@@ -534,7 +539,7 @@ func TestWebSocketChaosTestingNetworkFailures(t *testing.T) {
 				}
 
 				// Simulate network partition by closing some connections abruptly
-				for i := 0; i < 2; i++ {
+				for i := range 2 {
 					connections[i].Close(websocket.StatusInternalError, "network partition")
 				}
 
@@ -604,7 +609,7 @@ func TestWebSocketChaosTestingNetworkFailures(t *testing.T) {
 				defer conn.Close(websocket.StatusNormalClosure, "")
 
 				// Simulate intermittent connectivity by alternating successful and failed sends
-				for i := 0; i < 10; i++ {
+				for i := range 10 {
 					message := []byte("intermittent_" + string(rune(i+'0')))
 					err = conn.Write(ctx, websocket.MessageText, message)
 
@@ -641,7 +646,7 @@ func TestWebSocketChaosTestingNetworkFailures(t *testing.T) {
 	}
 }
 
-// TestWebSocketOriginValidationComprehensive tests comprehensive origin validation scenarios
+// TestWebSocketOriginValidationComprehensive tests comprehensive origin validation scenarios.
 func TestWebSocketOriginValidationComprehensive(t *testing.T) {
 	cfg := &config.Config{
 		Server: config.ServerConfig{
@@ -713,7 +718,7 @@ func TestWebSocketOriginValidationComprehensive(t *testing.T) {
 	}
 }
 
-// TestWebSocketSecurityHeaders tests that proper security headers are set
+// TestWebSocketSecurityHeaders tests that proper security headers are set.
 func TestWebSocketSecurityHeaders(t *testing.T) {
 	cfg := &config.Config{
 		Server: config.ServerConfig{
@@ -778,7 +783,7 @@ func TestWebSocketSecurityHeaders(t *testing.T) {
 	}
 }
 
-// BenchmarkWebSocketSecurityValidation benchmarks the performance of security validation
+// BenchmarkWebSocketSecurityValidation benchmarks the performance of security validation.
 func BenchmarkWebSocketSecurityValidation(b *testing.B) {
 	cfg := &config.Config{
 		Server: config.ServerConfig{

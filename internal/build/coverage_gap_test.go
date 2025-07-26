@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestBuildCache_GetHash_TTL_Coverage tests the TTL expiration logic specifically for GetHash method
+// TestBuildCache_GetHash_TTL_Coverage tests the TTL expiration logic specifically for GetHash method.
 func TestBuildCache_GetHash_TTL_Coverage(t *testing.T) {
 	t.Run("GetHash TTL expiration with cleanup", func(t *testing.T) {
 		cache := NewBuildCache(1000, 50*time.Millisecond) // 50ms TTL
@@ -63,7 +63,7 @@ func TestBuildCache_GetHash_TTL_Coverage(t *testing.T) {
 		var mutex sync.Mutex
 
 		// Start multiple goroutines that will try to access after TTL expiration
-		for i := 0; i < 5; i++ {
+		for range 5 {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
@@ -84,7 +84,7 @@ func TestBuildCache_GetHash_TTL_Coverage(t *testing.T) {
 	})
 }
 
-// TestHandleBuildResult_Coverage tests the missing coverage areas in handleBuildResult
+// TestHandleBuildResult_Coverage tests the missing coverage areas in handleBuildResult.
 func TestHandleBuildResult_Coverage(t *testing.T) {
 	t.Run("handleBuildResult with parsed errors", func(t *testing.T) {
 		// Create a mock registry for pipeline
@@ -113,7 +113,7 @@ func TestHandleBuildResult_Coverage(t *testing.T) {
 		// Create a BuildResult with error and parsed errors
 		result := BuildResult{
 			Component: component,
-			Error:     fmt.Errorf("build failed"),
+			Error:     errors.New("build failed"),
 			ParsedErrors: []*errors.ParsedError{
 				mockError,
 			},
@@ -231,7 +231,7 @@ func TestHandleBuildResult_Coverage(t *testing.T) {
 	})
 }
 
-// TestUntestedMetricsFunctions tests the 0% coverage functions in metrics
+// TestUntestedMetricsFunctions tests the 0% coverage functions in metrics.
 func TestUntestedMetricsFunctions(t *testing.T) {
 	t.Run("GetCacheHitRate calculation", func(t *testing.T) {
 		metrics := NewBuildMetrics()
@@ -290,7 +290,7 @@ func TestUntestedMetricsFunctions(t *testing.T) {
 		// Failure
 		metrics.RecordBuild(BuildResult{
 			Component: component,
-			Error:     fmt.Errorf("build failed"),
+			Error:     errors.New("build failed"),
 			Duration:  50 * time.Millisecond,
 		})
 
@@ -308,7 +308,7 @@ func TestUntestedMetricsFunctions(t *testing.T) {
 	})
 }
 
-// TestUntestedPoolFunctions tests the 0% coverage pool functions
+// TestUntestedPoolFunctions tests the 0% coverage pool functions.
 func TestUntestedPoolFunctions(t *testing.T) {
 	t.Run("PutBuildTask operation", func(t *testing.T) {
 		pools := NewObjectPools()
@@ -354,7 +354,7 @@ func TestUntestedPoolFunctions(t *testing.T) {
 		assert.Equal(t, 0, len(errorSlice), "Error slice should be empty initially")
 
 		// Use the slice
-		errorSlice = append(errorSlice, fmt.Errorf("test error"))
+		errorSlice = append(errorSlice, errors.New("test error"))
 		assert.Equal(t, 1, len(errorSlice), "Should be able to append to error slice")
 
 		// Put it back

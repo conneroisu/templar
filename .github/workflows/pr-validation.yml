@@ -62,10 +62,8 @@ jobs:
 
       - name: Run golangci-lint
         if: matrix.test-suite == 'unit'
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: latest
-          args: --timeout=5m
+        run: |
+          nix develop --command golangci-lint run --timeout=5m $(go list ./... | grep -v templar-cache-benchmark)
 
       - name: Run unit tests
         if: matrix.test-suite == 'unit'

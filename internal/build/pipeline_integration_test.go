@@ -237,7 +237,7 @@ func TestBuildPipeline_ConcurrentBuilds(t *testing.T) {
 		numBuilds := 20 // Reduced from 50 to work within queue constraints
 		var wg sync.WaitGroup
 
-		for i := 0; i < numBuilds; i++ {
+		for i := range numBuilds {
 			wg.Add(1)
 			go func(id int) {
 				defer wg.Done()
@@ -398,7 +398,7 @@ func TestBuildPipeline_ErrorHandling(t *testing.T) {
 		bp.Start(ctx)
 
 		// Submit builds - all valid since templ generate works at directory level
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			component := &types.ComponentInfo{
 				Name:     fmt.Sprintf("ValidComponent_%d", i),
 				FilePath: filepath.Join(testDir, "component1.templ"),
@@ -440,7 +440,7 @@ func TestBuildPipeline_ResourceManagement(t *testing.T) {
 
 		// Submit more builds than workers to test pool reuse
 		numBuilds := numWorkers * 3
-		for i := 0; i < numBuilds; i++ {
+		for i := range numBuilds {
 			component := &types.ComponentInfo{
 				Name:     fmt.Sprintf("ResourceComponent_%d", i),
 				FilePath: filepath.Join(testDir, "component1.templ"),
@@ -495,7 +495,7 @@ func TestBuildPipeline_MetricsAndCallbacks(t *testing.T) {
 
 		// Build valid components
 		validBuilds := 3
-		for i := 0; i < validBuilds; i++ {
+		for i := range validBuilds {
 			component := &types.ComponentInfo{
 				Name:     fmt.Sprintf("MetricsComponent_%d", i),
 				FilePath: filepath.Join(testDir, "component1.templ"),
@@ -547,7 +547,7 @@ func TestBuildPipeline_MetricsAndCallbacks(t *testing.T) {
 		bp.Start(ctx)
 
 		numBuilds := 3
-		for i := 0; i < numBuilds; i++ {
+		for i := range numBuilds {
 			component := &types.ComponentInfo{
 				Name:     fmt.Sprintf("CallbackComponent_%d", i),
 				FilePath: filepath.Join(testDir, "component1.templ"),
@@ -572,7 +572,7 @@ func TestBuildPipeline_MetricsAndCallbacks(t *testing.T) {
 	})
 }
 
-// Helper function to create test files
+// Helper function to create test files.
 func createTestFiles(t *testing.T) string {
 	testDir, err := os.MkdirTemp("", "build_integration_test")
 	require.NoError(t, err)
@@ -601,7 +601,7 @@ templ TestComponent2() {
 	return testDir
 }
 
-// Benchmark integration tests
+// Benchmark integration tests.
 func BenchmarkBuildPipeline_Integration(b *testing.B) {
 	testDir, err := os.MkdirTemp("", "build_benchmark")
 	if err != nil {
@@ -633,7 +633,7 @@ templ BenchComponent() {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		bp.Build(component)
 	}
 

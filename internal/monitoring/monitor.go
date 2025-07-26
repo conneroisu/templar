@@ -12,7 +12,7 @@ import (
 	"github.com/conneroisu/templar/internal/logging"
 )
 
-// Monitor provides comprehensive application monitoring
+// Monitor provides comprehensive application monitoring.
 type Monitor struct {
 	metrics    *MetricsCollector
 	health     *HealthMonitor
@@ -26,7 +26,7 @@ type Monitor struct {
 	mutex      sync.RWMutex
 }
 
-// MonitorConfig contains monitoring configuration
+// MonitorConfig contains monitoring configuration.
 type MonitorConfig struct {
 	// Metrics configuration
 	MetricsEnabled    bool          `yaml:"metrics_enabled" json:"metrics_enabled"`
@@ -56,7 +56,7 @@ type MonitorConfig struct {
 	AlertCooldown   time.Duration `yaml:"alert_cooldown" json:"alert_cooldown"`
 }
 
-// AlertConfig contains alerting thresholds
+// AlertConfig contains alerting thresholds.
 type AlertConfig struct {
 	ErrorRate           float64       `yaml:"error_rate" json:"error_rate"`
 	ResponseTime        time.Duration `yaml:"response_time" json:"response_time"`
@@ -66,7 +66,7 @@ type AlertConfig struct {
 	UnhealthyComponents int           `yaml:"unhealthy_components" json:"unhealthy_components"`
 }
 
-// DefaultMonitorConfig returns default monitoring configuration
+// DefaultMonitorConfig returns default monitoring configuration.
 func DefaultMonitorConfig() MonitorConfig {
 	return MonitorConfig{
 		MetricsEnabled:      true,
@@ -96,7 +96,7 @@ func DefaultMonitorConfig() MonitorConfig {
 	}
 }
 
-// NewMonitor creates a new comprehensive monitor
+// NewMonitor creates a new comprehensive monitor.
 func NewMonitor(config MonitorConfig, logger logging.Logger) (*Monitor, error) {
 	if logger == nil {
 		// Create default logger if none provided
@@ -157,13 +157,13 @@ func NewMonitor(config MonitorConfig, logger logging.Logger) (*Monitor, error) {
 	return monitor, nil
 }
 
-// Start starts all monitoring components
+// Start starts all monitoring components.
 func (m *Monitor) Start() error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
 	if m.started {
-		return fmt.Errorf("monitor already started")
+		return errors.New("monitor already started")
 	}
 
 	m.logger.Info(context.Background(), "Starting monitor",
@@ -202,10 +202,11 @@ func (m *Monitor) Start() error {
 
 	m.started = true
 	m.logger.Info(context.Background(), "Monitor started successfully")
+
 	return nil
 }
 
-// Stop stops all monitoring components
+// Stop stops all monitoring components.
 func (m *Monitor) Stop() error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
@@ -253,32 +254,33 @@ func (m *Monitor) Stop() error {
 
 	m.started = false
 	m.logger.Info(context.Background(), "Monitor stopped successfully")
+
 	return nil
 }
 
-// GetMetrics returns the metrics collector
+// GetMetrics returns the metrics collector.
 func (m *Monitor) GetMetrics() *ApplicationMetrics {
 	return m.appMetrics
 }
 
-// GetHealth returns the health monitor
+// GetHealth returns the health monitor.
 func (m *Monitor) GetHealth() *HealthMonitor {
 	return m.health
 }
 
-// GetLogger returns the logger
+// GetLogger returns the logger.
 func (m *Monitor) GetLogger() logging.Logger {
 	return m.logger
 }
 
-// RegisterHealthCheck registers a custom health check
+// RegisterHealthCheck registers a custom health check.
 func (m *Monitor) RegisterHealthCheck(checker HealthChecker) {
 	if m.health != nil {
 		m.health.RegisterCheck(checker)
 	}
 }
 
-// setupHTTPServer configures the HTTP server for metrics and health endpoints
+// setupHTTPServer configures the HTTP server for metrics and health endpoints.
 func (m *Monitor) setupHTTPServer() {
 	mux := http.NewServeMux()
 
@@ -306,7 +308,7 @@ func (m *Monitor) setupHTTPServer() {
 	}
 }
 
-// runHTTPServer runs the HTTP server
+// runHTTPServer runs the HTTP server.
 func (m *Monitor) runHTTPServer() {
 	defer m.wg.Done()
 
@@ -315,7 +317,7 @@ func (m *Monitor) runHTTPServer() {
 	}
 }
 
-// runAlerting runs the alerting system
+// runAlerting runs the alerting system.
 func (m *Monitor) runAlerting() {
 	defer m.wg.Done()
 
@@ -332,7 +334,7 @@ func (m *Monitor) runAlerting() {
 	}
 }
 
-// checkAlerts checks for alert conditions
+// checkAlerts checks for alert conditions.
 func (m *Monitor) checkAlerts() {
 	if m.health == nil {
 		return
@@ -370,7 +372,7 @@ func (m *Monitor) checkAlerts() {
 	}
 }
 
-// registerDefaultHealthChecks registers standard health checks
+// registerDefaultHealthChecks registers standard health checks.
 func (m *Monitor) registerDefaultHealthChecks() {
 	// Filesystem health check
 	m.health.RegisterCheck(FileSystemHealthChecker("./"))
@@ -396,6 +398,7 @@ func (m *Monitor) createReadinessHandler() http.HandlerFunc {
 		if m.health == nil {
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte("OK"))
+
 			return
 		}
 
@@ -414,6 +417,7 @@ func (m *Monitor) createMetricsHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if m.metrics == nil {
 			http.Error(w, "Metrics not enabled", http.StatusNotFound)
+
 			return
 		}
 
@@ -457,7 +461,7 @@ func (m *Monitor) createInfoHandler() http.HandlerFunc {
 
 // Convenience functions for integration with other components
 
-// LogOperation logs an operation with metrics
+// LogOperation logs an operation with metrics.
 func (m *Monitor) LogOperation(operation string, fn func() error) error {
 	if m.appMetrics == nil {
 		return fn()
@@ -474,7 +478,7 @@ func (m *Monitor) LogOperation(operation string, fn func() error) error {
 	return err
 }
 
-// LogOperationWithContext logs an operation with context and metrics
+// LogOperationWithContext logs an operation with context and metrics.
 func (m *Monitor) LogOperationWithContext(
 	ctx context.Context,
 	operation string,
@@ -497,21 +501,21 @@ func (m *Monitor) LogOperationWithContext(
 	return err
 }
 
-// TrackHTTPRequest tracks an HTTP request
+// TrackHTTPRequest tracks an HTTP request.
 func (m *Monitor) TrackHTTPRequest(method, path string, statusCode int) {
 	if m.appMetrics != nil {
 		m.appMetrics.ServerRequest(method, path, statusCode)
 	}
 }
 
-// TrackWebSocketEvent tracks a WebSocket event
+// TrackWebSocketEvent tracks a WebSocket event.
 func (m *Monitor) TrackWebSocketEvent(action string) {
 	if m.appMetrics != nil {
 		m.appMetrics.WebSocketConnection(action)
 	}
 }
 
-// TrackComponentOperation tracks component operations
+// TrackComponentOperation tracks component operations.
 func (m *Monitor) TrackComponentOperation(operation, component string, success bool) {
 	if m.appMetrics == nil {
 		return
@@ -525,20 +529,21 @@ func (m *Monitor) TrackComponentOperation(operation, component string, success b
 	}
 }
 
-// Global monitor instance for easy access
+// Global monitor instance for easy access.
 var globalMonitor *Monitor
 var globalMonitorMutex sync.RWMutex
 
-// SetGlobalMonitor sets the global monitor instance
+// SetGlobalMonitor sets the global monitor instance.
 func SetGlobalMonitor(monitor *Monitor) {
 	globalMonitorMutex.Lock()
 	defer globalMonitorMutex.Unlock()
 	globalMonitor = monitor
 }
 
-// GetGlobalMonitor returns the global monitor instance
+// GetGlobalMonitor returns the global monitor instance.
 func GetGlobalMonitor() *Monitor {
 	globalMonitorMutex.RLock()
 	defer globalMonitorMutex.RUnlock()
+
 	return globalMonitor
 }

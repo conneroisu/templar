@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Helper function to create a properly initialized cache for tests
+// Helper function to create a properly initialized cache for tests.
 func newTestCache(maxSize int64, ttl time.Duration) *BuildCache {
 	cache := &BuildCache{
 		entries: make(map[string]*CacheEntry),

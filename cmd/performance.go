@@ -19,7 +19,7 @@ var (
 	performanceThresholds performance.RegressionThresholds
 )
 
-// performanceCmd represents the performance command
+// performanceCmd represents the performance command.
 var performanceCmd = &cobra.Command{
 	Use:   "performance",
 	Short: "Performance monitoring and regression detection",
@@ -28,7 +28,7 @@ performance baselines. Includes benchmark execution, regression detection,
 and CI/CD integration capabilities.`,
 }
 
-// performanceCheckCmd handles performance regression detection
+// performanceCheckCmd handles performance regression detection.
 var performanceCheckCmd = &cobra.Command{
 	Use:   "check",
 	Short: "Run performance check and detect regressions",
@@ -37,7 +37,7 @@ and detects performance regressions with configurable thresholds.`,
 	RunE: runPerformanceCheck,
 }
 
-// performanceBaselineCmd manages performance baselines
+// performanceBaselineCmd manages performance baselines.
 var performanceBaselineCmd = &cobra.Command{
 	Use:   "baseline",
 	Short: "Manage performance baselines",
@@ -45,7 +45,7 @@ var performanceBaselineCmd = &cobra.Command{
 updates, and historical analysis.`,
 }
 
-// performanceBaselineCreateCmd creates new performance baselines
+// performanceBaselineCreateCmd creates new performance baselines.
 var performanceBaselineCreateCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create new performance baselines",
@@ -54,7 +54,7 @@ establishing reference performance metrics.`,
 	RunE: runPerformanceBaselineCreate,
 }
 
-// performanceBaselineListCmd lists existing baselines
+// performanceBaselineListCmd lists existing baselines.
 var performanceBaselineListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List performance baselines",
@@ -63,7 +63,7 @@ and last update timestamps.`,
 	RunE: runPerformanceBaselineList,
 }
 
-// performanceReportCmd generates performance reports
+// performanceReportCmd generates performance reports.
 var performanceReportCmd = &cobra.Command{
 	Use:   "report",
 	Short: "Generate performance reports",
@@ -156,7 +156,7 @@ func runPerformanceBaselineCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(results) == 0 {
-		return fmt.Errorf("no benchmark results found")
+		return errors.New("no benchmark results found")
 	}
 
 	// Update baselines
@@ -165,6 +165,7 @@ func runPerformanceBaselineCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("✅ Created baselines for %d benchmarks in %s\n", len(results), performanceBaseline)
+
 	return nil
 }
 
@@ -179,6 +180,7 @@ func runPerformanceBaselineList(cmd *cobra.Command, args []string) error {
 
 	if len(entries) == 0 {
 		fmt.Println("No baselines found. Run 'templar performance baseline create' to create them.")
+
 		return nil
 	}
 
@@ -261,6 +263,7 @@ func getGitCommit() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return strings.TrimSpace(string(output)), nil
 }
 
@@ -270,5 +273,6 @@ func getGitBranch() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return strings.TrimSpace(string(output)), nil
 }

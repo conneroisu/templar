@@ -14,7 +14,7 @@ import (
 	"github.com/conneroisu/templar/internal/config"
 )
 
-// AssetBundler handles bundling and optimization of JavaScript, CSS, and other assets
+// AssetBundler handles bundling and optimization of JavaScript, CSS, and other assets.
 type AssetBundler struct {
 	config           *config.Config
 	outputDir        string
@@ -23,7 +23,7 @@ type AssetBundler struct {
 	sourceMapEnabled bool
 }
 
-// AssetManifest represents discovered assets and their dependencies
+// AssetManifest represents discovered assets and their dependencies.
 type AssetManifest struct {
 	JavaScript   []AssetFile         `json:"javascript"`
 	CSS          []AssetFile         `json:"css"`
@@ -33,7 +33,7 @@ type AssetManifest struct {
 	Dependencies map[string][]string `json:"dependencies"`
 }
 
-// AssetFile represents an individual asset file
+// AssetFile represents an individual asset file.
 type AssetFile struct {
 	Path         string    `json:"path"`
 	Name         string    `json:"name"`
@@ -45,7 +45,7 @@ type AssetFile struct {
 	IsEntry      bool      `json:"is_entry"`
 }
 
-// BundlerOptions configures the bundling process
+// BundlerOptions configures the bundling process.
 type BundlerOptions struct {
 	Minify        bool              `json:"minify"`
 	TreeShaking   bool              `json:"tree_shaking"`
@@ -59,7 +59,7 @@ type BundlerOptions struct {
 	Plugins       []string          `json:"plugins"`  // Custom plugins
 }
 
-// BundleResult represents the result of a bundling operation
+// BundleResult represents the result of a bundling operation.
 type BundleResult struct {
 	Bundles    map[string]BundleInfo `json:"bundles"`
 	Chunks     map[string]ChunkInfo  `json:"chunks"`
@@ -69,7 +69,7 @@ type BundleResult struct {
 	Warnings   []string              `json:"warnings,omitempty"`
 }
 
-// BundleInfo contains information about a generated bundle
+// BundleInfo contains information about a generated bundle.
 type BundleInfo struct {
 	Name      string   `json:"name"`
 	Path      string   `json:"path"`
@@ -82,7 +82,7 @@ type BundleInfo struct {
 	SourceMap string   `json:"source_map,omitempty"`
 }
 
-// ChunkInfo contains information about code-split chunks
+// ChunkInfo contains information about code-split chunks.
 type ChunkInfo struct {
 	Name          string   `json:"name"`
 	Path          string   `json:"path"`
@@ -92,7 +92,7 @@ type ChunkInfo struct {
 	DynamicImport bool     `json:"dynamic_import"`
 }
 
-// BundleStatistics provides metrics about the bundling process
+// BundleStatistics provides metrics about the bundling process.
 type BundleStatistics struct {
 	TotalSize       int64         `json:"total_size"`
 	CompressedSize  int64         `json:"compressed_size"`
@@ -104,7 +104,7 @@ type BundleStatistics struct {
 	TreeShakeRatio  float64       `json:"tree_shake_ratio,omitempty"`
 }
 
-// AssetManifestFile represents the final asset manifest for deployment
+// AssetManifestFile represents the final asset manifest for deployment.
 type AssetManifestFile struct {
 	Version       string            `json:"version"`
 	BuildTime     time.Time         `json:"build_time"`
@@ -115,7 +115,7 @@ type AssetManifestFile struct {
 	Integrity     map[string]string `json:"integrity"`
 }
 
-// NewAssetBundler creates a new asset bundler instance
+// NewAssetBundler creates a new asset bundler instance.
 func NewAssetBundler(cfg *config.Config, outputDir string) *AssetBundler {
 	return &AssetBundler{
 		config:           cfg,
@@ -126,7 +126,7 @@ func NewAssetBundler(cfg *config.Config, outputDir string) *AssetBundler {
 	}
 }
 
-// DiscoverAssets scans the project for assets that need bundling
+// DiscoverAssets scans the project for assets that need bundling.
 func (b *AssetBundler) DiscoverAssets(ctx context.Context) (*AssetManifest, error) {
 	manifest := &AssetManifest{
 		JavaScript:   make([]AssetFile, 0),
@@ -206,7 +206,7 @@ func (b *AssetBundler) DiscoverAssets(ctx context.Context) (*AssetManifest, erro
 	return manifest, nil
 }
 
-// Bundle performs the actual bundling of assets
+// Bundle performs the actual bundling of assets.
 func (b *AssetBundler) Bundle(
 	ctx context.Context,
 	manifest *AssetManifest,
@@ -241,10 +241,11 @@ func (b *AssetBundler) Bundle(
 	bundledFiles = append(bundledFiles, otherAssets...)
 
 	fmt.Printf("Asset bundling completed in %v\n", time.Since(startTime))
+
 	return bundledFiles, nil
 }
 
-// bundleJavaScript handles JavaScript bundling with esbuild-like functionality
+// bundleJavaScript handles JavaScript bundling with esbuild-like functionality.
 func (b *AssetBundler) bundleJavaScript(
 	ctx context.Context,
 	jsFiles []AssetFile,
@@ -291,7 +292,7 @@ func (b *AssetBundler) bundleJavaScript(
 	return bundledFiles, nil
 }
 
-// bundleCSS handles CSS bundling and optimization
+// bundleCSS handles CSS bundling and optimization.
 func (b *AssetBundler) bundleCSS(
 	ctx context.Context,
 	cssFiles []AssetFile,
@@ -334,10 +335,11 @@ func (b *AssetBundler) bundleCSS(
 	}
 
 	bundledFiles = append(bundledFiles, bundlePath)
+
 	return bundledFiles, nil
 }
 
-// processOtherAssets handles images, fonts, and other static assets
+// processOtherAssets handles images, fonts, and other static assets.
 func (b *AssetBundler) processOtherAssets(
 	ctx context.Context,
 	manifest *AssetManifest,
@@ -377,7 +379,7 @@ func (b *AssetBundler) processOtherAssets(
 
 // Helper methods
 
-// createAssetFile creates an AssetFile from a file path and info
+// createAssetFile creates an AssetFile from a file path and info.
 func (b *AssetBundler) createAssetFile(path string, info os.FileInfo) (*AssetFile, error) {
 	ext := strings.ToLower(filepath.Ext(path))
 
@@ -403,7 +405,7 @@ func (b *AssetBundler) createAssetFile(path string, info os.FileInfo) (*AssetFil
 	}, nil
 }
 
-// getAssetType determines the asset type from file extension
+// getAssetType determines the asset type from file extension.
 func (b *AssetBundler) getAssetType(ext string) string {
 	switch ext {
 	case ".js", ".mjs", ".ts", ".jsx", ".tsx":
@@ -423,7 +425,7 @@ func (b *AssetBundler) getAssetType(ext string) string {
 	}
 }
 
-// isEntryPoint determines if a file should be treated as an entry point
+// isEntryPoint determines if a file should be treated as an entry point.
 func (b *AssetBundler) isEntryPoint(path, assetType string) bool {
 	if assetType != "javascript" && assetType != "css" {
 		return false
@@ -447,7 +449,7 @@ func (b *AssetBundler) isEntryPoint(path, assetType string) bool {
 	return false
 }
 
-// calculateFileHash generates a SHA256 hash for a file
+// calculateFileHash generates a SHA256 hash for a file.
 func (b *AssetBundler) calculateFileHash(path string) (string, error) {
 	file, err := os.Open(path)
 	if err != nil {
@@ -460,16 +462,17 @@ func (b *AssetBundler) calculateFileHash(path string) (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf("%x", hash.Sum(nil))[:12], nil // Use first 12 chars
+	return hex.EncodeToString(hash.Sum(nil))[:12], nil // Use first 12 chars
 }
 
-// generateBundleName creates a fingerprinted bundle name
+// generateBundleName creates a fingerprinted bundle name.
 func (b *AssetBundler) generateBundleName(baseName, ext string) string {
 	timestamp := time.Now().Unix()
+
 	return fmt.Sprintf("%s-%d.%s", baseName, timestamp, ext)
 }
 
-// findEntryPoints identifies entry point files for bundling
+// findEntryPoints identifies entry point files for bundling.
 func (b *AssetBundler) findEntryPoints(files []AssetFile) []AssetFile {
 	entryPoints := make([]AssetFile, 0)
 
@@ -487,7 +490,7 @@ func (b *AssetBundler) findEntryPoints(files []AssetFile) []AssetFile {
 	return entryPoints
 }
 
-// simpleJSBundle creates a simple JavaScript bundle (replace with real bundler)
+// simpleJSBundle creates a simple JavaScript bundle (replace with real bundler).
 func (b *AssetBundler) simpleJSBundle(
 	entry AssetFile,
 	allFiles []AssetFile,
@@ -523,7 +526,7 @@ func (b *AssetBundler) simpleJSBundle(
 	return bundleContent, nil
 }
 
-// minifyJS applies basic JavaScript minification
+// minifyJS applies basic JavaScript minification.
 func (b *AssetBundler) minifyJS(content string) string {
 	// Basic minification - remove comments and extra whitespace
 	// In production, use a real minifier like esbuild or terser
@@ -552,7 +555,7 @@ func (b *AssetBundler) minifyJS(content string) string {
 	return strings.TrimSpace(minified.String())
 }
 
-// minifyCSS applies basic CSS minification
+// minifyCSS applies basic CSS minification.
 func (b *AssetBundler) minifyCSS(content string) string {
 	// Basic CSS minification
 	// Remove comments
@@ -571,7 +574,7 @@ func (b *AssetBundler) minifyCSS(content string) string {
 	return strings.TrimSpace(content)
 }
 
-// copyWithFingerprint copies a file with a fingerprinted name
+// copyWithFingerprint copies a file with a fingerprinted name.
 func (b *AssetBundler) copyWithFingerprint(asset AssetFile, subdir string) (string, error) {
 	ext := filepath.Ext(asset.Name)
 	name := strings.TrimSuffix(asset.Name, ext)
@@ -604,7 +607,7 @@ func (b *AssetBundler) copyWithFingerprint(asset AssetFile, subdir string) (stri
 	return outputPath, nil
 }
 
-// generateSimpleSourceMap creates a basic source map
+// generateSimpleSourceMap creates a basic source map.
 func (b *AssetBundler) generateSimpleSourceMap(entry AssetFile, bundleName string) string {
 	sourceMap := map[string]interface{}{
 		"version":  3,
@@ -615,10 +618,11 @@ func (b *AssetBundler) generateSimpleSourceMap(entry AssetFile, bundleName strin
 	}
 
 	data, _ := json.Marshal(sourceMap)
+
 	return string(data)
 }
 
-// analyzeDependencies analyzes asset dependencies (simplified implementation)
+// analyzeDependencies analyzes asset dependencies (simplified implementation).
 func (b *AssetBundler) analyzeDependencies(manifest *AssetManifest) error {
 	// For each JavaScript file, analyze imports/requires
 	for _, jsFile := range manifest.JavaScript {
@@ -641,7 +645,7 @@ func (b *AssetBundler) analyzeDependencies(manifest *AssetManifest) error {
 	return nil
 }
 
-// analyzeJSDependencies finds import/require statements (basic implementation)
+// analyzeJSDependencies finds import/require statements (basic implementation).
 func (b *AssetBundler) analyzeJSDependencies(path string) ([]string, error) {
 	content, err := os.ReadFile(path)
 	if err != nil {
@@ -681,7 +685,7 @@ func (b *AssetBundler) analyzeJSDependencies(path string) ([]string, error) {
 	return deps, nil
 }
 
-// analyzeCSSImports finds @import statements in CSS files
+// analyzeCSSImports finds @import statements in CSS files.
 func (b *AssetBundler) analyzeCSSImports(path string) ([]string, error) {
 	content, err := os.ReadFile(path)
 	if err != nil {
@@ -716,7 +720,7 @@ func (b *AssetBundler) analyzeCSSImports(path string) ([]string, error) {
 	return deps, nil
 }
 
-// AnalyzeBundles returns bundle analysis for reporting
+// AnalyzeBundles returns bundle analysis for reporting.
 func (b *AssetBundler) AnalyzeBundles() BundleStatistics {
 	// Return basic statistics
 	// In a real implementation, this would be populated during bundling
@@ -730,7 +734,7 @@ func (b *AssetBundler) AnalyzeBundles() BundleStatistics {
 	}
 }
 
-// writeJSONFile writes data as JSON to a file
+// writeJSONFile writes data as JSON to a file.
 func writeJSONFile(path string, data interface{}) error {
 	jsonData, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {

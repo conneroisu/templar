@@ -13,7 +13,7 @@ func TestSlidingWindowRateLimiterComprehensiveSecurity(t *testing.T) {
 		limiter := NewSlidingWindowRateLimiter(5, 100*time.Millisecond)
 
 		// Fill the window completely
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			if !limiter.IsAllowed() {
 				t.Fatalf("Request %d should be allowed", i+1)
 			}
@@ -25,7 +25,7 @@ func TestSlidingWindowRateLimiterComprehensiveSecurity(t *testing.T) {
 		}
 
 		// Multiple rapid attempts should trigger exponential backoff
-		for i := 0; i < 5; i++ {
+		for range 5 {
 			if limiter.IsAllowed() {
 				t.Error("Rapid attack attempts should be rejected due to backoff")
 			}
@@ -44,7 +44,7 @@ func TestSlidingWindowRateLimiterComprehensiveSecurity(t *testing.T) {
 		limiter := NewSlidingWindowRateLimiter(3, 50*time.Millisecond)
 
 		// Fill window
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			if !limiter.IsAllowed() {
 				t.Fatalf("Request %d should be allowed", i+1)
 			}
@@ -104,7 +104,7 @@ func TestSlidingWindowRateLimiterComprehensiveSecurity(t *testing.T) {
 		limiter := NewSlidingWindowRateLimiter(10, 100*time.Millisecond)
 
 		// Attempt to exhaust memory with many timestamp entries
-		for i := 0; i < 1000; i++ {
+		for i := range 1000 {
 			limiter.IsAllowed()
 			if i%100 == 0 {
 				time.Sleep(1 * time.Millisecond)
@@ -134,7 +134,7 @@ func TestSlidingWindowRateLimiterComprehensiveSecurity(t *testing.T) {
 		numAttackers := 20
 		requestsPerAttacker := 50
 
-		for i := 0; i < numAttackers; i++ {
+		for i := range numAttackers {
 			wg.Add(1)
 			go func(attackerId int) {
 				defer wg.Done()
@@ -142,7 +142,7 @@ func TestSlidingWindowRateLimiterComprehensiveSecurity(t *testing.T) {
 				localAllowed := 0
 				localRejected := 0
 
-				for j := 0; j < requestsPerAttacker; j++ {
+				for range requestsPerAttacker {
 					if limiter.IsAllowed() {
 						localAllowed++
 					} else {
@@ -191,7 +191,7 @@ func TestSlidingWindowRateLimiterComprehensiveSecurity(t *testing.T) {
 		limiter := NewSlidingWindowRateLimiter(1, 10*time.Millisecond)
 
 		// Trigger many violations to reach maximum backoff
-		for i := 0; i < 15; i++ {
+		for range 15 {
 			limiter.IsAllowed()
 		}
 
@@ -251,7 +251,7 @@ func TestSlidingWindowRateLimiterComprehensiveSecurity(t *testing.T) {
 		start := time.Now()
 		iterations := 10000
 
-		for i := 0; i < iterations; i++ {
+		for range iterations {
 			limiter.IsAllowed()
 		}
 
@@ -277,7 +277,7 @@ func TestSlidingWindowVulnerabilityMitigation(t *testing.T) {
 
 		// Phase 1: Fill the window
 		allowedInPhase1 := 0
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			if limiter.IsAllowed() {
 				allowedInPhase1++
 			}
@@ -290,7 +290,7 @@ func TestSlidingWindowVulnerabilityMitigation(t *testing.T) {
 		// Phase 2: Try to burst (should be rejected)
 		burstAttempts := 0
 		burstAllowed := 0
-		for i := 0; i < 5; i++ {
+		for range 5 {
 			burstAttempts++
 			if limiter.IsAllowed() {
 				burstAllowed++
@@ -306,7 +306,7 @@ func TestSlidingWindowVulnerabilityMitigation(t *testing.T) {
 		time.Sleep(120 * time.Millisecond) // Window expired
 
 		postWindowAllowed := 0
-		for i := 0; i < 5; i++ {
+		for range 5 {
 			if limiter.IsAllowed() {
 				postWindowAllowed++
 			}
@@ -337,9 +337,9 @@ func TestSlidingWindowVulnerabilityMitigation(t *testing.T) {
 		totalAttempts := 0
 
 		// Simulate 10 attack cycles
-		for cycle := 0; cycle < 10; cycle++ {
+		for range 10 {
 			// Fill window
-			for i := 0; i < 5; i++ {
+			for range 5 {
 				totalAttempts++
 				if limiter.IsAllowed() {
 					totalAllowed++
@@ -347,7 +347,7 @@ func TestSlidingWindowVulnerabilityMitigation(t *testing.T) {
 			}
 
 			// Try burst attack
-			for i := 0; i < 5; i++ {
+			for range 5 {
 				totalAttempts++
 				if limiter.IsAllowed() {
 					totalAllowed++
@@ -358,7 +358,7 @@ func TestSlidingWindowVulnerabilityMitigation(t *testing.T) {
 			time.Sleep(60 * time.Millisecond)
 
 			// Attack after window reset
-			for i := 0; i < 5; i++ {
+			for range 5 {
 				totalAttempts++
 				if limiter.IsAllowed() {
 					totalAllowed++

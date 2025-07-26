@@ -478,17 +478,17 @@ func TestValidateArguments(t *testing.T) {
 	}
 }
 
-// Benchmark tests to ensure validation doesn't impact performance
+// Benchmark tests to ensure validation doesn't impact performance.
 func BenchmarkValidateArgument(b *testing.B) {
 	arg := "components/button.templ"
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		validateArgument(arg)
 	}
 }
 
 func BenchmarkValidateURL(b *testing.B) {
 	url := "http://localhost:8080/preview/Button"
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		validation.ValidateURL(url)
 	}
 }
@@ -500,7 +500,7 @@ func BenchmarkValidateArgumentsLarge(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		validateArguments(args)
 	}
 }

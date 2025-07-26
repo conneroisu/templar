@@ -2,7 +2,7 @@ package scaffolding
 
 // Note: fmt, strings, time are used in template content generation
 
-// ComponentTemplate represents a template for generating components
+// ComponentTemplate represents a template for generating components.
 type ComponentTemplate struct {
 	Name        string
 	Description string
@@ -14,7 +14,7 @@ type ComponentTemplate struct {
 	DocContent  string
 }
 
-// TemplateParameter represents a parameter in a component template
+// TemplateParameter represents a parameter in a component template.
 type TemplateParameter struct {
 	Name         string
 	Type         string
@@ -23,7 +23,7 @@ type TemplateParameter struct {
 	Required     bool
 }
 
-// TemplateContext holds the context for template generation
+// TemplateContext holds the context for template generation.
 type TemplateContext struct {
 	ComponentName string
 	PackageName   string
@@ -35,7 +35,7 @@ type TemplateContext struct {
 	CustomProps   map[string]interface{}
 }
 
-// GetBuiltinTemplates returns all built-in component templates
+// GetBuiltinTemplates returns all built-in component templates.
 func GetBuiltinTemplates() map[string]ComponentTemplate {
 	return map[string]ComponentTemplate{
 		"button":     getButtonTemplate(),

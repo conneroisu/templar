@@ -9,17 +9,17 @@ import (
 	"github.com/conneroisu/templar/internal/errors"
 )
 
-// InitService handles project initialization business logic
+// InitService handles project initialization business logic.
 type InitService struct {
 	// Dependencies can be added here in the future
 }
 
-// NewInitService creates a new initialization service
+// NewInitService creates a new initialization service.
 func NewInitService() *InitService {
 	return &InitService{}
 }
 
-// InitOptions contains options for project initialization
+// InitOptions contains options for project initialization.
 type InitOptions struct {
 	ProjectDir string
 	Minimal    bool
@@ -28,7 +28,7 @@ type InitOptions struct {
 	Wizard     bool
 }
 
-// InitProject initializes a new Templar project with the specified options
+// InitProject initializes a new Templar project with the specified options.
 func (s *InitService) InitProject(opts InitOptions) error {
 	// Validate project directory
 	if err := s.validateProjectDirectory(opts.ProjectDir); err != nil {
@@ -81,7 +81,7 @@ func (s *InitService) InitProject(opts InitOptions) error {
 	return nil
 }
 
-// validateProjectDirectory ensures the project directory is valid
+// validateProjectDirectory ensures the project directory is valid.
 func (s *InitService) validateProjectDirectory(projectDir string) error {
 	// Check if directory exists and is writable
 	if err := os.MkdirAll(projectDir, 0755); err != nil {
@@ -92,10 +92,11 @@ func (s *InitService) validateProjectDirectory(projectDir string) error {
 			err,
 		)
 	}
+
 	return nil
 }
 
-// createDirectoryStructure creates the standard Templar project directory structure
+// createDirectoryStructure creates the standard Templar project directory structure.
 func (s *InitService) createDirectoryStructure(projectDir string) error {
 	dirs := []string{
 		"components",
@@ -117,7 +118,7 @@ func (s *InitService) createDirectoryStructure(projectDir string) error {
 			return errors.FileOperationError(
 				"CREATE_DIR",
 				dirPath,
-				fmt.Sprintf("failed to create directory %s", dir),
+				"failed to create directory "+dir,
 				err,
 			)
 		}
@@ -126,7 +127,7 @@ func (s *InitService) createDirectoryStructure(projectDir string) error {
 	return nil
 }
 
-// createConfigFile creates a default configuration file
+// createConfigFile creates a default configuration file.
 func (s *InitService) createConfigFile(projectDir string) error {
 	cfg := &config.Config{}
 	// Apply defaults manually since we don't have DefaultConfig
@@ -144,10 +145,11 @@ func (s *InitService) createConfigFile(projectDir string) error {
 
 	// Write config file
 	configPath := filepath.Join(projectDir, ".templar.yml")
+
 	return s.writeConfigToFile(cfg, configPath)
 }
 
-// writeConfigToFile writes config to YAML file
+// writeConfigToFile writes config to YAML file.
 func (s *InitService) writeConfigToFile(cfg *config.Config, path string) error {
 	content := fmt.Sprintf(
 		`server:
@@ -194,13 +196,13 @@ development:
 	return os.WriteFile(path, []byte(content), 0644)
 }
 
-// createConfigWithWizard creates configuration using interactive wizard
+// createConfigWithWizard creates configuration using interactive wizard.
 func (s *InitService) createConfigWithWizard(projectDir string) error {
 	// For now, use default config - wizard implementation would go here
 	return s.createConfigFile(projectDir)
 }
 
-// createGoModule creates a Go module if it doesn't exist
+// createGoModule creates a Go module if it doesn't exist.
 func (s *InitService) createGoModule(projectDir string) error {
 	modFile := filepath.Join(projectDir, "go.mod")
 	if _, err := os.Stat(modFile); err == nil {
@@ -220,7 +222,7 @@ require (
 	return os.WriteFile(modFile, []byte(content), 0644)
 }
 
-// createExampleComponents creates example component files
+// createExampleComponents creates example component files.
 func (s *InitService) createExampleComponents(projectDir string) error {
 	// Example button component
 	buttonContent := `package components
@@ -409,10 +411,11 @@ templ Wrapper() {
 `
 
 	wrapperPath := filepath.Join(projectDir, "preview", "wrapper.templ")
+
 	return os.WriteFile(wrapperPath, []byte(wrapperContent), 0644)
 }
 
-// createFromTemplate creates files from the specified template
+// createFromTemplate creates files from the specified template.
 func (s *InitService) createFromTemplate(projectDir, template string) error {
 	switch template {
 	case "minimal":
@@ -427,6 +430,7 @@ templ Hello(name string) {
 }
 `
 		helloPath := filepath.Join(projectDir, "components", "hello.templ")
+
 		return os.WriteFile(helloPath, []byte(helloContent), 0644)
 	case "blog", "dashboard", "landing", "ecommerce", "documentation":
 		// For now, just create basic structure - full templates would be implemented here

@@ -21,7 +21,7 @@ var (
 	validatePaths    []string
 )
 
-// validateCmd represents the validate command
+// validateCmd represents the validate command.
 var validateCmd = &cobra.Command{
 	Use:   "validate [component...]",
 	Short: "Validate templ components for errors and dependency issues",
@@ -96,6 +96,7 @@ func runValidateCommand(cmd *cobra.Command, args []string) error {
 	allComponents := componentRegistry.GetAll()
 	if len(allComponents) == 0 {
 		fmt.Println("No components found to validate")
+
 		return nil
 	}
 
@@ -187,7 +188,8 @@ func validateComponent(component *types.ComponentInfo) ValidationResult {
 	// Check if file exists
 	if _, err := os.Stat(component.FilePath); os.IsNotExist(err) {
 		result.Valid = false
-		result.Errors = append(result.Errors, fmt.Sprintf("File not found: %s", component.FilePath))
+		result.Errors = append(result.Errors, "File not found: "+component.FilePath)
+
 		return result
 	}
 
@@ -236,8 +238,9 @@ func validateComponent(component *types.ComponentInfo) ValidationResult {
 		if strings.Contains(strings.ToLower(component.FilePath), pattern) {
 			result.Warnings = append(
 				result.Warnings,
-				fmt.Sprintf("File in suspicious location: %s", component.FilePath),
+				"File in suspicious location: "+component.FilePath,
 			)
+
 			break
 		}
 	}
@@ -251,7 +254,7 @@ func validateComponentName(name string) error {
 
 	// Reject empty names
 	if name == "" {
-		return fmt.Errorf("empty component name")
+		return errors.New("empty component name")
 	}
 
 	// Clean the name
@@ -259,17 +262,17 @@ func validateComponentName(name string) error {
 
 	// Reject names containing path traversal patterns
 	if strings.Contains(cleanName, "..") {
-		return fmt.Errorf("path traversal attempt detected")
+		return errors.New("path traversal attempt detected")
 	}
 
 	// Reject absolute paths
 	if filepath.IsAbs(cleanName) {
-		return fmt.Errorf("absolute path not allowed")
+		return errors.New("absolute path not allowed")
 	}
 
 	// Reject names with path separators (should be simple component names)
 	if strings.ContainsRune(cleanName, os.PathSeparator) {
-		return fmt.Errorf("path separators not allowed in component name")
+		return errors.New("path separators not allowed in component name")
 	}
 
 	// Reject special characters that could be used in injection attacks
@@ -299,7 +302,7 @@ func validateComponentName(name string) error {
 
 	// Reject if name is too long (prevent buffer overflow attacks)
 	if len(cleanName) > 100 {
-		return fmt.Errorf("component name too long (max 100 characters)")
+		return errors.New("component name too long (max 100 characters)")
 	}
 
 	return nil
@@ -353,11 +356,13 @@ func outputValidationText(summary ValidationSummary) error {
 	}
 
 	fmt.Println("✅ All components are valid!")
+
 	return nil
 }
 
 func outputValidationJSON(summary ValidationSummary) error {
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", "  ")
+
 	return encoder.Encode(summary)
 }

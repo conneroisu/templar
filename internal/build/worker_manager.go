@@ -71,7 +71,7 @@ func (wm *WorkerManager) StartWorkers(ctx context.Context, queue interfaces.Task
 	ctx, wm.cancel = context.WithCancel(ctx)
 
 	// Start the configured number of workers
-	for i := 0; i < wm.workers; i++ {
+	for range wm.workers {
 		wm.workerWg.Add(1)
 		go wm.worker(ctx, queue)
 	}
@@ -198,5 +198,5 @@ type WorkerStats struct {
 	AverageTaskTime time.Duration
 }
 
-// Verify that WorkerManager implements the WorkerManager interface
+// Verify that WorkerManager implements the WorkerManager interface.
 var _ interfaces.WorkerManager = (*WorkerManager)(nil)

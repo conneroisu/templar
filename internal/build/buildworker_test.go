@@ -211,7 +211,7 @@ func TestWorkerPool_ConcurrentAccess(t *testing.T) {
 		var wg sync.WaitGroup
 
 		// Launch multiple goroutines that get and put workers
-		for i := 0; i < 100; i++ {
+		for i := range 100 {
 			wg.Add(1)
 			go func(id int) {
 				defer wg.Done()
@@ -239,7 +239,7 @@ func TestWorkerPool_ConcurrentAccess(t *testing.T) {
 		var wg sync.WaitGroup
 
 		// Launch multiple goroutines that get and put contexts
-		for i := 0; i < 100; i++ {
+		for i := range 100 {
 			wg.Add(1)
 			go func(id int) {
 				defer wg.Done()
@@ -324,7 +324,7 @@ func TestWorkerContext_BufferGrowth(t *testing.T) {
 
 		// Add data to buffer
 		initialCap := cap(ctx.OutputBuffer)
-		for i := 0; i < 1000; i++ {
+		for range 1000 {
 			ctx.OutputBuffer = append(ctx.OutputBuffer, []byte("test data")...)
 		}
 
@@ -342,7 +342,7 @@ func TestWorkerContext_BufferGrowth(t *testing.T) {
 
 		// Add data to buffer
 		initialCap := cap(ctx.ErrorBuffer)
-		for i := 0; i < 100; i++ {
+		for range 100 {
 			ctx.ErrorBuffer = append(ctx.ErrorBuffer, []byte("error message")...)
 		}
 
@@ -380,14 +380,14 @@ func TestWorkerContext_EnvironmentManagement(t *testing.T) {
 	})
 }
 
-// Benchmark tests to verify performance characteristics
+// Benchmark tests to verify performance characteristics.
 func BenchmarkWorkerPool_GetPutWorker(b *testing.B) {
 	pool := NewWorkerPool()
 
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		worker := pool.GetWorker()
 		worker.ID = i
 		worker.State = WorkerBusy
@@ -401,7 +401,7 @@ func BenchmarkWorkerPool_GetPutContext(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		ctx := pool.GetWorkerContext()
 		ctx.TempDir = "/tmp/test"
 		ctx.OutputBuffer = append(ctx.OutputBuffer, []byte("test")...)
@@ -427,7 +427,7 @@ func BenchmarkWorkerReset(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		worker.Reset()
 		// Restore state for next iteration
 		worker.ID = 42
@@ -459,7 +459,7 @@ func BenchmarkContextReset(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		ctx.Reset()
 		// Restore state for next iteration
 		ctx.TempDir = "/tmp/test"
@@ -602,7 +602,7 @@ func TestBuildWorker_ErrorHandling(t *testing.T) {
 		ctx.Reset()
 
 		// Add many environment variables to test cleanup
-		for i := 0; i < 1000; i++ {
+		for i := range 1000 {
 			ctx.Environment[fmt.Sprintf("VAR_%d", i)] = fmt.Sprintf("value_%d", i)
 		}
 
@@ -621,7 +621,7 @@ func TestBuildWorker_ErrorHandling(t *testing.T) {
 		errors := make(chan error, 1000)
 
 		// Create high contention scenario
-		for i := 0; i < 1000; i++ {
+		for i := range 1000 {
 			wg.Add(1)
 			go func(id int) {
 				defer wg.Done()
@@ -635,6 +635,7 @@ func TestBuildWorker_ErrorHandling(t *testing.T) {
 				worker := pool.GetWorker()
 				if worker == nil {
 					errors <- fmt.Errorf("got nil worker in goroutine %d", id)
+
 					return
 				}
 
@@ -666,14 +667,14 @@ func TestBuildWorker_PerformanceUnderLoad(t *testing.T) {
 
 		start := time.Now()
 
-		for i := 0; i < iterations; i++ {
+		for i := range iterations {
 			worker := pool.GetWorker()
 			worker.ID = i
 			worker.State = WorkerBusy
 
 			// Simulate some work
 			worker.Context.OutputBuffer = append(worker.Context.OutputBuffer, []byte("test")...)
-			worker.Context.Environment["ITER"] = fmt.Sprintf("%d", i)
+			worker.Context.Environment["ITER"] = strconv.Itoa(i)
 
 			pool.PutWorker(worker)
 		}
@@ -695,7 +696,7 @@ func TestBuildWorker_PerformanceUnderLoad(t *testing.T) {
 		}
 
 		// Pre-populate with data
-		for i := 0; i < 100; i++ {
+		for i := range 100 {
 			ctx.OutputBuffer = append(ctx.OutputBuffer, []byte("test data")...)
 			ctx.ErrorBuffer = append(ctx.ErrorBuffer, []byte("error")...)
 			ctx.Environment[fmt.Sprintf("VAR_%d", i)] = fmt.Sprintf("value_%d", i)
@@ -704,7 +705,7 @@ func TestBuildWorker_PerformanceUnderLoad(t *testing.T) {
 		iterations := 1000
 		start := time.Now()
 
-		for i := 0; i < iterations; i++ {
+		for range iterations {
 			ctx.Reset()
 
 			// Add some data for next iteration
@@ -765,7 +766,7 @@ func TestBuildWorker_ResourceLimits(t *testing.T) {
 	})
 }
 
-// Additional benchmark for memory allocation patterns
+// Additional benchmark for memory allocation patterns.
 func BenchmarkWorkerPool_HighContention(b *testing.B) {
 	pool := NewWorkerPool()
 

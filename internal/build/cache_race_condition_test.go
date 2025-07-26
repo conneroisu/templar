@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestCacheRaceConditionFixes validates that the race condition fixes work correctly
+// TestCacheRaceConditionFixes validates that the race condition fixes work correctly.
 func TestCacheRaceConditionFixes(t *testing.T) {
 	t.Run("concurrent hash storage and retrieval", func(t *testing.T) {
 		cache := NewBuildCache(1024*1024, time.Hour)
@@ -26,12 +26,12 @@ func TestCacheRaceConditionFixes(t *testing.T) {
 		errors := make(chan error, numGoroutines)
 
 		// Start multiple goroutines doing concurrent hash operations
-		for i := 0; i < numGoroutines; i++ {
+		for i := range numGoroutines {
 			wg.Add(1)
 			go func(id int) {
 				defer wg.Done()
 
-				for j := 0; j < operationsPerGoroutine; j++ {
+				for j := range operationsPerGoroutine {
 					key := fmt.Sprintf("key_%d_%d", id, j)
 					hash := fmt.Sprintf("hash_%d_%d", id, j)
 
@@ -42,10 +42,12 @@ func TestCacheRaceConditionFixes(t *testing.T) {
 					retrievedHash, found := cache.GetHash(key)
 					if !found {
 						errors <- fmt.Errorf("hash not found for key %s", key)
+
 						return
 					}
 					if retrievedHash != hash {
 						errors <- fmt.Errorf("hash mismatch for key %s: expected %s, got %s", key, hash, retrievedHash)
+
 						return
 					}
 				}
@@ -73,7 +75,7 @@ func TestCacheRaceConditionFixes(t *testing.T) {
 		testFiles := make([]string, 10)
 		components := make([]*types.ComponentInfo, 10)
 
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			fileName := fmt.Sprintf("test_%d.templ", i)
 			filePath := filepath.Join(tempDir, fileName)
 			content := fmt.Sprintf("test content %d", i)
@@ -99,7 +101,7 @@ func TestCacheRaceConditionFixes(t *testing.T) {
 		errors := make(chan error, numGoroutines)
 
 		// Generate hashes concurrently
-		for i := 0; i < numGoroutines; i++ {
+		for i := range numGoroutines {
 			wg.Add(1)
 			go func(id int) {
 				defer wg.Done()
@@ -108,6 +110,7 @@ func TestCacheRaceConditionFixes(t *testing.T) {
 					hash := pipeline.generateContentHash(component)
 					if hash == "" {
 						errors <- fmt.Errorf("empty hash generated for component %s", component.Name)
+
 						return
 					}
 					results <- fmt.Sprintf("%s:%s", component.Name, hash)
@@ -130,6 +133,7 @@ func TestCacheRaceConditionFixes(t *testing.T) {
 			parts := strings.SplitN(result, ":", 2)
 			if len(parts) != 2 {
 				t.Errorf("Invalid result format: %s", result)
+
 				continue
 			}
 
@@ -158,12 +162,12 @@ func TestCacheRaceConditionFixes(t *testing.T) {
 		var wg sync.WaitGroup
 
 		// Try to overwhelm cache with concurrent large entries
-		for i := 0; i < numGoroutines; i++ {
+		for i := range numGoroutines {
 			wg.Add(1)
 			go func(id int) {
 				defer wg.Done()
 
-				for j := 0; j < 20; j++ {
+				for j := range 20 {
 					key := fmt.Sprintf("large_key_%d_%d", id, j)
 					// Create large hash string
 					hash := fmt.Sprintf("%0*d", largeDataSize, id*1000+j)
@@ -191,12 +195,12 @@ func TestCacheRaceConditionFixes(t *testing.T) {
 		var wg sync.WaitGroup
 
 		// Create many entries to force eviction races
-		for i := 0; i < numGoroutines; i++ {
+		for i := range numGoroutines {
 			wg.Add(1)
 			go func(id int) {
 				defer wg.Done()
 
-				for j := 0; j < operationsPerGoroutine; j++ {
+				for j := range operationsPerGoroutine {
 					key := fmt.Sprintf("evict_test_%d_%d", id, j)
 					hash := fmt.Sprintf("hash_%d_%d_with_extra_content", id, j)
 					cache.SetHash(key, hash)
@@ -231,7 +235,7 @@ func TestCacheRaceConditionFixes(t *testing.T) {
 	})
 }
 
-// TestAtomicSizeOperations tests that size operations are atomic
+// TestAtomicSizeOperations tests that size operations are atomic.
 func TestAtomicSizeOperations(t *testing.T) {
 	cache := NewBuildCache(2048, time.Hour)
 
@@ -240,12 +244,12 @@ func TestAtomicSizeOperations(t *testing.T) {
 	var wg sync.WaitGroup
 
 	// Concurrent size-affecting operations
-	for i := 0; i < numGoroutines; i++ {
+	for i := range numGoroutines {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
 
-			for j := 0; j < operationsPerGoroutine; j++ {
+			for j := range operationsPerGoroutine {
 				key := fmt.Sprintf("atomic_test_%d_%d", id, j)
 				hash := fmt.Sprintf("hash_%d_%d", id, j)
 
@@ -273,7 +277,7 @@ func TestAtomicSizeOperations(t *testing.T) {
 	assert.GreaterOrEqual(t, size, int64(0), "Size should never be negative")
 }
 
-// TestCacheMethodThreadSafety verifies thread safety of cache methods
+// TestCacheMethodThreadSafety verifies thread safety of cache methods.
 func TestCacheMethodThreadSafety(t *testing.T) {
 	cache := NewBuildCache(4096, time.Minute)
 
@@ -281,7 +285,7 @@ func TestCacheMethodThreadSafety(t *testing.T) {
 	var wg sync.WaitGroup
 
 	// Mix of all cache operations
-	for i := 0; i < numGoroutines; i++ {
+	for i := range numGoroutines {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
@@ -289,22 +293,22 @@ func TestCacheMethodThreadSafety(t *testing.T) {
 			// Different operation patterns per goroutine
 			switch id % 4 {
 			case 0: // Heavy setters
-				for j := 0; j < 50; j++ {
+				for j := range 50 {
 					cache.SetHash(fmt.Sprintf("setter_%d_%d", id, j), fmt.Sprintf("hash_%d", j))
 				}
 			case 1: // Heavy getters
-				for j := 0; j < 100; j++ {
+				for j := range 100 {
 					cache.GetHash(
 						fmt.Sprintf("setter_%d_%d", (id-1+numGoroutines)%numGoroutines, j%50),
 					)
 				}
 			case 2: // Stats checkers
-				for j := 0; j < 30; j++ {
+				for range 30 {
 					cache.GetStats()
 					time.Sleep(time.Microsecond)
 				}
 			case 3: // Cache clearers (less frequent)
-				for j := 0; j < 5; j++ {
+				for range 5 {
 					cache.Clear()
 					time.Sleep(time.Millisecond)
 				}

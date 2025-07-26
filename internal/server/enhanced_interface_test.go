@@ -384,6 +384,7 @@ func TestPropValidation(t *testing.T) {
 		for _, err := range errors {
 			if err.Property == "unknown_prop" && err.Severity == "warning" {
 				unknownWarning = true
+
 				break
 			}
 		}

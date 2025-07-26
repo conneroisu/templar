@@ -12,7 +12,7 @@ import (
 	"github.com/coder/websocket"
 )
 
-// OptimizedWebSocketHub manages WebSocket connections with high-performance optimizations
+// OptimizedWebSocketHub manages WebSocket connections with high-performance optimizations.
 type OptimizedWebSocketHub struct {
 	// Client management with efficient data structures
 	clients *ClientPool
@@ -38,7 +38,7 @@ type OptimizedWebSocketHub struct {
 	wg     sync.WaitGroup
 }
 
-// OptimizedClient represents a WebSocket client with performance optimizations
+// OptimizedClient represents a WebSocket client with performance optimizations.
 type OptimizedClient struct {
 	// Connection and basic info
 	conn         *websocket.Conn
@@ -58,7 +58,7 @@ type OptimizedClient struct {
 	active  int32 // atomic
 }
 
-// ClientPool efficiently manages client connections using hash map + ring buffer hybrid
+// ClientPool efficiently manages client connections using hash map + ring buffer hybrid.
 type ClientPool struct {
 	// Primary storage: hash map for O(1) lookups
 	clients   map[uint64]*OptimizedClient
@@ -77,7 +77,7 @@ type ClientPool struct {
 	clientPool sync.Pool
 }
 
-// RingBuffer provides lock-free message buffering for WebSocket clients
+// RingBuffer provides lock-free message buffering for WebSocket clients.
 type RingBuffer struct {
 	buffer [][]byte
 	size   uint64
@@ -88,14 +88,14 @@ type RingBuffer struct {
 	readPos  uint64
 }
 
-// BroadcastPool manages pre-allocated broadcast operations to eliminate allocations
+// BroadcastPool manages pre-allocated broadcast operations to eliminate allocations.
 type BroadcastPool struct {
 	messagePool     sync.Pool
 	operationPool   sync.Pool
 	clientSlicePool sync.Pool
 }
 
-// FailedClientPool manages cleanup operations with object pooling
+// FailedClientPool manages cleanup operations with object pooling.
 type FailedClientPool struct {
 	cleanupPool sync.Pool
 	cleanupChan chan *CleanupOperation
@@ -104,14 +104,14 @@ type FailedClientPool struct {
 	ctx         context.Context
 }
 
-// BackpressureManager handles backpressure for WebSocket broadcasts
+// BackpressureManager handles backpressure for WebSocket broadcasts.
 type BackpressureManager struct {
 	maxQueueSize    int
 	dropThreshold   float64
 	priorityWeights map[ClientPriority]float64
 }
 
-// BroadcastMessage represents a message to broadcast with metadata
+// BroadcastMessage represents a message to broadcast with metadata.
 type BroadcastMessage struct {
 	Data      []byte
 	Priority  MessagePriority
@@ -119,14 +119,14 @@ type BroadcastMessage struct {
 	ID        uint64
 }
 
-// CleanupOperation represents a client cleanup operation for pooling
+// CleanupOperation represents a client cleanup operation for pooling.
 type CleanupOperation struct {
 	Client    *OptimizedClient
 	Reason    string
 	Timestamp time.Time
 }
 
-// HubMetrics tracks performance metrics for the WebSocket hub
+// HubMetrics tracks performance metrics for the WebSocket hub.
 type HubMetrics struct {
 	TotalConnections    int64
 	ActiveConnections   int64
@@ -137,7 +137,7 @@ type HubMetrics struct {
 	AllocationsSaved    int64
 }
 
-// MessagePriority defines message priority levels
+// MessagePriority defines message priority levels.
 type MessagePriority int
 
 const (
@@ -147,7 +147,7 @@ const (
 	PriorityUrgent
 )
 
-// ClientPriority defines client priority levels for backpressure handling
+// ClientPriority defines client priority levels for backpressure handling.
 type ClientPriority int
 
 const (
@@ -156,7 +156,7 @@ const (
 	ClientPriorityHigh
 )
 
-// Optimized constants for performance
+// Optimized constants for performance.
 const (
 	DefaultRingBufferSize = 1024  // Must be power of 2
 	DefaultClientPoolSize = 256   // Expected concurrent clients
@@ -165,7 +165,7 @@ const (
 	MaxBackpressureQueue  = 10000 // Maximum queued messages before dropping
 )
 
-// NewOptimizedWebSocketHub creates a new optimized WebSocket hub
+// NewOptimizedWebSocketHub creates a new optimized WebSocket hub.
 func NewOptimizedWebSocketHub(ctx context.Context) *OptimizedWebSocketHub {
 	hubCtx, cancel := context.WithCancel(ctx)
 
@@ -189,7 +189,7 @@ func NewOptimizedWebSocketHub(ctx context.Context) *OptimizedWebSocketHub {
 	return hub
 }
 
-// NewClientPool creates a new optimized client pool
+// NewClientPool creates a new optimized client pool.
 func NewClientPool() *ClientPool {
 	return &ClientPool{
 		clients:       make(map[uint64]*OptimizedClient, DefaultClientPoolSize),
@@ -205,7 +205,7 @@ func NewClientPool() *ClientPool {
 	}
 }
 
-// NewRingBuffer creates a new lock-free ring buffer for message queuing
+// NewRingBuffer creates a new lock-free ring buffer for message queuing.
 func NewRingBuffer(size uint64) *RingBuffer {
 	// Ensure size is power of 2 for efficient modulo operations
 	if size&(size-1) != 0 {
@@ -220,7 +220,7 @@ func NewRingBuffer(size uint64) *RingBuffer {
 	}
 }
 
-// NewBroadcastPool creates a new broadcast pool for zero-allocation broadcasting
+// NewBroadcastPool creates a new broadcast pool for zero-allocation broadcasting.
 func NewBroadcastPool() *BroadcastPool {
 	return &BroadcastPool{
 		messagePool: sync.Pool{
@@ -241,7 +241,7 @@ func NewBroadcastPool() *BroadcastPool {
 	}
 }
 
-// NewFailedClientPool creates a new failed client pool for efficient cleanup
+// NewFailedClientPool creates a new failed client pool for efficient cleanup.
 func NewFailedClientPool(ctx context.Context, workers int) *FailedClientPool {
 	pool := &FailedClientPool{
 		cleanupPool: sync.Pool{
@@ -255,7 +255,7 @@ func NewFailedClientPool(ctx context.Context, workers int) *FailedClientPool {
 	}
 
 	// Start cleanup workers
-	for i := 0; i < workers; i++ {
+	for range workers {
 		pool.wg.Add(1)
 		go pool.cleanupWorker()
 	}
@@ -263,7 +263,7 @@ func NewFailedClientPool(ctx context.Context, workers int) *FailedClientPool {
 	return pool
 }
 
-// NewBackpressureManager creates a new backpressure manager
+// NewBackpressureManager creates a new backpressure manager.
 func NewBackpressureManager() *BackpressureManager {
 	return &BackpressureManager{
 		maxQueueSize:  MaxBackpressureQueue,
@@ -276,7 +276,7 @@ func NewBackpressureManager() *BackpressureManager {
 	}
 }
 
-// AddClient efficiently adds a client to the pool with O(1) operation
+// AddClient efficiently adds a client to the pool with O(1) operation.
 func (cp *ClientPool) AddClient(client *OptimizedClient) {
 	// Generate unique ID atomically
 	client.id = atomic.AddUint64(&cp.nextID, 1)
@@ -297,7 +297,7 @@ func (cp *ClientPool) AddClient(client *OptimizedClient) {
 	cp.ringMu.Unlock()
 }
 
-// RemoveClient efficiently removes a client with O(1) operation
+// RemoveClient efficiently removes a client with O(1) operation.
 func (cp *ClientPool) RemoveClient(clientID uint64) *OptimizedClient {
 	cp.clientsMu.Lock()
 	defer cp.clientsMu.Unlock()
@@ -312,9 +312,10 @@ func (cp *ClientPool) RemoveClient(clientID uint64) *OptimizedClient {
 
 	// Remove from ring buffer (mark as nil for skip during iteration)
 	cp.ringMu.Lock()
-	for i := 0; i < cp.ringHead; i++ {
+	for i := range cp.ringHead {
 		if cp.broadcastRing[i] != nil && cp.broadcastRing[i].id == clientID {
 			cp.broadcastRing[i] = nil
+
 			break
 		}
 	}
@@ -323,7 +324,7 @@ func (cp *ClientPool) RemoveClient(clientID uint64) *OptimizedClient {
 	return client
 }
 
-// GetActiveClientsForBroadcast returns a pre-allocated slice of active clients
+// GetActiveClientsForBroadcast returns a pre-allocated slice of active clients.
 func (cp *ClientPool) GetActiveClientsForBroadcast(pool *BroadcastPool) []*OptimizedClient {
 	// Get pre-allocated slice from pool
 	activeClients := pool.clientSlicePool.Get().([]*OptimizedClient)
@@ -333,7 +334,7 @@ func (cp *ClientPool) GetActiveClientsForBroadcast(pool *BroadcastPool) []*Optim
 	defer cp.ringMu.RUnlock()
 
 	// Efficiently iterate through ring buffer
-	for i := 0; i < cp.ringHead; i++ {
+	for i := range cp.ringHead {
 		client := cp.broadcastRing[i]
 		if client != nil && atomic.LoadInt32(&client.active) == 1 {
 			activeClients = append(activeClients, client)
@@ -343,12 +344,12 @@ func (cp *ClientPool) GetActiveClientsForBroadcast(pool *BroadcastPool) []*Optim
 	return activeClients
 }
 
-// ReturnClientsSlice returns a client slice to the pool
+// ReturnClientsSlice returns a client slice to the pool.
 func (cp *ClientPool) ReturnClientsSlice(slice []*OptimizedClient, pool *BroadcastPool) {
 	pool.clientSlicePool.Put(slice)
 }
 
-// Push adds a message to the ring buffer with lock-free operation
+// Push adds a message to the ring buffer with lock-free operation.
 func (rb *RingBuffer) Push(message []byte) bool {
 	// Get current write position
 	writePos := atomic.LoadUint64(&rb.writePos)
@@ -365,10 +366,11 @@ func (rb *RingBuffer) Push(message []byte) bool {
 
 	// Atomically update write position
 	atomic.StoreUint64(&rb.writePos, nextWritePos)
+
 	return true
 }
 
-// Pop removes a message from the ring buffer with lock-free operation
+// Pop removes a message from the ring buffer with lock-free operation.
 func (rb *RingBuffer) Pop() ([]byte, bool) {
 	readPos := atomic.LoadUint64(&rb.readPos)
 	writePos := atomic.LoadUint64(&rb.writePos)
@@ -383,24 +385,27 @@ func (rb *RingBuffer) Pop() ([]byte, bool) {
 
 	// Atomically update read position
 	atomic.StoreUint64(&rb.readPos, readPos+1)
+
 	return message, true
 }
 
-// IsEmpty checks if the ring buffer is empty
+// IsEmpty checks if the ring buffer is empty.
 func (rb *RingBuffer) IsEmpty() bool {
 	readPos := atomic.LoadUint64(&rb.readPos)
 	writePos := atomic.LoadUint64(&rb.writePos)
+
 	return readPos >= writePos
 }
 
-// Size returns the current number of messages in the buffer
+// Size returns the current number of messages in the buffer.
 func (rb *RingBuffer) Size() uint64 {
 	writePos := atomic.LoadUint64(&rb.writePos)
 	readPos := atomic.LoadUint64(&rb.readPos)
+
 	return writePos - readPos
 }
 
-// runHub is the main hub loop with optimized broadcasting
+// runHub is the main hub loop with optimized broadcasting.
 func (hub *OptimizedWebSocketHub) runHub() {
 	defer hub.wg.Done()
 
@@ -454,7 +459,7 @@ func (hub *OptimizedWebSocketHub) runHub() {
 	}
 }
 
-// optimizedBroadcast performs zero-allocation broadcasting with backpressure handling
+// optimizedBroadcast performs zero-allocation broadcasting with backpressure handling.
 func (hub *OptimizedWebSocketHub) optimizedBroadcast(message *BroadcastMessage) {
 	// Get pre-allocated client slice
 	activeClients := hub.clients.GetActiveClientsForBroadcast(hub.broadcastPool)
@@ -481,6 +486,7 @@ func (hub *OptimizedWebSocketHub) optimizedBroadcast(message *BroadcastMessage) 
 			if hub.shouldDropMessage(client, message) {
 				atomic.AddInt64(&client.missedMessages, 1)
 				atomic.AddInt64(&hub.metrics.DroppedMessages, 1)
+
 				continue
 			}
 
@@ -498,7 +504,7 @@ func (hub *OptimizedWebSocketHub) optimizedBroadcast(message *BroadcastMessage) 
 	hub.broadcastPool.messagePool.Put(message)
 }
 
-// shouldDropMessage implements intelligent backpressure handling
+// shouldDropMessage implements intelligent backpressure handling.
 func (hub *OptimizedWebSocketHub) shouldDropMessage(
 	client *OptimizedClient,
 	message *BroadcastMessage,
@@ -526,7 +532,7 @@ func (hub *OptimizedWebSocketHub) shouldDropMessage(
 	return true
 }
 
-// handleFailedClients efficiently handles clients that failed to receive messages
+// handleFailedClients efficiently handles clients that failed to receive messages.
 func (hub *OptimizedWebSocketHub) handleFailedClients(failedClients []*OptimizedClient) {
 	for _, client := range failedClients {
 		if atomic.LoadInt32(&client.active) == 0 {
@@ -549,7 +555,7 @@ func (hub *OptimizedWebSocketHub) handleFailedClients(failedClients []*Optimized
 	}
 }
 
-// cleanupWorker handles asynchronous client cleanup
+// cleanupWorker handles asynchronous client cleanup.
 func (pool *FailedClientPool) cleanupWorker() {
 	defer pool.wg.Done()
 
@@ -570,7 +576,7 @@ func (pool *FailedClientPool) cleanupWorker() {
 	}
 }
 
-// cleanupClientImmediate performs immediate client cleanup when async queue is full
+// cleanupClientImmediate performs immediate client cleanup when async queue is full.
 func (hub *OptimizedWebSocketHub) cleanupClientImmediate(client *OptimizedClient) {
 	if atomic.LoadInt32(&client.active) == 1 {
 		atomic.StoreInt32(&client.active, 0)
@@ -578,14 +584,14 @@ func (hub *OptimizedWebSocketHub) cleanupClientImmediate(client *OptimizedClient
 	}
 }
 
-// performMaintenance performs periodic maintenance for optimal performance
+// performMaintenance performs periodic maintenance for optimal performance.
 func (hub *OptimizedWebSocketHub) performMaintenance() {
 	// Compact ring buffer if needed
 	hub.clients.ringMu.Lock()
 
 	// Remove nil entries from ring buffer
 	writeIndex := 0
-	for readIndex := 0; readIndex < hub.clients.ringHead; readIndex++ {
+	for readIndex := range hub.clients.ringHead {
 		if hub.clients.broadcastRing[readIndex] != nil {
 			if writeIndex != readIndex {
 				hub.clients.broadcastRing[writeIndex] = hub.clients.broadcastRing[readIndex]
@@ -602,7 +608,7 @@ func (hub *OptimizedWebSocketHub) performMaintenance() {
 	atomic.AddInt64(&hub.metrics.AllocationsSaved, int64(DefaultClientPoolSize))
 }
 
-// GetOptimizedMetrics returns comprehensive performance metrics
+// GetOptimizedMetrics returns comprehensive performance metrics.
 func (hub *OptimizedWebSocketHub) GetOptimizedMetrics() map[string]interface{} {
 	metrics := make(map[string]interface{})
 
@@ -634,7 +640,7 @@ func (hub *OptimizedWebSocketHub) GetOptimizedMetrics() map[string]interface{} {
 	return metrics
 }
 
-// Shutdown gracefully shuts down the optimized WebSocket hub
+// Shutdown gracefully shuts down the optimized WebSocket hub.
 func (hub *OptimizedWebSocketHub) Shutdown() {
 	log.Println("Shutting down optimized WebSocket hub...")
 
@@ -650,7 +656,7 @@ func (hub *OptimizedWebSocketHub) Shutdown() {
 	log.Println("Optimized WebSocket hub shutdown complete")
 }
 
-// countLeadingZeros is a helper function for ring buffer size calculation
+// countLeadingZeros is a helper function for ring buffer size calculation.
 func countLeadingZeros(x uint64) int {
 	if x == 0 {
 		return 64
@@ -679,5 +685,6 @@ func countLeadingZeros(x uint64) int {
 	if x <= 0x7FFFFFFFFFFFFFFF {
 		n += 1
 	}
+
 	return n
 }

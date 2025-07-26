@@ -169,7 +169,8 @@ func runComponentCreate(cmd *cobra.Command, args []string) error {
 		for _, tmpl := range templates {
 			fmt.Printf("  • %s - %s (%s)\n", tmpl.Name, tmpl.Description, tmpl.Category)
 		}
-		return fmt.Errorf("template not found")
+
+		return errors.New("template not found")
 	}
 
 	// Generate component

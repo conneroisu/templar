@@ -138,7 +138,7 @@ func TestHandleComponent(t *testing.T) {
 		}
 
 		for _, name := range dangerousNames {
-			t.Run(fmt.Sprintf("dangerous name: %s", name), func(t *testing.T) {
+			t.Run("dangerous name: "+name, func(t *testing.T) {
 				// URL encode the dangerous name to prevent HTTP parsing issues
 				encodedName := url.QueryEscape(name)
 				req := httptest.NewRequest(http.MethodGet, "/component/"+encodedName, nil)

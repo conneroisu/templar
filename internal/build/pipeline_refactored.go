@@ -112,6 +112,7 @@ func (rbp *RefactoredBuildPipeline) Start(ctx context.Context) error {
 	rbp.workerManager.StartWorkers(ctx, rbp.queueManager)
 
 	rbp.started = true
+
 	return nil
 }
 
@@ -135,6 +136,7 @@ func (rbp *RefactoredBuildPipeline) Stop() error {
 	rbp.queueManager.Close()
 
 	rbp.started = false
+
 	return nil
 }
 
@@ -200,6 +202,7 @@ func (rbp *RefactoredBuildPipeline) GetWorkerStats() WorkerStats {
 	if concreteWorker, ok := rbp.workerManager.(*WorkerManager); ok {
 		return concreteWorker.GetWorkerStats()
 	}
+
 	return WorkerStats{}
 }
 
@@ -209,6 +212,7 @@ func (rbp *RefactoredBuildPipeline) GetHashStats() HashCacheStats {
 	if concreteHash, ok := rbp.hashProvider.(*HashProvider); ok {
 		return concreteHash.GetCacheStats()
 	}
+
 	return HashCacheStats{}
 }
 
@@ -226,6 +230,7 @@ func (rbp *RefactoredBuildPipeline) GetComponentRegistry() interfaces.ComponentR
 func (rbp *RefactoredBuildPipeline) IsStarted() bool {
 	rbp.mu.RLock()
 	defer rbp.mu.RUnlock()
+
 	return rbp.started
 }
 
@@ -249,5 +254,5 @@ type PipelineStats struct {
 	MetricsStats interface{}
 }
 
-// Verify that RefactoredBuildPipeline implements the BuildPipeline interface
+// Verify that RefactoredBuildPipeline implements the BuildPipeline interface.
 var _ interfaces.BuildPipeline = (*RefactoredBuildPipeline)(nil)

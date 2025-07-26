@@ -250,7 +250,7 @@ templ SimpleButton(text string) {
 	assert.Error(t, err)
 }
 
-// Helper function to check if templ command is available
+// Helper function to check if templ command is available.
 func isTemplAvailable() bool {
 	// Try to run templ --version
 	// This is a simple check - in practice, we'd use exec.Command

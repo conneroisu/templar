@@ -12,7 +12,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// FuzzLoadConfig tests configuration loading with various malformed inputs
+// FuzzLoadConfig tests configuration loading with various malformed inputs.
 func FuzzLoadConfig(f *testing.F) {
 	// Seed with valid and invalid YAML configurations
 	f.Add(`server:
@@ -98,7 +98,7 @@ components:
 	})
 }
 
-// FuzzConfigValidation tests validation of configuration structures
+// FuzzConfigValidation tests validation of configuration structures.
 func FuzzConfigValidation(f *testing.F) {
 	// Seed with various config structures
 	f.Add(
@@ -155,7 +155,7 @@ func FuzzConfigValidation(f *testing.F) {
 	})
 }
 
-// FuzzYAMLParsing tests YAML parsing with various edge cases
+// FuzzYAMLParsing tests YAML parsing with various edge cases.
 func FuzzYAMLParsing(f *testing.F) {
 	// Seed with YAML edge cases and potential attacks
 	f.Add("key: value")
@@ -180,7 +180,7 @@ func FuzzYAMLParsing(f *testing.F) {
 	})
 }
 
-// FuzzEnvironmentVariables tests environment variable parsing
+// FuzzEnvironmentVariables tests environment variable parsing.
 func FuzzEnvironmentVariables(f *testing.F) {
 	// Seed with various environment variable patterns
 	f.Add("TEMPLAR_SERVER_PORT=8080")
@@ -243,7 +243,7 @@ func FuzzEnvironmentVariables(f *testing.F) {
 	})
 }
 
-// ValidateConfig validates a configuration structure for security and correctness
+// ValidateConfig validates a configuration structure for security and correctness.
 func ValidateConfig(config *Config) error {
 	if config.Server.Port < 0 || config.Server.Port > 65535 {
 		return ErrInvalidPort
@@ -256,8 +256,8 @@ func ValidateConfig(config *Config) error {
 	return nil
 }
 
-// Custom errors for validation
+// Custom errors for validation.
 var (
-	ErrInvalidPort = fmt.Errorf("invalid port")
-	ErrInvalidHost = fmt.Errorf("invalid host")
+	ErrInvalidPort = errors.New("invalid port")
+	ErrInvalidHost = errors.New("invalid host")
 )

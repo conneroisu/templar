@@ -24,7 +24,7 @@ type ConfigBuilder struct {
 	tier       ConfigTier
 }
 
-// ConfigTier represents the complexity level of configuration
+// ConfigTier represents the complexity level of configuration.
 type ConfigTier int
 
 const (
@@ -34,10 +34,10 @@ const (
 	TierEnterprise
 )
 
-// ValidatorFunc represents a configuration validation function
+// ValidatorFunc represents a configuration validation function.
 type ValidatorFunc func(*Config) error
 
-// NewConfigBuilder creates a new configuration builder with sensible defaults
+// NewConfigBuilder creates a new configuration builder with sensible defaults.
 func NewConfigBuilder() *ConfigBuilder {
 	return &ConfigBuilder{
 		config:     &Config{},
@@ -46,7 +46,7 @@ func NewConfigBuilder() *ConfigBuilder {
 	}
 }
 
-// WithBasicSettings applies basic configuration suitable for simple projects
+// WithBasicSettings applies basic configuration suitable for simple projects.
 func (cb *ConfigBuilder) WithBasicSettings() *ConfigBuilder {
 	cb.tier = TierBasic
 	cb.config.Server = ServerConfig{
@@ -65,10 +65,11 @@ func (cb *ConfigBuilder) WithBasicSettings() *ConfigBuilder {
 		Ignore:   []string{"node_modules", ".git"},
 		CacheDir: ".templar/cache",
 	}
+
 	return cb
 }
 
-// WithDevelopmentMode adds development-specific settings
+// WithDevelopmentMode adds development-specific settings.
 func (cb *ConfigBuilder) WithDevelopmentMode() *ConfigBuilder {
 	if cb.tier < TierDevelopment {
 		cb.tier = TierDevelopment
@@ -92,10 +93,11 @@ func (cb *ConfigBuilder) WithDevelopmentMode() *ConfigBuilder {
 		HTTPPort:      8081,
 		AlertsEnabled: false,
 	}
+
 	return cb
 }
 
-// WithProductionOptimizations adds production-ready settings
+// WithProductionOptimizations adds production-ready settings.
 func (cb *ConfigBuilder) WithProductionOptimizations() *ConfigBuilder {
 	if cb.tier < TierProduction {
 		cb.tier = TierProduction
@@ -142,10 +144,11 @@ func (cb *ConfigBuilder) WithProductionOptimizations() *ConfigBuilder {
 			},
 		},
 	}
+
 	return cb
 }
 
-// WithEnterpriseFeatures adds enterprise-level configuration
+// WithEnterpriseFeatures adds enterprise-level configuration.
 func (cb *ConfigBuilder) WithEnterpriseFeatures() *ConfigBuilder {
 	cb.tier = TierEnterprise
 
@@ -180,22 +183,24 @@ func (cb *ConfigBuilder) WithEnterpriseFeatures() *ConfigBuilder {
 	return cb
 }
 
-// WithCustomServer allows customization of server settings
+// WithCustomServer allows customization of server settings.
 func (cb *ConfigBuilder) WithCustomServer(port int, host string) *ConfigBuilder {
 	cb.config.Server.Port = port
 	cb.config.Server.Host = host
 	cb.addValidator(validateServerConfig(&cb.config.Server))
+
 	return cb
 }
 
-// WithComponentPaths sets custom component scan paths
+// WithComponentPaths sets custom component scan paths.
 func (cb *ConfigBuilder) WithComponentPaths(paths ...string) *ConfigBuilder {
 	cb.config.Components.ScanPaths = paths
 	cb.addValidator(validateComponentsConfig(&cb.config.Components))
+
 	return cb
 }
 
-// WithCSS adds CSS framework configuration
+// WithCSS adds CSS framework configuration.
 func (cb *ConfigBuilder) WithCSS(framework string, config *CSSConfig) *ConfigBuilder {
 	if config == nil {
 		config = &CSSConfig{
@@ -219,10 +224,11 @@ func (cb *ConfigBuilder) WithCSS(framework string, config *CSSConfig) *ConfigBui
 		}
 	}
 	cb.config.CSS = config
+
 	return cb
 }
 
-// WithPlugins adds plugin configuration
+// WithPlugins adds plugin configuration.
 func (cb *ConfigBuilder) WithPlugins(enabled []string, discoveryPaths []string) *ConfigBuilder {
 	cb.config.Plugins = PluginsConfig{
 		Enabled:        enabled,
@@ -230,10 +236,11 @@ func (cb *ConfigBuilder) WithPlugins(enabled []string, discoveryPaths []string) 
 		Configurations: make(map[string]PluginConfigMap),
 	}
 	cb.addValidator(validatePluginsConfig(&cb.config.Plugins))
+
 	return cb
 }
 
-// WithEnvironment applies environment-specific overrides
+// WithEnvironment applies environment-specific overrides.
 func (cb *ConfigBuilder) WithEnvironment(env string) *ConfigBuilder {
 	switch env {
 	case "development":
@@ -255,25 +262,28 @@ func (cb *ConfigBuilder) WithEnvironment(env string) *ConfigBuilder {
 		cb.WithEnterpriseFeatures()
 		cb.config.Server.Environment = "production"
 	}
+
 	return cb
 }
 
-// FromViper loads settings from viper configuration
+// FromViper loads settings from viper configuration.
 func (cb *ConfigBuilder) FromViper() *ConfigBuilder {
 	var viperConfig Config
 	if err := viper.Unmarshal(&viperConfig); err == nil {
 		cb.mergeViperConfig(&viperConfig)
 	}
+
 	return cb
 }
 
-// AddValidator adds a custom validation function
+// AddValidator adds a custom validation function.
 func (cb *ConfigBuilder) AddValidator(validator ValidatorFunc) *ConfigBuilder {
 	cb.validators = append(cb.validators, validator)
+
 	return cb
 }
 
-// Build creates the final configuration after applying all settings and validations
+// Build creates the final configuration after applying all settings and validations.
 func (cb *ConfigBuilder) Build() (*Config, error) {
 	// Apply viper overrides for known issues
 	cb.applyViperWorkarounds()
@@ -293,12 +303,12 @@ func (cb *ConfigBuilder) Build() (*Config, error) {
 	return cb.config, nil
 }
 
-// GetTier returns the current configuration tier
+// GetTier returns the current configuration tier.
 func (cb *ConfigBuilder) GetTier() ConfigTier {
 	return cb.tier
 }
 
-// addValidator is a helper to add validator functions
+// addValidator is a helper to add validator functions.
 func (cb *ConfigBuilder) addValidator(err error) {
 	if err != nil {
 		cb.validators = append(cb.validators, func(*Config) error {
@@ -307,7 +317,7 @@ func (cb *ConfigBuilder) addValidator(err error) {
 	}
 }
 
-// mergeViperConfig merges settings from viper into the current config
+// mergeViperConfig merges settings from viper into the current config.
 func (cb *ConfigBuilder) mergeViperConfig(viperConfig *Config) {
 	// Only merge non-zero values to avoid overriding builder settings
 	if viperConfig.Server.Port != 0 {
@@ -322,7 +332,7 @@ func (cb *ConfigBuilder) mergeViperConfig(viperConfig *Config) {
 	// Add more merge logic as needed
 }
 
-// applyViperWorkarounds handles known viper issues with slice and boolean handling
+// applyViperWorkarounds handles known viper issues with slice and boolean handling.
 func (cb *ConfigBuilder) applyViperWorkarounds() {
 	// Handle scan_paths set via viper
 	if viper.IsSet("components.scan_paths") {

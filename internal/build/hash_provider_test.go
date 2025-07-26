@@ -170,7 +170,7 @@ func TestHashProvider_GenerateHashBatch(t *testing.T) {
 
 	// Create multiple test files
 	components := make([]*types.ComponentInfo, 0, 10)
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		content := fmt.Sprintf("Component %d content\npackage component%d", i, i)
 		testFile := filepath.Join(tempDir, fmt.Sprintf("comp%d.templ", i))
 		err := os.WriteFile(testFile, []byte(content), 0644)
@@ -187,7 +187,7 @@ func TestHashProvider_GenerateHashBatch(t *testing.T) {
 
 	// Verify results
 	assert.Len(t, results, 10)
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		componentName := fmt.Sprintf("Component%d", i)
 		hash, exists := results[componentName]
 		assert.True(t, exists, "Hash should exist for component %s", componentName)
@@ -211,7 +211,7 @@ func TestHashProvider_GenerateHashBatch_SmallBatch(t *testing.T) {
 
 	// Create small batch (≤5 components) to test synchronous processing
 	components := make([]*types.ComponentInfo, 0, 3)
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		content := fmt.Sprintf("Small batch component %d", i)
 		testFile := filepath.Join(tempDir, fmt.Sprintf("small%d.templ", i))
 		err := os.WriteFile(testFile, []byte(content), 0644)
@@ -226,7 +226,7 @@ func TestHashProvider_GenerateHashBatch_SmallBatch(t *testing.T) {
 	results := provider.GenerateHashBatch(components)
 	assert.Len(t, results, 3)
 
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		componentName := fmt.Sprintf("SmallComponent%d", i)
 		hash := results[componentName]
 		assert.NotEmpty(t, hash)
@@ -248,7 +248,7 @@ func TestHashProvider_GenerateHashBatch_AllCached(t *testing.T) {
 
 	// Create components
 	components := make([]*types.ComponentInfo, 0, 5)
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		content := fmt.Sprintf("Cached component %d", i)
 		testFile := filepath.Join(tempDir, fmt.Sprintf("cached%d.templ", i))
 		err := os.WriteFile(testFile, []byte(content), 0644)
@@ -372,7 +372,7 @@ func TestHashProvider_ConcurrentAccess(t *testing.T) {
 
 	// Create test files
 	components := make([]*types.ComponentInfo, 20)
-	for i := 0; i < 20; i++ {
+	for i := range 20 {
 		content := fmt.Sprintf("Concurrent test content %d", i)
 		testFile := filepath.Join(tempDir, fmt.Sprintf("concurrent%d.templ", i))
 		err := os.WriteFile(testFile, []byte(content), 0644)
@@ -386,7 +386,7 @@ func TestHashProvider_ConcurrentAccess(t *testing.T) {
 
 	// Run concurrent hash generation
 	done := make(chan bool, 10)
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		go func(workerID int) {
 			defer func() { done <- true }()
 
@@ -411,7 +411,7 @@ func TestHashProvider_ConcurrentAccess(t *testing.T) {
 	}
 
 	// Wait for all workers to complete
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		<-done
 	}
 }
@@ -480,7 +480,7 @@ func TestHashProvider_ErrorHandling(t *testing.T) {
 	}
 }
 
-// Benchmark tests
+// Benchmark tests.
 func BenchmarkHashProvider_GenerateContentHash(b *testing.B) {
 	tempDir := b.TempDir()
 	cache := NewBuildCache(1024*1024, 5*time.Minute)
@@ -498,7 +498,7 @@ func BenchmarkHashProvider_GenerateContentHash(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = provider.GenerateContentHash(component)
 	}
 }
@@ -510,7 +510,7 @@ func BenchmarkHashProvider_GenerateHashBatch(b *testing.B) {
 
 	// Create multiple components
 	components := make([]*types.ComponentInfo, 10)
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		content := fmt.Sprintf("Benchmark batch content %d", i)
 		testFile := filepath.Join(tempDir, fmt.Sprintf("batch%d.templ", i))
 		err := os.WriteFile(testFile, []byte(content), 0644)
@@ -523,7 +523,7 @@ func BenchmarkHashProvider_GenerateHashBatch(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = provider.GenerateHashBatch(components)
 	}
 }
@@ -550,14 +550,14 @@ func BenchmarkHashProvider_MmapVsRegular(b *testing.B) {
 		provider := NewHashProvider(cache)
 
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			_ = provider.GenerateContentHash(component)
 		}
 	})
 
 	b.Run("without_cache", func(b *testing.B) {
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			// Create fresh provider each time to avoid caching
 			cache := NewBuildCache(1, time.Nanosecond) // Tiny cache that expires immediately
 			provider := NewHashProvider(cache)

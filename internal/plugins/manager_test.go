@@ -11,7 +11,7 @@ import (
 	"github.com/conneroisu/templar/internal/registry"
 )
 
-// TestEnhancedPluginManager tests the basic functionality of the enhanced plugin manager
+// TestEnhancedPluginManager tests the basic functionality of the enhanced plugin manager.
 func TestEnhancedPluginManager(t *testing.T) {
 	ctx := context.Background()
 
@@ -88,7 +88,7 @@ func TestEnhancedPluginManager(t *testing.T) {
 	}
 }
 
-// TestBuildPipelineAdapter tests the build pipeline adapter
+// TestBuildPipelineAdapter tests the build pipeline adapter.
 func TestBuildPipelineAdapter(t *testing.T) {
 	// Test build pipeline adapter
 	buildAdapter := NewBuildPipelineAdapter()

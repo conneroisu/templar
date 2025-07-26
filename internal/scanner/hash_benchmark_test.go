@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// BenchmarkHashGeneration compares original vs optimized hash generation
+// BenchmarkHashGeneration compares original vs optimized hash generation.
 func BenchmarkHashGeneration(b *testing.B) {
 	// Create test data of different sizes
 	testSizes := []struct {
@@ -38,7 +38,7 @@ func BenchmarkHashGeneration(b *testing.B) {
 		// Test original hash generation
 		b.Run("Original_"+testSize.name, func(b *testing.B) {
 			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
+			for range b.N {
 				// Original CRC32 hash on full content
 				_ = strconv.FormatUint(uint64(crc32.Checksum(content, crcTable)), 16)
 			}
@@ -48,14 +48,14 @@ func BenchmarkHashGeneration(b *testing.B) {
 		scanner := &ComponentScanner{}
 		b.Run("Optimized_"+testSize.name, func(b *testing.B) {
 			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
+			for range b.N {
 				_, _ = scanner.generateOptimizedHash(content, fileInfo)
 			}
 		})
 	}
 }
 
-// BenchmarkHashStrategies tests different hashing strategies individually
+// BenchmarkHashStrategies tests different hashing strategies individually.
 func BenchmarkHashStrategies(b *testing.B) {
 	// Large file content (1MB)
 	content := make([]byte, 1024*1024)
@@ -67,25 +67,25 @@ func BenchmarkHashStrategies(b *testing.B) {
 	fileInfo := &mockFileInfo{size: int64(len(content)), modTime: time.Now()}
 
 	b.Run("FullContent", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			_ = crc32.Checksum(content, crcTable)
 		}
 	})
 
 	b.Run("SampledHash", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			_ = scanner.generateSampledHash(content)
 		}
 	})
 
 	b.Run("HierarchicalHash", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			_ = scanner.generateHierarchicalHash(content, fileInfo)
 		}
 	})
 }
 
-// mockFileInfo implements os.FileInfo for testing
+// mockFileInfo implements os.FileInfo for testing.
 type mockFileInfo struct {
 	size    int64
 	modTime time.Time

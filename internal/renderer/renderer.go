@@ -23,13 +23,13 @@ import (
 	"golang.org/x/text/language"
 )
 
-// ComponentRenderer handles rendering of templ components
+// ComponentRenderer handles rendering of templ components.
 type ComponentRenderer struct {
 	registry interfaces.ComponentRegistry
 	workDir  string
 }
 
-// NewComponentRenderer creates a new component renderer
+// NewComponentRenderer creates a new component renderer.
 func NewComponentRenderer(registry interfaces.ComponentRegistry) *ComponentRenderer {
 	workDir := ".templar/render"
 	if err := os.MkdirAll(workDir, 0750); err != nil {
@@ -43,7 +43,7 @@ func NewComponentRenderer(registry interfaces.ComponentRegistry) *ComponentRende
 	}
 }
 
-// RenderComponent renders a specific component with mock data
+// RenderComponent renders a specific component with mock data.
 func (r *ComponentRenderer) RenderComponent(componentName string) (string, error) {
 	// Validate component name to prevent path traversal
 	if err := r.validateComponentName(componentName); err != nil {
@@ -114,7 +114,7 @@ func (r *ComponentRenderer) RenderComponent(componentName string) (string, error
 	return html, nil
 }
 
-// generateMockData creates mock data for component parameters
+// generateMockData creates mock data for component parameters.
 func (r *ComponentRenderer) generateMockData(
 	component *types.ComponentInfo,
 ) map[string]interface{} {
@@ -131,14 +131,14 @@ func (r *ComponentRenderer) generateMockData(
 		case "[]string":
 			mockData[param.Name] = []string{"Item 1", "Item 2", "Item 3"}
 		default:
-			mockData[param.Name] = fmt.Sprintf("mock_%s", param.Name)
+			mockData[param.Name] = "mock_" + param.Name
 		}
 	}
 
 	return mockData
 }
 
-// generateMockString generates realistic mock strings based on parameter name
+// generateMockString generates realistic mock strings based on parameter name.
 func (r *ComponentRenderer) generateMockString(paramName string) string {
 	switch strings.ToLower(paramName) {
 	case "title", "heading":
@@ -158,11 +158,11 @@ func (r *ComponentRenderer) generateMockString(paramName string) string {
 	case "size":
 		return "medium"
 	default:
-		return fmt.Sprintf("Sample %s", cases.Title(language.English).String(paramName))
+		return "Sample " + cases.Title(language.English).String(paramName)
 	}
 }
 
-// generateGoCode creates Go code that renders the component
+// generateGoCode creates Go code that renders the component.
 func (r *ComponentRenderer) generateGoCode(
 	component *types.ComponentInfo,
 	mockData map[string]interface{},
@@ -211,15 +211,16 @@ func main() {
 		case string:
 			mockValueStr = fmt.Sprintf(`"%s"`, v)
 		case int:
-			mockValueStr = fmt.Sprintf("%d", v)
+			mockValueStr = strconv.Itoa(v)
 		case bool:
-			mockValueStr = fmt.Sprintf("%t", v)
+			mockValueStr = strconv.FormatBool(v)
 		case []string:
 			mockValueStr = fmt.Sprintf(`[]string{%s}`, strings.Join(func() []string {
 				var quoted []string
 				for _, s := range v {
 					quoted = append(quoted, fmt.Sprintf(`"%s"`, s))
 				}
+
 				return quoted
 			}(), ", "))
 		default:
@@ -244,7 +245,7 @@ func main() {
 }
 
 // copyFile copies a file from src to dst
-// copyAndModifyTemplFile copies a templ file and modifies it to use main package
+// copyAndModifyTemplFile copies a templ file and modifies it to use main package.
 func (r *ComponentRenderer) copyAndModifyTemplFile(src, dst string) error {
 	input, err := os.ReadFile(src)
 	if err != nil {
@@ -258,15 +259,17 @@ func (r *ComponentRenderer) copyAndModifyTemplFile(src, dst string) error {
 	for i, line := range lines {
 		if strings.HasPrefix(strings.TrimSpace(line), "package ") {
 			lines[i] = "package main"
+
 			break
 		}
 	}
 
 	modifiedContent := strings.Join(lines, "\n")
+
 	return os.WriteFile(dst, []byte(modifiedContent), 0600)
 }
 
-// runTemplGenerate runs templ generate in the work directory
+// runTemplGenerate runs templ generate in the work directory.
 func (r *ComponentRenderer) runTemplGenerate(workDir string) error {
 	// Validate work directory path to prevent directory traversal
 	if err := r.validateWorkDir(workDir); err != nil {
@@ -292,10 +295,11 @@ func (r *ComponentRenderer) runTemplGenerate(workDir string) error {
 			output,
 		)
 	}
+
 	return nil
 }
 
-// buildAndRun builds and runs the Go program to generate HTML
+// buildAndRun builds and runs the Go program to generate HTML.
 func (r *ComponentRenderer) buildAndRun(workDir string) (string, error) {
 	// Validate work directory path to prevent directory traversal
 	if err := r.validateWorkDir(workDir); err != nil {
@@ -335,7 +339,7 @@ func (r *ComponentRenderer) buildAndRun(workDir string) (string, error) {
 	return string(output), nil
 }
 
-// validateWorkDir validates the work directory path to prevent directory traversal
+// validateWorkDir validates the work directory path to prevent directory traversal.
 func (r *ComponentRenderer) validateWorkDir(workDir string) error {
 	// Clean the path to resolve . and .. elements
 	cleanPath := filepath.Clean(workDir)
@@ -365,12 +369,12 @@ func (r *ComponentRenderer) validateWorkDir(workDir string) error {
 	return nil
 }
 
-// RenderComponentWithLayout wraps component HTML in a full page layout
+// RenderComponentWithLayout wraps component HTML in a full page layout.
 func (r *ComponentRenderer) RenderComponentWithLayout(componentName string, html string) string {
 	return r.RenderComponentWithLayoutAndNonce(componentName, html, "")
 }
 
-// RenderComponentWithLayoutAndNonce wraps component HTML in a full page layout with CSP nonce support
+// RenderComponentWithLayoutAndNonce wraps component HTML in a full page layout with CSP nonce support.
 func (r *ComponentRenderer) RenderComponentWithLayoutAndNonce(
 	componentName string,
 	html string,
@@ -437,7 +441,7 @@ func (r *ComponentRenderer) RenderComponentWithLayoutAndNonce(
 </html>`, componentName, scriptNonce, styleNonce, componentName, html, scriptNonce)
 }
 
-// validateComponentName validates component name to prevent path traversal
+// validateComponentName validates component name to prevent path traversal.
 func (r *ComponentRenderer) validateComponentName(name string) error {
 	// Clean the name
 	cleanName := filepath.Clean(name)

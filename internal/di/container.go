@@ -17,18 +17,18 @@ import (
 	"github.com/conneroisu/templar/internal/watcher"
 )
 
-// dependencyResolver is a wrapper around ServiceContainer that prevents deadlocks
+// dependencyResolver is a wrapper around ServiceContainer that prevents deadlocks.
 type dependencyResolver struct {
 	container *ServiceContainer
 	resolving map[string]bool
 }
 
-// Get retrieves a service using the safe resolver
+// Get retrieves a service using the safe resolver.
 func (dr *dependencyResolver) Get(name string) (interface{}, error) {
 	return dr.container.getWithResolver(name, dr.resolving)
 }
 
-// GetByType retrieves a service by type using the safe resolver
+// GetByType retrieves a service by type using the safe resolver.
 func (dr *dependencyResolver) GetByType(serviceType reflect.Type) (interface{}, error) {
 	dr.container.mu.RLock()
 	var serviceName string
@@ -38,6 +38,7 @@ func (dr *dependencyResolver) GetByType(serviceType reflect.Type) (interface{}, 
 		if definition.Type == serviceType {
 			serviceName = definition.Name
 			found = true
+
 			break
 		}
 	}
@@ -50,7 +51,7 @@ func (dr *dependencyResolver) GetByType(serviceType reflect.Type) (interface{}, 
 	return nil, fmt.Errorf("no service found for type %s", serviceType.String())
 }
 
-// GetByTag retrieves all services with a specific tag using the safe resolver
+// GetByTag retrieves all services with a specific tag using the safe resolver.
 func (dr *dependencyResolver) GetByTag(tag string) ([]interface{}, error) {
 	dr.container.mu.RLock()
 	var serviceNames []string
@@ -59,6 +60,7 @@ func (dr *dependencyResolver) GetByTag(tag string) ([]interface{}, error) {
 		for _, defTag := range definition.Tags {
 			if defTag == tag {
 				serviceNames = append(serviceNames, definition.Name)
+
 				break
 			}
 		}
@@ -77,16 +79,17 @@ func (dr *dependencyResolver) GetByTag(tag string) ([]interface{}, error) {
 	return services, nil
 }
 
-// MustGet retrieves a service and panics if not found
+// MustGet retrieves a service and panics if not found.
 func (dr *dependencyResolver) MustGet(name string) interface{} {
 	instance, err := dr.Get(name)
 	if err != nil {
 		panic(fmt.Sprintf("failed to get service '%s': %v", name, err))
 	}
+
 	return instance
 }
 
-// ServiceContainer manages dependency injection for the application
+// ServiceContainer manages dependency injection for the application.
 type ServiceContainer struct {
 	services    map[string]ServiceDefinition
 	instances   map[string]interface{}
@@ -98,7 +101,7 @@ type ServiceContainer struct {
 	initialized bool
 }
 
-// ServiceDefinition defines how a service should be created and managed
+// ServiceDefinition defines how a service should be created and managed.
 type ServiceDefinition struct {
 	Name         string
 	Type         reflect.Type
@@ -108,13 +111,13 @@ type ServiceDefinition struct {
 	Tags         []string
 }
 
-// FactoryFunc creates a service instance using the dependency resolver
+// FactoryFunc creates a service instance using the dependency resolver.
 type FactoryFunc func(resolver DependencyResolver) (interface{}, error)
 
 // TODO: Update ServiceContainer to fully implement interfaces.ServiceContainer interface
 // var _ interfaces.ServiceContainer = (*ServiceContainer)(nil)
 
-// DependencyResolver provides safe dependency resolution that prevents circular dependencies
+// DependencyResolver provides safe dependency resolution that prevents circular dependencies.
 type DependencyResolver interface {
 	Get(name string) (interface{}, error)
 	GetByType(serviceType reflect.Type) (interface{}, error)
@@ -122,13 +125,13 @@ type DependencyResolver interface {
 	MustGet(name string) interface{}
 }
 
-// ServiceBuilder helps build service definitions
+// ServiceBuilder helps build service definitions.
 type ServiceBuilder struct {
 	definition ServiceDefinition
 	container  *ServiceContainer
 }
 
-// NewServiceContainer creates a new dependency injection container
+// NewServiceContainer creates a new dependency injection container.
 func NewServiceContainer(cfg *config.Config) *ServiceContainer {
 	return &ServiceContainer{
 		services:   make(map[string]ServiceDefinition),
@@ -140,7 +143,7 @@ func NewServiceContainer(cfg *config.Config) *ServiceContainer {
 	}
 }
 
-// Register registers a service with the container
+// Register registers a service with the container.
 func (c *ServiceContainer) Register(name string, factory FactoryFunc) *ServiceBuilder {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -162,15 +165,16 @@ func (c *ServiceContainer) Register(name string, factory FactoryFunc) *ServiceBu
 	return builder
 }
 
-// RegisterSingleton registers a singleton service
+// RegisterSingleton registers a singleton service.
 func (c *ServiceContainer) RegisterSingleton(name string, factory FactoryFunc) *ServiceBuilder {
 	builder := c.Register(name, factory)
 	builder.definition.Singleton = true
 	c.services[name] = builder.definition
+
 	return builder
 }
 
-// RegisterInstance registers an existing instance as a singleton
+// RegisterInstance registers an existing instance as a singleton.
 func (c *ServiceContainer) RegisterInstance(name string, instance interface{}) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -183,12 +187,12 @@ func (c *ServiceContainer) RegisterInstance(name string, instance interface{}) {
 	}
 }
 
-// Get retrieves a service from the container
+// Get retrieves a service from the container.
 func (c *ServiceContainer) Get(name string) (interface{}, error) {
 	return c.getWithResolver(name, make(map[string]bool))
 }
 
-// getWithResolver retrieves a service with circular dependency detection
+// getWithResolver retrieves a service with circular dependency detection.
 func (c *ServiceContainer) getWithResolver(
 	name string,
 	resolving map[string]bool,
@@ -214,6 +218,7 @@ func (c *ServiceContainer) getWithResolver(
 		c.mu.RLock()
 		if instance, exists := c.singletons[name]; exists {
 			c.mu.RUnlock()
+
 			return instance, nil
 		}
 
@@ -226,6 +231,7 @@ func (c *ServiceContainer) getWithResolver(
 			c.mu.RLock()
 			instance := c.singletons[name]
 			c.mu.RUnlock()
+
 			return instance, nil
 		}
 		c.mu.RUnlock()
@@ -234,6 +240,7 @@ func (c *ServiceContainer) getWithResolver(
 		c.mu.Lock()
 		if instance, exists := c.singletons[name]; exists {
 			c.mu.Unlock()
+
 			return instance, nil
 		}
 
@@ -244,6 +251,7 @@ func (c *ServiceContainer) getWithResolver(
 			c.mu.RLock()
 			instance := c.singletons[name]
 			c.mu.RUnlock()
+
 			return instance, nil
 		}
 
@@ -269,6 +277,7 @@ func (c *ServiceContainer) getWithResolver(
 			delete(c.creating, name)
 			c.mu.Unlock()
 			wg.Done()
+
 			return nil, fmt.Errorf("failed to create singleton service '%s': %w", name, err)
 		}
 
@@ -292,13 +301,13 @@ func (c *ServiceContainer) getWithResolver(
 	return instance, nil
 }
 
-// createInstanceSafely creates an instance with dependency resolution
+// createInstanceSafely creates an instance with dependency resolution.
 func (c *ServiceContainer) createInstanceSafely(
 	factory FactoryFunc,
 	resolving map[string]bool,
 ) (interface{}, error) {
 	if factory == nil {
-		return nil, fmt.Errorf("factory is nil")
+		return nil, errors.New("factory is nil")
 	}
 
 	// Create a resolver container that can handle circular dependencies
@@ -310,29 +319,31 @@ func (c *ServiceContainer) createInstanceSafely(
 	return factory(resolver)
 }
 
-// MustGet retrieves a service and panics if not found
+// MustGet retrieves a service and panics if not found.
 func (c *ServiceContainer) MustGet(name string) interface{} {
 	instance, err := c.Get(name)
 	if err != nil {
 		panic(fmt.Sprintf("failed to get service '%s': %v", name, err))
 	}
+
 	return instance
 }
 
-// GetRequired retrieves a service and panics if not found (interface compliance)
+// GetRequired retrieves a service and panics if not found (interface compliance).
 func (c *ServiceContainer) GetRequired(name string) interface{} {
 	return c.MustGet(name)
 }
 
-// Has checks if a service is registered
+// Has checks if a service is registered.
 func (c *ServiceContainer) Has(name string) bool {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	_, exists := c.services[name]
+
 	return exists
 }
 
-// GetByType retrieves a service by its type
+// GetByType retrieves a service by its type.
 func (c *ServiceContainer) GetByType(serviceType reflect.Type) (interface{}, error) {
 	c.mu.RLock()
 	var serviceName string
@@ -342,6 +353,7 @@ func (c *ServiceContainer) GetByType(serviceType reflect.Type) (interface{}, err
 		if definition.Type == serviceType {
 			serviceName = definition.Name
 			found = true
+
 			break
 		}
 	}
@@ -354,7 +366,7 @@ func (c *ServiceContainer) GetByType(serviceType reflect.Type) (interface{}, err
 	return nil, fmt.Errorf("no service found for type %s", serviceType.String())
 }
 
-// GetByTag retrieves all services with a specific tag
+// GetByTag retrieves all services with a specific tag.
 func (c *ServiceContainer) GetByTag(tag string) ([]interface{}, error) {
 	c.mu.RLock()
 	var serviceNames []string
@@ -363,6 +375,7 @@ func (c *ServiceContainer) GetByTag(tag string) ([]interface{}, error) {
 		for _, defTag := range definition.Tags {
 			if defTag == tag {
 				serviceNames = append(serviceNames, definition.Name)
+
 				break
 			}
 		}
@@ -381,7 +394,7 @@ func (c *ServiceContainer) GetByTag(tag string) ([]interface{}, error) {
 	return services, nil
 }
 
-// Initialize sets up all core services with their dependencies
+// Initialize sets up all core services with their dependencies.
 func (c *ServiceContainer) Initialize() error {
 	if c.initialized {
 		return nil
@@ -393,10 +406,11 @@ func (c *ServiceContainer) Initialize() error {
 	}
 
 	c.initialized = true
+
 	return nil
 }
 
-// registerCoreServices registers all the core application services
+// registerCoreServices registers all the core application services.
 func (c *ServiceContainer) registerCoreServices() error {
 	// Register ComponentRegistry
 	c.RegisterSingleton("registry", func(resolver DependencyResolver) (interface{}, error) {
@@ -409,6 +423,7 @@ func (c *ServiceContainer) registerCoreServices() error {
 		if err != nil {
 			return nil, err
 		}
+
 		return scanner.NewComponentScanner(reg.(*registry.ComponentRegistry)), nil
 	}).DependsOn("registry").WithTag("core")
 
@@ -419,6 +434,7 @@ func (c *ServiceContainer) registerCoreServices() error {
 			return nil, err
 		}
 		workers := 4 // Default worker count
+
 		return build.NewRefactoredBuildPipeline(workers, reg.(*registry.ComponentRegistry)), nil
 	}).DependsOn("registry").WithTag("core")
 
@@ -475,7 +491,7 @@ func (c *ServiceContainer) registerCoreServices() error {
 	return nil
 }
 
-// Shutdown gracefully shuts down all services
+// Shutdown gracefully shuts down all services.
 func (c *ServiceContainer) Shutdown(ctx context.Context) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -511,35 +527,39 @@ func (c *ServiceContainer) Shutdown(ctx context.Context) error {
 
 // ServiceBuilder methods for fluent interface
 
-// AsSingleton marks the service as a singleton
+// AsSingleton marks the service as a singleton.
 func (sb *ServiceBuilder) AsSingleton() *ServiceBuilder {
 	sb.definition.Singleton = true
 	sb.updateContainer()
+
 	return sb
 }
 
-// DependsOn adds dependencies to the service
+// DependsOn adds dependencies to the service.
 func (sb *ServiceBuilder) DependsOn(dependencies ...string) *ServiceBuilder {
 	sb.definition.Dependencies = append(sb.definition.Dependencies, dependencies...)
 	sb.updateContainer()
+
 	return sb
 }
 
-// WithTag adds tags to the service
+// WithTag adds tags to the service.
 func (sb *ServiceBuilder) WithTag(tags ...string) *ServiceBuilder {
 	sb.definition.Tags = append(sb.definition.Tags, tags...)
 	sb.updateContainer()
+
 	return sb
 }
 
-// WithType sets the service type
+// WithType sets the service type.
 func (sb *ServiceBuilder) WithType(serviceType reflect.Type) *ServiceBuilder {
 	sb.definition.Type = serviceType
 	sb.updateContainer()
+
 	return sb
 }
 
-// updateContainer updates the service definition in the container
+// updateContainer updates the service definition in the container.
 func (sb *ServiceBuilder) updateContainer() {
 	sb.container.mu.Lock()
 	sb.container.services[sb.definition.Name] = sb.definition
@@ -548,52 +568,57 @@ func (sb *ServiceBuilder) updateContainer() {
 
 // Convenience methods for typed service retrieval
 
-// GetRegistry retrieves the component registry
+// GetRegistry retrieves the component registry.
 func (c *ServiceContainer) GetRegistry() (*registry.ComponentRegistry, error) {
 	service, err := c.Get("registry")
 	if err != nil {
 		return nil, err
 	}
+
 	return service.(*registry.ComponentRegistry), nil
 }
 
-// GetScanner retrieves the component scanner
+// GetScanner retrieves the component scanner.
 func (c *ServiceContainer) GetScanner() (*scanner.ComponentScanner, error) {
 	service, err := c.Get("scanner")
 	if err != nil {
 		return nil, err
 	}
+
 	return service.(*scanner.ComponentScanner), nil
 }
 
-// GetBuildPipeline retrieves the build pipeline
+// GetBuildPipeline retrieves the build pipeline.
 func (c *ServiceContainer) GetBuildPipeline() (*build.RefactoredBuildPipeline, error) {
 	service, err := c.Get("buildPipeline")
 	if err != nil {
 		return nil, err
 	}
+
 	return service.(*build.RefactoredBuildPipeline), nil
 }
 
-// GetFileWatcher retrieves the file watcher
+// GetFileWatcher retrieves the file watcher.
 func (c *ServiceContainer) GetFileWatcher() (*watcher.FileWatcher, error) {
 	service, err := c.Get("watcher")
 	if err != nil {
 		return nil, err
 	}
+
 	return service.(*watcher.FileWatcher), nil
 }
 
-// GetServer retrieves the preview server
+// GetServer retrieves the preview server.
 func (c *ServiceContainer) GetServer() (*server.PreviewServer, error) {
 	service, err := c.Get("server")
 	if err != nil {
 		return nil, err
 	}
+
 	return service.(*server.PreviewServer), nil
 }
 
-// ListServices returns a list of all registered service names
+// ListServices returns a list of all registered service names.
 func (c *ServiceContainer) ListServices() []string {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -602,14 +627,16 @@ func (c *ServiceContainer) ListServices() []string {
 	for name := range c.services {
 		services = append(services, name)
 	}
+
 	return services
 }
 
-// GetServiceDefinition returns the definition for a service
+// GetServiceDefinition returns the definition for a service.
 func (c *ServiceContainer) GetServiceDefinition(name string) (ServiceDefinition, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
 	definition, exists := c.services[name]
+
 	return definition, exists
 }

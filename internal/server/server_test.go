@@ -178,6 +178,7 @@ func TestClient_String(t *testing.T) {
 		conn, err := websocket.Accept(w, r, nil)
 		if err != nil {
 			t.Errorf("Failed to upgrade connection: %v", err)
+
 			return
 		}
 		defer conn.Close(websocket.StatusNormalClosure, "")
@@ -343,7 +344,7 @@ func TestPreviewServer_MiddlewareOptions(t *testing.T) {
 	assert.Empty(t, rr.Body.String()) // Should not reach the handler
 }
 
-// Helper function to stop the server (for tests that need cleanup)
+// Helper function to stop the server (for tests that need cleanup).
 func (s *PreviewServer) Stop() {
 	if s.watcher != nil {
 		s.watcher.Stop()

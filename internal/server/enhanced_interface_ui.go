@@ -7,7 +7,7 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// generateEnhancedEditorHTML creates the enhanced component editor interface
+// generateEnhancedEditorHTML creates the enhanced component editor interface.
 func (s *PreviewServer) generateEnhancedEditorHTML(component *types.ComponentInfo) string {
 	return fmt.Sprintf(`<!DOCTYPE html>
 <html>
@@ -663,7 +663,7 @@ func (s *PreviewServer) generateEnhancedEditorHTML(component *types.ComponentInf
 		s.parametersToJSON(component.Parameters))
 }
 
-// parametersToJSON converts component parameters to JSON for JavaScript
+// parametersToJSON converts component parameters to JSON for JavaScript.
 func (s *PreviewServer) parametersToJSON(parameters []types.ParameterInfo) string {
 	var paramJSON []string
 
@@ -678,7 +678,7 @@ func (s *PreviewServer) parametersToJSON(parameters []types.ParameterInfo) strin
 	return "[" + strings.Join(paramJSON, ",") + "]"
 }
 
-// generateEnhancedIndexHTML creates an enhanced index page with inline prop editing
+// generateEnhancedIndexHTML creates an enhanced index page with inline prop editing.
 func (s *PreviewServer) generateEnhancedIndexHTML() string {
 	return `<!DOCTYPE html>
 <html>

@@ -7,7 +7,7 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// wrapInPlaygroundLayout wraps component HTML in the interactive playground layout
+// wrapInPlaygroundLayout wraps component HTML in the interactive playground layout.
 func (s *PreviewServer) wrapInPlaygroundLayout(
 	componentName, html, theme string,
 	viewport ViewportSize,
@@ -669,7 +669,7 @@ func (s *PreviewServer) wrapInPlaygroundLayout(
 </html>`, themeClass, componentName, viewport.Width-100, viewport.Width, componentName, html, componentName, theme, viewport.Width, viewport.Height, viewport.Name)
 }
 
-// generatePlaygroundHTML creates the main playground interface for a component
+// generatePlaygroundHTML creates the main playground interface for a component.
 func (s *PreviewServer) generatePlaygroundHTML(component *types.ComponentInfo) string {
 	// Generate initial mock data
 	mockData := s.generateIntelligentMockData(component)
@@ -682,10 +682,11 @@ func (s *PreviewServer) generatePlaygroundHTML(component *types.ComponentInfo) s
 
 	// Wrap in playground layout
 	viewport := ViewportSize{Width: 1200, Height: 800, Name: "Desktop"}
+
 	return s.wrapInPlaygroundLayout(component.Name, html, "light", viewport)
 }
 
-// generatePlaygroundIndexHTML creates the index page showing all components
+// generatePlaygroundIndexHTML creates the index page showing all components.
 func (s *PreviewServer) generatePlaygroundIndexHTML(components []*types.ComponentInfo) string {
 	var componentCards strings.Builder
 

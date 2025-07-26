@@ -397,13 +397,13 @@ func TestCIIntegration_CountCriticalRegressions(t *testing.T) {
 	}
 }
 
-// Benchmark the CI integration components
+// Benchmark the CI integration components.
 func BenchmarkCIIntegration_GenerateReport(b *testing.B) {
 	detector := NewPerformanceDetector("test", DefaultThresholds())
 	ci := NewCIIntegration(detector, "json", false)
 
 	results := make([]BenchmarkResult, 100)
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		results[i] = BenchmarkResult{
 			Name:    "Benchmark" + string(rune(i)),
 			NsPerOp: float64(1000 + i*10),
@@ -411,7 +411,7 @@ func BenchmarkCIIntegration_GenerateReport(b *testing.B) {
 	}
 
 	regressions := make([]RegressionDetection, 10)
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		regressions[i] = RegressionDetection{
 			BenchmarkName:    "Benchmark" + string(rune(i)),
 			IsRegression:     true,
@@ -421,7 +421,7 @@ func BenchmarkCIIntegration_GenerateReport(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = ci.GenerateReport(results, regressions)
 	}
 }
@@ -441,7 +441,7 @@ func BenchmarkCIIntegration_OutputText(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = ci.outputText(report, "")
 	}
 }

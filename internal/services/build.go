@@ -13,20 +13,20 @@ import (
 	"github.com/conneroisu/templar/internal/monitoring"
 )
 
-// BuildService handles component building business logic
+// BuildService handles component building business logic.
 type BuildService struct {
 	config    *config.Config
 	container *di.ServiceContainer
 }
 
-// NewBuildService creates a new build service
+// NewBuildService creates a new build service.
 func NewBuildService(cfg *config.Config) *BuildService {
 	return &BuildService{
 		config: cfg,
 	}
 }
 
-// BuildOptions contains options for the build process
+// BuildOptions contains options for the build process.
 type BuildOptions struct {
 	Output     string
 	Production bool
@@ -34,7 +34,7 @@ type BuildOptions struct {
 	Clean      bool
 }
 
-// BuildResult contains the result of a build operation
+// BuildResult contains the result of a build operation.
 type BuildResult struct {
 	Duration       time.Duration
 	ComponentCount int
@@ -42,7 +42,7 @@ type BuildResult struct {
 	Errors         []error
 }
 
-// Build performs the complete build process
+// Build performs the complete build process.
 func (s *BuildService) Build(ctx context.Context, opts BuildOptions) (*BuildResult, error) {
 	startTime := time.Now()
 	result := &BuildResult{
@@ -154,7 +154,7 @@ func (s *BuildService) Build(ctx context.Context, opts BuildOptions) (*BuildResu
 	return result, err
 }
 
-// cleanBuildArtifacts removes build artifacts and caches
+// cleanBuildArtifacts removes build artifacts and caches.
 func (s *BuildService) cleanBuildArtifacts() error {
 	// Clean cache directory
 	if s.config.Build.CacheDir != "" {
@@ -187,7 +187,7 @@ func (s *BuildService) cleanBuildArtifacts() error {
 	return nil
 }
 
-// cleanGeneratedFiles removes generated *_templ.go files
+// cleanGeneratedFiles removes generated *_templ.go files.
 func (s *BuildService) cleanGeneratedFiles(path string) error {
 	return filepath.Walk(path, func(filePath string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -200,11 +200,12 @@ func (s *BuildService) cleanGeneratedFiles(path string) error {
 				return os.Remove(filePath)
 			}
 		}
+
 		return nil
 	})
 }
 
-// scanComponents performs component scanning
+// scanComponents performs component scanning.
 func (s *BuildService) scanComponents(ctx context.Context, scanner interface{}) error {
 	// Scan all configured paths
 	for _, path := range s.config.Components.ScanPaths {
@@ -216,10 +217,11 @@ func (s *BuildService) scanComponents(ctx context.Context, scanner interface{}) 
 			return errors.ScannerError("PATH", path, "failed to scan path", err)
 		}
 	}
+
 	return nil
 }
 
-// buildComponents builds all components through the pipeline
+// buildComponents builds all components through the pipeline.
 func (s *BuildService) buildComponents(
 	ctx context.Context,
 	pipeline interface{},
@@ -237,7 +239,7 @@ func (s *BuildService) buildComponents(
 	)
 }
 
-// generateBuildAnalysis creates build analysis report
+// generateBuildAnalysis creates build analysis report.
 func (s *BuildService) generateBuildAnalysis(outputDir string) error {
 	analysisFile := filepath.Join(outputDir, "build-analysis.json")
 
@@ -256,7 +258,7 @@ func (s *BuildService) generateBuildAnalysis(outputDir string) error {
 	return nil
 }
 
-// applyProductionOptimizations applies production-specific optimizations
+// applyProductionOptimizations applies production-specific optimizations.
 func (s *BuildService) applyProductionOptimizations(ctx context.Context, outputDir string) error {
 	return monitoring.TrackOperation(
 		ctx,
@@ -287,19 +289,19 @@ func (s *BuildService) applyProductionOptimizations(ctx context.Context, outputD
 	)
 }
 
-// minifyCSS minifies CSS files for production
+// minifyCSS minifies CSS files for production.
 func (s *BuildService) minifyCSS(outputDir string) error {
 	// Simplified implementation - would use actual CSS minifier
 	return nil
 }
 
-// compressAssets compresses static assets
+// compressAssets compresses static assets.
 func (s *BuildService) compressAssets(outputDir string) error {
 	// Simplified implementation - would use gzip/brotli compression
 	return nil
 }
 
-// generateManifest creates asset manifest for production
+// generateManifest creates asset manifest for production.
 func (s *BuildService) generateManifest(outputDir string) error {
 	// Simplified implementation - would create manifest.json
 	return nil

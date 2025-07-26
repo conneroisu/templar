@@ -23,13 +23,13 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
-// Constants for memory management
+// Constants for memory management.
 const (
 	MaxPendingEvents = 1000             // Maximum events to queue before dropping
 	CleanupInterval  = 30 * time.Second // How often to cleanup old state
 )
 
-// Object pools for memory efficiency
+// Object pools for memory efficiency.
 var (
 	eventPool = sync.Pool{
 		New: func() interface{} {
@@ -43,7 +43,7 @@ var (
 		},
 	}
 
-	// Pool for event batches to reduce slice allocations
+	// Pool for event batches to reduce slice allocations.
 	eventBatchPool = sync.Pool{
 		New: func() interface{} {
 			return make([]ChangeEvent, 0, 50)
@@ -51,7 +51,7 @@ var (
 	}
 )
 
-// FileWatcher watches for file changes with intelligent debouncing
+// FileWatcher watches for file changes with intelligent debouncing.
 type FileWatcher struct {
 	watcher   *fsnotify.Watcher
 	debouncer *Debouncer
@@ -61,11 +61,11 @@ type FileWatcher struct {
 	stopped   bool
 }
 
-// Type aliases for convenience and backward compatibility
+// Type aliases for convenience and backward compatibility.
 type ChangeEvent = interfaces.ChangeEvent
 type EventType = interfaces.EventType
 
-// Event type constants for convenience
+// Event type constants for convenience.
 const (
 	EventTypeCreated  = interfaces.EventTypeCreated
 	EventTypeModified = interfaces.EventTypeModified
@@ -73,10 +73,10 @@ const (
 	EventTypeRenamed  = interfaces.EventTypeRenamed
 )
 
-// Interface compliance verification - FileWatcher implements interfaces.FileWatcher
+// Interface compliance verification - FileWatcher implements interfaces.FileWatcher.
 var _ interfaces.FileWatcher = (*FileWatcher)(nil)
 
-// Debouncer groups rapid file changes together with enhanced memory management
+// Debouncer groups rapid file changes together with enhanced memory management.
 type Debouncer struct {
 	delay        time.Duration
 	events       chan ChangeEvent
@@ -92,7 +92,7 @@ type Debouncer struct {
 	totalEvents   int64 // Counter for total events processed
 }
 
-// NewFileWatcher creates a new file watcher
+// NewFileWatcher creates a new file watcher.
 func NewFileWatcher(debounceDelay time.Duration) (*FileWatcher, error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -118,31 +118,32 @@ func NewFileWatcher(debounceDelay time.Duration) (*FileWatcher, error) {
 	return fw, nil
 }
 
-// AddFilter adds a file filter
+// AddFilter adds a file filter.
 func (fw *FileWatcher) AddFilter(filter interfaces.FileFilter) {
 	fw.mutex.Lock()
 	defer fw.mutex.Unlock()
 	fw.filters = append(fw.filters, filter)
 }
 
-// AddHandler adds a change handler
+// AddHandler adds a change handler.
 func (fw *FileWatcher) AddHandler(handler interfaces.ChangeHandlerFunc) {
 	fw.mutex.Lock()
 	defer fw.mutex.Unlock()
 	fw.handlers = append(fw.handlers, handler)
 }
 
-// AddPath adds a path to watch
+// AddPath adds a path to watch.
 func (fw *FileWatcher) AddPath(path string) error {
 	// Validate and clean the path
 	cleanPath, err := fw.validatePath(path)
 	if err != nil {
 		return fmt.Errorf("invalid path: %w", err)
 	}
+
 	return fw.watcher.Add(cleanPath)
 }
 
-// AddRecursive adds a directory and all subdirectories to watch
+// AddRecursive adds a directory and all subdirectories to watch.
 func (fw *FileWatcher) AddRecursive(root string) error {
 	// Validate and clean the root path
 	cleanRoot, err := fw.validatePath(root)
@@ -160,8 +161,10 @@ func (fw *FileWatcher) AddRecursive(root string) error {
 			cleanPath, err := fw.validatePath(path)
 			if err != nil {
 				log.Printf("Skipping invalid directory path: %s", path)
+
 				return nil
 			}
+
 			return fw.watcher.Add(cleanPath)
 		}
 
@@ -169,14 +172,14 @@ func (fw *FileWatcher) AddRecursive(root string) error {
 	})
 }
 
-// isInTestMode detects if we're running in test mode by checking the call stack
+// isInTestMode detects if we're running in test mode by checking the call stack.
 func isInTestMode() bool {
 	// Get the call stack
 	pc := make([]uintptr, 10)
 	n := runtime.Callers(1, pc)
 
 	// Check each frame in the call stack
-	for i := 0; i < n; i++ {
+	for i := range n {
 		fn := runtime.FuncForPC(pc[i])
 		if fn == nil {
 			continue
@@ -193,7 +196,7 @@ func isInTestMode() bool {
 	return false
 }
 
-// validatePath validates and cleans a file path to prevent directory traversal
+// validatePath validates and cleans a file path to prevent directory traversal.
 func (fw *FileWatcher) validatePath(path string) (string, error) {
 	// Clean the path to resolve . and .. elements
 	cleanPath := filepath.Clean(path)
@@ -218,6 +221,7 @@ func (fw *FileWatcher) validatePath(path string) (string, error) {
 			if strings.Contains(cleanPath, "..") {
 				return "", fmt.Errorf("path contains directory traversal: %s", path)
 			}
+
 			return cleanPath, nil
 		}
 	}
@@ -236,7 +240,7 @@ func (fw *FileWatcher) validatePath(path string) (string, error) {
 	return cleanPath, nil
 }
 
-// Start starts the file watcher
+// Start starts the file watcher.
 func (fw *FileWatcher) Start(ctx context.Context) error {
 	// Start debouncer
 	go fw.debouncer.start(ctx)
@@ -250,7 +254,7 @@ func (fw *FileWatcher) Start(ctx context.Context) error {
 	return nil
 }
 
-// Stop stops the file watcher and cleans up resources
+// Stop stops the file watcher and cleans up resources.
 func (fw *FileWatcher) Stop() error {
 	fw.mutex.Lock()
 	defer fw.mutex.Unlock()
@@ -379,7 +383,7 @@ func (fw *FileWatcher) processEvents(ctx context.Context) {
 	}
 }
 
-// Debouncer implementation
+// Debouncer implementation.
 func (d *Debouncer) start(ctx context.Context) {
 	for {
 		select {
@@ -410,6 +414,7 @@ func (d *Debouncer) addEvent(event ChangeEvent) {
 	// Batch processing: if we have enough events, flush immediately
 	if len(d.pending) >= d.maxBatchSize {
 		d.flushLocked() // Call internal flush without re-locking
+
 		return
 	}
 
@@ -435,7 +440,7 @@ func (d *Debouncer) flush() {
 	d.flushLocked()
 }
 
-// flushLocked performs the flush operation while already holding the mutex
+// flushLocked performs the flush operation while already holding the mutex.
 func (d *Debouncer) flushLocked() {
 	if len(d.pending) == 0 {
 		return
@@ -495,7 +500,7 @@ func (d *Debouncer) flushLocked() {
 	}
 }
 
-// cleanup performs periodic memory cleanup
+// cleanup performs periodic memory cleanup.
 func (d *Debouncer) cleanup() {
 	// This function is called while holding the mutex in addEvent
 
@@ -513,7 +518,7 @@ func (d *Debouncer) cleanup() {
 	}
 }
 
-// Common file filters
+// Common file filters.
 func TemplFilter(path string) bool {
 	return filepath.Ext(path) == ".templ"
 }
@@ -526,6 +531,7 @@ func NoTestFilter(path string) bool {
 	base := filepath.Base(path)
 	matched1, _ := filepath.Match("*_test.go", base)
 	matched2, _ := filepath.Match("*_test.templ", base)
+
 	return !matched1 && !matched2
 }
 
@@ -537,7 +543,7 @@ func NoGitFilter(path string) bool {
 	return !strings.HasPrefix(path, ".git/") && !strings.Contains(path, "/.git/")
 }
 
-// GetStats returns current file watcher statistics for monitoring
+// GetStats returns current file watcher statistics for monitoring.
 func (fw *FileWatcher) GetStats() map[string]interface{} {
 	fw.debouncer.mutex.Lock()
 	defer fw.debouncer.mutex.Unlock()

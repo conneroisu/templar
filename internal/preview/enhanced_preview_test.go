@@ -313,7 +313,7 @@ func BenchmarkSessionManager_GetOrCreateSession(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		sessionID := "benchmark-session"
 		sesm.GetOrCreateSession(ctx, sessionID)
 	}
@@ -325,7 +325,7 @@ func BenchmarkPreviewPerformanceMonitor_RecordRender(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		monitor.RecordRender(100*time.Millisecond, nil)
 	}
 }
@@ -337,7 +337,7 @@ func BenchmarkSandboxManager_CreateDestroySandbox(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		sandbox, _ := sm.CreateSandbox("BenchmarkComponent", 1)
 		sm.DestroySandbox(sandbox.ID)
 	}

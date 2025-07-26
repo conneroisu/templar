@@ -64,6 +64,7 @@ func TestMetricsCollector(t *testing.T) {
 			if metric.Name == "test_memory_usage" && metric.Labels["type"] == "heap" {
 				assert.Equal(t, 150.7, metric.Value)
 				found = true
+
 				break
 			}
 		}
@@ -117,6 +118,7 @@ func TestMetricsCollector(t *testing.T) {
 			if metric.Name == "test_operation_duration_seconds_count" {
 				assert.Equal(t, 1.0, metric.Value)
 				found = true
+
 				break
 			}
 		}
@@ -204,7 +206,7 @@ func TestHistogram(t *testing.T) {
 		// Simulate concurrent access
 		done := make(chan bool)
 
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			go func(val float64) {
 				hist.Observe(val)
 				done <- true
@@ -212,7 +214,7 @@ func TestHistogram(t *testing.T) {
 		}
 
 		// Wait for all goroutines
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			<-done
 		}
 
@@ -272,6 +274,7 @@ func TestApplicationMetrics(t *testing.T) {
 			if metric.Name == "test_build_duration_seconds_count" {
 				assert.Equal(t, 2.0, metric.Value)
 				found = true
+
 				break
 			}
 		}
@@ -403,6 +406,7 @@ func TestApplicationMetrics(t *testing.T) {
 			if metric.Name == "test_custom_metric" && metric.Labels["type"] == "custom" {
 				assert.Equal(t, 42.5, metric.Value)
 				found = true
+
 				break
 			}
 		}
@@ -421,6 +425,7 @@ func TestApplicationMetrics(t *testing.T) {
 				assert.Greater(t, metric.Value, 0.0)
 				assert.Equal(t, MetricTypeGauge, metric.Type)
 				found = true
+
 				break
 			}
 		}

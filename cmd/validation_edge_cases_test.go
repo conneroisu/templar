@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestValidateArgument_EdgeCases tests additional edge cases not covered in main validation tests
+// TestValidateArgument_EdgeCases tests additional edge cases not covered in main validation tests.
 func TestValidateArgument_EdgeCases(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -228,7 +228,7 @@ func TestValidateArgument_EdgeCases(t *testing.T) {
 	}
 }
 
-// TestValidateCommand_EdgeCases tests edge cases for command validation
+// TestValidateCommand_EdgeCases tests edge cases for command validation.
 func TestValidateCommand_EdgeCases(t *testing.T) {
 	tests := []struct {
 		name            string
@@ -401,7 +401,7 @@ func TestValidateCommand_EdgeCases(t *testing.T) {
 	}
 }
 
-// TestValidateArguments_EdgeCases tests edge cases for multiple argument validation
+// TestValidateArguments_EdgeCases tests edge cases for multiple argument validation.
 func TestValidateArguments_EdgeCases(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -462,6 +462,7 @@ func TestValidateArguments_EdgeCases(t *testing.T) {
 				for i := range args {
 					args[i] = "a.templ"
 				}
+
 				return args
 			}(),
 			expectError: false,
@@ -498,7 +499,7 @@ func TestValidateArguments_EdgeCases(t *testing.T) {
 	}
 }
 
-// TestUnicodeSecurityEdgeCases tests specific Unicode security edge cases
+// TestUnicodeSecurityEdgeCases tests specific Unicode security edge cases.
 func TestUnicodeSecurityEdgeCases(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -558,12 +559,12 @@ func TestUnicodeSecurityEdgeCases(t *testing.T) {
 	}
 }
 
-// BenchmarkValidation_EdgeCases benchmarks validation performance with edge cases
+// BenchmarkValidation_EdgeCases benchmarks validation performance with edge cases.
 func BenchmarkValidation_EdgeCases(b *testing.B) {
 	b.Run("very_long_argument", func(b *testing.B) {
 		arg := strings.Repeat("a", 10000) + ".templ"
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			validateArgument(arg)
 		}
 	})
@@ -571,7 +572,7 @@ func BenchmarkValidation_EdgeCases(b *testing.B) {
 	b.Run("unicode_argument", func(b *testing.B) {
 		arg := "файл🚀НаМе.templ"
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			validateArgument(arg)
 		}
 	})
@@ -582,7 +583,7 @@ func BenchmarkValidation_EdgeCases(b *testing.B) {
 			args[i] = "component.templ"
 		}
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			validateArguments(args)
 		}
 	})
@@ -593,7 +594,7 @@ func BenchmarkValidation_EdgeCases(b *testing.B) {
 			"go":    true,
 		}
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			validateCommand("templ", allowedCommands)
 		}
 	})

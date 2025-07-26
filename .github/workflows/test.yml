@@ -48,11 +48,12 @@ jobs:
     - name: Setup Nix cache
       uses: DeterminateSystems/magic-nix-cache-action@main
 
-    - name: Run linting
+    - name: Setup development environment
+      run: nix develop --command bash -c "go mod download && templ generate"
+
+    - name: Run golangci-lint
       run: |
-        echo "Skipping golangci-lint due to version compatibility issues"
-        echo "Using basic go vet instead"
-        nix develop --command go vet $(go list ./... | grep -v 'templar-cache-benchmark')
+        nix develop --command golangci-lint run --timeout=5m $(go list ./... | grep -v templar-cache-benchmark)
 
   build:
     runs-on: ubuntu-latest

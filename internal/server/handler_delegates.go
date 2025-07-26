@@ -13,7 +13,7 @@ import (
 // This file contains handler delegate functions that implement the actual HTTP handler logic
 // These functions are called by the ServerHandlerAdapter to maintain separation of concerns
 
-// handleHealthCheck handles health check requests
+// handleHealthCheck handles health check requests.
 func handleHealthCheck(w http.ResponseWriter, r *http.Request, orchestrator *ServiceOrchestrator) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -23,6 +23,7 @@ func handleHealthCheck(w http.ResponseWriter, r *http.Request, orchestrator *Ser
 	response, err := json.MarshalIndent(status, "", "  ")
 	if err != nil {
 		http.Error(w, "Failed to marshal health status", http.StatusInternalServerError)
+
 		return
 	}
 
@@ -30,7 +31,7 @@ func handleHealthCheck(w http.ResponseWriter, r *http.Request, orchestrator *Ser
 	w.Write(response)
 }
 
-// handleComponentsList handles requests for the components list
+// handleComponentsList handles requests for the components list.
 func handleComponentsList(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -43,6 +44,7 @@ func handleComponentsList(
 	response, err := json.MarshalIndent(components, "", "  ")
 	if err != nil {
 		http.Error(w, "Failed to marshal components", http.StatusInternalServerError)
+
 		return
 	}
 
@@ -50,7 +52,7 @@ func handleComponentsList(
 	w.Write(response)
 }
 
-// handleComponentDetail handles requests for individual component details
+// handleComponentDetail handles requests for individual component details.
 func handleComponentDetail(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -63,12 +65,14 @@ func handleComponentDetail(
 
 	if componentName == "" {
 		http.Error(w, "Component name required", http.StatusBadRequest)
+
 		return
 	}
 
 	component, exists := registry.Get(componentName)
 	if !exists {
 		http.Error(w, "Component not found", http.StatusNotFound)
+
 		return
 	}
 
@@ -76,6 +80,7 @@ func handleComponentDetail(
 	response, err := json.MarshalIndent(component, "", "  ")
 	if err != nil {
 		http.Error(w, "Failed to marshal component", http.StatusInternalServerError)
+
 		return
 	}
 
@@ -83,7 +88,7 @@ func handleComponentDetail(
 	w.Write(response)
 }
 
-// handleComponentRender handles component rendering requests
+// handleComponentRender handles component rendering requests.
 func handleComponentRender(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -96,12 +101,14 @@ func handleComponentRender(
 
 	if componentName == "" {
 		http.Error(w, "Component name required", http.StatusBadRequest)
+
 		return
 	}
 
 	component, exists := registry.Get(componentName)
 	if !exists {
 		http.Error(w, "Component not found", http.StatusNotFound)
+
 		return
 	}
 
@@ -113,13 +120,13 @@ func handleComponentRender(
 		component.Name, component.FilePath)
 }
 
-// handleStaticFiles handles static file requests
+// handleStaticFiles handles static file requests.
 func handleStaticFiles(w http.ResponseWriter, r *http.Request) {
 	// Basic static file serving
 	http.FileServer(http.Dir("./static")).ServeHTTP(w, r)
 }
 
-// handlePlaygroundIndexPage handles playground index page
+// handlePlaygroundIndexPage handles playground index page.
 func handlePlaygroundIndexPage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
@@ -134,7 +141,7 @@ func handlePlaygroundIndexPage(w http.ResponseWriter, r *http.Request) {
 	`))
 }
 
-// handlePlaygroundComponentPage handles individual playground component pages
+// handlePlaygroundComponentPage handles individual playground component pages.
 func handlePlaygroundComponentPage(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -154,7 +161,7 @@ func handlePlaygroundComponentPage(
 	`))
 }
 
-// handlePlaygroundRenderAPI handles playground render API requests
+// handlePlaygroundRenderAPI handles playground render API requests.
 func handlePlaygroundRenderAPI(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -166,7 +173,7 @@ func handlePlaygroundRenderAPI(
 	w.Write([]byte(`{"status": "rendered", "message": "Playground render complete"}`))
 }
 
-// handleEnhancedInterface handles enhanced web interface requests
+// handleEnhancedInterface handles enhanced web interface requests.
 func handleEnhancedInterface(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -185,7 +192,7 @@ func handleEnhancedInterface(
 	`))
 }
 
-// handleEditorInterface handles editor interface requests
+// handleEditorInterface handles editor interface requests.
 func handleEditorInterface(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
@@ -200,28 +207,28 @@ func handleEditorInterface(w http.ResponseWriter, r *http.Request) {
 	`))
 }
 
-// handleEditorAPI handles editor API requests
+// handleEditorAPI handles editor API requests.
 func handleEditorAPI(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"status": "ok", "message": "Editor API ready"}`))
 }
 
-// handleFileAPI handles file management API requests
+// handleFileAPI handles file management API requests.
 func handleFileAPI(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"status": "ok", "message": "File API ready"}`))
 }
 
-// handleInlineEditor handles inline editor requests
+// handleInlineEditor handles inline editor requests.
 func handleInlineEditor(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"status": "ok", "message": "Inline editor ready"}`))
 }
 
-// handleBuildStatus handles build status API requests
+// handleBuildStatus handles build status API requests.
 func handleBuildStatus(w http.ResponseWriter, r *http.Request, orchestrator *ServiceOrchestrator) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -235,6 +242,7 @@ func handleBuildStatus(w http.ResponseWriter, r *http.Request, orchestrator *Ser
 	response, err := json.MarshalIndent(status, "", "  ")
 	if err != nil {
 		http.Error(w, "Failed to marshal build status", http.StatusInternalServerError)
+
 		return
 	}
 
@@ -242,7 +250,7 @@ func handleBuildStatus(w http.ResponseWriter, r *http.Request, orchestrator *Ser
 	w.Write(response)
 }
 
-// handleBuildMetrics handles build metrics API requests
+// handleBuildMetrics handles build metrics API requests.
 func handleBuildMetrics(w http.ResponseWriter, r *http.Request, orchestrator *ServiceOrchestrator) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -261,6 +269,7 @@ func handleBuildMetrics(w http.ResponseWriter, r *http.Request, orchestrator *Se
 	response, err := json.MarshalIndent(metricsMap, "", "  ")
 	if err != nil {
 		http.Error(w, "Failed to marshal build metrics", http.StatusInternalServerError)
+
 		return
 	}
 
@@ -268,7 +277,7 @@ func handleBuildMetrics(w http.ResponseWriter, r *http.Request, orchestrator *Se
 	w.Write(response)
 }
 
-// handleBuildErrors handles build errors API requests
+// handleBuildErrors handles build errors API requests.
 func handleBuildErrors(w http.ResponseWriter, r *http.Request, orchestrator *ServiceOrchestrator) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -277,6 +286,7 @@ func handleBuildErrors(w http.ResponseWriter, r *http.Request, orchestrator *Ser
 	response, err := json.MarshalIndent(buildErrors, "", "  ")
 	if err != nil {
 		http.Error(w, "Failed to marshal build errors", http.StatusInternalServerError)
+
 		return
 	}
 
@@ -284,7 +294,7 @@ func handleBuildErrors(w http.ResponseWriter, r *http.Request, orchestrator *Ser
 	w.Write(response)
 }
 
-// handleBuildCache handles build cache API requests
+// handleBuildCache handles build cache API requests.
 func handleBuildCache(w http.ResponseWriter, r *http.Request, orchestrator *ServiceOrchestrator) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -296,6 +306,7 @@ func handleBuildCache(w http.ResponseWriter, r *http.Request, orchestrator *Serv
 	response, err := json.MarshalIndent(status, "", "  ")
 	if err != nil {
 		http.Error(w, "Failed to marshal cache status", http.StatusInternalServerError)
+
 		return
 	}
 
@@ -303,7 +314,7 @@ func handleBuildCache(w http.ResponseWriter, r *http.Request, orchestrator *Serv
 	w.Write(response)
 }
 
-// handleIndexPage handles the main index page
+// handleIndexPage handles the main index page.
 func handleIndexPage(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -335,7 +346,7 @@ func handleIndexPage(
 	w.Write([]byte(html))
 }
 
-// handleTargetFilesPage handles target files page
+// handleTargetFilesPage handles target files page.
 func handleTargetFilesPage(
 	w http.ResponseWriter,
 	r *http.Request,

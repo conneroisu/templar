@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestPluginSystemIntegration tests the plugin system integration with the registry and build pipeline
+// TestPluginSystemIntegration tests the plugin system integration with the registry and build pipeline.
 func TestPluginSystemIntegration(t *testing.T) {
 	t.Run("registry integration", func(t *testing.T) {
 		// Setup registry and plugin manager
@@ -257,7 +257,7 @@ func TestConcurrentPluginOperations(t *testing.T) {
 		const numComponents = 50
 		var wg sync.WaitGroup
 
-		for i := 0; i < numComponents; i++ {
+		for i := range numComponents {
 			wg.Add(1)
 			go func(id int) {
 				defer wg.Done()
@@ -357,14 +357,14 @@ type MockFailingPlugin struct {
 }
 
 func (mfp *MockFailingPlugin) Initialize(ctx context.Context, config PluginConfig) error {
-	return fmt.Errorf("intentional failure")
+	return errors.New("intentional failure")
 }
 
 func (mfp *MockFailingPlugin) HandleComponent(
 	ctx context.Context,
 	component *types.ComponentInfo,
 ) (*types.ComponentInfo, error) {
-	return nil, fmt.Errorf("component processing failed")
+	return nil, errors.New("component processing failed")
 }
 
 func (mfp *MockFailingPlugin) SupportedExtensions() []string { return []string{".templ"} }
@@ -379,11 +379,13 @@ type MockLifecyclePlugin struct {
 func (mlp *MockLifecyclePlugin) Initialize(ctx context.Context, config PluginConfig) error {
 	mlp.initializeCalled = true
 	mlp.initialized = true
+
 	return nil
 }
 
 func (mlp *MockLifecyclePlugin) Shutdown(ctx context.Context) error {
 	mlp.shutdownCalled = true
+
 	return nil
 }
 

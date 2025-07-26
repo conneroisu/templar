@@ -9,7 +9,7 @@ import (
 	"github.com/conneroisu/templar/internal/registry"
 )
 
-// BenchmarkConfigurableConcurrency tests performance with different worker counts
+// BenchmarkConfigurableConcurrency tests performance with different worker counts.
 func BenchmarkConfigurableConcurrency(b *testing.B) {
 	fileCount := 500
 	tempDir, cleanup := createLargeTestStructure(b, fileCount)
@@ -21,7 +21,7 @@ func BenchmarkConfigurableConcurrency(b *testing.B) {
 		b.Run(fmt.Sprintf("Workers_%d", workers), func(b *testing.B) {
 			b.ResetTimer()
 
-			for i := 0; i < b.N; i++ {
+			for i := range b.N {
 				reg := registry.NewComponentRegistry()
 				scanner := NewComponentScannerWithConcurrency(reg, workers)
 
@@ -58,7 +58,7 @@ func BenchmarkConfigurableConcurrency(b *testing.B) {
 	}
 }
 
-// BenchmarkMemoryEfficiency tests memory usage during scanning
+// BenchmarkMemoryEfficiency tests memory usage during scanning.
 func BenchmarkMemoryEfficiency(b *testing.B) {
 	scales := []int{100, 500, 1000}
 
@@ -69,7 +69,7 @@ func BenchmarkMemoryEfficiency(b *testing.B) {
 
 			b.ResetTimer()
 
-			for i := 0; i < b.N; i++ {
+			for i := range b.N {
 				runtime.GC()
 
 				var m1, m2 runtime.MemStats
@@ -104,14 +104,14 @@ func BenchmarkMemoryEfficiency(b *testing.B) {
 	}
 }
 
-// BenchmarkCacheEffectiveness measures cache performance improvements
+// BenchmarkCacheEffectiveness measures cache performance improvements.
 func BenchmarkCacheEffectiveness(b *testing.B) {
 	fileCount := 200
 	tempDir, cleanup := createLargeTestStructure(b, fileCount)
 	defer cleanup()
 
 	b.Run("FirstScan_NoCacheHits", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for i := range b.N {
 			reg := registry.NewComponentRegistry()
 			scanner := NewComponentScanner(reg)
 
@@ -144,7 +144,7 @@ func BenchmarkCacheEffectiveness(b *testing.B) {
 
 		b.ResetTimer()
 
-		for i := 0; i < b.N; i++ {
+		for i := range b.N {
 			reg = registry.NewComponentRegistry()
 			scanner.registry = reg
 			scanner.ResetMetrics()
@@ -173,7 +173,7 @@ func BenchmarkCacheEffectiveness(b *testing.B) {
 	})
 }
 
-// TestScannerMetricsAccuracy verifies metrics are tracked correctly
+// TestScannerMetricsAccuracy verifies metrics are tracked correctly.
 func TestScannerMetricsAccuracy(t *testing.T) {
 	fileCount := 50
 	tempDir, cleanup := createLargeTestStructure(t, fileCount)
@@ -267,7 +267,7 @@ func TestScannerMetricsAccuracy(t *testing.T) {
 	)
 }
 
-// TestConfigurableConcurrency verifies different worker counts work correctly
+// TestConfigurableConcurrency verifies different worker counts work correctly.
 func TestConfigurableConcurrency(t *testing.T) {
 	tempDir, cleanup := createLargeTestStructure(t, 20)
 	defer cleanup()

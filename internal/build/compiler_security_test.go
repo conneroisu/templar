@@ -13,9 +13,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestCompiler_UnicodeSecurityAttacks validates protection against various Unicode-based attacks
+// TestCompiler_UnicodeSecurityAttacks validates protection against various Unicode-based attacks.
 func TestCompiler_UnicodeSecurityAttacks(t *testing.T) {
-
 	t.Run("homoglyph attacks", func(t *testing.T) {
 		// Test homoglyph attacks where visually similar characters are used to deceive
 		homoglyphAttacks := []struct {
@@ -253,7 +252,7 @@ func TestCompiler_UnicodeSecurityAttacks(t *testing.T) {
 	})
 }
 
-// TestCompiler_ResourceLimits validates that the compiler has proper resource limits
+// TestCompiler_ResourceLimits validates that the compiler has proper resource limits.
 func TestCompiler_ResourceLimits(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping resource limit tests in short mode")
@@ -333,7 +332,7 @@ func TestCompiler_ResourceLimits(t *testing.T) {
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
 				args := make([]string, tc.argCount)
-				for i := 0; i < tc.argCount; i++ {
+				for i := range tc.argCount {
 					args[i] = fmt.Sprintf("arg%d", i)
 				}
 
@@ -367,7 +366,7 @@ func TestCompiler_ResourceLimits(t *testing.T) {
 
 			// Run validation many times to check for memory leaks
 			iterations := 10000
-			for i := 0; i < iterations; i++ {
+			for i := range iterations {
 				err := testCompiler.validateCommand()
 				assert.NoError(t, err, "Validation should succeed on iteration %d", i)
 
@@ -391,7 +390,7 @@ func TestCompiler_ResourceLimits(t *testing.T) {
 
 		errChan := make(chan error, concurrency*iterations)
 
-		for i := 0; i < concurrency; i++ {
+		for i := range concurrency {
 			wg.Add(1)
 			go func(workerID int) {
 				defer wg.Done()
@@ -401,7 +400,7 @@ func TestCompiler_ResourceLimits(t *testing.T) {
 					args:    []string{"generate", fmt.Sprintf("worker_%d.templ", workerID)},
 				}
 
-				for j := 0; j < iterations; j++ {
+				for j := range iterations {
 					err := testCompiler.validateCommand()
 					if err != nil {
 						errChan <- fmt.Errorf("worker %d iteration %d: %w", workerID, j, err)
@@ -447,9 +446,8 @@ func TestCompiler_ResourceLimits(t *testing.T) {
 	})
 }
 
-// TestCompiler_UnicodeNormalization tests Unicode normalization edge cases
+// TestCompiler_UnicodeNormalization tests Unicode normalization edge cases.
 func TestCompiler_UnicodeNormalization(t *testing.T) {
-
 	t.Run("invalid UTF-8 sequences", func(t *testing.T) {
 		// Test various invalid UTF-8 byte sequences
 		invalidUTF8 := []struct {
@@ -546,7 +544,7 @@ func TestCompiler_UnicodeNormalization(t *testing.T) {
 	})
 }
 
-// TestCompiler_SecurityBoundaries tests security boundary enforcement
+// TestCompiler_SecurityBoundaries tests security boundary enforcement.
 func TestCompiler_SecurityBoundaries(t *testing.T) {
 	t.Run("command allowlist enforcement", func(t *testing.T) {
 		// Test that only specific commands are allowed
@@ -560,7 +558,7 @@ func TestCompiler_SecurityBoundaries(t *testing.T) {
 		}
 
 		for _, cmd := range disallowedCommands {
-			t.Run(fmt.Sprintf("disallowed_%s", cmd), func(t *testing.T) {
+			t.Run("disallowed_"+cmd, func(t *testing.T) {
 				testCompiler := &TemplCompiler{
 					command: cmd,
 					args:    []string{"test"},
@@ -594,7 +592,7 @@ func TestCompiler_SecurityBoundaries(t *testing.T) {
 		}
 
 		for _, pattern := range dangerousPatterns {
-			t.Run(fmt.Sprintf("dangerous_pattern_%s", pattern), func(t *testing.T) {
+			t.Run("dangerous_pattern_"+pattern, func(t *testing.T) {
 				testCompiler := &TemplCompiler{
 					command: "templ",
 					args:    []string{pattern},
@@ -620,7 +618,7 @@ func TestCompiler_SecurityBoundaries(t *testing.T) {
 		}
 
 		for _, path := range maliciousPaths {
-			t.Run(fmt.Sprintf("malicious_path_%s", path), func(t *testing.T) {
+			t.Run("malicious_path_"+path, func(t *testing.T) {
 				testCompiler := &TemplCompiler{
 					command: "templ",
 					args:    []string{path},
@@ -633,7 +631,7 @@ func TestCompiler_SecurityBoundaries(t *testing.T) {
 	})
 }
 
-// TestCompiler_CompileResourceLimits tests resource limits during actual compilation
+// TestCompiler_CompileResourceLimits tests resource limits during actual compilation.
 func TestCompiler_CompileResourceLimits(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping compile resource limit tests in short mode")
@@ -677,7 +675,7 @@ func TestCompiler_CompileResourceLimits(t *testing.T) {
 		}
 
 		// Run multiple compilations to test memory reuse
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			// This will likely fail since we're not in a proper templ project,
 			// but it shouldn't cause memory issues
 			output, err := compiler.CompileWithPools(context.Background(), component, pools)
@@ -691,7 +689,7 @@ func TestCompiler_CompileResourceLimits(t *testing.T) {
 	})
 }
 
-// TestCompiler_EdgeCaseHandling tests various edge cases and error conditions
+// TestCompiler_EdgeCaseHandling tests various edge cases and error conditions.
 func TestCompiler_EdgeCaseHandling(t *testing.T) {
 	t.Run("nil component handling", func(t *testing.T) {
 		compiler := NewTemplCompiler()
@@ -755,7 +753,7 @@ func TestCompiler_EdgeCaseHandling(t *testing.T) {
 	})
 }
 
-// benchmarkValidateCommand benchmarks the validation performance
+// benchmarkValidateCommand benchmarks the validation performance.
 func BenchmarkCompiler_ValidateCommand(b *testing.B) {
 	compiler := &TemplCompiler{
 		command: "templ",
@@ -763,7 +761,7 @@ func BenchmarkCompiler_ValidateCommand(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		err := compiler.validateCommand()
 		if err != nil {
 			b.Fatal(err)
@@ -771,7 +769,7 @@ func BenchmarkCompiler_ValidateCommand(b *testing.B) {
 	}
 }
 
-// benchmarkUnicodeValidation benchmarks Unicode validation performance
+// benchmarkUnicodeValidation benchmarks Unicode validation performance.
 func BenchmarkCompiler_UnicodeValidation(b *testing.B) {
 	// Test with various Unicode inputs
 	testInputs := []string{
@@ -783,7 +781,7 @@ func BenchmarkCompiler_UnicodeValidation(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		input := testInputs[i%len(testInputs)]
 		compiler := &TemplCompiler{
 			command: "templ",

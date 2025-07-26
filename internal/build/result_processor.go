@@ -94,6 +94,7 @@ func (rp *ResultProcessor) Stop() {
 	rp.mu.Lock()
 	if rp.stopped {
 		rp.mu.Unlock()
+
 		return
 	}
 	rp.stopped = true
@@ -171,6 +172,7 @@ func (rp *ResultProcessor) RemoveCallback(targetCallback BuildCallback) {
 		// In practice, you might want to use callback IDs or a different mechanism
 		if fmt.Sprintf("%p", callback) == fmt.Sprintf("%p", targetCallback) {
 			rp.callbacks = append(rp.callbacks[:i], rp.callbacks[i+1:]...)
+
 			break
 		}
 	}
@@ -209,5 +211,5 @@ type ProcessorStats struct {
 	Stopped       bool
 }
 
-// Verify that ResultProcessor implements the ResultProcessor interface
+// Verify that ResultProcessor implements the ResultProcessor interface.
 var _ interfaces.ResultProcessor = (*ResultProcessor)(nil)

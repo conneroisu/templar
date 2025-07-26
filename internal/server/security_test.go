@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestValidateComponentName_Security tests component name validation security
+// TestValidateComponentName_Security tests component name validation security.
 func TestValidateComponentName_Security(t *testing.T) {
 	tests := []struct {
 		name          string
@@ -149,7 +149,7 @@ func TestValidateComponentName_Security(t *testing.T) {
 	}
 }
 
-// TestSecurityRegression_NoPathTraversal verifies path traversal is prevented
+// TestSecurityRegression_NoPathTraversal verifies path traversal is prevented.
 func TestSecurityRegression_NoPathTraversal(t *testing.T) {
 	// Test cases based on common path traversal patterns
 	pathTraversalAttempts := []string{
@@ -175,7 +175,7 @@ func TestSecurityRegression_NoPathTraversal(t *testing.T) {
 	}
 }
 
-// TestSecurityRegression_NoXSSInjection verifies XSS injection is prevented
+// TestSecurityRegression_NoXSSInjection verifies XSS injection is prevented.
 func TestSecurityRegression_NoXSSInjection(t *testing.T) {
 	xssAttempts := []string{
 		"<script>alert('xss')</script>",
@@ -197,7 +197,7 @@ func TestSecurityRegression_NoXSSInjection(t *testing.T) {
 	}
 }
 
-// TestSecurityRegression_NoSQLInjection verifies SQL injection patterns are blocked
+// TestSecurityRegression_NoSQLInjection verifies SQL injection patterns are blocked.
 func TestSecurityRegression_NoSQLInjection(t *testing.T) {
 	sqlInjectionAttempts := []string{
 		"'; DROP TABLE components; --",
@@ -733,7 +733,7 @@ func BenchmarkSecurityMiddleware(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		w := httptest.NewRecorder()
 		handler.ServeHTTP(w, req)
 	}
@@ -756,7 +756,7 @@ func BenchmarkCSPHeaderBuild(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = buildCSPHeader(csp, "")
 	}
 }

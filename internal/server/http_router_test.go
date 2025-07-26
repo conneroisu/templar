@@ -11,7 +11,7 @@ import (
 	"github.com/conneroisu/templar/internal/config"
 )
 
-// MockHTTPHandlers implements HTTPHandlers interface for testing
+// MockHTTPHandlers implements HTTPHandlers interface for testing.
 type MockHTTPHandlers struct {
 	HandleWebSocketCalls  int
 	HandleHealthCalls     int
@@ -101,17 +101,18 @@ func (m *MockHTTPHandlers) HandleTargetFiles(w http.ResponseWriter, r *http.Requ
 	w.WriteHeader(http.StatusOK)
 }
 
-// MockMiddlewareProvider implements MiddlewareProvider interface for testing
+// MockMiddlewareProvider implements MiddlewareProvider interface for testing.
 type MockMiddlewareProvider struct {
 	ApplyCalls int
 }
 
 func (m *MockMiddlewareProvider) Apply(handler http.Handler) http.Handler {
 	m.ApplyCalls++
+
 	return handler
 }
 
-// createTestConfig creates a valid configuration for testing
+// createTestConfig creates a valid configuration for testing.
 func createTestConfig() *config.Config {
 	return &config.Config{
 		Server: config.ServerConfig{
@@ -122,7 +123,7 @@ func createTestConfig() *config.Config {
 	}
 }
 
-// TestNewHTTPRouter_ValidInputs tests successful construction
+// TestNewHTTPRouter_ValidInputs tests successful construction.
 func TestNewHTTPRouter_ValidInputs(t *testing.T) {
 	cfg := createTestConfig()
 	handlers := &MockHTTPHandlers{}
@@ -161,7 +162,7 @@ func TestNewHTTPRouter_ValidInputs(t *testing.T) {
 	}
 }
 
-// TestNewHTTPRouter_NilConfig tests panic on nil config
+// TestNewHTTPRouter_NilConfig tests panic on nil config.
 func TestNewHTTPRouter_NilConfig(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
@@ -174,7 +175,7 @@ func TestNewHTTPRouter_NilConfig(t *testing.T) {
 	NewHTTPRouter(nil, handlers, middleware)
 }
 
-// TestNewHTTPRouter_NilHandlers tests panic on nil handlers
+// TestNewHTTPRouter_NilHandlers tests panic on nil handlers.
 func TestNewHTTPRouter_NilHandlers(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
@@ -187,7 +188,7 @@ func TestNewHTTPRouter_NilHandlers(t *testing.T) {
 	NewHTTPRouter(cfg, nil, middleware)
 }
 
-// TestNewHTTPRouter_NilMiddleware tests panic on nil middleware provider
+// TestNewHTTPRouter_NilMiddleware tests panic on nil middleware provider.
 func TestNewHTTPRouter_NilMiddleware(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
@@ -200,7 +201,7 @@ func TestNewHTTPRouter_NilMiddleware(t *testing.T) {
 	NewHTTPRouter(cfg, handlers, nil)
 }
 
-// TestNewHTTPRouter_InvalidPort tests panic on invalid port
+// TestNewHTTPRouter_InvalidPort tests panic on invalid port.
 func TestNewHTTPRouter_InvalidPort(t *testing.T) {
 	testCases := []int{0, -1, 65536, 100000}
 
@@ -221,7 +222,7 @@ func TestNewHTTPRouter_InvalidPort(t *testing.T) {
 	}
 }
 
-// TestNewHTTPRouter_EmptyHost tests panic on empty host
+// TestNewHTTPRouter_EmptyHost tests panic on empty host.
 func TestNewHTTPRouter_EmptyHost(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
@@ -236,7 +237,7 @@ func TestNewHTTPRouter_EmptyHost(t *testing.T) {
 	NewHTTPRouter(cfg, handlers, middleware)
 }
 
-// TestHTTPRouter_RouteRegistration tests that routes are properly registered
+// TestHTTPRouter_RouteRegistration tests that routes are properly registered.
 func TestHTTPRouter_RouteRegistration(t *testing.T) {
 	cfg := createTestConfig()
 	handlers := &MockHTTPHandlers{}
@@ -278,7 +279,7 @@ func TestHTTPRouter_RouteRegistration(t *testing.T) {
 	}
 }
 
-// TestHTTPRouter_Shutdown tests graceful shutdown
+// TestHTTPRouter_Shutdown tests graceful shutdown.
 func TestHTTPRouter_Shutdown(t *testing.T) {
 	cfg := createTestConfig()
 	handlers := &MockHTTPHandlers{}
@@ -307,7 +308,7 @@ func TestHTTPRouter_Shutdown(t *testing.T) {
 	}
 }
 
-// TestHTTPRouter_Shutdown_NilContext tests error on nil context
+// TestHTTPRouter_Shutdown_NilContext tests error on nil context.
 func TestHTTPRouter_Shutdown_NilContext(t *testing.T) {
 	cfg := createTestConfig()
 	handlers := &MockHTTPHandlers{}
@@ -321,7 +322,7 @@ func TestHTTPRouter_Shutdown_NilContext(t *testing.T) {
 	}
 }
 
-// TestHTTPRouter_GetAddr tests address retrieval
+// TestHTTPRouter_GetAddr tests address retrieval.
 func TestHTTPRouter_GetAddr(t *testing.T) {
 	cfg := createTestConfig()
 	cfg.Server.Host = "127.0.0.1"
@@ -338,7 +339,7 @@ func TestHTTPRouter_GetAddr(t *testing.T) {
 	}
 }
 
-// TestHTTPRouter_Start_NilContext tests error on nil context
+// TestHTTPRouter_Start_NilContext tests error on nil context.
 func TestHTTPRouter_Start_NilContext(t *testing.T) {
 	cfg := createTestConfig()
 	handlers := &MockHTTPHandlers{}
@@ -352,7 +353,7 @@ func TestHTTPRouter_Start_NilContext(t *testing.T) {
 	}
 }
 
-// TestHTTPRouter_Start_AlreadyShutdown tests error when starting shut down router
+// TestHTTPRouter_Start_AlreadyShutdown tests error when starting shut down router.
 func TestHTTPRouter_Start_AlreadyShutdown(t *testing.T) {
 	cfg := createTestConfig()
 	handlers := &MockHTTPHandlers{}
@@ -375,7 +376,7 @@ func TestHTTPRouter_Start_AlreadyShutdown(t *testing.T) {
 	}
 }
 
-// TestHTTPRouter_TargetFiles tests target files routing
+// TestHTTPRouter_TargetFiles tests target files routing.
 func TestHTTPRouter_TargetFiles(t *testing.T) {
 	cfg := createTestConfig()
 	cfg.TargetFiles = []string{"test.templ"} // Enable target files mode
@@ -385,7 +386,7 @@ func TestHTTPRouter_TargetFiles(t *testing.T) {
 	router := NewHTTPRouter(cfg, handlers, middleware)
 
 	// Test root route should use HandleTargetFiles
-	req := httptest.NewRequest("GET", "/", nil)
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	recorder := httptest.NewRecorder()
 
 	router.mux.ServeHTTP(recorder, req)
@@ -396,7 +397,7 @@ func TestHTTPRouter_TargetFiles(t *testing.T) {
 	}
 }
 
-// BenchmarkHTTPRouter_Apply benchmarks middleware application
+// BenchmarkHTTPRouter_Apply benchmarks middleware application.
 func BenchmarkHTTPRouter_Apply(b *testing.B) {
 	cfg := createTestConfig()
 	handlers := &MockHTTPHandlers{}
@@ -405,8 +406,8 @@ func BenchmarkHTTPRouter_Apply(b *testing.B) {
 	router := NewHTTPRouter(cfg, handlers, middleware)
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		req := httptest.NewRequest("GET", "/health", nil)
+	for range b.N {
+		req := httptest.NewRequest(http.MethodGet, "/health", nil)
 		recorder := httptest.NewRecorder()
 		router.mux.ServeHTTP(recorder, req)
 	}

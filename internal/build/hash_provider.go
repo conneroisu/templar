@@ -137,6 +137,7 @@ func (hp *HashProvider) GenerateHashBatch(components []*types.ComponentInfo) map
 			// Check metadata cache first (fastest path)
 			if hash, found := hp.cache.GetHash(metadataKey); found {
 				results[component.Name] = hash
+
 				continue
 			}
 		}
@@ -155,6 +156,7 @@ func (hp *HashProvider) GenerateHashBatch(components []*types.ComponentInfo) map
 		for _, component := range needsHashing {
 			results[component.Name] = hp.GenerateContentHash(component)
 		}
+
 		return results
 	}
 
@@ -236,5 +238,5 @@ type HashCacheStats struct {
 	MaxSize        int64
 }
 
-// Verify that HashProvider implements the HashProvider interface
+// Verify that HashProvider implements the HashProvider interface.
 var _ interfaces.HashProvider = (*HashProvider)(nil)

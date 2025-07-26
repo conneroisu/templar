@@ -7,10 +7,10 @@ import (
 	"time"
 )
 
-// Global generator for benchmark tests (non-deterministic)
+// Global generator for benchmark tests (non-deterministic).
 var benchRng = rand.New(rand.NewSource(time.Now().UnixNano()))
 
-// TestLockFreeRingBuffer tests basic ring buffer operations
+// TestLockFreeRingBuffer tests basic ring buffer operations.
 func TestLockFreeRingBuffer(t *testing.T) {
 	buffer := NewLockFreeRingBuffer(8) // Power of 2
 
@@ -29,7 +29,7 @@ func TestLockFreeRingBuffer(t *testing.T) {
 	}
 
 	// Test multiple writes
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		buffer.Write(Metric{Value: float64(i)})
 	}
 
@@ -39,7 +39,7 @@ func TestLockFreeRingBuffer(t *testing.T) {
 	}
 }
 
-// TestLockFreeMetricCollector tests basic collector functionality
+// TestLockFreeMetricCollector tests basic collector functionality.
 func TestLockFreeMetricCollector(t *testing.T) {
 	collector := NewLockFreeMetricCollector(1000)
 
@@ -78,7 +78,7 @@ func TestLockFreeMetricCollector(t *testing.T) {
 	}
 }
 
-// TestLockFreeCollector_ConcurrentRecording tests concurrent metric recording
+// TestLockFreeCollector_ConcurrentRecording tests concurrent metric recording.
 func TestLockFreeCollector_ConcurrentRecording(t *testing.T) {
 	collector := NewLockFreeMetricCollector(10000)
 
@@ -89,13 +89,13 @@ func TestLockFreeCollector_ConcurrentRecording(t *testing.T) {
 	start := make(chan struct{})
 
 	// Start multiple goroutines recording metrics concurrently
-	for i := 0; i < numGoroutines; i++ {
+	for i := range numGoroutines {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
 			<-start // Wait for signal to start
 
-			for j := 0; j < metricsPerGoroutine; j++ {
+			for j := range metricsPerGoroutine {
 				metric := Metric{
 					Type:      MetricTypeBuildTime,
 					Value:     float64(id*1000 + j),
@@ -129,7 +129,7 @@ func TestLockFreeCollector_ConcurrentRecording(t *testing.T) {
 	}
 }
 
-// TestLockFreeCollector_AtomicOperations tests atomic operation correctness
+// TestLockFreeCollector_AtomicOperations tests atomic operation correctness.
 func TestLockFreeCollector_AtomicOperations(t *testing.T) {
 	collector := NewLockFreeMetricCollector(1000)
 
@@ -137,13 +137,13 @@ func TestLockFreeCollector_AtomicOperations(t *testing.T) {
 	const numGoroutines = 20
 	var wg sync.WaitGroup
 
-	for i := 0; i < numGoroutines; i++ {
+	for i := range numGoroutines {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
 
 			// Record metrics with different values to test atomic min/max
-			for j := 0; j < 100; j++ {
+			for j := range 100 {
 				value := float64(id*100 + j)
 				metric := Metric{
 					Type:  MetricTypeMemoryUsage,
@@ -177,7 +177,7 @@ func TestLockFreeCollector_AtomicOperations(t *testing.T) {
 	}
 }
 
-// TestLockFreeCollector_Subscribers tests subscription mechanism
+// TestLockFreeCollector_Subscribers tests subscription mechanism.
 func TestLockFreeCollector_Subscribers(t *testing.T) {
 	collector := NewLockFreeMetricCollector(1000)
 
@@ -213,7 +213,7 @@ func TestLockFreeCollector_Subscribers(t *testing.T) {
 	}
 }
 
-// TestLockFreeCollector_PercentileUpdates tests percentile calculation updates
+// TestLockFreeCollector_PercentileUpdates tests percentile calculation updates.
 func TestLockFreeCollector_PercentileUpdates(t *testing.T) {
 	collector := NewLockFreeMetricCollector(1000)
 
@@ -245,7 +245,7 @@ func TestLockFreeCollector_PercentileUpdates(t *testing.T) {
 	}
 }
 
-// BenchmarkLockFreeCollector_Record benchmarks lock-free recording
+// BenchmarkLockFreeCollector_Record benchmarks lock-free recording.
 func BenchmarkLockFreeCollector_Record(t *testing.B) {
 	collector := NewLockFreeMetricCollector(10000)
 
@@ -255,12 +255,12 @@ func BenchmarkLockFreeCollector_Record(t *testing.B) {
 	}
 
 	t.ResetTimer()
-	for i := 0; i < t.N; i++ {
+	for range t.N {
 		collector.Record(metric)
 	}
 }
 
-// BenchmarkLockFreeCollector_ConcurrentRecord benchmarks concurrent recording
+// BenchmarkLockFreeCollector_ConcurrentRecord benchmarks concurrent recording.
 func BenchmarkLockFreeCollector_ConcurrentRecord(t *testing.B) {
 	collector := NewLockFreeMetricCollector(100000)
 
@@ -276,7 +276,7 @@ func BenchmarkLockFreeCollector_ConcurrentRecord(t *testing.B) {
 	})
 }
 
-// BenchmarkLockFreeVsOriginal_Record compares lock-free vs original implementation
+// BenchmarkLockFreeVsOriginal_Record compares lock-free vs original implementation.
 func BenchmarkLockFreeVsOriginal_Record(t *testing.B) {
 	t.Run("Original_Locked", func(b *testing.B) {
 		collector := NewMetricCollector(10000)
@@ -287,7 +287,7 @@ func BenchmarkLockFreeVsOriginal_Record(t *testing.B) {
 		}
 
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			collector.Record(metric)
 		}
 	})
@@ -301,13 +301,13 @@ func BenchmarkLockFreeVsOriginal_Record(t *testing.B) {
 		}
 
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			collector.Record(metric)
 		}
 	})
 }
 
-// BenchmarkLockFreeVsOriginal_ConcurrentRecord compares concurrent performance
+// BenchmarkLockFreeVsOriginal_ConcurrentRecord compares concurrent performance.
 func BenchmarkLockFreeVsOriginal_ConcurrentRecord(t *testing.B) {
 	t.Run("Original_Locked_Concurrent", func(b *testing.B) {
 		collector := NewMetricCollector(100000)
@@ -340,12 +340,12 @@ func BenchmarkLockFreeVsOriginal_ConcurrentRecord(t *testing.B) {
 	})
 }
 
-// TestLockFreeCollector_MemoryUsage tests memory efficiency
+// TestLockFreeCollector_MemoryUsage tests memory efficiency.
 func TestLockFreeCollector_MemoryUsage(t *testing.T) {
 	collector := NewLockFreeMetricCollector(1000)
 
 	// Record many metrics
-	for i := 0; i < 10000; i++ {
+	for i := range 10000 {
 		metric := Metric{
 			Type:  MetricTypeBuildTime,
 			Value: float64(i),
@@ -366,7 +366,7 @@ func TestLockFreeCollector_MemoryUsage(t *testing.T) {
 	}
 }
 
-// TestLockFreeCollector_RaceConditions tests for race conditions
+// TestLockFreeCollector_RaceConditions tests for race conditions.
 func TestLockFreeCollector_RaceConditions(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping race condition test in short mode")
@@ -381,12 +381,12 @@ func TestLockFreeCollector_RaceConditions(t *testing.T) {
 	var wg sync.WaitGroup
 
 	// Mixed read/write operations
-	for i := 0; i < numGoroutines; i++ {
+	for i := range numGoroutines {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
 
-			for j := 0; j < opsPerGoroutine; j++ {
+			for j := range opsPerGoroutine {
 				// Record metric
 				metric := Metric{
 					Type:  MetricTypeBuildTime,
@@ -425,7 +425,7 @@ func TestLockFreeCollector_RaceConditions(t *testing.T) {
 	}
 }
 
-// TestNextPowerOf2 tests the power of 2 calculation
+// TestNextPowerOf2 tests the power of 2 calculation.
 func TestNextPowerOf2(t *testing.T) {
 	tests := []struct {
 		input    int
@@ -450,13 +450,13 @@ func TestNextPowerOf2(t *testing.T) {
 	}
 }
 
-// TestLockFreeCollector_BufferOverflow tests buffer overflow handling
+// TestLockFreeCollector_BufferOverflow tests buffer overflow handling.
 func TestLockFreeCollector_BufferOverflow(t *testing.T) {
 	// Create small buffer to force overflow
 	collector := NewLockFreeMetricCollector(8)
 
 	// Record more metrics than buffer size
-	for i := 0; i < 20; i++ {
+	for i := range 20 {
 		metric := Metric{
 			Type:  MetricTypeBuildTime,
 			Value: float64(i),
@@ -481,14 +481,14 @@ func TestLockFreeCollector_BufferOverflow(t *testing.T) {
 	}
 }
 
-// TestLockFreeCollector_GetMetrics tests metric retrieval
+// TestLockFreeCollector_GetMetrics tests metric retrieval.
 func TestLockFreeCollector_GetMetrics(t *testing.T) {
 	collector := NewLockFreeMetricCollector(100)
 
 	now := time.Now()
 
 	// Record metrics with different timestamps
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		metric := Metric{
 			Type:      MetricTypeBuildTime,
 			Value:     float64(i),
@@ -515,7 +515,7 @@ func TestLockFreeCollector_GetMetrics(t *testing.T) {
 	}
 }
 
-// TestLockFreeCollector_GetMetricTypes tests metric type enumeration
+// TestLockFreeCollector_GetMetricTypes tests metric type enumeration.
 func TestLockFreeCollector_GetMetricTypes(t *testing.T) {
 	collector := NewLockFreeMetricCollector(100)
 

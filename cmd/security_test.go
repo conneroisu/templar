@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestValidateBuildCommand_Security tests the security of build command validation
+// TestValidateBuildCommand_Security tests the security of build command validation.
 func TestValidateBuildCommand_Security(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -101,7 +101,7 @@ func TestValidateBuildCommand_Security(t *testing.T) {
 	}
 }
 
-// TestValidateCustomCommand_Security tests the security of custom command validation
+// TestValidateCustomCommand_Security tests the security of custom command validation.
 func TestValidateCustomCommand_Security(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -174,7 +174,7 @@ func TestValidateCustomCommand_Security(t *testing.T) {
 	}
 }
 
-// TestValidateArgument_Security tests argument validation security
+// TestValidateArgument_Security tests argument validation security.
 func TestValidateArgument_Security(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -261,7 +261,7 @@ func TestValidateArgument_Security(t *testing.T) {
 	}
 }
 
-// TestSecurityRegression_NoCommandInjection verifies command injection is prevented
+// TestSecurityRegression_NoCommandInjection verifies command injection is prevented.
 func TestSecurityRegression_NoCommandInjection(t *testing.T) {
 	// Test cases based on common command injection patterns
 	maliciousCommands := []string{
@@ -281,6 +281,7 @@ func TestSecurityRegression_NoCommandInjection(t *testing.T) {
 			parts := strings.Fields(maliciousCmd)
 			if len(parts) < 2 {
 				t.Skip("Invalid test case")
+
 				return
 			}
 

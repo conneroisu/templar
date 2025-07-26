@@ -7,12 +7,12 @@ import (
 	"github.com/conneroisu/templar/internal/config"
 )
 
-// AssetOptimizer handles post-build optimization of assets
+// AssetOptimizer handles post-build optimization of assets.
 type AssetOptimizer struct {
 	config *config.Config
 }
 
-// OptimizerOptions configures asset optimization
+// OptimizerOptions configures asset optimization.
 type OptimizerOptions struct {
 	Images      bool `json:"images"`
 	CSS         bool `json:"css"`
@@ -20,12 +20,12 @@ type OptimizerOptions struct {
 	Compression bool `json:"compression"`
 }
 
-// NewAssetOptimizer creates a new asset optimizer
+// NewAssetOptimizer creates a new asset optimizer.
 func NewAssetOptimizer(cfg *config.Config) *AssetOptimizer {
 	return &AssetOptimizer{config: cfg}
 }
 
-// Optimize applies optimizations to assets in the specified directory
+// Optimize applies optimizations to assets in the specified directory.
 func (o *AssetOptimizer) Optimize(
 	ctx context.Context,
 	assetsDir string,

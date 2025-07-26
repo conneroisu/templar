@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// TestMemoryLeakPrevention tests that the file watcher doesn't leak memory under sustained load
+// TestMemoryLeakPrevention tests that the file watcher doesn't leak memory under sustained load.
 func TestMemoryLeakPrevention(t *testing.T) {
 	// Create a file watcher with short debounce delay
 	fw, err := NewFileWatcher(10 * time.Millisecond)
@@ -26,7 +26,7 @@ func TestMemoryLeakPrevention(t *testing.T) {
 	runtime.ReadMemStats(&m1)
 
 	// Simulate many file change events
-	for i := 0; i < 10000; i++ {
+	for i := range 10000 {
 		event := ChangeEvent{
 			Type:    EventTypeModified,
 			Path:    "/test/file.templ",
@@ -75,7 +75,7 @@ func TestMemoryLeakPrevention(t *testing.T) {
 	}
 }
 
-// TestBoundedEventQueue tests that the event queue doesn't grow unbounded
+// TestBoundedEventQueue tests that the event queue doesn't grow unbounded.
 func TestBoundedEventQueue(t *testing.T) {
 	fw, err := NewFileWatcher(1 * time.Second) // Long delay to prevent flushing
 	if err != nil {
@@ -84,7 +84,7 @@ func TestBoundedEventQueue(t *testing.T) {
 	defer fw.Stop()
 
 	// Send more events than MaxPendingEvents
-	for i := 0; i < MaxPendingEvents+500; i++ {
+	for range MaxPendingEvents + 500 {
 		event := ChangeEvent{
 			Type:    EventTypeModified,
 			Path:    "/test/file.templ",
@@ -110,7 +110,7 @@ func TestBoundedEventQueue(t *testing.T) {
 	t.Logf("Pending events after overflow: %d (max: %d)", pendingCount, MaxPendingEvents)
 }
 
-// TestObjectPoolEfficiency tests that object pools reduce allocations
+// TestObjectPoolEfficiency tests that object pools reduce allocations.
 func TestObjectPoolEfficiency(t *testing.T) {
 	fw, err := NewFileWatcher(10 * time.Millisecond)
 	if err != nil {
@@ -119,7 +119,7 @@ func TestObjectPoolEfficiency(t *testing.T) {
 	defer fw.Stop()
 
 	// Add events and force multiple flushes
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		event := ChangeEvent{
 			Type:    EventTypeModified,
 			Path:    "/test/file.templ",
@@ -138,7 +138,7 @@ func TestObjectPoolEfficiency(t *testing.T) {
 	t.Log("Object pool test completed successfully")
 }
 
-// TestCleanupPreventsGrowth tests that periodic cleanup prevents memory growth
+// TestCleanupPreventsGrowth tests that periodic cleanup prevents memory growth.
 func TestCleanupPreventsGrowth(t *testing.T) {
 	fw, err := NewFileWatcher(10 * time.Millisecond)
 	if err != nil {
@@ -150,7 +150,7 @@ func TestCleanupPreventsGrowth(t *testing.T) {
 	fw.debouncer.lastCleanup = time.Now().Add(-CleanupInterval - time.Second)
 
 	// Add many events to grow the pending slice
-	for i := 0; i < MaxPendingEvents*2; i++ {
+	for range MaxPendingEvents * 2 {
 		event := ChangeEvent{
 			Type:    EventTypeModified,
 			Path:    "/test/file.templ",
@@ -177,7 +177,7 @@ func TestCleanupPreventsGrowth(t *testing.T) {
 	}
 }
 
-// BenchmarkWatcherMemoryUsage benchmarks memory usage under load
+// BenchmarkWatcherMemoryUsage benchmarks memory usage under load.
 func BenchmarkWatcherMemoryUsage(b *testing.B) {
 	fw, err := NewFileWatcher(10 * time.Millisecond)
 	if err != nil {
@@ -192,7 +192,7 @@ func BenchmarkWatcherMemoryUsage(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		event := ChangeEvent{
 			Type:    EventTypeModified,
 			Path:    "/test/file.templ",

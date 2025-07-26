@@ -9,7 +9,7 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// TestFileHashCachingPerformance validates that file hash caching provides significant performance improvements
+// TestFileHashCachingPerformance validates that file hash caching provides significant performance improvements.
 func TestFileHashCachingPerformance(t *testing.T) {
 	// Create test files of different sizes
 	testSizes := []int{1024, 10240, 102400, 1048576} // 1KB, 10KB, 100KB, 1MB
@@ -79,7 +79,7 @@ func TestFileHashCachingPerformance(t *testing.T) {
 	}
 }
 
-// TestMetadataBasedCaching validates that metadata changes invalidate cache correctly
+// TestMetadataBasedCaching validates that metadata changes invalidate cache correctly.
 func TestMetadataBasedCaching(t *testing.T) {
 	// Create temporary test file
 	tempFile, err := os.CreateTemp("", "metadata_test_*.templ")
@@ -129,7 +129,7 @@ func TestMetadataBasedCaching(t *testing.T) {
 	}
 }
 
-// BenchmarkHashCachingPerformance benchmarks file hash caching performance
+// BenchmarkHashCachingPerformance benchmarks file hash caching performance.
 func BenchmarkHashCachingPerformance(b *testing.B) {
 	fileSizes := []int{1024, 10240, 102400, 1048576} // 1KB, 10KB, 100KB, 1MB
 
@@ -160,7 +160,7 @@ func BenchmarkHashCachingPerformance(b *testing.B) {
 			b.ResetTimer()
 			b.ReportAllocs()
 
-			for i := 0; i < b.N; i++ {
+			for range b.N {
 				bp := NewBuildPipeline(1, NewMockComponentRegistry())
 				_ = bp.generateContentHash(component)
 			}
@@ -196,14 +196,14 @@ func BenchmarkHashCachingPerformance(b *testing.B) {
 			b.ResetTimer()
 			b.ReportAllocs()
 
-			for i := 0; i < b.N; i++ {
+			for range b.N {
 				_ = bp.generateContentHash(component)
 			}
 		})
 	}
 }
 
-// TestCacheEvictionUnderMemoryPressure validates cache behavior under memory pressure
+// TestCacheEvictionUnderMemoryPressure validates cache behavior under memory pressure.
 func TestCacheEvictionUnderMemoryPressure(t *testing.T) {
 	// Create pipeline with smaller cache for metadata-based testing
 	reg := NewMockComponentRegistry()
@@ -226,7 +226,7 @@ func TestCacheEvictionUnderMemoryPressure(t *testing.T) {
 	}()
 
 	// Create test files
-	for i := 0; i < numFiles; i++ {
+	for i := range numFiles {
 		tempFile, err := os.CreateTemp("", fmt.Sprintf("cache_eviction_test_%d_*.templ", i))
 		if err != nil {
 			t.Fatalf("Failed to create temp file %d: %v", i, err)
@@ -278,7 +278,7 @@ func TestCacheEvictionUnderMemoryPressure(t *testing.T) {
 	}
 
 	// Re-access early components (should be cache misses due to eviction)
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		start := time.Now()
 		hash := bp.generateContentHash(components[i])
 		duration := time.Since(start)
@@ -299,7 +299,7 @@ func TestCacheEvictionUnderMemoryPressure(t *testing.T) {
 	}
 }
 
-// TestCacheConcurrency validates thread-safety of hash caching
+// TestCacheConcurrency validates thread-safety of hash caching.
 func TestCacheConcurrency(t *testing.T) {
 	bp := NewBuildPipeline(4, NewMockComponentRegistry())
 
@@ -330,9 +330,9 @@ func TestCacheConcurrency(t *testing.T) {
 
 	results := make(chan string, numGoroutines*numOperations)
 
-	for i := 0; i < numGoroutines; i++ {
+	for range numGoroutines {
 		go func() {
-			for j := 0; j < numOperations; j++ {
+			for range numOperations {
 				hash := bp.generateContentHash(component)
 				results <- hash
 			}
@@ -341,7 +341,7 @@ func TestCacheConcurrency(t *testing.T) {
 
 	// Collect all results
 	var allHashes []string
-	for i := 0; i < numGoroutines*numOperations; i++ {
+	for range numGoroutines * numOperations {
 		hash := <-results
 		allHashes = append(allHashes, hash)
 	}

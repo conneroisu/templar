@@ -174,6 +174,7 @@ func TestMonitorOperationTracking(t *testing.T) {
 		executed := false
 		err := monitor.LogOperation("test_operation", func() error {
 			executed = true
+
 			return nil
 		})
 

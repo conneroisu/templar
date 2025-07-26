@@ -7,16 +7,16 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// BenchmarkBuildMetrics_NewBuildMetrics benchmarks metrics creation
+// BenchmarkBuildMetrics_NewBuildMetrics benchmarks metrics creation.
 func BenchmarkBuildMetrics_NewBuildMetrics(b *testing.B) {
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		metrics := NewBuildMetrics()
 		_ = metrics
 	}
 }
 
-// BenchmarkBuildMetrics_RecordBuild benchmarks build result recording
+// BenchmarkBuildMetrics_RecordBuild benchmarks build result recording.
 func BenchmarkBuildMetrics_RecordBuild(b *testing.B) {
 	metrics := NewBuildMetrics()
 
@@ -34,17 +34,17 @@ func BenchmarkBuildMetrics_RecordBuild(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		metrics.RecordBuild(result)
 	}
 }
 
-// BenchmarkBuildMetrics_GetSnapshot benchmarks snapshot retrieval
+// BenchmarkBuildMetrics_GetSnapshot benchmarks snapshot retrieval.
 func BenchmarkBuildMetrics_GetSnapshot(b *testing.B) {
 	metrics := NewBuildMetrics()
 
 	// Pre-populate with some data
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		result := BuildResult{
 			Component: &types.ComponentInfo{
 				Name:     "Component",
@@ -63,12 +63,12 @@ func BenchmarkBuildMetrics_GetSnapshot(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = metrics.GetSnapshot()
 	}
 }
 
-// BenchmarkBuildMetrics_ConcurrentAccess benchmarks concurrent access
+// BenchmarkBuildMetrics_ConcurrentAccess benchmarks concurrent access.
 func BenchmarkBuildMetrics_ConcurrentAccess(b *testing.B) {
 	metrics := NewBuildMetrics()
 
@@ -95,21 +95,21 @@ func BenchmarkBuildMetrics_ConcurrentAccess(b *testing.B) {
 	})
 }
 
-// BenchmarkBuildMetrics_Reset benchmarks metrics reset operation
+// BenchmarkBuildMetrics_Reset benchmarks metrics reset operation.
 func BenchmarkBuildMetrics_Reset(b *testing.B) {
 	b.Run("empty_metrics", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			metrics := NewBuildMetrics()
 			metrics.Reset()
 		}
 	})
 
 	b.Run("populated_metrics", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			b.StopTimer()
 			metrics := NewBuildMetrics()
 			// Populate with data
-			for j := 0; j < 50; j++ {
+			for j := range 50 {
 				result := BuildResult{
 					Component: &types.ComponentInfo{
 						Name:     "PopulatedComponent",
@@ -133,7 +133,7 @@ func BenchmarkBuildMetrics_Reset(b *testing.B) {
 	})
 }
 
-// newTestError creates a test error
+// newTestError creates a test error.
 func newTestError(msg string) error {
 	return &testError{message: msg}
 }

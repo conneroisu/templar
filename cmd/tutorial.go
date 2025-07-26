@@ -34,7 +34,7 @@ var (
 	tutorialTopicFlag string
 )
 
-// tutorialTopic represents a tutorial section
+// tutorialTopic represents a tutorial section.
 type tutorialTopic struct {
 	Key         string
 	Title       string
@@ -63,19 +63,19 @@ func runTutorial(cmd *cobra.Command, args []string) error {
 	return tutorial.RunFull()
 }
 
-// Tutorial manages the interactive tutorial experience
+// Tutorial manages the interactive tutorial experience.
 type Tutorial struct {
 	reader *bufio.Reader
 }
 
-// NewTutorial creates a new tutorial instance
+// NewTutorial creates a new tutorial instance.
 func NewTutorial() *Tutorial {
 	return &Tutorial{
 		reader: bufio.NewReader(os.Stdin),
 	}
 }
 
-// RunFull runs the complete interactive tutorial
+// RunFull runs the complete interactive tutorial.
 func (t *Tutorial) RunFull() error {
 	fmt.Println("🎓 Welcome to Templar Tutorial!")
 	fmt.Println("==============================")
@@ -117,7 +117,7 @@ func (t *Tutorial) RunFull() error {
 	}
 }
 
-// RunQuick runs a 5-minute overview
+// RunQuick runs a 5-minute overview.
 func (t *Tutorial) RunQuick() error {
 	fmt.Println("⚡ Quick Templar Tutorial (5 minutes)")
 	fmt.Println("====================================")
@@ -163,10 +163,11 @@ templar build --clean               # Clean before building`,
 	}
 
 	fmt.Println("🎉 Tutorial complete! Run 'templar tutorial' for detailed guidance.")
+
 	return nil
 }
 
-// RunTopic runs tutorial for a specific topic
+// RunTopic runs tutorial for a specific topic.
 func (t *Tutorial) RunTopic(topic string) error {
 	switch topic {
 	case "init":
@@ -394,6 +395,7 @@ func (t *Tutorial) runAllTopics(topics []*tutorialTopic) error {
 
 	fmt.Println("\n🎉 Tutorial complete!")
 	fmt.Println("For more help, run 'templar <command> --help' or visit the documentation.")
+
 	return nil
 }
 

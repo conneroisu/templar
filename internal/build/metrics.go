@@ -9,7 +9,7 @@ import (
 	"github.com/conneroisu/templar/internal/interfaces"
 )
 
-// BuildMetrics tracks build performance and queue health
+// BuildMetrics tracks build performance and queue health.
 type BuildMetrics struct {
 	TotalBuilds      int64
 	SuccessfulBuilds int64
@@ -46,17 +46,17 @@ type BuildMetrics struct {
 	mutex sync.RWMutex
 }
 
-// Ensure BuildMetrics implements the interfaces.BuildMetrics interface
+// Ensure BuildMetrics implements the interfaces.BuildMetrics interface.
 var _ interfaces.BuildMetrics = (*BuildMetrics)(nil)
 
-// NewBuildMetrics creates a new build metrics tracker
+// NewBuildMetrics creates a new build metrics tracker.
 func NewBuildMetrics() *BuildMetrics {
 	return &BuildMetrics{
 		DropReasons: make(map[string]int64),
 	}
 }
 
-// RecordBuild records a build result in the metrics
+// RecordBuild records a build result in the metrics.
 func (bm *BuildMetrics) RecordBuild(result BuildResult) {
 	bm.mutex.Lock()
 	defer bm.mutex.Unlock()
@@ -80,7 +80,7 @@ func (bm *BuildMetrics) RecordBuild(result BuildResult) {
 	}
 }
 
-// GetSnapshot returns a snapshot of current metrics
+// GetSnapshot returns a snapshot of current metrics.
 func (bm *BuildMetrics) GetSnapshot() BuildMetrics {
 	bm.mutex.RLock()
 	defer bm.mutex.RUnlock()
@@ -106,7 +106,7 @@ func (bm *BuildMetrics) GetSnapshot() BuildMetrics {
 	}
 }
 
-// Reset resets all metrics
+// Reset resets all metrics.
 func (bm *BuildMetrics) Reset() {
 	bm.mutex.Lock()
 	defer bm.mutex.Unlock()
@@ -142,7 +142,7 @@ func (bm *BuildMetrics) Reset() {
 	atomic.StoreInt64(&bm.MemoryReused, 0)
 }
 
-// GetCacheHitRate returns the cache hit rate as a percentage
+// GetCacheHitRate returns the cache hit rate as a percentage.
 func (bm *BuildMetrics) GetCacheHitRate() float64 {
 	bm.mutex.RLock()
 	defer bm.mutex.RUnlock()
@@ -154,7 +154,7 @@ func (bm *BuildMetrics) GetCacheHitRate() float64 {
 	return float64(bm.CacheHits) / float64(bm.TotalBuilds) * 100.0
 }
 
-// GetSuccessRate returns the success rate as a percentage
+// GetSuccessRate returns the success rate as a percentage.
 func (bm *BuildMetrics) GetSuccessRate() float64 {
 	bm.mutex.RLock()
 	defer bm.mutex.RUnlock()
@@ -166,7 +166,7 @@ func (bm *BuildMetrics) GetSuccessRate() float64 {
 	return float64(bm.SuccessfulBuilds) / float64(bm.TotalBuilds) * 100.0
 }
 
-// RecordDroppedTask records when a task is dropped due to queue full
+// RecordDroppedTask records when a task is dropped due to queue full.
 func (bm *BuildMetrics) RecordDroppedTask(componentName, reason string) {
 	bm.mutex.Lock()
 	defer bm.mutex.Unlock()
@@ -175,7 +175,7 @@ func (bm *BuildMetrics) RecordDroppedTask(componentName, reason string) {
 	bm.DropReasons[reason]++
 }
 
-// RecordDroppedResult records when a result is dropped due to queue full
+// RecordDroppedResult records when a result is dropped due to queue full.
 func (bm *BuildMetrics) RecordDroppedResult(componentName, reason string) {
 	bm.mutex.Lock()
 	defer bm.mutex.Unlock()
@@ -184,7 +184,7 @@ func (bm *BuildMetrics) RecordDroppedResult(componentName, reason string) {
 	bm.DropReasons[reason]++
 }
 
-// GetQueueHealthStatus returns queue health information
+// GetQueueHealthStatus returns queue health information.
 func (bm *BuildMetrics) GetQueueHealthStatus() (droppedTasks, droppedResults int64, dropReasons map[string]int64) {
 	bm.mutex.RLock()
 	defer bm.mutex.RUnlock()
@@ -200,28 +200,31 @@ func (bm *BuildMetrics) GetQueueHealthStatus() (droppedTasks, droppedResults int
 
 // Interface compliance methods for interfaces.BuildMetrics
 
-// GetBuildCount returns the total number of builds
+// GetBuildCount returns the total number of builds.
 func (bm *BuildMetrics) GetBuildCount() int64 {
 	bm.mutex.RLock()
 	defer bm.mutex.RUnlock()
+
 	return bm.TotalBuilds
 }
 
-// GetSuccessCount returns the number of successful builds
+// GetSuccessCount returns the number of successful builds.
 func (bm *BuildMetrics) GetSuccessCount() int64 {
 	bm.mutex.RLock()
 	defer bm.mutex.RUnlock()
+
 	return bm.SuccessfulBuilds
 }
 
-// GetFailureCount returns the number of failed builds
+// GetFailureCount returns the number of failed builds.
 func (bm *BuildMetrics) GetFailureCount() int64 {
 	bm.mutex.RLock()
 	defer bm.mutex.RUnlock()
+
 	return bm.FailedBuilds
 }
 
-// GetAverageDuration returns the average build duration
+// GetAverageDuration returns the average build duration.
 func (bm *BuildMetrics) GetAverageDuration() time.Duration {
 	bm.mutex.RLock()
 	defer bm.mutex.RUnlock()
@@ -235,13 +238,13 @@ func (bm *BuildMetrics) GetAverageDuration() time.Duration {
 
 // Parallel processing metrics methods
 
-// RecordFileDiscovery records file discovery performance
+// RecordFileDiscovery records file discovery performance.
 func (bm *BuildMetrics) RecordFileDiscovery(duration time.Duration, filesFound int64) {
 	atomic.AddInt64(&bm.ParallelFileDiscoveries, 1)
 	atomic.AddInt64(&bm.FileDiscoveryDuration, int64(duration))
 }
 
-// RecordParallelProcessing records parallel processing performance
+// RecordParallelProcessing records parallel processing performance.
 func (bm *BuildMetrics) RecordParallelProcessing(duration time.Duration, concurrency int32) {
 	atomic.AddInt64(&bm.ParallelProcessingTime, int64(duration))
 
@@ -259,7 +262,7 @@ func (bm *BuildMetrics) RecordParallelProcessing(duration time.Duration, concurr
 	atomic.StoreInt32(&bm.ConcurrencyLevel, concurrency)
 }
 
-// RecordBatchProcessing records batch processing metrics
+// RecordBatchProcessing records batch processing metrics.
 func (bm *BuildMetrics) RecordBatchProcessing(batchSize int64, duration time.Duration) {
 	atomic.AddInt64(&bm.BatchProcessingCount, 1)
 	atomic.AddInt64(&bm.BatchSize, batchSize)
@@ -267,12 +270,12 @@ func (bm *BuildMetrics) RecordBatchProcessing(batchSize int64, duration time.Dur
 
 // AST caching metrics methods
 
-// RecordASTCacheHit records an AST cache hit
+// RecordASTCacheHit records an AST cache hit.
 func (bm *BuildMetrics) RecordASTCacheHit() {
 	atomic.AddInt64(&bm.ASTCacheHits, 1)
 }
 
-// RecordASTCacheMiss records an AST cache miss with parse time
+// RecordASTCacheMiss records an AST cache miss with parse time.
 func (bm *BuildMetrics) RecordASTCacheMiss(parseTime time.Duration) {
 	atomic.AddInt64(&bm.ASTCacheMisses, 1)
 	atomic.AddInt64(&bm.ASTParseTime, int64(parseTime))
@@ -280,40 +283,42 @@ func (bm *BuildMetrics) RecordASTCacheMiss(parseTime time.Duration) {
 
 // Memory optimization metrics methods
 
-// RecordPoolHit records object pool reuse
+// RecordPoolHit records object pool reuse.
 func (bm *BuildMetrics) RecordPoolHit(bytesReused int64) {
 	atomic.AddInt64(&bm.PoolHits, 1)
 	atomic.AddInt64(&bm.MemoryReused, bytesReused)
 }
 
-// RecordPoolMiss records object pool allocation
+// RecordPoolMiss records object pool allocation.
 func (bm *BuildMetrics) RecordPoolMiss() {
 	atomic.AddInt64(&bm.PoolMisses, 1)
 }
 
 // Performance analysis methods
 
-// GetAverageFileDiscoveryTime returns average file discovery time
+// GetAverageFileDiscoveryTime returns average file discovery time.
 func (bm *BuildMetrics) GetAverageFileDiscoveryTime() time.Duration {
 	discoveries := atomic.LoadInt64(&bm.ParallelFileDiscoveries)
 	if discoveries == 0 {
 		return 0
 	}
 	totalTime := atomic.LoadInt64(&bm.FileDiscoveryDuration)
+
 	return time.Duration(totalTime / discoveries)
 }
 
-// GetAverageParallelProcessingTime returns average parallel processing time
+// GetAverageParallelProcessingTime returns average parallel processing time.
 func (bm *BuildMetrics) GetAverageParallelProcessingTime() time.Duration {
 	batches := atomic.LoadInt64(&bm.BatchProcessingCount)
 	if batches == 0 {
 		return 0
 	}
 	totalTime := atomic.LoadInt64(&bm.ParallelProcessingTime)
+
 	return time.Duration(totalTime / batches)
 }
 
-// GetASTCacheHitRate returns AST cache hit rate as percentage
+// GetASTCacheHitRate returns AST cache hit rate as percentage.
 func (bm *BuildMetrics) GetASTCacheHitRate() float64 {
 	hits := atomic.LoadInt64(&bm.ASTCacheHits)
 	misses := atomic.LoadInt64(&bm.ASTCacheMisses)
@@ -321,10 +326,11 @@ func (bm *BuildMetrics) GetASTCacheHitRate() float64 {
 	if total == 0 {
 		return 0.0
 	}
+
 	return float64(hits) / float64(total) * 100.0
 }
 
-// GetPoolEfficiency returns memory pool efficiency as percentage
+// GetPoolEfficiency returns memory pool efficiency as percentage.
 func (bm *BuildMetrics) GetPoolEfficiency() float64 {
 	hits := atomic.LoadInt64(&bm.PoolHits)
 	misses := atomic.LoadInt64(&bm.PoolMisses)
@@ -332,25 +338,27 @@ func (bm *BuildMetrics) GetPoolEfficiency() float64 {
 	if total == 0 {
 		return 0.0
 	}
+
 	return float64(hits) / float64(total) * 100.0
 }
 
-// GetConcurrencyStats returns concurrency statistics
+// GetConcurrencyStats returns concurrency statistics.
 func (bm *BuildMetrics) GetConcurrencyStats() (current int32, peak int32) {
 	return atomic.LoadInt32(&bm.ConcurrencyLevel), atomic.LoadInt32(&bm.PeakConcurrency)
 }
 
-// GetAverageBatchSize returns average batch size
+// GetAverageBatchSize returns average batch size.
 func (bm *BuildMetrics) GetAverageBatchSize() float64 {
 	batches := atomic.LoadInt64(&bm.BatchProcessingCount)
 	if batches == 0 {
 		return 0.0
 	}
 	totalSize := atomic.LoadInt64(&bm.BatchSize)
+
 	return float64(totalSize) / float64(batches)
 }
 
-// GetPerformanceSummary returns a comprehensive performance summary
+// GetPerformanceSummary returns a comprehensive performance summary.
 func (bm *BuildMetrics) GetPerformanceSummary() map[string]interface{} {
 	bm.mutex.RLock()
 	defer bm.mutex.RUnlock()

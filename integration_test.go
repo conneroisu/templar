@@ -202,7 +202,7 @@ func TestIntegration_ServerRoutes(t *testing.T) {
 	testServerSetupAndShutdown(t, 0)
 }
 
-// testServerSetupAndShutdown is a helper function to avoid code duplication
+// testServerSetupAndShutdown is a helper function to avoid code duplication.
 func testServerSetupAndShutdown(t *testing.T, port int) {
 	// Create a temporary directory for components
 	tempDir := t.TempDir()
@@ -344,7 +344,7 @@ func TestIntegration_ResourceCleanup(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create multiple servers to test resource cleanup
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		srv, err := server.New(cfg)
 		require.NoError(t, err)
 

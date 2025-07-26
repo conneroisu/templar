@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// interactiveCmd provides an interactive command selection menu
+// interactiveCmd provides an interactive command selection menu.
 var interactiveCmd = &cobra.Command{
 	Use:     "interactive",
 	Aliases: []string{"menu", "m"},
@@ -66,6 +66,7 @@ func showInteractiveMenu() error {
 	choice, err := strconv.Atoi(input)
 	if err != nil {
 		fmt.Printf("Invalid input '%s'. Please enter a number between 0-8.\n", input)
+
 		return nil
 	}
 
@@ -73,6 +74,7 @@ func showInteractiveMenu() error {
 	case 0:
 		fmt.Println("Goodbye!")
 		os.Exit(0)
+
 		return nil
 	case 1:
 		return runInteractiveInit()
@@ -94,9 +96,11 @@ func showInteractiveMenu() error {
 			return versionCmd.RunE(versionCmd, []string{})
 		}
 		fmt.Println("Version command not available")
+
 		return nil
 	default:
 		fmt.Printf("Invalid choice '%d'. Please enter a number between 0-8.\n", choice)
+
 		return nil
 	}
 }
@@ -157,6 +161,7 @@ func runInteractiveInit() error {
 	}
 
 	fmt.Printf("\nRunning: templar init %s\n", strings.Join(args, " "))
+
 	return initCmd.RunE(initCmd, args)
 }
 
@@ -192,6 +197,7 @@ func runInteractiveServe() error {
 	}
 
 	fmt.Printf("\nRunning: templar serve %s\n", strings.Join(args, " "))
+
 	return serveCmd.RunE(serveCmd, args)
 }
 
@@ -206,6 +212,7 @@ func runInteractivePreview() error {
 
 	if componentName == "" {
 		fmt.Println("Error: Component name is required")
+
 		return nil
 	}
 
@@ -229,6 +236,7 @@ func runInteractivePreview() error {
 	}
 
 	fmt.Printf("\nRunning: templar preview %s\n", strings.Join(args, " "))
+
 	return previewCmd.RunE(previewCmd, args)
 }
 
@@ -256,6 +264,7 @@ func runInteractiveBuild() error {
 	}
 
 	fmt.Printf("\nRunning: templar build %s\n", strings.Join(args, " "))
+
 	return buildCmd.RunE(buildCmd, args)
 }
 
@@ -305,6 +314,7 @@ func runInteractiveList() error {
 	}
 
 	fmt.Printf("\nRunning: templar list %s\n", strings.Join(args, " "))
+
 	return listCmd.RunE(listCmd, args)
 }
 
@@ -332,5 +342,6 @@ func runInteractiveWatch() error {
 	}
 
 	fmt.Printf("\nRunning: templar watch %s\n", strings.Join(args, " "))
+
 	return watchCmd.RunE(watchCmd, args)
 }

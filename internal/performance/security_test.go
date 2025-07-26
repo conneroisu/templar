@@ -18,9 +18,8 @@ import (
 	"time"
 )
 
-// TestCI_CommandInjectionPrevention tests command injection prevention in CI operations
+// TestCI_CommandInjectionPrevention tests command injection prevention in CI operations.
 func TestCI_CommandInjectionPrevention(t *testing.T) {
-
 	tests := []struct {
 		name          string
 		packages      []string
@@ -107,6 +106,7 @@ func TestCI_CommandInjectionPrevention(t *testing.T) {
 			if tt.shouldError {
 				if err == nil {
 					t.Errorf("Expected error for %s, but got none. %s", tt.name, tt.description)
+
 					return
 				}
 				if tt.expectedError != "" && !strings.Contains(err.Error(), tt.expectedError) {
@@ -125,7 +125,7 @@ func TestCI_CommandInjectionPrevention(t *testing.T) {
 	}
 }
 
-// TestFileOperations_SecurityValidation tests file operation security
+// TestFileOperations_SecurityValidation tests file operation security.
 func TestFileOperations_SecurityValidation(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -138,6 +138,7 @@ func TestFileOperations_SecurityValidation(t *testing.T) {
 			operation: func() error {
 				detector := NewPerformanceDetector("test_safe_dir", DefaultThresholds())
 				defer os.RemoveAll("test_safe_dir")
+
 				return detector.validateBaselineDirectory()
 			},
 			shouldError: false,
@@ -146,6 +147,7 @@ func TestFileOperations_SecurityValidation(t *testing.T) {
 			name: "path traversal in baseline directory",
 			operation: func() error {
 				detector := NewPerformanceDetector("../malicious_dir", DefaultThresholds())
+
 				return detector.validateBaselineDirectory()
 			},
 			shouldError: true,
@@ -155,6 +157,7 @@ func TestFileOperations_SecurityValidation(t *testing.T) {
 			name: "absolute path in baseline directory",
 			operation: func() error {
 				detector := NewPerformanceDetector("/tmp/malicious", DefaultThresholds())
+
 				return detector.validateBaselineDirectory()
 			},
 			shouldError: true,
@@ -172,11 +175,13 @@ func TestFileOperations_SecurityValidation(t *testing.T) {
 				if err := os.Symlink("/etc/passwd", symlinkPath); err != nil {
 					// If we can't create symlink, skip this test
 					t.Logf("Could not create symlink: %v", err)
+
 					return nil
 				}
 
 				// Test using the symlink path as baseline directory
 				detector := NewPerformanceDetector(symlinkPath, DefaultThresholds())
+
 				return detector.validateBaselineDirectory()
 			},
 			shouldError: false, // The validation might not detect this specific case
@@ -191,6 +196,7 @@ func TestFileOperations_SecurityValidation(t *testing.T) {
 			if tt.shouldError {
 				if err == nil {
 					t.Errorf("Expected error for %s, but got none", tt.name)
+
 					return
 				}
 				if tt.errorMsg != "" && !strings.Contains(err.Error(), tt.errorMsg) {
@@ -205,7 +211,7 @@ func TestFileOperations_SecurityValidation(t *testing.T) {
 	}
 }
 
-// TestBenchmarkParser_MaliciousInput tests parser security against malicious input
+// TestBenchmarkParser_MaliciousInput tests parser security against malicious input.
 func TestBenchmarkParser_MaliciousInput(t *testing.T) {
 	detector := NewPerformanceDetector("test_parser_security", DefaultThresholds())
 	defer os.RemoveAll("test_parser_security")
@@ -306,7 +312,7 @@ func TestBenchmarkParser_MaliciousInput(t *testing.T) {
 	}
 }
 
-// TestConcurrentSafety_SecurityValidation tests concurrent access security
+// TestConcurrentSafety_SecurityValidation tests concurrent access security.
 func TestConcurrentSafety_SecurityValidation(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping concurrent safety test in short mode")
@@ -327,12 +333,12 @@ func TestConcurrentSafety_SecurityValidation(t *testing.T) {
 	done := make(chan struct{}, numGoroutines)
 
 	// Start multiple goroutines performing different operations
-	for i := 0; i < numGoroutines; i++ {
+	for i := range numGoroutines {
 		go func(id int) {
 			defer func() { done <- struct{}{} }()
 			<-start // Wait for start signal
 
-			for j := 0; j < opsPerGoroutine; j++ {
+			for j := range opsPerGoroutine {
 				// Mix of different operations to test for race conditions
 				switch j % 4 {
 				case 0:
@@ -373,7 +379,7 @@ func TestConcurrentSafety_SecurityValidation(t *testing.T) {
 	close(start)
 
 	// Wait for all goroutines to complete
-	for i := 0; i < numGoroutines; i++ {
+	for range numGoroutines {
 		<-done
 	}
 
@@ -385,7 +391,7 @@ func TestConcurrentSafety_SecurityValidation(t *testing.T) {
 	}
 }
 
-// TestMemorySafety_LockFreeOperations tests memory safety in lock-free operations
+// TestMemorySafety_LockFreeOperations tests memory safety in lock-free operations.
 func TestMemorySafety_LockFreeOperations(t *testing.T) {
 	collector := NewLockFreeMetricCollector(1000)
 
@@ -396,12 +402,12 @@ func TestMemorySafety_LockFreeOperations(t *testing.T) {
 	start := make(chan struct{})
 	done := make(chan struct{}, numGoroutines)
 
-	for i := 0; i < numGoroutines; i++ {
+	for i := range numGoroutines {
 		go func(id int) {
 			defer func() { done <- struct{}{} }()
 			<-start
 
-			for j := 0; j < opsPerGoroutine; j++ {
+			for j := range opsPerGoroutine {
 				// Record metrics with various edge case values
 				values := []float64{
 					0.0, math.Copysign(0, -1), 1.0, -1.0,
@@ -433,7 +439,7 @@ func TestMemorySafety_LockFreeOperations(t *testing.T) {
 	}
 
 	close(start)
-	for i := 0; i < numGoroutines; i++ {
+	for range numGoroutines {
 		<-done
 	}
 
@@ -441,6 +447,7 @@ func TestMemorySafety_LockFreeOperations(t *testing.T) {
 	agg := collector.GetAggregate(MetricTypeBuildTime)
 	if agg == nil {
 		t.Error("Expected aggregate after operations")
+
 		return
 	}
 
@@ -458,7 +465,7 @@ func TestMemorySafety_LockFreeOperations(t *testing.T) {
 	}
 }
 
-// TestInputSanitization_FilenameValidation tests filename sanitization
+// TestInputSanitization_FilenameValidation tests filename sanitization.
 func TestInputSanitization_FilenameValidation(t *testing.T) {
 	detector := NewPerformanceDetector("test_sanitization", DefaultThresholds())
 	defer os.RemoveAll("test_sanitization")

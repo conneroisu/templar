@@ -9,7 +9,7 @@ import (
 	"github.com/conneroisu/templar/internal/config"
 )
 
-// Test interfaces and implementations
+// Test interfaces and implementations.
 type TestService interface {
 	GetName() string
 }
@@ -124,6 +124,7 @@ func TestServiceContainer_DependencyInjection(t *testing.T) {
 		if err != nil {
 			return nil, err
 		}
+
 		return &TestDependentService{dependency: dep.(TestService)}, nil
 	}).DependsOn("dependency")
 
@@ -322,6 +323,7 @@ func TestServiceContainer_ConcurrentAccess(t *testing.T) {
 		"concurrent",
 		func(resolver DependencyResolver) (interface{}, error) {
 			time.Sleep(10 * time.Millisecond) // Simulate slow creation
+
 			return &TestImplementation{name: "concurrent-service"}, nil
 		},
 	)
@@ -331,11 +333,12 @@ func TestServiceContainer_ConcurrentAccess(t *testing.T) {
 	results := make(chan interface{}, numGoroutines)
 	errors := make(chan error, numGoroutines)
 
-	for i := 0; i < numGoroutines; i++ {
+	for range numGoroutines {
 		go func() {
 			service, err := container.Get("concurrent")
 			if err != nil {
 				errors <- err
+
 				return
 			}
 			results <- service
@@ -344,7 +347,7 @@ func TestServiceContainer_ConcurrentAccess(t *testing.T) {
 
 	// Collect results
 	var services []interface{}
-	for i := 0; i < numGoroutines; i++ {
+	for range numGoroutines {
 		select {
 		case service := <-results:
 			services = append(services, service)
@@ -453,7 +456,7 @@ func BenchmarkServiceContainer_GetSingleton(b *testing.B) {
 	_, _ = container.Get("test")
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, _ = container.Get("test")
 	}
 }
@@ -465,7 +468,7 @@ func BenchmarkServiceContainer_GetTransient(b *testing.B) {
 	})
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, _ = container.Get("test")
 	}
 }

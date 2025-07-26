@@ -97,9 +97,10 @@ func runPreview(cmd *cobra.Command, args []string) error {
 		suggestions := errors.ComponentNotFoundError(componentName, ctx)
 		enhancedErr := errors.NewEnhancedError(
 			fmt.Sprintf("Component '%s' not found", componentName),
-			fmt.Errorf("component not found"),
+			errors.New("component not found"),
 			suggestions,
 		)
+
 		return enhancedErr
 	}
 
@@ -149,6 +150,7 @@ func runPreview(cmd *cobra.Command, args []string) error {
 
 	// Keep the server running
 	<-ctx.Done()
+
 	return nil
 }
 
@@ -171,19 +173,20 @@ func loadMockData(mockFile string) (map[string]interface{}, error) {
 	return mockData, nil
 }
 
-// generateIntelligentMockData generates intelligent mock data using the advanced mock generator
+// generateIntelligentMockData generates intelligent mock data using the advanced mock generator.
 func generateIntelligentMockData(component *types.ComponentInfo) map[string]interface{} {
 	// Use the advanced mock generator for sophisticated mock data
 	generator := mockdata.NewAdvancedMockGenerator()
+
 	return generator.GenerateForComponent(component)
 }
 
-// Legacy generateMockData function kept for backward compatibility
+// Legacy generateMockData function kept for backward compatibility.
 func generateMockData(component *types.ComponentInfo) map[string]interface{} {
 	return generateIntelligentMockData(component)
 }
 
-// Legacy generateMockValue function kept for backward compatibility
+// Legacy generateMockValue function kept for backward compatibility.
 func generateMockValue(paramType string) interface{} {
 	switch strings.ToLower(paramType) {
 	case "string":
@@ -202,6 +205,7 @@ func generateMockValue(paramType string) interface{} {
 		if strings.HasPrefix(paramType, "[]") {
 			return []interface{}{"Mock Item"}
 		}
+
 		return "Mock Value"
 	}
 }
@@ -386,13 +390,14 @@ func formatJSON(data interface{}) string {
 	if err != nil {
 		return fmt.Sprintf("Error formatting JSON: %v", err)
 	}
+
 	return string(jsonData)
 }
 
-// validateMockFilePath validates mock file paths to prevent security vulnerabilities
+// validateMockFilePath validates mock file paths to prevent security vulnerabilities.
 func validateMockFilePath(mockFile string) error {
 	if mockFile == "" {
-		return fmt.Errorf("empty mock file path")
+		return errors.New("empty mock file path")
 	}
 
 	// Clean the path

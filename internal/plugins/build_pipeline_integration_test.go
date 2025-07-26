@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestPluginBuildPipelineIntegration tests the complete integration between plugins and the build pipeline
+// TestPluginBuildPipelineIntegration tests the complete integration between plugins and the build pipeline.
 func TestPluginBuildPipelineIntegration(t *testing.T) {
 	t.Run("plugin lifecycle during build process", func(t *testing.T) {
 		manager := NewPluginManager()
@@ -188,12 +188,12 @@ func TestPluginBuildPipelineIntegration(t *testing.T) {
 		var wg sync.WaitGroup
 		errChan := make(chan error, numConcurrentBuilds*numComponents)
 
-		for buildID := 0; buildID < numConcurrentBuilds; buildID++ {
+		for buildID := range numConcurrentBuilds {
 			wg.Add(1)
 			go func(id int) {
 				defer wg.Done()
 
-				for compID := 0; compID < numComponents; compID++ {
+				for compID := range numComponents {
 					component := &types.ComponentInfo{
 						Name:     fmt.Sprintf("Build%d-Component%d", id, compID),
 						FilePath: fmt.Sprintf("/test/build%d/comp%d.templ", id, compID),
@@ -263,7 +263,7 @@ func TestPluginBuildPipelineIntegration(t *testing.T) {
 		ctx := context.Background()
 
 		// Process many components to test resource management
-		for i := 0; i < 100; i++ {
+		for i := range 100 {
 			component := &types.ComponentInfo{
 				Name:     fmt.Sprintf("Component%d", i),
 				FilePath: fmt.Sprintf("/test/component%d.templ", i),
@@ -347,7 +347,7 @@ func TestPluginBuildPipelineIntegration(t *testing.T) {
 	})
 }
 
-// TestPluginBuildPipelinePerformance tests performance aspects of plugin-build integration
+// TestPluginBuildPipelinePerformance tests performance aspects of plugin-build integration.
 func TestPluginBuildPipelinePerformance(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping performance tests in short mode")
@@ -380,7 +380,7 @@ func TestPluginBuildPipelinePerformance(t *testing.T) {
 		start := time.Now()
 		const numComponents = 1000
 
-		for i := 0; i < numComponents; i++ {
+		for i := range numComponents {
 			component := &types.ComponentInfo{
 				Name:     fmt.Sprintf("PerfComponent%d", i),
 				FilePath: fmt.Sprintf("/test/perf%d.templ", i),
@@ -441,7 +441,7 @@ func TestPluginBuildPipelinePerformance(t *testing.T) {
 
 		// Process components and monitor memory usage
 		const numComponents = 500
-		for i := 0; i < numComponents; i++ {
+		for i := range numComponents {
 			component := &types.ComponentInfo{
 				Name:     fmt.Sprintf("MemComponent%d", i),
 				FilePath: fmt.Sprintf("/test/mem%d.templ", i),
@@ -465,7 +465,7 @@ func TestPluginBuildPipelinePerformance(t *testing.T) {
 	})
 }
 
-// TestPluginBuildPipelineErrorHandling tests error scenarios in plugin-build integration
+// TestPluginBuildPipelineErrorHandling tests error scenarios in plugin-build integration.
 func TestPluginBuildPipelineErrorHandling(t *testing.T) {
 	t.Run("plugin failure during build process", func(t *testing.T) {
 		manager := NewPluginManager()
@@ -496,7 +496,7 @@ func TestPluginBuildPipelineErrorHandling(t *testing.T) {
 		successCount := 0
 		failureCount := 0
 
-		for i := 0; i < numComponents; i++ {
+		for i := range numComponents {
 			component := &types.ComponentInfo{
 				Name:     fmt.Sprintf("Component%d", i),
 				FilePath: fmt.Sprintf("/test/component%d.templ", i),
@@ -606,6 +606,7 @@ func (m *MockBuildLifecyclePlugin) Initialize(ctx context.Context, config Plugin
 	defer m.mutex.Unlock()
 	m.events = append(m.events, "Initialize")
 	m.initialized = true
+
 	return nil
 }
 
@@ -616,6 +617,7 @@ func (m *MockBuildLifecyclePlugin) PreBuild(
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	m.events = append(m.events, "PreBuild")
+
 	return nil
 }
 
@@ -627,6 +629,7 @@ func (m *MockBuildLifecyclePlugin) PostBuild(
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	m.events = append(m.events, "PostBuild")
+
 	return nil
 }
 
@@ -645,6 +648,7 @@ type MockConcurrentBuildPlugin struct {
 
 func (m *MockConcurrentBuildPlugin) Initialize(ctx context.Context, config PluginConfig) error {
 	m.initialized = true
+
 	return nil
 }
 
@@ -660,6 +664,7 @@ func (m *MockConcurrentBuildPlugin) HandleComponent(
 		component.Metadata = make(map[string]interface{})
 	}
 	component.Metadata["processed_by"] = m.name
+
 	return component, nil
 }
 
@@ -675,6 +680,7 @@ type MockResourceTrackingPlugin struct {
 
 func (m *MockResourceTrackingPlugin) Initialize(ctx context.Context, config PluginConfig) error {
 	m.initialized = true
+
 	return nil
 }
 
@@ -702,6 +708,7 @@ func (m *MockResourceTrackingPlugin) HandleComponent(
 		component.Metadata = make(map[string]interface{})
 	}
 	component.Metadata["memory_tracked"] = true
+
 	return component, nil
 }
 
@@ -715,6 +722,7 @@ type MockCoordinatorPlugin struct {
 
 func (m *MockCoordinatorPlugin) Initialize(ctx context.Context, config PluginConfig) error {
 	m.initialized = true
+
 	return nil
 }
 
@@ -730,11 +738,12 @@ func (m *MockCoordinatorPlugin) HandleComponent(
 	ctx context.Context,
 	component *types.ComponentInfo,
 ) (*types.ComponentInfo, error) {
-	m.SendMessage(fmt.Sprintf("coordinator processing %s", component.Name))
+	m.SendMessage("coordinator processing " + component.Name)
 	if component.Metadata == nil {
 		component.Metadata = make(map[string]interface{})
 	}
 	component.Metadata["coordinated"] = true
+
 	return component, nil
 }
 
@@ -748,6 +757,7 @@ type MockWorkerPlugin struct {
 
 func (m *MockWorkerPlugin) Initialize(ctx context.Context, config PluginConfig) error {
 	m.initialized = true
+
 	return nil
 }
 
@@ -756,12 +766,13 @@ func (m *MockWorkerPlugin) HandleComponent(
 	component *types.ComponentInfo,
 ) (*types.ComponentInfo, error) {
 	if m.coordinator != nil {
-		m.coordinator.SendMessage(fmt.Sprintf("worker processed %s", component.Name))
+		m.coordinator.SendMessage("worker processed " + component.Name)
 	}
 	if component.Metadata == nil {
 		component.Metadata = make(map[string]interface{})
 	}
 	component.Metadata["worker_processed"] = true
+
 	return component, nil
 }
 
@@ -776,6 +787,7 @@ type MockPerformancePlugin struct {
 
 func (m *MockPerformancePlugin) Initialize(ctx context.Context, config PluginConfig) error {
 	m.initialized = true
+
 	return nil
 }
 
@@ -811,6 +823,7 @@ type MockMemoryEfficientPlugin struct {
 
 func (m *MockMemoryEfficientPlugin) Initialize(ctx context.Context, config PluginConfig) error {
 	m.initialized = true
+
 	return nil
 }
 
@@ -834,6 +847,7 @@ func (m *MockMemoryEfficientPlugin) HandleComponent(
 		component.Metadata = make(map[string]interface{})
 	}
 	component.Metadata["memory_efficient"] = true
+
 	return component, nil
 }
 
@@ -849,6 +863,7 @@ type MockIntermittentFailurePlugin struct {
 
 func (m *MockIntermittentFailurePlugin) Initialize(ctx context.Context, config PluginConfig) error {
 	m.initialized = true
+
 	return nil
 }
 
@@ -870,6 +885,7 @@ func (m *MockIntermittentFailurePlugin) HandleComponent(
 		component.Metadata = make(map[string]interface{})
 	}
 	component.Metadata["intermittent_processed"] = true
+
 	return component, nil
 }
 

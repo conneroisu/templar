@@ -197,7 +197,7 @@ func TestWorkerPool(t *testing.T) {
 
 func BenchmarkBuildResultCreation(b *testing.B) {
 	b.Run("Without Pool", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			result := &BuildResult{
 				Component: &types.ComponentInfo{Name: "Test"},
 				Duration:  time.Millisecond,
@@ -212,7 +212,7 @@ func BenchmarkBuildResultCreation(b *testing.B) {
 
 	b.Run("With Pool", func(b *testing.B) {
 		pools := NewObjectPools()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			result := pools.GetBuildResult()
 			result.Component = &types.ComponentInfo{Name: "Test"}
 			result.Duration = time.Millisecond
@@ -226,7 +226,7 @@ func BenchmarkOutputBufferUsage(b *testing.B) {
 	testData := []byte("This is test data for benchmarking buffer allocation patterns")
 
 	b.Run("Without Pool", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			buffer := make([]byte, 0, 1024)
 			buffer = append(buffer, testData...)
 			_ = buffer
@@ -235,7 +235,7 @@ func BenchmarkOutputBufferUsage(b *testing.B) {
 
 	b.Run("With Pool", func(b *testing.B) {
 		pools := NewObjectPools()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			buffer := pools.GetOutputBuffer()
 			buffer = append(buffer, testData...)
 			pools.PutOutputBuffer(buffer)
@@ -250,7 +250,7 @@ func BenchmarkSliceAllocation(b *testing.B) {
 	}
 
 	b.Run("Without Pool", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			slice := make([]*types.ComponentInfo, 0, 50)
 			slice = append(slice, components...)
 			_ = slice
@@ -259,7 +259,7 @@ func BenchmarkSliceAllocation(b *testing.B) {
 
 	b.Run("With Pool", func(b *testing.B) {
 		pools := NewSlicePools()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			slice := pools.GetComponentInfoSlice()
 			slice = append(slice, components...)
 			pools.PutComponentInfoSlice(slice)
@@ -286,11 +286,11 @@ func BenchmarkConcurrentPoolUsage(b *testing.B) {
 	})
 }
 
-// Memory allocation tracking tests
+// Memory allocation tracking tests.
 func BenchmarkMemoryAllocation(b *testing.B) {
 	b.Run("BuildPipeline Without Pools", func(b *testing.B) {
 		b.ReportAllocs()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			// Simulate build pipeline operations without pools
 			result := &BuildResult{
 				Component: &types.ComponentInfo{Name: "Test"},
@@ -304,7 +304,7 @@ func BenchmarkMemoryAllocation(b *testing.B) {
 	b.Run("BuildPipeline With Pools", func(b *testing.B) {
 		b.ReportAllocs()
 		pools := NewObjectPools()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			// Simulate build pipeline operations with pools
 			result := pools.GetBuildResult()
 			result.Component = &types.ComponentInfo{Name: "Test"}
@@ -321,7 +321,7 @@ func BenchmarkWorkerPoolUsage(b *testing.B) {
 	pool := NewWorkerPool()
 
 	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		worker := pool.GetWorker()
 		worker.ID = i
 		worker.State = WorkerBusy

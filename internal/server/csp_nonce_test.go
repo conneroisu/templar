@@ -47,6 +47,7 @@ func TestCSPNonceImplementation(t *testing.T) {
 				// Add unsafe directives when nonce is disabled
 				config.CSP.ScriptSrc = append(config.CSP.ScriptSrc, "'unsafe-inline'")
 				config.CSP.StyleSrc = append(config.CSP.StyleSrc, "'unsafe-inline'")
+
 				return config
 			}(),
 			expectNonce:  false,
@@ -128,7 +129,7 @@ func TestCSPNonceGeneration(t *testing.T) {
 	}))
 
 	// Make multiple requests
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		req := httptest.NewRequest(http.MethodGet, "/test", nil)
 		rec := httptest.NewRecorder()
 		handler.ServeHTTP(rec, req)

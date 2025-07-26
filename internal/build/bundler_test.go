@@ -22,6 +22,7 @@ func createTempDir(t *testing.T) string {
 	tmpDir, err := os.MkdirTemp("", "templar-bundler-test-*")
 	require.NoError(t, err)
 	t.Cleanup(func() { os.RemoveAll(tmpDir) })
+
 	return tmpDir
 }
 
@@ -38,10 +39,11 @@ func createTestFile(t *testing.T, path string, content string) {
 
 func createTestConfig(t *testing.T) *config.Config {
 	t.Helper()
+
 	return &config.Config{} // Basic config for testing
 }
 
-// TestNewAssetBundler validates bundler initialization
+// TestNewAssetBundler validates bundler initialization.
 func TestNewAssetBundler(t *testing.T) {
 	tmpDir := createTempDir(t)
 	cfg := createTestConfig(t)
@@ -59,7 +61,7 @@ func TestNewAssetBundler(t *testing.T) {
 	assert.Equal(t, 0, len(bundler.chunkMap))
 }
 
-// TestDiscoverAssets_EmptyDirectory tests asset discovery in empty directories
+// TestDiscoverAssets_EmptyDirectory tests asset discovery in empty directories.
 func TestDiscoverAssets_EmptyDirectory(t *testing.T) {
 	tmpDir := createTempDir(t)
 	cfg := createTestConfig(t)
@@ -87,7 +89,7 @@ func TestDiscoverAssets_EmptyDirectory(t *testing.T) {
 	assert.Equal(t, 0, len(manifest.Dependencies))
 }
 
-// TestDiscoverAssets_WithAssets tests asset discovery with various file types
+// TestDiscoverAssets_WithAssets tests asset discovery with various file types.
 func TestDiscoverAssets_WithAssets(t *testing.T) {
 	tmpDir := createTempDir(t)
 	cfg := createTestConfig(t)
@@ -154,7 +156,7 @@ func TestDiscoverAssets_WithAssets(t *testing.T) {
 	assert.NotNil(t, manifest.Dependencies)
 }
 
-// TestDiscoverAssets_PathTraversalSecurity tests security against path traversal attacks
+// TestDiscoverAssets_PathTraversalSecurity tests security against path traversal attacks.
 func TestDiscoverAssets_PathTraversalSecurity(t *testing.T) {
 	tmpDir := createTempDir(t)
 	cfg := createTestConfig(t)
@@ -229,7 +231,7 @@ func TestDiscoverAssets_PathTraversalSecurity(t *testing.T) {
 	}
 }
 
-// TestGetAssetType validates asset type classification
+// TestGetAssetType validates asset type classification.
 func TestGetAssetType(t *testing.T) {
 	bundler := NewAssetBundler(createTestConfig(t), createTempDir(t))
 
@@ -276,7 +278,7 @@ func TestGetAssetType(t *testing.T) {
 	}
 }
 
-// TestIsEntryPoint validates entry point detection
+// TestIsEntryPoint validates entry point detection.
 func TestIsEntryPoint(t *testing.T) {
 	bundler := NewAssetBundler(createTestConfig(t), createTempDir(t))
 
@@ -310,7 +312,7 @@ func TestIsEntryPoint(t *testing.T) {
 	}
 }
 
-// TestCalculateFileHash validates file hash generation
+// TestCalculateFileHash validates file hash generation.
 func TestCalculateFileHash(t *testing.T) {
 	tmpDir := createTempDir(t)
 	bundler := NewAssetBundler(createTestConfig(t), tmpDir)
@@ -328,7 +330,7 @@ func TestCalculateFileHash(t *testing.T) {
 	// Calculate expected hash manually
 	hasher := sha256.New()
 	hasher.Write([]byte(testContent))
-	expectedHash := fmt.Sprintf("%x", hasher.Sum(nil))[:12]
+	expectedHash := hex.EncodeToString(hasher.Sum(nil))[:12]
 	assert.Equal(t, expectedHash, hash1)
 
 	// Test that same content produces same hash
@@ -347,7 +349,7 @@ func TestCalculateFileHash(t *testing.T) {
 	assert.Error(t, err)
 }
 
-// TestBundle_JavaScript validates JavaScript bundling
+// TestBundle_JavaScript validates JavaScript bundling.
 func TestBundle_JavaScript(t *testing.T) {
 	tmpDir := createTempDir(t)
 	cfg := createTestConfig(t)
@@ -424,7 +426,7 @@ func TestBundle_JavaScript(t *testing.T) {
 	assert.True(t, bundleExists, "JavaScript bundle should have been created")
 }
 
-// TestBundle_CSS validates CSS bundling
+// TestBundle_CSS validates CSS bundling.
 func TestBundle_CSS(t *testing.T) {
 	tmpDir := createTempDir(t)
 	cfg := createTestConfig(t)
@@ -500,7 +502,7 @@ func TestBundle_CSS(t *testing.T) {
 	assert.True(t, cssBundleExists, "CSS bundle should have been created")
 }
 
-// TestBundle_WithMinification validates minification
+// TestBundle_WithMinification validates minification.
 func TestBundle_WithMinification(t *testing.T) {
 	tmpDir := createTempDir(t)
 	cfg := createTestConfig(t)
@@ -597,7 +599,7 @@ body {
 	}
 }
 
-// TestBundle_WithSourceMaps validates source map generation
+// TestBundle_WithSourceMaps validates source map generation.
 func TestBundle_WithSourceMaps(t *testing.T) {
 	tmpDir := createTempDir(t)
 	cfg := createTestConfig(t)
@@ -664,7 +666,7 @@ func TestBundle_WithSourceMaps(t *testing.T) {
 	}
 }
 
-// TestCopyWithFingerprint validates fingerprinted asset copying
+// TestCopyWithFingerprint validates fingerprinted asset copying.
 func TestCopyWithFingerprint(t *testing.T) {
 	tmpDir := createTempDir(t)
 	outputDir := filepath.Join(tmpDir, "output")
@@ -695,7 +697,7 @@ func TestCopyWithFingerprint(t *testing.T) {
 	assert.Equal(t, testContent, string(copiedContent))
 }
 
-// TestAnalyzeDependencies validates dependency analysis
+// TestAnalyzeDependencies validates dependency analysis.
 func TestAnalyzeDependencies(t *testing.T) {
 	tmpDir := createTempDir(t)
 	bundler := NewAssetBundler(createTestConfig(t), tmpDir)
@@ -751,7 +753,7 @@ body { margin: 0; }
 	assert.Contains(t, cssDeps, "fonts.css")
 }
 
-// TestBundle_SecurityValidation validates security measures in bundling
+// TestBundle_SecurityValidation validates security measures in bundling.
 func TestBundle_SecurityValidation(t *testing.T) {
 	tmpDir := createTempDir(t)
 	cfg := createTestConfig(t)
@@ -809,7 +811,7 @@ document.write('<script>alert("XSS")</script>');
 	}
 }
 
-// TestGenerateBundleName validates bundle name generation
+// TestGenerateBundleName validates bundle name generation.
 func TestGenerateBundleName(t *testing.T) {
 	bundler := NewAssetBundler(createTestConfig(t), createTempDir(t))
 
@@ -827,7 +829,7 @@ func TestGenerateBundleName(t *testing.T) {
 	assert.NotEqual(t, name1, name2)
 }
 
-// TestFindEntryPoints validates entry point detection
+// TestFindEntryPoints validates entry point detection.
 func TestFindEntryPoints(t *testing.T) {
 	bundler := NewAssetBundler(createTestConfig(t), createTempDir(t))
 
@@ -845,7 +847,7 @@ func TestFindEntryPoints(t *testing.T) {
 	assert.Equal(t, "app.js", entryPoints[1].Name)
 }
 
-// TestFindEntryPoints_NoExplicitEntries tests fallback behavior when no entry points are marked
+// TestFindEntryPoints_NoExplicitEntries tests fallback behavior when no entry points are marked.
 func TestFindEntryPoints_NoExplicitEntries(t *testing.T) {
 	bundler := NewAssetBundler(createTestConfig(t), createTempDir(t))
 
@@ -861,7 +863,7 @@ func TestFindEntryPoints_NoExplicitEntries(t *testing.T) {
 	assert.Equal(t, "utils.js", entryPoints[0].Name)
 }
 
-// TestFindEntryPoints_EmptyFiles tests behavior with no files
+// TestFindEntryPoints_EmptyFiles tests behavior with no files.
 func TestFindEntryPoints_EmptyFiles(t *testing.T) {
 	bundler := NewAssetBundler(createTestConfig(t), createTempDir(t))
 
@@ -871,7 +873,7 @@ func TestFindEntryPoints_EmptyFiles(t *testing.T) {
 	assert.Len(t, entryPoints, 0)
 }
 
-// TestBundle_ErrorHandling validates error handling in various scenarios
+// TestBundle_ErrorHandling validates error handling in various scenarios.
 func TestBundle_ErrorHandling(t *testing.T) {
 	tmpDir := createTempDir(t)
 	cfg := createTestConfig(t)
@@ -927,7 +929,7 @@ func TestBundle_ErrorHandling(t *testing.T) {
 	})
 }
 
-// TestProcessOtherAssets validates non-JS/CSS asset processing
+// TestProcessOtherAssets validates non-JS/CSS asset processing.
 func TestProcessOtherAssets(t *testing.T) {
 	tmpDir := createTempDir(t)
 	cfg := createTestConfig(t)
@@ -988,7 +990,7 @@ func TestProcessOtherAssets(t *testing.T) {
 	}
 }
 
-// TestMinifyJS validates JavaScript minification
+// TestMinifyJS validates JavaScript minification.
 func TestMinifyJS(t *testing.T) {
 	bundler := NewAssetBundler(createTestConfig(t), createTempDir(t))
 
@@ -1019,7 +1021,7 @@ var x = 1;
 	assert.Less(t, len(result), len(input))
 }
 
-// TestMinifyCSS validates CSS minification
+// TestMinifyCSS validates CSS minification.
 func TestMinifyCSS(t *testing.T) {
 	bundler := NewAssetBundler(createTestConfig(t), createTempDir(t))
 
@@ -1050,7 +1052,7 @@ body {
 	assert.Less(t, len(result), len(input))
 }
 
-// TestCreateAssetFile validates asset file creation
+// TestCreateAssetFile validates asset file creation.
 func TestCreateAssetFile(t *testing.T) {
 	tmpDir := createTempDir(t)
 	bundler := NewAssetBundler(createTestConfig(t), tmpDir)
@@ -1087,7 +1089,7 @@ func TestCreateAssetFile(t *testing.T) {
 	assert.True(t, mainAsset.IsEntry) // main.js should be detected as entry point
 }
 
-// TestCreateAssetFile_UnsupportedType validates handling of unsupported file types
+// TestCreateAssetFile_UnsupportedType validates handling of unsupported file types.
 func TestCreateAssetFile_UnsupportedType(t *testing.T) {
 	tmpDir := createTempDir(t)
 	bundler := NewAssetBundler(createTestConfig(t), tmpDir)

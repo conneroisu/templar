@@ -5,12 +5,12 @@ import (
 	"strings"
 )
 
-// AccessibilityGuide provides contextual accessibility guidance
+// AccessibilityGuide provides contextual accessibility guidance.
 type AccessibilityGuide struct {
 	guidelines map[string][]GuidanceItem
 }
 
-// GuidanceItem represents a single piece of accessibility guidance
+// GuidanceItem represents a single piece of accessibility guidance.
 type GuidanceItem struct {
 	Title       string            `json:"title"`
 	Description string            `json:"description"`
@@ -22,7 +22,7 @@ type GuidanceItem struct {
 	Tags        []string          `json:"tags"`
 }
 
-// GuidanceExample shows before/after code examples
+// GuidanceExample shows before/after code examples.
 type GuidanceExample struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
@@ -31,25 +31,27 @@ type GuidanceExample struct {
 	Explanation string `json:"explanation"`
 }
 
-// NewAccessibilityGuide creates a new accessibility guidance system
+// NewAccessibilityGuide creates a new accessibility guidance system.
 func NewAccessibilityGuide() *AccessibilityGuide {
 	guide := &AccessibilityGuide{
 		guidelines: make(map[string][]GuidanceItem),
 	}
 
 	guide.loadDefaultGuidelines()
+
 	return guide
 }
 
-// GetGuidanceForRule returns guidance for a specific accessibility rule
+// GetGuidanceForRule returns guidance for a specific accessibility rule.
 func (guide *AccessibilityGuide) GetGuidanceForRule(rule string) []GuidanceItem {
 	if items, exists := guide.guidelines[rule]; exists {
 		return items
 	}
+
 	return []GuidanceItem{}
 }
 
-// GetGuidanceForComponent returns general accessibility guidance for component development
+// GetGuidanceForComponent returns general accessibility guidance for component development.
 func (guide *AccessibilityGuide) GetGuidanceForComponent(componentName string) []GuidanceItem {
 	componentType := strings.ToLower(componentName)
 
@@ -77,12 +79,12 @@ func (guide *AccessibilityGuide) GetGuidanceForComponent(componentName string) [
 	return relevantGuidance
 }
 
-// GetAllGuidelines returns all available guidance organized by category
+// GetAllGuidelines returns all available guidance organized by category.
 func (guide *AccessibilityGuide) GetAllGuidelines() map[string][]GuidanceItem {
 	return guide.guidelines
 }
 
-// GetQuickStartGuide returns essential accessibility guidance for beginners
+// GetQuickStartGuide returns essential accessibility guidance for beginners.
 func (guide *AccessibilityGuide) GetQuickStartGuide() []GuidanceItem {
 	return []GuidanceItem{
 		{
@@ -157,7 +159,7 @@ func (guide *AccessibilityGuide) GetQuickStartGuide() []GuidanceItem {
 	}
 }
 
-// GetBestPracticesGuide returns advanced accessibility best practices
+// GetBestPracticesGuide returns advanced accessibility best practices.
 func (guide *AccessibilityGuide) GetBestPracticesGuide() []GuidanceItem {
 	return []GuidanceItem{
 		{
@@ -204,7 +206,7 @@ func (guide *AccessibilityGuide) GetBestPracticesGuide() []GuidanceItem {
 	}
 }
 
-// loadDefaultGuidelines loads the default accessibility guidelines
+// loadDefaultGuidelines loads the default accessibility guidelines.
 func (guide *AccessibilityGuide) loadDefaultGuidelines() {
 	// Load guidelines for each rule
 	guide.guidelines["missing-alt-text"] = []GuidanceItem{
@@ -328,7 +330,7 @@ func (guide *AccessibilityGuide) loadDefaultGuidelines() {
 	}
 }
 
-// Component-specific guidance methods
+// Component-specific guidance methods.
 func (guide *AccessibilityGuide) getButtonGuidance() []GuidanceItem {
 	return []GuidanceItem{
 		{
@@ -540,7 +542,7 @@ func (guide *AccessibilityGuide) getGeneralGuidance() []GuidanceItem {
 	}
 }
 
-// GetGuidanceText returns guidance formatted as plain text for CLI display
+// GetGuidanceText returns guidance formatted as plain text for CLI display.
 func (guide *AccessibilityGuide) GetGuidanceText(rule string) string {
 	items := guide.GetGuidanceForRule(rule)
 	if len(items) == 0 {
@@ -557,7 +559,7 @@ func (guide *AccessibilityGuide) GetGuidanceText(rule string) string {
 		}
 
 		text.WriteString(fmt.Sprintf("📋 %s\n\n", item.Title))
-		text.WriteString(fmt.Sprintf("%s\n\n", item.Description))
+		text.WriteString(item.Description + "\n\n")
 
 		if len(item.Examples) > 0 {
 			text.WriteString("💡 Examples:\n")
@@ -588,7 +590,7 @@ func (guide *AccessibilityGuide) GetGuidanceText(rule string) string {
 	return text.String()
 }
 
-// GetComponentGuidanceText returns component-specific guidance as text
+// GetComponentGuidanceText returns component-specific guidance as text.
 func (guide *AccessibilityGuide) GetComponentGuidanceText(componentName string) string {
 	items := guide.GetGuidanceForComponent(componentName)
 	if len(items) == 0 {
@@ -614,7 +616,7 @@ func (guide *AccessibilityGuide) GetComponentGuidanceText(componentName string) 
 			for _, item := range items {
 				text.WriteString(fmt.Sprintf("📌 %s\n", item.Title))
 				if item.Description != "" {
-					text.WriteString(fmt.Sprintf("%s\n\n", item.Description))
+					text.WriteString(item.Description + "\n\n")
 				}
 
 				if len(item.Examples) > 0 && len(item.Examples[0].GoodCode) > 0 {

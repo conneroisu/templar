@@ -9,7 +9,7 @@ import (
 	"github.com/conneroisu/templar/internal/registry"
 )
 
-// BenchmarkLargeCodebaseScanning benchmarks scanner performance on large codebases
+// BenchmarkLargeCodebaseScanning benchmarks scanner performance on large codebases.
 func BenchmarkLargeCodebaseScanning(b *testing.B) {
 	sizes := []int{100, 500, 1000, 2000, 5000}
 
@@ -28,7 +28,7 @@ func benchmarkLargeCodebase(b *testing.B, componentCount int) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		reg := registry.NewComponentRegistry()
 		scanner := NewComponentScanner(reg)
 
@@ -46,7 +46,7 @@ func benchmarkLargeCodebase(b *testing.B, componentCount int) {
 	}
 }
 
-// createRealisticCodebase creates a directory structure that mimics a real project
+// createRealisticCodebase creates a directory structure that mimics a real project.
 func createRealisticCodebase(b *testing.B, componentCount int) string {
 	tempDir, err := os.MkdirTemp(".", "templar-large-codebase-*")
 	if err != nil {
@@ -80,7 +80,7 @@ func createRealisticCodebase(b *testing.B, componentCount int) string {
 			count++ // Distribute remainder
 		}
 
-		for i := 0; i < count; i++ {
+		for range count {
 			// Create varied component types
 			var content string
 			switch componentIndex % 6 {
@@ -373,7 +373,7 @@ templ Modal%d(title string, isOpen bool, onClose string) {
 }`, index, index)
 }
 
-// BenchmarkMemoryUsageStability tests memory usage remains stable under load
+// BenchmarkMemoryUsageStability tests memory usage remains stable under load.
 func BenchmarkMemoryUsageStability(b *testing.B) {
 	// Create a large codebase in current directory
 	testDir := createRealisticCodebase(b, 1000)
@@ -382,7 +382,7 @@ func BenchmarkMemoryUsageStability(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		reg := registry.NewComponentRegistry()
 		scanner := NewComponentScanner(reg)
 

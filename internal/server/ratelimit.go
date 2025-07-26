@@ -11,7 +11,7 @@ import (
 	"github.com/conneroisu/templar/internal/logging"
 )
 
-// TokenBucketManager implements token bucket rate limiting for HTTP requests
+// TokenBucketManager implements token bucket rate limiting for HTTP requests.
 type TokenBucketManager struct {
 	buckets     map[string]*TokenBucket
 	bucketMutex sync.RWMutex
@@ -21,7 +21,7 @@ type TokenBucketManager struct {
 	stopCleaner chan struct{}
 }
 
-// TokenBucket represents a token bucket for rate limiting
+// TokenBucket represents a token bucket for rate limiting.
 type TokenBucket struct {
 	tokens     int
 	capacity   int
@@ -31,7 +31,7 @@ type TokenBucket struct {
 	lastAccess time.Time
 }
 
-// RateLimitResult represents the result of a rate limit check
+// RateLimitResult represents the result of a rate limit check.
 type RateLimitResult struct {
 	Allowed    bool
 	Remaining  int
@@ -39,10 +39,10 @@ type RateLimitResult struct {
 	ResetTime  time.Time
 }
 
-// RateLimiter is an alias for TokenBucketManager to maintain backwards compatibility
+// RateLimiter is an alias for TokenBucketManager to maintain backwards compatibility.
 type RateLimiter = TokenBucketManager
 
-// NewRateLimiter creates a new rate limiter
+// NewRateLimiter creates a new rate limiter.
 func NewRateLimiter(config *RateLimitConfig, logger logging.Logger) *TokenBucketManager {
 	if config == nil {
 		config = &RateLimitConfig{
@@ -67,7 +67,7 @@ func NewRateLimiter(config *RateLimitConfig, logger logging.Logger) *TokenBucket
 	return rl
 }
 
-// Check checks if a request is allowed for the given key (usually IP address)
+// Check checks if a request is allowed for the given key (usually IP address).
 func (rl *TokenBucketManager) Check(key string) RateLimitResult {
 	if !rl.config.Enabled {
 		return RateLimitResult{
@@ -77,10 +77,11 @@ func (rl *TokenBucketManager) Check(key string) RateLimitResult {
 	}
 
 	bucket := rl.getBucket(key)
+
 	return bucket.consume()
 }
 
-// getBucket gets or creates a token bucket for the given key
+// getBucket gets or creates a token bucket for the given key.
 func (rl *TokenBucketManager) getBucket(key string) *TokenBucket {
 	rl.bucketMutex.RLock()
 	bucket, exists := rl.buckets[key]
@@ -90,6 +91,7 @@ func (rl *TokenBucketManager) getBucket(key string) *TokenBucket {
 		bucket.mutex.Lock()
 		bucket.lastAccess = time.Now()
 		bucket.mutex.Unlock()
+
 		return bucket
 	}
 
@@ -102,6 +104,7 @@ func (rl *TokenBucketManager) getBucket(key string) *TokenBucket {
 		bucket.mutex.Lock()
 		bucket.lastAccess = time.Now()
 		bucket.mutex.Unlock()
+
 		return bucket
 	}
 
@@ -114,10 +117,11 @@ func (rl *TokenBucketManager) getBucket(key string) *TokenBucket {
 	}
 
 	rl.buckets[key] = bucket
+
 	return bucket
 }
 
-// consume attempts to consume a token from the bucket
+// consume attempts to consume a token from the bucket.
 func (tb *TokenBucket) consume() RateLimitResult {
 	tb.mutex.Lock()
 	defer tb.mutex.Unlock()
@@ -127,6 +131,7 @@ func (tb *TokenBucket) consume() RateLimitResult {
 
 	if tb.tokens > 0 {
 		tb.tokens--
+
 		return RateLimitResult{
 			Allowed:   true,
 			Remaining: tb.tokens,
@@ -147,7 +152,7 @@ func (tb *TokenBucket) consume() RateLimitResult {
 	}
 }
 
-// refill adds tokens to the bucket based on elapsed time
+// refill adds tokens to the bucket based on elapsed time.
 func (tb *TokenBucket) refill(now time.Time) {
 	elapsed := now.Sub(tb.lastRefill)
 	if elapsed < time.Second {
@@ -165,7 +170,7 @@ func (tb *TokenBucket) refill(now time.Time) {
 	}
 }
 
-// cleanupExpiredBuckets removes buckets that haven't been accessed recently
+// cleanupExpiredBuckets removes buckets that haven't been accessed recently.
 func (rl *TokenBucketManager) cleanupExpiredBuckets() {
 	defer close(rl.stopCleaner)
 
@@ -175,12 +180,13 @@ func (rl *TokenBucketManager) cleanupExpiredBuckets() {
 			rl.performCleanup()
 		case <-rl.stopCleaner:
 			rl.cleaner.Stop()
+
 			return
 		}
 	}
 }
 
-// performCleanup removes expired buckets
+// performCleanup removes expired buckets.
 func (rl *TokenBucketManager) performCleanup() {
 	rl.bucketMutex.Lock()
 	defer rl.bucketMutex.Unlock()
@@ -197,7 +203,7 @@ func (rl *TokenBucketManager) performCleanup() {
 	}
 }
 
-// Stop stops the rate limiter and cleanup goroutine
+// Stop stops the rate limiter and cleanup goroutine.
 func (rl *TokenBucketManager) Stop() {
 	select {
 	case rl.stopCleaner <- struct{}{}:
@@ -205,7 +211,7 @@ func (rl *TokenBucketManager) Stop() {
 	}
 }
 
-// GetStats returns rate limiter statistics
+// GetStats returns rate limiter statistics.
 func (rl *TokenBucketManager) GetStats() map[string]interface{} {
 	rl.bucketMutex.RLock()
 	defer rl.bucketMutex.RUnlock()
@@ -220,7 +226,7 @@ func (rl *TokenBucketManager) GetStats() map[string]interface{} {
 	return stats
 }
 
-// RateLimitMiddleware creates HTTP middleware for rate limiting
+// RateLimitMiddleware creates HTTP middleware for rate limiting.
 func RateLimitMiddleware(limiter *TokenBucketManager) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -231,9 +237,9 @@ func RateLimitMiddleware(limiter *TokenBucketManager) func(http.Handler) http.Ha
 			result := limiter.Check(clientIP)
 
 			// Set rate limit headers
-			w.Header().Set("X-RateLimit-Limit", fmt.Sprintf("%d", limiter.config.RequestsPerMinute))
-			w.Header().Set("X-RateLimit-Remaining", fmt.Sprintf("%d", result.Remaining))
-			w.Header().Set("X-RateLimit-Reset", fmt.Sprintf("%d", result.ResetTime.Unix()))
+			w.Header().Set("X-RateLimit-Limit", strconv.Itoa(limiter.config.RequestsPerMinute))
+			w.Header().Set("X-RateLimit-Remaining", strconv.Itoa(result.Remaining))
+			w.Header().Set("X-RateLimit-Reset", strconv.FormatInt(result.ResetTime.Unix(), 10))
 
 			if !result.Allowed {
 				// Set retry after header
@@ -252,6 +258,7 @@ func RateLimitMiddleware(limiter *TokenBucketManager) func(http.Handler) http.Ha
 
 				// Return 429 Too Many Requests
 				http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
+
 				return
 			}
 
@@ -260,7 +267,7 @@ func RateLimitMiddleware(limiter *TokenBucketManager) func(http.Handler) http.Ha
 	}
 }
 
-// AdaptiveRateLimiter implements adaptive rate limiting based on system load
+// AdaptiveRateLimiter implements adaptive rate limiting based on system load.
 type AdaptiveRateLimiter struct {
 	*TokenBucketManager
 	loadThreshold   float64
@@ -272,7 +279,7 @@ type AdaptiveRateLimiter struct {
 	adjustmentMutex sync.RWMutex
 }
 
-// NewAdaptiveRateLimiter creates a new adaptive rate limiter
+// NewAdaptiveRateLimiter creates a new adaptive rate limiter.
 func NewAdaptiveRateLimiter(config *RateLimitConfig, logger logging.Logger) *AdaptiveRateLimiter {
 	baseLimiter := NewRateLimiter(config, logger)
 
@@ -286,13 +293,14 @@ func NewAdaptiveRateLimiter(config *RateLimitConfig, logger logging.Logger) *Ada
 	}
 }
 
-// Check checks rate limit with adaptive adjustment
+// Check checks rate limit with adaptive adjustment.
 func (arl *AdaptiveRateLimiter) Check(key string) RateLimitResult {
 	arl.adjustLimitsIfNeeded()
+
 	return arl.TokenBucketManager.Check(key)
 }
 
-// adjustLimitsIfNeeded adjusts rate limits based on system load
+// adjustLimitsIfNeeded adjusts rate limits based on system load.
 func (arl *AdaptiveRateLimiter) adjustLimitsIfNeeded() {
 	now := time.Now()
 	if now.Sub(arl.lastCheck) < arl.checkInterval {
@@ -339,20 +347,21 @@ func (arl *AdaptiveRateLimiter) adjustLimitsIfNeeded() {
 	arl.lastCheck = now
 }
 
-// GetCurrentLimit returns the current effective rate limit
+// GetCurrentLimit returns the current effective rate limit.
 func (arl *AdaptiveRateLimiter) GetCurrentLimit() int {
 	arl.adjustmentMutex.RLock()
 	defer arl.adjustmentMutex.RUnlock()
+
 	return arl.currentLimit
 }
 
-// IPWhitelist manages IP addresses that bypass rate limiting
+// IPWhitelist manages IP addresses that bypass rate limiting.
 type IPWhitelist struct {
 	whitelist map[string]bool
 	mutex     sync.RWMutex
 }
 
-// NewIPWhitelist creates a new IP whitelist
+// NewIPWhitelist creates a new IP whitelist.
 func NewIPWhitelist(ips []string) *IPWhitelist {
 	whitelist := make(map[string]bool)
 	for _, ip := range ips {
@@ -364,28 +373,29 @@ func NewIPWhitelist(ips []string) *IPWhitelist {
 	}
 }
 
-// IsWhitelisted checks if an IP is whitelisted
+// IsWhitelisted checks if an IP is whitelisted.
 func (w *IPWhitelist) IsWhitelisted(ip string) bool {
 	w.mutex.RLock()
 	defer w.mutex.RUnlock()
+
 	return w.whitelist[ip]
 }
 
-// Add adds an IP to the whitelist
+// Add adds an IP to the whitelist.
 func (w *IPWhitelist) Add(ip string) {
 	w.mutex.Lock()
 	defer w.mutex.Unlock()
 	w.whitelist[ip] = true
 }
 
-// Remove removes an IP from the whitelist
+// Remove removes an IP from the whitelist.
 func (w *IPWhitelist) Remove(ip string) {
 	w.mutex.Lock()
 	defer w.mutex.Unlock()
 	delete(w.whitelist, ip)
 }
 
-// WhitelistMiddleware creates middleware that bypasses rate limiting for whitelisted IPs
+// WhitelistMiddleware creates middleware that bypasses rate limiting for whitelisted IPs.
 func WhitelistMiddleware(
 	whitelist *IPWhitelist,
 	rateLimitHandler http.Handler,
@@ -397,6 +407,7 @@ func WhitelistMiddleware(
 			if whitelist.IsWhitelisted(clientIP) {
 				// Bypass rate limiting
 				next.ServeHTTP(w, r)
+
 				return
 			}
 
@@ -406,7 +417,7 @@ func WhitelistMiddleware(
 	}
 }
 
-// DDoSProtection implements basic DDoS protection
+// DDoSProtection implements basic DDoS protection.
 type DDoSProtection struct {
 	rateLimiter      *TokenBucketManager
 	suspiciousIPs    map[string]*SuspiciousIP
@@ -417,7 +428,7 @@ type DDoSProtection struct {
 	logger           logging.Logger
 }
 
-// SuspiciousIP tracks suspicious IP activity
+// SuspiciousIP tracks suspicious IP activity.
 type SuspiciousIP struct {
 	requestCount int
 	firstSeen    time.Time
@@ -426,7 +437,7 @@ type SuspiciousIP struct {
 	blockUntil   time.Time
 }
 
-// NewDDoSProtection creates a new DDoS protection system
+// NewDDoSProtection creates a new DDoS protection system.
 func NewDDoSProtection(rateLimiter *TokenBucketManager, logger logging.Logger) *DDoSProtection {
 	return &DDoSProtection{
 		rateLimiter:      rateLimiter,
@@ -438,7 +449,7 @@ func NewDDoSProtection(rateLimiter *TokenBucketManager, logger logging.Logger) *
 	}
 }
 
-// CheckRequest checks if a request should be blocked
+// CheckRequest checks if a request should be blocked.
 func (ddos *DDoSProtection) CheckRequest(ip string) bool {
 	ddos.mutex.Lock()
 	defer ddos.mutex.Unlock()
@@ -454,6 +465,7 @@ func (ddos *DDoSProtection) CheckRequest(ip string) bool {
 			lastSeen:     now,
 		}
 		ddos.suspiciousIPs[ip] = suspIP
+
 		return true // Allow first request
 	}
 
@@ -500,7 +512,7 @@ func (ddos *DDoSProtection) CheckRequest(ip string) bool {
 	return true
 }
 
-// GetBlockedIPs returns currently blocked IPs
+// GetBlockedIPs returns currently blocked IPs.
 func (ddos *DDoSProtection) GetBlockedIPs() []string {
 	ddos.mutex.RLock()
 	defer ddos.mutex.RUnlock()
@@ -517,7 +529,7 @@ func (ddos *DDoSProtection) GetBlockedIPs() []string {
 	return blockedIPs
 }
 
-// DDoSMiddleware creates middleware for DDoS protection
+// DDoSMiddleware creates middleware for DDoS protection.
 func DDoSMiddleware(ddos *DDoSProtection) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -525,6 +537,7 @@ func DDoSMiddleware(ddos *DDoSProtection) func(http.Handler) http.Handler {
 
 			if !ddos.CheckRequest(clientIP) {
 				http.Error(w, "Too Many Requests - Blocked", http.StatusTooManyRequests)
+
 				return
 			}
 

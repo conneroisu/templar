@@ -403,10 +403,11 @@ func TestHealthMonitorConcurrency(t *testing.T) {
 	monitor := NewHealthMonitor(logger)
 
 	// Add multiple checks that take some time
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		checkName := fmt.Sprintf("check_%d", i)
 		checker := NewHealthCheckFunc(checkName, false, func(ctx context.Context) HealthCheck {
 			time.Sleep(10 * time.Millisecond) // Simulate work
+
 			return HealthCheck{
 				Name:   checkName,
 				Status: HealthStatusHealthy,
@@ -471,7 +472,7 @@ func BenchmarkHealthCheck(b *testing.B) {
 	monitor.RegisterCheck(checker)
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		monitor.runHealthChecks()
 	}
 }
@@ -481,7 +482,7 @@ func BenchmarkHealthResponseGeneration(b *testing.B) {
 	monitor := NewHealthMonitor(logger)
 
 	// Add several checks
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		checkName := fmt.Sprintf("check_%d", i)
 		checker := NewHealthCheckFunc(checkName, false, func(ctx context.Context) HealthCheck {
 			return HealthCheck{
@@ -495,7 +496,7 @@ func BenchmarkHealthResponseGeneration(b *testing.B) {
 	monitor.runHealthChecks()
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = monitor.GetHealth()
 	}
 }
@@ -506,6 +507,7 @@ func TestHealthCheckDuration(t *testing.T) {
 
 	checker := NewHealthCheckFunc("duration_check", false, func(ctx context.Context) HealthCheck {
 		time.Sleep(20 * time.Millisecond)
+
 		return HealthCheck{
 			Name:   "duration_check",
 			Status: HealthStatusHealthy,

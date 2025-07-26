@@ -6,10 +6,15 @@ After analysis of the 81 initial linting violations, I've optimized the configur
 
 ## Final Linting Status
 
-**Reduced from 81 to 20 issues:**
-- **errcheck: 10 violations** (down from 50) - Critical issues that need attention
-- **staticcheck: 10 violations** (down from 31) - Important performance/logic issues  
+**Current status with `make lint`:**
+- **errcheck: 30 violations** (down from 50) - Critical issues that need attention
+- **staticcheck: 13 violations** (down from 31) - Important performance/logic issues  
 - **govet/ineffassign: 0 violations** - Clean!
+- **Total: 43 issues** (down from 81 original violations)
+
+**With exclusion patterns (using command-line flags):**
+- Can be further reduced to ~20 critical issues by excluding common patterns
+- See command-line configuration below for noise reduction
 
 ## Recommended Command Line Configuration
 

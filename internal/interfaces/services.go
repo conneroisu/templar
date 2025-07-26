@@ -83,7 +83,7 @@ type MetricsCollector interface {
 	ExportMetrics(format MetricFormat) ([]byte, error)
 }
 
-// Timer represents an active timing measurement
+// Timer represents an active timing measurement.
 type Timer interface {
 	// Stop stops the timer and records the duration
 	Stop()
@@ -262,13 +262,13 @@ type SecurityService interface {
 
 // Type definitions for service interfaces
 
-// LogField represents a structured log field
+// LogField represents a structured log field.
 type LogField struct {
 	Key   string
 	Value interface{}
 }
 
-// LogLevel represents logging severity levels
+// LogLevel represents logging severity levels.
 type LogLevel int
 
 const (
@@ -279,13 +279,13 @@ const (
 	LogLevelFatal
 )
 
-// MetricTag represents a metric tag for labeling
+// MetricTag represents a metric tag for labeling.
 type MetricTag struct {
 	Key   string
 	Value string
 }
 
-// MetricInfo represents metadata about a metric
+// MetricInfo represents metadata about a metric.
 type MetricInfo struct {
 	Name        string
 	Type        string
@@ -293,7 +293,7 @@ type MetricInfo struct {
 	Tags        []MetricTag
 }
 
-// MetricFormat represents metric export formats
+// MetricFormat represents metric export formats.
 type MetricFormat int
 
 const (
@@ -302,7 +302,7 @@ const (
 	MetricFormatInfluxDB
 )
 
-// HistogramStats represents statistics from a histogram metric
+// HistogramStats represents statistics from a histogram metric.
 type HistogramStats struct {
 	Count      int64
 	Sum        float64
@@ -312,7 +312,7 @@ type HistogramStats struct {
 	Percentile map[int]float64 // e.g., 50, 95, 99
 }
 
-// HealthResult represents the result of a health check
+// HealthResult represents the result of a health check.
 type HealthResult struct {
 	Status    HealthStatus
 	Details   map[string]interface{}
@@ -321,7 +321,7 @@ type HealthResult struct {
 	Timestamp time.Time
 }
 
-// HealthStatus represents health check status
+// HealthStatus represents health check status.
 type HealthStatus int
 
 const (
@@ -331,10 +331,10 @@ const (
 	HealthStatusUnknown
 )
 
-// HealthCheckFunc is a function that performs a health check
+// HealthCheckFunc is a function that performs a health check.
 type HealthCheckFunc func(ctx context.Context) HealthResult
 
-// EmailMessage represents an email notification
+// EmailMessage represents an email notification.
 type EmailMessage struct {
 	To      []string
 	CC      []string
@@ -345,13 +345,13 @@ type EmailMessage struct {
 	Headers map[string]string
 }
 
-// SMSMessage represents an SMS notification
+// SMSMessage represents an SMS notification.
 type SMSMessage struct {
 	To   string
 	Body string
 }
 
-// WebhookMessage represents a webhook notification
+// WebhookMessage represents a webhook notification.
 type WebhookMessage struct {
 	URL     string
 	Method  string
@@ -360,7 +360,7 @@ type WebhookMessage struct {
 	Timeout time.Duration
 }
 
-// Notification represents a generic notification
+// Notification represents a generic notification.
 type Notification struct {
 	ID       string
 	Type     NotificationType
@@ -368,7 +368,7 @@ type Notification struct {
 	Message  interface{}
 }
 
-// NotificationType represents the type of notification
+// NotificationType represents the type of notification.
 type NotificationType int
 
 const (
@@ -377,7 +377,7 @@ const (
 	NotificationTypeWebhook
 )
 
-// NotificationPriority represents notification priority
+// NotificationPriority represents notification priority.
 type NotificationPriority int
 
 const (
@@ -387,7 +387,7 @@ const (
 	NotificationPriorityCritical
 )
 
-// DeliveryStatus represents notification delivery status
+// DeliveryStatus represents notification delivery status.
 type DeliveryStatus struct {
 	Status    DeliveryState
 	Timestamp time.Time
@@ -395,7 +395,7 @@ type DeliveryStatus struct {
 	Attempts  int
 }
 
-// DeliveryState represents the state of notification delivery
+// DeliveryState represents the state of notification delivery.
 type DeliveryState int
 
 const (
@@ -405,7 +405,7 @@ const (
 	DeliveryStateRetrying
 )
 
-// NotificationTemplate represents a notification template
+// NotificationTemplate represents a notification template.
 type NotificationTemplate struct {
 	Name      string
 	Type      NotificationType
@@ -415,7 +415,7 @@ type NotificationTemplate struct {
 	IsHTML    bool
 }
 
-// CacheServiceStats represents cache performance statistics
+// CacheServiceStats represents cache performance statistics.
 type CacheServiceStats struct {
 	Hits      int64
 	Misses    int64
@@ -429,7 +429,7 @@ type CacheServiceStats struct {
 	MaxMemory int64
 }
 
-// FileInfo represents file metadata
+// FileInfo represents file metadata.
 type FileInfo struct {
 	Name    string
 	Size    int64
@@ -438,21 +438,21 @@ type FileInfo struct {
 	IsDir   bool
 }
 
-// FileEvent represents a file system event
+// FileEvent represents a file system event.
 type FileEvent struct {
 	Path      string
 	Operation FileOperation
 	Timestamp time.Time
 }
 
-// TempFile represents a temporary file
+// TempFile represents a temporary file.
 type TempFile interface {
 	io.ReadWriteCloser
 	Name() string
 	Remove() error
 }
 
-// Credentials represents authentication credentials
+// Credentials represents authentication credentials.
 type Credentials struct {
 	Username string
 	Password string
@@ -460,7 +460,7 @@ type Credentials struct {
 	Type     CredentialType
 }
 
-// CredentialType represents the type of credentials
+// CredentialType represents the type of credentials.
 type CredentialType int
 
 const (
@@ -470,7 +470,7 @@ const (
 	CredentialTypeCertificate
 )
 
-// AuthResult represents authentication result
+// AuthResult represents authentication result.
 type AuthResult struct {
 	Success   bool
 	User      User
@@ -479,7 +479,7 @@ type AuthResult struct {
 	Error     error
 }
 
-// User represents an authenticated user
+// User represents an authenticated user.
 type User struct {
 	ID       string
 	Username string
@@ -489,7 +489,7 @@ type User struct {
 	Metadata map[string]interface{}
 }
 
-// SecurityEvent represents a security audit event
+// SecurityEvent represents a security audit event.
 type SecurityEvent struct {
 	Type      SecurityEventType
 	User      string
@@ -502,7 +502,7 @@ type SecurityEvent struct {
 	Details   map[string]interface{}
 }
 
-// SecurityEventType represents the type of security event
+// SecurityEventType represents the type of security event.
 type SecurityEventType int
 
 const (

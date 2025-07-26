@@ -31,10 +31,10 @@ import (
 	"github.com/conneroisu/templar/internal/validation"
 )
 
-// contextKey represents a context key type for type safety
+// contextKey represents a context key type for type safety.
 type contextKey string
 
-// nonceContextKey is used to store CSP nonce values in request context
+// nonceContextKey is used to store CSP nonce values in request context.
 const nonceContextKey contextKey = "csp_nonce"
 
 // SecurityConfig holds comprehensive security configuration for HTTP middleware
@@ -67,7 +67,7 @@ type SecurityConfig struct {
 	Logger logging.Logger
 }
 
-// CSPConfig holds Content Security Policy configuration
+// CSPConfig holds Content Security Policy configuration.
 type CSPConfig struct {
 	DefaultSrc              []string
 	ScriptSrc               []string
@@ -91,21 +91,21 @@ type CSPConfig struct {
 	ReportTo                string
 }
 
-// HSTSConfig holds HTTP Strict Transport Security configuration
+// HSTSConfig holds HTTP Strict Transport Security configuration.
 type HSTSConfig struct {
 	MaxAge            int
 	IncludeSubDomains bool
 	Preload           bool
 }
 
-// XSSProtectionConfig holds X-XSS-Protection configuration
+// XSSProtectionConfig holds X-XSS-Protection configuration.
 type XSSProtectionConfig struct {
 	Enabled   bool
 	Mode      string // "block" or "report"
 	ReportURI string
 }
 
-// PermissionsPolicyConfig holds Permissions Policy configuration
+// PermissionsPolicyConfig holds Permissions Policy configuration.
 type PermissionsPolicyConfig struct {
 	Geolocation       []string
 	Camera            []string
@@ -120,7 +120,7 @@ type PermissionsPolicyConfig struct {
 	Fullscreen        []string
 }
 
-// RateLimitConfig holds rate limiting configuration
+// RateLimitConfig holds rate limiting configuration.
 type RateLimitConfig struct {
 	RequestsPerMinute int
 	BurstSize         int
@@ -128,7 +128,7 @@ type RateLimitConfig struct {
 	Enabled           bool
 }
 
-// DefaultSecurityConfig returns a secure default configuration
+// DefaultSecurityConfig returns a secure default configuration.
 func DefaultSecurityConfig() *SecurityConfig {
 	return &SecurityConfig{
 		CSP: &CSPConfig{
@@ -188,7 +188,7 @@ func DefaultSecurityConfig() *SecurityConfig {
 	}
 }
 
-// DevelopmentSecurityConfig returns a more permissive config for development
+// DevelopmentSecurityConfig returns a more permissive config for development.
 func DevelopmentSecurityConfig() *SecurityConfig {
 	config := DefaultSecurityConfig()
 
@@ -217,7 +217,7 @@ func DevelopmentSecurityConfig() *SecurityConfig {
 	return config
 }
 
-// ProductionSecurityConfig returns a strict config for production
+// ProductionSecurityConfig returns a strict config for production.
 func ProductionSecurityConfig() *SecurityConfig {
 	config := DefaultSecurityConfig()
 
@@ -251,24 +251,26 @@ func ProductionSecurityConfig() *SecurityConfig {
 	return config
 }
 
-// generateNonce generates a cryptographically secure random nonce
+// generateNonce generates a cryptographically secure random nonce.
 func generateNonce() (string, error) {
 	bytes := make([]byte, 16)
 	if _, err := rand.Read(bytes); err != nil {
 		return "", fmt.Errorf("failed to generate nonce: %w", err)
 	}
+
 	return base64.StdEncoding.EncodeToString(bytes), nil
 }
 
-// GetNonceFromContext retrieves the CSP nonce from the request context
+// GetNonceFromContext retrieves the CSP nonce from the request context.
 func GetNonceFromContext(ctx context.Context) string {
 	if nonce, ok := ctx.Value(nonceContextKey).(string); ok {
 		return nonce
 	}
+
 	return ""
 }
 
-// CSPViolationReport represents a CSP violation report
+// CSPViolationReport represents a CSP violation report.
 type CSPViolationReport struct {
 	CSPReport struct {
 		DocumentURI        string `json:"document-uri"`
@@ -284,11 +286,12 @@ type CSPViolationReport struct {
 	} `json:"csp-report"`
 }
 
-// CSPViolationHandler handles CSP violation reports
+// CSPViolationHandler handles CSP violation reports.
 func CSPViolationHandler(logger logging.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+
 			return
 		}
 
@@ -309,6 +312,7 @@ func CSPViolationHandler(logger logging.Logger) http.HandlerFunc {
 				)
 			}
 			http.Error(w, "Bad Request", http.StatusBadRequest)
+
 			return
 		}
 
@@ -340,7 +344,7 @@ func CSPViolationHandler(logger logging.Logger) http.HandlerFunc {
 	}
 }
 
-// SecurityMiddleware creates a security middleware with the given configuration
+// SecurityMiddleware creates a security middleware with the given configuration.
 func SecurityMiddleware(secConfig *SecurityConfig) func(http.Handler) http.Handler {
 	if secConfig == nil {
 		secConfig = DefaultSecurityConfig()
@@ -358,6 +362,7 @@ func SecurityMiddleware(secConfig *SecurityConfig) func(http.Handler) http.Handl
 						secConfig.Logger.Error(r.Context(), err, "Failed to generate CSP nonce")
 					}
 					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+
 					return
 				}
 				// Add nonce to request context
@@ -384,6 +389,7 @@ func SecurityMiddleware(secConfig *SecurityConfig) func(http.Handler) http.Handl
 					)
 				}
 				http.Error(w, "Forbidden", http.StatusForbidden)
+
 				return
 			}
 
@@ -411,6 +417,7 @@ func SecurityMiddleware(secConfig *SecurityConfig) func(http.Handler) http.Handl
 							"ip", getClientIP(r))
 					}
 					http.Error(w, "Forbidden", http.StatusForbidden)
+
 					return
 				}
 			}
@@ -420,7 +427,7 @@ func SecurityMiddleware(secConfig *SecurityConfig) func(http.Handler) http.Handl
 	}
 }
 
-// applySecurityHeaders applies all configured security headers
+// applySecurityHeaders applies all configured security headers.
 func applySecurityHeaders(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -477,7 +484,7 @@ func applySecurityHeaders(
 	w.Header().Set("Cross-Origin-Resource-Policy", "same-origin")
 }
 
-// buildCSPHeader constructs the Content-Security-Policy header value
+// buildCSPHeader constructs the Content-Security-Policy header value.
 func buildCSPHeader(csp *CSPConfig, nonce string) string {
 	var directives []string
 
@@ -529,22 +536,22 @@ func buildCSPHeader(csp *CSPConfig, nonce string) string {
 	if len(csp.RequireSRIFor) > 0 {
 		directives = append(
 			directives,
-			fmt.Sprintf("require-sri-for %s", strings.Join(csp.RequireSRIFor, " ")),
+			"require-sri-for "+strings.Join(csp.RequireSRIFor, " "),
 		)
 	}
 
 	if csp.ReportURI != "" {
-		directives = append(directives, fmt.Sprintf("report-uri %s", csp.ReportURI))
+		directives = append(directives, "report-uri "+csp.ReportURI)
 	}
 
 	if csp.ReportTo != "" {
-		directives = append(directives, fmt.Sprintf("report-to %s", csp.ReportTo))
+		directives = append(directives, "report-to "+csp.ReportTo)
 	}
 
 	return strings.Join(directives, "; ")
 }
 
-// buildHSTSHeader constructs the Strict-Transport-Security header value
+// buildHSTSHeader constructs the Strict-Transport-Security header value.
 func buildHSTSHeader(hsts *HSTSConfig) string {
 	header := fmt.Sprintf("max-age=%d", hsts.MaxAge)
 
@@ -559,7 +566,7 @@ func buildHSTSHeader(hsts *HSTSConfig) string {
 	return header
 }
 
-// buildXSSProtectionHeader constructs the X-XSS-Protection header value
+// buildXSSProtectionHeader constructs the X-XSS-Protection header value.
 func buildXSSProtectionHeader(xss *XSSProtectionConfig) string {
 	if !xss.Enabled {
 		return "0"
@@ -570,20 +577,20 @@ func buildXSSProtectionHeader(xss *XSSProtectionConfig) string {
 	if xss.Mode == "block" {
 		header += "; mode=block"
 	} else if xss.Mode == "report" && xss.ReportURI != "" {
-		header += fmt.Sprintf("; report=%s", xss.ReportURI)
+		header += "; report=" + xss.ReportURI
 	}
 
 	return header
 }
 
-// buildPermissionsPolicyHeader constructs the Permissions-Policy header value
+// buildPermissionsPolicyHeader constructs the Permissions-Policy header value.
 func buildPermissionsPolicyHeader(pp *PermissionsPolicyConfig) string {
 	var policies []string
 
 	// Helper function to add policy
 	addPolicy := func(name string, values []string) {
 		if len(values) == 0 {
-			policies = append(policies, fmt.Sprintf("%s=()", name))
+			policies = append(policies, name+"=()")
 		} else {
 			policies = append(policies, fmt.Sprintf("%s=(%s)", name, strings.Join(values, " ")))
 		}
@@ -607,13 +614,14 @@ func buildPermissionsPolicyHeader(pp *PermissionsPolicyConfig) string {
 // Note: isBlockedUserAgent and isValidOrigin functions have been replaced
 // with centralized validation functions in the validation package.
 
-// getClientIP extracts the client IP address from the request
+// getClientIP extracts the client IP address from the request.
 func getClientIP(r *http.Request) string {
 	// Check X-Forwarded-For header (proxy/load balancer)
 	xff := r.Header.Get("X-Forwarded-For")
 	if xff != "" {
 		// Take the first IP in the list
 		ips := strings.Split(xff, ",")
+
 		return strings.TrimSpace(ips[0])
 	}
 
@@ -632,7 +640,7 @@ func getClientIP(r *http.Request) string {
 	return ip
 }
 
-// SecurityConfigFromAppConfig creates security config from application config
+// SecurityConfigFromAppConfig creates security config from application config.
 func SecurityConfigFromAppConfig(cfg *config.Config) *SecurityConfig {
 	switch cfg.Server.Environment {
 	case "production":
@@ -644,13 +652,14 @@ func SecurityConfigFromAppConfig(cfg *config.Config) *SecurityConfig {
 	return DefaultSecurityConfig()
 }
 
-// AuthMiddleware provides authentication for the development server
+// AuthMiddleware provides authentication for the development server.
 func AuthMiddleware(authConfig *config.AuthConfig) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Skip authentication if disabled
 			if !authConfig.Enabled {
 				next.ServeHTTP(w, r)
+
 				return
 			}
 
@@ -658,12 +667,14 @@ func AuthMiddleware(authConfig *config.AuthConfig) func(http.Handler) http.Handl
 			clientIP := getClientIP(r)
 			if authConfig.LocalhostBypass && isLocalhost(clientIP) {
 				next.ServeHTTP(w, r)
+
 				return
 			}
 
 			// Check IP allowlist
 			if len(authConfig.AllowedIPs) > 0 && !isIPAllowed(clientIP, authConfig.AllowedIPs) {
 				http.Error(w, "Access denied from this IP", http.StatusForbidden)
+
 				return
 			}
 
@@ -671,6 +682,7 @@ func AuthMiddleware(authConfig *config.AuthConfig) func(http.Handler) http.Handl
 			if authConfig.RequireAuth && !isLocalhost(clientIP) {
 				if !authenticateRequest(r, authConfig) {
 					requireAuth(w, authConfig.Mode)
+
 					return
 				}
 			}
@@ -680,7 +692,7 @@ func AuthMiddleware(authConfig *config.AuthConfig) func(http.Handler) http.Handl
 	}
 }
 
-// authenticateRequest validates the request authentication
+// authenticateRequest validates the request authentication.
 func authenticateRequest(r *http.Request, authConfig *config.AuthConfig) bool {
 	switch authConfig.Mode {
 	case "token":
@@ -694,7 +706,7 @@ func authenticateRequest(r *http.Request, authConfig *config.AuthConfig) bool {
 	}
 }
 
-// authenticateToken validates token-based authentication
+// authenticateToken validates token-based authentication.
 func authenticateToken(r *http.Request, expectedToken string) bool {
 	if expectedToken == "" {
 		return false
@@ -704,6 +716,7 @@ func authenticateToken(r *http.Request, expectedToken string) bool {
 	authHeader := r.Header.Get("Authorization")
 	if strings.HasPrefix(authHeader, "Bearer ") {
 		token := strings.TrimPrefix(authHeader, "Bearer ")
+
 		return token == expectedToken
 	}
 
@@ -716,7 +729,7 @@ func authenticateToken(r *http.Request, expectedToken string) bool {
 	return false
 }
 
-// authenticateBasic validates basic authentication
+// authenticateBasic validates basic authentication.
 func authenticateBasic(r *http.Request, expectedUsername, expectedPassword string) bool {
 	if expectedUsername == "" || expectedPassword == "" {
 		return false
@@ -730,7 +743,7 @@ func authenticateBasic(r *http.Request, expectedUsername, expectedPassword strin
 	return username == expectedUsername && password == expectedPassword
 }
 
-// requireAuth sends authentication required response
+// requireAuth sends authentication required response.
 func requireAuth(w http.ResponseWriter, mode string) {
 	switch mode {
 	case "basic":
@@ -744,7 +757,7 @@ func requireAuth(w http.ResponseWriter, mode string) {
 	}
 }
 
-// isLocalhost checks if the IP address is localhost
+// isLocalhost checks if the IP address is localhost.
 func isLocalhost(ip string) bool {
 	// Remove IPv6 brackets if present
 	ip = strings.Trim(ip, "[]")
@@ -752,7 +765,7 @@ func isLocalhost(ip string) bool {
 	return ip == "127.0.0.1" || ip == "::1" || ip == "localhost"
 }
 
-// isIPAllowed checks if the IP is in the allowed list
+// isIPAllowed checks if the IP is in the allowed list.
 func isIPAllowed(clientIP string, allowedIPs []string) bool {
 	// Remove IPv6 brackets if present
 	clientIP = strings.Trim(clientIP, "[]")
@@ -763,5 +776,6 @@ func isIPAllowed(clientIP string, allowedIPs []string) bool {
 			return true
 		}
 	}
+
 	return false
 }

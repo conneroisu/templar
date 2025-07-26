@@ -142,7 +142,7 @@ func TestErrorCollectorClear(t *testing.T) {
 	collector := NewErrorCollector()
 
 	// Add some errors
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		err := BuildError{
 			Message:  "test error",
 			Severity: ErrorSeverityError,
@@ -414,7 +414,7 @@ func TestErrorCollectorConcurrency(t *testing.T) {
 	done := make(chan bool, 10)
 
 	// Add errors concurrently
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		go func(i int) {
 			err := BuildError{
 				Component: fmt.Sprintf("Component%d", i),
@@ -427,7 +427,7 @@ func TestErrorCollectorConcurrency(t *testing.T) {
 	}
 
 	// Wait for all goroutines to complete
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		<-done
 	}
 

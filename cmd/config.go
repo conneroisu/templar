@@ -126,11 +126,13 @@ func runConfigWizard(cmd *cobra.Command, args []string) error {
 		var response string
 		if _, err := fmt.Scanln(&response); err != nil {
 			fmt.Printf("Failed to read input: %v\n", err)
+
 			return err
 		}
 
 		if response != "y" && response != "Y" && response != "yes" && response != "Yes" {
 			fmt.Println("Configuration wizard cancelled.")
+
 			return nil
 		}
 	}
@@ -148,7 +150,8 @@ func runConfigWizard(cmd *cobra.Command, args []string) error {
 	if validation.HasErrors() {
 		fmt.Println("\n❌ Configuration validation failed:")
 		fmt.Print(validation.String())
-		return fmt.Errorf("generated configuration is invalid")
+
+		return errors.New("generated configuration is invalid")
 	}
 
 	if validation.HasWarnings() {
@@ -159,11 +162,13 @@ func runConfigWizard(cmd *cobra.Command, args []string) error {
 		var response string
 		if _, err := fmt.Scanln(&response); err != nil {
 			fmt.Printf("Failed to read input: %v\n", err)
+
 			return err
 		}
 
 		if response != "y" && response != "Y" && response != "yes" && response != "Yes" {
 			fmt.Println("Configuration wizard cancelled.")
+
 			return nil
 		}
 	}
@@ -191,7 +196,7 @@ func runConfigValidate(cmd *cobra.Command, args []string) error {
 		if _, err := os.Stat(".templar.yml"); err == nil {
 			targetFile = ".templar.yml"
 		} else {
-			return fmt.Errorf("no configuration file found. Use --file to specify a config file " +
+			return errors.New("no configuration file found. Use --file to specify a config file " +
 				"or run 'templar config wizard' to create one")
 		}
 	}
@@ -224,12 +229,14 @@ func runConfigValidate(cmd *cobra.Command, args []string) error {
 	if validation.Valid && !validation.HasWarnings() {
 		fmt.Println("✅ Configuration is valid!")
 		fmt.Println("No errors or warnings found.")
+
 		return nil
 	}
 
 	// Print validation results
 	if validation.HasErrors() {
 		fmt.Print(validation.String())
+
 		return fmt.Errorf("configuration validation failed with %d errors", len(validation.Errors))
 	}
 

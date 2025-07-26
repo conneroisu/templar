@@ -10,7 +10,7 @@ import (
 	"math"
 )
 
-// StatisticalResult contains detailed statistical analysis results
+// StatisticalResult contains detailed statistical analysis results.
 type StatisticalResult struct {
 	TStatistic         float64            `json:"t_statistic"`
 	DegreesOfFreedom   int                `json:"degrees_of_freedom"`
@@ -22,14 +22,14 @@ type StatisticalResult struct {
 	TestType           string             `json:"test_type"` // "t-test" or "z-test"
 }
 
-// ConfidenceInterval represents a statistical confidence interval
+// ConfidenceInterval represents a statistical confidence interval.
 type ConfidenceInterval struct {
 	Lower float64 `json:"lower"`
 	Upper float64 `json:"upper"`
 	Level float64 `json:"level"` // e.g., 0.95 for 95% confidence
 }
 
-// MultipleComparisonCorrection applies corrections for multiple testing
+// MultipleComparisonCorrection applies corrections for multiple testing.
 type MultipleComparisonCorrection struct {
 	Method         string  `json:"method"` // "bonferroni", "benjamini-hochberg"
 	NumComparisons int     `json:"num_comparisons"`
@@ -37,7 +37,7 @@ type MultipleComparisonCorrection struct {
 	OriginalAlpha  float64 `json:"original_alpha"`
 }
 
-// StatisticalValidator provides rigorous statistical analysis for performance regression
+// StatisticalValidator provides rigorous statistical analysis for performance regression.
 type StatisticalValidator struct {
 	confidenceLevel       float64
 	minSampleSize         int
@@ -45,7 +45,7 @@ type StatisticalValidator struct {
 	correctionMethod      string
 }
 
-// NewStatisticalValidator creates a new validator with proper statistical configuration
+// NewStatisticalValidator creates a new validator with proper statistical configuration.
 func NewStatisticalValidator(confidenceLevel float64, minSampleSize int) *StatisticalValidator {
 	return &StatisticalValidator{
 		confidenceLevel:       confidenceLevel,
@@ -55,13 +55,12 @@ func NewStatisticalValidator(confidenceLevel float64, minSampleSize int) *Statis
 	}
 }
 
-// CalculateStatisticalConfidence performs rigorous statistical analysis
+// CalculateStatisticalConfidence performs rigorous statistical analysis.
 func (sv *StatisticalValidator) CalculateStatisticalConfidence(
 	currentValue float64,
 	baseline *PerformanceBaseline,
 	numComparisons int,
 ) StatisticalResult {
-
 	// Handle edge cases
 	if len(baseline.Samples) == 0 {
 		return StatisticalResult{
@@ -197,7 +196,7 @@ func (sv *StatisticalValidator) CalculateStatisticalConfidence(
 }
 
 // calculateTPValue calculates p-value using t-distribution approximation
-// This is a simplified implementation - for production use, consider a statistics library
+// This is a simplified implementation - for production use, consider a statistics library.
 func (sv *StatisticalValidator) calculateTPValue(tStat float64, df int) float64 {
 	// Simplified t-distribution p-value calculation
 	// For more accuracy, use a proper statistics library like gonum.org/v1/gonum/stat
@@ -222,6 +221,7 @@ func (sv *StatisticalValidator) calculateTPValue(tStat float64, df int) float64 
 	if df == 1 {
 		// Special case: Cauchy distribution (t with df=1)
 		pValue := 2.0 * (1.0 / math.Pi) * math.Atan(1.0/tStat)
+
 		return math.Max(0.001, pValue) // Minimum p-value to avoid overconfidence
 	}
 
@@ -233,7 +233,7 @@ func (sv *StatisticalValidator) calculateTPValue(tStat float64, df int) float64 
 	return sv.calculateZPValue(normalizedT)
 }
 
-// calculateZPValue calculates p-value using standard normal distribution
+// calculateZPValue calculates p-value using standard normal distribution.
 func (sv *StatisticalValidator) calculateZPValue(zStat float64) float64 {
 	// Two-tailed p-value for standard normal distribution
 	// Using complementary error function approximation
@@ -265,23 +265,24 @@ func (sv *StatisticalValidator) calculateZPValue(zStat float64) float64 {
 
 		// Convert to p-value (two-tailed)
 		pValue := erfcApprox
+
 		return math.Max(1e-10, math.Min(1.0, pValue))
 	} else {
 		// For large z-scores, use asymptotic approximation
 		// P(|Z| > z) ≈ 2 * φ(z) / z * exp(-z²/2) for large z
 		// This gives more reasonable p-values for extreme cases
 		asymptotic := (2.0 / (absZ * math.Sqrt(2.0*math.Pi))) * math.Exp(-0.5*absZ*absZ)
+
 		return math.Max(1e-10, math.Min(1.0, asymptotic))
 	}
 }
 
-// calculateConfidenceInterval calculates confidence interval for the mean difference
+// calculateConfidenceInterval calculates confidence interval for the mean difference.
 func (sv *StatisticalValidator) calculateConfidenceInterval(
 	meanDiff, standardError float64,
 	degreesOfFreedom int,
 	confidenceLevel float64,
 ) ConfidenceInterval {
-
 	// Calculate critical value (t-score)
 	_ = 1.0 - confidenceLevel // alpha (not used in this simplified implementation)
 
@@ -327,12 +328,12 @@ func (sv *StatisticalValidator) calculateConfidenceInterval(
 	}
 }
 
-// IsStatisticallySignificant determines if a regression is statistically significant
+// IsStatisticallySignificant determines if a regression is statistically significant.
 func (sv *StatisticalValidator) IsStatisticallySignificant(result StatisticalResult) bool {
 	return result.Confidence >= sv.confidenceLevel
 }
 
-// ClassifyEffectSize classifies the practical significance using Cohen's d
+// ClassifyEffectSize classifies the practical significance using Cohen's d.
 func (sv *StatisticalValidator) ClassifyEffectSize(effectSize float64) string {
 	absEffect := math.Abs(effectSize)
 
@@ -350,7 +351,7 @@ func (sv *StatisticalValidator) ClassifyEffectSize(effectSize float64) string {
 	}
 }
 
-// CalculatePowerAnalysis estimates statistical power for detecting regressions
+// CalculatePowerAnalysis estimates statistical power for detecting regressions.
 func (sv *StatisticalValidator) CalculatePowerAnalysis(
 	sampleSize int,
 	effectSize float64,
@@ -376,5 +377,6 @@ func (sv *StatisticalValidator) CalculatePowerAnalysis(
 
 	// Linear approximation for moderate effects
 	power := 0.1 + 0.85*(ncp-0.5)/3.5
+
 	return math.Max(0.05, math.Min(0.99, power))
 }

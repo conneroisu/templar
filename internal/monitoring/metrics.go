@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-// MetricType represents different types of metrics
+// MetricType represents different types of metrics.
 type MetricType string
 
 const (
@@ -22,7 +22,7 @@ const (
 	MetricTypeSummary   MetricType = "summary"
 )
 
-// Metric represents a single metric measurement
+// Metric represents a single metric measurement.
 type Metric struct {
 	Name      string                 `json:"name"`
 	Type      MetricType             `json:"type"`
@@ -34,7 +34,7 @@ type Metric struct {
 	Tags      map[string]interface{} `json:"tags,omitempty"`
 }
 
-// MetricsCollector collects and manages application metrics
+// MetricsCollector collects and manages application metrics.
 type MetricsCollector struct {
 	metrics     map[string]*Metric
 	counters    map[string]*int64
@@ -50,13 +50,13 @@ type MetricsCollector struct {
 	wg          sync.WaitGroup
 }
 
-// MetricCollector interface for custom metric collectors
+// MetricCollector interface for custom metric collectors.
 type MetricCollector interface {
 	Collect() []Metric
 	Name() string
 }
 
-// Histogram tracks distribution of values
+// Histogram tracks distribution of values.
 type Histogram struct {
 	buckets map[float64]int64
 	count   int64
@@ -64,12 +64,12 @@ type Histogram struct {
 	mutex   sync.RWMutex
 }
 
-// HistogramBuckets defines histogram bucket boundaries
+// HistogramBuckets defines histogram bucket boundaries.
 var DefaultHistogramBuckets = []float64{
 	0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10,
 }
 
-// NewMetricsCollector creates a new metrics collector
+// NewMetricsCollector creates a new metrics collector.
 func NewMetricsCollector(prefix string, outputPath string) *MetricsCollector {
 	return &MetricsCollector{
 		metrics:     make(map[string]*Metric),
@@ -84,7 +84,7 @@ func NewMetricsCollector(prefix string, outputPath string) *MetricsCollector {
 	}
 }
 
-// Start begins background metric collection and flushing
+// Start begins background metric collection and flushing.
 func (mc *MetricsCollector) Start() {
 	if !mc.enabled {
 		return
@@ -94,7 +94,7 @@ func (mc *MetricsCollector) Start() {
 	go mc.flushLoop()
 }
 
-// Stop stops the metrics collector
+// Stop stops the metrics collector.
 func (mc *MetricsCollector) Stop() {
 	// Only close if not already closed
 	select {
@@ -106,7 +106,7 @@ func (mc *MetricsCollector) Stop() {
 	mc.wg.Wait()
 }
 
-// flushLoop periodically flushes metrics to disk
+// flushLoop periodically flushes metrics to disk.
 func (mc *MetricsCollector) flushLoop() {
 	defer mc.wg.Done()
 
@@ -119,12 +119,13 @@ func (mc *MetricsCollector) flushLoop() {
 			mc.FlushMetrics()
 		case <-mc.stopChan:
 			mc.FlushMetrics() // Final flush
+
 			return
 		}
 	}
 }
 
-// Counter increments a counter metric
+// Counter increments a counter metric.
 func (mc *MetricsCollector) Counter(name string, labels map[string]string) {
 	if !mc.enabled {
 		return
@@ -150,7 +151,7 @@ func (mc *MetricsCollector) Counter(name string, labels map[string]string) {
 	}
 }
 
-// CounterAdd adds a value to a counter metric
+// CounterAdd adds a value to a counter metric.
 func (mc *MetricsCollector) CounterAdd(name string, value float64, labels map[string]string) {
 	if !mc.enabled {
 		return
@@ -176,7 +177,7 @@ func (mc *MetricsCollector) CounterAdd(name string, value float64, labels map[st
 	}
 }
 
-// Gauge sets a gauge metric value
+// Gauge sets a gauge metric value.
 func (mc *MetricsCollector) Gauge(name string, value float64, labels map[string]string) {
 	if !mc.enabled {
 		return
@@ -202,7 +203,7 @@ func (mc *MetricsCollector) Gauge(name string, value float64, labels map[string]
 	}
 }
 
-// Histogram observes a value in a histogram
+// Histogram observes a value in a histogram.
 func (mc *MetricsCollector) Histogram(name string, value float64, labels map[string]string) {
 	if !mc.enabled {
 		return
@@ -229,22 +230,24 @@ func (mc *MetricsCollector) Histogram(name string, value float64, labels map[str
 	hist.Observe(value)
 }
 
-// Timer measures operation duration
+// Timer measures operation duration.
 func (mc *MetricsCollector) Timer(name string, labels map[string]string) func() {
 	start := time.Now()
+
 	return func() {
 		duration := time.Since(start).Seconds()
 		mc.Histogram(name+"_duration_seconds", duration, labels)
 	}
 }
 
-// TimerContext measures operation duration with context
+// TimerContext measures operation duration with context.
 func (mc *MetricsCollector) TimerContext(
 	ctx context.Context,
 	name string,
 	labels map[string]string,
 ) func() {
 	start := time.Now()
+
 	return func() {
 		duration := time.Since(start).Seconds()
 		mc.Histogram(name+"_duration_seconds", duration, labels)
@@ -254,14 +257,14 @@ func (mc *MetricsCollector) TimerContext(
 	}
 }
 
-// RegisterCollector adds a custom metric collector
+// RegisterCollector adds a custom metric collector.
 func (mc *MetricsCollector) RegisterCollector(collector MetricCollector) {
 	mc.mutex.Lock()
 	defer mc.mutex.Unlock()
 	mc.collectors = append(mc.collectors, collector)
 }
 
-// FlushMetrics writes current metrics to output
+// FlushMetrics writes current metrics to output.
 func (mc *MetricsCollector) FlushMetrics() error {
 	if !mc.enabled || mc.outputPath == "" {
 		return nil
@@ -298,7 +301,7 @@ func (mc *MetricsCollector) FlushMetrics() error {
 	return nil
 }
 
-// GatherMetrics collects all current metrics
+// GatherMetrics collects all current metrics.
 func (mc *MetricsCollector) GatherMetrics() []Metric {
 	mc.mutex.RLock()
 	defer mc.mutex.RUnlock()
@@ -366,7 +369,7 @@ func (mc *MetricsCollector) GatherMetrics() []Metric {
 	return allMetrics
 }
 
-// getSystemMetrics collects system-level metrics
+// getSystemMetrics collects system-level metrics.
 func (mc *MetricsCollector) getSystemMetrics() map[string]interface{} {
 	var mem runtime.MemStats
 	runtime.ReadMemStats(&mem)
@@ -388,15 +391,16 @@ func (mc *MetricsCollector) getSystemMetrics() map[string]interface{} {
 	}
 }
 
-// getFullName returns the full metric name with prefix
+// getFullName returns the full metric name with prefix.
 func (mc *MetricsCollector) getFullName(name string) string {
 	if mc.prefix == "" {
 		return name
 	}
+
 	return mc.prefix + "_" + name
 }
 
-// getKey generates a unique key for a metric with labels
+// getKey generates a unique key for a metric with labels.
 func (mc *MetricsCollector) getKey(name string, labels map[string]string) string {
 	key := name
 	if labels != nil {
@@ -404,10 +408,11 @@ func (mc *MetricsCollector) getKey(name string, labels map[string]string) string
 			key += fmt.Sprintf("_%s_%s", k, v)
 		}
 	}
+
 	return key
 }
 
-// NewHistogram creates a new histogram with the given buckets
+// NewHistogram creates a new histogram with the given buckets.
 func NewHistogram(buckets []float64) *Histogram {
 	hist := &Histogram{
 		buckets: make(map[float64]int64),
@@ -420,7 +425,7 @@ func NewHistogram(buckets []float64) *Histogram {
 	return hist
 }
 
-// Observe adds an observation to the histogram
+// Observe adds an observation to the histogram.
 func (h *Histogram) Observe(value float64) {
 	h.mutex.Lock()
 	defer h.mutex.Unlock()
@@ -435,7 +440,7 @@ func (h *Histogram) Observe(value float64) {
 	}
 }
 
-// GetBuckets returns the histogram buckets
+// GetBuckets returns the histogram buckets.
 func (h *Histogram) GetBuckets() map[float64]int64 {
 	h.mutex.RLock()
 	defer h.mutex.RUnlock()
@@ -444,43 +449,46 @@ func (h *Histogram) GetBuckets() map[float64]int64 {
 	for k, v := range h.buckets {
 		buckets[k] = v
 	}
+
 	return buckets
 }
 
-// GetCount returns the total observation count
+// GetCount returns the total observation count.
 func (h *Histogram) GetCount() int64 {
 	h.mutex.RLock()
 	defer h.mutex.RUnlock()
+
 	return h.count
 }
 
-// GetSum returns the sum of all observations
+// GetSum returns the sum of all observations.
 func (h *Histogram) GetSum() float64 {
 	h.mutex.RLock()
 	defer h.mutex.RUnlock()
+
 	return h.sum
 }
 
-// ApplicationMetrics collects application-specific metrics
+// ApplicationMetrics collects application-specific metrics.
 type ApplicationMetrics struct {
 	collector *MetricsCollector
 }
 
-// NewApplicationMetrics creates application metrics collector
+// NewApplicationMetrics creates application metrics collector.
 func NewApplicationMetrics(collector *MetricsCollector) *ApplicationMetrics {
 	return &ApplicationMetrics{
 		collector: collector,
 	}
 }
 
-// ComponentScanned increments component scan counter
+// ComponentScanned increments component scan counter.
 func (am *ApplicationMetrics) ComponentScanned(componentType string) {
 	am.collector.Counter("components_scanned_total", map[string]string{
 		"type": componentType,
 	})
 }
 
-// ComponentBuilt increments component build counter
+// ComponentBuilt increments component build counter.
 func (am *ApplicationMetrics) ComponentBuilt(componentName string, success bool) {
 	status := "success"
 	if !success {
@@ -493,44 +501,44 @@ func (am *ApplicationMetrics) ComponentBuilt(componentName string, success bool)
 	})
 }
 
-// BuildDuration records build duration
+// BuildDuration records build duration.
 func (am *ApplicationMetrics) BuildDuration(componentName string, duration time.Duration) {
 	am.collector.Histogram("build_duration_seconds", duration.Seconds(), map[string]string{
 		"component": componentName,
 	})
 }
 
-// ServerRequest increments server request counter
+// ServerRequest increments server request counter.
 func (am *ApplicationMetrics) ServerRequest(method, path string, statusCode int) {
 	am.collector.Counter("http_requests_total", map[string]string{
 		"method": method,
 		"path":   path,
-		"status": fmt.Sprintf("%d", statusCode),
+		"status": strconv.Itoa(statusCode),
 	})
 }
 
-// WebSocketConnection tracks WebSocket connections
+// WebSocketConnection tracks WebSocket connections.
 func (am *ApplicationMetrics) WebSocketConnection(action string) {
 	am.collector.Counter("websocket_connections_total", map[string]string{
 		"action": action, // "opened", "closed", "error"
 	})
 }
 
-// WebSocketMessage tracks WebSocket messages
+// WebSocketMessage tracks WebSocket messages.
 func (am *ApplicationMetrics) WebSocketMessage(messageType string) {
 	am.collector.Counter("websocket_messages_total", map[string]string{
 		"type": messageType,
 	})
 }
 
-// FileWatcherEvent tracks file watcher events
+// FileWatcherEvent tracks file watcher events.
 func (am *ApplicationMetrics) FileWatcherEvent(eventType string) {
 	am.collector.Counter("file_watcher_events_total", map[string]string{
 		"type": eventType,
 	})
 }
 
-// CacheOperation tracks cache operations
+// CacheOperation tracks cache operations.
 func (am *ApplicationMetrics) CacheOperation(operation string, hit bool) {
 	hitStr := "miss"
 	if hit {
@@ -543,7 +551,7 @@ func (am *ApplicationMetrics) CacheOperation(operation string, hit bool) {
 	})
 }
 
-// ErrorOccurred tracks errors by category and component
+// ErrorOccurred tracks errors by category and component.
 func (am *ApplicationMetrics) ErrorOccurred(category, component string) {
 	am.collector.Counter("errors_total", map[string]string{
 		"category":  category,
@@ -551,12 +559,12 @@ func (am *ApplicationMetrics) ErrorOccurred(category, component string) {
 	})
 }
 
-// SetGauge sets a gauge metric value
+// SetGauge sets a gauge metric value.
 func (am *ApplicationMetrics) SetGauge(name string, value float64, labels map[string]string) {
 	am.collector.Gauge(name, value, labels)
 }
 
-// Collect implements MetricCollector interface
+// Collect implements MetricCollector interface.
 func (am *ApplicationMetrics) Collect() []Metric {
 	// This method can be used to export additional computed metrics
 	return []Metric{
@@ -570,7 +578,7 @@ func (am *ApplicationMetrics) Collect() []Metric {
 	}
 }
 
-// Name returns the collector name
+// Name returns the collector name.
 func (am *ApplicationMetrics) Name() string {
 	return "application_metrics"
 }

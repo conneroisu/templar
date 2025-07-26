@@ -129,6 +129,7 @@ func (g *MockGenerator) generateByType(paramType string) interface{} {
 		// Handle slice types
 		if strings.HasPrefix(paramType, "[]") {
 			elementType := strings.TrimPrefix(paramType, "[]")
+
 			return []interface{}{
 				g.generateByType(elementType),
 				g.generateByType(elementType),
@@ -200,7 +201,8 @@ func (g *MockGenerator) generateURL(context string) string {
 	if strings.Contains(context, "image") || strings.Contains(context, "avatar") {
 		sizes := []string{"150x150", "200x200", "300x300", "400x400"}
 		size := sizes[g.rng.Intn(len(sizes))]
-		return fmt.Sprintf("https://via.placeholder.com/%s", size)
+
+		return "https://via.placeholder.com/" + size
 	}
 
 	domains := []string{"example.com", "demo.org", "test.net", "sample.io"}
@@ -238,6 +240,7 @@ func (g *MockGenerator) generateText(context string) string {
 			"Discover the power of this innovative solution that streamlines your workflow and improves productivity.",
 			"Experience seamless integration and exceptional performance with this cutting-edge component.",
 		}
+
 		return descriptions[g.rng.Intn(len(descriptions))]
 	}
 
@@ -249,6 +252,7 @@ func (g *MockGenerator) generateText(context string) string {
 			"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.",
 			"Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
 		}
+
 		return contents[g.rng.Intn(len(contents))]
 	}
 
@@ -259,6 +263,7 @@ func (g *MockGenerator) generateText(context string) string {
 			"We're excited to have you here.",
 			"Get started with our amazing features.",
 		}
+
 		return messages[g.rng.Intn(len(messages))]
 	}
 
@@ -321,6 +326,7 @@ func containsAny(str string, substrings []string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -379,6 +385,7 @@ func (g *AdvancedMockGenerator) generateByPattern(pattern string) interface{} {
 			g.rng.Intn(900)+100, g.rng.Intn(900)+100, g.rng.Intn(10000))
 	case "address":
 		streets := []string{"Main St", "Oak Ave", "Pine Rd", "Elm Dr", "Cedar Ln"}
+
 		return fmt.Sprintf("%d %s", g.rng.Intn(9999)+1, streets[g.rng.Intn(len(streets))])
 	case "company":
 		companies := []string{
@@ -388,6 +395,7 @@ func (g *AdvancedMockGenerator) generateByPattern(pattern string) interface{} {
 			"NextGenSolutions",
 			"DigitalDynamics",
 		}
+
 		return companies[g.rng.Intn(len(companies))]
 	case "password":
 		return "••••••••" // Masked password
@@ -395,6 +403,7 @@ func (g *AdvancedMockGenerator) generateByPattern(pattern string) interface{} {
 		return fmt.Sprintf("%.1f%%", g.rng.Float64()*100)
 	case "currency":
 		currencies := []string{"USD", "EUR", "GBP", "CAD", "AUD"}
+
 		return currencies[g.rng.Intn(len(currencies))]
 	default:
 		return "Advanced mock data"

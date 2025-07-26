@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// FuzzValidateURL tests URL validation with various malicious and edge case inputs
+// FuzzValidateURL tests URL validation with various malicious and edge case inputs.
 func FuzzValidateURL(f *testing.F) {
 	// Seed with valid and invalid URLs
 	f.Add("http://localhost:8080")
@@ -43,6 +43,7 @@ func FuzzValidateURL(f *testing.F) {
 			parsed, parseErr := url.Parse(testURL)
 			if parseErr != nil {
 				t.Errorf("ValidateURL passed but URL.Parse failed for: %q", testURL)
+
 				return
 			}
 
@@ -95,7 +96,7 @@ func FuzzValidateURL(f *testing.F) {
 	})
 }
 
-// FuzzURLParsing tests URL parsing edge cases that could bypass validation
+// FuzzURLParsing tests URL parsing edge cases that could bypass validation.
 func FuzzURLParsing(f *testing.F) {
 	// Seed with tricky URL patterns
 	f.Add("http://localhost:8080/../../../etc/passwd")
@@ -163,7 +164,7 @@ func FuzzURLParsing(f *testing.F) {
 	})
 }
 
-// FuzzPathTraversal tests path traversal patterns in URLs
+// FuzzPathTraversal tests path traversal patterns in URLs.
 func FuzzPathTraversal(f *testing.F) {
 	// Seed with various path traversal patterns
 	f.Add("http://localhost:8080/../admin")
@@ -203,7 +204,7 @@ func FuzzPathTraversal(f *testing.F) {
 	})
 }
 
-// FuzzProtocolHandlers tests various protocol handlers that could bypass validation
+// FuzzProtocolHandlers tests various protocol handlers that could bypass validation.
 func FuzzProtocolHandlers(f *testing.F) {
 	// Seed with various protocol handlers
 	f.Add("javascript:alert('xss')")
@@ -238,7 +239,7 @@ func FuzzProtocolHandlers(f *testing.F) {
 	})
 }
 
-// FuzzCommandInjection tests command injection patterns in URLs
+// FuzzCommandInjection tests command injection patterns in URLs.
 func FuzzCommandInjection(f *testing.F) {
 	// Seed with command injection patterns
 	f.Add("http://localhost:8080; curl malicious.com")

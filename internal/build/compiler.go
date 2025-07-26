@@ -10,13 +10,13 @@ import (
 	"github.com/conneroisu/templar/internal/validation"
 )
 
-// TemplCompiler handles templ compilation
+// TemplCompiler handles templ compilation.
 type TemplCompiler struct {
 	command string
 	args    []string
 }
 
-// NewTemplCompiler creates a new templ compiler
+// NewTemplCompiler creates a new templ compiler.
 func NewTemplCompiler() *TemplCompiler {
 	return &TemplCompiler{
 		command: "templ",
@@ -24,7 +24,7 @@ func NewTemplCompiler() *TemplCompiler {
 	}
 }
 
-// Compile compiles a component using templ generate with context-based timeout
+// Compile compiles a component using templ generate with context-based timeout.
 func (tc *TemplCompiler) Compile(
 	ctx context.Context,
 	component *types.ComponentInfo,
@@ -44,13 +44,14 @@ func (tc *TemplCompiler) Compile(
 		if ctx.Err() != nil {
 			return nil, fmt.Errorf("templ generate timed out: %w", ctx.Err())
 		}
+
 		return nil, fmt.Errorf("templ generate failed: %w\nOutput: %s", err, output)
 	}
 
 	return output, nil
 }
 
-// CompileWithPools performs compilation using object pools for memory efficiency with context-based timeout
+// CompileWithPools performs compilation using object pools for memory efficiency with context-based timeout.
 func (tc *TemplCompiler) CompileWithPools(
 	ctx context.Context,
 	component *types.ComponentInfo,
@@ -80,6 +81,7 @@ func (tc *TemplCompiler) CompileWithPools(
 		// Copy output to our buffer to avoid keeping the original allocation
 		outputBuffer = append(outputBuffer, output...)
 		err = fmt.Errorf("templ generate failed: %w\nOutput: %s", cmdErr, outputBuffer)
+
 		return nil, err
 	} else {
 		// Copy successful output to our buffer
@@ -89,10 +91,11 @@ func (tc *TemplCompiler) CompileWithPools(
 	// Return a copy of the buffer content (caller owns this memory)
 	result := make([]byte, len(outputBuffer))
 	copy(result, outputBuffer)
+
 	return result, nil
 }
 
-// validateCommand validates the command and arguments to prevent command injection
+// validateCommand validates the command and arguments to prevent command injection.
 func (tc *TemplCompiler) validateCommand() error {
 	// Allowlist of permitted commands
 	allowedCommands := map[string]bool{

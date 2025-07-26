@@ -37,7 +37,7 @@ import (
 // - config must never be nil after construction
 // - ctx and cancel are never nil after construction
 // - lastBuildErrors access always protected by buildMutex
-// - shutdown happens exactly once via shutdownOnce
+// - shutdown happens exactly once via shutdownOnce.
 type ServiceOrchestrator struct {
 	// Configuration - immutable reference to application configuration
 	config *config.Config
@@ -63,7 +63,7 @@ type ServiceOrchestrator struct {
 	shutdownOnce sync.Once          // Ensures shutdown happens exactly once
 }
 
-// ServiceDependencies contains all services needed by the orchestrator
+// ServiceDependencies contains all services needed by the orchestrator.
 type ServiceDependencies struct {
 	Config        *config.Config
 	Registry      interfaces.ComponentRegistry
@@ -97,7 +97,7 @@ type ServiceDependencies struct {
 // - Fully initialized ServiceOrchestrator ready for Start()
 //
 // Panics:
-// - If required dependencies are nil or invalid
+// - If required dependencies are nil or invalid.
 func NewServiceOrchestrator(deps ServiceDependencies) *ServiceOrchestrator {
 	// Critical dependency validation - config is always required
 	if deps.Config == nil {
@@ -139,10 +139,11 @@ func NewServiceOrchestrator(deps ServiceDependencies) *ServiceOrchestrator {
 		"ServiceOrchestrator initialized with %d scan paths",
 		len(deps.Config.Components.ScanPaths),
 	)
+
 	return orchestrator
 }
 
-// Start initializes and starts all coordinated services
+// Start initializes and starts all coordinated services.
 func (so *ServiceOrchestrator) Start(ctx context.Context) error {
 	// Start build pipeline
 	if so.buildPipeline != nil {
@@ -172,10 +173,11 @@ func (so *ServiceOrchestrator) Start(ctx context.Context) error {
 	}
 
 	log.Printf("Service orchestrator started successfully")
+
 	return nil
 }
 
-// setupFileWatcher configures the file watcher with appropriate filters and handlers
+// setupFileWatcher configures the file watcher with appropriate filters and handlers.
 func (so *ServiceOrchestrator) setupFileWatcher(ctx context.Context) {
 	if so.fileWatcher == nil {
 		return
@@ -195,6 +197,7 @@ func (so *ServiceOrchestrator) setupFileWatcher(ctx context.Context) {
 			// Convert interfaces.ChangeEvent to watcher.ChangeEvent
 			changeEvents[i] = watcher.ChangeEvent(event)
 		}
+
 		return so.handleFileChange(changeEvents)
 	})
 
@@ -206,10 +209,10 @@ func (so *ServiceOrchestrator) setupFileWatcher(ctx context.Context) {
 	}
 }
 
-// initialScan performs the initial component scanning
+// initialScan performs the initial component scanning.
 func (so *ServiceOrchestrator) initialScan() error {
 	if so.scanner == nil {
-		return fmt.Errorf("component scanner not available")
+		return errors.New("component scanner not available")
 	}
 
 	// Scan all configured paths
@@ -220,10 +223,11 @@ func (so *ServiceOrchestrator) initialScan() error {
 	}
 
 	log.Printf("Initial component scan completed")
+
 	return nil
 }
 
-// handleFileChange processes file change events and coordinates appropriate actions
+// handleFileChange processes file change events and coordinates appropriate actions.
 func (so *ServiceOrchestrator) handleFileChange(events []watcher.ChangeEvent) error {
 	if len(events) == 0 {
 		return nil
@@ -263,7 +267,7 @@ func (so *ServiceOrchestrator) handleFileChange(events []watcher.ChangeEvent) er
 	return nil
 }
 
-// processTemplateFileChange handles changes to template files
+// processTemplateFileChange handles changes to template files.
 func (so *ServiceOrchestrator) processTemplateFileChange(filePath string) error {
 	// Re-scan the specific file
 	if so.scanner != nil {
@@ -282,6 +286,7 @@ func (so *ServiceOrchestrator) processTemplateFileChange(filePath string) error 
 				if so.buildPipeline != nil {
 					so.buildPipeline.Build(component)
 				}
+
 				break
 			}
 		}
@@ -290,7 +295,7 @@ func (so *ServiceOrchestrator) processTemplateFileChange(filePath string) error 
 	return nil
 }
 
-// processGeneralFileChange handles changes to non-template files
+// processGeneralFileChange handles changes to non-template files.
 func (so *ServiceOrchestrator) processGeneralFileChange(filePath string) error {
 	log.Printf("Processing general file change: %s", filePath)
 
@@ -302,7 +307,7 @@ func (so *ServiceOrchestrator) processGeneralFileChange(filePath string) error {
 	return nil
 }
 
-// handleBuildResult processes build results and updates system state
+// handleBuildResult processes build results and updates system state.
 func (so *ServiceOrchestrator) handleBuildResult(result build.BuildResult) {
 	so.buildMutex.Lock()
 	defer so.buildMutex.Unlock()
@@ -329,7 +334,7 @@ func (so *ServiceOrchestrator) handleBuildResult(result build.BuildResult) {
 	}
 }
 
-// triggerFullRebuild initiates a complete rebuild of all components
+// triggerFullRebuild initiates a complete rebuild of all components.
 func (so *ServiceOrchestrator) triggerFullRebuild() {
 	log.Printf("Triggering full component rebuild")
 
@@ -346,7 +351,7 @@ func (so *ServiceOrchestrator) triggerFullRebuild() {
 	}
 }
 
-// broadcastFileChangeNotification sends file change notifications to WebSocket clients
+// broadcastFileChangeNotification sends file change notifications to WebSocket clients.
 func (so *ServiceOrchestrator) broadcastFileChangeNotification(eventCount int) {
 	if so.wsManager != nil {
 		message := UpdateMessage{
@@ -358,7 +363,7 @@ func (so *ServiceOrchestrator) broadcastFileChangeNotification(eventCount int) {
 	}
 }
 
-// broadcastBuildResult sends build results to WebSocket clients
+// broadcastBuildResult sends build results to WebSocket clients.
 func (so *ServiceOrchestrator) broadcastBuildResult(result build.BuildResult) {
 	if so.wsManager == nil {
 		return
@@ -381,7 +386,7 @@ func (so *ServiceOrchestrator) broadcastBuildResult(result build.BuildResult) {
 	so.wsManager.BroadcastMessage(message)
 }
 
-// OpenBrowser opens the default browser to the application URL
+// OpenBrowser opens the default browser to the application URL.
 func (so *ServiceOrchestrator) OpenBrowser(url string) {
 	if !so.config.Server.Open {
 		return
@@ -397,18 +402,20 @@ func (so *ServiceOrchestrator) OpenBrowser(url string) {
 		cmd = exec.Command("xdg-open", url)
 	default:
 		log.Printf("Cannot open browser on %s", runtime.GOOS)
+
 		return
 	}
 
 	if err := cmd.Start(); err != nil {
 		log.Printf("Failed to open browser: %v", err)
+
 		return
 	}
 
 	log.Printf("Successfully opened browser for URL: %s", url)
 }
 
-// GetBuildMetrics returns current build metrics
+// GetBuildMetrics returns current build metrics.
 func (so *ServiceOrchestrator) GetBuildMetrics() interfaces.BuildMetrics {
 	if so.buildPipeline != nil {
 		return so.buildPipeline.GetMetrics()
@@ -418,7 +425,7 @@ func (so *ServiceOrchestrator) GetBuildMetrics() interfaces.BuildMetrics {
 	return &build.BuildMetrics{}
 }
 
-// GetLastBuildErrors returns the errors from the last build
+// GetLastBuildErrors returns the errors from the last build.
 func (so *ServiceOrchestrator) GetLastBuildErrors() []*errors.ParsedError {
 	so.buildMutex.RLock()
 	defer so.buildMutex.RUnlock()
@@ -430,10 +437,11 @@ func (so *ServiceOrchestrator) GetLastBuildErrors() []*errors.ParsedError {
 
 	errorsCopy := make([]*errors.ParsedError, len(so.lastBuildErrors))
 	copy(errorsCopy, so.lastBuildErrors)
+
 	return errorsCopy
 }
 
-// Shutdown gracefully shuts down all coordinated services
+// Shutdown gracefully shuts down all coordinated services.
 func (so *ServiceOrchestrator) Shutdown(ctx context.Context) error {
 	var shutdownErr error
 
@@ -459,23 +467,25 @@ func (so *ServiceOrchestrator) Shutdown(ctx context.Context) error {
 	return shutdownErr
 }
 
-// GetComponentCount returns the number of registered components
+// GetComponentCount returns the number of registered components.
 func (so *ServiceOrchestrator) GetComponentCount() int {
 	if so.registry != nil {
 		return so.registry.Count()
 	}
+
 	return 0
 }
 
-// GetConnectedWebSocketClients returns the number of connected WebSocket clients
+// GetConnectedWebSocketClients returns the number of connected WebSocket clients.
 func (so *ServiceOrchestrator) GetConnectedWebSocketClients() int {
 	if so.wsManager != nil {
 		return so.wsManager.GetConnectedClients()
 	}
+
 	return 0
 }
 
-// IsHealthy performs a health check on all coordinated services
+// IsHealthy performs a health check on all coordinated services.
 func (so *ServiceOrchestrator) IsHealthy() bool {
 	// Check if essential services are available
 	if so.registry == nil || so.scanner == nil {
@@ -486,7 +496,7 @@ func (so *ServiceOrchestrator) IsHealthy() bool {
 	return true
 }
 
-// GetServiceStatus returns the status of all coordinated services
+// GetServiceStatus returns the status of all coordinated services.
 func (so *ServiceOrchestrator) GetServiceStatus() map[string]interface{} {
 	status := make(map[string]interface{})
 

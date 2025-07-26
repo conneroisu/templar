@@ -8,36 +8,36 @@ import (
 	"strings"
 )
 
-// ValidationError represents a configuration validation error with context
+// ValidationError represents a configuration validation error with context.
 type ValidationError struct {
 	Field   string      `json:"field"`
 	Value   interface{} `json:"value"`
 	Message string      `json:"message"`
 }
 
-// Error implements the error interface
+// Error implements the error interface.
 func (e ValidationError) Error() string {
 	return fmt.Sprintf("%s: %s", e.Field, e.Message)
 }
 
-// ValidationResult contains the result of configuration validation
+// ValidationResult contains the result of configuration validation.
 type ValidationResult struct {
 	Valid    bool              `json:"valid"`
 	Errors   []ValidationError `json:"errors"`
 	Warnings []ValidationError `json:"warnings"`
 }
 
-// HasErrors returns true if there are validation errors
+// HasErrors returns true if there are validation errors.
 func (r *ValidationResult) HasErrors() bool {
 	return len(r.Errors) > 0
 }
 
-// HasWarnings returns true if there are validation warnings
+// HasWarnings returns true if there are validation warnings.
 func (r *ValidationResult) HasWarnings() bool {
 	return len(r.Warnings) > 0
 }
 
-// String returns a formatted string representation of the validation result
+// String returns a formatted string representation of the validation result.
 func (r *ValidationResult) String() string {
 	if r.Valid {
 		return "Configuration is valid"
@@ -48,25 +48,25 @@ func (r *ValidationResult) String() string {
 		messages = append(messages, err.Error())
 	}
 	for _, warn := range r.Warnings {
-		messages = append(messages, fmt.Sprintf("Warning: %s", warn.Error()))
+		messages = append(messages, "Warning: "+warn.Error())
 	}
 
 	return strings.Join(messages, "\n")
 }
 
-// ConfigValidator provides centralized validation for all configuration components
+// ConfigValidator provides centralized validation for all configuration components.
 type ConfigValidator struct {
 	errors []error
 }
 
-// NewConfigValidator creates a new configuration validator
+// NewConfigValidator creates a new configuration validator.
 func NewConfigValidator() *ConfigValidator {
 	return &ConfigValidator{
 		errors: make([]error, 0),
 	}
 }
 
-// ValidateAll performs comprehensive validation on the entire configuration
+// ValidateAll performs comprehensive validation on the entire configuration.
 func (cv *ConfigValidator) ValidateAll(config *Config) error {
 	cv.errors = cv.errors[:0] // Reset errors
 
@@ -80,10 +80,11 @@ func (cv *ConfigValidator) ValidateAll(config *Config) error {
 	if len(cv.errors) > 0 {
 		return cv.combineErrors()
 	}
+
 	return nil
 }
 
-// validateServer validates server configuration with security checks
+// validateServer validates server configuration with security checks.
 func (cv *ConfigValidator) validateServer(config *ServerConfig) {
 	// Validate port range
 	if config.Port < 0 || config.Port > 65535 {
@@ -114,7 +115,7 @@ func (cv *ConfigValidator) validateServer(config *ServerConfig) {
 	cv.validateAuth(&config.Auth)
 }
 
-// validateAuth validates authentication configuration
+// validateAuth validates authentication configuration.
 func (cv *ConfigValidator) validateAuth(config *AuthConfig) {
 	if !config.Enabled {
 		return
@@ -134,14 +135,14 @@ func (cv *ConfigValidator) validateAuth(config *AuthConfig) {
 		if config.Token == "" && config.RequireAuth {
 			cv.addError(
 				"server.auth.token",
-				fmt.Errorf("token is required when auth mode is 'token'"),
+				errors.New("token is required when auth mode is 'token'"),
 			)
 		}
 	case "basic":
 		if (config.Username == "" || config.Password == "") && config.RequireAuth {
 			cv.addError(
 				"server.auth.basic",
-				fmt.Errorf("username and password are required when auth mode is 'basic'"),
+				errors.New("username and password are required when auth mode is 'basic'"),
 			)
 		}
 	}
@@ -154,7 +155,7 @@ func (cv *ConfigValidator) validateAuth(config *AuthConfig) {
 	}
 }
 
-// validateBuild validates build configuration
+// validateBuild validates build configuration.
 func (cv *ConfigValidator) validateBuild(config *BuildConfig) {
 	// Validate cache directory
 	if config.CacheDir != "" {
@@ -179,16 +180,16 @@ func (cv *ConfigValidator) validateBuild(config *BuildConfig) {
 	// Validate watch patterns
 	for i, pattern := range config.Watch {
 		if pattern == "" {
-			cv.addError(fmt.Sprintf("build.watch[%d]", i), fmt.Errorf("empty watch pattern"))
+			cv.addError(fmt.Sprintf("build.watch[%d]", i), errors.New("empty watch pattern"))
 		}
 	}
 }
 
-// validateComponents validates components configuration
+// validateComponents validates components configuration.
 func (cv *ConfigValidator) validateComponents(config *ComponentsConfig) {
 	// Validate scan paths
 	if len(config.ScanPaths) == 0 {
-		cv.addError("components.scan_paths", fmt.Errorf("at least one scan path is required"))
+		cv.addError("components.scan_paths", errors.New("at least one scan path is required"))
 	}
 
 	for i, path := range config.ScanPaths {
@@ -202,13 +203,13 @@ func (cv *ConfigValidator) validateComponents(config *ComponentsConfig) {
 		if pattern == "" {
 			cv.addError(
 				fmt.Sprintf("components.exclude_patterns[%d]", i),
-				fmt.Errorf("empty exclude pattern"),
+				errors.New("empty exclude pattern"),
 			)
 		}
 	}
 }
 
-// validatePlugins validates plugins configuration
+// validatePlugins validates plugins configuration.
 func (cv *ConfigValidator) validatePlugins(config *PluginsConfig) {
 	// Validate discovery paths
 	for i, path := range config.DiscoveryPaths {
@@ -228,7 +229,7 @@ func (cv *ConfigValidator) validatePlugins(config *PluginsConfig) {
 	}
 }
 
-// validateMonitoring validates monitoring configuration
+// validateMonitoring validates monitoring configuration.
 func (cv *ConfigValidator) validateMonitoring(config *MonitoringConfig) {
 	// Validate log level
 	validLogLevels := []string{"debug", "info", "warn", "error", "fatal"}
@@ -272,7 +273,7 @@ func (cv *ConfigValidator) validateMonitoring(config *MonitoringConfig) {
 	}
 }
 
-// validateProduction validates production configuration
+// validateProduction validates production configuration.
 func (cv *ConfigValidator) validateProduction(config *ProductionConfig) {
 	// Validate output directories
 	if err := cv.validatePath(config.OutputDir); err != nil {
@@ -295,7 +296,7 @@ func (cv *ConfigValidator) validateProduction(config *ProductionConfig) {
 	cv.validateDeployment(&config.Deployment)
 }
 
-// validateCompression validates compression settings
+// validateCompression validates compression settings.
 func (cv *ConfigValidator) validateCompression(config *CompressionSettings) {
 	if !config.Enabled {
 		return
@@ -331,7 +332,7 @@ func (cv *ConfigValidator) validateCompression(config *CompressionSettings) {
 	}
 }
 
-// validateSecurity validates security settings
+// validateSecurity validates security settings.
 func (cv *ConfigValidator) validateSecurity(config *SecuritySettings) {
 	// Validate X-Frame-Options
 	validFrameOptions := []string{"DENY", "SAMEORIGIN"}
@@ -347,13 +348,13 @@ func (cv *ConfigValidator) validateSecurity(config *SecuritySettings) {
 		if !strings.HasPrefix(config.CSP.ReportURI, "http") {
 			cv.addError(
 				"production.security.csp.report_uri",
-				fmt.Errorf("CSP report URI must be a valid HTTP URL"),
+				errors.New("CSP report URI must be a valid HTTP URL"),
 			)
 		}
 	}
 }
 
-// validateDeployment validates deployment settings
+// validateDeployment validates deployment settings.
 func (cv *ConfigValidator) validateDeployment(config *DeploymentSettings) {
 	validTargets := []string{"static", "docker", "serverless"}
 	if config.Target != "" && !cv.contains(validTargets, config.Target) {
@@ -368,7 +369,7 @@ func (cv *ConfigValidator) validateDeployment(config *DeploymentSettings) {
 		if redirect.From == "" || redirect.To == "" {
 			cv.addError(
 				fmt.Sprintf("production.deployment.redirects[%d]", i),
-				fmt.Errorf("redirect from and to fields are required"),
+				errors.New("redirect from and to fields are required"),
 			)
 		}
 		if redirect.Status < 300 || redirect.Status >= 400 {
@@ -382,7 +383,7 @@ func (cv *ConfigValidator) validateDeployment(config *DeploymentSettings) {
 
 // Security validation helpers
 
-// validateHostSecurity checks for dangerous characters in host configuration
+// validateHostSecurity checks for dangerous characters in host configuration.
 func (cv *ConfigValidator) validateHostSecurity(host string) error {
 	dangerousChars := []string{";", "&", "|", "$", "`", "(", ")", "<", ">", "\"", "'", "\\"}
 	for _, char := range dangerousChars {
@@ -390,10 +391,11 @@ func (cv *ConfigValidator) validateHostSecurity(host string) error {
 			return fmt.Errorf("host contains dangerous character: %s", char)
 		}
 	}
+
 	return nil
 }
 
-// validateSecurePath validates paths with enhanced security checks
+// validateSecurePath validates paths with enhanced security checks.
 func (cv *ConfigValidator) validateSecurePath(path string) error {
 	if err := cv.validatePath(path); err != nil {
 		return err
@@ -408,10 +410,10 @@ func (cv *ConfigValidator) validateSecurePath(path string) error {
 	return nil
 }
 
-// validatePath performs basic path validation
+// validatePath performs basic path validation.
 func (cv *ConfigValidator) validatePath(path string) error {
 	if path == "" {
-		return fmt.Errorf("empty path")
+		return errors.New("empty path")
 	}
 
 	cleanPath := filepath.Clean(path)
@@ -432,11 +434,11 @@ func (cv *ConfigValidator) validatePath(path string) error {
 	return nil
 }
 
-// validateIPAddress performs basic IP address validation
+// validateIPAddress performs basic IP address validation.
 func (cv *ConfigValidator) validateIPAddress(ip string) error {
 	// Basic validation - should be enhanced with proper IP parsing
 	if ip == "" {
-		return fmt.Errorf("empty IP address")
+		return errors.New("empty IP address")
 	}
 
 	// Check for dangerous characters
@@ -452,22 +454,23 @@ func (cv *ConfigValidator) validateIPAddress(ip string) error {
 
 // Utility functions
 
-// addError adds an error with context
+// addError adds an error with context.
 func (cv *ConfigValidator) addError(field string, err error) {
 	cv.errors = append(cv.errors, fmt.Errorf("%s: %w", field, err))
 }
 
-// contains checks if a slice contains a value
+// contains checks if a slice contains a value.
 func (cv *ConfigValidator) contains(slice []string, item string) bool {
 	for _, s := range slice {
 		if s == item {
 			return true
 		}
 	}
+
 	return false
 }
 
-// combineErrors combines multiple validation errors into a single error
+// combineErrors combines multiple validation errors into a single error.
 func (cv *ConfigValidator) combineErrors() error {
 	if len(cv.errors) == 1 {
 		return cv.errors[0]
@@ -481,7 +484,7 @@ func (cv *ConfigValidator) combineErrors() error {
 	return fmt.Errorf("multiple validation errors:\n  - %s", strings.Join(messages, "\n  - "))
 }
 
-// ValidateConfigWithDetails performs comprehensive validation with detailed feedback
+// ValidateConfigWithDetails performs comprehensive validation with detailed feedback.
 func ValidateConfigWithDetails(config *Config) *ValidationResult {
 	result := &ValidationResult{
 		Valid:    true,
@@ -582,19 +585,21 @@ func validatePluginsConfigDetails(config *PluginsConfig, result *ValidationResul
 
 // Legacy validation functions for backward compatibility
 
-// validateConfig is the main validation function used by the existing Load() function
+// validateConfig is the main validation function used by the existing Load() function.
 func validateConfig(config *Config) error {
 	validator := NewConfigValidator()
+
 	return validator.ValidateAll(config)
 }
 
-// Individual validation functions for backward compatibility
+// Individual validation functions for backward compatibility.
 func validateServerConfig(config *ServerConfig) error {
 	validator := NewConfigValidator()
 	validator.validateServer(config)
 	if len(validator.errors) > 0 {
 		return validator.combineErrors()
 	}
+
 	return nil
 }
 
@@ -604,6 +609,7 @@ func validateBuildConfig(config *BuildConfig) error {
 	if len(validator.errors) > 0 {
 		return validator.combineErrors()
 	}
+
 	return nil
 }
 
@@ -613,6 +619,7 @@ func validateComponentsConfig(config *ComponentsConfig) error {
 	if len(validator.errors) > 0 {
 		return validator.combineErrors()
 	}
+
 	return nil
 }
 
@@ -622,11 +629,13 @@ func validatePluginsConfig(config *PluginsConfig) error {
 	if len(validator.errors) > 0 {
 		return validator.combineErrors()
 	}
+
 	return nil
 }
 
-// validatePath for backward compatibility
+// validatePath for backward compatibility.
 func validatePath(path string) error {
 	validator := NewConfigValidator()
+
 	return validator.validatePath(path)
 }

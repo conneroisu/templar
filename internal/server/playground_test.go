@@ -344,6 +344,7 @@ func TestMockValueGeneration(t *testing.T) {
 			paramType: "string",
 			validate: func(v interface{}) bool {
 				s, ok := v.(string)
+
 				return ok && len(s) > 0 &&
 					(strings.Contains(s, "Title") || strings.Contains(s, "Sample"))
 			},
@@ -354,6 +355,7 @@ func TestMockValueGeneration(t *testing.T) {
 			paramType: "int",
 			validate: func(v interface{}) bool {
 				_, ok := v.(int)
+
 				return ok
 			},
 		},
@@ -363,6 +365,7 @@ func TestMockValueGeneration(t *testing.T) {
 			paramType: "bool",
 			validate: func(v interface{}) bool {
 				val, ok := v.(bool)
+
 				return ok && val == true // Should default to true for "active"
 			},
 		},
@@ -372,6 +375,7 @@ func TestMockValueGeneration(t *testing.T) {
 			paramType: "[]string",
 			validate: func(v interface{}) bool {
 				slice, ok := v.([]string)
+
 				return ok && len(slice) > 0
 			},
 		},
@@ -381,6 +385,7 @@ func TestMockValueGeneration(t *testing.T) {
 			paramType: "float64",
 			validate: func(v interface{}) bool {
 				_, ok := v.(float64)
+
 				return ok
 			},
 		},
@@ -401,13 +406,14 @@ func TestMockValueGeneration(t *testing.T) {
 	}
 }
 
-// Helper function to find prop by name
+// Helper function to find prop by name.
 func findPropByName(props []PropDefinition, name string) *PropDefinition {
 	for _, prop := range props {
 		if prop.Name == name {
 			return &prop
 		}
 	}
+
 	return nil
 }
 

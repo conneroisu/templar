@@ -15,7 +15,7 @@ type MockComponentRegistry struct {
 	mutex      sync.RWMutex
 }
 
-// NewMockComponentRegistry creates a new mock registry for testing
+// NewMockComponentRegistry creates a new mock registry for testing.
 func NewMockComponentRegistry() interfaces.ComponentRegistry {
 	return &MockComponentRegistry{
 		components: make(map[string]*types.ComponentInfo),
@@ -23,7 +23,7 @@ func NewMockComponentRegistry() interfaces.ComponentRegistry {
 	}
 }
 
-// Register adds or updates a component in the registry
+// Register adds or updates a component in the registry.
 func (m *MockComponentRegistry) Register(component *types.ComponentInfo) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
@@ -45,16 +45,17 @@ func (m *MockComponentRegistry) Register(component *types.ComponentInfo) {
 	}
 }
 
-// Get retrieves a component by name
+// Get retrieves a component by name.
 func (m *MockComponentRegistry) Get(name string) (*types.ComponentInfo, bool) {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
 	component, exists := m.components[name]
+
 	return component, exists
 }
 
-// GetAll returns all registered components
+// GetAll returns all registered components.
 func (m *MockComponentRegistry) GetAll() []*types.ComponentInfo {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
@@ -67,7 +68,7 @@ func (m *MockComponentRegistry) GetAll() []*types.ComponentInfo {
 	return components
 }
 
-// Watch returns a channel for component change events
+// Watch returns a channel for component change events.
 func (m *MockComponentRegistry) Watch() <-chan types.ComponentEvent {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
@@ -78,7 +79,7 @@ func (m *MockComponentRegistry) Watch() <-chan types.ComponentEvent {
 	return ch
 }
 
-// UnWatch removes a watcher and closes its channel
+// UnWatch removes a watcher and closes its channel.
 func (m *MockComponentRegistry) UnWatch(ch <-chan types.ComponentEvent) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
@@ -89,7 +90,7 @@ func (m *MockComponentRegistry) UnWatch(ch <-chan types.ComponentEvent) {
 	}
 }
 
-// Count returns the number of registered components
+// Count returns the number of registered components.
 func (m *MockComponentRegistry) Count() int {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
@@ -97,7 +98,7 @@ func (m *MockComponentRegistry) Count() int {
 	return len(m.components)
 }
 
-// DetectCircularDependencies returns any circular dependency chains
+// DetectCircularDependencies returns any circular dependency chains.
 func (m *MockComponentRegistry) DetectCircularDependencies() [][]string {
 	// Mock implementation returns no circular dependencies
 	return nil

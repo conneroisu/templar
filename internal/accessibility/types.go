@@ -5,13 +5,13 @@ import (
 	"time"
 )
 
-// WCAG represents Web Content Accessibility Guidelines levels and criteria
+// WCAG represents Web Content Accessibility Guidelines levels and criteria.
 type WCAG struct {
 	Level    WCAGLevel    `json:"level"`
 	Criteria WCAGCriteria `json:"criteria"`
 }
 
-// WCAGLevel represents different WCAG compliance levels
+// WCAGLevel represents different WCAG compliance levels.
 type WCAGLevel string
 
 const (
@@ -20,11 +20,11 @@ const (
 	WCAGLevelAAA WCAGLevel = "AAA"
 )
 
-// WCAGCriteria represents the specific WCAG success criteria
+// WCAGCriteria represents the specific WCAG success criteria.
 type WCAGCriteria string
 
 const (
-	// Level A criteria
+	// Level A criteria.
 	Criteria1_1_1 WCAGCriteria = "1.1.1" // Non-text Content
 	Criteria1_3_1 WCAGCriteria = "1.3.1" // Info and Relationships
 	Criteria1_3_3 WCAGCriteria = "1.3.3" // Sensory Characteristics
@@ -41,7 +41,7 @@ const (
 	Criteria4_1_1 WCAGCriteria = "4.1.1" // Parsing
 	Criteria4_1_2 WCAGCriteria = "4.1.2" // Name, Role, Value
 
-	// Level AA criteria
+	// Level AA criteria.
 	Criteria1_2_1 WCAGCriteria = "1.2.1" // Audio-only and Video-only (Prerecorded)
 	Criteria1_2_2 WCAGCriteria = "1.2.2" // Captions (Prerecorded)
 	Criteria1_2_3 WCAGCriteria = "1.2.3" // Audio Description or Media Alternative (Prerecorded)
@@ -60,7 +60,7 @@ const (
 	Criteria3_3_4 WCAGCriteria = "3.3.4" // Error Prevention (Legal, Financial, Data)
 )
 
-// AccessibilityViolation represents a single accessibility issue found during testing
+// AccessibilityViolation represents a single accessibility issue found during testing.
 type AccessibilityViolation struct {
 	ID          string                    `json:"id"`
 	Rule        string                    `json:"rule"`
@@ -79,7 +79,7 @@ type AccessibilityViolation struct {
 	CreatedAt   time.Time                 `json:"created_at"`
 }
 
-// ViolationSeverity represents the severity level of an accessibility violation
+// ViolationSeverity represents the severity level of an accessibility violation.
 type ViolationSeverity string
 
 const (
@@ -88,7 +88,7 @@ const (
 	SeverityInfo    ViolationSeverity = "info"
 )
 
-// ViolationImpact represents the potential impact of an accessibility violation
+// ViolationImpact represents the potential impact of an accessibility violation.
 type ViolationImpact string
 
 const (
@@ -98,7 +98,7 @@ const (
 	ImpactMinor    ViolationImpact = "minor"
 )
 
-// ViolationContext provides contextual information about where the violation occurred
+// ViolationContext provides contextual information about where the violation occurred.
 type ViolationContext struct {
 	ComponentName string                 `json:"component_name"`
 	ComponentFile string                 `json:"component_file"`
@@ -110,7 +110,7 @@ type ViolationContext struct {
 	Metadata      map[string]interface{} `json:"metadata,omitempty"`
 }
 
-// AccessibilitySuggestion provides actionable suggestions for fixing accessibility issues
+// AccessibilitySuggestion provides actionable suggestions for fixing accessibility issues.
 type AccessibilitySuggestion struct {
 	Type        SuggestionType `json:"type"`
 	Title       string         `json:"title"`
@@ -120,7 +120,7 @@ type AccessibilitySuggestion struct {
 	Priority    int            `json:"priority"` // 1 = highest, 5 = lowest
 }
 
-// SuggestionType categorizes different types of accessibility suggestions
+// SuggestionType categorizes different types of accessibility suggestions.
 type SuggestionType string
 
 const (
@@ -132,7 +132,7 @@ const (
 	SuggestionContent       SuggestionType = "content"
 )
 
-// Resource provides additional learning resources for accessibility improvements
+// Resource provides additional learning resources for accessibility improvements.
 type Resource struct {
 	Title       string `json:"title"`
 	URL         string `json:"url"`
@@ -140,7 +140,7 @@ type Resource struct {
 	Description string `json:"description"`
 }
 
-// AccessibilityReport contains the complete results of an accessibility audit
+// AccessibilityReport contains the complete results of an accessibility audit.
 type AccessibilityReport struct {
 	ID            string                    `json:"id"`
 	Timestamp     time.Time                 `json:"timestamp"`
@@ -157,7 +157,7 @@ type AccessibilityReport struct {
 	HTMLSnapshot  string                    `json:"html_snapshot,omitempty"`
 }
 
-// AccessibilityTarget describes what was tested
+// AccessibilityTarget describes what was tested.
 type AccessibilityTarget struct {
 	Type     string `json:"type"` // "component", "page", "html_snippet"
 	Name     string `json:"name"`
@@ -166,7 +166,7 @@ type AccessibilityTarget struct {
 	Selector string `json:"selector,omitempty"`
 }
 
-// AuditConfiguration contains settings for the accessibility audit
+// AuditConfiguration contains settings for the accessibility audit.
 type AuditConfiguration struct {
 	WCAGLevel        WCAGLevel       `json:"wcag_level"`
 	Rules            []string        `json:"rules,omitempty"` // Specific rules to run
@@ -181,7 +181,7 @@ type AuditConfiguration struct {
 	BrowserSettings  BrowserSettings `json:"browser_settings,omitempty"`
 }
 
-// ReportFormat specifies the format for accessibility reports
+// ReportFormat specifies the format for accessibility reports.
 type ReportFormat string
 
 const (
@@ -191,7 +191,7 @@ const (
 	FormatConsole  ReportFormat = "console"
 )
 
-// BrowserSettings configures browser-specific testing parameters
+// BrowserSettings configures browser-specific testing parameters.
 type BrowserSettings struct {
 	UserAgent    string `json:"user_agent,omitempty"`
 	ViewportSize struct {
@@ -201,7 +201,7 @@ type BrowserSettings struct {
 	ColorScheme string `json:"color_scheme,omitempty"` // "light", "dark", "no-preference"
 }
 
-// AccessibilitySummary provides high-level statistics about the accessibility audit
+// AccessibilitySummary provides high-level statistics about the accessibility audit.
 type AccessibilitySummary struct {
 	TotalRules   int `json:"total_rules"`
 	PassedRules  int `json:"passed_rules"`
@@ -222,14 +222,14 @@ type AccessibilitySummary struct {
 	OverallScore   float64              `json:"overall_score"` // 0-100 accessibility score
 }
 
-// WCAGComplianceStatus represents compliance status for each WCAG level
+// WCAGComplianceStatus represents compliance status for each WCAG level.
 type WCAGComplianceStatus struct {
 	LevelA   ComplianceLevel `json:"level_a"`
 	LevelAA  ComplianceLevel `json:"level_aa"`
 	LevelAAA ComplianceLevel `json:"level_aaa"`
 }
 
-// ComplianceLevel represents the compliance status for a specific WCAG level
+// ComplianceLevel represents the compliance status for a specific WCAG level.
 type ComplianceLevel struct {
 	Status      ComplianceStatus `json:"status"`
 	PassedCount int              `json:"passed_count"`
@@ -237,7 +237,7 @@ type ComplianceLevel struct {
 	TotalCount  int              `json:"total_count"`
 }
 
-// ComplianceStatus represents the overall compliance status
+// ComplianceStatus represents the overall compliance status.
 type ComplianceStatus string
 
 const (
@@ -247,7 +247,7 @@ const (
 	StatusUnknown      ComplianceStatus = "unknown"
 )
 
-// AccessibilityRule represents a specific accessibility rule that was checked
+// AccessibilityRule represents a specific accessibility rule that was checked.
 type AccessibilityRule struct {
 	ID          string   `json:"id"`
 	Description string   `json:"description"`
@@ -256,13 +256,13 @@ type AccessibilityRule struct {
 	HelpURL     string   `json:"help_url"`
 }
 
-// AccessibilityIncomplete represents a rule that couldn't be fully evaluated
+// AccessibilityIncomplete represents a rule that couldn't be fully evaluated.
 type AccessibilityIncomplete struct {
 	AccessibilityRule
 	Reason string `json:"reason"`
 }
 
-// AccessibilityTester is the main interface for running accessibility tests
+// AccessibilityTester is the main interface for running accessibility tests.
 type AccessibilityTester interface {
 	// TestComponent runs accessibility tests on a single component
 	TestComponent(
@@ -292,7 +292,7 @@ type AccessibilityTester interface {
 	GetRulesByWCAGLevel(level WCAGLevel) []AccessibilityRule
 }
 
-// AccessibilityEngine provides core accessibility testing functionality
+// AccessibilityEngine provides core accessibility testing functionality.
 type AccessibilityEngine interface {
 	// Initialize sets up the accessibility engine with configuration
 	Initialize(ctx context.Context, config EngineConfig) error
@@ -317,7 +317,7 @@ type AccessibilityEngine interface {
 	Shutdown(ctx context.Context) error
 }
 
-// EngineConfig contains configuration for the accessibility engine
+// EngineConfig contains configuration for the accessibility engine.
 type EngineConfig struct {
 	EnableBrowserEngine bool          `json:"enable_browser_engine"`
 	BrowserPath         string        `json:"browser_path,omitempty"`
@@ -330,7 +330,7 @@ type EngineConfig struct {
 	LogLevel            string        `json:"log_level"`
 }
 
-// CustomRule allows defining custom accessibility rules
+// CustomRule allows defining custom accessibility rules.
 type CustomRule struct {
 	ID          string            `json:"id"`
 	Name        string            `json:"name"`
@@ -342,10 +342,10 @@ type CustomRule struct {
 	Check       RuleCheckFunction `json:"-"`
 }
 
-// RuleCheckFunction is a function that checks for accessibility violations
+// RuleCheckFunction is a function that checks for accessibility violations.
 type RuleCheckFunction func(ctx context.Context, element HTMLElement) ([]AccessibilityViolation, error)
 
-// HTMLElement represents an HTML element for accessibility testing
+// HTMLElement represents an HTML element for accessibility testing.
 type HTMLElement interface {
 	// TagName returns the tag name of the element
 	TagName() string

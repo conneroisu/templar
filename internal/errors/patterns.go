@@ -18,7 +18,7 @@ import (
 
 // Service Layer Error Patterns
 
-// ServiceError creates a standardized service error with component context
+// ServiceError creates a standardized service error with component context.
 func ServiceError(service, operation, message string, cause error) *TemplarError {
 	code := fmt.Sprintf("ERR_%s_%s", service, operation)
 	var err *TemplarError
@@ -38,29 +38,31 @@ func ServiceError(service, operation, message string, cause error) *TemplarError
 			Recoverable: false,
 		}
 	}
+
 	return err.WithComponent(service)
 }
 
-// InitError creates initialization-related errors
+// InitError creates initialization-related errors.
 func InitError(operation, message string, cause error) *TemplarError {
 	return ServiceError("INIT", operation, message, cause)
 }
 
-// BuildServiceError creates build service errors
+// BuildServiceError creates build service errors.
 func BuildServiceError(operation, message string, cause error) *TemplarError {
 	return ServiceError("BUILD", operation, message, cause)
 }
 
-// ServeServiceError creates serve service errors
+// ServeServiceError creates serve service errors.
 func ServeServiceError(operation, message string, cause error) *TemplarError {
 	return ServiceError("SERVE", operation, message, cause)
 }
 
 // Repository/Data Layer Error Patterns
 
-// DataError creates data layer errors with consistent formatting
+// DataError creates data layer errors with consistent formatting.
 func DataError(operation, resource, message string, cause error) *TemplarError {
-	code := fmt.Sprintf("ERR_DATA_%s", operation)
+	code := "ERR_DATA_" + operation
+
 	return WrapIO(
 		cause,
 		code,
@@ -68,13 +70,13 @@ func DataError(operation, resource, message string, cause error) *TemplarError {
 	)
 }
 
-// FileOperationError creates file operation errors
+// FileOperationError creates file operation errors.
 func FileOperationError(operation, filePath, message string, cause error) *TemplarError {
-	return DataError(operation, fmt.Sprintf("file:%s", filePath), message, cause).
+	return DataError(operation, "file:"+filePath, message, cause).
 		WithContext("file_path", filePath)
 }
 
-// ConfigurationError creates configuration-related errors
+// ConfigurationError creates configuration-related errors.
 func ConfigurationError(setting, message string, value interface{}) *TemplarError {
 	return NewConfigError(
 		"ERR_CONFIG_INVALID",
@@ -84,9 +86,10 @@ func ConfigurationError(setting, message string, value interface{}) *TemplarErro
 
 // Network and Communication Error Patterns
 
-// NetworkError creates network-related errors
+// NetworkError creates network-related errors.
 func NetworkError(operation, endpoint, message string, cause error) *TemplarError {
-	code := fmt.Sprintf("ERR_NETWORK_%s", operation)
+	code := "ERR_NETWORK_" + operation
+
 	return &TemplarError{
 		Type:        ErrorTypeNetwork,
 		Code:        code,
@@ -97,22 +100,23 @@ func NetworkError(operation, endpoint, message string, cause error) *TemplarErro
 	}
 }
 
-// WebSocketError creates WebSocket-related errors
+// WebSocketError creates WebSocket-related errors.
 func WebSocketError(operation, clientID, message string, cause error) *TemplarError {
 	return NetworkError("WEBSOCKET_"+operation, clientID, message, cause).
 		WithContext("client_id", clientID)
 }
 
-// ServerError creates server operation errors
+// ServerError creates server operation errors.
 func ServerError(operation, message string, cause error) *TemplarError {
 	return NetworkError("SERVER_"+operation, "localhost", message, cause)
 }
 
 // Component and Build Error Patterns
 
-// ComponentError creates component-related errors with full context
+// ComponentError creates component-related errors with full context.
 func ComponentError(operation, componentName, filePath, message string, cause error) *TemplarError {
-	code := fmt.Sprintf("ERR_COMPONENT_%s", operation)
+	code := "ERR_COMPONENT_" + operation
+
 	return &TemplarError{
 		Type:        ErrorTypeBuild,
 		Code:        code,
@@ -125,21 +129,22 @@ func ComponentError(operation, componentName, filePath, message string, cause er
 	}
 }
 
-// ScannerError creates scanner-related errors
+// ScannerError creates scanner-related errors.
 func ScannerError(operation, path, message string, cause error) *TemplarError {
 	return ComponentError("SCAN_"+operation, "scanner", path, message, cause)
 }
 
-// RegistryError creates registry operation errors
+// RegistryError creates registry operation errors.
 func RegistryError(operation, componentName, message string, cause error) *TemplarError {
 	return ComponentError("REGISTRY_"+operation, componentName, "", message, cause)
 }
 
 // CLI and User Interface Error Patterns
 
-// CLIError creates CLI command errors with user-friendly messages
+// CLIError creates CLI command errors with user-friendly messages.
 func CLIError(command, message string, cause error) *TemplarError {
-	code := fmt.Sprintf("ERR_CLI_%s", command)
+	code := "ERR_CLI_" + command
+
 	return &TemplarError{
 		Type:        ErrorTypeValidation,
 		Code:        code,
@@ -150,7 +155,7 @@ func CLIError(command, message string, cause error) *TemplarError {
 	}
 }
 
-// FlagError creates CLI flag validation errors
+// FlagError creates CLI flag validation errors.
 func FlagError(flagName, message string, value interface{}) *TemplarError {
 	return NewFieldValidationError(
 		flagName,
@@ -160,7 +165,7 @@ func FlagError(flagName, message string, value interface{}) *TemplarError {
 	).ToTemplarError()
 }
 
-// ArgumentError creates CLI argument validation errors
+// ArgumentError creates CLI argument validation errors.
 func ArgumentError(argName, message string, value interface{}) *TemplarError {
 	return NewFieldValidationError(
 		argName,
@@ -172,9 +177,10 @@ func ArgumentError(argName, message string, value interface{}) *TemplarError {
 
 // Security and Validation Error Patterns
 
-// SecurityViolation creates security violation errors (non-recoverable)
+// SecurityViolation creates security violation errors (non-recoverable).
 func SecurityViolation(operation, detail string, context map[string]interface{}) *TemplarError {
-	code := fmt.Sprintf("ERR_SECURITY_%s", operation)
+	code := "ERR_SECURITY_" + operation
+
 	return &TemplarError{
 		Type:        ErrorTypeSecurity,
 		Code:        code,
@@ -184,37 +190,39 @@ func SecurityViolation(operation, detail string, context map[string]interface{})
 	}
 }
 
-// ValidationFailure creates validation errors with suggestions
+// ValidationFailure creates validation errors with suggestions.
 func ValidationFailure(
 	field, message string,
 	value interface{},
 	suggestions ...string,
 ) *TemplarError {
 	fieldErr := NewFieldValidationError(field, value, message, suggestions...)
+
 	return fieldErr.ToTemplarError()
 }
 
-// PathValidationError creates path validation errors with security context
+// PathValidationError creates path validation errors with security context.
 func PathValidationError(path, reason string) *TemplarError {
 	if reason == "traversal" {
 		return ErrPathTraversal(path)
 	}
+
 	return ErrInvalidPath(path).WithContext("reason", reason)
 }
 
 // Utility Functions for Error Enhancement
 
-// WithLocationInfo adds file location information to any error
+// WithLocationInfo adds file location information to any error.
 func WithLocationInfo(err error, filePath string, line, column int) error {
 	return EnhanceError(err, "", filePath, line, column)
 }
 
-// WithComponentInfo adds component context to any error
+// WithComponentInfo adds component context to any error.
 func WithComponentInfo(err error, componentName string) error {
 	return EnhanceError(err, componentName, "", 0, 0)
 }
 
-// WithOperationContext adds operation context to any error
+// WithOperationContext adds operation context to any error.
 func WithOperationContext(err error, operation string, context map[string]interface{}) error {
 	if err == nil {
 		return nil
@@ -229,6 +237,7 @@ func WithOperationContext(err error, operation string, context map[string]interf
 		for k, v := range context {
 			te.Context[k] = v
 		}
+
 		return te
 	}
 
@@ -251,12 +260,12 @@ func WithOperationContext(err error, operation string, context map[string]interf
 
 // Error Chain Utilities
 
-// GetRootCause returns the deepest underlying error in the chain
+// GetRootCause returns the deepest underlying error in the chain.
 func GetRootCause(err error) error {
 	return ExtractCause(err)
 }
 
-// GetErrorChain returns all errors in the chain from outermost to innermost
+// GetErrorChain returns all errors in the chain from outermost to innermost.
 func GetErrorChain(err error) []error {
 	var chain []error
 	for err != nil {
@@ -270,10 +279,11 @@ func GetErrorChain(err error) []error {
 			break
 		}
 	}
+
 	return chain
 }
 
-// HasErrorCode checks if any error in the chain has the specified code
+// HasErrorCode checks if any error in the chain has the specified code.
 func HasErrorCode(err error, code string) bool {
 	chain := GetErrorChain(err)
 	for _, e := range chain {
@@ -282,10 +292,11 @@ func HasErrorCode(err error, code string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
-// HasErrorType checks if any error in the chain has the specified type
+// HasErrorType checks if any error in the chain has the specified type.
 func HasErrorType(err error, errType ErrorType) bool {
 	chain := GetErrorChain(err)
 	for _, e := range chain {
@@ -294,6 +305,7 @@ func HasErrorType(err error, errType ErrorType) bool {
 			return true
 		}
 	}
+
 	return false
 }
 

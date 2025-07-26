@@ -13,7 +13,7 @@ import (
 	"github.com/conneroisu/templar/internal/config"
 )
 
-// FuzzWebSocketOriginValidation tests origin validation with various malicious inputs
+// FuzzWebSocketOriginValidation tests origin validation with various malicious inputs.
 func FuzzWebSocketOriginValidation(f *testing.F) {
 	// Seed with valid and invalid origins
 	f.Add("http://localhost:8080")
@@ -58,6 +58,7 @@ func FuzzWebSocketOriginValidation(f *testing.F) {
 			parsedOrigin, err := url.Parse(origin)
 			if err != nil {
 				t.Errorf("Origin validation passed for unparseable origin: %q", origin)
+
 				return
 			}
 
@@ -86,6 +87,7 @@ func FuzzWebSocketOriginValidation(f *testing.F) {
 			for _, allowedHost := range allowedHosts {
 				if parsedOrigin.Host == allowedHost {
 					allowed = true
+
 					break
 				}
 			}
@@ -96,7 +98,7 @@ func FuzzWebSocketOriginValidation(f *testing.F) {
 	})
 }
 
-// FuzzWebSocketMessage tests WebSocket message handling with various payloads
+// FuzzWebSocketMessage tests WebSocket message handling with various payloads.
 func FuzzWebSocketMessage(f *testing.F) {
 	// Seed with various message types and potentially dangerous content
 	f.Add(`{"type":"reload"}`)
@@ -168,7 +170,7 @@ func FuzzWebSocketMessage(f *testing.F) {
 	})
 }
 
-// FuzzWebSocketHeaders tests WebSocket upgrade with various header combinations
+// FuzzWebSocketHeaders tests WebSocket upgrade with various header combinations.
 func FuzzWebSocketHeaders(f *testing.F) {
 	// Seed with various header combinations
 	f.Add("Upgrade\x00WebSocket\x00Connection\x00upgrade")
@@ -231,7 +233,7 @@ func FuzzWebSocketHeaders(f *testing.F) {
 	})
 }
 
-// FuzzWebSocketURL tests WebSocket endpoint with various URL patterns
+// FuzzWebSocketURL tests WebSocket endpoint with various URL patterns.
 func FuzzWebSocketURL(f *testing.F) {
 	// Seed with various URL patterns and potential attacks
 	f.Add("/ws")

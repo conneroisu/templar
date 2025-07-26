@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-// BuildErrorType represents different types of build errors
+// BuildErrorType represents different types of build errors.
 type BuildErrorType int
 
 const (
@@ -28,7 +28,7 @@ const (
 	BuildErrorTypePermission
 )
 
-// ParsedError represents a parsed error with structured information
+// ParsedError represents a parsed error with structured information.
 type ParsedError struct {
 	Type       BuildErrorType `json:"type"`
 	Severity   ErrorSeverity  `json:"severity"`
@@ -42,7 +42,7 @@ type ParsedError struct {
 	Context    []string       `json:"context,omitempty"`
 }
 
-// ErrorParser parses templ and Go errors into structured format
+// ErrorParser parses templ and Go errors into structured format.
 type ErrorParser struct {
 	templPatterns []errorPattern
 	goPatterns    []errorPattern
@@ -56,7 +56,7 @@ type errorPattern struct {
 	parseFields func(matches []string) (file string, line int, column int, message string)
 }
 
-// NewErrorParser creates a new error parser
+// NewErrorParser creates a new error parser.
 func NewErrorParser() *ErrorParser {
 	return &ErrorParser{
 		templPatterns: buildTemplPatterns(),
@@ -64,7 +64,7 @@ func NewErrorParser() *ErrorParser {
 	}
 }
 
-// ParseError parses a build error output into structured errors
+// ParseError parses a build error output into structured errors.
 func (ep *ErrorParser) ParseError(output string) []*ParsedError {
 	var errors []*ParsedError
 
@@ -81,6 +81,7 @@ func (ep *ErrorParser) ParseError(output string) []*ParsedError {
 			// Add context lines
 			err.Context = ep.getContextLines(lines, i, 2)
 			errors = append(errors, err)
+
 			continue
 		}
 
@@ -89,6 +90,7 @@ func (ep *ErrorParser) ParseError(output string) []*ParsedError {
 			// Add context lines
 			err.Context = ep.getContextLines(lines, i, 2)
 			errors = append(errors, err)
+
 			continue
 		}
 
@@ -126,6 +128,7 @@ func (ep *ErrorParser) tryParseWithPatterns(line string, patterns []errorPattern
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -157,6 +160,7 @@ func buildTemplPatterns() []errorPattern {
 				line, _ := strconv.Atoi(matches[2])
 				column, _ := strconv.Atoi(matches[3])
 				message := matches[4]
+
 				return file, line, column, message
 			},
 		},
@@ -170,6 +174,7 @@ func buildTemplPatterns() []errorPattern {
 				line, _ := strconv.Atoi(matches[3])
 				column, _ := strconv.Atoi(matches[4])
 				message := fmt.Sprintf("%s: %s", matches[1], matches[5])
+
 				return file, line, column, message
 			},
 		},
@@ -206,6 +211,7 @@ func buildGoPatterns() []errorPattern {
 				line, _ := strconv.Atoi(matches[2])
 				column, _ := strconv.Atoi(matches[3])
 				message := matches[4]
+
 				return file, line, column, message
 			},
 		},
@@ -218,6 +224,7 @@ func buildGoPatterns() []errorPattern {
 				file := matches[1]
 				line, _ := strconv.Atoi(matches[2])
 				message := matches[3]
+
 				return file, line, 0, message
 			},
 		},
@@ -269,7 +276,7 @@ func buildGoPatterns() []errorPattern {
 	}
 }
 
-// FormatError formats a parsed error for display
+// FormatError formats a parsed error for display.
 func (pe *ParsedError) FormatError() string {
 	var builder strings.Builder
 
@@ -278,7 +285,7 @@ func (pe *ParsedError) FormatError() string {
 
 	// Location information
 	if pe.File != "" {
-		builder.WriteString(fmt.Sprintf(" in %s", pe.File))
+		builder.WriteString(" in " + pe.File)
 		if pe.Line > 0 {
 			builder.WriteString(fmt.Sprintf(":%d", pe.Line))
 			if pe.Column > 0 {
@@ -308,7 +315,7 @@ func (pe *ParsedError) FormatError() string {
 	return builder.String()
 }
 
-// FormatErrorsForBrowser formats errors for browser display
+// FormatErrorsForBrowser formats errors for browser display.
 func FormatErrorsForBrowser(errors []*ParsedError) string {
 	if len(errors) == 0 {
 		return ""
@@ -358,7 +365,7 @@ func FormatErrorsForBrowser(errors []*ParsedError) string {
 		)
 
 		if err.File != "" {
-			builder.WriteString(fmt.Sprintf(`        <div class="error-location">%s`, err.File))
+			builder.WriteString("        <div class=\"error-location\">" + err.File)
 			if err.Line > 0 {
 				builder.WriteString(fmt.Sprintf(`:%d`, err.Line))
 				if err.Column > 0 {
@@ -438,6 +445,7 @@ func max(a, b int) int {
 	if a > b {
 		return a
 	}
+
 	return b
 }
 
@@ -445,5 +453,6 @@ func min(a, b int) int {
 	if a < b {
 		return a
 	}
+
 	return b
 }

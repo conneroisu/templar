@@ -89,7 +89,7 @@ type DevelopmentConfig struct {
 	ErrorOverlay      bool `yaml:"error_overlay"`
 }
 
-// ProductionConfig defines production-specific build and deployment settings
+// ProductionConfig defines production-specific build and deployment settings.
 type ProductionConfig struct {
 	// Output configuration
 	OutputDir string `yaml:"output_dir"`
@@ -121,7 +121,7 @@ type ProductionConfig struct {
 	Environments map[string]EnvironmentConfig `yaml:"environments"`
 }
 
-// OptimizationSettings controls various optimization features
+// OptimizationSettings controls various optimization features.
 type OptimizationSettings struct {
 	CSS            bool `yaml:"css"`
 	JavaScript     bool `yaml:"javascript"`
@@ -131,7 +131,7 @@ type OptimizationSettings struct {
 	StripDebug     bool `yaml:"strip_debug"`
 }
 
-// CompressionSettings controls asset compression
+// CompressionSettings controls asset compression.
 type CompressionSettings struct {
 	Enabled    bool     `yaml:"enabled"`
 	Algorithms []string `yaml:"algorithms"` // gzip, brotli, deflate
@@ -139,7 +139,7 @@ type CompressionSettings struct {
 	Extensions []string `yaml:"extensions"` // file extensions to compress
 }
 
-// AssetSettings controls image and asset optimization
+// AssetSettings controls image and asset optimization.
 type AssetSettings struct {
 	Images              ImageOptimization `yaml:"images"`
 	Fonts               FontOptimization  `yaml:"fonts"`
@@ -149,7 +149,7 @@ type AssetSettings struct {
 	DeadCodeElimination bool              `yaml:"dead_code_elimination"`
 }
 
-// ImageOptimization controls image processing
+// ImageOptimization controls image processing.
 type ImageOptimization struct {
 	Enabled     bool     `yaml:"enabled"`
 	Quality     int      `yaml:"quality"`
@@ -158,7 +158,7 @@ type ImageOptimization struct {
 	Responsive  bool     `yaml:"responsive"`
 }
 
-// FontOptimization controls font processing
+// FontOptimization controls font processing.
 type FontOptimization struct {
 	Enabled    bool     `yaml:"enabled"`
 	Subsetting bool     `yaml:"subsetting"`
@@ -166,7 +166,7 @@ type FontOptimization struct {
 	Preload    bool     `yaml:"preload"`
 }
 
-// IconOptimization controls icon processing
+// IconOptimization controls icon processing.
 type IconOptimization struct {
 	Enabled bool   `yaml:"enabled"`
 	Sprite  bool   `yaml:"sprite"`
@@ -174,7 +174,7 @@ type IconOptimization struct {
 	Format  string `yaml:"format"` // svg, sprite, font
 }
 
-// BundlingSettings controls asset bundling
+// BundlingSettings controls asset bundling.
 type BundlingSettings struct {
 	Enabled        bool     `yaml:"enabled"`
 	Strategy       string   `yaml:"strategy"` // single, multiple, adaptive
@@ -183,7 +183,7 @@ type BundlingSettings struct {
 	Splitting      bool     `yaml:"splitting"` // enable automatic code splitting
 }
 
-// SplittingSettings controls code splitting
+// SplittingSettings controls code splitting.
 type SplittingSettings struct {
 	Enabled      bool     `yaml:"enabled"`
 	VendorSplit  bool     `yaml:"vendor_split"`
@@ -192,7 +192,7 @@ type SplittingSettings struct {
 	ManualChunks []string `yaml:"manual_chunks"`
 }
 
-// DeploymentSettings controls deployment configuration
+// DeploymentSettings controls deployment configuration.
 type DeploymentSettings struct {
 	Target      string            `yaml:"target"`       // static, docker, serverless
 	Environment string            `yaml:"environment"`  // production, staging, preview
@@ -203,14 +203,14 @@ type DeploymentSettings struct {
 	ErrorPages  map[string]string `yaml:"error_pages"`  // custom error pages
 }
 
-// RedirectRule defines URL redirect rules
+// RedirectRule defines URL redirect rules.
 type RedirectRule struct {
 	From   string `yaml:"from"`
 	To     string `yaml:"to"`
 	Status int    `yaml:"status"`
 }
 
-// CDNSettings controls CDN integration
+// CDNSettings controls CDN integration.
 type CDNSettings struct {
 	Enabled      bool              `yaml:"enabled"`
 	Provider     string            `yaml:"provider"`     // cloudflare, aws, etc.
@@ -220,7 +220,7 @@ type CDNSettings struct {
 	Headers      map[string]string `yaml:"headers"`      // CDN-specific headers
 }
 
-// PerformanceSettings controls performance optimizations
+// PerformanceSettings controls performance optimizations.
 type PerformanceSettings struct {
 	BudgetLimits  map[string]int64 `yaml:"budget_limits"`  // size budgets
 	Preconnect    []string         `yaml:"preconnect"`     // domains to preconnect
@@ -231,7 +231,7 @@ type PerformanceSettings struct {
 	ManifestFile  bool             `yaml:"manifest_file"`  // generate web manifest
 }
 
-// ProductionMonitoring extends base monitoring for production
+// ProductionMonitoring extends base monitoring for production.
 type ProductionMonitoring struct {
 	Analytics     AnalyticsSettings     `yaml:"analytics"`
 	ErrorTracking ErrorTrackingSettings `yaml:"error_tracking"`
@@ -239,7 +239,7 @@ type ProductionMonitoring struct {
 	Uptime        UptimeSettings        `yaml:"uptime"`
 }
 
-// AnalyticsSettings controls analytics integration
+// AnalyticsSettings controls analytics integration.
 type AnalyticsSettings struct {
 	Enabled  bool   `yaml:"enabled"`
 	Provider string `yaml:"provider"` // google, plausible, etc.
@@ -247,7 +247,7 @@ type AnalyticsSettings struct {
 	Privacy  bool   `yaml:"privacy"`  // privacy-focused analytics
 }
 
-// ErrorTrackingSettings controls error tracking
+// ErrorTrackingSettings controls error tracking.
 type ErrorTrackingSettings struct {
 	Enabled     bool    `yaml:"enabled"`
 	Provider    string  `yaml:"provider"` // sentry, bugsnag, etc.
@@ -256,7 +256,7 @@ type ErrorTrackingSettings struct {
 	SampleRate  float64 `yaml:"sample_rate"`
 }
 
-// PerformanceMonitoring controls performance tracking
+// PerformanceMonitoring controls performance tracking.
 type PerformanceMonitoring struct {
 	Enabled      bool     `yaml:"enabled"`
 	RealUserData bool     `yaml:"real_user_data"`
@@ -264,7 +264,7 @@ type PerformanceMonitoring struct {
 	Metrics      []string `yaml:"metrics"` // custom metrics to track
 }
 
-// UptimeSettings controls uptime monitoring
+// UptimeSettings controls uptime monitoring.
 type UptimeSettings struct {
 	Enabled   bool     `yaml:"enabled"`
 	Endpoints []string `yaml:"endpoints"` // endpoints to monitor
@@ -272,7 +272,7 @@ type UptimeSettings struct {
 	Alerts    bool     `yaml:"alerts"`    // enable alerting
 }
 
-// SecuritySettings controls security features
+// SecuritySettings controls security features.
 type SecuritySettings struct {
 	CSP                 ContentSecurityPolicy `yaml:"csp"`
 	HSTS                bool                  `yaml:"hsts"`
@@ -282,14 +282,14 @@ type SecuritySettings struct {
 	Secrets             SecretsSettings       `yaml:"secrets"`
 }
 
-// ContentSecurityPolicy defines CSP configuration
+// ContentSecurityPolicy defines CSP configuration.
 type ContentSecurityPolicy struct {
 	Enabled    bool              `yaml:"enabled"`
 	Directives map[string]string `yaml:"directives"`
 	ReportURI  string            `yaml:"report_uri"`
 }
 
-// SecurityScanSettings controls security scanning
+// SecurityScanSettings controls security scanning.
 type SecurityScanSettings struct {
 	Enabled        bool     `yaml:"enabled"`
 	Dependencies   bool     `yaml:"dependencies"`    // scan dependencies for vulnerabilities
@@ -298,7 +298,7 @@ type SecurityScanSettings struct {
 	AllowedRisks   []string `yaml:"allowed_risks"`   // acceptable risk levels
 }
 
-// SecretsSettings controls secrets management
+// SecretsSettings controls secrets management.
 type SecretsSettings struct {
 	Detection  bool     `yaml:"detection"`  // detect secrets in code
 	Validation bool     `yaml:"validation"` // validate secret formats
@@ -306,7 +306,7 @@ type SecretsSettings struct {
 	Exclusions []string `yaml:"exclusions"` // files to exclude from scanning
 }
 
-// ValidationSettings controls build validation
+// ValidationSettings controls build validation.
 type ValidationSettings struct {
 	Enabled       bool                `yaml:"enabled"`
 	Accessibility AccessibilityChecks `yaml:"accessibility"`
@@ -316,7 +316,7 @@ type ValidationSettings struct {
 	Standards     StandardsChecks     `yaml:"standards"`
 }
 
-// AccessibilityChecks controls accessibility validation
+// AccessibilityChecks controls accessibility validation.
 type AccessibilityChecks struct {
 	Enabled     bool     `yaml:"enabled"`
 	Level       string   `yaml:"level"`        // A, AA, AAA
@@ -324,7 +324,7 @@ type AccessibilityChecks struct {
 	IgnoreRules []string `yaml:"ignore_rules"` // rules to ignore
 }
 
-// PerformanceChecks controls performance validation
+// PerformanceChecks controls performance validation.
 type PerformanceChecks struct {
 	Enabled    bool             `yaml:"enabled"`
 	BundleSize int64            `yaml:"bundle_size"` // max bundle size
@@ -333,7 +333,7 @@ type PerformanceChecks struct {
 	Lighthouse bool             `yaml:"lighthouse"`  // run Lighthouse audits
 }
 
-// SEOChecks controls SEO validation
+// SEOChecks controls SEO validation.
 type SEOChecks struct {
 	Enabled   bool `yaml:"enabled"`
 	MetaTags  bool `yaml:"meta_tags"`  // validate meta tags
@@ -343,7 +343,7 @@ type SEOChecks struct {
 	OpenGraph bool `yaml:"open_graph"` // validate Open Graph tags
 }
 
-// LinkChecks controls link validation
+// LinkChecks controls link validation.
 type LinkChecks struct {
 	Enabled    bool     `yaml:"enabled"`
 	Internal   bool     `yaml:"internal"`    // check internal links
@@ -353,7 +353,7 @@ type LinkChecks struct {
 	IgnoreUrls []string `yaml:"ignore_urls"` // URLs to ignore
 }
 
-// StandardsChecks controls web standards validation
+// StandardsChecks controls web standards validation.
 type StandardsChecks struct {
 	Enabled    bool `yaml:"enabled"`
 	HTML       bool `yaml:"html"`       // validate HTML
@@ -362,7 +362,7 @@ type StandardsChecks struct {
 	W3C        bool `yaml:"w3c"`        // use W3C validators
 }
 
-// EnvironmentConfig allows per-environment configuration overrides
+// EnvironmentConfig allows per-environment configuration overrides.
 type EnvironmentConfig struct {
 	Extends    string                 `yaml:"extends"`    // inherit from another environment
 	Variables  map[string]string      `yaml:"variables"`  // environment variables
@@ -391,7 +391,7 @@ type MonitoringConfig struct {
 	AlertsEnabled bool   `yaml:"alerts_enabled"`
 }
 
-// CSSConfig defines CSS framework integration configuration
+// CSSConfig defines CSS framework integration configuration.
 type CSSConfig struct {
 	Framework    string                 `yaml:"framework"`    // "tailwind", "bootstrap", "bulma", etc.
 	OutputPath   string                 `yaml:"output_path"`  // Path for generated CSS
@@ -402,19 +402,19 @@ type CSSConfig struct {
 	Options      map[string]interface{} `yaml:"options,omitempty"`
 }
 
-// OptimizationConfig defines CSS optimization settings
+// OptimizationConfig defines CSS optimization settings.
 type OptimizationConfig struct {
 	Purge  bool `yaml:"purge"`
 	Minify bool `yaml:"minify"`
 }
 
-// ThemingConfig defines CSS theming settings
+// ThemingConfig defines CSS theming settings.
 type ThemingConfig struct {
 	ExtractVariables bool `yaml:"extract_variables"`
 	StyleGuide       bool `yaml:"style_guide"`
 }
 
-// TimeoutConfig defines timeout settings for various operations
+// TimeoutConfig defines timeout settings for various operations.
 type TimeoutConfig struct {
 	// Build and compilation timeouts
 	Build    time.Duration `yaml:"build"`    // Build operation timeout (templ generate, etc.)
@@ -540,7 +540,7 @@ func loadDefaults(config *Config) {
 	loadTimeoutDefaults(&config.Timeouts)
 }
 
-// loadProductionDefaults applies default values for production configuration
+// loadProductionDefaults applies default values for production configuration.
 func loadProductionDefaults(prod *ProductionConfig) {
 	// Output configuration defaults
 	if prod.OutputDir == "" {
@@ -752,7 +752,7 @@ func loadProductionDefaults(prod *ProductionConfig) {
 	}
 }
 
-// loadTimeoutDefaults applies default values for timeout configuration
+// loadTimeoutDefaults applies default values for timeout configuration.
 func loadTimeoutDefaults(timeouts *TimeoutConfig) {
 	// Build and compilation timeouts
 	if timeouts.Build == 0 {
@@ -930,16 +930,17 @@ func Load() (*Config, error) {
 	return &config, nil
 }
 
-// GetEnvironmentConfig returns environment-specific configuration
+// GetEnvironmentConfig returns environment-specific configuration.
 func (c *Config) GetEnvironmentConfig(env string) (*EnvironmentConfig, bool) {
 	if c.Production.Environments == nil {
 		return nil, false
 	}
 	envConfig, exists := c.Production.Environments[env]
+
 	return &envConfig, exists
 }
 
-// ApplyEnvironmentOverrides applies environment-specific configuration overrides
+// ApplyEnvironmentOverrides applies environment-specific configuration overrides.
 func (c *Config) ApplyEnvironmentOverrides(env string) error {
 	envConfig, exists := c.GetEnvironmentConfig(env)
 	if !exists {
@@ -983,7 +984,7 @@ func (c *Config) ApplyEnvironmentOverrides(env string) error {
 	return nil
 }
 
-// GetProductionConfig returns production configuration with environment overrides applied
+// GetProductionConfig returns production configuration with environment overrides applied.
 func (c *Config) GetProductionConfig(env string) (*ProductionConfig, error) {
 	// Clone production config to avoid modifying original
 	prodConfig := c.Production

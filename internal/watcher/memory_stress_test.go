@@ -11,7 +11,7 @@ import (
 	"github.com/conneroisu/templar/internal/interfaces"
 )
 
-// TestMemoryGrowthUnderHighLoad tests memory behavior under sustained high load
+// TestMemoryGrowthUnderHighLoad tests memory behavior under sustained high load.
 func TestMemoryGrowthUnderHighLoad(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping memory stress test in short mode")
@@ -36,6 +36,7 @@ func TestMemoryGrowthUnderHighLoad(t *testing.T) {
 	eventCount := 0
 	fw.AddHandler(func(events []ChangeEvent) error {
 		eventCount += len(events)
+
 		return nil
 	})
 
@@ -58,11 +59,11 @@ func TestMemoryGrowthUnderHighLoad(t *testing.T) {
 	runtime.ReadMemStats(&m1)
 
 	// Create sustained file activity to stress memory management
-	for cycle := 0; cycle < 5; cycle++ {
+	for cycle := range 5 {
 		t.Logf("Memory stress cycle %d/5", cycle+1)
 
 		// Create many files rapidly
-		for i := 0; i < 200; i++ {
+		for i := range 200 {
 			fileName := filepath.Join(
 				tempDir,
 				"stress_test_"+string(rune(cycle))+"_"+string(rune(i))+".templ",
@@ -86,7 +87,7 @@ func TestMemoryGrowthUnderHighLoad(t *testing.T) {
 		time.Sleep(50 * time.Millisecond)
 
 		// Delete files to create more events
-		for i := 0; i < 200; i++ {
+		for i := range 200 {
 			fileName := filepath.Join(
 				tempDir,
 				"stress_test_"+string(rune(cycle))+"_"+string(rune(i))+".templ",
@@ -154,7 +155,7 @@ func TestMemoryGrowthUnderHighLoad(t *testing.T) {
 	}
 }
 
-// TestChannelBufferOverflow tests behavior when event channels become full
+// TestChannelBufferOverflow tests behavior when event channels become full.
 func TestChannelBufferOverflow(t *testing.T) {
 	// Create watcher with very long debounce to prevent flushing
 	fw, err := NewFileWatcher(10 * time.Second)
@@ -172,7 +173,7 @@ func TestChannelBufferOverflow(t *testing.T) {
 	eventsToSend := 150 // More than channel capacity (100)
 	sentEvents := 0
 
-	for i := 0; i < eventsToSend; i++ {
+	for range eventsToSend {
 		event := ChangeEvent{
 			Type:    EventTypeModified,
 			Path:    "/test/file.templ",
@@ -202,7 +203,7 @@ func TestChannelBufferOverflow(t *testing.T) {
 	}
 }
 
-// BenchmarkMemoryEfficiency benchmarks memory efficiency improvements
+// BenchmarkMemoryEfficiency benchmarks memory efficiency improvements.
 func BenchmarkMemoryEfficiency(b *testing.B) {
 	fw, err := NewFileWatcher(10 * time.Millisecond)
 	if err != nil {
@@ -218,7 +219,7 @@ func BenchmarkMemoryEfficiency(b *testing.B) {
 	b.ReportAllocs()
 
 	// Benchmark event processing with pooled objects
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		event := ChangeEvent{
 			Type:    EventTypeModified,
 			Path:    "/test/file" + string(rune(i%100)) + ".templ",

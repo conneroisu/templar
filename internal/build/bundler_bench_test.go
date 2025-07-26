@@ -11,7 +11,7 @@ import (
 	"github.com/conneroisu/templar/internal/config"
 )
 
-// createBenchConfig creates a config for benchmarking
+// createBenchConfig creates a config for benchmarking.
 func createBenchConfig(b *testing.B) *config.Config {
 	return &config.Config{
 		Build: config.BuildConfig{
@@ -23,7 +23,7 @@ func createBenchConfig(b *testing.B) *config.Config {
 	}
 }
 
-// BenchmarkDiscoverAssets benchmarks asset discovery operations
+// BenchmarkDiscoverAssets benchmarks asset discovery operations.
 func BenchmarkDiscoverAssets(b *testing.B) {
 	// Create test directory with different numbers of files
 	testDirs := []struct {
@@ -51,7 +51,7 @@ func BenchmarkDiscoverAssets(b *testing.B) {
 			ctx := context.Background()
 
 			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
+			for range b.N {
 				manifest, err := bundler.DiscoverAssets(ctx)
 				if err != nil {
 					b.Fatal(err)
@@ -62,7 +62,7 @@ func BenchmarkDiscoverAssets(b *testing.B) {
 	}
 }
 
-// BenchmarkBundle benchmarks different bundling operations
+// BenchmarkBundle benchmarks different bundling operations.
 func BenchmarkBundle(b *testing.B) {
 	// Create test assets
 	tempDir := createTestAssetStructure(b, 50, "mixed")
@@ -102,7 +102,7 @@ func BenchmarkBundle(b *testing.B) {
 			}
 
 			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
+			for range b.N {
 				result, err := bundler.Bundle(ctx, manifest, options)
 				if err != nil {
 					b.Fatal(err)
@@ -113,7 +113,7 @@ func BenchmarkBundle(b *testing.B) {
 	}
 }
 
-// BenchmarkAssetProcessing benchmarks asset processing operations
+// BenchmarkAssetProcessing benchmarks asset processing operations.
 func BenchmarkAssetProcessing(b *testing.B) {
 	tempDir := createTestAssetStructure(b, 100, "mixed")
 	defer os.RemoveAll(tempDir)
@@ -124,7 +124,7 @@ func BenchmarkAssetProcessing(b *testing.B) {
 
 	b.Run("asset_discovery", func(b *testing.B) {
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			manifest, err := bundler.DiscoverAssets(ctx)
 			if err != nil {
 				b.Fatal(err)
@@ -134,7 +134,7 @@ func BenchmarkAssetProcessing(b *testing.B) {
 	})
 }
 
-// BenchmarkConcurrentBundling benchmarks concurrent bundling operations
+// BenchmarkConcurrentBundling benchmarks concurrent bundling operations.
 func BenchmarkConcurrentBundling(b *testing.B) {
 	// Create test assets
 	tempDir := createTestAssetStructure(b, 200, "mixed")
@@ -147,7 +147,7 @@ func BenchmarkConcurrentBundling(b *testing.B) {
 		ctx := context.Background()
 
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			manifest, err := bundler.DiscoverAssets(ctx)
 			if err != nil {
 				b.Fatal(err)
@@ -197,7 +197,7 @@ func BenchmarkConcurrentBundling(b *testing.B) {
 	})
 }
 
-// BenchmarkMemoryUsage benchmarks memory usage patterns
+// BenchmarkMemoryUsage benchmarks memory usage patterns.
 func BenchmarkMemoryUsage(b *testing.B) {
 	b.Run("large_asset_processing", func(b *testing.B) {
 		// Create large assets
@@ -208,8 +208,7 @@ func BenchmarkMemoryUsage(b *testing.B) {
 		defer os.RemoveAll(tempDir)
 
 		// Create a large JavaScript file (1MB)
-		largeContent := fmt.Sprintf("// Large content\n%s",
-			strings.Repeat("console.log('test');\n", 50000))
+		largeContent := "// Large content\n" + strings.Repeat("console.log('test');\n", 50000)
 		largeFile := filepath.Join(tempDir, "large.js")
 		err = os.WriteFile(largeFile, []byte(largeContent), 0644)
 		if err != nil {
@@ -221,7 +220,7 @@ func BenchmarkMemoryUsage(b *testing.B) {
 		ctx := context.Background()
 
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			manifest, err := bundler.DiscoverAssets(ctx)
 			if err != nil {
 				b.Fatal(err)
@@ -238,7 +237,7 @@ func BenchmarkMemoryUsage(b *testing.B) {
 		defer os.RemoveAll(tempDir)
 
 		// Create many small assets
-		for i := 0; i < 1000; i++ {
+		for i := range 1000 {
 			content := fmt.Sprintf("var x%d = %d;\n", i, i)
 			fileName := fmt.Sprintf("asset_%d.js", i)
 			filePath := filepath.Join(tempDir, fileName)
@@ -254,7 +253,7 @@ func BenchmarkMemoryUsage(b *testing.B) {
 		ctx := context.Background()
 
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			manifest, err := bundler.DiscoverAssets(ctx)
 			if err != nil {
 				b.Fatal(err)
@@ -287,7 +286,7 @@ func createTestAssetStructure(b *testing.B, numFiles int, structure string) stri
 func createFlatStructure(b *testing.B, baseDir string, numFiles int) {
 	extensions := []string{"js", "css", "ts", "scss"}
 
-	for i := 0; i < numFiles; i++ {
+	for i := range numFiles {
 		ext := extensions[i%len(extensions)]
 		fileName := fmt.Sprintf("file_%d.%s", i, ext)
 		filePath := filepath.Join(baseDir, fileName)
@@ -305,7 +304,7 @@ func createNestedStructure(b *testing.B, baseDir string, numFiles int) {
 	dirsPerLevel := 5
 	maxDepth := 4
 
-	for i := 0; i < numFiles; i++ {
+	for i := range numFiles {
 		ext := extensions[i%len(extensions)]
 
 		// Create nested directory path
@@ -413,7 +412,7 @@ func generateTestContent(ext string, index int) string {
 	}
 }
 
-// Additional I/O intensive benchmarks
+// Additional I/O intensive benchmarks.
 func BenchmarkFileIOOperations(b *testing.B) {
 	tempDir, err := os.MkdirTemp("", "io_bench_*")
 	if err != nil {
@@ -441,11 +440,11 @@ func BenchmarkFileIOOperations(b *testing.B) {
 			b.Fatal(err)
 		}
 
-		b.Run(fmt.Sprintf("process_%s", sizeName), func(b *testing.B) {
+		b.Run("process_"+sizeName, func(b *testing.B) {
 			ctx := context.Background()
 
 			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
+			for range b.N {
 				manifest, err := bundler.DiscoverAssets(ctx)
 				if err != nil {
 					b.Fatal(err)
@@ -456,7 +455,7 @@ func BenchmarkFileIOOperations(b *testing.B) {
 	}
 }
 
-// BenchmarkErrorHandling benchmarks error handling paths
+// BenchmarkErrorHandling benchmarks error handling paths.
 func BenchmarkErrorHandling(b *testing.B) {
 	tempDir, err := os.MkdirTemp("", "error_bench_*")
 	if err != nil {
@@ -469,7 +468,7 @@ func BenchmarkErrorHandling(b *testing.B) {
 
 	b.Run("discovery_with_invalid_files", func(b *testing.B) {
 		// Create some invalid/empty files
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			fileName := fmt.Sprintf("invalid_%d.js", i)
 			filePath := filepath.Join(tempDir, fileName)
 			os.WriteFile(filePath, []byte(""), 0000) // No permissions
@@ -477,7 +476,7 @@ func BenchmarkErrorHandling(b *testing.B) {
 
 		ctx := context.Background()
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			_, err := bundler.DiscoverAssets(ctx)
 			// Don't fail on errors - we're benchmarking error handling
 			_ = err

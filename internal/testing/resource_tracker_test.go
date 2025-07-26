@@ -39,7 +39,7 @@ func TestResourceTracker_GoroutineLeak(t *testing.T) {
 	stopCh := make(chan struct{})
 
 	// Start 5 goroutines that will leak
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -74,7 +74,7 @@ func TestResourceTracker_NoLeakDetection(t *testing.T) {
 	tracker := NewResourceTracker("no_leak_test")
 
 	// Do some work that shouldn't leak
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		go func() {
 			// Do nothing and exit immediately
 		}()
@@ -95,7 +95,7 @@ func TestResourceTracker_MemoryTracking(t *testing.T) {
 
 	// Allocate some memory
 	var allocations [][]byte
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		allocation := make([]byte, 1024) // 1KB each
 		allocations = append(allocations, allocation)
 	}
@@ -121,7 +121,7 @@ func TestResourceTracker_SamplingHistory(t *testing.T) {
 	tracker := NewResourceTracker("sampling_test")
 
 	// Take several samples
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		tracker.TakeSample()
 		time.Sleep(1 * time.Millisecond)
 	}
@@ -235,11 +235,11 @@ func TestResourceTracker_ConcurrentAccess(t *testing.T) {
 	const numGoroutines = 10
 	const samplesPerGoroutine = 10
 
-	for i := 0; i < numGoroutines; i++ {
+	for range numGoroutines {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			for j := 0; j < samplesPerGoroutine; j++ {
+			for range samplesPerGoroutine {
 				tracker.TakeSample()
 				time.Sleep(time.Millisecond)
 			}
@@ -256,7 +256,7 @@ func TestResourceTracker_ConcurrentAccess(t *testing.T) {
 	}
 }
 
-// Test helper that captures testing.T calls for verification
+// Test helper that captures testing.T calls for verification.
 type TestHelper struct {
 	errors []string
 	logs   []string
@@ -278,6 +278,7 @@ func (th *TestHelper) Logf(format string, args ...interface{}) {
 func (th *TestHelper) HasError() bool {
 	th.mu.Lock()
 	defer th.mu.Unlock()
+
 	return len(th.errors) > 0
 }
 
@@ -286,15 +287,16 @@ func (th *TestHelper) GetErrors() []string {
 	defer th.mu.Unlock()
 	result := make([]string, len(th.errors))
 	copy(result, th.errors)
+
 	return result
 }
 
-// Benchmark tests
+// Benchmark tests.
 func BenchmarkResourceTracker_TakeSample(b *testing.B) {
 	tracker := NewResourceTracker("bench_test")
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		tracker.TakeSample()
 	}
 }
@@ -303,12 +305,12 @@ func BenchmarkResourceTracker_GetResourceUsage(b *testing.B) {
 	tracker := NewResourceTracker("bench_usage_test")
 
 	// Take some samples first
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		tracker.TakeSample()
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		tracker.GetResourceUsage()
 	}
 }
@@ -326,14 +328,14 @@ func BenchmarkResourceTracker_ConcurrentSampling(b *testing.B) {
 
 func BenchmarkMemoryPressure_SmallAllocations(b *testing.B) {
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		test := NewMemoryPressureTest("bench_pressure")
 		test.ApplyPressure(1, 1) // 1MB
 		test.ReleasePressure()
 	}
 }
 
-// Integration test combining error injection and resource tracking
+// Integration test combining error injection and resource tracking.
 func TestIntegration_ErrorInjectionWithResourceTracking(t *testing.T) {
 	tracker := NewResourceTracker("integration_test")
 	injector := NewErrorInjector()
@@ -350,6 +352,7 @@ func TestIntegration_ErrorInjectionWithResourceTracking(t *testing.T) {
 		// Allocate memory if no error injection
 		allocation := make([]byte, 1024*1024) // 1MB
 		_ = allocation
+
 		return nil
 	}
 

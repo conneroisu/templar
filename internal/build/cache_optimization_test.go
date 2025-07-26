@@ -10,7 +10,7 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// BenchmarkCacheHashGeneration tests the performance improvement of the optimized cache system
+// BenchmarkCacheHashGeneration tests the performance improvement of the optimized cache system.
 func BenchmarkCacheHashGeneration(b *testing.B) {
 	// Create temp directory with test files
 	tempDir := b.TempDir()
@@ -49,7 +49,7 @@ func BenchmarkCacheHashGeneration(b *testing.B) {
 	// Benchmark cache performance
 	b.Run("ColdCache", func(b *testing.B) {
 		// Test performance with empty cache (worst case)
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			for _, component := range components {
 				pipeline.generateContentHash(component)
 			}
@@ -67,7 +67,7 @@ func BenchmarkCacheHashGeneration(b *testing.B) {
 		b.ResetTimer()
 
 		// Test performance with warm cache (best case)
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			for _, component := range components {
 				pipeline.generateContentHash(component)
 			}
@@ -76,7 +76,7 @@ func BenchmarkCacheHashGeneration(b *testing.B) {
 
 	b.Run("MixedCache", func(b *testing.B) {
 		// Test realistic scenario with some cache hits and misses
-		for i := 0; i < b.N; i++ {
+		for i := range b.N {
 			for j, component := range components {
 				pipeline.generateContentHash(component)
 
@@ -90,7 +90,7 @@ func BenchmarkCacheHashGeneration(b *testing.B) {
 	})
 }
 
-// BenchmarkBatchHashGeneration tests the batch processing performance
+// BenchmarkBatchHashGeneration tests the batch processing performance.
 func BenchmarkBatchHashGeneration(b *testing.B) {
 	tempDir := b.TempDir()
 
@@ -98,7 +98,7 @@ func BenchmarkBatchHashGeneration(b *testing.B) {
 	numFiles := 100
 	components := make([]*types.ComponentInfo, numFiles)
 
-	for i := 0; i < numFiles; i++ {
+	for i := range numFiles {
 		fileName := fmt.Sprintf("component_%d.templ", i)
 		filePath := filepath.Join(tempDir, fileName)
 		content := fmt.Sprintf("component %d content with some text", i)
@@ -121,7 +121,7 @@ func BenchmarkBatchHashGeneration(b *testing.B) {
 	b.ResetTimer()
 
 	b.Run("IndividualHashing", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			cache.Clear()
 			for _, component := range components {
 				pipeline.generateContentHash(component)
@@ -130,14 +130,14 @@ func BenchmarkBatchHashGeneration(b *testing.B) {
 	})
 
 	b.Run("BatchHashing", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 			cache.Clear()
 			pipeline.generateContentHashesBatch(components)
 		}
 	})
 }
 
-// TestCacheOptimizationCorrectness verifies that the optimization doesn't break correctness
+// TestCacheOptimizationCorrectness verifies that the optimization doesn't break correctness.
 func TestCacheOptimizationCorrectness(t *testing.T) {
 	tempDir := t.TempDir()
 
@@ -202,16 +202,17 @@ func TestCacheOptimizationCorrectness(t *testing.T) {
 	}
 }
 
-// generateContent creates content of specified size for testing
+// generateContent creates content of specified size for testing.
 func generateContent(size int) string {
 	content := make([]byte, size)
-	for i := 0; i < size; i++ {
+	for i := range size {
 		content[i] = byte('A' + (i % 26))
 	}
+
 	return string(content)
 }
 
-// TestFileIOReduction validates that we actually reduce file I/O operations
+// TestFileIOReduction validates that we actually reduce file I/O operations.
 func TestFileIOReduction(t *testing.T) {
 	tempDir := t.TempDir()
 
@@ -221,7 +222,7 @@ func TestFileIOReduction(t *testing.T) {
 
 	for i, fileName := range files {
 		filePath := filepath.Join(tempDir, fileName)
-		content := fmt.Sprintf("content for %s", fileName)
+		content := "content for " + fileName
 		if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
 			t.Fatalf("Failed to create test file: %v", err)
 		}

@@ -19,7 +19,7 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// VisualRegressionTester handles visual regression testing for template output
+// VisualRegressionTester handles visual regression testing for template output.
 type VisualRegressionTester struct {
 	goldenDir       string
 	updateMode      bool
@@ -30,7 +30,7 @@ type VisualRegressionTester struct {
 	serverPort      int
 }
 
-// TestCase represents a visual regression test case
+// TestCase represents a visual regression test case.
 type TestCase struct {
 	Name        string                 `json:"name"`
 	Component   string                 `json:"component"`
@@ -43,13 +43,13 @@ type TestCase struct {
 	Screenshot  bool                   `json:"screenshot,omitempty"`
 }
 
-// Viewport defines the browser viewport size for screenshot tests
+// Viewport defines the browser viewport size for screenshot tests.
 type Viewport struct {
 	Width  int `json:"width"`
 	Height int `json:"height"`
 }
 
-// RegressionResult contains the results of a visual regression test
+// RegressionResult contains the results of a visual regression test.
 type RegressionResult struct {
 	TestCase       TestCase `json:"test_case"`
 	Passed         bool     `json:"passed"`
@@ -67,7 +67,7 @@ type RegressionResult struct {
 	PercentDiff    float64  `json:"percent_diff"`
 }
 
-// NewVisualRegressionTester creates a new visual regression tester
+// NewVisualRegressionTester creates a new visual regression tester.
 func NewVisualRegressionTester(goldenDir string, updateMode bool) *VisualRegressionTester {
 	reg := registry.NewComponentRegistry()
 	renderer := renderer.NewComponentRenderer(reg)
@@ -83,7 +83,7 @@ func NewVisualRegressionTester(goldenDir string, updateMode bool) *VisualRegress
 	}
 }
 
-// NewVisualRegressionTesterWithOptions creates a tester with custom options
+// NewVisualRegressionTesterWithOptions creates a tester with custom options.
 func NewVisualRegressionTesterWithOptions(
 	goldenDir string,
 	updateMode bool,
@@ -102,14 +102,14 @@ func NewVisualRegressionTesterWithOptions(
 	return vrt
 }
 
-// VisualTestOptions provides configuration options for visual regression testing
+// VisualTestOptions provides configuration options for visual regression testing.
 type VisualTestOptions struct {
 	ScreenshotDir   string
 	EnablePuppeteer bool
 	ServerPort      int
 }
 
-// checkPuppeteerAvailable checks if Puppeteer or similar tools are available
+// checkPuppeteerAvailable checks if Puppeteer or similar tools are available.
 func checkPuppeteerAvailable() bool {
 	// Check for Puppeteer CLI or Chrome/Chromium in headless mode
 	tools := []string{"puppeteer", "chrome", "chromium", "google-chrome"}
@@ -118,17 +118,18 @@ func checkPuppeteerAvailable() bool {
 			return true
 		}
 	}
+
 	return false
 }
 
-// RegisterComponents adds components to the registry for testing
+// RegisterComponents adds components to the registry for testing.
 func (vrt *VisualRegressionTester) RegisterComponents(components []*types.ComponentInfo) {
 	for _, component := range components {
 		vrt.registry.Register(component)
 	}
 }
 
-// RunTest executes a single visual regression test
+// RunTest executes a single visual regression test.
 func (vrt *VisualRegressionTester) RunTest(t *testing.T, testCase TestCase) *RegressionResult {
 	result := &RegressionResult{
 		TestCase: testCase,
@@ -139,6 +140,7 @@ func (vrt *VisualRegressionTester) RunTest(t *testing.T, testCase TestCase) *Reg
 	output, err := vrt.renderComponent(testCase.Component, testCase.Props)
 	if err != nil {
 		result.Error = fmt.Errorf("failed to render component %s: %w", testCase.Component, err)
+
 		return result
 	}
 
@@ -153,6 +155,7 @@ func (vrt *VisualRegressionTester) RunTest(t *testing.T, testCase TestCase) *Reg
 		screenshotResult, err := vrt.runScreenshotTest(t, testCase, output)
 		if err != nil {
 			result.Error = fmt.Errorf("screenshot test failed: %w", err)
+
 			return result
 		}
 
@@ -166,6 +169,7 @@ func (vrt *VisualRegressionTester) RunTest(t *testing.T, testCase TestCase) *Reg
 
 		if !screenshotResult.Passed {
 			result.Passed = false
+
 			return result
 		}
 	}
@@ -174,9 +178,11 @@ func (vrt *VisualRegressionTester) RunTest(t *testing.T, testCase TestCase) *Reg
 		// Update golden file
 		if err := vrt.updateGoldenFile(goldenPath, output); err != nil {
 			result.Error = fmt.Errorf("failed to update golden file %s: %w", goldenPath, err)
+
 			return result
 		}
 		result.Passed = true
+
 		return result
 	}
 
@@ -184,6 +190,7 @@ func (vrt *VisualRegressionTester) RunTest(t *testing.T, testCase TestCase) *Reg
 	expected, err := vrt.readGoldenFile(goldenPath)
 	if err != nil {
 		result.Error = fmt.Errorf("failed to read golden file %s: %w", goldenPath, err)
+
 		return result
 	}
 
@@ -200,7 +207,7 @@ func (vrt *VisualRegressionTester) RunTest(t *testing.T, testCase TestCase) *Reg
 	return result
 }
 
-// RunTestSuite executes multiple visual regression tests
+// RunTestSuite executes multiple visual regression tests.
 func (vrt *VisualRegressionTester) RunTestSuite(
 	t *testing.T,
 	testCases []TestCase,
@@ -224,7 +231,7 @@ func (vrt *VisualRegressionTester) RunTestSuite(
 	return results
 }
 
-// renderComponent renders a component with given props
+// renderComponent renders a component with given props.
 func (vrt *VisualRegressionTester) renderComponent(
 	componentName string,
 	props map[string]interface{},
@@ -239,10 +246,11 @@ func (vrt *VisualRegressionTester) renderComponent(
 
 	// Generate HTML based on component and props
 	html := vrt.generateHTML(component, props)
+
 	return []byte(html), nil
 }
 
-// generateHTML generates HTML for a component (placeholder implementation)
+// generateHTML generates HTML for a component (placeholder implementation).
 func (vrt *VisualRegressionTester) generateHTML(
 	component *types.ComponentInfo,
 	props map[string]interface{},
@@ -298,13 +306,14 @@ func (vrt *VisualRegressionTester) generateHTML(
 	return html.String()
 }
 
-// hashContent generates a SHA256 hash of content for comparison
+// hashContent generates a SHA256 hash of content for comparison.
 func (vrt *VisualRegressionTester) hashContent(content []byte) string {
 	hash := sha256.Sum256(content)
+
 	return hex.EncodeToString(hash[:])
 }
 
-// updateGoldenFile writes content to a golden file
+// updateGoldenFile writes content to a golden file.
 func (vrt *VisualRegressionTester) updateGoldenFile(path string, content []byte) error {
 	// Ensure directory exists
 	dir := filepath.Dir(path)
@@ -315,12 +324,12 @@ func (vrt *VisualRegressionTester) updateGoldenFile(path string, content []byte)
 	return os.WriteFile(path, content, 0644)
 }
 
-// readGoldenFile reads content from a golden file
+// readGoldenFile reads content from a golden file.
 func (vrt *VisualRegressionTester) readGoldenFile(path string) ([]byte, error) {
 	return os.ReadFile(path)
 }
 
-// generateDiff creates a simple diff between expected and actual content
+// generateDiff creates a simple diff between expected and actual content.
 func (vrt *VisualRegressionTester) generateDiff(expected, actual []byte) string {
 	expectedLines := strings.Split(string(expected), "\n")
 	actualLines := strings.Split(string(actual), "\n")
@@ -334,7 +343,7 @@ func (vrt *VisualRegressionTester) generateDiff(expected, actual []byte) string 
 		maxLines = len(actualLines)
 	}
 
-	for i := 0; i < maxLines; i++ {
+	for i := range maxLines {
 		var expectedLine, actualLine string
 
 		if i < len(expectedLines) {
@@ -357,7 +366,7 @@ func (vrt *VisualRegressionTester) generateDiff(expected, actual []byte) string 
 	return diff.String()
 }
 
-// GenerateReport creates a detailed test report
+// GenerateReport creates a detailed test report.
 func (vrt *VisualRegressionTester) GenerateReport(results []*RegressionResult) string {
 	var report strings.Builder
 
@@ -410,10 +419,10 @@ func (vrt *VisualRegressionTester) GenerateReport(results []*RegressionResult) s
 	return report.String()
 }
 
-// CleanupGoldenFiles removes unused golden files
+// CleanupGoldenFiles removes unused golden files.
 func (vrt *VisualRegressionTester) CleanupGoldenFiles(activeFiles []string) error {
 	if !vrt.updateMode {
-		return fmt.Errorf("cleanup only available in update mode")
+		return errors.New("cleanup only available in update mode")
 	}
 
 	activeFileSet := make(map[string]bool)
@@ -434,6 +443,7 @@ func (vrt *VisualRegressionTester) CleanupGoldenFiles(activeFiles []string) erro
 
 			if !activeFileSet[relPath] {
 				fmt.Printf("Removing unused golden file: %s\n", relPath)
+
 				return os.Remove(path)
 			}
 		}
@@ -442,7 +452,7 @@ func (vrt *VisualRegressionTester) CleanupGoldenFiles(activeFiles []string) erro
 	})
 }
 
-// runScreenshotTest performs visual screenshot testing
+// runScreenshotTest performs visual screenshot testing.
 func (vrt *VisualRegressionTester) runScreenshotTest(
 	t *testing.T,
 	testCase TestCase,
@@ -459,7 +469,7 @@ func (vrt *VisualRegressionTester) runScreenshotTest(
 	}
 
 	// Create a temporary HTML file for the component
-	tempFile := filepath.Join(vrt.screenshotDir, fmt.Sprintf("%s_temp.html", testCase.Name))
+	tempFile := filepath.Join(vrt.screenshotDir, testCase.Name+"_temp.html")
 	fullHTML := vrt.createFullHTMLPage(htmlContent, testCase)
 
 	if err := os.WriteFile(tempFile, []byte(fullHTML), 0644); err != nil {
@@ -468,13 +478,13 @@ func (vrt *VisualRegressionTester) runScreenshotTest(
 	defer os.Remove(tempFile)
 
 	// Screenshot paths
-	screenshotPath := filepath.Join(vrt.screenshotDir, fmt.Sprintf("%s.png", testCase.Name))
+	screenshotPath := filepath.Join(vrt.screenshotDir, testCase.Name+".png")
 	baselinePath := filepath.Join(
 		vrt.screenshotDir,
 		"baselines",
-		fmt.Sprintf("%s.png", testCase.Name),
+		testCase.Name+".png",
 	)
-	diffPath := filepath.Join(vrt.screenshotDir, "diffs", fmt.Sprintf("%s_diff.png", testCase.Name))
+	diffPath := filepath.Join(vrt.screenshotDir, "diffs", testCase.Name+"_diff.png")
 
 	// Take screenshot
 	if err := vrt.takeScreenshot(tempFile, screenshotPath, testCase.Viewport); err != nil {
@@ -489,6 +499,7 @@ func (vrt *VisualRegressionTester) runScreenshotTest(
 			return result, fmt.Errorf("failed to update baseline: %w", err)
 		}
 		result.Passed = true
+
 		return result, nil
 	}
 
@@ -520,7 +531,7 @@ func (vrt *VisualRegressionTester) runScreenshotTest(
 	return result, nil
 }
 
-// createFullHTMLPage wraps component HTML in a full page template
+// createFullHTMLPage wraps component HTML in a full page template.
 func (vrt *VisualRegressionTester) createFullHTMLPage(
 	componentHTML []byte,
 	testCase TestCase,
@@ -563,7 +574,7 @@ func (vrt *VisualRegressionTester) createFullHTMLPage(
 	return html
 }
 
-// getWaitForScript returns a script to wait for specific conditions
+// getWaitForScript returns a script to wait for specific conditions.
 func (vrt *VisualRegressionTester) getWaitForScript(waitFor string) string {
 	if waitFor == "" {
 		return `<script>
@@ -596,7 +607,7 @@ func (vrt *VisualRegressionTester) getWaitForScript(waitFor string) string {
 	</script>`, waitFor)
 }
 
-// takeScreenshot captures a screenshot using headless Chrome/Chromium
+// takeScreenshot captures a screenshot using headless Chrome/Chromium.
 func (vrt *VisualRegressionTester) takeScreenshot(
 	htmlFile, outputPath string,
 	viewport Viewport,
@@ -615,12 +626,13 @@ func (vrt *VisualRegressionTester) takeScreenshot(
 	for _, binary := range chromeBinaries {
 		if _, err := exec.LookPath(binary); err == nil {
 			chromeCmd = binary
+
 			break
 		}
 	}
 
 	if chromeCmd == "" {
-		return fmt.Errorf("no Chrome/Chromium binary found")
+		return errors.New("no Chrome/Chromium binary found")
 	}
 
 	// Ensure output directory exists
@@ -637,8 +649,8 @@ func (vrt *VisualRegressionTester) takeScreenshot(
 		"--disable-web-security",
 		"--virtual-time-budget=5000",
 		fmt.Sprintf("--window-size=%d,%d", viewport.Width, viewport.Height),
-		fmt.Sprintf("--screenshot=%s", outputPath),
-		fmt.Sprintf("file://%s", htmlFile),
+		"--screenshot=" + outputPath,
+		"file://" + htmlFile,
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -658,7 +670,7 @@ func (vrt *VisualRegressionTester) takeScreenshot(
 	return nil
 }
 
-// updateBaseline copies the current screenshot as the new baseline
+// updateBaseline copies the current screenshot as the new baseline.
 func (vrt *VisualRegressionTester) updateBaseline(screenshotPath, baselinePath string) error {
 	// Ensure baseline directory exists
 	if err := os.MkdirAll(filepath.Dir(baselinePath), 0755); err != nil {
@@ -678,10 +690,11 @@ func (vrt *VisualRegressionTester) updateBaseline(screenshotPath, baselinePath s
 	defer dst.Close()
 
 	_, err = dst.ReadFrom(src)
+
 	return err
 }
 
-// compareImages compares two images and returns pixel difference and percentage
+// compareImages compares two images and returns pixel difference and percentage.
 func (vrt *VisualRegressionTester) compareImages(
 	baselinePath, screenshotPath, diffPath string,
 ) (int, float64, error) {
@@ -728,7 +741,7 @@ func (vrt *VisualRegressionTester) compareImages(
 	return sizeDiff, percentDiff, nil
 }
 
-// StartTestServer starts a test server for component preview testing
+// StartTestServer starts a test server for component preview testing.
 func (vrt *VisualRegressionTester) StartTestServer(ctx context.Context) (*http.Server, error) {
 	mux := http.NewServeMux()
 
@@ -758,7 +771,7 @@ func (vrt *VisualRegressionTester) StartTestServer(ctx context.Context) (*http.S
 	return server, nil
 }
 
-// handleComponentPreview serves component previews for testing
+// handleComponentPreview serves component previews for testing.
 func (vrt *VisualRegressionTester) handleComponentPreview(w http.ResponseWriter, r *http.Request) {
 	// Extract component name and props from URL/query params
 	// This is a simplified implementation

@@ -12,7 +12,7 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// TailwindPlugin implements CSSFrameworkPlugin for Tailwind CSS framework
+// TailwindPlugin implements CSSFrameworkPlugin for Tailwind CSS framework.
 type TailwindPlugin struct {
 	name         string
 	version      string
@@ -20,7 +20,7 @@ type TailwindPlugin struct {
 	tailwindPath string
 }
 
-// NewTailwindPlugin creates a new Tailwind plugin instance
+// NewTailwindPlugin creates a new Tailwind plugin instance.
 func NewTailwindPlugin() *TailwindPlugin {
 	return &TailwindPlugin{
 		name:    "tailwind",
@@ -29,17 +29,17 @@ func NewTailwindPlugin() *TailwindPlugin {
 	}
 }
 
-// GetName returns the plugin name
+// GetName returns the plugin name.
 func (p *TailwindPlugin) GetName() string {
 	return p.name
 }
 
-// GetVersion returns the plugin version
+// GetVersion returns the plugin version.
 func (p *TailwindPlugin) GetVersion() string {
 	return p.version
 }
 
-// Initialize initializes the Tailwind plugin
+// Initialize initializes the Tailwind plugin.
 func (p *TailwindPlugin) Initialize(ctx context.Context, config map[string]interface{}) error {
 	p.config = config
 
@@ -50,7 +50,7 @@ func (p *TailwindPlugin) Initialize(ctx context.Context, config map[string]inter
 		if _, err := exec.LookPath("npx"); err == nil {
 			p.tailwindPath = "npx tailwindcss"
 		} else {
-			return fmt.Errorf("tailwindcss not found in PATH and npx not available")
+			return errors.New("tailwindcss not found in PATH and npx not available")
 		}
 	} else {
 		p.tailwindPath = tailwindPath
@@ -59,22 +59,22 @@ func (p *TailwindPlugin) Initialize(ctx context.Context, config map[string]inter
 	return nil
 }
 
-// Cleanup cleans up plugin resources
+// Cleanup cleans up plugin resources.
 func (p *TailwindPlugin) Cleanup() error {
 	return nil
 }
 
-// GetFrameworkName returns the framework name
+// GetFrameworkName returns the framework name.
 func (p *TailwindPlugin) GetFrameworkName() string {
 	return "tailwind"
 }
 
-// GetSupportedVersions returns supported Tailwind versions
+// GetSupportedVersions returns supported Tailwind versions.
 func (p *TailwindPlugin) GetSupportedVersions() []string {
 	return []string{"3.4.0", "3.3.6", "3.3.5", "3.3.4", "3.3.3", "3.3.2", "3.3.1", "3.3.0"}
 }
 
-// GetDefaultConfig returns default configuration for Tailwind
+// GetDefaultConfig returns default configuration for Tailwind.
 func (p *TailwindPlugin) GetDefaultConfig() FrameworkConfig {
 	return FrameworkConfig{
 		Name:          "tailwind",
@@ -129,7 +129,7 @@ func (p *TailwindPlugin) GetDefaultConfig() FrameworkConfig {
 	}
 }
 
-// IsInstalled checks if Tailwind is installed
+// IsInstalled checks if Tailwind is installed.
 func (p *TailwindPlugin) IsInstalled() bool {
 	// Check for npm package
 	if _, err := os.Stat("node_modules/tailwindcss"); err == nil {
@@ -158,7 +158,7 @@ func (p *TailwindPlugin) IsInstalled() bool {
 	return false
 }
 
-// Setup sets up Tailwind with the given configuration
+// Setup sets up Tailwind with the given configuration.
 func (p *TailwindPlugin) Setup(ctx context.Context, config FrameworkConfig) error {
 	switch config.InstallMethod {
 	case "npm":
@@ -172,7 +172,7 @@ func (p *TailwindPlugin) Setup(ctx context.Context, config FrameworkConfig) erro
 	}
 }
 
-// setupWithNPM sets up Tailwind using npm
+// setupWithNPM sets up Tailwind using npm.
 func (p *TailwindPlugin) setupWithNPM(ctx context.Context, config FrameworkConfig) error {
 	// Install Tailwind via npm
 	cmd := exec.CommandContext(
@@ -180,7 +180,7 @@ func (p *TailwindPlugin) setupWithNPM(ctx context.Context, config FrameworkConfi
 		"npm",
 		"install",
 		"-D",
-		fmt.Sprintf("tailwindcss@%s", config.Version),
+		"tailwindcss@"+config.Version,
 	)
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to install Tailwind via npm: %w", err)
@@ -208,11 +208,11 @@ func (p *TailwindPlugin) setupWithNPM(ctx context.Context, config FrameworkConfi
 	return nil
 }
 
-// setupWithCDN sets up Tailwind using CDN
+// setupWithCDN sets up Tailwind using CDN.
 func (p *TailwindPlugin) setupWithCDN(ctx context.Context, config FrameworkConfig) error {
 	cdnUrl := config.CDNUrl
 	if cdnUrl == "" {
-		cdnUrl = fmt.Sprintf("https://cdn.tailwindcss.com/%s", config.Version)
+		cdnUrl = "https://cdn.tailwindcss.com/" + config.Version
 	}
 
 	// Create a simple CSS file that imports from CDN
@@ -232,7 +232,7 @@ func (p *TailwindPlugin) setupWithCDN(ctx context.Context, config FrameworkConfi
 	return nil
 }
 
-// setupStandalone sets up Tailwind as standalone
+// setupStandalone sets up Tailwind as standalone.
 func (p *TailwindPlugin) setupStandalone(ctx context.Context, config FrameworkConfig) error {
 	// Download Tailwind CLI binary (simplified - in practice, you'd download from GitHub releases)
 	outputDir := filepath.Dir(config.OutputPath)
@@ -249,7 +249,7 @@ func (p *TailwindPlugin) setupStandalone(ctx context.Context, config FrameworkCo
 	return nil
 }
 
-// createEntryPoint creates the main CSS entry point file
+// createEntryPoint creates the main CSS entry point file.
 func (p *TailwindPlugin) createEntryPoint(config FrameworkConfig) error {
 	entryDir := filepath.Dir(config.EntryPoint)
 	if err := os.MkdirAll(entryDir, 0755); err != nil {
@@ -266,7 +266,7 @@ func (p *TailwindPlugin) createEntryPoint(config FrameworkConfig) error {
 	return nil
 }
 
-// generateTailwindCSS generates the main Tailwind CSS file
+// generateTailwindCSS generates the main Tailwind CSS file.
 func (p *TailwindPlugin) generateTailwindCSS(config FrameworkConfig) string {
 	var css strings.Builder
 
@@ -299,7 +299,7 @@ func (p *TailwindPlugin) generateTailwindCSS(config FrameworkConfig) string {
 	return css.String()
 }
 
-// generateBasicTailwindCSS generates basic Tailwind CSS for standalone setup
+// generateBasicTailwindCSS generates basic Tailwind CSS for standalone setup.
 func (p *TailwindPlugin) generateBasicTailwindCSS(config FrameworkConfig) string {
 	css := `/* Tailwind CSS Framework */
 
@@ -433,7 +433,7 @@ html {
 	return css
 }
 
-// GenerateConfig generates a Tailwind configuration file
+// GenerateConfig generates a Tailwind configuration file.
 func (p *TailwindPlugin) GenerateConfig(config FrameworkConfig) ([]byte, error) {
 	configContent := fmt.Sprintf(`/** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -470,7 +470,7 @@ module.exports = {
 	return []byte(configContent), nil
 }
 
-// ValidateConfig validates Tailwind configuration
+// ValidateConfig validates Tailwind configuration.
 func (p *TailwindPlugin) ValidateConfig(configPath string) error {
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		return fmt.Errorf("config file does not exist: %s", configPath)
@@ -485,13 +485,13 @@ func (p *TailwindPlugin) ValidateConfig(configPath string) error {
 	// Basic validation - check for required exports
 	if !strings.Contains(string(content), "module.exports") &&
 		!strings.Contains(string(content), "export default") {
-		return fmt.Errorf("config file must export a configuration object")
+		return errors.New("config file must export a configuration object")
 	}
 
 	return nil
 }
 
-// ProcessCSS processes CSS using Tailwind
+// ProcessCSS processes CSS using Tailwind.
 func (p *TailwindPlugin) ProcessCSS(
 	ctx context.Context,
 	input []byte,
@@ -538,7 +538,7 @@ func (p *TailwindPlugin) ProcessCSS(
 	return output, nil
 }
 
-// ExtractClasses extracts Tailwind classes from content
+// ExtractClasses extracts Tailwind classes from content.
 func (p *TailwindPlugin) ExtractClasses(content string) ([]string, error) {
 	var classes []string
 
@@ -575,7 +575,7 @@ func (p *TailwindPlugin) ExtractClasses(content string) ([]string, error) {
 	return removeDuplicates(classes), nil
 }
 
-// isTailwindClass checks if a class name is a Tailwind class
+// isTailwindClass checks if a class name is a Tailwind class.
 func (p *TailwindPlugin) isTailwindClass(className string) bool {
 	// Tailwind utility prefixes
 	tailwindPrefixes := []string{
@@ -604,6 +604,7 @@ func (p *TailwindPlugin) isTailwindClass(className string) bool {
 	for _, prefix := range responsivePrefixes {
 		if strings.HasPrefix(className, prefix) {
 			rest := className[len(prefix):]
+
 			return p.isTailwindClass(rest)
 		}
 	}
@@ -623,6 +624,7 @@ func (p *TailwindPlugin) isTailwindClass(className string) bool {
 	for _, prefix := range statePrefixes {
 		if strings.HasPrefix(className, prefix) {
 			rest := className[len(prefix):]
+
 			return p.isTailwindClass(rest)
 		}
 	}
@@ -641,7 +643,7 @@ func (p *TailwindPlugin) isTailwindClass(className string) bool {
 	return false
 }
 
-// OptimizeCSS optimizes CSS for Tailwind
+// OptimizeCSS optimizes CSS for Tailwind.
 func (p *TailwindPlugin) OptimizeCSS(
 	ctx context.Context,
 	css []byte,
@@ -667,7 +669,7 @@ func (p *TailwindPlugin) OptimizeCSS(
 	return []byte(cssStr), nil
 }
 
-// ExtractVariables extracts CSS variables from Tailwind CSS
+// ExtractVariables extracts CSS variables from Tailwind CSS.
 func (p *TailwindPlugin) ExtractVariables(css []byte) (map[string]string, error) {
 	variables := make(map[string]string)
 
@@ -686,7 +688,7 @@ func (p *TailwindPlugin) ExtractVariables(css []byte) (map[string]string, error)
 	return variables, nil
 }
 
-// GenerateTheme generates a Tailwind theme with custom variables
+// GenerateTheme generates a Tailwind theme with custom variables.
 func (p *TailwindPlugin) GenerateTheme(variables map[string]string) ([]byte, error) {
 	var theme strings.Builder
 
@@ -708,7 +710,7 @@ func (p *TailwindPlugin) GenerateTheme(variables map[string]string) ([]byte, err
 	return []byte(theme.String()), nil
 }
 
-// GetDevServerConfig returns development server configuration
+// GetDevServerConfig returns development server configuration.
 func (p *TailwindPlugin) GetDevServerConfig() DevServerConfig {
 	return DevServerConfig{
 		HotReload:      true,
@@ -728,12 +730,12 @@ func (p *TailwindPlugin) GetDevServerConfig() DevServerConfig {
 	}
 }
 
-// SupportsHotReload returns true if the framework supports hot reload
+// SupportsHotReload returns true if the framework supports hot reload.
 func (p *TailwindPlugin) SupportsHotReload() bool {
 	return true
 }
 
-// GenerateStyleGuide generates a Tailwind style guide
+// GenerateStyleGuide generates a Tailwind style guide.
 func (p *TailwindPlugin) GenerateStyleGuide(ctx context.Context) ([]byte, error) {
 	styleGuide := `<!DOCTYPE html>
 <html lang="en">
@@ -846,16 +848,17 @@ func (p *TailwindPlugin) GenerateStyleGuide(ctx context.Context) ([]byte, error)
 
 // Helper functions
 
-// formatArrayAsJS formats a string array as JavaScript array
+// formatArrayAsJS formats a string array as JavaScript array.
 func formatArrayAsJS(arr []string) string {
 	var quoted []string
 	for _, item := range arr {
 		quoted = append(quoted, fmt.Sprintf("'%s'", item))
 	}
+
 	return "[" + strings.Join(quoted, ", ") + "]"
 }
 
-// getTailwindTemplates returns built-in Tailwind component templates
+// getTailwindTemplates returns built-in Tailwind component templates.
 func getTailwindTemplates() []ComponentTemplate {
 	return []ComponentTemplate{
 		{

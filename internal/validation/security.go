@@ -11,7 +11,7 @@ import (
 	"unicode/utf8"
 )
 
-// ValidateArgument validates a command line argument to prevent injection attacks
+// ValidateArgument validates a command line argument to prevent injection attacks.
 func ValidateArgument(arg string) error {
 	// Check argument length to prevent DoS attacks
 	const maxArgLength = 4096 // Reasonable limit for command arguments
@@ -46,10 +46,10 @@ func ValidateArgument(arg string) error {
 	return nil
 }
 
-// ValidateCommand validates a command name against an allowlist
+// ValidateCommand validates a command name against an allowlist.
 func ValidateCommand(command string, allowedCommands map[string]bool) error {
 	if command == "" {
-		return fmt.Errorf("command cannot be empty")
+		return errors.New("command cannot be empty")
 	}
 
 	// Check if command is in allowlist
@@ -65,10 +65,10 @@ func ValidateCommand(command string, allowedCommands map[string]bool) error {
 	return nil
 }
 
-// ValidatePath validates a file path to prevent path traversal attacks
+// ValidatePath validates a file path to prevent path traversal attacks.
 func ValidatePath(path string) error {
 	if path == "" {
-		return fmt.Errorf("path cannot be empty")
+		return errors.New("path cannot be empty")
 	}
 
 	// Clean the path to resolve any . or .. components
@@ -108,10 +108,10 @@ func ValidatePath(path string) error {
 	return nil
 }
 
-// ValidateOrigin validates WebSocket origin for CSRF protection
+// ValidateOrigin validates WebSocket origin for CSRF protection.
 func ValidateOrigin(origin string, allowedOrigins []string) error {
 	if origin == "" {
-		return fmt.Errorf("origin header is required")
+		return errors.New("origin header is required")
 	}
 
 	// Parse the origin URL
@@ -138,7 +138,7 @@ func ValidateOrigin(origin string, allowedOrigins []string) error {
 	return fmt.Errorf("origin '%s' is not in allowed origins list", origin)
 }
 
-// ValidateUserAgent validates user agent strings against a blocklist
+// ValidateUserAgent validates user agent strings against a blocklist.
 func ValidateUserAgent(userAgent string, blockedAgents []string) error {
 	if userAgent == "" {
 		// Empty user agent is allowed
@@ -155,15 +155,15 @@ func ValidateUserAgent(userAgent string, blockedAgents []string) error {
 	return nil
 }
 
-// ValidateFileExtension validates file extensions against an allowlist
+// ValidateFileExtension validates file extensions against an allowlist.
 func ValidateFileExtension(filename string, allowedExtensions []string) error {
 	if filename == "" {
-		return fmt.Errorf("filename cannot be empty")
+		return errors.New("filename cannot be empty")
 	}
 
 	ext := strings.ToLower(filepath.Ext(filename))
 	if ext == "" {
-		return fmt.Errorf("file must have an extension")
+		return errors.New("file must have an extension")
 	}
 
 	for _, allowed := range allowedExtensions {
@@ -175,7 +175,7 @@ func ValidateFileExtension(filename string, allowedExtensions []string) error {
 	return fmt.Errorf("file extension '%s' is not allowed", ext)
 }
 
-// SanitizeInput removes or escapes potentially dangerous characters from user input
+// SanitizeInput removes or escapes potentially dangerous characters from user input.
 func SanitizeInput(input string) string {
 	// Remove null bytes
 	input = strings.ReplaceAll(input, "\x00", "")
@@ -191,10 +191,10 @@ func SanitizeInput(input string) string {
 	return sanitized.String()
 }
 
-// ValidateUnicodeString validates Unicode strings against various security attacks
+// ValidateUnicodeString validates Unicode strings against various security attacks.
 func ValidateUnicodeString(s string) error {
 	if !utf8.ValidString(s) {
-		return fmt.Errorf("invalid UTF-8 sequence")
+		return errors.New("invalid UTF-8 sequence")
 	}
 
 	for i, r := range s {
@@ -230,7 +230,7 @@ func ValidateUnicodeString(s string) error {
 	return nil
 }
 
-// isBidiOverride checks for bidirectional text override characters
+// isBidiOverride checks for bidirectional text override characters.
 func isBidiOverride(r rune) bool {
 	switch r {
 	case '\u202D', // Left-to-Right Override (LRO)
@@ -242,10 +242,11 @@ func isBidiOverride(r rune) bool {
 		'\u2069': // Pop Directional Isolate (PDI)
 		return true
 	}
+
 	return false
 }
 
-// isZeroWidth checks for zero-width characters that could hide content
+// isZeroWidth checks for zero-width characters that could hide content.
 func isZeroWidth(r rune) bool {
 	switch r {
 	case '\u200B', // Zero Width Space (ZWSP)
@@ -259,10 +260,11 @@ func isZeroWidth(r rune) bool {
 		'\uFEFF': // Zero Width No-Break Space (BOM)
 		return true
 	}
+
 	return false
 }
 
-// isHomoglyphRisk checks for characters that might be homoglyph attacks
+// isHomoglyphRisk checks for characters that might be homoglyph attacks.
 func isHomoglyphRisk(r rune) bool {
 	// For security, we restrict to ASCII printable characters for command arguments
 	// This prevents homoglyph attacks where visually similar characters from
@@ -270,5 +272,6 @@ func isHomoglyphRisk(r rune) bool {
 	if r > 127 {
 		return true // Any non-ASCII character is considered risky
 	}
+
 	return false
 }

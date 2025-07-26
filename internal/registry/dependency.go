@@ -11,19 +11,19 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
-// DependencyAnalyzer analyzes component dependencies
+// DependencyAnalyzer analyzes component dependencies.
 type DependencyAnalyzer struct {
 	registry *ComponentRegistry
 }
 
-// NewDependencyAnalyzer creates a new dependency analyzer
+// NewDependencyAnalyzer creates a new dependency analyzer.
 func NewDependencyAnalyzer(registry *ComponentRegistry) *DependencyAnalyzer {
 	return &DependencyAnalyzer{
 		registry: registry,
 	}
 }
 
-// AnalyzeComponent analyzes dependencies for a single component
+// AnalyzeComponent analyzes dependencies for a single component.
 func (da *DependencyAnalyzer) AnalyzeComponent(component *types.ComponentInfo) ([]string, error) {
 	dependencies := make([]string, 0)
 
@@ -51,7 +51,7 @@ func (da *DependencyAnalyzer) AnalyzeComponent(component *types.ComponentInfo) (
 	return dependencies, nil
 }
 
-// AnalyzeComponentFromContent analyzes dependencies from raw content
+// AnalyzeComponentFromContent analyzes dependencies from raw content.
 func (da *DependencyAnalyzer) AnalyzeComponentFromContent(content, componentName string) []string {
 	dependencies := make(map[string]bool)
 
@@ -97,7 +97,7 @@ func (da *DependencyAnalyzer) AnalyzeComponentFromContent(content, componentName
 	return result
 }
 
-// UpdateAllDependencies updates dependencies for all components
+// UpdateAllDependencies updates dependencies for all components.
 func (da *DependencyAnalyzer) UpdateAllDependencies() error {
 	components := da.registry.GetAll()
 
@@ -119,7 +119,7 @@ func (da *DependencyAnalyzer) UpdateAllDependencies() error {
 	return nil
 }
 
-// GetDependents returns components that depend on the given component
+// GetDependents returns components that depend on the given component.
 func (da *DependencyAnalyzer) GetDependents(componentName string) []*types.ComponentInfo {
 	var dependents []*types.ComponentInfo
 
@@ -130,6 +130,7 @@ func (da *DependencyAnalyzer) GetDependents(componentName string) []*types.Compo
 		for _, dep := range component.Dependencies {
 			if dep == componentName {
 				dependents = append(dependents, component)
+
 				break
 			}
 		}
@@ -138,7 +139,7 @@ func (da *DependencyAnalyzer) GetDependents(componentName string) []*types.Compo
 	return dependents
 }
 
-// GetDependencyGraph returns the full dependency graph
+// GetDependencyGraph returns the full dependency graph.
 func (da *DependencyAnalyzer) GetDependencyGraph() map[string][]string {
 	graph := make(map[string][]string)
 
@@ -153,7 +154,7 @@ func (da *DependencyAnalyzer) GetDependencyGraph() map[string][]string {
 	return graph
 }
 
-// DetectCircularDependencies detects circular dependencies in the graph
+// DetectCircularDependencies detects circular dependencies in the graph.
 func (da *DependencyAnalyzer) DetectCircularDependencies() [][]string {
 	cycles := make([][]string, 0)
 	graph := da.GetDependencyGraph()
@@ -173,7 +174,7 @@ func (da *DependencyAnalyzer) DetectCircularDependencies() [][]string {
 	return cycles
 }
 
-// detectCycleDFS performs DFS to detect cycles
+// detectCycleDFS performs DFS to detect cycles.
 func (da *DependencyAnalyzer) detectCycleDFS(
 	component string,
 	graph map[string][]string,
@@ -195,6 +196,7 @@ func (da *DependencyAnalyzer) detectCycleDFS(
 			for i, p := range path {
 				if p == dep {
 					cycleStart = i
+
 					break
 				}
 			}
@@ -202,23 +204,25 @@ func (da *DependencyAnalyzer) detectCycleDFS(
 				cycle := make([]string, len(path)-cycleStart+1)
 				copy(cycle, path[cycleStart:])
 				cycle[len(cycle)-1] = dep // Close the cycle
+
 				return cycle
 			}
 		}
 	}
 
 	recStack[component] = false
+
 	return nil
 }
 
-// dependencyVisitor implements ast.Visitor for dependency analysis
+// dependencyVisitor implements ast.Visitor for dependency analysis.
 type dependencyVisitor struct {
 	registry     *ComponentRegistry
 	dependencies map[string]bool
 	currentComp  string
 }
 
-// Visit visits AST nodes to find component calls
+// Visit visits AST nodes to find component calls.
 func (v *dependencyVisitor) Visit(node ast.Node) ast.Visitor {
 	switch n := node.(type) {
 	case *ast.CallExpr:

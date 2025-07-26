@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// ComponentGenerator handles component scaffolding
+// ComponentGenerator handles component scaffolding.
 type ComponentGenerator struct {
 	templates   map[string]ComponentTemplate
 	outputDir   string
@@ -18,7 +18,7 @@ type ComponentGenerator struct {
 	author      string
 }
 
-// GenerateOptions holds options for component generation
+// GenerateOptions holds options for component generation.
 type GenerateOptions struct {
 	Name        string
 	Template    string
@@ -32,7 +32,7 @@ type GenerateOptions struct {
 	CustomProps map[string]interface{}
 }
 
-// NewComponentGenerator creates a new component generator
+// NewComponentGenerator creates a new component generator.
 func NewComponentGenerator(outputDir, packageName, projectName, author string) *ComponentGenerator {
 	return &ComponentGenerator{
 		templates:   GetBuiltinTemplates(),
@@ -43,7 +43,7 @@ func NewComponentGenerator(outputDir, packageName, projectName, author string) *
 	}
 }
 
-// Generate creates a new component from a template
+// Generate creates a new component from a template.
 func (g *ComponentGenerator) Generate(opts GenerateOptions) error {
 	// Set defaults
 	if opts.OutputDir == "" {
@@ -84,7 +84,7 @@ func (g *ComponentGenerator) Generate(opts GenerateOptions) error {
 	// Generate main component file
 	componentFile := filepath.Join(
 		opts.OutputDir,
-		fmt.Sprintf("%s.templ", strings.ToLower(opts.Name)),
+		strings.ToLower(opts.Name)+".templ",
 	)
 	if err := g.generateFile(componentFile, tmpl.Content, ctx); err != nil {
 		return fmt.Errorf("failed to generate component file: %w", err)
@@ -96,7 +96,7 @@ func (g *ComponentGenerator) Generate(opts GenerateOptions) error {
 	if opts.WithTests && tmpl.TestContent != "" {
 		testFile := filepath.Join(
 			opts.OutputDir,
-			fmt.Sprintf("%s_test.go", strings.ToLower(opts.Name)),
+			strings.ToLower(opts.Name)+"_test.go",
 		)
 		if err := g.generateFile(testFile, tmpl.TestContent, ctx); err != nil {
 			return fmt.Errorf("failed to generate test file: %w", err)
@@ -111,7 +111,7 @@ func (g *ComponentGenerator) Generate(opts GenerateOptions) error {
 			return fmt.Errorf("failed to create styles directory: %w", err)
 		}
 
-		stylesFile := filepath.Join(stylesDir, fmt.Sprintf("%s.css", strings.ToLower(opts.Name)))
+		stylesFile := filepath.Join(stylesDir, strings.ToLower(opts.Name)+".css")
 		if err := os.WriteFile(stylesFile, []byte(tmpl.StylesCSS), 0644); err != nil {
 			return fmt.Errorf("failed to generate styles file: %w", err)
 		}
@@ -125,7 +125,7 @@ func (g *ComponentGenerator) Generate(opts GenerateOptions) error {
 			return fmt.Errorf("failed to create docs directory: %w", err)
 		}
 
-		docFile := filepath.Join(docsDir, fmt.Sprintf("%s.md", strings.ToLower(opts.Name)))
+		docFile := filepath.Join(docsDir, strings.ToLower(opts.Name)+".md")
 		if err := g.generateFile(docFile, tmpl.DocContent, ctx); err != nil {
 			return fmt.Errorf("failed to generate documentation: %w", err)
 		}
@@ -135,7 +135,7 @@ func (g *ComponentGenerator) Generate(opts GenerateOptions) error {
 	return nil
 }
 
-// ListTemplates returns available templates
+// ListTemplates returns available templates.
 func (g *ComponentGenerator) ListTemplates() []TemplateInfo {
 	var templates []TemplateInfo
 	for name, tmpl := range g.templates {
@@ -146,16 +146,18 @@ func (g *ComponentGenerator) ListTemplates() []TemplateInfo {
 			Parameters:  len(tmpl.Parameters),
 		})
 	}
+
 	return templates
 }
 
-// GetTemplate returns a specific template
+// GetTemplate returns a specific template.
 func (g *ComponentGenerator) GetTemplate(name string) (ComponentTemplate, bool) {
 	tmpl, exists := g.templates[name]
+
 	return tmpl, exists
 }
 
-// TemplateInfo holds basic template information
+// TemplateInfo holds basic template information.
 type TemplateInfo struct {
 	Name        string
 	Description string
@@ -163,7 +165,7 @@ type TemplateInfo struct {
 	Parameters  int
 }
 
-// generateFile generates a file from a template
+// generateFile generates a file from a template.
 func (g *ComponentGenerator) generateFile(filename, content string, ctx TemplateContext) error {
 	// Parse template
 	tmpl, err := template.New("component").Parse(content)
@@ -190,31 +192,31 @@ func (g *ComponentGenerator) generateFile(filename, content string, ctx Template
 	return nil
 }
 
-// AddCustomTemplate adds a custom template
+// AddCustomTemplate adds a custom template.
 func (g *ComponentGenerator) AddCustomTemplate(name string, tmpl ComponentTemplate) {
 	g.templates[name] = tmpl
 }
 
-// ValidateComponentName checks if a component name is valid
+// ValidateComponentName checks if a component name is valid.
 func ValidateComponentName(name string) error {
 	if name == "" {
-		return fmt.Errorf("component name cannot be empty")
+		return errors.New("component name cannot be empty")
 	}
 
 	// Check for valid Go identifier
 	if !isValidGoIdentifier(name) {
-		return fmt.Errorf("component name must be a valid Go identifier")
+		return errors.New("component name must be a valid Go identifier")
 	}
 
 	// Check if name starts with uppercase (exported)
 	if !isUppercase(name[0]) {
-		return fmt.Errorf("component name must start with uppercase letter (exported)")
+		return errors.New("component name must start with uppercase letter (exported)")
 	}
 
 	return nil
 }
 
-// GenerateComponentSet generates multiple related components
+// GenerateComponentSet generates multiple related components.
 func (g *ComponentGenerator) GenerateComponentSet(
 	setName string,
 	components []string,
@@ -238,10 +240,11 @@ func (g *ComponentGenerator) GenerateComponentSet(
 	}
 
 	fmt.Printf("✅ Component set '%s' generated successfully\n", setName)
+
 	return nil
 }
 
-// GetTemplatesByCategory returns templates grouped by category
+// GetTemplatesByCategory returns templates grouped by category.
 func (g *ComponentGenerator) GetTemplatesByCategory() map[string][]TemplateInfo {
 	categories := make(map[string][]TemplateInfo)
 
@@ -264,6 +267,7 @@ func capitalizeFirst(s string) string {
 	if s == "" {
 		return s
 	}
+
 	return strings.ToUpper(s[:1]) + s[1:]
 }
 
@@ -300,7 +304,7 @@ func isUppercase(b byte) bool {
 	return b >= 'A' && b <= 'Z'
 }
 
-// CreateProjectScaffold creates a complete project structure with common components
+// CreateProjectScaffold creates a complete project structure with common components.
 func (g *ComponentGenerator) CreateProjectScaffold(projectDir string) error {
 	fmt.Println("🏗️  Creating project scaffold...")
 
