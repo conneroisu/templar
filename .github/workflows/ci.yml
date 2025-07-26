@@ -35,7 +35,7 @@ jobs:
 
       - name: Run golangci-lint
         run: |
-          nix develop --command golangci-lint run --timeout=5m $(go list ./... | grep -v templar-cache-benchmark)
+          nix develop --command golangci-lint run --timeout=5m ./...
 
       - name: Check code formatting
         run: |

@@ -2,13 +2,13 @@ package server
 
 import (
 	"context"
-	"errors"
+	stderrors "errors"
 	"testing"
 	"time"
 
 	"github.com/conneroisu/templar/internal/build"
 	"github.com/conneroisu/templar/internal/config"
-	templarerrrors "github.com/conneroisu/templar/internal/errors"
+	"github.com/conneroisu/templar/internal/errors"
 	"github.com/conneroisu/templar/internal/interfaces"
 	"github.com/conneroisu/templar/internal/renderer"
 	"github.com/conneroisu/templar/internal/types"
@@ -417,7 +417,7 @@ func TestServiceOrchestrator_HandleBuildResult(t *testing.T) {
 			{Message: "Test error", Line: 1, Column: 1},
 		},
 		Component: &types.ComponentInfo{Name: "TestComponent"},
-		Error:     errors.New("build failed"),
+		Error:     stderrors.New("build failed"),
 		Duration:  200 * time.Millisecond,
 		CacheHit:  false,
 	}
@@ -593,7 +593,7 @@ func BenchmarkServiceOrchestrator_HandleBuildResult(b *testing.B) {
 			{Message: "Benchmark error", Line: 1, Column: 1},
 		},
 		Component: &types.ComponentInfo{Name: "BenchmarkComponent"},
-		Error:     errors.New("benchmark error"),
+		Error:     stderrors.New("benchmark error"),
 		Duration:  50 * time.Millisecond,
 		CacheHit:  false,
 	}

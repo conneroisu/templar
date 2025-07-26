@@ -2,7 +2,7 @@ package plugins
 
 import (
 	"context"
-	"errors"
+	stderrors "errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -455,11 +455,11 @@ func (epm *EnhancedPluginManager) EnablePlugin(ctx context.Context, name string)
 	// If it's a builtin plugin that's not loaded, we need to load it
 	if info.Source == "builtin" {
 		// TODO: Reload builtin plugin
-		return errors.New("runtime enabling of builtin plugins not yet implemented")
+		return stderrors.New("runtime enabling of builtin plugins not yet implemented")
 	}
 
 	// TODO: Load external plugin
-	return errors.New("runtime enabling of external plugins not yet implemented")
+	return stderrors.New("runtime enabling of external plugins not yet implemented")
 }
 
 // DisablePlugin disables a plugin at runtime.

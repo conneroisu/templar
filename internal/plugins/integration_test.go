@@ -2,12 +2,11 @@ package plugins
 
 import (
 	"context"
-	"errors"
+	stderrors "errors"
 	"fmt"
 	"sync"
 	"testing"
 
-	"github.com/conneroisu/templar/internal/errors"
 	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/types"
 	"github.com/stretchr/testify/assert"
@@ -359,14 +358,14 @@ type MockFailingPlugin struct {
 }
 
 func (mfp *MockFailingPlugin) Initialize(ctx context.Context, config PluginConfig) error {
-	return errors.New("intentional failure")
+	return stderrors.New("intentional failure")
 }
 
 func (mfp *MockFailingPlugin) HandleComponent(
 	ctx context.Context,
 	component *types.ComponentInfo,
 ) (*types.ComponentInfo, error) {
-	return nil, errors.New("component processing failed")
+	return nil, stderrors.New("component processing failed")
 }
 
 func (mfp *MockFailingPlugin) SupportedExtensions() []string { return []string{".templ"} }

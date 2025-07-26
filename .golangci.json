@@ -5,6 +5,13 @@
       "paths": ["third_party$", "builtin$", "examples$"]
     }
   },
+  "run": {
+    "skip-dirs": [
+      "templar-cache-benchmark.*",
+      "\\.templar",
+      "\\.test-baselines"
+    ]
+  },
   "linters": {
     "enable": [
       "asasalint",
