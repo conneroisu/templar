@@ -386,7 +386,10 @@ func (w *IPWhitelist) Remove(ip string) {
 }
 
 // WhitelistMiddleware creates middleware that bypasses rate limiting for whitelisted IPs
-func WhitelistMiddleware(whitelist *IPWhitelist, rateLimitHandler http.Handler) func(http.Handler) http.Handler {
+func WhitelistMiddleware(
+	whitelist *IPWhitelist,
+	rateLimitHandler http.Handler,
+) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			clientIP := getClientIP(r)

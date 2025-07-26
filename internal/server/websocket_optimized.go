@@ -499,7 +499,10 @@ func (hub *OptimizedWebSocketHub) optimizedBroadcast(message *BroadcastMessage) 
 }
 
 // shouldDropMessage implements intelligent backpressure handling
-func (hub *OptimizedWebSocketHub) shouldDropMessage(client *OptimizedClient, message *BroadcastMessage) bool {
+func (hub *OptimizedWebSocketHub) shouldDropMessage(
+	client *OptimizedClient,
+	message *BroadcastMessage,
+) bool {
 	// Calculate queue utilization
 	queueSize := client.sendRing.Size()
 	utilization := float64(queueSize) / float64(client.sendRing.size)

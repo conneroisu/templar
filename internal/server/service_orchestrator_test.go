@@ -506,7 +506,10 @@ func TestServiceOrchestrator_GetServiceStatus(t *testing.T) {
 		t.Error("Monitor should be reported as unavailable (nil)")
 	}
 	if status["websocket_clients"] != 0 {
-		t.Errorf("Expected 0 WebSocket clients in status (nil manager), got %v", status["websocket_clients"])
+		t.Errorf(
+			"Expected 0 WebSocket clients in status (nil manager), got %v",
+			status["websocket_clients"],
+		)
 	}
 }
 

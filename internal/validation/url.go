@@ -35,7 +35,10 @@ func ValidateURL(rawURL string) error {
 
 	for _, char := range rawURL {
 		if strings.ContainsRune(shellMetachars, char) {
-			return fmt.Errorf("URL contains shell metacharacter %q (potential command injection)", char)
+			return fmt.Errorf(
+				"URL contains shell metacharacter %q (potential command injection)",
+				char,
+			)
 		}
 	}
 
@@ -51,7 +54,9 @@ func ValidateURL(rawURL string) error {
 
 	// Check for path traversal patterns that could bypass browser security
 	if strings.Contains(parsed.Path, "..") {
-		return fmt.Errorf("URL contains path traversal sequence '..' (potential directory traversal)")
+		return fmt.Errorf(
+			"URL contains path traversal sequence '..' (potential directory traversal)",
+		)
 	}
 
 	// Check for encoded path traversal attempts

@@ -223,7 +223,11 @@ func TestInlineEditor(t *testing.T) {
 	})
 
 	t.Run("Invalid JSON", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/api/inline-editor", strings.NewReader("invalid json"))
+		req := httptest.NewRequest(
+			http.MethodPost,
+			"/api/inline-editor",
+			strings.NewReader("invalid json"),
+		)
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 

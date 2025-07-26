@@ -184,7 +184,8 @@ func isInTestMode() bool {
 
 		name := fn.Name()
 		// Check if any caller is from the testing package or contains "test"
-		if strings.Contains(name, "testing.") || strings.Contains(name, "_test.") || strings.Contains(name, ".Test") {
+		if strings.Contains(name, "testing.") || strings.Contains(name, "_test.") ||
+			strings.Contains(name, ".Test") {
 			return true
 		}
 	}
@@ -349,8 +350,12 @@ func (fw *FileWatcher) handleFsnotifyEvent(event fsnotify.Event) {
 	default:
 		// Channel full - implement backpressure by dropping events
 		fw.debouncer.droppedEvents++
-		log.Printf("Warning: Dropping file event for %s due to backpressure (dropped: %d, total: %d)",
-			event.Name, fw.debouncer.droppedEvents, fw.debouncer.totalEvents)
+		log.Printf(
+			"Warning: Dropping file event for %s due to backpressure (dropped: %d, total: %d)",
+			event.Name,
+			fw.debouncer.droppedEvents,
+			fw.debouncer.totalEvents,
+		)
 	}
 }
 
@@ -475,7 +480,10 @@ func (d *Debouncer) flushLocked() {
 	default:
 		// Channel full - implement backpressure by dropping entire batch
 		d.droppedEvents += int64(len(eventsCopy))
-		log.Printf("Warning: Dropping event batch of %d events due to output channel backpressure", len(eventsCopy))
+		log.Printf(
+			"Warning: Dropping event batch of %d events due to output channel backpressure",
+			len(eventsCopy),
+		)
 	}
 
 	// Clear pending events - reuse underlying array if capacity is reasonable

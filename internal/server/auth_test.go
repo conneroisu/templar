@@ -202,7 +202,10 @@ func TestAuthMiddleware_BasicAuth(t *testing.T) {
 			if tt.expectCode == http.StatusUnauthorized {
 				wwwAuth := w.Header().Get("WWW-Authenticate")
 				if !containsString(wwwAuth, "Basic") {
-					t.Errorf("Expected WWW-Authenticate header to contain 'Basic', got: %s", wwwAuth)
+					t.Errorf(
+						"Expected WWW-Authenticate header to contain 'Basic', got: %s",
+						wwwAuth,
+					)
 				}
 			}
 		})
@@ -285,7 +288,10 @@ func TestAuthMiddleware_TokenAuth(t *testing.T) {
 			if tt.expectCode == http.StatusUnauthorized {
 				wwwAuth := w.Header().Get("WWW-Authenticate")
 				if !containsString(wwwAuth, "Bearer") {
-					t.Errorf("Expected WWW-Authenticate header to contain 'Bearer', got: %s", wwwAuth)
+					t.Errorf(
+						"Expected WWW-Authenticate header to contain 'Bearer', got: %s",
+						wwwAuth,
+					)
 				}
 			}
 		})
@@ -366,7 +372,13 @@ func TestIsIPAllowed(t *testing.T) {
 		t.Run(tt.ip, func(t *testing.T) {
 			result := isIPAllowed(tt.ip, allowedIPs)
 			if result != tt.expected {
-				t.Errorf("isIPAllowed(%q, %v) = %v, want %v", tt.ip, allowedIPs, result, tt.expected)
+				t.Errorf(
+					"isIPAllowed(%q, %v) = %v, want %v",
+					tt.ip,
+					allowedIPs,
+					result,
+					tt.expected,
+				)
 			}
 		})
 	}

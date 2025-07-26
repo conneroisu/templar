@@ -364,8 +364,11 @@ func TestRenderComponentSelection(t *testing.T) {
 			Parameters: []types.ParameterInfo{{Name: "text", Type: "string"}},
 		},
 		{
-			Name:       "Card",
-			Parameters: []types.ParameterInfo{{Name: "title", Type: "string"}, {Name: "content", Type: "string"}},
+			Name: "Card",
+			Parameters: []types.ParameterInfo{
+				{Name: "title", Type: "string"},
+				{Name: "content", Type: "string"},
+			},
 		},
 	}
 

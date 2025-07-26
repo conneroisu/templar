@@ -52,10 +52,30 @@ func FuzzValidateURL(f *testing.F) {
 			}
 
 			// Ensure no command injection characters
-			dangerousChars := []string{";", "&", "|", "`", "$", "(", ")", "<", ">", "\"", "'", "\\", "\n", "\r", " "}
+			dangerousChars := []string{
+				";",
+				"&",
+				"|",
+				"`",
+				"$",
+				"(",
+				")",
+				"<",
+				">",
+				"\"",
+				"'",
+				"\\",
+				"\n",
+				"\r",
+				" ",
+			}
 			for _, char := range dangerousChars {
 				if strings.Contains(testURL, char) {
-					t.Errorf("ValidateURL passed for URL with dangerous character %q: %q", char, testURL)
+					t.Errorf(
+						"ValidateURL passed for URL with dangerous character %q: %q",
+						char,
+						testURL,
+					)
 				}
 			}
 
@@ -104,7 +124,10 @@ func FuzzURLParsing(f *testing.F) {
 		// If URL parsed successfully, check for dangerous patterns
 		if parsed.Host != "" {
 			// Check for control characters in hostname
-			if strings.ContainsAny(parsed.Host, "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f") {
+			if strings.ContainsAny(
+				parsed.Host,
+				"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f",
+			) {
 				t.Errorf("URL parsing allowed control characters in host: %q", parsed.Host)
 			}
 
@@ -121,7 +144,11 @@ func FuzzURLParsing(f *testing.F) {
 			// This is a dangerous URL that Go parsed - our ValidateURL should reject it
 			err := ValidateURL(testURL)
 			if err == nil {
-				t.Errorf("Our ValidateURL failed to reject dangerous path traversal URL: %q (path: %q)", testURL, parsed.Path)
+				t.Errorf(
+					"Our ValidateURL failed to reject dangerous path traversal URL: %q (path: %q)",
+					testURL,
+					parsed.Path,
+				)
 			}
 		}
 
@@ -232,10 +259,26 @@ func FuzzCommandInjection(f *testing.F) {
 
 		// All URLs with command injection patterns should be rejected
 		if err == nil {
-			dangerousPatterns := []string{";", "&", "|", "`", "$", "rm ", "curl ", "wget ", "nc ", "powershell", "cmd.exe"}
+			dangerousPatterns := []string{
+				";",
+				"&",
+				"|",
+				"`",
+				"$",
+				"rm ",
+				"curl ",
+				"wget ",
+				"nc ",
+				"powershell",
+				"cmd.exe",
+			}
 			for _, pattern := range dangerousPatterns {
 				if strings.Contains(injectionURL, pattern) {
-					t.Errorf("Validation allowed command injection pattern %q in URL: %q", pattern, injectionURL)
+					t.Errorf(
+						"Validation allowed command injection pattern %q in URL: %q",
+						pattern,
+						injectionURL,
+					)
 				}
 			}
 		}

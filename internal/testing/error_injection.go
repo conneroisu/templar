@@ -68,7 +68,11 @@ func (ei *ErrorInjector) InjectErrorCount(operation string, err error, count int
 }
 
 // InjectErrorWithDelay configures error injection with a delay
-func (ei *ErrorInjector) InjectErrorWithDelay(operation string, err error, delay time.Duration) *ErrorTarget {
+func (ei *ErrorInjector) InjectErrorWithDelay(
+	operation string,
+	err error,
+	delay time.Duration,
+) *ErrorTarget {
 	target := ei.InjectError(operation, err)
 	target.Delay = delay
 	return target

@@ -311,7 +311,11 @@ func (s *PreviewServer) handleSingleFile(w http.ResponseWriter, r *http.Request,
 
 	// Scan the specific file to find components
 	if err := s.scanner.ScanFile(filename); err != nil {
-		http.Error(w, fmt.Sprintf("Error scanning file %s: %v", filename, err), http.StatusInternalServerError)
+		http.Error(
+			w,
+			fmt.Sprintf("Error scanning file %s: %v", filename, err),
+			http.StatusInternalServerError,
+		)
 		return
 	}
 
@@ -371,7 +375,11 @@ func (s *PreviewServer) handleRender(w http.ResponseWriter, r *http.Request) {
 	// Render the component
 	html, err := s.renderer.RenderComponent(componentName)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error rendering component %s: %v", componentName, err), http.StatusInternalServerError)
+		http.Error(
+			w,
+			fmt.Sprintf("Error rendering component %s: %v", componentName, err),
+			http.StatusInternalServerError,
+		)
 		return
 	}
 
@@ -387,11 +395,19 @@ func (s *PreviewServer) handleRender(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *PreviewServer) renderSingleComponent(w http.ResponseWriter, r *http.Request, component *types.ComponentInfo) {
+func (s *PreviewServer) renderSingleComponent(
+	w http.ResponseWriter,
+	r *http.Request,
+	component *types.ComponentInfo,
+) {
 	// Render the component directly
 	html, err := s.renderer.RenderComponent(component.Name)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error rendering component %s: %v", component.Name, err), http.StatusInternalServerError)
+		http.Error(
+			w,
+			fmt.Sprintf("Error rendering component %s: %v", component.Name, err),
+			http.StatusInternalServerError,
+		)
 		return
 	}
 
@@ -407,7 +423,12 @@ func (s *PreviewServer) renderSingleComponent(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func (s *PreviewServer) renderComponentSelection(w http.ResponseWriter, r *http.Request, components []*types.ComponentInfo, filename string) {
+func (s *PreviewServer) renderComponentSelection(
+	w http.ResponseWriter,
+	r *http.Request,
+	components []*types.ComponentInfo,
+	filename string,
+) {
 	html := fmt.Sprintf(`<!DOCTYPE html>
 <html>
 <head>
@@ -492,7 +513,24 @@ func validateComponentName(name string) error {
 	}
 
 	// Reject special characters that could be used in injection attacks (check first for security)
-	dangerousChars := []string{"<", ">", "\"", "'", "&", ";", "|", "$", "`", "(", ")", "{", "}", "[", "]", "\\"}
+	dangerousChars := []string{
+		"<",
+		">",
+		"\"",
+		"'",
+		"&",
+		";",
+		"|",
+		"$",
+		"`",
+		"(",
+		")",
+		"{",
+		"}",
+		"[",
+		"]",
+		"\\",
+	}
 	for _, char := range dangerousChars {
 		if strings.Contains(cleanName, char) {
 			return fmt.Errorf("dangerous character not allowed: %s", char)

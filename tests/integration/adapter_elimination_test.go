@@ -119,7 +119,12 @@ func TestNoAdapterAntiPatternRequired(t *testing.T) {
 	var buildPipeline interfaces.BuildPipeline = bp
 
 	// Validate all interfaces work together without adapters
-	summary := interfaces.ValidateAllInterfaces(componentRegistry, fileWatcher, componentScanner, buildPipeline)
+	summary := interfaces.ValidateAllInterfaces(
+		componentRegistry,
+		fileWatcher,
+		componentScanner,
+		buildPipeline,
+	)
 
 	if !summary.IsValid() {
 		t.Errorf("Interface validation failed: %s", summary.String())

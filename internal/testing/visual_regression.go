@@ -85,7 +85,11 @@ func NewVisualRegressionTester(goldenDir string, updateMode bool) *VisualRegress
 }
 
 // NewVisualRegressionTesterWithOptions creates a tester with custom options
-func NewVisualRegressionTesterWithOptions(goldenDir string, updateMode bool, options VisualTestOptions) *VisualRegressionTester {
+func NewVisualRegressionTesterWithOptions(
+	goldenDir string,
+	updateMode bool,
+	options VisualTestOptions,
+) *VisualRegressionTester {
 	vrt := NewVisualRegressionTester(goldenDir, updateMode)
 
 	if options.ScreenshotDir != "" {
@@ -198,7 +202,10 @@ func (vrt *VisualRegressionTester) RunTest(t *testing.T, testCase TestCase) *Reg
 }
 
 // RunTestSuite executes multiple visual regression tests
-func (vrt *VisualRegressionTester) RunTestSuite(t *testing.T, testCases []TestCase) []*RegressionResult {
+func (vrt *VisualRegressionTester) RunTestSuite(
+	t *testing.T,
+	testCases []TestCase,
+) []*RegressionResult {
 	results := make([]*RegressionResult, 0, len(testCases))
 
 	for _, testCase := range testCases {
@@ -219,7 +226,10 @@ func (vrt *VisualRegressionTester) RunTestSuite(t *testing.T, testCases []TestCa
 }
 
 // renderComponent renders a component with given props
-func (vrt *VisualRegressionTester) renderComponent(componentName string, props map[string]interface{}) ([]byte, error) {
+func (vrt *VisualRegressionTester) renderComponent(
+	componentName string,
+	props map[string]interface{},
+) ([]byte, error) {
 	// This is a placeholder implementation
 	// In a real implementation, this would render the actual component
 
@@ -234,7 +244,10 @@ func (vrt *VisualRegressionTester) renderComponent(componentName string, props m
 }
 
 // generateHTML generates HTML for a component (placeholder implementation)
-func (vrt *VisualRegressionTester) generateHTML(component *types.ComponentInfo, props map[string]interface{}) string {
+func (vrt *VisualRegressionTester) generateHTML(
+	component *types.ComponentInfo,
+	props map[string]interface{},
+) string {
 	var html strings.Builder
 
 	html.WriteString(fmt.Sprintf("<!-- Component: %s -->\n", component.Name))
@@ -431,7 +444,11 @@ func (vrt *VisualRegressionTester) CleanupGoldenFiles(activeFiles []string) erro
 }
 
 // runScreenshotTest performs visual screenshot testing
-func (vrt *VisualRegressionTester) runScreenshotTest(t *testing.T, testCase TestCase, htmlContent []byte) (*RegressionResult, error) {
+func (vrt *VisualRegressionTester) runScreenshotTest(
+	t *testing.T,
+	testCase TestCase,
+	htmlContent []byte,
+) (*RegressionResult, error) {
 	result := &RegressionResult{
 		TestCase: testCase,
 		Passed:   false,
@@ -453,7 +470,11 @@ func (vrt *VisualRegressionTester) runScreenshotTest(t *testing.T, testCase Test
 
 	// Screenshot paths
 	screenshotPath := filepath.Join(vrt.screenshotDir, fmt.Sprintf("%s.png", testCase.Name))
-	baselinePath := filepath.Join(vrt.screenshotDir, "baselines", fmt.Sprintf("%s.png", testCase.Name))
+	baselinePath := filepath.Join(
+		vrt.screenshotDir,
+		"baselines",
+		fmt.Sprintf("%s.png", testCase.Name),
+	)
 	diffPath := filepath.Join(vrt.screenshotDir, "diffs", fmt.Sprintf("%s_diff.png", testCase.Name))
 
 	// Take screenshot
@@ -501,7 +522,10 @@ func (vrt *VisualRegressionTester) runScreenshotTest(t *testing.T, testCase Test
 }
 
 // createFullHTMLPage wraps component HTML in a full page template
-func (vrt *VisualRegressionTester) createFullHTMLPage(componentHTML []byte, testCase TestCase) string {
+func (vrt *VisualRegressionTester) createFullHTMLPage(
+	componentHTML []byte,
+	testCase TestCase,
+) string {
 	viewport := testCase.Viewport
 	if viewport.Width == 0 {
 		viewport.Width = 1280
@@ -574,7 +598,10 @@ func (vrt *VisualRegressionTester) getWaitForScript(waitFor string) string {
 }
 
 // takeScreenshot captures a screenshot using headless Chrome/Chromium
-func (vrt *VisualRegressionTester) takeScreenshot(htmlFile, outputPath string, viewport Viewport) error {
+func (vrt *VisualRegressionTester) takeScreenshot(
+	htmlFile, outputPath string,
+	viewport Viewport,
+) error {
 	if viewport.Width == 0 {
 		viewport.Width = 1280
 	}
@@ -656,7 +683,9 @@ func (vrt *VisualRegressionTester) updateBaseline(screenshotPath, baselinePath s
 }
 
 // compareImages compares two images and returns pixel difference and percentage
-func (vrt *VisualRegressionTester) compareImages(baselinePath, screenshotPath, diffPath string) (int, float64, error) {
+func (vrt *VisualRegressionTester) compareImages(
+	baselinePath, screenshotPath, diffPath string,
+) (int, float64, error) {
 	// For now, use a simple file size comparison as a basic difference metric
 	// In a production system, you would use an image comparison library like ImageMagick or a Go image library
 
@@ -680,8 +709,13 @@ func (vrt *VisualRegressionTester) compareImages(baselinePath, screenshotPath, d
 
 	// Create a simple diff marker file
 	if percentDiff > 0.1 {
-		diffInfo := fmt.Sprintf("Baseline: %d bytes\nScreenshot: %d bytes\nDifference: %d bytes (%.2f%%)",
-			baselineInfo.Size(), screenshotInfo.Size(), sizeDiff, percentDiff)
+		diffInfo := fmt.Sprintf(
+			"Baseline: %d bytes\nScreenshot: %d bytes\nDifference: %d bytes (%.2f%%)",
+			baselineInfo.Size(),
+			screenshotInfo.Size(),
+			sizeDiff,
+			percentDiff,
+		)
 
 		if err := os.MkdirAll(filepath.Dir(diffPath), 0755); err != nil {
 			return sizeDiff, percentDiff, err

@@ -472,7 +472,11 @@ func TestOptimizedWebSocketMetrics(t *testing.T) {
 	metrics := hub.GetOptimizedMetrics()
 
 	if metrics["active_connections"].(int64) != int64(clientCount) {
-		t.Errorf("Expected %d active connections, got %v", clientCount, metrics["active_connections"])
+		t.Errorf(
+			"Expected %d active connections, got %v",
+			clientCount,
+			metrics["active_connections"],
+		)
 	}
 
 	if metrics["client_pool_size"].(int) != clientCount {

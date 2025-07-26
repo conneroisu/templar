@@ -96,7 +96,11 @@ func TestPlaygroundRender(t *testing.T) {
 			reqBody, err := json.Marshal(tt.request)
 			assert.NoError(t, err)
 
-			req := httptest.NewRequest(http.MethodPost, "/api/playground/render", bytes.NewReader(reqBody))
+			req := httptest.NewRequest(
+				http.MethodPost,
+				"/api/playground/render",
+				bytes.NewReader(reqBody),
+			)
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
@@ -244,8 +248,19 @@ func TestPlaygroundIndex(t *testing.T) {
 	// Setup
 	reg := registry.NewComponentRegistry()
 	components := []*types.ComponentInfo{
-		{Name: "Button", Package: "ui", Parameters: []types.ParameterInfo{{Name: "text", Type: "string"}}},
-		{Name: "Card", Package: "layout", Parameters: []types.ParameterInfo{{Name: "title", Type: "string"}, {Name: "content", Type: "string"}}},
+		{
+			Name:       "Button",
+			Package:    "ui",
+			Parameters: []types.ParameterInfo{{Name: "text", Type: "string"}},
+		},
+		{
+			Name:    "Card",
+			Package: "layout",
+			Parameters: []types.ParameterInfo{
+				{Name: "title", Type: "string"},
+				{Name: "content", Type: "string"},
+			},
+		},
 	}
 
 	for _, comp := range components {
@@ -329,7 +344,8 @@ func TestMockValueGeneration(t *testing.T) {
 			paramType: "string",
 			validate: func(v interface{}) bool {
 				s, ok := v.(string)
-				return ok && len(s) > 0 && (strings.Contains(s, "Title") || strings.Contains(s, "Sample"))
+				return ok && len(s) > 0 &&
+					(strings.Contains(s, "Title") || strings.Contains(s, "Sample"))
 			},
 		},
 		{
@@ -373,7 +389,14 @@ func TestMockValueGeneration(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			value := server.generateMockValueForType(tt.paramName, tt.paramType)
-			assert.True(t, tt.validate(value), "Generated value %v did not pass validation for %s:%s", value, tt.paramName, tt.paramType)
+			assert.True(
+				t,
+				tt.validate(value),
+				"Generated value %v did not pass validation for %s:%s",
+				value,
+				tt.paramName,
+				tt.paramType,
+			)
 		})
 	}
 }
@@ -392,7 +415,12 @@ func TestViewportSizeHandling(t *testing.T) {
 	server := &PreviewServer{}
 
 	// Test with default viewport
-	html := server.wrapInPlaygroundLayout("TestComponent", "<div>Test</div>", "light", ViewportSize{})
+	html := server.wrapInPlaygroundLayout(
+		"TestComponent",
+		"<div>Test</div>",
+		"light",
+		ViewportSize{},
+	)
 	assert.Contains(t, html, "1200")    // Should default to 1200px width
 	assert.Contains(t, html, "Desktop") // Should default to Desktop
 

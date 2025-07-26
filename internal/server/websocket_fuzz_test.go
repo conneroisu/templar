@@ -67,7 +67,10 @@ func FuzzWebSocketOriginValidation(f *testing.F) {
 			}
 
 			// Ensure no control characters in host
-			if strings.ContainsAny(parsedOrigin.Host, "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f") {
+			if strings.ContainsAny(
+				parsedOrigin.Host,
+				"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f",
+			) {
 				t.Errorf("Origin validation passed for host with control characters: %q", origin)
 			}
 
@@ -133,7 +136,10 @@ func FuzzWebSocketMessage(f *testing.F) {
 				if strings.Contains(msgStr, "<script>") ||
 					strings.Contains(msgStr, "javascript:") ||
 					strings.Contains(msgStr, "rm -rf") ||
-					strings.ContainsAny(msgStr, "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f") {
+					strings.ContainsAny(
+						msgStr,
+						"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f",
+					) {
 					t.Errorf("Received dangerous message content: %q", msgStr)
 				}
 			}
@@ -197,7 +203,10 @@ func FuzzWebSocketHeaders(f *testing.F) {
 				value := headers[i+1]
 
 				// Skip headers with control characters that would break HTTP
-				if strings.ContainsAny(key, "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f") ||
+				if strings.ContainsAny(
+					key,
+					"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f",
+				) ||
 					strings.ContainsAny(value, "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f") {
 					continue
 				}
@@ -240,7 +249,10 @@ func FuzzWebSocketURL(f *testing.F) {
 		}
 
 		// Skip URLs with control characters that would break HTTP
-		if strings.ContainsAny(urlPath, "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f") {
+		if strings.ContainsAny(
+			urlPath,
+			"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f",
+		) {
 			t.Skip("URL contains control characters")
 		}
 

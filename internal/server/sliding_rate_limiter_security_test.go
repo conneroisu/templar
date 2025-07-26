@@ -135,7 +135,9 @@ func TestWindowBoundaryAttackPrevention(t *testing.T) {
 		}
 
 		// Wait for full window reset but still in backoff
-		time.Sleep(50 * time.Millisecond) // Total 110ms, window expired but backoff may still be active
+		time.Sleep(
+			50 * time.Millisecond,
+		) // Total 110ms, window expired but backoff may still be active
 
 		// Try again - might still be in backoff depending on timing
 		allowed := limiter.IsAllowed()

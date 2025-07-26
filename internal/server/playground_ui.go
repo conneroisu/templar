@@ -8,7 +8,10 @@ import (
 )
 
 // wrapInPlaygroundLayout wraps component HTML in the interactive playground layout
-func (s *PreviewServer) wrapInPlaygroundLayout(componentName, html, theme string, viewport ViewportSize) string {
+func (s *PreviewServer) wrapInPlaygroundLayout(
+	componentName, html, theme string,
+	viewport ViewportSize,
+) string {
 	if viewport.Width == 0 {
 		viewport.Width = 1200
 	}

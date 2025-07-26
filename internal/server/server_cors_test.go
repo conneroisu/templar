@@ -70,9 +70,11 @@ func TestCORSProduction(t *testing.T) {
 			}
 
 			w := httptest.NewRecorder()
-			handler := server.addMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			}))
+			handler := server.addMiddleware(
+				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusOK)
+				}),
+			)
 
 			handler.ServeHTTP(w, req)
 
@@ -130,9 +132,11 @@ func TestCORSDevelopment(t *testing.T) {
 			}
 
 			w := httptest.NewRecorder()
-			handler := server.addMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			}))
+			handler := server.addMiddleware(
+				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusOK)
+				}),
+			)
 
 			handler.ServeHTTP(w, req)
 

@@ -207,7 +207,10 @@ func TestCSPViolationReporting(t *testing.T) {
 	config := ProductionSecurityConfig()
 
 	if config.CSP.ReportURI != "/api/csp-violation-report" {
-		t.Errorf("Expected CSP report URI to be '/api/csp-violation-report', got %s", config.CSP.ReportURI)
+		t.Errorf(
+			"Expected CSP report URI to be '/api/csp-violation-report', got %s",
+			config.CSP.ReportURI,
+		)
 	}
 
 	// Build CSP header and check it includes report-uri

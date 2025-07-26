@@ -62,9 +62,14 @@ func (s *BuildService) Build(ctx context.Context, opts BuildOptions) (*BuildResu
 	err := monitoring.TrackOperation(ctx, "build", "full_build", func(ctx context.Context) error {
 		// Clean build artifacts if requested
 		if opts.Clean {
-			err := monitoring.TrackOperation(ctx, "build", "clean_artifacts", func(ctx context.Context) error {
-				return s.cleanBuildArtifacts()
-			})
+			err := monitoring.TrackOperation(
+				ctx,
+				"build",
+				"clean_artifacts",
+				func(ctx context.Context) error {
+					return s.cleanBuildArtifacts()
+				},
+			)
 			if err != nil {
 				return fmt.Errorf("failed to clean build artifacts: %w", err)
 			}
@@ -73,7 +78,11 @@ func (s *BuildService) Build(ctx context.Context, opts BuildOptions) (*BuildResu
 		// Initialize dependency injection container
 		container := di.NewServiceContainer(s.config)
 		if err := container.Initialize(); err != nil {
-			return errors.BuildServiceError("INIT_CONTAINER", "service container initialization failed", err)
+			return errors.BuildServiceError(
+				"INIT_CONTAINER",
+				"service container initialization failed",
+				err,
+			)
 		}
 		s.container = container
 
@@ -150,7 +159,12 @@ func (s *BuildService) cleanBuildArtifacts() error {
 	// Clean cache directory
 	if s.config.Build.CacheDir != "" {
 		if err := os.RemoveAll(s.config.Build.CacheDir); err != nil {
-			return errors.FileOperationError("CLEAN", s.config.Build.CacheDir, "failed to clean cache directory", err)
+			return errors.FileOperationError(
+				"CLEAN",
+				s.config.Build.CacheDir,
+				"failed to clean cache directory",
+				err,
+			)
 		}
 	}
 
@@ -161,7 +175,12 @@ func (s *BuildService) cleanBuildArtifacts() error {
 			continue // Skip non-existent paths
 		}
 		if err := s.cleanGeneratedFiles(path); err != nil {
-			return errors.FileOperationError("CLEAN_GENERATED", path, "failed to clean generated files", err)
+			return errors.FileOperationError(
+				"CLEAN_GENERATED",
+				path,
+				"failed to clean generated files",
+				err,
+			)
 		}
 	}
 
@@ -201,12 +220,21 @@ func (s *BuildService) scanComponents(ctx context.Context, scanner interface{}) 
 }
 
 // buildComponents builds all components through the pipeline
-func (s *BuildService) buildComponents(ctx context.Context, pipeline interface{}, components interface{}) error {
+func (s *BuildService) buildComponents(
+	ctx context.Context,
+	pipeline interface{},
+	components interface{},
+) error {
 	// Build each component through the pipeline
 	// This is simplified - would need proper interface handling
-	return monitoring.TrackOperation(ctx, "build", "build_components", func(ctx context.Context) error {
-		return nil
-	})
+	return monitoring.TrackOperation(
+		ctx,
+		"build",
+		"build_components",
+		func(ctx context.Context) error {
+			return nil
+		},
+	)
 }
 
 // generateBuildAnalysis creates build analysis report
@@ -230,24 +258,33 @@ func (s *BuildService) generateBuildAnalysis(outputDir string) error {
 
 // applyProductionOptimizations applies production-specific optimizations
 func (s *BuildService) applyProductionOptimizations(ctx context.Context, outputDir string) error {
-	return monitoring.TrackOperation(ctx, "build", "production_optimize", func(ctx context.Context) error {
-		// Minify CSS
-		if err := s.minifyCSS(outputDir); err != nil {
-			return errors.BuildServiceError("MINIFY_CSS", "CSS minification failed", err)
-		}
+	return monitoring.TrackOperation(
+		ctx,
+		"build",
+		"production_optimize",
+		func(ctx context.Context) error {
+			// Minify CSS
+			if err := s.minifyCSS(outputDir); err != nil {
+				return errors.BuildServiceError("MINIFY_CSS", "CSS minification failed", err)
+			}
 
-		// Compress assets
-		if err := s.compressAssets(outputDir); err != nil {
-			return errors.BuildServiceError("COMPRESS_ASSETS", "asset compression failed", err)
-		}
+			// Compress assets
+			if err := s.compressAssets(outputDir); err != nil {
+				return errors.BuildServiceError("COMPRESS_ASSETS", "asset compression failed", err)
+			}
 
-		// Generate manifest
-		if err := s.generateManifest(outputDir); err != nil {
-			return errors.BuildServiceError("GENERATE_MANIFEST", "manifest generation failed", err)
-		}
+			// Generate manifest
+			if err := s.generateManifest(outputDir); err != nil {
+				return errors.BuildServiceError(
+					"GENERATE_MANIFEST",
+					"manifest generation failed",
+					err,
+				)
+			}
 
-		return nil
-	})
+			return nil
+		},
+	)
 }
 
 // minifyCSS minifies CSS files for production

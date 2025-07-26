@@ -25,7 +25,11 @@ func (s *PreviewServer) handleEditorIndex(w http.ResponseWriter, r *http.Request
 }
 
 // handleComponentEditorView serves the editor for a specific component
-func (s *PreviewServer) handleComponentEditorView(w http.ResponseWriter, r *http.Request, componentName string) {
+func (s *PreviewServer) handleComponentEditorView(
+	w http.ResponseWriter,
+	r *http.Request,
+	componentName string,
+) {
 	// Validate component name
 	if err := validateComponentName(componentName); err != nil {
 		http.Error(w, "Invalid component name: "+err.Error(), http.StatusBadRequest)
@@ -292,10 +296,16 @@ func (s *PreviewServer) generateComponentEditorHTML(component *types.ComponentIn
         .editor-content { flex: 1; display: flex; }
         .code-editor { flex: 1; }
         .preview-pane { width: 400px; background: white; display: flex; flex-direction: column; }
-        .preview-header { height: 40px; background: #f3f3f3; display: flex; align-items: center; padding: 0 15px; border-bottom: 1px solid #ddd; }
+        .preview-header { 
+            height: 40px; background: #f3f3f3; display: flex; 
+            align-items: center; padding: 0 15px; border-bottom: 1px solid #ddd; 
+        }
         .preview-content { flex: 1; padding: 15px; overflow-y: auto; }
         .props-panel { height: 200px; border-top: 1px solid #ddd; background: #fafafa; padding: 15px; overflow-y: auto; }
-        .status-bar { height: 25px; background: #007acc; color: white; display: flex; align-items: center; padding: 0 15px; font-size: 12px; }
+        .status-bar { 
+            height: 25px; background: #007acc; color: white; display: flex; 
+            align-items: center; padding: 0 15px; font-size: 12px; 
+        }
     </style>
 </head>
 <body class="editor-container">
@@ -358,7 +368,13 @@ func (s *PreviewServer) generateComponentEditorHTML(component *types.ComponentIn
         %s
     </script>
 </body>
-</html>`, component.Name, component.Name, component.FilePath, component.Name, component.FilePath, s.generateComponentEditorJavaScript(component))
+</html>`,
+		component.Name,
+		component.Name,
+		component.FilePath,
+		component.Name,
+		component.FilePath,
+		s.generateComponentEditorJavaScript(component))
 }
 
 // generateEditorJavaScript generates JavaScript for the main editor

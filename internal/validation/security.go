@@ -38,7 +38,8 @@ func ValidateArgument(arg string) error {
 	}
 
 	// Check for absolute paths (prefer relative paths for security)
-	if filepath.IsAbs(arg) && !strings.HasPrefix(arg, "/usr/bin/") && !strings.HasPrefix(arg, "/bin/") {
+	if filepath.IsAbs(arg) && !strings.HasPrefix(arg, "/usr/bin/") &&
+		!strings.HasPrefix(arg, "/bin/") {
 		return fmt.Errorf("absolute path not allowed: %s", arg)
 	}
 
@@ -121,7 +122,10 @@ func ValidateOrigin(origin string, allowedOrigins []string) error {
 
 	// Only allow http/https schemes
 	if originURL.Scheme != "http" && originURL.Scheme != "https" {
-		return fmt.Errorf("invalid origin scheme '%s': only http and https are allowed", originURL.Scheme)
+		return fmt.Errorf(
+			"invalid origin scheme '%s': only http and https are allowed",
+			originURL.Scheme,
+		)
 	}
 
 	// Check against allowed origins list
@@ -206,7 +210,10 @@ func ValidateUnicodeString(s string) error {
 
 		// Check for homoglyph attacks (non-ASCII that looks similar to ASCII)
 		if isHomoglyphRisk(r) {
-			return fmt.Errorf("contains potentially confusing non-ASCII character at position %d", i)
+			return fmt.Errorf(
+				"contains potentially confusing non-ASCII character at position %d",
+				i,
+			)
 		}
 
 		// Check for control characters - for command arguments, we should be strict

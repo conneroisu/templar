@@ -222,7 +222,11 @@ templ TestComponent(title string) {
 	<h1>{ title }</h1>
 }`
 
-	scanErr := os.WriteFile(filepath.Join(componentDir, "test.templ"), []byte(componentContent), 0644)
+	scanErr := os.WriteFile(
+		filepath.Join(componentDir, "test.templ"),
+		[]byte(componentContent),
+		0644,
+	)
 	require.NoError(t, scanErr)
 
 	ctx := context.Background()

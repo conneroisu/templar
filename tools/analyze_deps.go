@@ -115,7 +115,12 @@ func findCircularDeps(deps map[string][]string) {
 	checkIndirectCircular(deps, "internal/server", []string{}, make(map[string]bool))
 }
 
-func checkIndirectCircular(deps map[string][]string, currentPkg string, path []string, visited map[string]bool) {
+func checkIndirectCircular(
+	deps map[string][]string,
+	currentPkg string,
+	path []string,
+	visited map[string]bool,
+) {
 	if visited[currentPkg] {
 		if contains(path, currentPkg) {
 			// Found a cycle

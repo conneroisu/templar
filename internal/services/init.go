@@ -43,7 +43,11 @@ func (s *InitService) InitProject(opts InitOptions) error {
 	// Create configuration file
 	if opts.Wizard {
 		if err := s.createConfigWithWizard(opts.ProjectDir); err != nil {
-			return errors.InitError("CREATE_CONFIG_WIZARD", "configuration creation with wizard failed", err)
+			return errors.InitError(
+				"CREATE_CONFIG_WIZARD",
+				"configuration creation with wizard failed",
+				err,
+			)
 		}
 	} else {
 		if err := s.createConfigFile(opts.ProjectDir); err != nil {
@@ -66,7 +70,11 @@ func (s *InitService) InitProject(opts InitOptions) error {
 	// Create template files if template is specified
 	if opts.Template != "" {
 		if err := s.createFromTemplate(opts.ProjectDir, opts.Template); err != nil {
-			return errors.InitError("CREATE_TEMPLATE", fmt.Sprintf("template '%s' creation failed", opts.Template), err)
+			return errors.InitError(
+				"CREATE_TEMPLATE",
+				fmt.Sprintf("template '%s' creation failed", opts.Template),
+				err,
+			)
 		}
 	}
 
@@ -77,7 +85,12 @@ func (s *InitService) InitProject(opts InitOptions) error {
 func (s *InitService) validateProjectDirectory(projectDir string) error {
 	// Check if directory exists and is writable
 	if err := os.MkdirAll(projectDir, 0755); err != nil {
-		return errors.FileOperationError("CREATE_DIR", projectDir, "cannot create project directory", err)
+		return errors.FileOperationError(
+			"CREATE_DIR",
+			projectDir,
+			"cannot create project directory",
+			err,
+		)
 	}
 	return nil
 }
@@ -101,7 +114,12 @@ func (s *InitService) createDirectoryStructure(projectDir string) error {
 	for _, dir := range dirs {
 		dirPath := filepath.Join(projectDir, dir)
 		if err := os.MkdirAll(dirPath, 0755); err != nil {
-			return errors.FileOperationError("CREATE_DIR", dirPath, fmt.Sprintf("failed to create directory %s", dir), err)
+			return errors.FileOperationError(
+				"CREATE_DIR",
+				dirPath,
+				fmt.Sprintf("failed to create directory %s", dir),
+				err,
+			)
 		}
 	}
 
@@ -131,7 +149,8 @@ func (s *InitService) createConfigFile(projectDir string) error {
 
 // writeConfigToFile writes config to YAML file
 func (s *InitService) writeConfigToFile(cfg *config.Config, path string) error {
-	content := fmt.Sprintf(`server:
+	content := fmt.Sprintf(
+		`server:
   port: %d
   host: %s
   open: %t
@@ -156,10 +175,21 @@ development:
   css_injection: %t
   error_overlay: %t
 `,
-		cfg.Server.Port, cfg.Server.Host, cfg.Server.Open,
-		cfg.Components.ScanPaths[0], cfg.Components.ScanPaths[1], cfg.Components.ScanPaths[2],
-		cfg.Build.Command, cfg.Build.Watch[0], cfg.Build.Ignore[0], cfg.Build.Ignore[1],
-		cfg.Build.CacheDir, cfg.Development.HotReload, cfg.Development.CSSInjection, cfg.Development.ErrorOverlay)
+		cfg.Server.Port,
+		cfg.Server.Host,
+		cfg.Server.Open,
+		cfg.Components.ScanPaths[0],
+		cfg.Components.ScanPaths[1],
+		cfg.Components.ScanPaths[2],
+		cfg.Build.Command,
+		cfg.Build.Watch[0],
+		cfg.Build.Ignore[0],
+		cfg.Build.Ignore[1],
+		cfg.Build.CacheDir,
+		cfg.Development.HotReload,
+		cfg.Development.CSSInjection,
+		cfg.Development.ErrorOverlay,
+	)
 
 	return os.WriteFile(path, []byte(content), 0644)
 }
@@ -204,7 +234,12 @@ templ Button(text string, variant string) {
 
 	buttonPath := filepath.Join(projectDir, "components", "button.templ")
 	if err := os.WriteFile(buttonPath, []byte(buttonContent), 0644); err != nil {
-		return errors.FileOperationError("CREATE_COMPONENT", buttonPath, "failed to create button component", err)
+		return errors.FileOperationError(
+			"CREATE_COMPONENT",
+			buttonPath,
+			"failed to create button component",
+			err,
+		)
 	}
 
 	// Example card component
@@ -224,7 +259,12 @@ templ Card(title string, content string) {
 
 	cardPath := filepath.Join(projectDir, "components", "card.templ")
 	if err := os.WriteFile(cardPath, []byte(cardContent), 0644); err != nil {
-		return errors.FileOperationError("CREATE_COMPONENT", cardPath, "failed to create card component", err)
+		return errors.FileOperationError(
+			"CREATE_COMPONENT",
+			cardPath,
+			"failed to create card component",
+			err,
+		)
 	}
 
 	// Create basic CSS file
@@ -290,7 +330,12 @@ templ Layout(title string) {
 
 	layoutPath := filepath.Join(projectDir, "views", "layout.templ")
 	if err := os.WriteFile(layoutPath, []byte(layoutContent), 0644); err != nil {
-		return errors.FileOperationError("CREATE_LAYOUT", layoutPath, "failed to create layout view", err)
+		return errors.FileOperationError(
+			"CREATE_LAYOUT",
+			layoutPath,
+			"failed to create layout view",
+			err,
+		)
 	}
 
 	// Create demo example
@@ -316,7 +361,12 @@ templ Demo() {
 
 	demoPath := filepath.Join(projectDir, "examples", "demo.templ")
 	if err := os.WriteFile(demoPath, []byte(demoContent), 0644); err != nil {
-		return errors.FileOperationError("CREATE_DEMO", demoPath, "failed to create demo example", err)
+		return errors.FileOperationError(
+			"CREATE_DEMO",
+			demoPath,
+			"failed to create demo example",
+			err,
+		)
 	}
 
 	// Create preview wrapper
@@ -382,6 +432,11 @@ templ Hello(name string) {
 		// For now, just create basic structure - full templates would be implemented here
 		return s.createExampleComponents(projectDir)
 	default:
-		return errors.ValidationFailure("template", "unknown template specified", template, "Use one of: minimal, blog, dashboard, landing, ecommerce, documentation")
+		return errors.ValidationFailure(
+			"template",
+			"unknown template specified",
+			template,
+			"Use one of: minimal, blog, dashboard, landing, ecommerce, documentation",
+		)
 	}
 }

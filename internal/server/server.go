@@ -605,10 +605,22 @@ func (s *PreviewServer) handleHealth(w http.ResponseWriter, r *http.Request) {
 		"version":    version.GetShortVersion(),
 		"build_info": version.GetBuildInfo(),
 		"checks": map[string]interface{}{
-			"server":   map[string]interface{}{"status": "healthy", "message": "HTTP server operational"},
-			"registry": map[string]interface{}{"status": "healthy", "components": len(s.registry.GetAll())},
-			"watcher":  map[string]interface{}{"status": "healthy", "message": "File watcher operational"},
-			"build":    map[string]interface{}{"status": "healthy", "message": "Build pipeline operational"},
+			"server": map[string]interface{}{
+				"status":  "healthy",
+				"message": "HTTP server operational",
+			},
+			"registry": map[string]interface{}{
+				"status":     "healthy",
+				"components": len(s.registry.GetAll()),
+			},
+			"watcher": map[string]interface{}{
+				"status":  "healthy",
+				"message": "File watcher operational",
+			},
+			"build": map[string]interface{}{
+				"status":  "healthy",
+				"message": "Build pipeline operational",
+			},
 		},
 	}
 

@@ -63,7 +63,10 @@ func TestMemoryGrowthUnderHighLoad(t *testing.T) {
 
 		// Create many files rapidly
 		for i := 0; i < 200; i++ {
-			fileName := filepath.Join(tempDir, "stress_test_"+string(rune(cycle))+"_"+string(rune(i))+".templ")
+			fileName := filepath.Join(
+				tempDir,
+				"stress_test_"+string(rune(cycle))+"_"+string(rune(i))+".templ",
+			)
 			content := make([]byte, 1024) // 1KB per file
 			for j := range content {
 				content[j] = byte(i % 256)
@@ -84,7 +87,10 @@ func TestMemoryGrowthUnderHighLoad(t *testing.T) {
 
 		// Delete files to create more events
 		for i := 0; i < 200; i++ {
-			fileName := filepath.Join(tempDir, "stress_test_"+string(rune(cycle))+"_"+string(rune(i))+".templ")
+			fileName := filepath.Join(
+				tempDir,
+				"stress_test_"+string(rune(cycle))+"_"+string(rune(i))+".templ",
+			)
 			os.Remove(fileName)
 		}
 
@@ -101,7 +107,12 @@ func TestMemoryGrowthUnderHighLoad(t *testing.T) {
 			memGrowth = int64(m.Alloc - m1.Alloc)
 		}
 
-		t.Logf("Cycle %d: Memory growth: %d bytes, Events processed: %d", cycle+1, memGrowth, eventCount)
+		t.Logf(
+			"Cycle %d: Memory growth: %d bytes, Events processed: %d",
+			cycle+1,
+			memGrowth,
+			eventCount,
+		)
 
 		// Check for excessive growth (should be sub-linear)
 		expectedMaxGrowth := int64((cycle + 1) * 100 * 1024) // 100KB per cycle max
@@ -130,7 +141,11 @@ func TestMemoryGrowthUnderHighLoad(t *testing.T) {
 	// Memory growth should be reasonable (under 2MB for this workload)
 	maxAllowedGrowth := int64(2 * 1024 * 1024)
 	if finalGrowth > maxAllowedGrowth {
-		t.Errorf("Excessive memory growth: %d bytes (max allowed: %d bytes)", finalGrowth, maxAllowedGrowth)
+		t.Errorf(
+			"Excessive memory growth: %d bytes (max allowed: %d bytes)",
+			finalGrowth,
+			maxAllowedGrowth,
+		)
 	}
 
 	// Should have processed a reasonable number of events

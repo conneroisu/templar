@@ -145,6 +145,11 @@ func TestWebSocketManagerTimeout(t *testing.T) {
 		networkTimeout := manager.getNetworkTimeout()
 
 		assert.Equal(t, 30*time.Second, wsTimeout, "Should use first config for WebSocket timeout")
-		assert.Equal(t, 5*time.Second, networkTimeout, "Should use first config for network timeout")
+		assert.Equal(
+			t,
+			5*time.Second,
+			networkTimeout,
+			"Should use first config for network timeout",
+		)
 	})
 }

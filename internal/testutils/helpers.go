@@ -266,7 +266,12 @@ func CleanupTestEnvironment(projectDir string) error {
 }
 
 // WaitForFileChange waits for a file to be modified (useful for testing file watchers)
-func WaitForFileChange(t *testing.T, filePath string, originalModTime time.Time, timeout time.Duration) {
+func WaitForFileChange(
+	t *testing.T,
+	filePath string,
+	originalModTime time.Time,
+	timeout time.Duration,
+) {
 	deadline := time.Now().Add(timeout)
 
 	for time.Now().Before(deadline) {

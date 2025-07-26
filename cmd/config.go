@@ -185,7 +185,8 @@ func runConfigValidate(cmd *cobra.Command, args []string) error {
 		if _, err := os.Stat(".templar.yml"); err == nil {
 			targetFile = ".templar.yml"
 		} else {
-			return fmt.Errorf("no configuration file found. Use --file to specify a config file or run 'templar config wizard' to create one")
+			return fmt.Errorf("no configuration file found. Use --file to specify a config file " +
+				"or run 'templar config wizard' to create one")
 		}
 	}
 

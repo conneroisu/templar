@@ -92,7 +92,11 @@ func TestNewMiddlewareChain_ValidInputs(t *testing.T) {
 	// Should have at least logging, CORS, security, and auth middlewares
 	expectedMinCount := 4
 	if len(chain.middlewares) < expectedMinCount {
-		t.Errorf("Expected at least %d middlewares, got %d", expectedMinCount, len(chain.middlewares))
+		t.Errorf(
+			"Expected at least %d middlewares, got %d",
+			expectedMinCount,
+			len(chain.middlewares),
+		)
 	}
 }
 

@@ -142,8 +142,14 @@ func (rt *ResourceTracker) CheckLeaksWithLimits(t TestingInterface, limits Resou
 	// Check goroutine leaks
 	goroutineDiff := currentSample.Goroutines - rt.initialGoroutines
 	if goroutineDiff > limits.MaxGoroutineIncrease {
-		t.Errorf("%s: Goroutine leak detected: %d initial, %d current (+%d, limit: +%d)",
-			rt.name, rt.initialGoroutines, currentSample.Goroutines, goroutineDiff, limits.MaxGoroutineIncrease)
+		t.Errorf(
+			"%s: Goroutine leak detected: %d initial, %d current (+%d, limit: +%d)",
+			rt.name,
+			rt.initialGoroutines,
+			currentSample.Goroutines,
+			goroutineDiff,
+			limits.MaxGoroutineIncrease,
+		)
 
 		// Log goroutine stack trace for debugging
 		if goroutineDiff > 0 {
@@ -162,16 +168,28 @@ func (rt *ResourceTracker) CheckLeaksWithLimits(t TestingInterface, limits Resou
 	memoryDiff := int64(currentSample.Memory) - int64(rt.initialMemory)
 	toleranceBytes := int64(float64(rt.initialMemory) * limits.TolerancePercent)
 	if memoryDiff > int64(limits.MaxMemoryIncrease)+toleranceBytes {
-		t.Errorf("%s: Memory leak detected: %d initial, %d current (+%d bytes, limit: +%d bytes + tolerance)",
-			rt.name, rt.initialMemory, currentSample.Memory, memoryDiff, limits.MaxMemoryIncrease)
+		t.Errorf(
+			"%s: Memory leak detected: %d initial, %d current (+%d bytes, limit: +%d bytes + tolerance)",
+			rt.name,
+			rt.initialMemory,
+			currentSample.Memory,
+			memoryDiff,
+			limits.MaxMemoryIncrease,
+		)
 	}
 
 	// Check object leaks
 	objectDiff := currentSample.Objects - rt.initialObjects
 	toleranceObjects := int64(float64(rt.initialObjects) * limits.TolerancePercent)
 	if objectDiff > limits.MaxObjectIncrease+toleranceObjects {
-		t.Errorf("%s: Object leak detected: %d initial, %d current (+%d objects, limit: +%d objects + tolerance)",
-			rt.name, rt.initialObjects, currentSample.Objects, objectDiff, limits.MaxObjectIncrease)
+		t.Errorf(
+			"%s: Object leak detected: %d initial, %d current (+%d objects, limit: +%d objects + tolerance)",
+			rt.name,
+			rt.initialObjects,
+			currentSample.Objects,
+			objectDiff,
+			limits.MaxObjectIncrease,
+		)
 	}
 }
 

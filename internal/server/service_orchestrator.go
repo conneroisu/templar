@@ -135,7 +135,10 @@ func NewServiceOrchestrator(deps ServiceDependencies) *ServiceOrchestrator {
 		panic("ServiceOrchestrator: config storage failed")
 	}
 
-	log.Printf("ServiceOrchestrator initialized with %d scan paths", len(deps.Config.Components.ScanPaths))
+	log.Printf(
+		"ServiceOrchestrator initialized with %d scan paths",
+		len(deps.Config.Components.ScanPaths),
+	)
 	return orchestrator
 }
 

@@ -62,7 +62,12 @@ func TestMemoryLeakPrevention(t *testing.T) {
 		memoryGrowth = 0 // Memory decreased or stayed same
 	}
 
-	t.Logf("Memory before: %d bytes, after: %d bytes, growth: %d bytes", m1.Alloc, m2.Alloc, memoryGrowth)
+	t.Logf(
+		"Memory before: %d bytes, after: %d bytes, growth: %d bytes",
+		m1.Alloc,
+		m2.Alloc,
+		memoryGrowth,
+	)
 
 	// Allow some growth but not more than 1MB for 10k events
 	if memoryGrowth > 1024*1024 {
@@ -95,7 +100,11 @@ func TestBoundedEventQueue(t *testing.T) {
 	fw.debouncer.mutex.Unlock()
 
 	if pendingCount > MaxPendingEvents {
-		t.Errorf("Event queue not bounded: %d events (expected <= %d)", pendingCount, MaxPendingEvents)
+		t.Errorf(
+			"Event queue not bounded: %d events (expected <= %d)",
+			pendingCount,
+			MaxPendingEvents,
+		)
 	}
 
 	t.Logf("Pending events after overflow: %d (max: %d)", pendingCount, MaxPendingEvents)
@@ -160,7 +169,11 @@ func TestCleanupPreventsGrowth(t *testing.T) {
 
 	// Capacity should be reasonable after cleanup
 	if capacity > MaxPendingEvents*3 {
-		t.Errorf("Cleanup didn't prevent growth: capacity %d (expected <= %d)", capacity, MaxPendingEvents*3)
+		t.Errorf(
+			"Cleanup didn't prevent growth: capacity %d (expected <= %d)",
+			capacity,
+			MaxPendingEvents*3,
+		)
 	}
 }
 

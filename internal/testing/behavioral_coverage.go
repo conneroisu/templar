@@ -116,7 +116,10 @@ const (
 )
 
 // NewBehavioralCoverageAnalyzer creates a new behavioral coverage analyzer
-func NewBehavioralCoverageAnalyzer(projectRoot string, packages []string) *BehavioralCoverageAnalyzer {
+func NewBehavioralCoverageAnalyzer(
+	projectRoot string,
+	packages []string,
+) *BehavioralCoverageAnalyzer {
 	return &BehavioralCoverageAnalyzer{
 		ProjectRoot:  projectRoot,
 		Packages:     packages,
@@ -215,7 +218,10 @@ func (bca *BehavioralCoverageAnalyzer) discoverTestFiles() ([]string, error) {
 }
 
 // analyzeFile performs behavioral coverage analysis for a single file
-func (bca *BehavioralCoverageAnalyzer) analyzeFile(sourceFile string, testFiles []string) (*FileCoverage, error) {
+func (bca *BehavioralCoverageAnalyzer) analyzeFile(
+	sourceFile string,
+	testFiles []string,
+) (*FileCoverage, error) {
 	coverage := &FileCoverage{
 		File:             sourceFile,
 		BoundaryTests:    make([]BoundaryTest, 0),
@@ -247,7 +253,11 @@ func (bca *BehavioralCoverageAnalyzer) analyzeFile(sourceFile string, testFiles 
 }
 
 // analyzeASTForBehaviors analyzes AST for behavioral patterns
-func (bca *BehavioralCoverageAnalyzer) analyzeASTForBehaviors(node *ast.File, fset *token.FileSet, coverage *FileCoverage) {
+func (bca *BehavioralCoverageAnalyzer) analyzeASTForBehaviors(
+	node *ast.File,
+	fset *token.FileSet,
+	coverage *FileCoverage,
+) {
 	ast.Inspect(node, func(n ast.Node) bool {
 		switch node := n.(type) {
 		case *ast.FuncDecl:
@@ -268,7 +278,11 @@ func (bca *BehavioralCoverageAnalyzer) analyzeASTForBehaviors(node *ast.File, fs
 }
 
 // analyzeFunctionBehaviors analyzes function-level behaviors
-func (bca *BehavioralCoverageAnalyzer) analyzeFunctionBehaviors(fn *ast.FuncDecl, fset *token.FileSet, coverage *FileCoverage) {
+func (bca *BehavioralCoverageAnalyzer) analyzeFunctionBehaviors(
+	fn *ast.FuncDecl,
+	fset *token.FileSet,
+	coverage *FileCoverage,
+) {
 	if fn.Name == nil {
 		return
 	}
@@ -297,7 +311,10 @@ func (bca *BehavioralCoverageAnalyzer) analyzeFunctionBehaviors(fn *ast.FuncDecl
 }
 
 // analyzeFunctionSignature analyzes function signature for boundary testing
-func (bca *BehavioralCoverageAnalyzer) analyzeFunctionSignature(fn *ast.FuncDecl, coverage *FileCoverage) {
+func (bca *BehavioralCoverageAnalyzer) analyzeFunctionSignature(
+	fn *ast.FuncDecl,
+	coverage *FileCoverage,
+) {
 	if fn.Type.Params == nil {
 		return
 	}
@@ -323,7 +340,11 @@ func (bca *BehavioralCoverageAnalyzer) analyzeFunctionSignature(fn *ast.FuncDecl
 }
 
 // analyzeErrorHandling analyzes error handling patterns
-func (bca *BehavioralCoverageAnalyzer) analyzeErrorHandling(fn *ast.FuncDecl, fset *token.FileSet, coverage *FileCoverage) {
+func (bca *BehavioralCoverageAnalyzer) analyzeErrorHandling(
+	fn *ast.FuncDecl,
+	fset *token.FileSet,
+	coverage *FileCoverage,
+) {
 	ast.Inspect(fn, func(n ast.Node) bool {
 		switch node := n.(type) {
 		case *ast.IfStmt:
@@ -358,7 +379,11 @@ func (bca *BehavioralCoverageAnalyzer) analyzeErrorHandling(fn *ast.FuncDecl, fs
 }
 
 // analyzeConcurrencyPatterns analyzes concurrency-related behaviors
-func (bca *BehavioralCoverageAnalyzer) analyzeConcurrencyPatterns(fn *ast.FuncDecl, fset *token.FileSet, coverage *FileCoverage) {
+func (bca *BehavioralCoverageAnalyzer) analyzeConcurrencyPatterns(
+	fn *ast.FuncDecl,
+	fset *token.FileSet,
+	coverage *FileCoverage,
+) {
 	ast.Inspect(fn, func(n ast.Node) bool {
 		switch node := n.(type) {
 		case *ast.GoStmt:
@@ -399,7 +424,11 @@ func (bca *BehavioralCoverageAnalyzer) analyzeConcurrencyPatterns(fn *ast.FuncDe
 }
 
 // analyzeStateMachinePatterns looks for state machine behaviors
-func (bca *BehavioralCoverageAnalyzer) analyzeStateMachinePatterns(fn *ast.FuncDecl, fset *token.FileSet, coverage *FileCoverage) {
+func (bca *BehavioralCoverageAnalyzer) analyzeStateMachinePatterns(
+	fn *ast.FuncDecl,
+	fset *token.FileSet,
+	coverage *FileCoverage,
+) {
 	// Look for switch statements that might represent state transitions
 	ast.Inspect(fn, func(n ast.Node) bool {
 		if switchStmt, ok := n.(*ast.SwitchStmt); ok {
@@ -410,7 +439,11 @@ func (bca *BehavioralCoverageAnalyzer) analyzeStateMachinePatterns(fn *ast.FuncD
 }
 
 // analyzeStateTransitions analyzes state transition patterns
-func (bca *BehavioralCoverageAnalyzer) analyzeStateTransitions(switchStmt *ast.SwitchStmt, funcName string, coverage *FileCoverage) {
+func (bca *BehavioralCoverageAnalyzer) analyzeStateTransitions(
+	switchStmt *ast.SwitchStmt,
+	funcName string,
+	coverage *FileCoverage,
+) {
 	// This is a simplified state transition analysis
 	// In a real implementation, this would be more sophisticated
 
@@ -438,7 +471,11 @@ func (bca *BehavioralCoverageAnalyzer) analyzeStateTransitions(switchStmt *ast.S
 }
 
 // analyzeConditionalBehaviors analyzes conditional statement behaviors
-func (bca *BehavioralCoverageAnalyzer) analyzeConditionalBehaviors(ifStmt *ast.IfStmt, fset *token.FileSet, coverage *FileCoverage) {
+func (bca *BehavioralCoverageAnalyzer) analyzeConditionalBehaviors(
+	ifStmt *ast.IfStmt,
+	fset *token.FileSet,
+	coverage *FileCoverage,
+) {
 	// Analyze branch coverage requirements
 	position := fset.Position(ifStmt.Pos())
 
@@ -468,7 +505,11 @@ func (bca *BehavioralCoverageAnalyzer) analyzeConditionalBehaviors(ifStmt *ast.I
 }
 
 // analyzeSwitchBehaviors analyzes switch statement behaviors
-func (bca *BehavioralCoverageAnalyzer) analyzeSwitchBehaviors(switchStmt *ast.SwitchStmt, fset *token.FileSet, coverage *FileCoverage) {
+func (bca *BehavioralCoverageAnalyzer) analyzeSwitchBehaviors(
+	switchStmt *ast.SwitchStmt,
+	fset *token.FileSet,
+	coverage *FileCoverage,
+) {
 	position := fset.Position(switchStmt.Pos())
 
 	if switchStmt.Body == nil {
@@ -499,13 +540,21 @@ func (bca *BehavioralCoverageAnalyzer) analyzeSwitchBehaviors(switchStmt *ast.Sw
 }
 
 // analyzeTypeSwitchBehaviors analyzes type switch behaviors
-func (bca *BehavioralCoverageAnalyzer) analyzeTypeSwitchBehaviors(typeSwitchStmt *ast.TypeSwitchStmt, fset *token.FileSet, coverage *FileCoverage) {
+func (bca *BehavioralCoverageAnalyzer) analyzeTypeSwitchBehaviors(
+	typeSwitchStmt *ast.TypeSwitchStmt,
+	fset *token.FileSet,
+	coverage *FileCoverage,
+) {
 	// Similar to switch analysis but for type switches
 	bca.analyzeSwitchBehaviors(&ast.SwitchStmt{Body: typeSwitchStmt.Body}, fset, coverage)
 }
 
 // analyzeConcurrencyBehaviors analyzes select statement behaviors
-func (bca *BehavioralCoverageAnalyzer) analyzeConcurrencyBehaviors(selectStmt *ast.SelectStmt, fset *token.FileSet, coverage *FileCoverage) {
+func (bca *BehavioralCoverageAnalyzer) analyzeConcurrencyBehaviors(
+	selectStmt *ast.SelectStmt,
+	fset *token.FileSet,
+	coverage *FileCoverage,
+) {
 	position := fset.Position(selectStmt.Pos())
 
 	concurrencyTest := ConcurrencyTest{
@@ -547,7 +596,11 @@ func (bca *BehavioralCoverageAnalyzer) analyzeConcurrencyBehaviors(selectStmt *a
 }
 
 // analyzeLoopBehaviors analyzes loop behaviors
-func (bca *BehavioralCoverageAnalyzer) analyzeLoopBehaviors(loopNode ast.Node, fset *token.FileSet, coverage *FileCoverage) {
+func (bca *BehavioralCoverageAnalyzer) analyzeLoopBehaviors(
+	loopNode ast.Node,
+	fset *token.FileSet,
+	coverage *FileCoverage,
+) {
 	position := fset.Position(loopNode.Pos())
 
 	// Loop behaviors to test
@@ -667,7 +720,10 @@ func (bca *BehavioralCoverageAnalyzer) calculateComplexity(fn *ast.FuncDecl) *Co
 }
 
 // findRelatedTestFiles finds test files related to a source file
-func (bca *BehavioralCoverageAnalyzer) findRelatedTestFiles(sourceFile string, testFiles []string) []string {
+func (bca *BehavioralCoverageAnalyzer) findRelatedTestFiles(
+	sourceFile string,
+	testFiles []string,
+) []string {
 	related := make([]string, 0)
 
 	sourceBase := strings.TrimSuffix(filepath.Base(sourceFile), ".go")
@@ -687,7 +743,10 @@ func (bca *BehavioralCoverageAnalyzer) findRelatedTestFiles(sourceFile string, t
 }
 
 // analyzeTestCoverage analyzes test files to determine behavioral coverage
-func (bca *BehavioralCoverageAnalyzer) analyzeTestCoverage(testFiles []string, coverage *FileCoverage) {
+func (bca *BehavioralCoverageAnalyzer) analyzeTestCoverage(
+	testFiles []string,
+	coverage *FileCoverage,
+) {
 	for _, testFile := range testFiles {
 		bca.analyzeTestFile(testFile, coverage)
 	}
@@ -726,16 +785,25 @@ func (bca *BehavioralCoverageAnalyzer) extractTestName(line string) string {
 }
 
 // markBehaviorsCovered marks behaviors as covered based on test analysis
-func (bca *BehavioralCoverageAnalyzer) markBehaviorsCovered(testName string, testLines []string, coverage *FileCoverage) {
+func (bca *BehavioralCoverageAnalyzer) markBehaviorsCovered(
+	testName string,
+	testLines []string,
+	coverage *FileCoverage,
+) {
 	// Simple heuristic: look for keywords in test that suggest covered behaviors
 	testContent := strings.Join(testLines, " ")
 	testContentLower := strings.ToLower(testContent)
 
 	// Mark boundary tests as covered if test suggests boundary testing
-	if strings.Contains(testContentLower, "boundary") || strings.Contains(testContentLower, "edge") || strings.Contains(testContentLower, "limit") {
+	if strings.Contains(testContentLower, "boundary") ||
+		strings.Contains(testContentLower, "edge") ||
+		strings.Contains(testContentLower, "limit") {
 		for i := range coverage.BoundaryTests {
 			if coverage.BoundaryTests[i].Coverage == 0 {
-				coverage.BoundaryTests[i].TestedValues = append(coverage.BoundaryTests[i].TestedValues, "detected_in_"+testName)
+				coverage.BoundaryTests[i].TestedValues = append(
+					coverage.BoundaryTests[i].TestedValues,
+					"detected_in_"+testName,
+				)
 			}
 		}
 	}
@@ -751,7 +819,9 @@ func (bca *BehavioralCoverageAnalyzer) markBehaviorsCovered(testName string, tes
 	}
 
 	// Mark concurrency tests as covered
-	if strings.Contains(testContentLower, "concurrent") || strings.Contains(testContentLower, "goroutine") || strings.Contains(testContentLower, "race") {
+	if strings.Contains(testContentLower, "concurrent") ||
+		strings.Contains(testContentLower, "goroutine") ||
+		strings.Contains(testContentLower, "race") {
 		for i := range coverage.ConcurrencyTests {
 			if !coverage.ConcurrencyTests[i].Tested {
 				coverage.ConcurrencyTests[i].Tested = true
@@ -771,7 +841,10 @@ func (bca *BehavioralCoverageAnalyzer) markBehaviorsCovered(testName string, tes
 }
 
 // testCoversBehavior determines if a test covers a specific behavior
-func (bca *BehavioralCoverageAnalyzer) testCoversBehavior(testName, testContent, behaviorName string, behavior BehaviorCoverage) bool {
+func (bca *BehavioralCoverageAnalyzer) testCoversBehavior(
+	testName, testContent, behaviorName string,
+	behavior BehaviorCoverage,
+) bool {
 	testNameLower := strings.ToLower(testName)
 	testContentLower := strings.ToLower(testContent)
 	behaviorNameLower := strings.ToLower(behaviorName)
@@ -789,7 +862,8 @@ func (bca *BehavioralCoverageAnalyzer) testCoversBehavior(testName, testContent,
 	for pattern, words := range keywords {
 		if strings.Contains(behaviorNameLower, pattern) {
 			for _, word := range words {
-				if strings.Contains(testNameLower, word) || strings.Contains(testContentLower, word) {
+				if strings.Contains(testNameLower, word) ||
+					strings.Contains(testContentLower, word) {
 					return true
 				}
 			}
@@ -805,7 +879,11 @@ func (bca *BehavioralCoverageAnalyzer) calculateCoverageMetrics(coverage *FileCo
 	for i := range coverage.BoundaryTests {
 		boundary := &coverage.BoundaryTests[i]
 		if len(boundary.Boundaries) > 0 {
-			boundary.Coverage = float64(len(boundary.TestedValues)) / float64(len(boundary.Boundaries)) * 100
+			boundary.Coverage = float64(
+				len(boundary.TestedValues),
+			) / float64(
+				len(boundary.Boundaries),
+			) * 100
 		}
 
 		// Identify missing tests
@@ -827,9 +905,19 @@ func (bca *BehavioralCoverageAnalyzer) calculateCoverageMetrics(coverage *FileCo
 	// Calculate contract test coverage
 	for i := range coverage.ContractTests {
 		contract := &coverage.ContractTests[i]
-		totalContracts := len(contract.Preconditions) + len(contract.Postconditions) + len(contract.Invariants)
+		totalContracts := len(
+			contract.Preconditions,
+		) + len(
+			contract.Postconditions,
+		) + len(
+			contract.Invariants,
+		)
 		if totalContracts > 0 {
-			contract.Coverage = float64(len(contract.TestedContracts)) / float64(totalContracts) * 100
+			contract.Coverage = float64(
+				len(contract.TestedContracts),
+			) / float64(
+				totalContracts,
+			) * 100
 		}
 	}
 
@@ -946,7 +1034,15 @@ func (bca *BehavioralCoverageAnalyzer) mightBeErrorExpression(expr ast.Expr) boo
 func (bca *BehavioralCoverageAnalyzer) mightReturnError(callExpr *ast.CallExpr) bool {
 	// Heuristic: assume functions with certain names might return errors
 	if fun, ok := callExpr.Fun.(*ast.Ident); ok {
-		errorProneNames := []string{"Open", "Create", "Parse", "Connect", "Read", "Write", "Execute"}
+		errorProneNames := []string{
+			"Open",
+			"Create",
+			"Parse",
+			"Connect",
+			"Read",
+			"Write",
+			"Execute",
+		}
 		for _, name := range errorProneNames {
 			if strings.Contains(fun.Name, name) {
 				return true
@@ -956,7 +1052,11 @@ func (bca *BehavioralCoverageAnalyzer) mightReturnError(callExpr *ast.CallExpr) 
 	return false
 }
 
-func (bca *BehavioralCoverageAnalyzer) addBehavioralExpectations(fn *ast.FuncDecl, coverage *FileCoverage, complexity *ComplexityMetrics) {
+func (bca *BehavioralCoverageAnalyzer) addBehavioralExpectations(
+	fn *ast.FuncDecl,
+	coverage *FileCoverage,
+	complexity *ComplexityMetrics,
+) {
 	funcName := fn.Name.Name
 
 	// Add expectations based on function name patterns

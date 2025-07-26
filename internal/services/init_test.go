@@ -93,14 +93,26 @@ func TestInitService_InitProject(t *testing.T) {
 
 			// Check example components based on options
 			if tt.opts.Example || (!tt.opts.Minimal && tt.opts.Template == "") {
-				assert.FileExists(t, filepath.Join(tt.opts.ProjectDir, "components", "button.templ"))
+				assert.FileExists(
+					t,
+					filepath.Join(tt.opts.ProjectDir, "components", "button.templ"),
+				)
 				assert.FileExists(t, filepath.Join(tt.opts.ProjectDir, "components", "card.templ"))
-				assert.FileExists(t, filepath.Join(tt.opts.ProjectDir, "static", "css", "styles.css"))
+				assert.FileExists(
+					t,
+					filepath.Join(tt.opts.ProjectDir, "static", "css", "styles.css"),
+				)
 			}
 
 			if tt.opts.Minimal {
-				assert.NoFileExists(t, filepath.Join(tt.opts.ProjectDir, "components", "button.templ"))
-				assert.NoFileExists(t, filepath.Join(tt.opts.ProjectDir, "components", "card.templ"))
+				assert.NoFileExists(
+					t,
+					filepath.Join(tt.opts.ProjectDir, "components", "button.templ"),
+				)
+				assert.NoFileExists(
+					t,
+					filepath.Join(tt.opts.ProjectDir, "components", "card.templ"),
+				)
 			}
 		})
 	}

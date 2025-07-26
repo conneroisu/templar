@@ -177,7 +177,10 @@ func TestSlidingWindowRateLimiterComprehensiveSecurity(t *testing.T) {
 		// Verify violations were tracked
 		violationCount, _, _ := limiter.GetViolationInfo()
 		if violationCount < int(totalRequests/2) {
-			t.Errorf("Expected significant violations from concurrent attack, got %d", violationCount)
+			t.Errorf(
+				"Expected significant violations from concurrent attack, got %d",
+				violationCount,
+			)
 		}
 
 		t.Logf("Concurrent attack results: %d allowed (%.1f%%), %d rejected, %d violations",
@@ -312,8 +315,10 @@ func TestSlidingWindowVulnerabilityMitigation(t *testing.T) {
 		// Due to exponential backoff from previous violations,
 		// requests should still be blocked
 		if postWindowAllowed > 1 {
-			t.Errorf("Window boundary attack should be mitigated by backoff, but %d requests allowed",
-				postWindowAllowed)
+			t.Errorf(
+				"Window boundary attack should be mitigated by backoff, but %d requests allowed",
+				postWindowAllowed,
+			)
 		}
 
 		violationCount, _, _ := limiter.GetViolationInfo()

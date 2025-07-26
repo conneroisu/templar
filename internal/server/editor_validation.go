@@ -474,7 +474,10 @@ func (s *PreviewServer) generateEditorSuggestions(content string) []EditorSugges
 }
 
 // renderTemplContentWithProps renders template content with props for preview
-func (s *PreviewServer) renderTemplContentWithProps(content string, props map[string]interface{}) (string, error) {
+func (s *PreviewServer) renderTemplContentWithProps(
+	content string,
+	props map[string]interface{},
+) (string, error) {
 	// This is a simplified implementation
 	// In a real implementation, you would need to compile and execute the templ
 

@@ -120,7 +120,10 @@ func TestServeService_Serve(t *testing.T) {
 						}
 
 						if !foundExpected {
-							t.Logf("Got unexpected error (but this might be ok in test env): %v", err)
+							t.Logf(
+								"Got unexpected error (but this might be ok in test env): %v",
+								err,
+							)
 						}
 					}
 				} else {

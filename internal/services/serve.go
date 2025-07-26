@@ -68,7 +68,11 @@ func (s *ServeService) Serve(ctx context.Context, opts ServeOptions) (*ServeResu
 	container := di.NewServiceContainer(s.config)
 	if err := container.Initialize(); err != nil {
 		result.Success = false
-		result.Error = errors.ServeServiceError("INIT_CONTAINER", "service container initialization failed", err)
+		result.Error = errors.ServeServiceError(
+			"INIT_CONTAINER",
+			"service container initialization failed",
+			err,
+		)
 		return result, result.Error
 	}
 	defer func() {
@@ -81,7 +85,8 @@ func (s *ServeService) Serve(ctx context.Context, opts ServeOptions) (*ServeResu
 	if err != nil {
 		result.Success = false
 		// Check for server creation errors
-		if strings.Contains(err.Error(), "address already in use") || strings.Contains(err.Error(), "bind") {
+		if strings.Contains(err.Error(), "address already in use") ||
+			strings.Contains(err.Error(), "bind") {
 			contextSuggestion := &errors.SuggestionContext{}
 			suggestions := errors.ServerStartError(err, s.config.Server.Port, contextSuggestion)
 			enhancedErr := errors.NewEnhancedError(

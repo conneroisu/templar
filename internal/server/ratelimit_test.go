@@ -264,9 +264,13 @@ func TestWhitelistMiddleware(t *testing.T) {
 
 	whitelist := NewIPWhitelist([]string{"192.168.1.100"})
 
-	rateLimitHandler := RateLimitMiddleware(limiter)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	}))
+	rateLimitHandler := RateLimitMiddleware(
+		limiter,
+	)(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
 
 	middleware := WhitelistMiddleware(whitelist, rateLimitHandler)
 	handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -320,7 +324,9 @@ func TestAdaptiveRateLimiter(t *testing.T) {
 
 	// Force adjustment by manipulating lastCheck to bypass time interval check
 	limiter.adjustmentMutex.Lock()
-	limiter.lastCheck = time.Now().Add(-time.Hour) // Make it seem like we haven't checked in an hour
+	limiter.lastCheck = time.Now().
+		Add(-time.Hour)
+		// Make it seem like we haven't checked in an hour
 	limiter.adjustmentMutex.Unlock()
 
 	// Force adjustment check

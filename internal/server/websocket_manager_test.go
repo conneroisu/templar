@@ -204,7 +204,11 @@ func TestWebSocketManager_HandleWebSocket_RateLimiting(t *testing.T) {
 
 	// Should fail at WebSocket upgrade (BadRequest) since we're not doing real WebSocket handshake
 	if recorder.Code != http.StatusBadRequest {
-		t.Errorf("Expected status %d (WebSocket upgrade failure), got %d", http.StatusBadRequest, recorder.Code)
+		t.Errorf(
+			"Expected status %d (WebSocket upgrade failure), got %d",
+			http.StatusBadRequest,
+			recorder.Code,
+		)
 	}
 }
 

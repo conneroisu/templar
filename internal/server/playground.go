@@ -86,7 +86,9 @@ func (s *PreviewServer) handlePlaygroundRender(w http.ResponseWriter, r *http.Re
 	// Get component from registry
 	component, exists := s.registry.Get(req.ComponentName)
 	if !exists {
-		response := PlaygroundResponse{Error: fmt.Sprintf("Component '%s' not found", req.ComponentName)}
+		response := PlaygroundResponse{
+			Error: fmt.Sprintf("Component '%s' not found", req.ComponentName),
+		}
 		s.writeJSONResponse(w, response)
 		return
 	}
@@ -160,14 +162,19 @@ func (s *PreviewServer) handlePlaygroundIndex(w http.ResponseWriter, r *http.Req
 }
 
 // renderComponentWithProps renders a component with custom props
-func (s *PreviewServer) renderComponentWithProps(componentName string, props map[string]interface{}) (string, error) {
+func (s *PreviewServer) renderComponentWithProps(
+	componentName string,
+	props map[string]interface{},
+) (string, error) {
 	// Create a temporary renderer with custom mock data
 	renderer := s.createCustomRenderer(props)
 	return renderer.RenderComponent(componentName)
 }
 
 // generateIntelligentMockData creates contextually appropriate mock data
-func (s *PreviewServer) generateIntelligentMockData(component *types.ComponentInfo) map[string]interface{} {
+func (s *PreviewServer) generateIntelligentMockData(
+	component *types.ComponentInfo,
+) map[string]interface{} {
 	mockData := make(map[string]interface{})
 
 	for _, param := range component.Parameters {
@@ -201,10 +208,14 @@ func (s *PreviewServer) generateMockValueForType(paramName, paramType string) in
 // generateMockString creates contextually appropriate mock strings
 func (s *PreviewServer) generateMockString(paramName string) string {
 	contextualValues := map[string][]string{
-		"title":       {"Sample Title", "Welcome to Templar", "Interactive Component"},
-		"name":        {"John Doe", "Alice Smith", "Bob Johnson"},
-		"email":       {"user@example.com", "alice@company.com", "developer@templar.dev"},
-		"text":        {"Sample text content", "Lorem ipsum dolor sit amet", "This is example text"},
+		"title": {"Sample Title", "Welcome to Templar", "Interactive Component"},
+		"name":  {"John Doe", "Alice Smith", "Bob Johnson"},
+		"email": {"user@example.com", "alice@company.com", "developer@templar.dev"},
+		"text": {
+			"Sample text content",
+			"Lorem ipsum dolor sit amet",
+			"This is example text",
+		},
 		"label":       {"Click Me", "Submit", "Get Started"},
 		"url":         {"https://example.com", "https://templar.dev", "#"},
 		"href":        {"https://example.com", "https://templar.dev", "#"},
@@ -213,9 +224,16 @@ func (s *PreviewServer) generateMockString(paramName string) string {
 		"size":        {"small", "medium", "large"},
 		"type":        {"button", "submit", "reset"},
 		"placeholder": {"Enter text here...", "Search...", "Type something..."},
-		"description": {"A sample description for this component", "This explains what the component does"},
-		"message":     {"Hello from the playground!", "This is a test message", "Component rendered successfully"},
-		"content":     {"This is sample content that demonstrates the component functionality."},
+		"description": {
+			"A sample description for this component",
+			"This explains what the component does",
+		},
+		"message": {
+			"Hello from the playground!",
+			"This is a test message",
+			"Component rendered successfully",
+		},
+		"content": {"This is sample content that demonstrates the component functionality."},
 	}
 
 	if values, exists := contextualValues[paramName]; exists {
@@ -430,7 +448,9 @@ func (s *PreviewServer) getIntExamples(name string) []string {
 }
 
 // generateMockDataSuggestions creates suggestions for mock data
-func (s *PreviewServer) generateMockDataSuggestions(component *types.ComponentInfo) map[string]interface{} {
+func (s *PreviewServer) generateMockDataSuggestions(
+	component *types.ComponentInfo,
+) map[string]interface{} {
 	suggestions := make(map[string]interface{})
 
 	for _, param := range component.Parameters {
@@ -493,7 +513,10 @@ func (s *PreviewServer) extractDocComments(component *types.ComponentInfo) strin
 }
 
 // generateComponentCode creates code showing current component usage
-func (s *PreviewServer) generateComponentCode(componentName string, props map[string]interface{}) string {
+func (s *PreviewServer) generateComponentCode(
+	componentName string,
+	props map[string]interface{},
+) string {
 	var code strings.Builder
 
 	code.WriteString(fmt.Sprintf("@%s(", componentName))
@@ -557,7 +580,10 @@ func (cmr *CustomMockRenderer) RenderComponent(componentName string) (string, er
 }
 
 // generateMockHTML creates mock HTML representation of a component
-func (cmr *CustomMockRenderer) generateMockHTML(componentName string, props map[string]interface{}) (string, error) {
+func (cmr *CustomMockRenderer) generateMockHTML(
+	componentName string,
+	props map[string]interface{},
+) (string, error) {
 	var html strings.Builder
 
 	// Create a representative HTML structure based on component name
@@ -610,7 +636,12 @@ func (cmr *CustomMockRenderer) generateMockHTML(componentName string, props map[
 		if placeholderProp, exists := props["placeholder"]; exists {
 			placeholder = fmt.Sprintf("%v", placeholderProp)
 		}
-		html.WriteString(fmt.Sprintf(`<input type="text" class="form-input mock-input" placeholder="%s">`, placeholder))
+		html.WriteString(
+			fmt.Sprintf(
+				`<input type="text" class="form-input mock-input" placeholder="%s">`,
+				placeholder,
+			),
+		)
 
 	default:
 		// Generic component representation

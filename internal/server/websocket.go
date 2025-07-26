@@ -48,7 +48,11 @@ func (s *PreviewServer) handleWebSocket(w http.ResponseWriter, r *http.Request) 
 
 	if currentConnections >= maxConnections {
 		http.Error(w, "Too Many Connections", http.StatusTooManyRequests)
-		log.Printf("WebSocket connection rejected: limit exceeded (%d/%d)", currentConnections, maxConnections)
+		log.Printf(
+			"WebSocket connection rejected: limit exceeded (%d/%d)",
+			currentConnections,
+			maxConnections,
+		)
 		return
 	}
 

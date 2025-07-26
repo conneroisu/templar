@@ -47,7 +47,10 @@ func NewMemoryLeakPreventionManager(cfg *config.Config) *MemoryLeakPreventionMan
 }
 
 // RegisterConnection registers a connection stub
-func (m *MemoryLeakPreventionManager) RegisterConnection(conn *websocket.Conn, remoteAddr string) (*ConnectionInfo, error) {
+func (m *MemoryLeakPreventionManager) RegisterConnection(
+	conn *websocket.Conn,
+	remoteAddr string,
+) (*ConnectionInfo, error) {
 	info := &ConnectionInfo{
 		ID:        fmt.Sprintf("conn_%d", time.Now().UnixNano()),
 		CreatedAt: time.Now(),
@@ -255,7 +258,8 @@ func (em *EnhancedWebSocketManager) cleanupEnhancedClient(client *EnhancedClient
 
 	// Log final statistics
 	connectionDuration := time.Since(client.CreatedAt)
-	log.Printf("Enhanced client cleanup for %s: duration=%v, messages=%d, bytes_sent=%d, bytes_received=%d, errors=%d",
+	log.Printf(
+		"Enhanced client cleanup for %s: duration=%v, messages=%d, bytes_sent=%d, bytes_received=%d, errors=%d",
 		client.ID[:8],
 		connectionDuration,
 		client.MessageCount,
@@ -337,8 +341,13 @@ func (em *EnhancedWebSocketManager) updateEnhancedMetrics() {
 
 	// Log health summary periodically
 	if int(time.Now().Unix())%300 == 0 { // Every 5 minutes
-		log.Printf("WebSocket Health Summary: %.1f%% health, %d active connections (%.1f%% capacity), %.2f%% error rate",
-			healthScore, memoryMetrics.ActiveConnections, connectionCapacity, errorRate)
+		log.Printf(
+			"WebSocket Health Summary: %.1f%% health, %d active connections (%.1f%% capacity), %.2f%% error rate",
+			healthScore,
+			memoryMetrics.ActiveConnections,
+			connectionCapacity,
+			errorRate,
+		)
 	}
 }
 
@@ -369,7 +378,11 @@ func (em *EnhancedWebSocketManager) calculateHealthScore(
 
 	// Deduct for failed connections
 	if memoryMetrics.TotalConnections > 0 {
-		failureRate := float64(memoryMetrics.FailedConnections) / float64(memoryMetrics.TotalConnections)
+		failureRate := float64(
+			memoryMetrics.FailedConnections,
+		) / float64(
+			memoryMetrics.TotalConnections,
+		)
 		if failureRate > 0.05 { // More than 5% failure rate
 			score -= failureRate * 50
 		}
@@ -466,7 +479,10 @@ func (em *EnhancedWebSocketManager) Shutdown(ctx context.Context) error {
 		}
 		em.connectionsMux.Unlock()
 
-		log.Printf("Enhanced WebSocket manager shutdown completed. Cleaned up %d connections.", connectionCount)
+		log.Printf(
+			"Enhanced WebSocket manager shutdown completed. Cleaned up %d connections.",
+			connectionCount,
+		)
 	})
 
 	return shutdownErr

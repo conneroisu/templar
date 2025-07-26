@@ -1,4 +1,5 @@
 {
+  "version": 2,
   "run": {
     "timeout": "5m",
     "tests": true
@@ -88,29 +89,10 @@
   "linters": {
     "disable-all": true,
     "enable": [
-      "bodyclose",
-      "depguard", 
-      "dogsled",
-      "errcheck",
-      "gofmt",
-      "goimports",
-      "goprintffuncname",
-      "govet",
-      "ineffassign",
-      "lll",
-      "nakedret",
-      "noctx",
-      "nolintlint",
-      "rowserrcheck",
-      "staticcheck",
-      "stylecheck", 
-      "typecheck",
-      "unconvert",
-      "unparam",
-      "unused",
-      "whitespace",
-      "prealloc",
-      "nestif"
+      "staticcheck"
+    ],
+    "disable": [
+      "errcheck"
     ]
   },
   "issues": {

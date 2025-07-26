@@ -31,7 +31,11 @@ func handleHealthCheck(w http.ResponseWriter, r *http.Request, orchestrator *Ser
 }
 
 // handleComponentsList handles requests for the components list
-func handleComponentsList(w http.ResponseWriter, r *http.Request, registry interfaces.ComponentRegistry) {
+func handleComponentsList(
+	w http.ResponseWriter,
+	r *http.Request,
+	registry interfaces.ComponentRegistry,
+) {
 	w.Header().Set("Content-Type", "application/json")
 
 	components := registry.GetAll()
@@ -47,7 +51,12 @@ func handleComponentsList(w http.ResponseWriter, r *http.Request, registry inter
 }
 
 // handleComponentDetail handles requests for individual component details
-func handleComponentDetail(w http.ResponseWriter, r *http.Request, registry interfaces.ComponentRegistry, renderer *renderer.ComponentRenderer) {
+func handleComponentDetail(
+	w http.ResponseWriter,
+	r *http.Request,
+	registry interfaces.ComponentRegistry,
+	renderer *renderer.ComponentRenderer,
+) {
 	// Extract component name from URL path
 	path := r.URL.Path
 	componentName := path[len("/component/"):]
@@ -75,7 +84,12 @@ func handleComponentDetail(w http.ResponseWriter, r *http.Request, registry inte
 }
 
 // handleComponentRender handles component rendering requests
-func handleComponentRender(w http.ResponseWriter, r *http.Request, registry interfaces.ComponentRegistry, renderer *renderer.ComponentRenderer) {
+func handleComponentRender(
+	w http.ResponseWriter,
+	r *http.Request,
+	registry interfaces.ComponentRegistry,
+	renderer *renderer.ComponentRenderer,
+) {
 	// Extract component name from URL path
 	path := r.URL.Path
 	componentName := path[len("/render/"):]
@@ -121,7 +135,12 @@ func handlePlaygroundIndexPage(w http.ResponseWriter, r *http.Request) {
 }
 
 // handlePlaygroundComponentPage handles individual playground component pages
-func handlePlaygroundComponentPage(w http.ResponseWriter, r *http.Request, registry interfaces.ComponentRegistry, renderer *renderer.ComponentRenderer) {
+func handlePlaygroundComponentPage(
+	w http.ResponseWriter,
+	r *http.Request,
+	registry interfaces.ComponentRegistry,
+	renderer *renderer.ComponentRenderer,
+) {
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`
@@ -136,14 +155,23 @@ func handlePlaygroundComponentPage(w http.ResponseWriter, r *http.Request, regis
 }
 
 // handlePlaygroundRenderAPI handles playground render API requests
-func handlePlaygroundRenderAPI(w http.ResponseWriter, r *http.Request, registry interfaces.ComponentRegistry, renderer *renderer.ComponentRenderer) {
+func handlePlaygroundRenderAPI(
+	w http.ResponseWriter,
+	r *http.Request,
+	registry interfaces.ComponentRegistry,
+	renderer *renderer.ComponentRenderer,
+) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"status": "rendered", "message": "Playground render complete"}`))
 }
 
 // handleEnhancedInterface handles enhanced web interface requests
-func handleEnhancedInterface(w http.ResponseWriter, r *http.Request, registry interfaces.ComponentRegistry) {
+func handleEnhancedInterface(
+	w http.ResponseWriter,
+	r *http.Request,
+	registry interfaces.ComponentRegistry,
+) {
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`
@@ -276,7 +304,11 @@ func handleBuildCache(w http.ResponseWriter, r *http.Request, orchestrator *Serv
 }
 
 // handleIndexPage handles the main index page
-func handleIndexPage(w http.ResponseWriter, r *http.Request, registry interfaces.ComponentRegistry) {
+func handleIndexPage(
+	w http.ResponseWriter,
+	r *http.Request,
+	registry interfaces.ComponentRegistry,
+) {
 	w.Header().Set("Content-Type", "text/html")
 
 	componentCount := registry.Count()
@@ -304,7 +336,13 @@ func handleIndexPage(w http.ResponseWriter, r *http.Request, registry interfaces
 }
 
 // handleTargetFilesPage handles target files page
-func handleTargetFilesPage(w http.ResponseWriter, r *http.Request, config *config.Config, registry interfaces.ComponentRegistry, renderer *renderer.ComponentRenderer) {
+func handleTargetFilesPage(
+	w http.ResponseWriter,
+	r *http.Request,
+	config *config.Config,
+	registry interfaces.ComponentRegistry,
+	renderer *renderer.ComponentRenderer,
+) {
 	w.Header().Set("Content-Type", "text/html")
 
 	html := fmt.Sprintf(`

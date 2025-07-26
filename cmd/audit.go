@@ -840,7 +840,6 @@ func showGuidanceOnly(componentName string) error {
 			fmt.Printf("%d. %s\n", i+1, item.Title)
 			fmt.Printf("   %s\n\n", item.Description)
 		}
-
 	} else {
 		// Show general accessibility guidance
 		fmt.Printf("🌟 Accessibility Quick Start Guide\n")

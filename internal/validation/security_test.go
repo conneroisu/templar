@@ -5,11 +5,16 @@ import (
 )
 
 // Helper function for validation tests to reduce code duplication
-func runValidationTests(t *testing.T, testName string, validationFunc func(string) error, tests []struct {
-	name    string
-	input   string
-	wantErr bool
-}) {
+func runValidationTests(
+	t *testing.T,
+	testName string,
+	validationFunc func(string) error,
+	tests []struct {
+		name    string
+		input   string
+		wantErr bool
+	},
+) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := validationFunc(tt.input)

@@ -52,9 +52,11 @@ func TestWebSocketRateLimitBypassVulnerability(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := setupTestWebSocketServerForBypassTest(t)
 
-			testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				server.handleWebSocket(w, r)
-			}))
+			testServer := httptest.NewServer(
+				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					server.handleWebSocket(w, r)
+				}),
+			)
 			defer testServer.Close()
 
 			wsURL := "ws" + strings.TrimPrefix(testServer.URL, "http")
@@ -125,7 +127,11 @@ func testRapidMessageBurst(t *testing.T, wsURL string) {
 
 	for i := 0; i < 70; i++ {
 		writeCtx, writeCancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-		err := conn.Write(writeCtx, websocket.MessageText, []byte(fmt.Sprintf("test message %d", i)))
+		err := conn.Write(
+			writeCtx,
+			websocket.MessageText,
+			[]byte(fmt.Sprintf("test message %d", i)),
+		)
 		writeCancel()
 
 		if err != nil {
@@ -145,11 +151,17 @@ func testRapidMessageBurst(t *testing.T, wsURL string) {
 	}
 
 	if !rateLimitTriggered {
-		t.Errorf("Expected rate limiting to be triggered after sending %d messages, but it wasn't", messagesSent)
+		t.Errorf(
+			"Expected rate limiting to be triggered after sending %d messages, but it wasn't",
+			messagesSent,
+		)
 	}
 
 	if messagesSent < 60 {
-		t.Logf("Rate limiting triggered after %d messages (expected, as it should be around the limit)", messagesSent)
+		t.Logf(
+			"Rate limiting triggered after %d messages (expected, as it should be around the limit)",
+			messagesSent,
+		)
 	}
 }
 
@@ -243,7 +255,10 @@ func testRateLimitWindowBoundary(t *testing.T, wsURL string) {
 		writeCancel()
 
 		if err != nil {
-			t.Errorf("Message in second batch failed (sliding window not working correctly): %v", err)
+			t.Errorf(
+				"Message in second batch failed (sliding window not working correctly): %v",
+				err,
+			)
 			return
 		}
 		time.Sleep(20 * time.Millisecond)
@@ -281,7 +296,11 @@ func testConcurrentConnections(t *testing.T, wsURL string) {
 	for connIdx, conn := range connections {
 		for msgIdx := 0; msgIdx < messageCount; msgIdx++ {
 			writeCtx, writeCancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-			err := conn.Write(writeCtx, websocket.MessageText, []byte(fmt.Sprintf("conn%d msg%d", connIdx, msgIdx)))
+			err := conn.Write(
+				writeCtx,
+				websocket.MessageText,
+				[]byte(fmt.Sprintf("conn%d msg%d", connIdx, msgIdx)),
+			)
 			writeCancel()
 
 			if err != nil {

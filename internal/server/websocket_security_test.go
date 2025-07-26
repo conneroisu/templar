@@ -555,12 +555,25 @@ func TestWebSocketSecurityUnderLoad(t *testing.T) {
 	t.Logf("  Unexpectedly allowed malicious: %d", unexpectedAllowed)
 
 	// Security validations - the core requirement
-	assert.Zero(t, unexpectedAllowed, "CRITICAL: Security validation failed under load: %d malicious connections allowed", unexpectedAllowed)
-	assert.Equal(t, numMaliciousAttempts, rejectedMaliciousAttempts, "CRITICAL: Not all malicious attempts were rejected under load")
+	assert.Zero(
+		t,
+		unexpectedAllowed,
+		"CRITICAL: Security validation failed under load: %d malicious connections allowed",
+		unexpectedAllowed,
+	)
+	assert.Equal(
+		t,
+		numMaliciousAttempts,
+		rejectedMaliciousAttempts,
+		"CRITICAL: Not all malicious attempts were rejected under load",
+	)
 
 	// Load performance validation - security system should handle the load
 	if unexpectedAllowed == 0 && rejectedMaliciousAttempts == numMaliciousAttempts {
-		t.Logf("✅ SUCCESS: Security validation is robust under load - all %d malicious attempts correctly rejected", numMaliciousAttempts)
+		t.Logf(
+			"✅ SUCCESS: Security validation is robust under load - all %d malicious attempts correctly rejected",
+			numMaliciousAttempts,
+		)
 		t.Logf("✅ SUCCESS: No race conditions detected in concurrent security validation")
 	}
 

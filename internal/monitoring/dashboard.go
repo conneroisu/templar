@@ -80,7 +80,10 @@ func (hd *HealthDashboard) handleDashboardHTML(w http.ResponseWriter, r *http.Re
         .status-healthy { color: #27ae60; font-weight: bold; }
         .status-degraded { color: #f39c12; font-weight: bold; }
         .status-unhealthy { color: #e74c3c; font-weight: bold; }
-        .metric { display: flex; justify-content: space-between; margin: 10px 0; padding: 5px 0; border-bottom: 1px solid #eee; }
+        .metric { 
+            display: flex; justify-content: space-between; margin: 10px 0; 
+            padding: 5px 0; border-bottom: 1px solid #eee; 
+        }
         .recovery-item { margin: 10px 0; padding: 10px; border-left: 4px solid #3498db; background: #f8f9fa; }
         .critical { border-left-color: #e74c3c; }
         .auto-refresh { text-align: center; margin: 20px 0; }
@@ -151,11 +154,16 @@ func (hd *HealthDashboard) handleDashboardHTML(w http.ResponseWriter, r *http.Re
             document.getElementById('overallHealth').innerHTML = 
                 '<div class="metric"><span>Status:</span><span class="' + statusClass + '">' + 
                 health.status.toUpperCase() + '</span></div>' +
-                '<div class="metric"><span>Uptime:</span><span>' + formatDuration(health.uptime) + '</span></div>' +
-                '<div class="metric"><span>Total Checks:</span><span>' + health.summary.total + '</span></div>' +
-                '<div class="metric"><span>Healthy:</span><span class="status-healthy">' + health.summary.healthy + '</span></div>' +
-                '<div class="metric"><span>Degraded:</span><span class="status-degraded">' + health.summary.degraded + '</span></div>' +
-                '<div class="metric"><span>Unhealthy:</span><span class="status-unhealthy">' + health.summary.unhealthy + '</span></div>';
+                '<div class="metric"><span>Uptime:</span><span>' + 
+                formatDuration(health.uptime) + '</span></div>' +
+                '<div class="metric"><span>Total Checks:</span><span>' + 
+                health.summary.total + '</span></div>' +
+                '<div class="metric"><span>Healthy:</span><span class="status-healthy">' + 
+                health.summary.healthy + '</span></div>' +
+                '<div class="metric"><span>Degraded:</span><span class="status-degraded">' + 
+                health.summary.degraded + '</span></div>' +
+                '<div class="metric"><span>Unhealthy:</span><span class="status-unhealthy">' + 
+                health.summary.unhealthy + '</span></div>';
         }
 
         function updateSystemMetrics(metrics) {

@@ -1309,7 +1309,8 @@ func (s *PreviewServer) generateEnhancedIndexHTML() string {
                     '<label class="prop-label">' + param.name + ':</label>' +
                     '<input class="prop-input-inline" type="' + inputType + '" ' +
                     'value="' + value + '" ' +
-                    'onchange="updateComponentProp(\\\'' + component.name + '\\\', \\\'' + param.name + '\\\', this.value, \\\'' + param.type + '\\\')">' +
+                    'onchange="updateComponentProp(\\\'' + component.name + '\\\', ' +
+                    '\\\'' + param.name + '\\\', this.value, \\\'' + param.type + '\\\')">' +
                     '</div>';
             }).join('');
         }

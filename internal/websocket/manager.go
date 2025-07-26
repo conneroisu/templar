@@ -160,7 +160,11 @@ func NewWebSocketManager(
 func (wm *WebSocketManager) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	// Precondition checks
 	if w == nil || r == nil {
-		log.Printf("WebSocketManager.HandleWebSocket: invalid parameters (w=%v, r=%v)", w == nil, r == nil)
+		log.Printf(
+			"WebSocketManager.HandleWebSocket: invalid parameters (w=%v, r=%v)",
+			w == nil,
+			r == nil,
+		)
 		if w != nil {
 			http.Error(w, "Bad Request", http.StatusBadRequest)
 		}
@@ -175,7 +179,10 @@ func (wm *WebSocketManager) HandleWebSocket(w http.ResponseWriter, r *http.Reque
 
 	// Security validation - critical for preventing unauthorized access
 	if !wm.validateWebSocketRequest(r) {
-		log.Printf("WebSocket connection rejected: failed security validation from %s", r.RemoteAddr)
+		log.Printf(
+			"WebSocket connection rejected: failed security validation from %s",
+			r.RemoteAddr,
+		)
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
@@ -191,9 +198,11 @@ func (wm *WebSocketManager) HandleWebSocket(w http.ResponseWriter, r *http.Reque
 	// Upgrade HTTP connection to WebSocket protocol
 	// This is the critical transition point from HTTP to WebSocket
 	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
-		InsecureSkipVerify: false,                         // Enforce TLS verification in production
-		OriginPatterns:     []string{"*"},                 // Allow all origins (validated separately)
-		CompressionMode:    websocket.CompressionDisabled, // Disable compression for simplicity
+		InsecureSkipVerify: false, // Enforce TLS verification in production
+		OriginPatterns: []string{
+			"*",
+		}, // Allow all origins (validated separately)
+		CompressionMode: websocket.CompressionDisabled, // Disable compression for simplicity
 	})
 	if err != nil {
 		log.Printf("WebSocket upgrade failed for client %s: %v", clientIP, err)

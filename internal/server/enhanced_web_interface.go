@@ -74,7 +74,9 @@ func (s *PreviewServer) handleInlineEditor(w http.ResponseWriter, r *http.Reques
 	// Get component from registry
 	component, exists := s.registry.Get(req.ComponentName)
 	if !exists {
-		response := map[string]interface{}{"error": fmt.Sprintf("Component '%s' not found", req.ComponentName)}
+		response := map[string]interface{}{
+			"error": fmt.Sprintf("Component '%s' not found", req.ComponentName),
+		}
 		s.writeJSONResponse(w, response)
 		return
 	}
@@ -92,7 +94,11 @@ func (s *PreviewServer) handleInlineEditor(w http.ResponseWriter, r *http.Reques
 }
 
 // handleInlineRender renders component with props for inline preview
-func (s *PreviewServer) handleInlineRender(w http.ResponseWriter, component *types.ComponentInfo, props map[string]interface{}) {
+func (s *PreviewServer) handleInlineRender(
+	w http.ResponseWriter,
+	component *types.ComponentInfo,
+	props map[string]interface{},
+) {
 	// Use the playground renderer for consistent behavior
 	html, err := s.renderComponentWithProps(component.Name, props)
 	if err != nil {
@@ -109,7 +115,11 @@ func (s *PreviewServer) handleInlineRender(w http.ResponseWriter, component *typ
 }
 
 // handleInlineValidate validates props against component schema
-func (s *PreviewServer) handleInlineValidate(w http.ResponseWriter, component *types.ComponentInfo, props map[string]interface{}) {
+func (s *PreviewServer) handleInlineValidate(
+	w http.ResponseWriter,
+	component *types.ComponentInfo,
+	props map[string]interface{},
+) {
 	validationErrors := s.validateComponentProps(component, props)
 
 	response := map[string]interface{}{
@@ -120,7 +130,11 @@ func (s *PreviewServer) handleInlineValidate(w http.ResponseWriter, component *t
 }
 
 // handleInlineSuggest provides prop suggestions and autocompletion
-func (s *PreviewServer) handleInlineSuggest(w http.ResponseWriter, component *types.ComponentInfo, props map[string]interface{}) {
+func (s *PreviewServer) handleInlineSuggest(
+	w http.ResponseWriter,
+	component *types.ComponentInfo,
+	props map[string]interface{},
+) {
 	suggestions := s.generatePropSuggestions(component, props)
 
 	response := map[string]interface{}{
@@ -130,7 +144,10 @@ func (s *PreviewServer) handleInlineSuggest(w http.ResponseWriter, component *ty
 }
 
 // validateComponentProps validates props against component parameter definitions
-func (s *PreviewServer) validateComponentProps(component *types.ComponentInfo, props map[string]interface{}) []ValidationError {
+func (s *PreviewServer) validateComponentProps(
+	component *types.ComponentInfo,
+	props map[string]interface{},
+) []ValidationError {
 	var errors []ValidationError
 
 	// Check required parameters
@@ -167,7 +184,12 @@ func (s *PreviewServer) validateComponentProps(component *types.ComponentInfo, p
 				Property: propName,
 				Expected: param.Type,
 				Actual:   fmt.Sprintf("%T", propValue),
-				Message:  fmt.Sprintf("Type mismatch for '%s': expected %s, got %T", propName, param.Type, propValue),
+				Message: fmt.Sprintf(
+					"Type mismatch for '%s': expected %s, got %T",
+					propName,
+					param.Type,
+					propValue,
+				),
 				Severity: "error",
 			})
 		}
@@ -177,7 +199,10 @@ func (s *PreviewServer) validateComponentProps(component *types.ComponentInfo, p
 }
 
 // findParameterByName finds a parameter by name in component definition
-func (s *PreviewServer) findParameterByName(component *types.ComponentInfo, name string) *types.ParameterInfo {
+func (s *PreviewServer) findParameterByName(
+	component *types.ComponentInfo,
+	name string,
+) *types.ParameterInfo {
 	for i, param := range component.Parameters {
 		if param.Name == name {
 			return &component.Parameters[i]
@@ -226,7 +251,10 @@ func (s *PreviewServer) isCompatibleType(value interface{}, expectedType string)
 }
 
 // generatePropSuggestions generates contextual suggestions for props
-func (s *PreviewServer) generatePropSuggestions(component *types.ComponentInfo, currentProps map[string]interface{}) map[string]interface{} {
+func (s *PreviewServer) generatePropSuggestions(
+	component *types.ComponentInfo,
+	currentProps map[string]interface{},
+) map[string]interface{} {
 	suggestions := make(map[string]interface{})
 
 	for _, param := range component.Parameters {

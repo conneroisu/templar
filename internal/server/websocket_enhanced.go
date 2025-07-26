@@ -110,7 +110,11 @@ func (s *PreviewServer) handleWebSocketEnhanced(w http.ResponseWriter, r *http.R
 	if currentConnections >= maxConnections {
 		http.Error(w, "Too Many Connections", http.StatusTooManyRequests)
 		atomic.AddInt64(&s.enhancements.rejectedConnections, 1)
-		log.Printf("WebSocket connection rejected: global limit exceeded (%d/%d)", currentConnections, maxConnections)
+		log.Printf(
+			"WebSocket connection rejected: global limit exceeded (%d/%d)",
+			currentConnections,
+			maxConnections,
+		)
 		return
 	}
 
@@ -150,7 +154,11 @@ func (s *PreviewServer) handleWebSocketEnhanced(w http.ResponseWriter, r *http.R
 	s.register <- enhancedClient.Client
 
 	atomic.AddInt64(&s.enhancements.totalConnections, 1)
-	log.Printf("Enhanced WebSocket client connected: %s (total: %d)", enhancedClient.id, currentConnections+1)
+	log.Printf(
+		"Enhanced WebSocket client connected: %s (total: %d)",
+		enhancedClient.id,
+		currentConnections+1,
+	)
 }
 
 // Enhanced read pump with better performance and monitoring
@@ -311,8 +319,11 @@ func (s *PreviewServer) writePumpEnhanced(client *EnhancedClient) {
 
 				// Enhanced ping failure handling
 				if client.pingFailures >= 3 {
-					log.Printf("Enhanced WebSocket client %s failed ping test %d times, disconnecting",
-						client.id, client.pingFailures)
+					log.Printf(
+						"Enhanced WebSocket client %s failed ping test %d times, disconnecting",
+						client.id,
+						client.pingFailures,
+					)
 					return
 				}
 

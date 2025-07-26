@@ -202,7 +202,12 @@ func TestFullInterfaceIntegration(t *testing.T) {
 	pipelineAdapter := concretePipeline
 
 	// Validate all interfaces
-	summary := interfaces.ValidateAllInterfaces(reg, watcherAdapter, scannerAdapter, pipelineAdapter)
+	summary := interfaces.ValidateAllInterfaces(
+		reg,
+		watcherAdapter,
+		scannerAdapter,
+		pipelineAdapter,
+	)
 
 	if !summary.IsValid() {
 		t.Errorf("Interface validation failed: %s", summary.String())
@@ -341,7 +346,8 @@ func TestConcurrentInterfaceAccess(t *testing.T) {
 
 					reg.Register(testComponent)
 
-					if retrieved, exists := reg.Get(testComponent.Name); !exists || retrieved.Name != testComponent.Name {
+					if retrieved, exists := reg.Get(testComponent.Name); !exists ||
+						retrieved.Name != testComponent.Name {
 						t.Errorf("Concurrent access error for component %s", testComponent.Name)
 					}
 				}
@@ -419,11 +425,19 @@ func TestInterfaceContractCompliance(t *testing.T) {
 	newAll := reg.GetAll()
 
 	if newCount != len(newAll) {
-		t.Errorf("After registration: Count() (%d) does not match len(GetAll()) (%d)", newCount, len(newAll))
+		t.Errorf(
+			"After registration: Count() (%d) does not match len(GetAll()) (%d)",
+			newCount,
+			len(newAll),
+		)
 	}
 
 	if newCount != initialCount+1 {
-		t.Errorf("Count should increase by 1 after registration: got %d, want %d", newCount, initialCount+1)
+		t.Errorf(
+			"Count should increase by 1 after registration: got %d, want %d",
+			newCount,
+			initialCount+1,
+		)
 	}
 
 	// Test that Get() returns what was registered
