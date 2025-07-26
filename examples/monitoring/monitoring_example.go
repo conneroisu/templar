@@ -291,11 +291,8 @@ func simulateActivity() {
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
-	for {
-		select {
-		case <-ticker.C:
-			simulateBackgroundOperations()
-		}
+	for range ticker.C {
+		simulateBackgroundOperations()
 	}
 }
 

@@ -436,7 +436,7 @@ func (t *Tutorial) askChoice(prompt string, choices []string, defaultValue strin
 
 		// Check if input is valid choice
 		for _, choice := range choices {
-			if strings.ToLower(input) == strings.ToLower(choice) {
+			if strings.EqualFold(input, choice) {
 				return choice
 			}
 		}

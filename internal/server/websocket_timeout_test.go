@@ -20,7 +20,7 @@ func TestWebSocketManagerTimeout(t *testing.T) {
 		// Create WebSocket manager with timeout config
 		originValidator := &MockOriginValidator{}
 		manager := NewWebSocketManager(originValidator, nil, cfg)
-		defer manager.Shutdown(nil)
+		defer manager.Shutdown(context.TODO())
 
 		// Test that the getWebSocketTimeout returns the configured value
 		timeout := manager.getWebSocketTimeout()
@@ -31,7 +31,7 @@ func TestWebSocketManagerTimeout(t *testing.T) {
 		// Create WebSocket manager without config
 		originValidator := &MockOriginValidator{}
 		manager := NewWebSocketManager(originValidator, nil)
-		defer manager.Shutdown(nil)
+		defer manager.Shutdown(context.TODO())
 
 		// Test that the getWebSocketTimeout returns the default value
 		timeout := manager.getWebSocketTimeout()
@@ -49,7 +49,7 @@ func TestWebSocketManagerTimeout(t *testing.T) {
 		// Create WebSocket manager with timeout config
 		originValidator := &MockOriginValidator{}
 		manager := NewWebSocketManager(originValidator, nil, cfg)
-		defer manager.Shutdown(nil)
+		defer manager.Shutdown(context.TODO())
 
 		// Test that the getNetworkTimeout returns the configured value
 		timeout := manager.getNetworkTimeout()
@@ -60,7 +60,7 @@ func TestWebSocketManagerTimeout(t *testing.T) {
 		// Create WebSocket manager without config
 		originValidator := &MockOriginValidator{}
 		manager := NewWebSocketManager(originValidator, nil)
-		defer manager.Shutdown(nil)
+		defer manager.Shutdown(context.TODO())
 
 		// Test that the getNetworkTimeout returns the default value
 		timeout := manager.getNetworkTimeout()
@@ -111,7 +111,7 @@ func TestWebSocketManagerTimeout(t *testing.T) {
 				}
 
 				manager := NewWebSocketManager(originValidator, nil, cfg)
-				defer manager.Shutdown(nil)
+				defer manager.Shutdown(context.TODO())
 
 				wsTimeout := manager.getWebSocketTimeout()
 				networkTimeout := manager.getNetworkTimeout()
@@ -139,7 +139,7 @@ func TestWebSocketManagerTimeout(t *testing.T) {
 
 		originValidator := &MockOriginValidator{}
 		manager := NewWebSocketManager(originValidator, nil, cfg1, cfg2)
-		defer manager.Shutdown(nil)
+		defer manager.Shutdown(context.TODO())
 
 		wsTimeout := manager.getWebSocketTimeout()
 		networkTimeout := manager.getNetworkTimeout()

@@ -85,6 +85,7 @@ func (p *ObjectPools) PutOutputBuffer(buffer []byte) {
 	if buffer != nil {
 		// Only pool buffers with reasonable capacity to prevent memory bloat
 		if cap(buffer) >= 1*1024 && cap(buffer) <= 64*1024 { // 1KB-64KB sweet spot
+			//nolint:staticcheck // SA6002: intentional slice value for sync.Pool performance
 			p.outputBuffers.Put(buffer[:0])
 		}
 		// Buffers outside this range are just discarded (too small or too large)
@@ -308,6 +309,7 @@ func (sp *SlicePools) GetComponentInfoSlice() []*types.ComponentInfo {
 // PutComponentInfoSlice returns a slice to the pool
 func (sp *SlicePools) PutComponentInfoSlice(slice []*types.ComponentInfo) {
 	if slice != nil && cap(slice) <= 1000 { // Reasonable limit
+		//nolint:staticcheck // SA6002: intentional slice value for sync.Pool performance
 		sp.componentInfoSlices.Put(slice[:0])
 	}
 }
@@ -321,6 +323,7 @@ func (sp *SlicePools) GetStringSlice() []string {
 // PutStringSlice returns a string slice to the pool
 func (sp *SlicePools) PutStringSlice(slice []string) {
 	if slice != nil && cap(slice) <= 200 { // Reasonable limit
+		//nolint:staticcheck // SA6002: intentional slice value for sync.Pool performance
 		sp.stringSlices.Put(slice[:0])
 	}
 }
@@ -334,6 +337,7 @@ func (sp *SlicePools) GetErrorSlice() []error {
 // PutErrorSlice returns an error slice to the pool
 func (sp *SlicePools) PutErrorSlice(slice []error) {
 	if slice != nil && cap(slice) <= 100 { // Reasonable limit
+		//nolint:staticcheck // SA6002: intentional slice value for sync.Pool performance
 		sp.errorSlices.Put(slice[:0])
 	}
 }

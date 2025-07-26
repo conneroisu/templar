@@ -101,11 +101,8 @@ func runList(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	// Convert map to slice for output
-	componentSlice := make([]*types.ComponentInfo, 0, len(components))
-	for _, comp := range components {
-		componentSlice = append(componentSlice, comp)
-	}
+	// Components are already a slice
+	componentSlice := components
 
 	// Validate flags
 	if err := listFlags.ValidateFlags(); err != nil {

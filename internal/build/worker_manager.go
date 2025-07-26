@@ -125,10 +125,8 @@ func (wm *WorkerManager) worker(ctx context.Context, queue interfaces.TaskQueue)
 			// Process the build task
 			result := wm.processBuildTask(ctx, buildTask)
 
-			// Publish the result
-			if err := queue.PublishResult(result); err != nil {
-				// Note: Results dropped tracking could be added to metrics if needed
-			}
+			// Publish the result - ignore publication errors as they don't affect core functionality
+			_ = queue.PublishResult(result)
 		}
 	}
 }

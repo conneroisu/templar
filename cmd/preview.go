@@ -148,10 +148,8 @@ func runPreview(cmd *cobra.Command, args []string) error {
 	}()
 
 	// Keep the server running
-	select {
-	case <-ctx.Done():
-		return nil
-	}
+	<-ctx.Done()
+	return nil
 }
 
 func loadMockData(mockFile string) (map[string]interface{}, error) {

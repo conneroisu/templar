@@ -484,7 +484,7 @@ func (w *ConfigWizard) askChoice(prompt string, choices []string, defaultValue s
 
 		// Check if input is valid choice
 		for _, choice := range choices {
-			if strings.ToLower(input) == strings.ToLower(choice) {
+			if strings.EqualFold(input, choice) {
 				return choice
 			}
 		}

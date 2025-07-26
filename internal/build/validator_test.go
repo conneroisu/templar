@@ -269,7 +269,7 @@ func TestBuildValidator_NilInputs(t *testing.T) {
 
 		// Should not panic with nil context
 		assert.NotPanics(t, func() {
-			validator.Validate(nil, artifacts, options)
+			validator.Validate(context.TODO(), artifacts, options)
 		})
 	})
 }

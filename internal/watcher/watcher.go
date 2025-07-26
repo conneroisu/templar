@@ -530,11 +530,11 @@ func NoTestFilter(path string) bool {
 }
 
 func NoVendorFilter(path string) bool {
-	return !filepath.HasPrefix(path, "vendor/") && !strings.Contains(path, "/vendor/")
+	return !strings.HasPrefix(path, "vendor/") && !strings.Contains(path, "/vendor/")
 }
 
 func NoGitFilter(path string) bool {
-	return !filepath.HasPrefix(path, ".git/") && !strings.Contains(path, "/.git/")
+	return !strings.HasPrefix(path, ".git/") && !strings.Contains(path, "/.git/")
 }
 
 // GetStats returns current file watcher statistics for monitoring

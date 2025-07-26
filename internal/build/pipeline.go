@@ -550,11 +550,8 @@ func (bp *BuildPipeline) readFileWithMmap(file *os.File, size int64) ([]byte, er
 	content := make([]byte, size)
 	copy(content, mmap)
 
-	// Unmap the memory
-	if err := syscall.Munmap(mmap); err != nil {
-		// Log warning but don't fail - we have the content
-		// Could add logging here if logger is available
-	}
+	// Unmap the memory - ignore errors as we have the content
+	_ = syscall.Munmap(mmap)
 
 	return content, nil
 }

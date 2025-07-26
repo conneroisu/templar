@@ -386,7 +386,7 @@ func (p *ProductionBuildPipeline) buildDockerImage(
 	options ProductionBuildOptions,
 ) (string, string, error) {
 	// Temporarily disabled Docker functionality
-	return "", "", fmt.Errorf("Docker functionality temporarily disabled")
+	return "", "", fmt.Errorf("docker functionality temporarily disabled")
 }
 
 // generateBuildReports creates analysis and performance reports

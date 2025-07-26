@@ -482,7 +482,7 @@ func addCommonFlags(cmd *cobra.Command, flags *EnhancedStandardFlags) {
 // ValidateEnhancedFlags validates all enhanced flags with better error messages
 func (f *EnhancedStandardFlags) ValidateEnhancedFlags() error {
 	// Validate base flags first
-	if err := f.StandardFlags.ValidateFlags(); err != nil {
+	if err := f.ValidateFlags(); err != nil {
 		return err
 	}
 

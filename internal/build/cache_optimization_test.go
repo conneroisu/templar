@@ -82,10 +82,8 @@ func BenchmarkCacheHashGeneration(b *testing.B) {
 
 				// Simulate file changes for some components
 				if i%5 == 0 && j == 0 {
-					// "Modify" the first file every 5 iterations
-					if err := os.Chtimes(component.FilePath, time.Now(), time.Now()); err == nil {
-						// File modification time changed, cache will miss
-					}
+					// "Modify" the first file every 5 iterations to force cache miss
+					_ = os.Chtimes(component.FilePath, time.Now(), time.Now())
 				}
 			}
 		}

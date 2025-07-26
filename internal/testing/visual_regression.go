@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
@@ -313,12 +312,12 @@ func (vrt *VisualRegressionTester) updateGoldenFile(path string, content []byte)
 		return err
 	}
 
-	return ioutil.WriteFile(path, content, 0644)
+	return os.WriteFile(path, content, 0644)
 }
 
 // readGoldenFile reads content from a golden file
 func (vrt *VisualRegressionTester) readGoldenFile(path string) ([]byte, error) {
-	return ioutil.ReadFile(path)
+	return os.ReadFile(path)
 }
 
 // generateDiff creates a simple diff between expected and actual content
@@ -378,7 +377,7 @@ func (vrt *VisualRegressionTester) GenerateReport(results []*RegressionResult) s
 		}
 	}
 
-	report.WriteString(fmt.Sprintf("## Summary\n"))
+	report.WriteString("## Summary\n")
 	report.WriteString(fmt.Sprintf("- **Total Tests**: %d\n", len(results)))
 	report.WriteString(fmt.Sprintf("- **Passed**: %d\n", passed))
 	report.WriteString(fmt.Sprintf("- **Failed**: %d\n", failed))
@@ -463,7 +462,7 @@ func (vrt *VisualRegressionTester) runScreenshotTest(
 	tempFile := filepath.Join(vrt.screenshotDir, fmt.Sprintf("%s_temp.html", testCase.Name))
 	fullHTML := vrt.createFullHTMLPage(htmlContent, testCase)
 
-	if err := ioutil.WriteFile(tempFile, []byte(fullHTML), 0644); err != nil {
+	if err := os.WriteFile(tempFile, []byte(fullHTML), 0644); err != nil {
 		return result, fmt.Errorf("failed to write temporary HTML file: %w", err)
 	}
 	defer os.Remove(tempFile)
@@ -721,7 +720,7 @@ func (vrt *VisualRegressionTester) compareImages(
 			return sizeDiff, percentDiff, err
 		}
 
-		if err := ioutil.WriteFile(diffPath+".txt", []byte(diffInfo), 0644); err != nil {
+		if err := os.WriteFile(diffPath+".txt", []byte(diffInfo), 0644); err != nil {
 			return sizeDiff, percentDiff, err
 		}
 	}
