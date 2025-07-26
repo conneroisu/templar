@@ -9,7 +9,24 @@ import (
 // This is a shared function used by both build.go and watch.go
 func validateArgument(arg string) error {
 	// Reject arguments containing shell metacharacters
-	dangerousChars := []string{";", "&", "|", "$", "`", "(", ")", "{", "}", "[", "]", "<", ">", "\"", "'", "\\"}
+	dangerousChars := []string{
+		";",
+		"&",
+		"|",
+		"$",
+		"`",
+		"(",
+		")",
+		"{",
+		"}",
+		"[",
+		"]",
+		"<",
+		">",
+		"\"",
+		"'",
+		"\\",
+	}
 	for _, char := range dangerousChars {
 		if strings.Contains(arg, char) {
 			return fmt.Errorf("contains dangerous character: %s", char)
@@ -22,7 +39,8 @@ func validateArgument(arg string) error {
 	}
 
 	// Additional validation for common patterns
-	if strings.HasPrefix(arg, "/") && !strings.HasPrefix(arg, "/tmp/") && !strings.HasPrefix(arg, "/usr/") {
+	if strings.HasPrefix(arg, "/") && !strings.HasPrefix(arg, "/tmp/") &&
+		!strings.HasPrefix(arg, "/usr/") {
 		return fmt.Errorf("absolute path not allowed: %s", arg)
 	}
 

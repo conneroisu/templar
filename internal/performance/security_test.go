@@ -109,7 +109,11 @@ func TestCI_CommandInjectionPrevention(t *testing.T) {
 					return
 				}
 				if tt.expectedError != "" && !strings.Contains(err.Error(), tt.expectedError) {
-					t.Errorf("Expected error containing '%s', got: %s", tt.expectedError, err.Error())
+					t.Errorf(
+						"Expected error containing '%s', got: %s",
+						tt.expectedError,
+						err.Error(),
+					)
 				}
 			} else {
 				if err != nil {

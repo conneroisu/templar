@@ -59,7 +59,12 @@ func TestScannerTimeout(t *testing.T) {
 		// Test scanning with cancelled context
 		err := scanner.ScanDirectoryWithContext(ctx, ".")
 		assert.Error(t, err, "Should fail due to context timeout")
-		assert.Contains(t, err.Error(), "context deadline exceeded", "Error should mention context deadline")
+		assert.Contains(
+			t,
+			err.Error(),
+			"context deadline exceeded",
+			"Error should mention context deadline",
+		)
 	})
 
 	t.Run("timeout configuration validation", func(t *testing.T) {

@@ -98,7 +98,11 @@ func createRealisticCodebase(b *testing.B, componentCount int) string {
 				content = generateRealisticModalComponent(componentIndex)
 			}
 
-			filename := filepath.Join(tempDir, dir, fmt.Sprintf("component_%d.templ", componentIndex))
+			filename := filepath.Join(
+				tempDir,
+				dir,
+				fmt.Sprintf("component_%d.templ", componentIndex),
+			)
 			if err := os.WriteFile(filename, []byte(content), 0644); err != nil {
 				b.Fatal(err)
 			}

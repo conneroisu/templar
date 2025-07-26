@@ -239,7 +239,11 @@ func (mc *MetricsCollector) Timer(name string, labels map[string]string) func() 
 }
 
 // TimerContext measures operation duration with context
-func (mc *MetricsCollector) TimerContext(ctx context.Context, name string, labels map[string]string) func() {
+func (mc *MetricsCollector) TimerContext(
+	ctx context.Context,
+	name string,
+	labels map[string]string,
+) func() {
 	start := time.Now()
 	return func() {
 		duration := time.Since(start).Seconds()

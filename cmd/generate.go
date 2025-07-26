@@ -45,10 +45,14 @@ Examples:
 func init() {
 	rootCmd.AddCommand(generateCmd)
 
-	generateCmd.Flags().BoolVar(&generateAll, "all", false, "Generate code for all components (default if no components specified)")
-	generateCmd.Flags().StringVarP(&generateFormat, "format", "f", "go", "Output format (go, types, mocks, docs)")
-	generateCmd.Flags().StringVarP(&generateOutput, "output", "o", "", "Output directory (default: current directory)")
-	generateCmd.Flags().StringSliceVar(&generatePaths, "path", nil, "Additional paths to scan for components")
+	generateCmd.Flags().
+		BoolVar(&generateAll, "all", false, "Generate code for all components (default if no components specified)")
+	generateCmd.Flags().
+		StringVarP(&generateFormat, "format", "f", "go", "Output format (go, types, mocks, docs)")
+	generateCmd.Flags().
+		StringVarP(&generateOutput, "output", "o", "", "Output directory (default: current directory)")
+	generateCmd.Flags().
+		StringSliceVar(&generatePaths, "path", nil, "Additional paths to scan for components")
 }
 
 type GenerateResult struct {
@@ -153,7 +157,10 @@ func runGenerateCommand(cmd *cobra.Command, args []string) error {
 	return outputGenerateResults(summary)
 }
 
-func generateComponentCode(component *types.ComponentInfo, outputDir, format string) GenerateResult {
+func generateComponentCode(
+	component *types.ComponentInfo,
+	outputDir, format string,
+) GenerateResult {
 	result := GenerateResult{
 		Component: component.Name,
 		Files:     make([]string, 0),
@@ -189,7 +196,11 @@ func generateComponentCode(component *types.ComponentInfo, outputDir, format str
 	return result
 }
 
-func generateGoCode(component *types.ComponentInfo, outputDir string, result *GenerateResult) error {
+func generateGoCode(
+	component *types.ComponentInfo,
+	outputDir string,
+	result *GenerateResult,
+) error {
 	// For now, just create a placeholder Go file
 	fileName := fmt.Sprintf("%s_generated.go", strings.ToLower(component.Name))
 	filePath := filepath.Join(outputDir, fileName)
@@ -228,7 +239,11 @@ func Render%s(ctx context.Context, props %sProps) error {
 	return nil
 }
 
-func generateTypeDefinitions(component *types.ComponentInfo, outputDir string, result *GenerateResult) error {
+func generateTypeDefinitions(
+	component *types.ComponentInfo,
+	outputDir string,
+	result *GenerateResult,
+) error {
 	fileName := fmt.Sprintf("%s_types.ts", strings.ToLower(component.Name))
 	filePath := filepath.Join(outputDir, fileName)
 
@@ -254,7 +269,11 @@ func generateTypeDefinitions(component *types.ComponentInfo, outputDir string, r
 	return nil
 }
 
-func generateMockDataFile(component *types.ComponentInfo, outputDir string, result *GenerateResult) error {
+func generateMockDataFile(
+	component *types.ComponentInfo,
+	outputDir string,
+	result *GenerateResult,
+) error {
 	fileName := fmt.Sprintf("%s_mock.json", strings.ToLower(component.Name))
 	filePath := filepath.Join(outputDir, fileName)
 
@@ -276,7 +295,11 @@ func generateMockDataFile(component *types.ComponentInfo, outputDir string, resu
 	return nil
 }
 
-func generateDocumentation(component *types.ComponentInfo, outputDir string, result *GenerateResult) error {
+func generateDocumentation(
+	component *types.ComponentInfo,
+	outputDir string,
+	result *GenerateResult,
+) error {
 	fileName := fmt.Sprintf("%s.md", strings.ToLower(component.Name))
 	filePath := filepath.Join(outputDir, fileName)
 

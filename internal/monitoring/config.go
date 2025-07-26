@@ -304,12 +304,36 @@ func DefaultMonitoringConfiguration() *MonitoringConfiguration {
 			CheckTimeout:     10 * time.Second,
 			FailureThreshold: 3,
 			Checks: HealthChecksConfig{
-				Filesystem:        HealthCheckConfig{Enabled: true, Critical: true, Timeout: 5 * time.Second},
-				Memory:            HealthCheckConfig{Enabled: true, Critical: true, Timeout: 1 * time.Second},
-				Goroutines:        HealthCheckConfig{Enabled: true, Critical: false, Timeout: 1 * time.Second},
-				ComponentRegistry: HealthCheckConfig{Enabled: true, Critical: true, Timeout: 2 * time.Second},
-				TemplBinary:       HealthCheckConfig{Enabled: true, Critical: true, Timeout: 2 * time.Second},
-				CacheDirectory:    HealthCheckConfig{Enabled: true, Critical: false, Timeout: 2 * time.Second},
+				Filesystem: HealthCheckConfig{
+					Enabled:  true,
+					Critical: true,
+					Timeout:  5 * time.Second,
+				},
+				Memory: HealthCheckConfig{
+					Enabled:  true,
+					Critical: true,
+					Timeout:  1 * time.Second,
+				},
+				Goroutines: HealthCheckConfig{
+					Enabled:  true,
+					Critical: false,
+					Timeout:  1 * time.Second,
+				},
+				ComponentRegistry: HealthCheckConfig{
+					Enabled:  true,
+					Critical: true,
+					Timeout:  2 * time.Second,
+				},
+				TemplBinary: HealthCheckConfig{
+					Enabled:  true,
+					Critical: true,
+					Timeout:  2 * time.Second,
+				},
+				CacheDirectory: HealthCheckConfig{
+					Enabled:  true,
+					Critical: false,
+					Timeout:  2 * time.Second,
+				},
 			},
 		},
 
@@ -482,7 +506,10 @@ func validateConfiguration(config *MonitoringConfiguration) error {
 	if config.Metrics.Enabled && config.Metrics.OutputPath != "" {
 		dir := filepath.Dir(config.Metrics.OutputPath)
 		if strings.Contains(dir, "..") {
-			return fmt.Errorf("invalid metrics output path (contains path traversal): %s", config.Metrics.OutputPath)
+			return fmt.Errorf(
+				"invalid metrics output path (contains path traversal): %s",
+				config.Metrics.OutputPath,
+			)
 		}
 	}
 

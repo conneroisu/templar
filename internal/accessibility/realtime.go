@@ -68,14 +68,21 @@ func NewRealtimeAccessibilityMonitor(
 }
 
 // Subscribe subscribes to real-time accessibility updates
-func (monitor *RealtimeAccessibilityMonitor) Subscribe(subscriberID string) <-chan AccessibilityUpdate {
+func (monitor *RealtimeAccessibilityMonitor) Subscribe(
+	subscriberID string,
+) <-chan AccessibilityUpdate {
 	monitor.subscribersMu.Lock()
 	defer monitor.subscribersMu.Unlock()
 
 	ch := make(chan AccessibilityUpdate, 100) // Buffered channel
 	monitor.subscribers[subscriberID] = ch
 
-	monitor.logger.Info(context.Background(), "New accessibility monitor subscriber", "subscriber_id", subscriberID)
+	monitor.logger.Info(
+		context.Background(),
+		"New accessibility monitor subscriber",
+		"subscriber_id",
+		subscriberID,
+	)
 
 	return ch
 }
@@ -88,12 +95,21 @@ func (monitor *RealtimeAccessibilityMonitor) Unsubscribe(subscriberID string) {
 	if ch, exists := monitor.subscribers[subscriberID]; exists {
 		close(ch)
 		delete(monitor.subscribers, subscriberID)
-		monitor.logger.Info(context.Background(), "Accessibility monitor subscriber removed", "subscriber_id", subscriberID)
+		monitor.logger.Info(
+			context.Background(),
+			"Accessibility monitor subscriber removed",
+			"subscriber_id",
+			subscriberID,
+		)
 	}
 }
 
 // CheckComponent performs real-time accessibility check on a component
-func (monitor *RealtimeAccessibilityMonitor) CheckComponent(ctx context.Context, componentName string, props map[string]interface{}) {
+func (monitor *RealtimeAccessibilityMonitor) CheckComponent(
+	ctx context.Context,
+	componentName string,
+	props map[string]interface{},
+) {
 	if !monitor.config.EnableRealTimeWarnings {
 		return
 	}
@@ -102,13 +118,23 @@ func (monitor *RealtimeAccessibilityMonitor) CheckComponent(ctx context.Context,
 }
 
 // performCheck performs the actual accessibility check in a goroutine
-func (monitor *RealtimeAccessibilityMonitor) performCheck(ctx context.Context, componentName string, props map[string]interface{}) {
+func (monitor *RealtimeAccessibilityMonitor) performCheck(
+	ctx context.Context,
+	componentName string,
+	props map[string]interface{},
+) {
 	start := time.Now()
 
 	// Run accessibility test
 	report, err := monitor.tester.TestComponent(ctx, componentName, props)
 	if err != nil {
-		monitor.logger.Warn(ctx, err, "Failed to run real-time accessibility check", "component", componentName)
+		monitor.logger.Warn(
+			ctx,
+			err,
+			"Failed to run real-time accessibility check",
+			"component",
+			componentName,
+		)
 		return
 	}
 
@@ -174,7 +200,9 @@ func (monitor *RealtimeAccessibilityMonitor) performCheck(ctx context.Context, c
 }
 
 // filterViolationsBySeverity filters violations based on configured severity level
-func (monitor *RealtimeAccessibilityMonitor) filterViolationsBySeverity(violations []AccessibilityViolation) []AccessibilityViolation {
+func (monitor *RealtimeAccessibilityMonitor) filterViolationsBySeverity(
+	violations []AccessibilityViolation,
+) []AccessibilityViolation {
 	if monitor.config.WarningSeverityLevel == SeverityInfo {
 		return violations // Include all
 	}
@@ -197,7 +225,9 @@ func (monitor *RealtimeAccessibilityMonitor) filterViolationsBySeverity(violatio
 }
 
 // getUpdateTypeFromViolations determines the update type based on violation severity
-func (monitor *RealtimeAccessibilityMonitor) getUpdateTypeFromViolations(violations []AccessibilityViolation) UpdateType {
+func (monitor *RealtimeAccessibilityMonitor) getUpdateTypeFromViolations(
+	violations []AccessibilityViolation,
+) UpdateType {
 	hasError := false
 	hasWarning := false
 
@@ -221,7 +251,10 @@ func (monitor *RealtimeAccessibilityMonitor) getUpdateTypeFromViolations(violati
 }
 
 // generateUpdateMessage creates a user-friendly message for the update
-func (monitor *RealtimeAccessibilityMonitor) generateUpdateMessage(componentName string, violations []AccessibilityViolation) string {
+func (monitor *RealtimeAccessibilityMonitor) generateUpdateMessage(
+	componentName string,
+	violations []AccessibilityViolation,
+) string {
 	if len(violations) == 0 {
 		return fmt.Sprintf("✅ %s passes accessibility checks", componentName)
 	}
@@ -239,18 +272,28 @@ func (monitor *RealtimeAccessibilityMonitor) generateUpdateMessage(componentName
 	}
 
 	if criticalCount > 0 {
-		return fmt.Sprintf("🚨 %s has %d critical accessibility issue(s)", componentName, criticalCount)
+		return fmt.Sprintf(
+			"🚨 %s has %d critical accessibility issue(s)",
+			componentName,
+			criticalCount,
+		)
 	}
 
 	if seriousCount > 0 {
-		return fmt.Sprintf("⚠️ %s has %d serious accessibility issue(s)", componentName, seriousCount)
+		return fmt.Sprintf(
+			"⚠️ %s has %d serious accessibility issue(s)",
+			componentName,
+			seriousCount,
+		)
 	}
 
 	return fmt.Sprintf("ℹ️ %s has %d accessibility issue(s)", componentName, len(violations))
 }
 
 // generateCombinedSuggestions creates combined suggestions from multiple violations
-func (monitor *RealtimeAccessibilityMonitor) generateCombinedSuggestions(violations []AccessibilityViolation) []AccessibilitySuggestion {
+func (monitor *RealtimeAccessibilityMonitor) generateCombinedSuggestions(
+	violations []AccessibilityViolation,
+) []AccessibilitySuggestion {
 	suggestionMap := make(map[string]*AccessibilitySuggestion)
 
 	// Collect all suggestions and merge similar ones
@@ -370,7 +413,10 @@ func (monitor *RealtimeAccessibilityMonitor) broadcastUpdate(update Accessibilit
 }
 
 // StartPeriodicChecks starts periodic accessibility checks for active components
-func (monitor *RealtimeAccessibilityMonitor) StartPeriodicChecks(ctx context.Context, activeComponents map[string]map[string]interface{}) {
+func (monitor *RealtimeAccessibilityMonitor) StartPeriodicChecks(
+	ctx context.Context,
+	activeComponents map[string]map[string]interface{},
+) {
 	if !monitor.config.EnableRealTimeWarnings || monitor.config.CheckInterval <= 0 {
 		return
 	}
@@ -397,7 +443,9 @@ func (monitor *RealtimeAccessibilityMonitor) StartPeriodicChecks(ctx context.Con
 }
 
 // GetAccessibilityStatus returns the current accessibility status for all monitored components
-func (monitor *RealtimeAccessibilityMonitor) GetAccessibilityStatus(ctx context.Context) (*AccessibilityStatus, error) {
+func (monitor *RealtimeAccessibilityMonitor) GetAccessibilityStatus(
+	ctx context.Context,
+) (*AccessibilityStatus, error) {
 	// This would typically cache recent results
 	// For now, return basic status
 

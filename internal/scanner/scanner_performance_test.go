@@ -174,7 +174,11 @@ func createTestDirectoryStructure(b *testing.B) (string, func()) {
 
 		for i := 0; i < 10; i++ {
 			filename := filepath.Join(tempDir, dir, fmt.Sprintf("component%d.templ", i))
-			content := fmt.Sprintf("package components\n\ntempl Component%d() {\n\t<div>Component %d</div>\n}\n", i, i)
+			content := fmt.Sprintf(
+				"package components\n\ntempl Component%d() {\n\t<div>Component %d</div>\n}\n",
+				i,
+				i,
+			)
 			if err := os.WriteFile(filename, []byte(content), 0644); err != nil {
 				b.Fatal(err)
 			}
@@ -222,7 +226,11 @@ func TestPathValidationCorrectness(t *testing.T) {
 		{"valid_relative_path", "components/button.templ", false},
 		{"valid_dot_relative", "./views/layout.templ", false},
 		{"directory_traversal_attack", "../../../etc/passwd", true},
-		{"dot_dot_in_path", "components/../views/page.templ", false}, // This gets cleaned to "views/page.templ" which is valid
+		{
+			"dot_dot_in_path",
+			"components/../views/page.templ",
+			false,
+		}, // This gets cleaned to "views/page.templ" which is valid
 	}
 
 	for _, tc := range testCases {

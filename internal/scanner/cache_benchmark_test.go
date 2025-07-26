@@ -94,7 +94,9 @@ func BenchmarkComponentMetadataCache(b *testing.B) {
 	cache := NewMetadataCache(1000, time.Hour)
 
 	// Prepare test data
-	testData := []byte(`{"components":[{"name":"TestComponent","package":"test","filePath":"/test/path.templ","parameters":[],"imports":[],"hash":"abc123","dependencies":[]}],"fileHash":"abc123","parsedAt":"2024-01-01T00:00:00Z"}`)
+	testData := []byte(
+		`{"components":[{"name":"TestComponent","package":"test","filePath":"/test/path.templ","parameters":[],"imports":[],"hash":"abc123","dependencies":[]}],"fileHash":"abc123","parsedAt":"2024-01-01T00:00:00Z"}`,
+	)
 
 	b.Run("Set", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
@@ -243,7 +245,15 @@ func generateRealisticComponent(index int) string {
 			params = "ctx context.Context, data interface{}, opts ...Option"
 		}
 
-		content.WriteString(fmt.Sprintf("templ %s%s%s(%s) {\n", componentType, suffix, fmt.Sprintf("%d", index), params))
+		content.WriteString(
+			fmt.Sprintf(
+				"templ %s%s%s(%s) {\n",
+				componentType,
+				suffix,
+				fmt.Sprintf("%d", index),
+				params,
+			),
+		)
 		content.WriteString(fmt.Sprintf("\t<div class=\"%s\">\n", strings.ToLower(componentType)))
 
 		// Add some conditional logic to make parsing more complex
@@ -253,7 +263,9 @@ func generateRealisticComponent(index int) string {
 			content.WriteString(fmt.Sprintf("\t\t}\n"))
 		}
 
-		content.WriteString(fmt.Sprintf("\t\t<p>This is %s component %d</p>\n", componentType, index))
+		content.WriteString(
+			fmt.Sprintf("\t\t<p>This is %s component %d</p>\n", componentType, index),
+		)
 
 		// Add nested components
 		if index%5 == 0 {

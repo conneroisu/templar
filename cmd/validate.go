@@ -44,10 +44,14 @@ Examples:
 func init() {
 	rootCmd.AddCommand(validateCmd)
 
-	validateCmd.Flags().BoolVar(&validateAll, "all", false, "Validate all components (default if no components specified)")
-	validateCmd.Flags().BoolVar(&validateCircular, "circular", false, "Check for circular dependencies")
-	validateCmd.Flags().StringVarP(&validateFormat, "format", "f", "text", "Output format (text, json)")
-	validateCmd.Flags().StringSliceVar(&validatePaths, "path", nil, "Additional paths to scan for components")
+	validateCmd.Flags().
+		BoolVar(&validateAll, "all", false, "Validate all components (default if no components specified)")
+	validateCmd.Flags().
+		BoolVar(&validateCircular, "circular", false, "Check for circular dependencies")
+	validateCmd.Flags().
+		StringVarP(&validateFormat, "format", "f", "text", "Output format (text, json)")
+	validateCmd.Flags().
+		StringSliceVar(&validatePaths, "path", nil, "Additional paths to scan for components")
 }
 
 type ValidationResult struct {
@@ -152,7 +156,10 @@ func runValidateCommand(cmd *cobra.Command, args []string) error {
 						summary.Valid--
 						summary.Invalid++
 					}
-					summary.Results[i].Errors = append(summary.Results[i].Errors, "Part of circular dependency")
+					summary.Results[i].Errors = append(
+						summary.Results[i].Errors,
+						"Part of circular dependency",
+					)
 				}
 			}
 		}
@@ -212,7 +219,10 @@ func validateComponent(component *types.ComponentInfo) ValidationResult {
 	// Validate dependencies exist
 	for _, dep := range component.Dependencies {
 		if err := validateComponentName(dep); err != nil {
-			result.Warnings = append(result.Warnings, fmt.Sprintf("Dependency '%s' has invalid name: %v", dep, err))
+			result.Warnings = append(
+				result.Warnings,
+				fmt.Sprintf("Dependency '%s' has invalid name: %v", dep, err),
+			)
 		}
 	}
 
@@ -224,7 +234,10 @@ func validateComponent(component *types.ComponentInfo) ValidationResult {
 
 	for _, pattern := range suspiciousPatterns {
 		if strings.Contains(strings.ToLower(component.FilePath), pattern) {
-			result.Warnings = append(result.Warnings, fmt.Sprintf("File in suspicious location: %s", component.FilePath))
+			result.Warnings = append(
+				result.Warnings,
+				fmt.Sprintf("File in suspicious location: %s", component.FilePath),
+			)
 			break
 		}
 	}
@@ -260,7 +273,24 @@ func validateComponentName(name string) error {
 	}
 
 	// Reject special characters that could be used in injection attacks
-	dangerousChars := []string{"<", ">", "\"", "'", "&", ";", "|", "$", "`", "(", ")", "{", "}", "[", "]", "\\"}
+	dangerousChars := []string{
+		"<",
+		">",
+		"\"",
+		"'",
+		"&",
+		";",
+		"|",
+		"$",
+		"`",
+		"(",
+		")",
+		"{",
+		"}",
+		"[",
+		"]",
+		"\\",
+	}
 	for _, char := range dangerousChars {
 		if strings.Contains(cleanName, char) {
 			return fmt.Errorf("dangerous character not allowed: %s", char)

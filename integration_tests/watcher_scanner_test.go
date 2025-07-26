@@ -562,7 +562,9 @@ func TestIntegration_WatcherScanner_PerformanceUnderLoad(t *testing.T) {
 	// Initialize components
 	reg := registry.NewComponentRegistry()
 	componentScanner := scanner.NewComponentScanner(reg)
-	fileWatcher, err := watcher.NewFileWatcher(50 * time.Millisecond) // Shorter debounce for load test
+	fileWatcher, err := watcher.NewFileWatcher(
+		50 * time.Millisecond,
+	) // Shorter debounce for load test
 	require.NoError(t, err)
 	defer fileWatcher.Stop()
 

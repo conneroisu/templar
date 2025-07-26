@@ -237,7 +237,12 @@ func (mc *MiddlewareChain) Apply(handler http.Handler) http.Handler {
 
 		// Validate middleware didn't return nil handler
 		if wrappedHandler == nil {
-			panic(fmt.Sprintf("MiddlewareChain.Apply: middleware at index %d returned nil handler", i))
+			panic(
+				fmt.Sprintf(
+					"MiddlewareChain.Apply: middleware at index %d returned nil handler",
+					i,
+				),
+			)
 		}
 	}
 
@@ -353,7 +358,10 @@ type MiddlewareConfig struct {
 }
 
 // NewCustomMiddlewareChain creates a middleware chain with custom configuration
-func NewCustomMiddlewareChain(deps MiddlewareDependencies, config MiddlewareConfig) *MiddlewareChain {
+func NewCustomMiddlewareChain(
+	deps MiddlewareDependencies,
+	config MiddlewareConfig,
+) *MiddlewareChain {
 	chain := &MiddlewareChain{
 		config:          deps.Config,
 		rateLimiter:     deps.RateLimiter,

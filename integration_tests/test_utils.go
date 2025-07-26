@@ -60,7 +60,11 @@ type HealthResponse struct {
 
 // WaitForServerReadiness waits for a server to become ready and healthy
 // Returns ServerReadiness with detailed information about the readiness check
-func WaitForServerReadiness(ctx context.Context, baseURL string, config *TestServerConfig) (*ServerReadiness, error) {
+func WaitForServerReadiness(
+	ctx context.Context,
+	baseURL string,
+	config *TestServerConfig,
+) (*ServerReadiness, error) {
 	if config == nil {
 		config = DefaultTestConfig()
 	}

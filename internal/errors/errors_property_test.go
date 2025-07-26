@@ -24,7 +24,8 @@ func TestErrorCollectorProperties(t *testing.T) {
 	// Property: Error collector should handle concurrent error addition safely
 	properties.Property("concurrent error addition is thread-safe", prop.ForAll(
 		func(goroutineCount int, errorsPerGoroutine int) bool {
-			if goroutineCount < 1 || goroutineCount > 20 || errorsPerGoroutine < 1 || errorsPerGoroutine > 50 {
+			if goroutineCount < 1 || goroutineCount > 20 || errorsPerGoroutine < 1 ||
+				errorsPerGoroutine > 50 {
 				return true
 			}
 
@@ -44,8 +45,12 @@ func TestErrorCollectorProperties(t *testing.T) {
 							File:      fmt.Sprintf("file_%d_%d.templ", goroutineID, e),
 							Line:      e + 1,
 							Column:    1,
-							Message:   fmt.Sprintf("error from goroutine %d, iteration %d", goroutineID, e),
-							Severity:  ErrorSeverityError,
+							Message: fmt.Sprintf(
+								"error from goroutine %d, iteration %d",
+								goroutineID,
+								e,
+							),
+							Severity: ErrorSeverityError,
 						}
 						collector.Add(err)
 					}
@@ -120,7 +125,8 @@ func TestErrorCollectorProperties(t *testing.T) {
 				}
 			}
 
-			return len(errors) == errorCount && orderViolations <= errorCount/4 // Allow some tolerance
+			return len(errors) == errorCount &&
+				orderViolations <= errorCount/4 // Allow some tolerance
 		},
 		gen.IntRange(2, 25),
 	))

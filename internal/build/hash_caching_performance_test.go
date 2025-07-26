@@ -69,7 +69,11 @@ func TestFileHashCachingPerformance(t *testing.T) {
 
 			// For larger files, we expect more significant improvements
 			if size >= 102400 && speedup < 5.0 {
-				t.Logf("Cache speedup for large file (%d bytes) was only %.2fx, expected >5x", size, speedup)
+				t.Logf(
+					"Cache speedup for large file (%d bytes) was only %.2fx, expected >5x",
+					size,
+					speedup,
+				)
 			}
 		})
 	}
@@ -286,7 +290,11 @@ func TestCacheEvictionUnderMemoryPressure(t *testing.T) {
 
 		// Should take longer due to cache miss
 		if duration < time.Microsecond {
-			t.Logf("Warning: Component %d hash generation was very fast (%v), might still be cached", i, duration)
+			t.Logf(
+				"Warning: Component %d hash generation was very fast (%v), might still be cached",
+				i,
+				duration,
+			)
 		}
 	}
 }
@@ -346,5 +354,8 @@ func TestCacheConcurrency(t *testing.T) {
 		}
 	}
 
-	t.Logf("Successfully completed %d concurrent hash operations, all hashes identical", len(allHashes))
+	t.Logf(
+		"Successfully completed %d concurrent hash operations, all hashes identical",
+		len(allHashes),
+	)
 }

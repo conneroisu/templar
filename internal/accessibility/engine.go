@@ -26,7 +26,10 @@ func NewDefaultAccessibilityEngine(logger logging.Logger) *DefaultAccessibilityE
 }
 
 // Initialize sets up the accessibility engine with configuration
-func (engine *DefaultAccessibilityEngine) Initialize(ctx context.Context, config EngineConfig) error {
+func (engine *DefaultAccessibilityEngine) Initialize(
+	ctx context.Context,
+	config EngineConfig,
+) error {
 	engine.config = config
 
 	// Load default WCAG rules
@@ -85,7 +88,11 @@ func (engine *DefaultAccessibilityEngine) Analyze(
 	passedRules := []AccessibilityRule{}
 
 	// Apply WCAG level filtering
-	applicableRules := engine.getApplicableRules(config.WCAGLevel, config.Rules, config.ExcludeRules)
+	applicableRules := engine.getApplicableRules(
+		config.WCAGLevel,
+		config.Rules,
+		config.ExcludeRules,
+	)
 
 	for _, rule := range applicableRules {
 		ruleViolations, err := engine.checkRule(ctx, rule, elements, config)
@@ -135,7 +142,11 @@ func (engine *DefaultAccessibilityEngine) GetSuggestions(
 			Code:        `<img src="..." alt="Description of the image content" />`,
 			Priority:    1,
 			Resources: []Resource{
-				{Title: "Alt text best practices", URL: "https://www.w3.org/WAI/tutorials/images/", Type: "documentation"},
+				{
+					Title: "Alt text best practices",
+					URL:   "https://www.w3.org/WAI/tutorials/images/",
+					Type:  "documentation",
+				},
 			},
 		})
 
@@ -147,7 +158,11 @@ func (engine *DefaultAccessibilityEngine) GetSuggestions(
 			Code:        `<label for="input-id">Label text</label>\n<input id="input-id" type="text" />`,
 			Priority:    1,
 			Resources: []Resource{
-				{Title: "Form labels", URL: "https://www.w3.org/WAI/tutorials/forms/labels/", Type: "documentation"},
+				{
+					Title: "Form labels",
+					URL:   "https://www.w3.org/WAI/tutorials/forms/labels/",
+					Type:  "documentation",
+				},
 			},
 		})
 
@@ -167,7 +182,11 @@ func (engine *DefaultAccessibilityEngine) GetSuggestions(
 			Description: "Ensure text has sufficient contrast ratio (4.5:1 for normal text, 3:1 for large text)",
 			Priority:    1,
 			Resources: []Resource{
-				{Title: "Color contrast checker", URL: "https://webaim.org/resources/contrastchecker/", Type: "tool"},
+				{
+					Title: "Color contrast checker",
+					URL:   "https://webaim.org/resources/contrastchecker/",
+					Type:  "tool",
+				},
 			},
 		})
 
@@ -193,12 +212,20 @@ func (engine *DefaultAccessibilityEngine) GetSuggestions(
 	// Add generic suggestions if no specific ones were found
 	if len(suggestions) == 0 {
 		suggestions = append(suggestions, AccessibilitySuggestion{
-			Type:        SuggestionContent,
-			Title:       "Review accessibility guidelines",
-			Description: fmt.Sprintf("Review WCAG %s guidelines for rule: %s", violation.WCAG.Level, violation.Rule),
-			Priority:    3,
+			Type:  SuggestionContent,
+			Title: "Review accessibility guidelines",
+			Description: fmt.Sprintf(
+				"Review WCAG %s guidelines for rule: %s",
+				violation.WCAG.Level,
+				violation.Rule,
+			),
+			Priority: 3,
 			Resources: []Resource{
-				{Title: "WCAG Quick Reference", URL: "https://www.w3.org/WAI/WCAG21/quickref/", Type: "documentation"},
+				{
+					Title: "WCAG Quick Reference",
+					URL:   "https://www.w3.org/WAI/WCAG21/quickref/",
+					Type:  "documentation",
+				},
 			},
 		})
 	}
@@ -237,7 +264,12 @@ func (engine *DefaultAccessibilityEngine) AutoFix(
 	}
 
 	if fixed != htmlContent {
-		engine.logger.Info(ctx, "Applied automatic accessibility fixes", "fixes_applied", len(violations))
+		engine.logger.Info(
+			ctx,
+			"Applied automatic accessibility fixes",
+			"fixes_applied",
+			len(violations),
+		)
 	}
 
 	return fixed, nil
@@ -348,7 +380,10 @@ func (engine *DefaultAccessibilityEngine) extractElements(node *html.Node) []HTM
 }
 
 // getApplicableRules returns rules applicable for the given configuration
-func (engine *DefaultAccessibilityEngine) getApplicableRules(level WCAGLevel, includeRules, excludeRules []string) []AccessibilityRule {
+func (engine *DefaultAccessibilityEngine) getApplicableRules(
+	level WCAGLevel,
+	includeRules, excludeRules []string,
+) []AccessibilityRule {
 	applicable := []AccessibilityRule{}
 
 	for _, rule := range engine.rules {
@@ -372,14 +407,18 @@ func (engine *DefaultAccessibilityEngine) getApplicableRules(level WCAGLevel, in
 }
 
 // isRuleApplicableForLevel checks if a rule applies to the given WCAG level
-func (engine *DefaultAccessibilityEngine) isRuleApplicableForLevel(rule AccessibilityRule, level WCAGLevel) bool {
+func (engine *DefaultAccessibilityEngine) isRuleApplicableForLevel(
+	rule AccessibilityRule,
+	level WCAGLevel,
+) bool {
 	switch level {
 	case WCAGLevelA:
 		return contains(rule.Tags, "wcag2a")
 	case WCAGLevelAA:
 		return contains(rule.Tags, "wcag2a") || contains(rule.Tags, "wcag2aa")
 	case WCAGLevelAAA:
-		return contains(rule.Tags, "wcag2a") || contains(rule.Tags, "wcag2aa") || contains(rule.Tags, "wcag2aaa")
+		return contains(rule.Tags, "wcag2a") || contains(rule.Tags, "wcag2aa") ||
+			contains(rule.Tags, "wcag2aaa")
 	default:
 		return true
 	}
@@ -399,7 +438,10 @@ func (engine *DefaultAccessibilityEngine) checkRule(
 		for _, element := range elements {
 			if element.TagName() == "img" {
 				if alt, hasAlt := element.GetAttribute("alt"); !hasAlt || alt == "" {
-					violations = append(violations, engine.createViolation(rule, element, "Image missing alt attribute"))
+					violations = append(
+						violations,
+						engine.createViolation(rule, element, "Image missing alt attribute"),
+					)
 				}
 			}
 		}
@@ -408,7 +450,14 @@ func (engine *DefaultAccessibilityEngine) checkRule(
 		for _, element := range elements {
 			if isFormControl(element.TagName()) {
 				if !engine.hasAssociatedLabel(element, elements) {
-					violations = append(violations, engine.createViolation(rule, element, "Form control missing associated label"))
+					violations = append(
+						violations,
+						engine.createViolation(
+							rule,
+							element,
+							"Form control missing associated label",
+						),
+					)
 				}
 			}
 		}
@@ -422,7 +471,10 @@ func (engine *DefaultAccessibilityEngine) checkRule(
 		}
 		if !engine.hasLogicalHeadingOrder(headings) {
 			if len(headings) > 0 {
-				violations = append(violations, engine.createViolation(rule, headings[0], "Heading structure is not logical"))
+				violations = append(
+					violations,
+					engine.createViolation(rule, headings[0], "Heading structure is not logical"),
+				)
 			}
 		}
 
@@ -430,7 +482,10 @@ func (engine *DefaultAccessibilityEngine) checkRule(
 		for _, element := range elements {
 			if element.TagName() == "button" {
 				if !engine.hasAccessibleName(element) {
-					violations = append(violations, engine.createViolation(rule, element, "Button missing accessible name"))
+					violations = append(
+						violations,
+						engine.createViolation(rule, element, "Button missing accessible name"),
+					)
 				}
 			}
 		}
@@ -439,7 +494,14 @@ func (engine *DefaultAccessibilityEngine) checkRule(
 		for _, element := range elements {
 			if element.TagName() == "html" {
 				if _, hasLang := element.GetAttribute("lang"); !hasLang {
-					violations = append(violations, engine.createViolation(rule, element, "HTML element missing lang attribute"))
+					violations = append(
+						violations,
+						engine.createViolation(
+							rule,
+							element,
+							"HTML element missing lang attribute",
+						),
+					)
 				}
 			}
 		}
@@ -454,7 +516,10 @@ func (engine *DefaultAccessibilityEngine) checkRule(
 		for id, elementsWithId := range idMap {
 			if len(elementsWithId) > 1 {
 				for _, element := range elementsWithId {
-					violations = append(violations, engine.createViolation(rule, element, fmt.Sprintf("Duplicate ID: %s", id)))
+					violations = append(
+						violations,
+						engine.createViolation(rule, element, fmt.Sprintf("Duplicate ID: %s", id)),
+					)
 				}
 			}
 		}
@@ -558,7 +623,10 @@ func (engine *DefaultAccessibilityEngine) canAutoFix(ruleID string) bool {
 	return contains(autoFixableRules, ruleID)
 }
 
-func (engine *DefaultAccessibilityEngine) hasAssociatedLabel(element HTMLElement, allElements []HTMLElement) bool {
+func (engine *DefaultAccessibilityEngine) hasAssociatedLabel(
+	element HTMLElement,
+	allElements []HTMLElement,
+) bool {
 	// Check for aria-label
 	if _, hasAriaLabel := element.GetAttribute("aria-label"); hasAriaLabel {
 		return true
@@ -809,7 +877,8 @@ func (e *DefaultHTMLElement) IsVisible() bool {
 	// Simplified visibility check
 	style, hasStyle := e.GetAttribute("style")
 	if hasStyle {
-		return !strings.Contains(style, "display:none") && !strings.Contains(style, "visibility:hidden")
+		return !strings.Contains(style, "display:none") &&
+			!strings.Contains(style, "visibility:hidden")
 	}
 	return true
 }

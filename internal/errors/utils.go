@@ -38,7 +38,12 @@ func Wrap(err error, errType ErrorType, code, message string) *TemplarError {
 }
 
 // WrapWithContext wraps an error with context information
-func WrapWithContext(err error, errType ErrorType, code, message string, context map[string]interface{}) *TemplarError {
+func WrapWithContext(
+	err error,
+	errType ErrorType,
+	code, message string,
+	context map[string]interface{},
+) *TemplarError {
 	templErr := Wrap(err, errType, code, message)
 	if templErr != nil {
 		templErr.Context = context
@@ -196,7 +201,8 @@ func IsTemporaryError(err error) bool {
 	var te *TemplarError
 	if errors.As(err, &te) {
 		// Build and validation errors are typically temporary
-		return te.Type == ErrorTypeBuild || te.Type == ErrorTypeValidation || te.Type == ErrorTypeNetwork
+		return te.Type == ErrorTypeBuild || te.Type == ErrorTypeValidation ||
+			te.Type == ErrorTypeNetwork
 	}
 	return false
 }

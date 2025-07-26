@@ -9,7 +9,9 @@ import (
 )
 
 // SetupComprehensiveHealthSystem creates a complete health monitoring and self-healing system
-func SetupComprehensiveHealthSystem(deps *ComprehensiveDependencies) (*ComprehensiveHealthSystem, error) {
+func SetupComprehensiveHealthSystem(
+	deps *ComprehensiveDependencies,
+) (*ComprehensiveHealthSystem, error) {
 	// Create health monitor
 	healthMonitor := NewHealthMonitor(deps.Logger)
 

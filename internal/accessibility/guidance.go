@@ -132,7 +132,11 @@ func (guide *AccessibilityGuide) GetQuickStartGuide() []GuidanceItem {
 			Description: "Text must have adequate contrast against backgrounds",
 			Priority:    2,
 			Resources: []Resource{
-				{Title: "Color Contrast Checker", URL: "https://webaim.org/resources/contrastchecker/", Type: "tool"},
+				{
+					Title: "Color Contrast Checker",
+					URL:   "https://webaim.org/resources/contrastchecker/",
+					Type:  "tool",
+				},
 			},
 			Tags: []string{"color", "contrast", "wcag-aa"},
 		},
@@ -225,7 +229,11 @@ func (guide *AccessibilityGuide) loadDefaultGuidelines() {
 				},
 			},
 			Resources: []Resource{
-				{Title: "Alt Text Guide", URL: "https://webaim.org/articles/images/", Type: "documentation"},
+				{
+					Title: "Alt Text Guide",
+					URL:   "https://webaim.org/articles/images/",
+					Type:  "documentation",
+				},
 			},
 			Tags: []string{"images", "alt-text", "wcag-a"},
 		},
@@ -252,7 +260,11 @@ func (guide *AccessibilityGuide) loadDefaultGuidelines() {
 				},
 			},
 			Resources: []Resource{
-				{Title: "Form Labels", URL: "https://webaim.org/techniques/forms/controls", Type: "documentation"},
+				{
+					Title: "Form Labels",
+					URL:   "https://webaim.org/techniques/forms/controls",
+					Type:  "documentation",
+				},
 			},
 			Tags: []string{"forms", "labels", "wcag-a"},
 		},
@@ -305,7 +317,11 @@ func (guide *AccessibilityGuide) loadDefaultGuidelines() {
 				},
 			},
 			Resources: []Resource{
-				{Title: "Contrast Checker", URL: "https://webaim.org/resources/contrastchecker/", Type: "tool"},
+				{
+					Title: "Contrast Checker",
+					URL:   "https://webaim.org/resources/contrastchecker/",
+					Type:  "tool",
+				},
 			},
 			Tags: []string{"color", "contrast", "wcag-aa"},
 		},
@@ -495,7 +511,11 @@ func (guide *AccessibilityGuide) getGeneralGuidance() []GuidanceItem {
 			Description: "Verify the experience with assistive technology",
 			Priority:    4,
 			Resources: []Resource{
-				{Title: "Screen Reader Testing", URL: "https://webaim.org/articles/screenreader_testing/", Type: "guide"},
+				{
+					Title: "Screen Reader Testing",
+					URL:   "https://webaim.org/articles/screenreader_testing/",
+					Type:  "guide",
+				},
 			},
 			Tags: []string{"testing", "screen-reader", "general"},
 		},
@@ -572,9 +592,12 @@ func (guide *AccessibilityGuide) GetGuidanceText(rule string) string {
 func (guide *AccessibilityGuide) GetComponentGuidanceText(componentName string) string {
 	items := guide.GetGuidanceForComponent(componentName)
 	if len(items) == 0 {
-		return fmt.Sprintf("No specific guidance available for component: %s\n\nConsider these general principles:\n"+
-			"• Use semantic HTML elements\n• Provide text alternatives\n"+
-			"• Ensure keyboard accessibility\n• Test with screen readers", componentName)
+		return fmt.Sprintf(
+			"No specific guidance available for component: %s\n\nConsider these general principles:\n"+
+				"• Use semantic HTML elements\n• Provide text alternatives\n"+
+				"• Ensure keyboard accessibility\n• Test with screen readers",
+			componentName,
+		)
 	}
 
 	var text strings.Builder

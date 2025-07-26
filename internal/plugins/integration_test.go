@@ -121,7 +121,9 @@ func TestPluginSystemIntegration(t *testing.T) {
 func TestEnhancedPluginManagerIntegration(t *testing.T) {
 	t.Run("basic enhanced manager functionality", func(t *testing.T) {
 		// Skip this test for now as it has issues with logging setup
-		t.Skip("Enhanced plugin manager has logging setup issues, focusing on basic plugin manager tests")
+		t.Skip(
+			"Enhanced plugin manager has logging setup issues, focusing on basic plugin manager tests",
+		)
 	})
 }
 
@@ -149,8 +151,16 @@ func TestPluginIsolationAndSecurity(t *testing.T) {
 		}
 
 		// Register both plugins
-		config1 := PluginConfig{Name: "plugin1", Enabled: true, Config: make(map[string]interface{})}
-		config2 := PluginConfig{Name: "plugin2", Enabled: true, Config: make(map[string]interface{})}
+		config1 := PluginConfig{
+			Name:    "plugin1",
+			Enabled: true,
+			Config:  make(map[string]interface{}),
+		}
+		config2 := PluginConfig{
+			Name:    "plugin2",
+			Enabled: true,
+			Config:  make(map[string]interface{}),
+		}
 
 		err := manager.RegisterPlugin(plugin1, config1)
 		require.NoError(t, err)
@@ -191,7 +201,11 @@ func TestPluginIsolationAndSecurity(t *testing.T) {
 			},
 		}
 
-		config := PluginConfig{Name: "failing-plugin", Enabled: true, Config: make(map[string]interface{})}
+		config := PluginConfig{
+			Name:    "failing-plugin",
+			Enabled: true,
+			Config:  make(map[string]interface{}),
+		}
 		// This should fail during RegisterPlugin since Initialize is called
 		_ = manager.RegisterPlugin(failingPlugin, config)
 		// The manager should handle failures gracefully
@@ -229,7 +243,11 @@ func TestConcurrentPluginOperations(t *testing.T) {
 			priority: 1,
 		}
 
-		config := PluginConfig{Name: "concurrent-plugin", Enabled: true, Config: make(map[string]interface{})}
+		config := PluginConfig{
+			Name:    "concurrent-plugin",
+			Enabled: true,
+			Config:  make(map[string]interface{}),
+		}
 		err := manager.RegisterPlugin(plugin, config)
 		require.NoError(t, err)
 
@@ -277,7 +295,11 @@ func TestPluginLifecycleManagement(t *testing.T) {
 			},
 		}
 
-		config := PluginConfig{Name: "lifecycle-plugin", Enabled: true, Config: make(map[string]interface{})}
+		config := PluginConfig{
+			Name:    "lifecycle-plugin",
+			Enabled: true,
+			Config:  make(map[string]interface{}),
+		}
 		err := manager.RegisterPlugin(plugin, config)
 		require.NoError(t, err)
 
@@ -314,7 +336,11 @@ func TestPluginDiscoveryAndLoading(t *testing.T) {
 			health:  PluginHealth{Status: HealthStatusHealthy},
 		}
 
-		config := PluginConfig{Name: "discovery-test", Enabled: true, Config: make(map[string]interface{})}
+		config := PluginConfig{
+			Name:    "discovery-test",
+			Enabled: true,
+			Config:  make(map[string]interface{}),
+		}
 		err := manager.RegisterPlugin(mockPlugin, config)
 		assert.NoError(t, err, "Should be able to register discovered plugin")
 
@@ -334,7 +360,10 @@ func (mfp *MockFailingPlugin) Initialize(ctx context.Context, config PluginConfi
 	return fmt.Errorf("intentional failure")
 }
 
-func (mfp *MockFailingPlugin) HandleComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error) {
+func (mfp *MockFailingPlugin) HandleComponent(
+	ctx context.Context,
+	component *types.ComponentInfo,
+) (*types.ComponentInfo, error) {
 	return nil, fmt.Errorf("component processing failed")
 }
 

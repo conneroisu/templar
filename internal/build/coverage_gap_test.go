@@ -136,7 +136,12 @@ func TestHandleBuildResult_Coverage(t *testing.T) {
 		// Verify callback was called
 		callbackMutex.Lock()
 		assert.Equal(t, 1, len(callbackResults), "Callback should be called")
-		assert.Equal(t, component.Name, callbackResults[0].Component.Name, "Callback should receive correct component")
+		assert.Equal(
+			t,
+			component.Name,
+			callbackResults[0].Component.Name,
+			"Callback should receive correct component",
+		)
 		callbackMutex.Unlock()
 	})
 

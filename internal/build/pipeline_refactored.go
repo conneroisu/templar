@@ -45,7 +45,10 @@ type RefactoredBuildPipeline struct {
 }
 
 // NewRefactoredBuildPipeline creates a new refactored build pipeline with separated components.
-func NewRefactoredBuildPipeline(workers int, registry interfaces.ComponentRegistry) *RefactoredBuildPipeline {
+func NewRefactoredBuildPipeline(
+	workers int,
+	registry interfaces.ComponentRegistry,
+) *RefactoredBuildPipeline {
 	// Initialize core components
 	cache := NewBuildCache(100*1024*1024, time.Hour) // 100MB, 1 hour TTL
 	metrics := NewBuildMetrics()
@@ -53,11 +56,23 @@ func NewRefactoredBuildPipeline(workers int, registry interfaces.ComponentRegist
 	objectPools := NewObjectPools()
 
 	// Create specialized components
-	queueManager := NewTaskQueueManager(100, 100, 10, metrics) // tasks, results, priority buffer sizes
+	queueManager := NewTaskQueueManager(
+		100,
+		100,
+		10,
+		metrics,
+	) // tasks, results, priority buffer sizes
 	hashProvider := NewHashProvider(cache)
 	compiler := NewTemplCompiler()
 
-	workerManager := NewWorkerManager(workers, compiler, hashProvider, metrics, objectPools, errorParser)
+	workerManager := NewWorkerManager(
+		workers,
+		compiler,
+		hashProvider,
+		metrics,
+		objectPools,
+		errorParser,
+	)
 	resultProcessor := NewResultProcessor(metrics, errorParser)
 
 	return &RefactoredBuildPipeline{
@@ -79,7 +94,11 @@ func (rbp *RefactoredBuildPipeline) Start(ctx context.Context) error {
 	defer rbp.mu.Unlock()
 
 	if rbp.started {
-		return errors.NewBuildError("ERR_PIPELINE_ALREADY_STARTED", "pipeline is already started", nil)
+		return errors.NewBuildError(
+			"ERR_PIPELINE_ALREADY_STARTED",
+			"pipeline is already started",
+			nil,
+		)
 	}
 
 	// Create cancellable context for all components

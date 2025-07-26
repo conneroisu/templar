@@ -184,7 +184,13 @@ func (l *TemplarLogger) WithComponent(component string) Logger {
 }
 
 // log is the internal logging method
-func (l *TemplarLogger) log(ctx context.Context, level slog.Level, err error, msg string, fields ...interface{}) {
+func (l *TemplarLogger) log(
+	ctx context.Context,
+	level slog.Level,
+	err error,
+	msg string,
+	fields ...interface{},
+) {
 	// Defensive programming - ensure we don't panic on nil logger
 	if l.logger == nil {
 		fmt.Fprintf(os.Stderr, "[ERROR] Logger is nil - message: %s\n", msg)
@@ -231,7 +237,12 @@ func (l *TemplarLogger) log(ctx context.Context, level slog.Level, err error, ms
 	if handler := l.logger.Handler(); handler != nil {
 		if err := handler.Handle(ctx, record); err != nil {
 			// Fallback to stderr if primary logging fails
-			fmt.Fprintf(os.Stderr, "[ERROR] Failed to write log: %v - Original message: %s\n", err, msg)
+			fmt.Fprintf(
+				os.Stderr,
+				"[ERROR] Failed to write log: %v - Original message: %s\n",
+				err,
+				msg,
+			)
 		}
 	}
 }
@@ -437,7 +448,12 @@ func SanitizeForLog(data string) string {
 }
 
 // LogSecurityEvent logs security-related events with special handling
-func LogSecurityEvent(logger Logger, ctx context.Context, event string, details map[string]interface{}) {
+func LogSecurityEvent(
+	logger Logger,
+	ctx context.Context,
+	event string,
+	details map[string]interface{},
+) {
 	sanitizedDetails := make(map[string]interface{})
 	for k, v := range details {
 		if str, ok := v.(string); ok {
@@ -594,7 +610,12 @@ func NewResilientLogger(logger Logger, maxRetries int, retryDelay time.Duration)
 }
 
 // ErrorWithRetry logs an error with retry mechanism
-func (r *ResilientLogger) ErrorWithRetry(ctx context.Context, err error, msg string, fields ...interface{}) {
+func (r *ResilientLogger) ErrorWithRetry(
+	ctx context.Context,
+	err error,
+	msg string,
+	fields ...interface{},
+) {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
 
@@ -626,7 +647,13 @@ func (r *ResilientLogger) ErrorWithRetry(ctx context.Context, err error, msg str
 	}
 
 	// All retry attempts failed, use fallback
-	fmt.Fprintf(os.Stderr, "[CRITICAL] Failed to log error after %d retries: %s - %v\n", r.maxRetries, msg, err)
+	fmt.Fprintf(
+		os.Stderr,
+		"[CRITICAL] Failed to log error after %d retries: %s - %v\n",
+		r.maxRetries,
+		msg,
+		err,
+	)
 }
 
 // LogStructuredError logs a structured error with enhanced context

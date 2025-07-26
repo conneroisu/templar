@@ -35,11 +35,21 @@ func BenchmarkConfigurableConcurrency(b *testing.B) {
 				metrics := scanner.GetMetrics()
 
 				if i == 0 {
-					b.Logf("Workers: %d, Time: %v, Files: %d, Components: %d, Cache: %d/%d (%.1f%% hit rate), Memory: %d KB",
-						workers, elapsed, metrics.FilesProcessed, metrics.ComponentsFound,
-						metrics.CacheHits, metrics.CacheHits+metrics.CacheMisses,
-						float64(metrics.CacheHits)/float64(metrics.CacheHits+metrics.CacheMisses)*100,
-						metrics.PeakMemoryUsage/1024)
+					b.Logf(
+						"Workers: %d, Time: %v, Files: %d, Components: %d, Cache: %d/%d (%.1f%% hit rate), Memory: %d KB",
+						workers,
+						elapsed,
+						metrics.FilesProcessed,
+						metrics.ComponentsFound,
+						metrics.CacheHits,
+						metrics.CacheHits+metrics.CacheMisses,
+						float64(
+							metrics.CacheHits,
+						)/float64(
+							metrics.CacheHits+metrics.CacheMisses,
+						)*100,
+						metrics.PeakMemoryUsage/1024,
+					)
 				}
 
 				scanner.Close()
@@ -79,8 +89,13 @@ func BenchmarkMemoryEfficiency(b *testing.B) {
 				actualMemory := m2.Alloc - m1.Alloc
 
 				if i == 0 {
-					b.Logf("Files: %d, Scanner Memory: %d KB, Actual Memory: %d KB, Objects: %d",
-						scale, metrics.PeakMemoryUsage/1024, actualMemory/1024, m2.Mallocs-m1.Mallocs)
+					b.Logf(
+						"Files: %d, Scanner Memory: %d KB, Actual Memory: %d KB, Objects: %d",
+						scale,
+						metrics.PeakMemoryUsage/1024,
+						actualMemory/1024,
+						m2.Mallocs-m1.Mallocs,
+					)
 				}
 
 				scanner.Close()
@@ -144,7 +159,11 @@ func BenchmarkCacheEffectiveness(b *testing.B) {
 			metrics := scanner.GetMetrics()
 
 			if i == 0 {
-				hitRate := float64(metrics.CacheHits) / float64(metrics.CacheHits+metrics.CacheMisses) * 100
+				hitRate := float64(
+					metrics.CacheHits,
+				) / float64(
+					metrics.CacheHits+metrics.CacheMisses,
+				) * 100
 				b.Logf("Cached scan - Time: %v, Cache hits: %d, Cache misses: %d (%.1f%% hit rate)",
 					elapsed, metrics.CacheHits, metrics.CacheMisses, hitRate)
 			}
@@ -179,7 +198,11 @@ func TestScannerMetricsAccuracy(t *testing.T) {
 
 	// Log actual vs expected for debugging
 	if metrics1.FilesProcessed != int64(fileCount) {
-		t.Logf("Note: Expected %d files, but processed %d (may include generated .go files)", fileCount, metrics1.FilesProcessed)
+		t.Logf(
+			"Note: Expected %d files, but processed %d (may include generated .go files)",
+			fileCount,
+			metrics1.FilesProcessed,
+		)
 	}
 
 	if metrics1.CacheHits != 0 {
@@ -232,10 +255,16 @@ func TestScannerMetricsAccuracy(t *testing.T) {
 	}
 
 	hitRate := float64(metrics2.CacheHits) / float64(metrics2.CacheHits+metrics2.CacheMisses) * 100
-	t.Logf("Second scan metrics: Files=%d, Components=%d, Cache=%d/%d (%.1f%% hit rate), Time=%v, Memory=%dKB",
-		metrics2.FilesProcessed, metrics2.ComponentsFound,
-		metrics2.CacheHits, metrics2.CacheMisses, hitRate,
-		metrics2.TotalScanTime, metrics2.PeakMemoryUsage/1024)
+	t.Logf(
+		"Second scan metrics: Files=%d, Components=%d, Cache=%d/%d (%.1f%% hit rate), Time=%v, Memory=%dKB",
+		metrics2.FilesProcessed,
+		metrics2.ComponentsFound,
+		metrics2.CacheHits,
+		metrics2.CacheMisses,
+		hitRate,
+		metrics2.TotalScanTime,
+		metrics2.PeakMemoryUsage/1024,
+	)
 }
 
 // TestConfigurableConcurrency verifies different worker counts work correctly

@@ -501,7 +501,11 @@ func BenchmarkAlertEvaluation(b *testing.B) {
 		{Name: "templar_errors_total", Value: 5.0},
 		{Name: "memory_heap_alloc", Value: 500000000},
 		{Name: "goroutines", Value: 500.0},
-		{Name: "templar_components_built_total", Value: 2.0, Labels: map[string]string{"status": "error"}},
+		{
+			Name:   "templar_components_built_total",
+			Value:  2.0,
+			Labels: map[string]string{"status": "error"},
+		},
 	}
 
 	ctx := context.Background()

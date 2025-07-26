@@ -104,16 +104,26 @@ templ Valid() {
 
 				// Package should be reasonable if set
 				if component.Package != "" && strings.ContainsAny(component.Package, "/\\:;") {
-					t.Errorf("Parser returned invalid package name: %q for input: %q", component.Package, template)
+					t.Errorf(
+						"Parser returned invalid package name: %q for input: %q",
+						component.Package,
+						template,
+					)
 				}
 
 				// Parameters should have names and types if present
 				for _, param := range component.Parameters {
 					if param.Name == "" {
-						t.Errorf("Parser returned parameter with empty name for input: %q", template)
+						t.Errorf(
+							"Parser returned parameter with empty name for input: %q",
+							template,
+						)
 					}
 					if param.Type == "" {
-						t.Errorf("Parser returned parameter with empty type for input: %q", template)
+						t.Errorf(
+							"Parser returned parameter with empty type for input: %q",
+							template,
+						)
 					}
 				}
 			}
@@ -201,8 +211,15 @@ func FuzzComponentValidation(f *testing.F) {
 		// Component creation should never panic
 		defer func() {
 			if r := recover(); r != nil {
-				t.Errorf("Component creation panicked\nName: %q, Package: %q, FilePath: %q, ParamName: %q, ParamType: %q\nPanic: %v",
-					name, pkg, filePath, paramName, paramType, r)
+				t.Errorf(
+					"Component creation panicked\nName: %q, Package: %q, FilePath: %q, ParamName: %q, ParamType: %q\nPanic: %v",
+					name,
+					pkg,
+					filePath,
+					paramName,
+					paramType,
+					r,
+				)
 			}
 		}()
 

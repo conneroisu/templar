@@ -6,7 +6,6 @@ package config
 import (
 	"fmt"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"testing"
 
@@ -190,7 +189,10 @@ func TestComponentsConfigProperties(t *testing.T) {
 
 			return true
 		},
-		gen.SliceOfN(5, gen.OneConstOf("./components", "../components", "components/", "./components/../other")),
+		gen.SliceOfN(
+			5,
+			gen.OneConstOf("./components", "../components", "components/", "./components/../other"),
+		),
 	))
 
 	// Property: Exclude patterns should be valid regex
@@ -213,7 +215,10 @@ func TestComponentsConfigProperties(t *testing.T) {
 
 			return err == nil
 		},
-		gen.SliceOfN(3, gen.OneConstOf("*.templ", "*_test.templ", "**/*.bak", "[invalid", "*.{templ,go}")),
+		gen.SliceOfN(
+			3,
+			gen.OneConstOf("*.templ", "*_test.templ", "**/*.bak", "[invalid", "*.{templ,go}"),
+		),
 	))
 
 	properties.TestingRun(t)
@@ -246,7 +251,15 @@ func TestBuildConfigProperties(t *testing.T) {
 
 			return err == nil
 		},
-		gen.OneConstOf("templ generate", "go build", "make build", "rm -rf /", "cmd; rm -rf /", "", "  "),
+		gen.OneConstOf(
+			"templ generate",
+			"go build",
+			"make build",
+			"rm -rf /",
+			"cmd; rm -rf /",
+			"",
+			"  ",
+		),
 	))
 
 	// Property: Watch patterns should be valid
@@ -269,7 +282,10 @@ func TestBuildConfigProperties(t *testing.T) {
 
 			return err == nil
 		},
-		gen.SliceOfN(3, gen.OneConstOf("**/*.templ", "*.go", "**/*.{templ,go}", "[invalid", "components/**")),
+		gen.SliceOfN(
+			3,
+			gen.OneConstOf("**/*.templ", "*.go", "**/*.{templ,go}", "[invalid", "components/**"),
+		),
 	))
 
 	properties.TestingRun(t)

@@ -38,7 +38,11 @@ type HealthDashboard struct {
 }
 
 // NewHealthDashboard creates a new health dashboard
-func NewHealthDashboard(healthMonitor *HealthMonitor, selfHealingSystem *SelfHealingSystem, logger logging.Logger) *HealthDashboard {
+func NewHealthDashboard(
+	healthMonitor *HealthMonitor,
+	selfHealingSystem *SelfHealingSystem,
+	logger logging.Logger,
+) *HealthDashboard {
 	return &HealthDashboard{
 		healthMonitor:     healthMonitor,
 		selfHealingSystem: selfHealingSystem,

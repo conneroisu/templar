@@ -130,5 +130,15 @@ func (ml *MockLogger) Info(ctx context.Context, msg string, fields ...interface{
 func (ml *MockLogger) Warn(ctx context.Context, err error, msg string, fields ...interface{})  {}
 func (ml *MockLogger) Error(ctx context.Context, err error, msg string, fields ...interface{}) {}
 func (ml *MockLogger) Fatal(ctx context.Context, err error, msg string, fields ...interface{}) {}
-func (ml *MockLogger) With(fields ...interface{}) logging.Logger                               { return ml }
-func (ml *MockLogger) WithComponent(component string) logging.Logger                           { return ml }
+
+func (ml *MockLogger) With(
+	fields ...interface{},
+) logging.Logger {
+	return ml
+}
+
+func (ml *MockLogger) WithComponent(
+	component string,
+) logging.Logger {
+	return ml
+}

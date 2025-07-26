@@ -212,8 +212,14 @@ func TestValidateArgument_EdgeCases(t *testing.T) {
 			if tt.expectError {
 				require.Error(t, err, "Expected error for argument '%s'", tt.arg)
 				if tt.errorType != "" {
-					assert.Contains(t, strings.ToLower(err.Error()), tt.errorType,
-						"Error should contain expected type: %s, got: %s", tt.errorType, err.Error())
+					assert.Contains(
+						t,
+						strings.ToLower(err.Error()),
+						tt.errorType,
+						"Error should contain expected type: %s, got: %s",
+						tt.errorType,
+						err.Error(),
+					)
 				}
 			} else {
 				assert.NoError(t, err, "Expected no error for argument '%s', got: %v", tt.arg, err)
@@ -379,8 +385,14 @@ func TestValidateCommand_EdgeCases(t *testing.T) {
 			if tt.expectError {
 				require.Error(t, err, "Expected error for command '%s'", tt.command)
 				if tt.errorType != "" {
-					assert.Contains(t, strings.ToLower(err.Error()), tt.errorType,
-						"Error should contain expected type: %s, got: %s", tt.errorType, err.Error())
+					assert.Contains(
+						t,
+						strings.ToLower(err.Error()),
+						tt.errorType,
+						"Error should contain expected type: %s, got: %s",
+						tt.errorType,
+						err.Error(),
+					)
 				}
 			} else {
 				assert.NoError(t, err, "Expected no error for command '%s', got: %v", tt.command, err)
@@ -470,8 +482,14 @@ func TestValidateArguments_EdgeCases(t *testing.T) {
 			if tt.expectError {
 				require.Error(t, err, "Expected error for arguments")
 				if tt.errorType != "" {
-					assert.Contains(t, strings.ToLower(err.Error()), tt.errorType,
-						"Error should contain expected type: %s, got: %s", tt.errorType, err.Error())
+					assert.Contains(
+						t,
+						strings.ToLower(err.Error()),
+						tt.errorType,
+						"Error should contain expected type: %s, got: %s",
+						tt.errorType,
+						err.Error(),
+					)
 				}
 			} else {
 				assert.NoError(t, err, "Expected no error for arguments, got: %v", err)

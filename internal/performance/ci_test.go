@@ -67,7 +67,11 @@ func TestCIIntegration_GenerateReport(t *testing.T) {
 	// Health score should be reduced due to major regression
 	expectedHealthScore := 100.0 - 15.0 // 100 - (1 major * 15 points)
 	if report.Summary.OverallHealthScore != expectedHealthScore {
-		t.Errorf("Expected health score %f, got %f", expectedHealthScore, report.Summary.OverallHealthScore)
+		t.Errorf(
+			"Expected health score %f, got %f",
+			expectedHealthScore,
+			report.Summary.OverallHealthScore,
+		)
 	}
 }
 
@@ -106,7 +110,10 @@ func TestCIIntegration_OutputJSON(t *testing.T) {
 	}
 
 	if parsedReport.Summary.TotalBenchmarks != 1 {
-		t.Errorf("Expected 1 total benchmark in parsed report, got %d", parsedReport.Summary.TotalBenchmarks)
+		t.Errorf(
+			"Expected 1 total benchmark in parsed report, got %d",
+			parsedReport.Summary.TotalBenchmarks,
+		)
 	}
 }
 
@@ -344,19 +351,31 @@ func TestCIIntegration_CalculateSummary(t *testing.T) {
 	// Health score calculation: 100 - (1*30 + 2*15 + 2*5) = 100 - 70 = 30
 	expectedHealthScore := 30.0
 	if summary.OverallHealthScore != expectedHealthScore {
-		t.Errorf("Expected health score %f, got %f", expectedHealthScore, summary.OverallHealthScore)
+		t.Errorf(
+			"Expected health score %f, got %f",
+			expectedHealthScore,
+			summary.OverallHealthScore,
+		)
 	}
 
 	// Average degradation: (50 + 30 + 25 + 10) / 4 = 28.75
 	expectedAvgDegradation := 28.75
 	if summary.AverageDegradation != expectedAvgDegradation {
-		t.Errorf("Expected average degradation %f, got %f", expectedAvgDegradation, summary.AverageDegradation)
+		t.Errorf(
+			"Expected average degradation %f, got %f",
+			expectedAvgDegradation,
+			summary.AverageDegradation,
+		)
 	}
 
 	// Average improvement: 5.0 (only one improvement)
 	expectedAvgImprovement := 5.0
 	if summary.AverageImprovement != expectedAvgImprovement {
-		t.Errorf("Expected average improvement %f, got %f", expectedAvgImprovement, summary.AverageImprovement)
+		t.Errorf(
+			"Expected average improvement %f, got %f",
+			expectedAvgImprovement,
+			summary.AverageImprovement,
+		)
 	}
 }
 

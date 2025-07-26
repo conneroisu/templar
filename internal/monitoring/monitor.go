@@ -475,7 +475,11 @@ func (m *Monitor) LogOperation(operation string, fn func() error) error {
 }
 
 // LogOperationWithContext logs an operation with context and metrics
-func (m *Monitor) LogOperationWithContext(ctx context.Context, operation string, fn func(ctx context.Context) error) error {
+func (m *Monitor) LogOperationWithContext(
+	ctx context.Context,
+	operation string,
+	fn func(ctx context.Context) error,
+) error {
 	start := time.Now()
 
 	if m.appMetrics != nil {

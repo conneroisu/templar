@@ -35,7 +35,10 @@ type ComponentPlugin interface {
 	Plugin
 
 	// HandleComponent processes a component and returns modified component info
-	HandleComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error)
+	HandleComponent(
+		ctx context.Context,
+		component *types.ComponentInfo,
+	) (*types.ComponentInfo, error)
 
 	// SupportedExtensions returns file extensions this plugin can handle
 	SupportedExtensions() []string
@@ -391,7 +394,10 @@ type PluginInfo struct {
 }
 
 // ProcessComponent processes a component through all component plugins
-func (pm *PluginManager) ProcessComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error) {
+func (pm *PluginManager) ProcessComponent(
+	ctx context.Context,
+	component *types.ComponentInfo,
+) (*types.ComponentInfo, error) {
 	pm.mu.RLock()
 	plugins := make([]ComponentPlugin, len(pm.componentPlugins))
 	copy(plugins, pm.componentPlugins)

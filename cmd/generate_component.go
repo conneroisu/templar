@@ -107,23 +107,32 @@ func init() {
 	componentCmd.AddCommand(componentScaffoldCmd)
 
 	// Create command flags
-	componentCreateCmd.Flags().StringVarP(&componentTemplate, "template", "t", "", "Template to use (required)")
-	componentCreateCmd.Flags().StringVarP(&componentOutput, "output", "o", "./components", "Output directory")
-	componentCreateCmd.Flags().StringVarP(&componentPackage, "package", "p", "components", "Package name")
-	componentCreateCmd.Flags().BoolVar(&componentWithTests, "with-tests", false, "Generate test files")
-	componentCreateCmd.Flags().BoolVar(&componentWithDocs, "with-docs", false, "Generate documentation")
-	componentCreateCmd.Flags().BoolVar(&componentWithStyles, "with-styles", false, "Generate CSS styles")
+	componentCreateCmd.Flags().
+		StringVarP(&componentTemplate, "template", "t", "", "Template to use (required)")
+	componentCreateCmd.Flags().
+		StringVarP(&componentOutput, "output", "o", "./components", "Output directory")
+	componentCreateCmd.Flags().
+		StringVarP(&componentPackage, "package", "p", "components", "Package name")
+	componentCreateCmd.Flags().
+		BoolVar(&componentWithTests, "with-tests", false, "Generate test files")
+	componentCreateCmd.Flags().
+		BoolVar(&componentWithDocs, "with-docs", false, "Generate documentation")
+	componentCreateCmd.Flags().
+		BoolVar(&componentWithStyles, "with-styles", false, "Generate CSS styles")
 	componentCreateCmd.Flags().StringVar(&componentAuthor, "author", "", "Component author")
 	componentCreateCmd.Flags().StringVar(&componentProject, "project", "", "Project name")
 	componentCreateCmd.MarkFlagRequired("template")
 
 	// List command flags
 	componentListCmd.Flags().StringVar(&componentCategory, "category", "", "Filter by category")
-	componentListCmd.Flags().StringVar(&componentFormat, "format", "list", "Output format (list, table, json)")
+	componentListCmd.Flags().
+		StringVar(&componentFormat, "format", "list", "Output format (list, table, json)")
 
 	// Scaffold command flags
-	componentScaffoldCmd.Flags().StringVarP(&componentOutput, "output", "o", ".", "Output directory")
-	componentScaffoldCmd.Flags().StringVarP(&componentPackage, "package", "p", "components", "Package name")
+	componentScaffoldCmd.Flags().
+		StringVarP(&componentOutput, "output", "o", ".", "Output directory")
+	componentScaffoldCmd.Flags().
+		StringVarP(&componentPackage, "package", "p", "components", "Package name")
 	componentScaffoldCmd.Flags().StringVar(&componentAuthor, "author", "", "Project author")
 	componentScaffoldCmd.Flags().StringVar(&componentProject, "project", "", "Project name")
 }

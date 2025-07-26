@@ -166,7 +166,9 @@ var cssStyleguideCmd = &cobra.Command{
 
 		activeFramework := manager.GetActiveFramework()
 		if activeFramework == "" {
-			return fmt.Errorf("no active CSS framework found. Run 'templar css setup <framework>' first")
+			return fmt.Errorf(
+				"no active CSS framework found. Run 'templar css setup <framework>' first",
+			)
 		}
 
 		fmt.Printf("Generating style guide for %s...\n", activeFramework)
@@ -220,7 +222,9 @@ var cssThemeExtractCmd = &cobra.Command{
 
 		activeFramework := manager.GetActiveFramework()
 		if activeFramework == "" {
-			return fmt.Errorf("no active CSS framework found. Run 'templar css setup <framework>' first")
+			return fmt.Errorf(
+				"no active CSS framework found. Run 'templar css setup <framework>' first",
+			)
 		}
 
 		fmt.Printf("Extracting variables from %s...\n", activeFramework)
@@ -333,7 +337,9 @@ The variables file should be in JSON format with variable names and values:
 
 		activeFramework := manager.GetActiveFramework()
 		if activeFramework == "" {
-			return fmt.Errorf("no active CSS framework found. Run 'templar css setup <framework>' first")
+			return fmt.Errorf(
+				"no active CSS framework found. Run 'templar css setup <framework>' first",
+			)
 		}
 
 		fmt.Printf("Generating custom theme for %s...\n", activeFramework)
@@ -418,11 +424,14 @@ func init() {
 	cssSetupCmd.Flags().Bool("config", true, "Generate framework configuration file")
 
 	// Styleguide command flags
-	cssStyleguideCmd.Flags().StringP("output", "o", "styleguide.html", "Output path for style guide")
+	cssStyleguideCmd.Flags().
+		StringP("output", "o", "styleguide.html", "Output path for style guide")
 
 	// Theme extract flags
-	cssThemeExtractCmd.Flags().StringP("output", "o", "theme-variables.json", "Output path for variables")
+	cssThemeExtractCmd.Flags().
+		StringP("output", "o", "theme-variables.json", "Output path for variables")
 
 	// Theme generate flags
-	cssThemeGenerateCmd.Flags().StringP("output", "o", "custom-theme.css", "Output path for custom theme")
+	cssThemeGenerateCmd.Flags().
+		StringP("output", "o", "custom-theme.css", "Output path for custom theme")
 }

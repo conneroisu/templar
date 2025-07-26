@@ -45,8 +45,10 @@ func init() {
 	listFlags = AddStandardFlags(listCmd, "output")
 
 	// Add list-specific flags with short aliases
-	listCmd.Flags().BoolVarP(&listWithDeps, "with-deps", "d", false, "Include component dependencies")
-	listCmd.Flags().BoolVarP(&listWithProps, "with-props", "p", false, "Include component properties/parameters")
+	listCmd.Flags().
+		BoolVarP(&listWithDeps, "with-deps", "d", false, "Include component dependencies")
+	listCmd.Flags().
+		BoolVarP(&listWithProps, "with-props", "p", false, "Include component properties/parameters")
 
 	// Add format validation
 	AddFlagValidation(listCmd, "format", func(format string) error {
@@ -208,7 +210,19 @@ func outputTable(components []*types.ComponentInfo) error {
 	fmt.Fprintln(w, header)
 
 	// Write separator
-	separator := strings.Repeat("-", 4) + "\t" + strings.Repeat("-", 7) + "\t" + strings.Repeat("-", 4) + "\t" + strings.Repeat("-", 8)
+	separator := strings.Repeat(
+		"-",
+		4,
+	) + "\t" + strings.Repeat(
+		"-",
+		7,
+	) + "\t" + strings.Repeat(
+		"-",
+		4,
+	) + "\t" + strings.Repeat(
+		"-",
+		8,
+	)
 	if listWithProps {
 		separator += "\t" + strings.Repeat("-", 10)
 	}

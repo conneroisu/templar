@@ -3,11 +3,9 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"sort"
-	"strings"
 	"text/tabwriter"
 	"time"
 
@@ -339,7 +337,11 @@ func displayPluginInfo(plugin plugins.Plugin, info plugins.PluginInfo) error {
 	fmt.Printf("Version:     %s\n", info.Version)
 	fmt.Printf("Description: %s\n", info.Description)
 	fmt.Printf("Status:      %s\n", getEnabledStatus(info.Enabled))
-	fmt.Printf("Health:      %s %s\n", getHealthIcon(info.Health.Status), string(info.Health.Status))
+	fmt.Printf(
+		"Health:      %s %s\n",
+		getHealthIcon(info.Health.Status),
+		string(info.Health.Status),
+	)
 
 	if !info.Health.LastCheck.IsZero() {
 		fmt.Printf("Last Check:  %s\n", info.Health.LastCheck.Format(time.RFC3339))

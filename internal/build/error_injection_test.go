@@ -90,7 +90,11 @@ func TestBuildPipeline_ErrorInjection(t *testing.T) {
 		injector.Clear()
 
 		// Inject command execution timeouts with delay
-		injector.InjectErrorWithDelay("exec.command", errors.New("command timeout"), 200*time.Millisecond)
+		injector.InjectErrorWithDelay(
+			"exec.command",
+			errors.New("command timeout"),
+			200*time.Millisecond,
+		)
 
 		mockCompiler := &MockTemplCompilerWithInjection{
 			injector: injector,
@@ -329,7 +333,10 @@ type MockTemplCompilerWithInjection struct {
 	injector *testingpkg.ErrorInjector
 }
 
-func (m *MockTemplCompilerWithInjection) CompileWithPools(component *types.ComponentInfo, pools *ObjectPools) ([]byte, error) {
+func (m *MockTemplCompilerWithInjection) CompileWithPools(
+	component *types.ComponentInfo,
+	pools *ObjectPools,
+) ([]byte, error) {
 	// Check for file read errors
 	if err := m.injector.ShouldFail("file.read"); err != nil {
 		return nil, err

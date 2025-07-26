@@ -64,11 +64,19 @@ func (r *ComponentRenderer) RenderComponent(componentName string) (string, error
 	}
 
 	if err := os.RemoveAll(componentWorkDir); err != nil {
-		log.Printf("Failed to remove existing component work directory %s: %v", componentWorkDir, err)
+		log.Printf(
+			"Failed to remove existing component work directory %s: %v",
+			componentWorkDir,
+			err,
+		)
 		// Continue - directory removal failure is not critical if we can still create the new one
 	}
 	if err := os.MkdirAll(componentWorkDir, 0750); err != nil {
-		return "", fmt.Errorf("failed to create component work directory %s: %w", componentWorkDir, err)
+		return "", fmt.Errorf(
+			"failed to create component work directory %s: %w",
+			componentWorkDir,
+			err,
+		)
 	}
 
 	// Generate mock data for parameters
@@ -107,7 +115,9 @@ func (r *ComponentRenderer) RenderComponent(componentName string) (string, error
 }
 
 // generateMockData creates mock data for component parameters
-func (r *ComponentRenderer) generateMockData(component *types.ComponentInfo) map[string]interface{} {
+func (r *ComponentRenderer) generateMockData(
+	component *types.ComponentInfo,
+) map[string]interface{} {
 	mockData := make(map[string]interface{})
 
 	for _, param := range component.Parameters {
@@ -153,7 +163,10 @@ func (r *ComponentRenderer) generateMockString(paramName string) string {
 }
 
 // generateGoCode creates Go code that renders the component
-func (r *ComponentRenderer) generateGoCode(component *types.ComponentInfo, mockData map[string]interface{}) (string, error) {
+func (r *ComponentRenderer) generateGoCode(
+	component *types.ComponentInfo,
+	mockData map[string]interface{},
+) (string, error) {
 	tmplStr := `package main
 
 import (
@@ -262,14 +275,22 @@ func (r *ComponentRenderer) runTemplGenerate(workDir string) error {
 
 	// Check if templ command is available
 	if _, err := exec.LookPath("templ"); err != nil {
-		return fmt.Errorf("templ command not found: %w. Please install it with: go install github.com/a-h/templ/cmd/templ@v0.3.819", err)
+		return fmt.Errorf(
+			"templ command not found: %w. Please install it with: go install github.com/a-h/templ/cmd/templ@v0.3.819",
+			err,
+		)
 	}
 
 	cmd := exec.Command("templ", "generate")
 	cmd.Dir = workDir
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("templ generate failed in directory %s: %w\nOutput: %s", workDir, err, output)
+		return fmt.Errorf(
+			"templ generate failed in directory %s: %w\nOutput: %s",
+			workDir,
+			err,
+			output,
+		)
 	}
 	return nil
 }
@@ -350,7 +371,11 @@ func (r *ComponentRenderer) RenderComponentWithLayout(componentName string, html
 }
 
 // RenderComponentWithLayoutAndNonce wraps component HTML in a full page layout with CSP nonce support
-func (r *ComponentRenderer) RenderComponentWithLayoutAndNonce(componentName string, html string, nonce string) string {
+func (r *ComponentRenderer) RenderComponentWithLayoutAndNonce(
+	componentName string,
+	html string,
+	nonce string,
+) string {
 	// Generate nonce attributes for inline scripts and styles
 	scriptNonce := ""
 	styleNonce := ""

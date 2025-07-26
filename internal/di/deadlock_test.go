@@ -53,20 +53,23 @@ func TestConcurrentSingletonCreation(t *testing.T) {
 	var creationCount int32
 	var mu sync.Mutex
 
-	container.RegisterSingleton("expensiveService", func(resolver DependencyResolver) (interface{}, error) {
-		mu.Lock()
-		creationCount++
-		currentCount := creationCount
-		mu.Unlock()
+	container.RegisterSingleton(
+		"expensiveService",
+		func(resolver DependencyResolver) (interface{}, error) {
+			mu.Lock()
+			creationCount++
+			currentCount := creationCount
+			mu.Unlock()
 
-		// Simulate expensive creation
-		time.Sleep(time.Millisecond * 10)
+			// Simulate expensive creation
+			time.Sleep(time.Millisecond * 10)
 
-		return map[string]interface{}{
-			"id":      currentCount,
-			"created": time.Now(),
-		}, nil
-	})
+			return map[string]interface{}{
+				"id":      currentCount,
+				"created": time.Now(),
+			}, nil
+		},
+	)
 
 	// Launch multiple goroutines trying to get the same singleton
 	const numGoroutines = 50
@@ -177,14 +180,17 @@ func TestConcurrentDifferentServices(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		serviceName := fmt.Sprintf("service%d", i)
 		serviceValue := i
-		container.RegisterSingleton(serviceName, func(resolver DependencyResolver) (interface{}, error) {
-			// Simulate some work
-			time.Sleep(time.Millisecond * 5)
-			return map[string]interface{}{
-				"id":   serviceValue,
-				"name": serviceName,
-			}, nil
-		})
+		container.RegisterSingleton(
+			serviceName,
+			func(resolver DependencyResolver) (interface{}, error) {
+				// Simulate some work
+				time.Sleep(time.Millisecond * 5)
+				return map[string]interface{}{
+					"id":   serviceValue,
+					"name": serviceName,
+				}, nil
+			},
+		)
 	}
 
 	// Concurrently access different services

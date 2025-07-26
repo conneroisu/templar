@@ -100,7 +100,10 @@ type SelfHealingDependencies struct {
 }
 
 // SetupSelfHealingSystem creates and configures a complete self-healing system
-func SetupSelfHealingSystem(healthMonitor *HealthMonitor, deps *SelfHealingDependencies) *SelfHealingSystem {
+func SetupSelfHealingSystem(
+	healthMonitor *HealthMonitor,
+	deps *SelfHealingDependencies,
+) *SelfHealingSystem {
 	system := NewSelfHealingSystem(healthMonitor, deps.Logger)
 
 	// Register default recovery rules
@@ -219,7 +222,10 @@ func RestartBuildPipelineAction(buildPipeline interfaces.BuildPipeline) Recovery
 }
 
 // RefreshComponentRegistryAction creates an action to refresh the component registry
-func RefreshComponentRegistryAction(registry interfaces.ComponentRegistry, scanner interfaces.ComponentScanner) RecoveryAction {
+func RefreshComponentRegistryAction(
+	registry interfaces.ComponentRegistry,
+	scanner interfaces.ComponentScanner,
+) RecoveryAction {
 	return NewRecoveryActionFunc(
 		"refresh_component_registry",
 		"Refresh component registry by rescanning component directories",

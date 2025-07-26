@@ -294,7 +294,9 @@ func TestCacheMethodThreadSafety(t *testing.T) {
 				}
 			case 1: // Heavy getters
 				for j := 0; j < 100; j++ {
-					cache.GetHash(fmt.Sprintf("setter_%d_%d", (id-1+numGoroutines)%numGoroutines, j%50))
+					cache.GetHash(
+						fmt.Sprintf("setter_%d_%d", (id-1+numGoroutines)%numGoroutines, j%50),
+					)
 				}
 			case 2: // Stats checkers
 				for j := 0; j < 30; j++ {

@@ -4,7 +4,6 @@ package cmd
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"sort"
@@ -14,7 +13,6 @@ import (
 
 	"github.com/conneroisu/templar/internal/config"
 	"github.com/conneroisu/templar/internal/errors"
-	"github.com/conneroisu/templar/internal/logging"
 	"github.com/conneroisu/templar/internal/plugins"
 	"github.com/conneroisu/templar/internal/plugins/builtin"
 	"github.com/conneroisu/templar/internal/registry"
@@ -471,7 +469,10 @@ func displayEnhancedPluginDetailedInfo(info EnhancedPluginDetailedInfo) error {
 			fmt.Printf("Health Error: %s\n", info.LoadedPlugin.Health.Error)
 		}
 		if info.LoadedPlugin.Health.LastCheck.Unix() > 0 {
-			fmt.Printf("Last Health Check: %s\n", info.LoadedPlugin.Health.LastCheck.Format(time.RFC3339))
+			fmt.Printf(
+				"Last Health Check: %s\n",
+				info.LoadedPlugin.Health.LastCheck.Format(time.RFC3339),
+			)
 		}
 	}
 

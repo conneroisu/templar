@@ -281,7 +281,12 @@ func (r *FrameworkRegistry) DetectFramework(projectPath string) ([]string, error
 
 	// Check for framework-specific config files
 	configFiles := map[string][]string{
-		"tailwind":  {"tailwind.config.js", "tailwind.config.ts", "tailwind.config.cjs", "tailwind.config.mjs"},
+		"tailwind": {
+			"tailwind.config.js",
+			"tailwind.config.ts",
+			"tailwind.config.cjs",
+			"tailwind.config.mjs",
+		},
 		"bootstrap": {"bootstrap.config.js", "scss/bootstrap.scss", "css/bootstrap.css"},
 		"bulma":     {"bulma.config.js", "sass/bulma.sass", "css/bulma.css"},
 	}

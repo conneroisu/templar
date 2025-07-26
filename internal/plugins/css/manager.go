@@ -71,7 +71,11 @@ func (m *FrameworkManager) registerBuiltinFrameworks() error {
 }
 
 // SetupFramework sets up a CSS framework with the given configuration
-func (m *FrameworkManager) SetupFramework(ctx context.Context, frameworkName string, setupConfig FrameworkSetupConfig) error {
+func (m *FrameworkManager) SetupFramework(
+	ctx context.Context,
+	frameworkName string,
+	setupConfig FrameworkSetupConfig,
+) error {
 	plugin, exists := m.registry.Get(frameworkName)
 	if !exists {
 		return fmt.Errorf("framework %s not found", frameworkName)
@@ -79,7 +83,10 @@ func (m *FrameworkManager) SetupFramework(ctx context.Context, frameworkName str
 
 	// Check if framework is already installed
 	if plugin.IsInstalled() && !setupConfig.Force {
-		return fmt.Errorf("framework %s is already installed (use --force to reinstall)", frameworkName)
+		return fmt.Errorf(
+			"framework %s is already installed (use --force to reinstall)",
+			frameworkName,
+		)
 	}
 
 	// Create framework configuration
@@ -168,7 +175,11 @@ func (m *FrameworkManager) GetActiveFramework() string {
 }
 
 // ProcessCSS processes CSS for the active framework
-func (m *FrameworkManager) ProcessCSS(ctx context.Context, input []byte, options ProcessingOptions) ([]byte, error) {
+func (m *FrameworkManager) ProcessCSS(
+	ctx context.Context,
+	input []byte,
+	options ProcessingOptions,
+) ([]byte, error) {
 	if m.activeFramework == "" {
 		return input, nil // No framework active, return input as-is
 	}
@@ -196,7 +207,11 @@ func (m *FrameworkManager) ExtractClasses(content string) ([]string, error) {
 }
 
 // OptimizeCSS optimizes CSS for the active framework
-func (m *FrameworkManager) OptimizeCSS(ctx context.Context, css []byte, usedClasses []string) ([]byte, error) {
+func (m *FrameworkManager) OptimizeCSS(
+	ctx context.Context,
+	css []byte,
+	usedClasses []string,
+) ([]byte, error) {
 	if m.activeFramework == "" {
 		return css, nil
 	}
@@ -255,7 +270,10 @@ func (m *FrameworkManager) GenerateStyleGuide(ctx context.Context) ([]byte, erro
 func (m *FrameworkManager) GetFrameworkConfig(frameworkName string) (FrameworkConfig, error) {
 	config, exists := m.registry.GetConfig(frameworkName)
 	if !exists {
-		return FrameworkConfig{}, fmt.Errorf("no configuration found for framework %s", frameworkName)
+		return FrameworkConfig{}, fmt.Errorf(
+			"no configuration found for framework %s",
+			frameworkName,
+		)
 	}
 
 	return config, nil
@@ -295,7 +313,9 @@ func (m *FrameworkManager) ValidateFramework(frameworkName string) error {
 }
 
 // GetComponentTemplates returns available component templates for a framework
-func (m *FrameworkManager) GetComponentTemplates(frameworkName string) ([]ComponentTemplate, error) {
+func (m *FrameworkManager) GetComponentTemplates(
+	frameworkName string,
+) ([]ComponentTemplate, error) {
 	_, exists := m.registry.Get(frameworkName)
 	if !exists {
 		return nil, fmt.Errorf("framework %s not found", frameworkName)
@@ -321,7 +341,10 @@ func (m *FrameworkManager) getBuiltinTemplates(frameworkName string) []Component
 }
 
 // updateProjectConfig updates the project configuration with framework settings
-func (m *FrameworkManager) updateProjectConfig(frameworkName string, frameworkConfig FrameworkConfig) error {
+func (m *FrameworkManager) updateProjectConfig(
+	frameworkName string,
+	frameworkConfig FrameworkConfig,
+) error {
 	// This would integrate with the main config system
 	// For now, we'll just ensure the CSS section exists in the config
 

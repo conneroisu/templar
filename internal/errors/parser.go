@@ -349,7 +349,13 @@ func FormatErrorsForBrowser(errors []*ParsedError) string {
 		}
 
 		builder.WriteString(fmt.Sprintf(`    <div class="%s">`, cssClass))
-		builder.WriteString(fmt.Sprintf(`        <div class="error-header">[%s] %s</div>`, err.severityString(), err.typeString()))
+		builder.WriteString(
+			fmt.Sprintf(
+				`        <div class="error-header">[%s] %s</div>`,
+				err.severityString(),
+				err.typeString(),
+			),
+		)
 
 		if err.File != "" {
 			builder.WriteString(fmt.Sprintf(`        <div class="error-location">%s`, err.File))
@@ -365,7 +371,9 @@ func FormatErrorsForBrowser(errors []*ParsedError) string {
 		builder.WriteString(fmt.Sprintf(`        <div class="error-message">%s</div>`, err.Message))
 
 		if err.Suggestion != "" {
-			builder.WriteString(fmt.Sprintf(`        <div class="error-suggestion">💡 %s</div>`, err.Suggestion))
+			builder.WriteString(
+				fmt.Sprintf(`        <div class="error-suggestion">💡 %s</div>`, err.Suggestion),
+			)
 		}
 
 		if len(err.Context) > 0 {
@@ -375,7 +383,9 @@ func FormatErrorsForBrowser(errors []*ParsedError) string {
 				if strings.HasPrefix(line, "→ ") {
 					class = "context-current"
 				}
-				builder.WriteString(fmt.Sprintf(`            <div class="%s">%s</div>`, class, line))
+				builder.WriteString(
+					fmt.Sprintf(`            <div class="%s">%s</div>`, class, line),
+				)
 			}
 			builder.WriteString(`        </div>`)
 		}

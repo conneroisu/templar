@@ -560,8 +560,18 @@ func TestBuildWorker_ErrorHandling(t *testing.T) {
 		ctx.Reset()
 
 		// Should have reasonable capacity after reset
-		assert.LessOrEqual(t, cap(ctx.OutputBuffer), 1024*1024, "Output buffer capacity should be limited")
-		assert.LessOrEqual(t, cap(ctx.ErrorBuffer), 64*1024, "Error buffer capacity should be limited")
+		assert.LessOrEqual(
+			t,
+			cap(ctx.OutputBuffer),
+			1024*1024,
+			"Output buffer capacity should be limited",
+		)
+		assert.LessOrEqual(
+			t,
+			cap(ctx.ErrorBuffer),
+			64*1024,
+			"Error buffer capacity should be limited",
+		)
 	})
 
 	t.Run("worker handles nil pointer errors", func(t *testing.T) {

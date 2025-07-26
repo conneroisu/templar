@@ -58,25 +58,31 @@ func AddStandardFlags(cmd *cobra.Command, flagTypes ...string) *StandardFlags {
 
 func addServerFlags(cmd *cobra.Command, flags *StandardFlags) {
 	cmd.Flags().IntVarP(&flags.Port, "port", "p", 8080, "Port to serve on")
-	cmd.Flags().StringVar(&flags.Host, "host", "localhost", "Host to bind to (use 0.0.0.0 for all interfaces)")
+	cmd.Flags().
+		StringVar(&flags.Host, "host", "localhost", "Host to bind to (use 0.0.0.0 for all interfaces)")
 	cmd.Flags().BoolVarP(&flags.NoOpen, "no-open", "n", false, "Don't automatically open browser")
 }
 
 func addComponentFlags(cmd *cobra.Command, flags *StandardFlags) {
-	cmd.Flags().StringVar(&flags.Props, "props", "", "Component properties (JSON string or @file.json)")
+	cmd.Flags().
+		StringVar(&flags.Props, "props", "", "Component properties (JSON string or @file.json)")
 	cmd.Flags().StringVarP(&flags.PropsFile, "props-file", "P", "", "Properties file path (JSON)")
-	cmd.Flags().StringVarP(&flags.MockData, "mock", "m", "", "Mock data file, pattern, or 'auto' for generation")
+	cmd.Flags().
+		StringVarP(&flags.MockData, "mock", "m", "", "Mock data file, pattern, or 'auto' for generation")
 	cmd.Flags().StringVarP(&flags.Wrapper, "wrapper", "w", "", "Wrapper template path")
 }
 
 func addBuildFlags(cmd *cobra.Command, flags *StandardFlags) {
-	cmd.Flags().StringVarP(&flags.WatchPattern, "watch", "W", "**/*.templ", "File watch pattern for auto-rebuild")
-	cmd.Flags().StringVarP(&flags.BuildCmd, "build-cmd", "B", "templ generate", "Build command to execute")
+	cmd.Flags().
+		StringVarP(&flags.WatchPattern, "watch", "W", "**/*.templ", "File watch pattern for auto-rebuild")
+	cmd.Flags().
+		StringVarP(&flags.BuildCmd, "build-cmd", "B", "templ generate", "Build command to execute")
 	cmd.Flags().BoolVarP(&flags.Clean, "clean", "c", false, "Clean build artifacts before building")
 }
 
 func addOutputFlags(cmd *cobra.Command, flags *StandardFlags) {
-	cmd.Flags().StringVarP(&flags.Format, "format", "f", "table", "Output format (table|json|yaml|csv)")
+	cmd.Flags().
+		StringVarP(&flags.Format, "format", "f", "table", "Output format (table|json|yaml|csv)")
 	cmd.Flags().StringVarP(&flags.Output, "output", "o", "", "Output directory or file")
 	cmd.Flags().BoolVarP(&flags.Verbose, "verbose", "v", false, "Enable verbose/detailed output")
 	cmd.Flags().BoolVarP(&flags.Quiet, "quiet", "q", false, "Suppress non-essential output")
@@ -426,7 +432,8 @@ func AddEnhancedFlags(cmd *cobra.Command, flagTypes ...string) *EnhancedStandard
 
 func addEnhancedServerFlags(cmd *cobra.Command, flags *EnhancedStandardFlags) {
 	cmd.Flags().IntVarP(&flags.Port, "port", "p", 8080, "Port to serve on")
-	cmd.Flags().StringVar(&flags.Host, "host", "localhost", "Host to bind to (use 0.0.0.0 for all interfaces)")
+	cmd.Flags().
+		StringVar(&flags.Host, "host", "localhost", "Host to bind to (use 0.0.0.0 for all interfaces)")
 	cmd.Flags().BoolVarP(&flags.NoOpen, "no-open", "n", false, "Don't automatically open browser")
 
 	// Add validation
@@ -434,9 +441,11 @@ func addEnhancedServerFlags(cmd *cobra.Command, flags *EnhancedStandardFlags) {
 }
 
 func addEnhancedComponentFlags(cmd *cobra.Command, flags *EnhancedStandardFlags) {
-	cmd.Flags().StringVar(&flags.Props, "props", "", "Component properties (JSON string or @file.json)")
+	cmd.Flags().
+		StringVar(&flags.Props, "props", "", "Component properties (JSON string or @file.json)")
 	cmd.Flags().StringVarP(&flags.PropsFile, "props-file", "P", "", "Properties file path (JSON)")
-	cmd.Flags().StringVarP(&flags.MockData, "mock", "m", "", "Mock data file, pattern, or 'auto' for generation")
+	cmd.Flags().
+		StringVarP(&flags.MockData, "mock", "m", "", "Mock data file, pattern, or 'auto' for generation")
 	cmd.Flags().StringVarP(&flags.Wrapper, "wrapper", "w", "", "Wrapper template path")
 
 	// Add validation for JSON props
@@ -445,12 +454,14 @@ func addEnhancedComponentFlags(cmd *cobra.Command, flags *EnhancedStandardFlags)
 
 func addEnhancedBuildFlags(cmd *cobra.Command, flags *EnhancedStandardFlags) {
 	cmd.Flags().StringVar(&flags.WatchPattern, "watch", "**/*.templ", "File watch pattern")
-	cmd.Flags().StringVar(&flags.BuildCmd, "build-cmd", "templ generate", "Build command to execute")
+	cmd.Flags().
+		StringVar(&flags.BuildCmd, "build-cmd", "templ generate", "Build command to execute")
 	cmd.Flags().BoolVar(&flags.Clean, "clean", false, "Clean build artifacts before building")
 }
 
 func addEnhancedOutputFlags(cmd *cobra.Command, flags *EnhancedStandardFlags) {
-	cmd.Flags().StringVarP(&flags.Format, "format", "f", "table", "Output format (table|json|yaml|csv)")
+	cmd.Flags().
+		StringVarP(&flags.Format, "format", "f", "table", "Output format (table|json|yaml|csv)")
 	cmd.Flags().StringVarP(&flags.Output, "output", "o", "", "Output directory or file")
 	cmd.Flags().BoolVarP(&flags.Verbose, "verbose", "v", false, "Enable verbose/detailed output")
 	cmd.Flags().BoolVarP(&flags.Quiet, "quiet", "q", false, "Suppress non-essential output")
@@ -463,7 +474,8 @@ func addEnhancedOutputFlags(cmd *cobra.Command, flags *EnhancedStandardFlags) {
 
 func addCommonFlags(cmd *cobra.Command, flags *EnhancedStandardFlags) {
 	cmd.Flags().StringVarP(&flags.Template, "template", "t", "", "Template name to use")
-	cmd.Flags().BoolVar(&flags.DryRun, "dry-run", false, "Show what would be done without executing")
+	cmd.Flags().
+		BoolVar(&flags.DryRun, "dry-run", false, "Show what would be done without executing")
 	cmd.Flags().BoolVarP(&flags.Force, "force", "F", false, "Force operation, skip confirmations")
 }
 

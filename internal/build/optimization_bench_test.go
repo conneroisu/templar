@@ -125,7 +125,9 @@ func BenchmarkConcurrentWorkerPool(b *testing.B) {
 						}
 
 						// Simulate work
-						worker.Context.OutputBuffer = append(worker.Context.OutputBuffer, []byte("build output")...)
+						worker.Context.OutputBuffer = append(
+							worker.Context.OutputBuffer,
+							[]byte("build output")...)
 						worker.Context.Environment["PATH"] = "/usr/bin"
 
 						// Cleanup
@@ -158,7 +160,9 @@ func BenchmarkConcurrentWorkerPool(b *testing.B) {
 						worker.State = WorkerBusy
 
 						// Simulate work
-						worker.Context.OutputBuffer = append(worker.Context.OutputBuffer, []byte("build output")...)
+						worker.Context.OutputBuffer = append(
+							worker.Context.OutputBuffer,
+							[]byte("build output")...)
 						worker.Context.Environment["PATH"] = "/usr/bin"
 
 						// Return to pool

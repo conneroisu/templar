@@ -24,7 +24,9 @@ func NewMockGenerator() *MockGenerator {
 }
 
 // GenerateForComponent generates mock data for all parameters of a component.
-func (g *MockGenerator) GenerateForComponent(component *types.ComponentInfo) map[string]interface{} {
+func (g *MockGenerator) GenerateForComponent(
+	component *types.ComponentInfo,
+) map[string]interface{} {
 	mockData := make(map[string]interface{})
 
 	for _, param := range component.Parameters {
@@ -95,7 +97,10 @@ func (g *MockGenerator) generateByNamePattern(name, _ string) interface{} {
 	}
 
 	// Boolean patterns
-	if containsAny(nameLower, []string{"active", "enabled", "visible", "public", "featured", "selected"}) {
+	if containsAny(
+		nameLower,
+		[]string{"active", "enabled", "visible", "public", "featured", "selected"},
+	) {
 		return g.generateBoolean()
 	}
 
@@ -155,7 +160,16 @@ func (g *MockGenerator) generateEmail() string {
 
 func (g *MockGenerator) generateName(context string) string {
 	firstNames := []string{"John", "Jane", "Alex", "Taylor", "Jordan", "Casey", "Morgan", "Riley"}
-	lastNames := []string{"Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis"}
+	lastNames := []string{
+		"Smith",
+		"Johnson",
+		"Williams",
+		"Brown",
+		"Jones",
+		"Garcia",
+		"Miller",
+		"Davis",
+	}
 	usernames := []string{"user123", "developer", "designer", "admin", "guest", "test_user"}
 
 	if strings.Contains(context, "first") {
@@ -200,7 +214,14 @@ func (g *MockGenerator) generateURL(context string) string {
 }
 
 func (g *MockGenerator) generateTitle() string {
-	adjectives := []string{"Amazing", "Incredible", "Fantastic", "Outstanding", "Remarkable", "Excellent"}
+	adjectives := []string{
+		"Amazing",
+		"Incredible",
+		"Fantastic",
+		"Outstanding",
+		"Remarkable",
+		"Excellent",
+	}
 	nouns := []string{"Component", "Feature", "Design", "Experience", "Solution", "Product"}
 
 	adj := adjectives[g.rng.Intn(len(adjectives))]
@@ -326,7 +347,9 @@ func NewAdvancedMockGenerator() *AdvancedMockGenerator {
 }
 
 // GenerateForComponent generates advanced mock data with pattern matching.
-func (g *AdvancedMockGenerator) GenerateForComponent(component *types.ComponentInfo) map[string]interface{} {
+func (g *AdvancedMockGenerator) GenerateForComponent(
+	component *types.ComponentInfo,
+) map[string]interface{} {
 	mockData := make(map[string]interface{})
 
 	for _, param := range component.Parameters {
@@ -357,7 +380,13 @@ func (g *AdvancedMockGenerator) generateByPattern(pattern string) interface{} {
 		streets := []string{"Main St", "Oak Ave", "Pine Rd", "Elm Dr", "Cedar Ln"}
 		return fmt.Sprintf("%d %s", g.rng.Intn(9999)+1, streets[g.rng.Intn(len(streets))])
 	case "company":
-		companies := []string{"TechCorp", "InnovateLLC", "FutureSystems", "NextGenSolutions", "DigitalDynamics"}
+		companies := []string{
+			"TechCorp",
+			"InnovateLLC",
+			"FutureSystems",
+			"NextGenSolutions",
+			"DigitalDynamics",
+		}
 		return companies[g.rng.Intn(len(companies))]
 	case "password":
 		return "••••••••" // Masked password

@@ -167,7 +167,10 @@ func (p *BootstrapPlugin) setupWithCDN(ctx context.Context, config FrameworkConf
 
 	cdnUrl := config.CDNUrl
 	if cdnUrl == "" {
-		cdnUrl = fmt.Sprintf("https://cdn.jsdelivr.net/npm/bootstrap@%s/dist/css/bootstrap.min.css", config.Version)
+		cdnUrl = fmt.Sprintf(
+			"https://cdn.jsdelivr.net/npm/bootstrap@%s/dist/css/bootstrap.min.css",
+			config.Version,
+		)
 	}
 
 	// Create a simple CSS file that imports from CDN
@@ -395,7 +398,11 @@ func (p *BootstrapPlugin) ValidateConfig(configPath string) error {
 }
 
 // ProcessCSS processes CSS using Bootstrap
-func (p *BootstrapPlugin) ProcessCSS(ctx context.Context, input []byte, options ProcessingOptions) ([]byte, error) {
+func (p *BootstrapPlugin) ProcessCSS(
+	ctx context.Context,
+	input []byte,
+	options ProcessingOptions,
+) ([]byte, error) {
 	// For Bootstrap, we primarily work with SCSS compilation
 	if strings.Contains(options.InputPath, ".scss") {
 		return p.compileSCSS(ctx, input, options)
@@ -416,7 +423,11 @@ func (p *BootstrapPlugin) ProcessCSS(ctx context.Context, input []byte, options 
 }
 
 // compileSCSS compiles SCSS to CSS using sass
-func (p *BootstrapPlugin) compileSCSS(ctx context.Context, input []byte, options ProcessingOptions) ([]byte, error) {
+func (p *BootstrapPlugin) compileSCSS(
+	ctx context.Context,
+	input []byte,
+	options ProcessingOptions,
+) ([]byte, error) {
 	// Create temporary input file
 	tmpDir := os.TempDir()
 	inputFile := filepath.Join(tmpDir, "input.scss")
@@ -572,7 +583,11 @@ func (p *BootstrapPlugin) isBootstrapClass(className string) bool {
 }
 
 // OptimizeCSS optimizes CSS for Bootstrap
-func (p *BootstrapPlugin) OptimizeCSS(ctx context.Context, css []byte, usedClasses []string) ([]byte, error) {
+func (p *BootstrapPlugin) OptimizeCSS(
+	ctx context.Context,
+	css []byte,
+	usedClasses []string,
+) ([]byte, error) {
 	options := ProcessingOptions{
 		Purge:       true,
 		Optimize:    true,

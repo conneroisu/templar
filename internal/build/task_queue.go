@@ -33,7 +33,10 @@ type TaskQueueManager struct {
 
 // NewTaskQueueManager creates a new task queue manager with the specified
 // buffer sizes and metrics tracking.
-func NewTaskQueueManager(taskBufferSize, resultBufferSize, priorityBufferSize int, metrics *BuildMetrics) *TaskQueueManager {
+func NewTaskQueueManager(
+	taskBufferSize, resultBufferSize, priorityBufferSize int,
+	metrics *BuildMetrics,
+) *TaskQueueManager {
 	return &TaskQueueManager{
 		tasks:    make(chan BuildTask, taskBufferSize),
 		results:  make(chan BuildResult, resultBufferSize),
@@ -217,10 +220,16 @@ type QueueStats struct {
 
 // Queue error definitions
 var (
-	ErrQueueClosed       = &QueueError{Code: "QUEUE_CLOSED", Message: "task queue has been closed"}
-	ErrQueueFull         = &QueueError{Code: "QUEUE_FULL", Message: "task queue is full"}
-	ErrInvalidTaskType   = &QueueError{Code: "INVALID_TASK_TYPE", Message: "invalid task type provided"}
-	ErrInvalidResultType = &QueueError{Code: "INVALID_RESULT_TYPE", Message: "invalid result type provided"}
+	ErrQueueClosed     = &QueueError{Code: "QUEUE_CLOSED", Message: "task queue has been closed"}
+	ErrQueueFull       = &QueueError{Code: "QUEUE_FULL", Message: "task queue is full"}
+	ErrInvalidTaskType = &QueueError{
+		Code:    "INVALID_TASK_TYPE",
+		Message: "invalid task type provided",
+	}
+	ErrInvalidResultType = &QueueError{
+		Code:    "INVALID_RESULT_TYPE",
+		Message: "invalid result type provided",
+	}
 )
 
 // QueueError represents an error in queue operations.

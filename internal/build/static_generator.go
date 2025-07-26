@@ -109,7 +109,11 @@ func (s *StaticSiteGenerator) Generate(
 		if component.IsExported && component.IsRenderable {
 			pageFiles, err := s.generateComponentPage(ctx, component, options)
 			if err != nil {
-				return nil, fmt.Errorf("failed to generate page for component %s: %w", component.Name, err)
+				return nil, fmt.Errorf(
+					"failed to generate page for component %s: %w",
+					component.Name,
+					err,
+				)
 			}
 			generatedFiles = append(generatedFiles, pageFiles...)
 		}
@@ -211,7 +215,12 @@ func (s *StaticSiteGenerator) generateComponentPage(
 	// Generate component variants if they exist
 	if len(component.Examples) > 0 {
 		for _, example := range component.Examples {
-			variantPath := strings.TrimSuffix(pagePath, ".html") + "-" + s.sanitizeFileName(example.Name) + ".html"
+			variantPath := strings.TrimSuffix(
+				pagePath,
+				".html",
+			) + "-" + s.sanitizeFileName(
+				example.Name,
+			) + ".html"
 			variantHTML, err := s.renderComponentVariant(component, example, options)
 			if err != nil {
 				return nil, fmt.Errorf("failed to render variant %s: %w", example.Name, err)
@@ -228,7 +237,11 @@ func (s *StaticSiteGenerator) generateComponentPage(
 }
 
 // generateCustomPage creates a custom static page
-func (s *StaticSiteGenerator) generateCustomPage(ctx context.Context, page CustomPage, options StaticGenerationOptions) (string, error) {
+func (s *StaticSiteGenerator) generateCustomPage(
+	ctx context.Context,
+	page CustomPage,
+	options StaticGenerationOptions,
+) (string, error) {
 	pagePath := filepath.Join(s.outputDir, page.Path)
 
 	// Ensure directory exists
@@ -310,7 +323,9 @@ func (s *StaticSiteGenerator) generateSitemap(
 
 			sitemap.WriteString("  <url>\n")
 			sitemap.WriteString(fmt.Sprintf("    <loc>%s</loc>\n", url))
-			sitemap.WriteString(fmt.Sprintf("    <lastmod>%s</lastmod>\n", time.Now().Format("2006-01-02")))
+			sitemap.WriteString(
+				fmt.Sprintf("    <lastmod>%s</lastmod>\n", time.Now().Format("2006-01-02")),
+			)
 			sitemap.WriteString("    <changefreq>weekly</changefreq>\n")
 			sitemap.WriteString("    <priority>0.8</priority>\n")
 			sitemap.WriteString("  </url>\n")
@@ -328,7 +343,10 @@ func (s *StaticSiteGenerator) generateSitemap(
 }
 
 // generateRobotsTxt creates a robots.txt file
-func (s *StaticSiteGenerator) generateRobotsTxt(ctx context.Context, options StaticGenerationOptions) (string, error) {
+func (s *StaticSiteGenerator) generateRobotsTxt(
+	ctx context.Context,
+	options StaticGenerationOptions,
+) (string, error) {
 	robotsPath := filepath.Join(s.outputDir, "robots.txt")
 
 	robotsContent := "User-agent: *\n"
@@ -377,7 +395,10 @@ func (s *StaticSiteGenerator) generateIndexPage(
 // HTML Generation Methods
 
 // renderComponentHTML generates HTML for a component page
-func (s *StaticSiteGenerator) renderComponentHTML(component *types.ComponentInfo, options StaticGenerationOptions) (string, error) {
+func (s *StaticSiteGenerator) renderComponentHTML(
+	component *types.ComponentInfo,
+	options StaticGenerationOptions,
+) (string, error) {
 	var html strings.Builder
 
 	html.WriteString("<!DOCTYPE html>\n")
@@ -385,16 +406,22 @@ func (s *StaticSiteGenerator) renderComponentHTML(component *types.ComponentInfo
 	html.WriteString("<head>\n")
 	html.WriteString(fmt.Sprintf("  <title>%s - Component</title>\n", component.Name))
 	html.WriteString("  <meta charset=\"UTF-8\">\n")
-	html.WriteString("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n")
+	html.WriteString(
+		"  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n",
+	)
 
 	// Add meta description
 	if component.Description != "" {
-		html.WriteString(fmt.Sprintf("  <meta name=\"description\" content=\"%s\">\n", component.Description))
+		html.WriteString(
+			fmt.Sprintf("  <meta name=\"description\" content=\"%s\">\n", component.Description),
+		)
 	}
 
 	// Add CSS
 	if options.CDNPath != "" {
-		html.WriteString(fmt.Sprintf("  <link rel=\"stylesheet\" href=\"%s/css/main.css\">\n", options.CDNPath))
+		html.WriteString(
+			fmt.Sprintf("  <link rel=\"stylesheet\" href=\"%s/css/main.css\">\n", options.CDNPath),
+		)
 	} else {
 		html.WriteString("  <link rel=\"stylesheet\" href=\"/assets/css/main.css\">\n")
 	}
@@ -417,13 +444,20 @@ func (s *StaticSiteGenerator) renderComponentHTML(component *types.ComponentInfo
 	html.WriteString(fmt.Sprintf("    <h1>%s</h1>\n", component.Name))
 
 	if component.Description != "" {
-		html.WriteString(fmt.Sprintf("    <p class=\"description\">%s</p>\n", component.Description))
+		html.WriteString(
+			fmt.Sprintf("    <p class=\"description\">%s</p>\n", component.Description),
+		)
 	}
 
 	// Add component preview
 	html.WriteString("    <div class=\"component-preview\">\n")
 	html.WriteString("      <!-- Component would be rendered here -->\n")
-	html.WriteString(fmt.Sprintf("      <div class=\"placeholder\">%s Component Preview</div>\n", component.Name))
+	html.WriteString(
+		fmt.Sprintf(
+			"      <div class=\"placeholder\">%s Component Preview</div>\n",
+			component.Name,
+		),
+	)
 	html.WriteString("    </div>\n")
 
 	// Add component documentation
@@ -432,7 +466,9 @@ func (s *StaticSiteGenerator) renderComponentHTML(component *types.ComponentInfo
 		html.WriteString("      <h2>Properties</h2>\n")
 		html.WriteString("      <table>\n")
 		html.WriteString("        <thead>\n")
-		html.WriteString("          <tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th></tr>\n")
+		html.WriteString(
+			"          <tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th></tr>\n",
+		)
 		html.WriteString("        </thead>\n")
 		html.WriteString("        <tbody>\n")
 
@@ -441,8 +477,10 @@ func (s *StaticSiteGenerator) renderComponentHTML(component *types.ComponentInfo
 			if param.Optional {
 				required = "No"
 			}
-			html.WriteString(fmt.Sprintf("          <tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n",
-				param.Name, param.Type, required, param.Description))
+			html.WriteString(
+				fmt.Sprintf("          <tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n",
+					param.Name, param.Type, required, param.Description),
+			)
 		}
 
 		html.WriteString("        </tbody>\n")
@@ -454,7 +492,9 @@ func (s *StaticSiteGenerator) renderComponentHTML(component *types.ComponentInfo
 
 	// Add JavaScript if needed
 	if options.CDNPath != "" {
-		html.WriteString(fmt.Sprintf("  <script src=\"%s/js/main.js\"></script>\n", options.CDNPath))
+		html.WriteString(
+			fmt.Sprintf("  <script src=\"%s/js/main.js\"></script>\n", options.CDNPath),
+		)
 	} else {
 		html.WriteString("  <script src=\"/assets/js/main.js\"></script>\n")
 	}
@@ -476,13 +516,19 @@ func (s *StaticSiteGenerator) renderComponentVariant(
 	html.WriteString("<!DOCTYPE html>\n")
 	html.WriteString("<html lang=\"en\">\n")
 	html.WriteString("<head>\n")
-	html.WriteString(fmt.Sprintf("  <title>%s - %s Variant</title>\n", component.Name, example.Name))
+	html.WriteString(
+		fmt.Sprintf("  <title>%s - %s Variant</title>\n", component.Name, example.Name),
+	)
 	html.WriteString("  <meta charset=\"UTF-8\">\n")
-	html.WriteString("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n")
+	html.WriteString(
+		"  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n",
+	)
 
 	// Add CSS
 	if options.CDNPath != "" {
-		html.WriteString(fmt.Sprintf("  <link rel=\"stylesheet\" href=\"%s/css/main.css\">\n", options.CDNPath))
+		html.WriteString(
+			fmt.Sprintf("  <link rel=\"stylesheet\" href=\"%s/css/main.css\">\n", options.CDNPath),
+		)
 	} else {
 		html.WriteString("  <link rel=\"stylesheet\" href=\"/assets/css/main.css\">\n")
 	}
@@ -497,7 +543,9 @@ func (s *StaticSiteGenerator) renderComponentVariant(
 	}
 
 	html.WriteString("    <div class=\"variant-preview\">\n")
-	html.WriteString(fmt.Sprintf("      <!-- %s variant would be rendered here -->\n", example.Name))
+	html.WriteString(
+		fmt.Sprintf("      <!-- %s variant would be rendered here -->\n", example.Name),
+	)
 	html.WriteString("    </div>\n")
 	html.WriteString("  </main>\n")
 	html.WriteString("</body>\n")
@@ -507,7 +555,10 @@ func (s *StaticSiteGenerator) renderComponentVariant(
 }
 
 // renderCustomPageHTML generates HTML for a custom page
-func (s *StaticSiteGenerator) renderCustomPageHTML(page CustomPage, options StaticGenerationOptions) (string, error) {
+func (s *StaticSiteGenerator) renderCustomPageHTML(
+	page CustomPage,
+	options StaticGenerationOptions,
+) (string, error) {
 	var html strings.Builder
 
 	html.WriteString("<!DOCTYPE html>\n")
@@ -515,15 +566,21 @@ func (s *StaticSiteGenerator) renderCustomPageHTML(page CustomPage, options Stat
 	html.WriteString("<head>\n")
 	html.WriteString(fmt.Sprintf("  <title>%s</title>\n", page.Title))
 	html.WriteString("  <meta charset=\"UTF-8\">\n")
-	html.WriteString("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n")
+	html.WriteString(
+		"  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n",
+	)
 
 	if page.Description != "" {
-		html.WriteString(fmt.Sprintf("  <meta name=\"description\" content=\"%s\">\n", page.Description))
+		html.WriteString(
+			fmt.Sprintf("  <meta name=\"description\" content=\"%s\">\n", page.Description),
+		)
 	}
 
 	// Add CSS
 	if options.CDNPath != "" {
-		html.WriteString(fmt.Sprintf("  <link rel=\"stylesheet\" href=\"%s/css/main.css\">\n", options.CDNPath))
+		html.WriteString(
+			fmt.Sprintf("  <link rel=\"stylesheet\" href=\"%s/css/main.css\">\n", options.CDNPath),
+		)
 	} else {
 		html.WriteString("  <link rel=\"stylesheet\" href=\"/assets/css/main.css\">\n")
 	}
@@ -548,7 +605,10 @@ func (s *StaticSiteGenerator) renderCustomPageHTML(page CustomPage, options Stat
 }
 
 // generateErrorPageHTML creates HTML for error pages
-func (s *StaticSiteGenerator) generateErrorPageHTML(errorCode, templatePath string, options StaticGenerationOptions) string {
+func (s *StaticSiteGenerator) generateErrorPageHTML(
+	errorCode, templatePath string,
+	options StaticGenerationOptions,
+) string {
 	var html strings.Builder
 
 	html.WriteString("<!DOCTYPE html>\n")
@@ -556,7 +616,9 @@ func (s *StaticSiteGenerator) generateErrorPageHTML(errorCode, templatePath stri
 	html.WriteString("<head>\n")
 	html.WriteString(fmt.Sprintf("  <title>Error %s</title>\n", errorCode))
 	html.WriteString("  <meta charset=\"UTF-8\">\n")
-	html.WriteString("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n")
+	html.WriteString(
+		"  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n",
+	)
 	html.WriteString("  <link rel=\"stylesheet\" href=\"/assets/css/main.css\">\n")
 	html.WriteString("</head>\n")
 	html.WriteString("<body>\n")
@@ -581,7 +643,10 @@ func (s *StaticSiteGenerator) generateErrorPageHTML(errorCode, templatePath stri
 }
 
 // generateComponentCatalogHTML creates the main component catalog page
-func (s *StaticSiteGenerator) generateComponentCatalogHTML(components []*types.ComponentInfo, options StaticGenerationOptions) string {
+func (s *StaticSiteGenerator) generateComponentCatalogHTML(
+	components []*types.ComponentInfo,
+	options StaticGenerationOptions,
+) string {
 	var html strings.Builder
 
 	html.WriteString("<!DOCTYPE html>\n")
@@ -589,8 +654,12 @@ func (s *StaticSiteGenerator) generateComponentCatalogHTML(components []*types.C
 	html.WriteString("<head>\n")
 	html.WriteString("  <title>Component Catalog</title>\n")
 	html.WriteString("  <meta charset=\"UTF-8\">\n")
-	html.WriteString("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n")
-	html.WriteString("  <meta name=\"description\" content=\"Templar component catalog and documentation\">\n")
+	html.WriteString(
+		"  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n",
+	)
+	html.WriteString(
+		"  <meta name=\"description\" content=\"Templar component catalog and documentation\">\n",
+	)
 	html.WriteString("  <link rel=\"stylesheet\" href=\"/assets/css/main.css\">\n")
 	html.WriteString("</head>\n")
 	html.WriteString("<body>\n")
@@ -603,7 +672,13 @@ func (s *StaticSiteGenerator) generateComponentCatalogHTML(components []*types.C
 	for _, component := range components {
 		if component.IsExported && component.IsRenderable {
 			html.WriteString("      <div class=\"component-card\">\n")
-			html.WriteString(fmt.Sprintf("        <h3><a href=\"%s\">%s</a></h3>\n", s.getComponentPagePath(component), component.Name))
+			html.WriteString(
+				fmt.Sprintf(
+					"        <h3><a href=\"%s\">%s</a></h3>\n",
+					s.getComponentPagePath(component),
+					component.Name,
+				),
+			)
 
 			if component.Description != "" {
 				html.WriteString(fmt.Sprintf("        <p>%s</p>\n", component.Description))
@@ -683,7 +758,10 @@ func (s *StaticSiteGenerator) extractCriticalCSS(component *types.ComponentInfo)
 }
 
 // generateComponentJSON creates a JSON representation of a component
-func (s *StaticSiteGenerator) generateComponentJSON(component *types.ComponentInfo, options StaticGenerationOptions) (string, error) {
+func (s *StaticSiteGenerator) generateComponentJSON(
+	component *types.ComponentInfo,
+	options StaticGenerationOptions,
+) (string, error) {
 	componentData := map[string]interface{}{
 		"name":         component.Name,
 		"package":      component.Package,

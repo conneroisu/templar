@@ -53,7 +53,10 @@ func (v *InterfaceValidator) ValidateComponentRegistry(reg ComponentRegistry) Va
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("Register method panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("Register method panicked: %v", r),
+				)
 			}
 		}()
 		reg.Register(testComponent)
@@ -70,7 +73,10 @@ func (v *InterfaceValidator) ValidateComponentRegistry(reg ComponentRegistry) Va
 
 		retrieved, exists := reg.Get("ValidationTest")
 		if !exists {
-			result.Warnings = append(result.Warnings, "Get method did not find registered component")
+			result.Warnings = append(
+				result.Warnings,
+				"Get method did not find registered component",
+			)
 		} else if retrieved == nil {
 			result.Errors = append(result.Errors, "Get method returned nil component")
 			result.Valid = false
@@ -133,13 +139,19 @@ func (v *InterfaceValidator) ValidateComponentRegistry(reg ComponentRegistry) Va
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("DetectCircularDependencies method panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("DetectCircularDependencies method panicked: %v", r),
+				)
 			}
 		}()
 
 		cycles := reg.DetectCircularDependencies()
 		if cycles == nil {
-			result.Warnings = append(result.Warnings, "DetectCircularDependencies returned nil (should return empty slice)")
+			result.Warnings = append(
+				result.Warnings,
+				"DetectCircularDependencies returned nil (should return empty slice)",
+			)
 		}
 	}()
 
@@ -162,7 +174,10 @@ func (v *InterfaceValidator) ValidateFileWatcher(watcher FileWatcher) Validation
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("AddFilter method panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("AddFilter method panicked: %v", r),
+				)
 			}
 		}()
 
@@ -175,7 +190,10 @@ func (v *InterfaceValidator) ValidateFileWatcher(watcher FileWatcher) Validation
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("AddHandler method panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("AddHandler method panicked: %v", r),
+				)
 			}
 		}()
 
@@ -201,7 +219,10 @@ func (v *InterfaceValidator) ValidateFileWatcher(watcher FileWatcher) Validation
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("AddRecursive method panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("AddRecursive method panicked: %v", r),
+				)
 			}
 		}()
 
@@ -214,7 +235,10 @@ func (v *InterfaceValidator) ValidateFileWatcher(watcher FileWatcher) Validation
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("Start/Stop methods panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("Start/Stop methods panicked: %v", r),
+				)
 			}
 		}()
 
@@ -244,7 +268,10 @@ func (v *InterfaceValidator) ValidateComponentScanner(scanner ComponentScanner) 
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("ScanFile method panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("ScanFile method panicked: %v", r),
+				)
 			}
 		}()
 
@@ -257,7 +284,10 @@ func (v *InterfaceValidator) ValidateComponentScanner(scanner ComponentScanner) 
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("ScanDirectory method panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("ScanDirectory method panicked: %v", r),
+				)
 			}
 		}()
 
@@ -290,7 +320,10 @@ func (v *InterfaceValidator) ValidateBuildPipeline(pipeline BuildPipeline) Valid
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("Start/Stop methods panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("Start/Stop methods panicked: %v", r),
+				)
 			}
 		}()
 
@@ -304,7 +337,10 @@ func (v *InterfaceValidator) ValidateBuildPipeline(pipeline BuildPipeline) Valid
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("AddCallback method panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("AddCallback method panicked: %v", r),
+				)
 			}
 		}()
 
@@ -329,7 +365,10 @@ func (v *InterfaceValidator) ValidateBuildPipeline(pipeline BuildPipeline) Valid
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("BuildWithPriority method panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("BuildWithPriority method panicked: %v", r),
+				)
 			}
 		}()
 
@@ -341,7 +380,10 @@ func (v *InterfaceValidator) ValidateBuildPipeline(pipeline BuildPipeline) Valid
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("GetMetrics method panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("GetMetrics method panicked: %v", r),
+				)
 			}
 		}()
 
@@ -357,7 +399,10 @@ func (v *InterfaceValidator) ValidateBuildPipeline(pipeline BuildPipeline) Valid
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("GetCache method panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("GetCache method panicked: %v", r),
+				)
 			}
 		}()
 
@@ -373,7 +418,10 @@ func (v *InterfaceValidator) ValidateBuildPipeline(pipeline BuildPipeline) Valid
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("ClearCache method panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("ClearCache method panicked: %v", r),
+				)
 			}
 		}()
 
@@ -399,7 +447,10 @@ func (v *InterfaceValidator) ValidateFileFilter(filter FileFilter) ValidationRes
 		defer func() {
 			if r := recover(); r != nil {
 				result.Valid = false
-				result.Errors = append(result.Errors, fmt.Sprintf("ShouldInclude method panicked: %v", r))
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf("ShouldInclude method panicked: %v", r),
+				)
 			}
 		}()
 

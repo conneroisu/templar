@@ -159,7 +159,10 @@ func runMonitorStart(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func runFollowMode(monitor *performance.PerformanceMonitor, integration *performance.PerformanceIntegration) error {
+func runFollowMode(
+	monitor *performance.PerformanceMonitor,
+	integration *performance.PerformanceIntegration,
+) error {
 	fmt.Println("📈 Following performance metrics (Ctrl+C to stop)...")
 
 	ticker := time.NewTicker(5 * time.Second)

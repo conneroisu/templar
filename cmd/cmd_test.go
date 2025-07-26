@@ -258,7 +258,11 @@ templ TestComponent(title string) {
 }
 `
 
-			err = os.WriteFile(filepath.Join(componentDir, "test.templ"), []byte(componentContent), 0644)
+			err = os.WriteFile(
+				filepath.Join(componentDir, "test.templ"),
+				[]byte(componentContent),
+				0644,
+			)
 			require.NoError(t, err)
 
 			// Set up viper configuration

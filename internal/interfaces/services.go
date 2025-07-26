@@ -145,7 +145,12 @@ type NotificationService interface {
 	RegisterTemplate(name string, template NotificationTemplate) error
 
 	// SendWithTemplate sends a notification using a template
-	SendWithTemplate(ctx context.Context, templateName string, data map[string]interface{}, recipient string) error
+	SendWithTemplate(
+		ctx context.Context,
+		templateName string,
+		data map[string]interface{},
+		recipient string,
+	) error
 }
 
 // CacheService defines the interface for application caching

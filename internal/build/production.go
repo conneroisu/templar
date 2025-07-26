@@ -263,7 +263,10 @@ func (p *ProductionBuildPipeline) createOutputDirectories() error {
 }
 
 // generateTemplates runs templ generation for all components
-func (p *ProductionBuildPipeline) generateTemplates(ctx context.Context, components []*types.ComponentInfo) error {
+func (p *ProductionBuildPipeline) generateTemplates(
+	ctx context.Context,
+	components []*types.ComponentInfo,
+) error {
 	// Use existing template compilation from the build pipeline
 	compiler := NewTemplCompiler()
 
@@ -316,7 +319,10 @@ func (p *ProductionBuildPipeline) generateStaticSite(
 }
 
 // optimizeAssets performs post-bundle optimization
-func (p *ProductionBuildPipeline) optimizeAssets(ctx context.Context, options ProductionBuildOptions) error {
+func (p *ProductionBuildPipeline) optimizeAssets(
+	ctx context.Context,
+	options ProductionBuildOptions,
+) error {
 	optimizerOptions := OptimizerOptions{
 		Images:      options.OptimizeImages,
 		CSS:         options.OptimizeCSS,
@@ -328,7 +334,10 @@ func (p *ProductionBuildPipeline) optimizeAssets(ctx context.Context, options Pr
 }
 
 // generateAssetManifest creates a manifest file for asset references
-func (p *ProductionBuildPipeline) generateAssetManifest(ctx context.Context, artifacts *BuildArtifacts) (string, error) {
+func (p *ProductionBuildPipeline) generateAssetManifest(
+	ctx context.Context,
+	artifacts *BuildArtifacts,
+) (string, error) {
 	manifestPath := filepath.Join(p.outputDir, "asset-manifest.json")
 
 	manifest := AssetManifestFile{
@@ -343,7 +352,11 @@ func (p *ProductionBuildPipeline) generateAssetManifest(ctx context.Context, art
 }
 
 // validateBuild performs quality checks on the build output
-func (p *ProductionBuildPipeline) validateBuild(ctx context.Context, artifacts *BuildArtifacts, options ProductionBuildOptions) error {
+func (p *ProductionBuildPipeline) validateBuild(
+	ctx context.Context,
+	artifacts *BuildArtifacts,
+	options ProductionBuildOptions,
+) error {
 	validatorOptions := ValidationOptions{
 		BundleSizeLimit:  options.BundleSizeLimit,
 		SecurityScan:     options.SecurityScan,

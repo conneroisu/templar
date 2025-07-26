@@ -130,7 +130,12 @@ func (hp *HashProvider) GenerateHashBatch(components []*types.ComponentInfo) map
 	for _, component := range components {
 		// OPTIMIZATION: Use efficient Stat() + metadata cache check first
 		if stat, err := os.Stat(component.FilePath); err == nil {
-			metadataKey := fmt.Sprintf("%s:%d:%d", component.FilePath, stat.ModTime().Unix(), stat.Size())
+			metadataKey := fmt.Sprintf(
+				"%s:%d:%d",
+				component.FilePath,
+				stat.ModTime().Unix(),
+				stat.Size(),
+			)
 
 			// Check metadata cache first (fastest path)
 			if hash, found := hp.cache.GetHash(metadataKey); found {

@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
-	"text/template"
 
 	"github.com/conneroisu/templar/internal/config"
 )
@@ -93,7 +91,11 @@ func NewDockerBuilder(cfg *config.Config, outputDir string) *DockerBuilder {
 }
 
 // Build creates a Docker image from build artifacts
-func (d *DockerBuilder) Build(ctx context.Context, artifacts *BuildArtifacts, options DockerBuildOptions) (string, string, error) {
+func (d *DockerBuilder) Build(
+	ctx context.Context,
+	artifacts *BuildArtifacts,
+	options DockerBuildOptions,
+) (string, string, error) {
 	dockerDir := filepath.Join(d.outputDir, "deployment", "docker")
 	dockerfilePath := filepath.Join(dockerDir, "Dockerfile")
 
@@ -133,7 +135,11 @@ func (d *DockerBuilder) Build(ctx context.Context, artifacts *BuildArtifacts, op
 }
 
 // GenerateDeploymentArtifacts creates comprehensive deployment artifacts for various platforms
-func (d *DockerBuilder) GenerateDeploymentArtifacts(ctx context.Context, artifacts *BuildArtifacts, target DeploymentTarget) (*DeploymentArtifacts, error) {
+func (d *DockerBuilder) GenerateDeploymentArtifacts(
+	ctx context.Context,
+	artifacts *BuildArtifacts,
+	target DeploymentTarget,
+) (*DeploymentArtifacts, error) {
 	deploymentDir := filepath.Join(d.outputDir, "deployment")
 
 	// Ensure deployment directory exists
@@ -161,7 +167,10 @@ func (d *DockerBuilder) GenerateDeploymentArtifacts(ctx context.Context, artifac
 }
 
 // generateDockerfile creates Dockerfile content for the application
-func (d *DockerBuilder) generateDockerfile(artifacts *BuildArtifacts, options DockerBuildOptions) string {
+func (d *DockerBuilder) generateDockerfile(
+	artifacts *BuildArtifacts,
+	options DockerBuildOptions,
+) string {
 	dockerfile := `# Multi-stage Docker build for Templar application
 FROM golang:1.24-alpine AS builder
 WORKDIR /app

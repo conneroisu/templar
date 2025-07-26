@@ -108,7 +108,11 @@ type BuildQueue struct {
 }
 
 // NewBuildPipeline creates a new build pipeline with optional timeout configuration
-func NewBuildPipeline(workers int, registry interfaces.ComponentRegistry, cfg ...*config.Config) *BuildPipeline {
+func NewBuildPipeline(
+	workers int,
+	registry interfaces.ComponentRegistry,
+	cfg ...*config.Config,
+) *BuildPipeline {
 	compiler := NewTemplCompiler()
 	cache := NewBuildCache(100*1024*1024, time.Hour) // 100MB, 1 hour TTL
 
@@ -201,7 +205,10 @@ func (bp *BuildPipeline) StopWithTimeout(timeout time.Duration) error {
 func (bp *BuildPipeline) Build(component *types.ComponentInfo) {
 	// Check if pipeline is shut down
 	if bp.cancel == nil {
-		fmt.Printf("Error: Build pipeline not started, dropping task for component %s\n", component.Name)
+		fmt.Printf(
+			"Error: Build pipeline not started, dropping task for component %s\n",
+			component.Name,
+		)
 		bp.metrics.RecordDroppedTask(component.Name, "pipeline_not_started")
 		return
 	}
@@ -226,7 +233,10 @@ func (bp *BuildPipeline) Build(component *types.ComponentInfo) {
 		case bp.queue.priority <- task:
 			fmt.Printf("Task for %s promoted to priority queue\n", component.Name)
 		default:
-			fmt.Printf("Error: Both queues full, build request lost for component %s\n", component.Name)
+			fmt.Printf(
+				"Error: Both queues full, build request lost for component %s\n",
+				component.Name,
+			)
 			// TODO: Implement persistent queue or callback for dropped tasks
 		}
 	}
@@ -236,7 +246,10 @@ func (bp *BuildPipeline) Build(component *types.ComponentInfo) {
 func (bp *BuildPipeline) BuildWithPriority(component *types.ComponentInfo) {
 	// Check if pipeline is shut down
 	if bp.cancel == nil {
-		fmt.Printf("Error: Build pipeline not started, dropping priority task for component %s\n", component.Name)
+		fmt.Printf(
+			"Error: Build pipeline not started, dropping priority task for component %s\n",
+			component.Name,
+		)
 		bp.metrics.RecordDroppedTask(component.Name, "pipeline_not_started")
 		return
 	}
@@ -252,7 +265,10 @@ func (bp *BuildPipeline) BuildWithPriority(component *types.ComponentInfo) {
 		// Priority task successfully queued
 	default:
 		// Priority queue also full - this is a critical error
-		fmt.Printf("Critical: Priority queue full, dropping high-priority task for component %s\n", component.Name)
+		fmt.Printf(
+			"Critical: Priority queue full, dropping high-priority task for component %s\n",
+			component.Name,
+		)
 		bp.metrics.RecordDroppedTask(component.Name, "priority_queue_full")
 
 		// Could implement emergency handling here (e.g., block briefly or expand queue)
@@ -358,8 +374,14 @@ func (bp *BuildPipeline) processBuildTask(ctx context.Context, task BuildTask) {
 			return
 		default:
 			// Results queue full - this could cause result loss
-			fmt.Printf("Warning: Results queue full, dropping cache hit result for component %s\n", buildResult.Component.Name)
-			bp.metrics.RecordDroppedResult(buildResult.Component.Name, "results_queue_full_cache_hit")
+			fmt.Printf(
+				"Warning: Results queue full, dropping cache hit result for component %s\n",
+				buildResult.Component.Name,
+			)
+			bp.metrics.RecordDroppedResult(
+				buildResult.Component.Name,
+				"results_queue_full_cache_hit",
+			)
 		}
 		bp.objectPools.PutBuildResult(buildResult)
 		return
@@ -410,7 +432,10 @@ func (bp *BuildPipeline) processBuildTask(ctx context.Context, task BuildTask) {
 		return
 	default:
 		// Results queue full - this could cause result loss
-		fmt.Printf("Warning: Results queue full, dropping result for component %s\n", buildResult.Component.Name)
+		fmt.Printf(
+			"Warning: Results queue full, dropping result for component %s\n",
+			buildResult.Component.Name,
+		)
 		bp.metrics.RecordDroppedResult(buildResult.Component.Name, "results_queue_full")
 	}
 	bp.objectPools.PutBuildResult(buildResult)
@@ -535,7 +560,9 @@ func (bp *BuildPipeline) readFileWithMmap(file *os.File, size int64) ([]byte, er
 }
 
 // generateContentHashesBatch processes multiple components in a single batch for better I/O efficiency
-func (bp *BuildPipeline) generateContentHashesBatch(components []*types.ComponentInfo) map[string]string {
+func (bp *BuildPipeline) generateContentHashesBatch(
+	components []*types.ComponentInfo,
+) map[string]string {
 	results := make(map[string]string, len(components))
 
 	// Group components by whether they need content reading (cache misses)
@@ -545,7 +572,12 @@ func (bp *BuildPipeline) generateContentHashesBatch(components []*types.Componen
 	for _, component := range components {
 		// OPTIMIZATION: Use efficient Stat() + metadata cache check first
 		if stat, err := os.Stat(component.FilePath); err == nil {
-			metadataKey := fmt.Sprintf("%s:%d:%d", component.FilePath, stat.ModTime().Unix(), stat.Size())
+			metadataKey := fmt.Sprintf(
+				"%s:%d:%d",
+				component.FilePath,
+				stat.ModTime().Unix(),
+				stat.Size(),
+			)
 
 			// Check cache with metadata key
 			if hash, found := bp.cache.GetHash(metadataKey); found {
@@ -621,7 +653,10 @@ func NewParallelFileProcessor(workerCount int) *ParallelFileProcessor {
 }
 
 // DiscoverFiles discovers component files in parallel using filepath.WalkDir
-func (pfp *ParallelFileProcessor) DiscoverFiles(ctx context.Context, rootPaths []string) (*FileDiscoveryResult, error) {
+func (pfp *ParallelFileProcessor) DiscoverFiles(
+	ctx context.Context,
+	rootPaths []string,
+) (*FileDiscoveryResult, error) {
 	start := time.Now()
 	defer func() {
 		pfp.stats.Duration = time.Since(start)

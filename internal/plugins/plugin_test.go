@@ -34,7 +34,10 @@ type MockComponentPlugin struct {
 	priority int
 }
 
-func (mcp *MockComponentPlugin) HandleComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error) {
+func (mcp *MockComponentPlugin) HandleComponent(
+	ctx context.Context,
+	component *types.ComponentInfo,
+) (*types.ComponentInfo, error) {
 	// Add test metadata
 	if component.Metadata == nil {
 		component.Metadata = make(map[string]interface{})
@@ -58,12 +61,19 @@ func (mbp *MockBuildPlugin) PreBuild(ctx context.Context, components []*types.Co
 	return nil
 }
 
-func (mbp *MockBuildPlugin) PostBuild(ctx context.Context, components []*types.ComponentInfo, buildResult BuildResult) error {
+func (mbp *MockBuildPlugin) PostBuild(
+	ctx context.Context,
+	components []*types.ComponentInfo,
+	buildResult BuildResult,
+) error {
 	mbp.postBuildCalled = true
 	return nil
 }
 
-func (mbp *MockBuildPlugin) TransformBuildCommand(ctx context.Context, command []string) ([]string, error) {
+func (mbp *MockBuildPlugin) TransformBuildCommand(
+	ctx context.Context,
+	command []string,
+) ([]string, error) {
 	// Add a test flag
 	return append(command, "--test-flag"), nil
 }
@@ -335,7 +345,10 @@ func TestBuildPlugin_Lifecycle(t *testing.T) {
 
 	// Test TransformBuildCommand
 	originalCommand := []string{"go", "build"}
-	transformedCommand, err := pm.buildPlugins[0].TransformBuildCommand(context.Background(), originalCommand)
+	transformedCommand, err := pm.buildPlugins[0].TransformBuildCommand(
+		context.Background(),
+		originalCommand,
+	)
 	if err != nil {
 		t.Fatalf("TransformBuildCommand failed: %v", err)
 	}

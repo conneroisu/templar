@@ -82,7 +82,10 @@ func (g *ComponentGenerator) Generate(opts GenerateOptions) error {
 	}
 
 	// Generate main component file
-	componentFile := filepath.Join(opts.OutputDir, fmt.Sprintf("%s.templ", strings.ToLower(opts.Name)))
+	componentFile := filepath.Join(
+		opts.OutputDir,
+		fmt.Sprintf("%s.templ", strings.ToLower(opts.Name)),
+	)
 	if err := g.generateFile(componentFile, tmpl.Content, ctx); err != nil {
 		return fmt.Errorf("failed to generate component file: %w", err)
 	}
@@ -91,7 +94,10 @@ func (g *ComponentGenerator) Generate(opts GenerateOptions) error {
 
 	// Generate test file if requested
 	if opts.WithTests && tmpl.TestContent != "" {
-		testFile := filepath.Join(opts.OutputDir, fmt.Sprintf("%s_test.go", strings.ToLower(opts.Name)))
+		testFile := filepath.Join(
+			opts.OutputDir,
+			fmt.Sprintf("%s_test.go", strings.ToLower(opts.Name)),
+		)
 		if err := g.generateFile(testFile, tmpl.TestContent, ctx); err != nil {
 			return fmt.Errorf("failed to generate test file: %w", err)
 		}
@@ -205,7 +211,11 @@ func ValidateComponentName(name string) error {
 }
 
 // GenerateComponentSet generates multiple related components
-func (g *ComponentGenerator) GenerateComponentSet(setName string, components []string, outputDir string) error {
+func (g *ComponentGenerator) GenerateComponentSet(
+	setName string,
+	components []string,
+	outputDir string,
+) error {
 	fmt.Printf("🏗️  Generating component set: %s\n", setName)
 
 	for _, component := range components {

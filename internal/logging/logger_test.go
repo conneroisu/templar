@@ -196,8 +196,18 @@ func (m *mockLogger) Error(ctx context.Context, err error, msg string, fields ..
 	}
 }
 func (m *mockLogger) Fatal(ctx context.Context, err error, msg string, fields ...interface{}) {}
-func (m *mockLogger) With(fields ...interface{}) Logger                                       { return m }
-func (m *mockLogger) WithComponent(component string) Logger                                   { return m }
+
+func (m *mockLogger) With(
+	fields ...interface{},
+) Logger {
+	return m
+}
+
+func (m *mockLogger) WithComponent(
+	component string,
+) Logger {
+	return m
+}
 
 // Helper function to convert fields slice to map
 func fieldsToMap(fields []interface{}) map[string]interface{} {

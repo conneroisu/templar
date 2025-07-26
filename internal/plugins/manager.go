@@ -193,7 +193,11 @@ func (epm *EnhancedPluginManager) SetBuiltinPlugins(plugins []Plugin) error {
 }
 
 // registerPlugin registers a plugin instance
-func (epm *EnhancedPluginManager) registerPlugin(ctx context.Context, plugin Plugin, source string) error {
+func (epm *EnhancedPluginManager) registerPlugin(
+	ctx context.Context,
+	plugin Plugin,
+	source string,
+) error {
 	name := plugin.Name()
 
 	// Create plugin info
@@ -230,7 +234,11 @@ func (epm *EnhancedPluginManager) registerPlugin(ctx context.Context, plugin Plu
 }
 
 // loadPlugin loads and initializes a plugin
-func (epm *EnhancedPluginManager) loadPlugin(ctx context.Context, plugin Plugin, info EnhancedPluginInfo) error {
+func (epm *EnhancedPluginManager) loadPlugin(
+	ctx context.Context,
+	plugin Plugin,
+	info EnhancedPluginInfo,
+) error {
 	name := plugin.Name()
 
 	// Get plugin configuration
@@ -535,7 +543,10 @@ func (epm *EnhancedPluginManager) GetPluginState(name string) PluginState {
 }
 
 // ProcessComponent processes a component through all enabled component plugins
-func (epm *EnhancedPluginManager) ProcessComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error) {
+func (epm *EnhancedPluginManager) ProcessComponent(
+	ctx context.Context,
+	component *types.ComponentInfo,
+) (*types.ComponentInfo, error) {
 	// Get component plugins in priority order
 	plugins := epm.getComponentPluginsByPriority()
 

@@ -100,7 +100,14 @@ func (cv *ConfigValidator) validateServer(config *ServerConfig) {
 	// Validate environment
 	validEnvs := []string{"development", "staging", "production", "test"}
 	if config.Environment != "" && !cv.contains(validEnvs, config.Environment) {
-		cv.addError("server.environment", fmt.Errorf("invalid environment '%s', must be one of: %v", config.Environment, validEnvs))
+		cv.addError(
+			"server.environment",
+			fmt.Errorf(
+				"invalid environment '%s', must be one of: %v",
+				config.Environment,
+				validEnvs,
+			),
+		)
 	}
 
 	// Validate authentication
@@ -115,18 +122,27 @@ func (cv *ConfigValidator) validateAuth(config *AuthConfig) {
 
 	validModes := []string{"token", "basic", "none"}
 	if !cv.contains(validModes, config.Mode) {
-		cv.addError("server.auth.mode", fmt.Errorf("invalid auth mode '%s', must be one of: %v", config.Mode, validModes))
+		cv.addError(
+			"server.auth.mode",
+			fmt.Errorf("invalid auth mode '%s', must be one of: %v", config.Mode, validModes),
+		)
 	}
 
 	// Validate mode-specific requirements
 	switch config.Mode {
 	case "token":
 		if config.Token == "" && config.RequireAuth {
-			cv.addError("server.auth.token", fmt.Errorf("token is required when auth mode is 'token'"))
+			cv.addError(
+				"server.auth.token",
+				fmt.Errorf("token is required when auth mode is 'token'"),
+			)
 		}
 	case "basic":
 		if (config.Username == "" || config.Password == "") && config.RequireAuth {
-			cv.addError("server.auth.basic", fmt.Errorf("username and password are required when auth mode is 'basic'"))
+			cv.addError(
+				"server.auth.basic",
+				fmt.Errorf("username and password are required when auth mode is 'basic'"),
+			)
 		}
 	}
 
@@ -152,7 +168,10 @@ func (cv *ConfigValidator) validateBuild(config *BuildConfig) {
 		dangerousChars := []string{";", "&", "|", "$(", "`"}
 		for _, char := range dangerousChars {
 			if strings.Contains(config.Command, char) {
-				cv.addError("build.command", fmt.Errorf("command contains potentially dangerous character: %s", char))
+				cv.addError(
+					"build.command",
+					fmt.Errorf("command contains potentially dangerous character: %s", char),
+				)
 			}
 		}
 	}
@@ -181,7 +200,10 @@ func (cv *ConfigValidator) validateComponents(config *ComponentsConfig) {
 	// Validate exclude patterns
 	for i, pattern := range config.ExcludePatterns {
 		if pattern == "" {
-			cv.addError(fmt.Sprintf("components.exclude_patterns[%d]", i), fmt.Errorf("empty exclude pattern"))
+			cv.addError(
+				fmt.Sprintf("components.exclude_patterns[%d]", i),
+				fmt.Errorf("empty exclude pattern"),
+			)
 		}
 	}
 }
@@ -198,7 +220,10 @@ func (cv *ConfigValidator) validatePlugins(config *PluginsConfig) {
 	// Check for conflicts between enabled and disabled
 	for _, plugin := range config.Enabled {
 		if cv.contains(config.Disabled, plugin) {
-			cv.addError("plugins.enabled", fmt.Errorf("plugin '%s' is both enabled and disabled", plugin))
+			cv.addError(
+				"plugins.enabled",
+				fmt.Errorf("plugin '%s' is both enabled and disabled", plugin),
+			)
 		}
 	}
 }
@@ -208,18 +233,35 @@ func (cv *ConfigValidator) validateMonitoring(config *MonitoringConfig) {
 	// Validate log level
 	validLogLevels := []string{"debug", "info", "warn", "error", "fatal"}
 	if !cv.contains(validLogLevels, config.LogLevel) {
-		cv.addError("monitoring.log_level", fmt.Errorf("invalid log level '%s', must be one of: %v", config.LogLevel, validLogLevels))
+		cv.addError(
+			"monitoring.log_level",
+			fmt.Errorf(
+				"invalid log level '%s', must be one of: %v",
+				config.LogLevel,
+				validLogLevels,
+			),
+		)
 	}
 
 	// Validate log format
 	validLogFormats := []string{"json", "text"}
 	if !cv.contains(validLogFormats, config.LogFormat) {
-		cv.addError("monitoring.log_format", fmt.Errorf("invalid log format '%s', must be one of: %v", config.LogFormat, validLogFormats))
+		cv.addError(
+			"monitoring.log_format",
+			fmt.Errorf(
+				"invalid log format '%s', must be one of: %v",
+				config.LogFormat,
+				validLogFormats,
+			),
+		)
 	}
 
 	// Validate HTTP port
 	if config.HTTPPort < 0 || config.HTTPPort > 65535 {
-		cv.addError("monitoring.http_port", fmt.Errorf("HTTP port %d is not in valid range 0-65535", config.HTTPPort))
+		cv.addError(
+			"monitoring.http_port",
+			fmt.Errorf("HTTP port %d is not in valid range 0-65535", config.HTTPPort),
+		)
 	}
 
 	// Validate metrics path
@@ -261,21 +303,30 @@ func (cv *ConfigValidator) validateCompression(config *CompressionSettings) {
 
 	// Validate compression level
 	if config.Level < 1 || config.Level > 9 {
-		cv.addError("production.compression.level", fmt.Errorf("compression level %d is not in valid range 1-9", config.Level))
+		cv.addError(
+			"production.compression.level",
+			fmt.Errorf("compression level %d is not in valid range 1-9", config.Level),
+		)
 	}
 
 	// Validate algorithms
 	validAlgorithms := []string{"gzip", "brotli", "deflate"}
 	for i, algo := range config.Algorithms {
 		if !cv.contains(validAlgorithms, algo) {
-			cv.addError(fmt.Sprintf("production.compression.algorithms[%d]", i), fmt.Errorf("invalid compression algorithm '%s'", algo))
+			cv.addError(
+				fmt.Sprintf("production.compression.algorithms[%d]", i),
+				fmt.Errorf("invalid compression algorithm '%s'", algo),
+			)
 		}
 	}
 
 	// Validate file extensions
 	for i, ext := range config.Extensions {
 		if !strings.HasPrefix(ext, ".") {
-			cv.addError(fmt.Sprintf("production.compression.extensions[%d]", i), fmt.Errorf("file extension '%s' must start with '.'", ext))
+			cv.addError(
+				fmt.Sprintf("production.compression.extensions[%d]", i),
+				fmt.Errorf("file extension '%s' must start with '.'", ext),
+			)
 		}
 	}
 }
@@ -285,13 +336,19 @@ func (cv *ConfigValidator) validateSecurity(config *SecuritySettings) {
 	// Validate X-Frame-Options
 	validFrameOptions := []string{"DENY", "SAMEORIGIN"}
 	if config.XFrameOptions != "" && !cv.contains(validFrameOptions, config.XFrameOptions) {
-		cv.addError("production.security.x_frame_options", fmt.Errorf("invalid X-Frame-Options '%s'", config.XFrameOptions))
+		cv.addError(
+			"production.security.x_frame_options",
+			fmt.Errorf("invalid X-Frame-Options '%s'", config.XFrameOptions),
+		)
 	}
 
 	// Validate CSP
 	if config.CSP.Enabled && config.CSP.ReportURI != "" {
 		if !strings.HasPrefix(config.CSP.ReportURI, "http") {
-			cv.addError("production.security.csp.report_uri", fmt.Errorf("CSP report URI must be a valid HTTP URL"))
+			cv.addError(
+				"production.security.csp.report_uri",
+				fmt.Errorf("CSP report URI must be a valid HTTP URL"),
+			)
 		}
 	}
 }
@@ -300,16 +357,25 @@ func (cv *ConfigValidator) validateSecurity(config *SecuritySettings) {
 func (cv *ConfigValidator) validateDeployment(config *DeploymentSettings) {
 	validTargets := []string{"static", "docker", "serverless"}
 	if config.Target != "" && !cv.contains(validTargets, config.Target) {
-		cv.addError("production.deployment.target", fmt.Errorf("invalid deployment target '%s'", config.Target))
+		cv.addError(
+			"production.deployment.target",
+			fmt.Errorf("invalid deployment target '%s'", config.Target),
+		)
 	}
 
 	// Validate redirects
 	for i, redirect := range config.Redirects {
 		if redirect.From == "" || redirect.To == "" {
-			cv.addError(fmt.Sprintf("production.deployment.redirects[%d]", i), fmt.Errorf("redirect from and to fields are required"))
+			cv.addError(
+				fmt.Sprintf("production.deployment.redirects[%d]", i),
+				fmt.Errorf("redirect from and to fields are required"),
+			)
 		}
 		if redirect.Status < 300 || redirect.Status >= 400 {
-			cv.addError(fmt.Sprintf("production.deployment.redirects[%d].status", i), fmt.Errorf("invalid redirect status %d", redirect.Status))
+			cv.addError(
+				fmt.Sprintf("production.deployment.redirects[%d].status", i),
+				fmt.Errorf("invalid redirect status %d", redirect.Status),
+			)
 		}
 	}
 }

@@ -201,7 +201,11 @@ func (am *AlertManager) evaluateCondition(condition string, value, threshold flo
 }
 
 // triggerAlert creates and sends a new alert
-func (am *AlertManager) triggerAlert(ctx context.Context, rule *AlertRule, value, threshold float64) {
+func (am *AlertManager) triggerAlert(
+	ctx context.Context,
+	rule *AlertRule,
+	value, threshold float64,
+) {
 	// Check cooldown
 	if cooldownTime, exists := am.cooldowns[rule.Name]; exists {
 		if time.Since(cooldownTime) < rule.Cooldown {
@@ -492,7 +496,12 @@ func (wc *WebhookChannel) Send(ctx context.Context, alert Alert) error {
 		return fmt.Errorf("failed to marshal alert: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, wc.url, strings.NewReader(string(data)))
+	req, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodPost,
+		wc.url,
+		strings.NewReader(string(data)),
+	)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}

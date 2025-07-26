@@ -64,7 +64,11 @@ func (h *HealthCheckFunc) IsCritical() bool {
 }
 
 // NewHealthCheckFunc creates a new health check function
-func NewHealthCheckFunc(name string, critical bool, checkFn func(ctx context.Context) HealthCheck) *HealthCheckFunc {
+func NewHealthCheckFunc(
+	name string,
+	critical bool,
+	checkFn func(ctx context.Context) HealthCheck,
+) *HealthCheckFunc {
 	return &HealthCheckFunc{
 		name:     name,
 		checkFn:  checkFn,

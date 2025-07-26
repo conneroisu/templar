@@ -191,7 +191,10 @@ func (p *BulmaPlugin) setupWithNPM(ctx context.Context, config FrameworkConfig) 
 func (p *BulmaPlugin) setupWithCDN(ctx context.Context, config FrameworkConfig) error {
 	cdnUrl := config.CDNUrl
 	if cdnUrl == "" {
-		cdnUrl = fmt.Sprintf("https://cdn.jsdelivr.net/npm/bulma@%s/css/bulma.min.css", config.Version)
+		cdnUrl = fmt.Sprintf(
+			"https://cdn.jsdelivr.net/npm/bulma@%s/css/bulma.min.css",
+			config.Version,
+		)
 	}
 
 	// Create a simple CSS file that imports from CDN
@@ -565,9 +568,14 @@ func (p *BulmaPlugin) ValidateConfig(configPath string) error {
 }
 
 // ProcessCSS processes CSS using Bulma
-func (p *BulmaPlugin) ProcessCSS(ctx context.Context, input []byte, options ProcessingOptions) ([]byte, error) {
+func (p *BulmaPlugin) ProcessCSS(
+	ctx context.Context,
+	input []byte,
+	options ProcessingOptions,
+) ([]byte, error) {
 	// For Bulma, we primarily work with Sass compilation
-	if strings.HasSuffix(options.InputPath, ".sass") || strings.HasSuffix(options.InputPath, ".scss") {
+	if strings.HasSuffix(options.InputPath, ".sass") ||
+		strings.HasSuffix(options.InputPath, ".scss") {
 		return p.compileSass(ctx, input, options)
 	}
 
@@ -586,7 +594,11 @@ func (p *BulmaPlugin) ProcessCSS(ctx context.Context, input []byte, options Proc
 }
 
 // compileSass compiles Sass to CSS using sass
-func (p *BulmaPlugin) compileSass(ctx context.Context, input []byte, options ProcessingOptions) ([]byte, error) {
+func (p *BulmaPlugin) compileSass(
+	ctx context.Context,
+	input []byte,
+	options ProcessingOptions,
+) ([]byte, error) {
 	// Create temporary input file
 	tmpDir := os.TempDir()
 	inputFile := filepath.Join(tmpDir, "input.sass")
@@ -758,7 +770,11 @@ func (p *BulmaPlugin) isBulmaClass(className string) bool {
 }
 
 // OptimizeCSS optimizes CSS for Bulma
-func (p *BulmaPlugin) OptimizeCSS(ctx context.Context, css []byte, usedClasses []string) ([]byte, error) {
+func (p *BulmaPlugin) OptimizeCSS(
+	ctx context.Context,
+	css []byte,
+	usedClasses []string,
+) ([]byte, error) {
 	options := ProcessingOptions{
 		Purge:       true,
 		Optimize:    true,
@@ -997,7 +1013,15 @@ func getBulmaTemplates() []ComponentTemplate {
 					},
 				},
 			},
-			Classes: []string{"button", "is-primary", "is-link", "is-info", "is-success", "is-warning", "is-danger"},
+			Classes: []string{
+				"button",
+				"is-primary",
+				"is-link",
+				"is-info",
+				"is-success",
+				"is-warning",
+				"is-danger",
+			},
 		},
 		{
 			Name:        "Card",
@@ -1038,7 +1062,14 @@ func getBulmaTemplates() []ComponentTemplate {
 				{Name: "message", Type: "string", Optional: false},
 				{Name: "color", Type: "string", Optional: false},
 			},
-			Classes: []string{"notification", "is-primary", "is-info", "is-success", "is-warning", "is-danger"},
+			Classes: []string{
+				"notification",
+				"is-primary",
+				"is-info",
+				"is-success",
+				"is-warning",
+				"is-danger",
+			},
 		},
 	}
 }

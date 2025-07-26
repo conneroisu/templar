@@ -84,20 +84,30 @@ func init() {
 	performanceBaselineCmd.AddCommand(performanceBaselineListCmd)
 
 	// Global performance flags
-	performanceCmd.PersistentFlags().StringSliceVar(&performancePackages, "packages", []string{"./..."}, "Go packages to benchmark")
-	performanceCmd.PersistentFlags().StringVar(&performanceFormat, "format", "text", "Output format (text, json, junit, github)")
-	performanceCmd.PersistentFlags().StringVar(&performanceOutput, "output", "", "Output file (defaults to stdout)")
-	performanceCmd.PersistentFlags().StringVar(&performanceBaseline, "baseline-dir", ".performance-baselines", "Directory to store performance baselines")
+	performanceCmd.PersistentFlags().
+		StringSliceVar(&performancePackages, "packages", []string{"./..."}, "Go packages to benchmark")
+	performanceCmd.PersistentFlags().
+		StringVar(&performanceFormat, "format", "text", "Output format (text, json, junit, github)")
+	performanceCmd.PersistentFlags().
+		StringVar(&performanceOutput, "output", "", "Output file (defaults to stdout)")
+	performanceCmd.PersistentFlags().
+		StringVar(&performanceBaseline, "baseline-dir", ".performance-baselines", "Directory to store performance baselines")
 
 	// Performance check specific flags
-	performanceCheckCmd.Flags().BoolVar(&performanceFailOn, "fail-on-critical", false, "Fail CI on critical regressions")
+	performanceCheckCmd.Flags().
+		BoolVar(&performanceFailOn, "fail-on-critical", false, "Fail CI on critical regressions")
 
 	// Threshold configuration flags
-	performanceCheckCmd.Flags().Float64Var(&performanceThresholds.SlownessThreshold, "slowness-threshold", 1.15, "Performance degradation threshold (e.g., 1.15 = 15% slower)")
-	performanceCheckCmd.Flags().Float64Var(&performanceThresholds.MemoryThreshold, "memory-threshold", 1.20, "Memory usage increase threshold (e.g., 1.20 = 20% more memory)")
-	performanceCheckCmd.Flags().Float64Var(&performanceThresholds.AllocThreshold, "alloc-threshold", 1.25, "Allocation increase threshold (e.g., 1.25 = 25% more allocations)")
-	performanceCheckCmd.Flags().IntVar(&performanceThresholds.MinSamples, "min-samples", 5, "Minimum samples required for regression detection")
-	performanceCheckCmd.Flags().Float64Var(&performanceThresholds.ConfidenceLevel, "confidence-level", 0.95, "Statistical confidence level (e.g., 0.95 = 95%)")
+	performanceCheckCmd.Flags().
+		Float64Var(&performanceThresholds.SlownessThreshold, "slowness-threshold", 1.15, "Performance degradation threshold (e.g., 1.15 = 15% slower)")
+	performanceCheckCmd.Flags().
+		Float64Var(&performanceThresholds.MemoryThreshold, "memory-threshold", 1.20, "Memory usage increase threshold (e.g., 1.20 = 20% more memory)")
+	performanceCheckCmd.Flags().
+		Float64Var(&performanceThresholds.AllocThreshold, "alloc-threshold", 1.25, "Allocation increase threshold (e.g., 1.25 = 25% more allocations)")
+	performanceCheckCmd.Flags().
+		IntVar(&performanceThresholds.MinSamples, "min-samples", 5, "Minimum samples required for regression detection")
+	performanceCheckCmd.Flags().
+		Float64Var(&performanceThresholds.ConfidenceLevel, "confidence-level", 0.95, "Statistical confidence level (e.g., 0.95 = 95%)")
 
 	// Set default thresholds
 	performanceThresholds = performance.DefaultThresholds()

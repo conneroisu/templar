@@ -295,11 +295,18 @@ func CSPViolationHandler(logger logging.Logger) http.HandlerFunc {
 		var report CSPViolationReport
 		if err := json.NewDecoder(r.Body).Decode(&report); err != nil {
 			if logger != nil {
-				logger.Warn(r.Context(),
-					errors.NewSecurityError("CSP_REPORT_PARSE_ERROR", "Failed to parse CSP violation report"),
+				logger.Warn(
+					r.Context(),
+					errors.NewSecurityError(
+						"CSP_REPORT_PARSE_ERROR",
+						"Failed to parse CSP violation report",
+					),
 					"CSP: Failed to parse violation report",
-					"error", err.Error(),
-					"ip", getClientIP(r))
+					"error",
+					err.Error(),
+					"ip",
+					getClientIP(r),
+				)
 			}
 			http.Error(w, "Bad Request", http.StatusBadRequest)
 			return
@@ -307,15 +314,26 @@ func CSPViolationHandler(logger logging.Logger) http.HandlerFunc {
 
 		// Log the CSP violation
 		if logger != nil {
-			logger.Warn(r.Context(),
-				errors.NewSecurityError("CSP_VIOLATION", "Content Security Policy violation detected"),
+			logger.Warn(
+				r.Context(),
+				errors.NewSecurityError(
+					"CSP_VIOLATION",
+					"Content Security Policy violation detected",
+				),
 				"CSP: Policy violation detected",
-				"document_uri", report.CSPReport.DocumentURI,
-				"violated_directive", report.CSPReport.ViolatedDirective,
-				"blocked_uri", report.CSPReport.BlockedURI,
-				"source_file", report.CSPReport.SourceFile,
-				"line_number", report.CSPReport.LineNumber,
-				"ip", getClientIP(r))
+				"document_uri",
+				report.CSPReport.DocumentURI,
+				"violated_directive",
+				report.CSPReport.ViolatedDirective,
+				"blocked_uri",
+				report.CSPReport.BlockedURI,
+				"source_file",
+				report.CSPReport.SourceFile,
+				"line_number",
+				report.CSPReport.LineNumber,
+				"ip",
+				getClientIP(r),
+			)
 		}
 
 		w.WriteHeader(http.StatusNoContent)
@@ -352,18 +370,26 @@ func SecurityMiddleware(secConfig *SecurityConfig) func(http.Handler) http.Handl
 			// Check blocked user agents
 			if err := validation.ValidateUserAgent(r.UserAgent(), secConfig.BlockedUserAgents); err != nil {
 				if secConfig.Logger != nil {
-					secConfig.Logger.Warn(r.Context(),
-						errors.NewSecurityError("BLOCKED_USER_AGENT", "Blocked user agent attempted access"),
+					secConfig.Logger.Warn(
+						r.Context(),
+						errors.NewSecurityError(
+							"BLOCKED_USER_AGENT",
+							"Blocked user agent attempted access",
+						),
 						"Security: Blocked user agent",
-						"user_agent", r.UserAgent(),
-						"ip", getClientIP(r))
+						"user_agent",
+						r.UserAgent(),
+						"ip",
+						getClientIP(r),
+					)
 				}
 				http.Error(w, "Forbidden", http.StatusForbidden)
 				return
 			}
 
 			// Validate origin for non-GET requests
-			if r.Method != http.MethodGet && r.Method != http.MethodHead && r.Method != http.MethodOptions {
+			if r.Method != http.MethodGet && r.Method != http.MethodHead &&
+				r.Method != http.MethodOptions {
 				origin := r.Header.Get("Origin")
 				if origin == "" {
 					// For same-origin requests, browser doesn't send Origin header
@@ -395,7 +421,12 @@ func SecurityMiddleware(secConfig *SecurityConfig) func(http.Handler) http.Handl
 }
 
 // applySecurityHeaders applies all configured security headers
-func applySecurityHeaders(w http.ResponseWriter, r *http.Request, config *SecurityConfig, nonce string) {
+func applySecurityHeaders(
+	w http.ResponseWriter,
+	r *http.Request,
+	config *SecurityConfig,
+	nonce string,
+) {
 	// Content Security Policy
 	if config.CSP != nil {
 		cspHeader := buildCSPHeader(config.CSP, nonce)
@@ -496,7 +527,10 @@ func buildCSPHeader(csp *CSPConfig, nonce string) string {
 	}
 
 	if len(csp.RequireSRIFor) > 0 {
-		directives = append(directives, fmt.Sprintf("require-sri-for %s", strings.Join(csp.RequireSRIFor, " ")))
+		directives = append(
+			directives,
+			fmt.Sprintf("require-sri-for %s", strings.Join(csp.RequireSRIFor, " ")),
+		)
 	}
 
 	if csp.ReportURI != "" {

@@ -59,7 +59,10 @@ func (w *ConfigWizard) Run() (*Config, error) {
 		fmt.Printf("🔍 Detected project type: %s\n", w.detectedStructure.ProjectType)
 
 		if len(w.detectedStructure.ComponentDirs) > 0 {
-			fmt.Printf("📁 Found existing directories: %s\n", strings.Join(w.detectedStructure.ComponentDirs, ", "))
+			fmt.Printf(
+				"📁 Found existing directories: %s\n",
+				strings.Join(w.detectedStructure.ComponentDirs, ", "),
+			)
 		}
 
 		if w.detectedStructure.HasExistingTempl {
@@ -163,7 +166,10 @@ func (w *ConfigWizard) configureComponents() error {
 
 	// Use detected component directories if available
 	if w.detectedStructure != nil && len(w.detectedStructure.ComponentDirs) > 0 {
-		fmt.Printf("Using detected directories: %s\n", strings.Join(w.detectedStructure.ComponentDirs, ", "))
+		fmt.Printf(
+			"Using detected directories: %s\n",
+			strings.Join(w.detectedStructure.ComponentDirs, ", "),
+		)
 		for _, path := range w.detectedStructure.ComponentDirs {
 			if w.askBool(fmt.Sprintf("Include %s", path), true) {
 				scanPaths = append(scanPaths, path)
@@ -355,7 +361,11 @@ func (w *ConfigWizard) configureMonitoring() error {
 	fmt.Println("---------------------------")
 
 	w.config.Monitoring.Enabled = w.askBool("Enable application monitoring", true)
-	w.config.Monitoring.LogLevel = w.askChoice("Log level", []string{"debug", "info", "warn", "error", "fatal"}, "info")
+	w.config.Monitoring.LogLevel = w.askChoice(
+		"Log level",
+		[]string{"debug", "info", "warn", "error", "fatal"},
+		"info",
+	)
 	w.config.Monitoring.LogFormat = w.askChoice("Log format", []string{"json", "text"}, "json")
 	w.config.Monitoring.AlertsEnabled = w.askBool("Enable alerts", false)
 
@@ -425,7 +435,11 @@ func (w *ConfigWizard) askInt(prompt string, defaultValue, min, max int) (int, e
 		}
 
 		if value < min || value > max {
-			fmt.Printf("❌ Number out of range. Please enter a number between %d and %d.\n", min, max)
+			fmt.Printf(
+				"❌ Number out of range. Please enter a number between %d and %d.\n",
+				min,
+				max,
+			)
 			continue
 		}
 
@@ -483,7 +497,10 @@ func (w *ConfigWizard) askChoice(prompt string, choices []string, defaultValue s
 func (w *ConfigWizard) WriteConfigFile(filename string) error {
 	// Check if file already exists
 	if _, err := os.Stat(filename); err == nil {
-		overwrite := w.askBool(fmt.Sprintf("Configuration file %s already exists. Overwrite", filename), false)
+		overwrite := w.askBool(
+			fmt.Sprintf("Configuration file %s already exists. Overwrite", filename),
+			false,
+		)
 		if !overwrite {
 			return fmt.Errorf("configuration file already exists")
 		}
@@ -568,7 +585,9 @@ func (w *ConfigWizard) generateYAMLConfig() string {
 	builder.WriteString("development:\n")
 	builder.WriteString(fmt.Sprintf("  hot_reload: %t\n", w.config.Development.HotReload))
 	builder.WriteString(fmt.Sprintf("  css_injection: %t\n", w.config.Development.CSSInjection))
-	builder.WriteString(fmt.Sprintf("  state_preservation: %t\n", w.config.Development.StatePreservation))
+	builder.WriteString(
+		fmt.Sprintf("  state_preservation: %t\n", w.config.Development.StatePreservation),
+	)
 	builder.WriteString(fmt.Sprintf("  error_overlay: %t\n", w.config.Development.ErrorOverlay))
 	builder.WriteString("\n")
 
@@ -590,7 +609,8 @@ func (w *ConfigWizard) generateYAMLConfig() string {
 	}
 
 	// Monitoring configuration
-	if w.config.Monitoring.Enabled || w.config.Monitoring.LogLevel != "" || w.config.Monitoring.LogFormat != "" {
+	if w.config.Monitoring.Enabled || w.config.Monitoring.LogLevel != "" ||
+		w.config.Monitoring.LogFormat != "" {
 		builder.WriteString("\nmonitoring:\n")
 		builder.WriteString(fmt.Sprintf("  enabled: %t\n", w.config.Monitoring.Enabled))
 		if w.config.Monitoring.LogLevel != "" {
@@ -600,12 +620,16 @@ func (w *ConfigWizard) generateYAMLConfig() string {
 			builder.WriteString(fmt.Sprintf("  log_format: %s\n", w.config.Monitoring.LogFormat))
 		}
 		if w.config.Monitoring.MetricsPath != "" {
-			builder.WriteString(fmt.Sprintf("  metrics_path: \"%s\"\n", w.config.Monitoring.MetricsPath))
+			builder.WriteString(
+				fmt.Sprintf("  metrics_path: \"%s\"\n", w.config.Monitoring.MetricsPath),
+			)
 		}
 		if w.config.Monitoring.HTTPPort != 0 && w.config.Monitoring.HTTPPort != 8081 {
 			builder.WriteString(fmt.Sprintf("  http_port: %d\n", w.config.Monitoring.HTTPPort))
 		}
-		builder.WriteString(fmt.Sprintf("  alerts_enabled: %t\n", w.config.Monitoring.AlertsEnabled))
+		builder.WriteString(
+			fmt.Sprintf("  alerts_enabled: %t\n", w.config.Monitoring.AlertsEnabled),
+		)
 	}
 
 	return builder.String()
@@ -624,7 +648,8 @@ func (w *ConfigWizard) detectProjectStructure() {
 	// Check for existing files and directories
 	w.detectedStructure.HasGoMod = w.fileExists("go.mod")
 	w.detectedStructure.HasNodeModules = w.fileExists("node_modules")
-	w.detectedStructure.HasTailwindCSS = w.fileExists("tailwind.config.js") || w.fileExists("tailwind.config.ts")
+	w.detectedStructure.HasTailwindCSS = w.fileExists("tailwind.config.js") ||
+		w.fileExists("tailwind.config.ts")
 	w.detectedStructure.HasTypeScript = w.fileExists("tsconfig.json")
 
 	// Scan for existing .templ files

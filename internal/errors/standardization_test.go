@@ -64,7 +64,13 @@ func TestTemplarError(t *testing.T) {
 }
 
 func TestValidationError(t *testing.T) {
-	fieldErr := NewFieldValidationError("username", "invalid", "must be at least 3 characters", "Use a longer username", "Avoid special characters")
+	fieldErr := NewFieldValidationError(
+		"username",
+		"invalid",
+		"must be at least 3 characters",
+		"Use a longer username",
+		"Avoid special characters",
+	)
 
 	if fieldErr.Field() != "username" {
 		t.Errorf("Field() = %v, want %v", fieldErr.Field(), "username")
@@ -94,7 +100,12 @@ func TestValidationErrorCollection(t *testing.T) {
 	}
 
 	// Add field error
-	collection.AddField("email", "invalid-email", "must be valid email", "Use format: user@domain.com")
+	collection.AddField(
+		"email",
+		"invalid-email",
+		"must be valid email",
+		"Use format: user@domain.com",
+	)
 
 	if !collection.HasErrors() {
 		t.Error("HasErrors() should return true after adding error")
@@ -298,7 +309,16 @@ func TestErrorContext(t *testing.T) {
 
 	context := GetErrorContext(err)
 
-	expectedKeys := []string{"component", "file", "line", "column", "type", "code", "recoverable", "custom"}
+	expectedKeys := []string{
+		"component",
+		"file",
+		"line",
+		"column",
+		"type",
+		"code",
+		"recoverable",
+		"custom",
+	}
 	for _, key := range expectedKeys {
 		if _, exists := context[key]; !exists {
 			t.Errorf("Context should contain key %s", key)

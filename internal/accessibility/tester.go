@@ -151,17 +151,26 @@ func (tester *ComponentAccessibilityTester) GetAvailableRules() []AccessibilityR
 }
 
 // GetRulesByWCAGLevel returns rules for a specific WCAG level
-func (tester *ComponentAccessibilityTester) GetRulesByWCAGLevel(level WCAGLevel) []AccessibilityRule {
+func (tester *ComponentAccessibilityTester) GetRulesByWCAGLevel(
+	level WCAGLevel,
+) []AccessibilityRule {
 	engine := tester.engine.(*DefaultAccessibilityEngine)
 	return engine.getApplicableRules(level, nil, nil)
 }
 
 // TestAllComponents runs accessibility tests on all registered components
-func (tester *ComponentAccessibilityTester) TestAllComponents(ctx context.Context) (map[string]*AccessibilityReport, error) {
+func (tester *ComponentAccessibilityTester) TestAllComponents(
+	ctx context.Context,
+) (map[string]*AccessibilityReport, error) {
 	components := tester.registry.GetAll()
 	reports := make(map[string]*AccessibilityReport)
 
-	tester.logger.Info(ctx, "Starting accessibility test for all components", "count", len(components))
+	tester.logger.Info(
+		ctx,
+		"Starting accessibility test for all components",
+		"count",
+		len(components),
+	)
 
 	for _, component := range components {
 		// Use default props or empty props for testing
@@ -196,12 +205,19 @@ func (tester *ComponentAccessibilityTester) TestComponentWithMockData(
 }
 
 // AutoFix attempts to automatically fix accessibility issues in HTML
-func (tester *ComponentAccessibilityTester) AutoFix(ctx context.Context, html string, violations []AccessibilityViolation) (string, error) {
+func (tester *ComponentAccessibilityTester) AutoFix(
+	ctx context.Context,
+	html string,
+	violations []AccessibilityViolation,
+) (string, error) {
 	return tester.engine.AutoFix(ctx, html, violations)
 }
 
 // GetAccessibilityScoreForComponent returns a simplified accessibility score
-func (tester *ComponentAccessibilityTester) GetAccessibilityScoreForComponent(ctx context.Context, componentName string) (float64, error) {
+func (tester *ComponentAccessibilityTester) GetAccessibilityScoreForComponent(
+	ctx context.Context,
+	componentName string,
+) (float64, error) {
 	report, err := tester.TestComponent(ctx, componentName, nil)
 	if err != nil {
 		return 0, err
@@ -265,7 +281,10 @@ func (tester *ComponentAccessibilityTester) renderComponentToHTML(
 }
 
 // generateMockHTML creates mock HTML for testing based on component name patterns
-func (tester *ComponentAccessibilityTester) generateMockHTML(component *types.ComponentInfo, props map[string]interface{}) string {
+func (tester *ComponentAccessibilityTester) generateMockHTML(
+	component *types.ComponentInfo,
+	props map[string]interface{},
+) string {
 	name := strings.ToLower(component.Name)
 
 	// Generate HTML based on component name patterns
@@ -325,7 +344,9 @@ func (tester *ComponentAccessibilityTester) generateMockHTML(component *types.Co
 }
 
 // getDefaultPropsForComponent returns default props for a component
-func (tester *ComponentAccessibilityTester) getDefaultPropsForComponent(component *types.ComponentInfo) map[string]interface{} {
+func (tester *ComponentAccessibilityTester) getDefaultPropsForComponent(
+	component *types.ComponentInfo,
+) map[string]interface{} {
 	props := make(map[string]interface{})
 
 	// Set default values for common parameter patterns
@@ -357,7 +378,9 @@ func (tester *ComponentAccessibilityTester) getDefaultPropsForComponent(componen
 }
 
 // generateMockPropsForComponent generates realistic mock data for component props
-func (tester *ComponentAccessibilityTester) generateMockPropsForComponent(component *types.ComponentInfo) map[string]interface{} {
+func (tester *ComponentAccessibilityTester) generateMockPropsForComponent(
+	component *types.ComponentInfo,
+) map[string]interface{} {
 	props := make(map[string]interface{})
 
 	for _, param := range component.Parameters {
@@ -409,7 +432,9 @@ func (tester *ComponentAccessibilityTester) generateMockString(paramName string)
 }
 
 // Helper methods for insights
-func (tester *ComponentAccessibilityTester) getHighestCompliantLevel(report *AccessibilityReport) WCAGLevel {
+func (tester *ComponentAccessibilityTester) getHighestCompliantLevel(
+	report *AccessibilityReport,
+) WCAGLevel {
 	if report.Summary.WCAGCompliance.LevelAAA.Status == StatusCompliant {
 		return WCAGLevelAAA
 	}
@@ -422,7 +447,9 @@ func (tester *ComponentAccessibilityTester) getHighestCompliantLevel(report *Acc
 	return WCAGLevelA // Default
 }
 
-func (tester *ComponentAccessibilityTester) getCriticalIssues(violations []AccessibilityViolation) []AccessibilityIssue {
+func (tester *ComponentAccessibilityTester) getCriticalIssues(
+	violations []AccessibilityViolation,
+) []AccessibilityIssue {
 	issues := []AccessibilityIssue{}
 	for _, violation := range violations {
 		if violation.Impact == ImpactCritical || violation.Severity == SeverityError {
@@ -437,7 +464,9 @@ func (tester *ComponentAccessibilityTester) getCriticalIssues(violations []Acces
 	return issues
 }
 
-func (tester *ComponentAccessibilityTester) getQuickWins(violations []AccessibilityViolation) []AccessibilityIssue {
+func (tester *ComponentAccessibilityTester) getQuickWins(
+	violations []AccessibilityViolation,
+) []AccessibilityIssue {
 	issues := []AccessibilityIssue{}
 	for _, violation := range violations {
 		if violation.CanAutoFix || tester.isQuickFix(violation) {
@@ -452,7 +481,9 @@ func (tester *ComponentAccessibilityTester) getQuickWins(violations []Accessibil
 	return issues
 }
 
-func (tester *ComponentAccessibilityTester) getRecommendations(report *AccessibilityReport) []string {
+func (tester *ComponentAccessibilityTester) getRecommendations(
+	report *AccessibilityReport,
+) []string {
 	recommendations := []string{}
 
 	if report.Summary.CriticalImpact > 0 {
@@ -471,7 +502,10 @@ func (tester *ComponentAccessibilityTester) getRecommendations(report *Accessibi
 	// Find most common issues
 	for rule, count := range ruleFrequency {
 		if count > 1 {
-			recommendations = append(recommendations, fmt.Sprintf("Multiple instances of %s found - consider component-wide fix", rule))
+			recommendations = append(
+				recommendations,
+				fmt.Sprintf("Multiple instances of %s found - consider component-wide fix", rule),
+			)
 		}
 	}
 
@@ -482,7 +516,10 @@ func (tester *ComponentAccessibilityTester) getNextSteps(report *AccessibilityRe
 	steps := []string{}
 
 	if len(report.Violations) == 0 {
-		steps = append(steps, "Great! No accessibility violations found. Consider testing with screen reader.")
+		steps = append(
+			steps,
+			"Great! No accessibility violations found. Consider testing with screen reader.",
+		)
 		return steps
 	}
 
@@ -513,7 +550,9 @@ func (tester *ComponentAccessibilityTester) getNextSteps(report *AccessibilityRe
 	return steps
 }
 
-func (tester *ComponentAccessibilityTester) estimateFixEffort(violation AccessibilityViolation) FixEffort {
+func (tester *ComponentAccessibilityTester) estimateFixEffort(
+	violation AccessibilityViolation,
+) FixEffort {
 	if violation.CanAutoFix {
 		return FixEffortLow
 	}

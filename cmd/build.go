@@ -36,7 +36,8 @@ func init() {
 	rootCmd.AddCommand(buildCmd)
 
 	buildCmd.Flags().StringVarP(&buildOutput, "output", "o", "", "Output directory")
-	buildCmd.Flags().BoolVar(&buildProduction, "production", false, "Production build optimizations")
+	buildCmd.Flags().
+		BoolVar(&buildProduction, "production", false, "Production build optimizations")
 	buildCmd.Flags().BoolVar(&buildAnalyze, "analyze", false, "Generate build analysis")
 	buildCmd.Flags().BoolVar(&buildClean, "clean", false, "Clean build artifacts before building")
 }

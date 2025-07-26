@@ -164,7 +164,12 @@ func TestBuildPipeline_CacheIntegration(t *testing.T) {
 		if len(results) >= 2 {
 			secondBuild := results[1]
 			assert.True(t, secondBuild.CacheHit, "Second build should be cache hit")
-			assert.Less(t, secondBuild.Duration, firstBuild.Duration, "Cached build should be faster")
+			assert.Less(
+				t,
+				secondBuild.Duration,
+				firstBuild.Duration,
+				"Cached build should be faster",
+			)
 		}
 		resultsMutex.Unlock()
 
@@ -266,8 +271,16 @@ func TestBuildPipeline_ConcurrentBuilds(t *testing.T) {
 
 		// Should process at least 80% of builds (accounting for queue limits)
 		minExpected := int(float64(numBuilds) * 0.8)
-		assert.GreaterOrEqual(t, processedBuilds, minExpected,
-			fmt.Sprintf("Should have processed at least %d builds (80%% of %d)", minExpected, numBuilds))
+		assert.GreaterOrEqual(
+			t,
+			processedBuilds,
+			minExpected,
+			fmt.Sprintf(
+				"Should have processed at least %d builds (80%% of %d)",
+				minExpected,
+				numBuilds,
+			),
+		)
 
 		// Count cache hits vs misses
 		cacheHits := 0
@@ -282,13 +295,23 @@ func TestBuildPipeline_ConcurrentBuilds(t *testing.T) {
 
 		if processedBuilds > 0 {
 			assert.Greater(t, cacheMisses, 0, "Should have some cache misses")
-			assert.Equal(t, processedBuilds, cacheHits+cacheMisses, "All processed builds should be accounted for")
+			assert.Equal(
+				t,
+				processedBuilds,
+				cacheHits+cacheMisses,
+				"All processed builds should be accounted for",
+			)
 		}
 		resultsMutex.Unlock()
 
 		// Verify metrics match actual processed builds
 		metrics := bp.GetMetrics()
-		assert.Equal(t, int64(processedBuilds), metrics.TotalBuilds, "Metrics should match processed build count")
+		assert.Equal(
+			t,
+			int64(processedBuilds),
+			metrics.TotalBuilds,
+			"Metrics should match processed build count",
+		)
 		if processedBuilds > 1 {
 			assert.Greater(t, metrics.CacheHits, int64(0), "Should have cache hits in metrics")
 		}
@@ -488,7 +511,12 @@ func TestBuildPipeline_MetricsAndCallbacks(t *testing.T) {
 		metrics := bp.GetMetrics()
 		assert.Equal(t, int64(validBuilds), metrics.TotalBuilds, "Total builds should match")
 		assert.Greater(t, metrics.SuccessfulBuilds, int64(0), "Should have successful builds")
-		assert.Greater(t, metrics.AverageDuration, time.Duration(0), "Should have average build time")
+		assert.Greater(
+			t,
+			metrics.AverageDuration,
+			time.Duration(0),
+			"Should have average build time",
+		)
 	})
 
 	t.Run("callbacks receive all build results", func(t *testing.T) {
@@ -534,7 +562,12 @@ func TestBuildPipeline_MetricsAndCallbacks(t *testing.T) {
 		// Verify callbacks were called
 		callbackMutex.Lock()
 		assert.Equal(t, numBuilds, len(callbackResults), "Should have results for all builds")
-		assert.Equal(t, numBuilds*2, callbackCount, "Both callbacks should be called for each build")
+		assert.Equal(
+			t,
+			numBuilds*2,
+			callbackCount,
+			"Both callbacks should be called for each build",
+		)
 		callbackMutex.Unlock()
 	})
 }

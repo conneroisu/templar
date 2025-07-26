@@ -8,7 +8,10 @@ import (
 
 func main() {
 	ctx := context.Background()
-	component := Button("This is sample content for the component preview. Lorem ipsum dolor sit amet, consectetur adipiscing elit.", "primary")
+	component := Button(
+		"This is sample content for the component preview. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+		"primary",
+	)
 
 	err := component.Render(ctx, os.Stdout)
 	if err != nil {

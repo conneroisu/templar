@@ -45,7 +45,8 @@ func init() {
 	rootCmd.AddCommand(tutorialCmd)
 
 	tutorialCmd.Flags().BoolVar(&tutorialQuick, "quick", false, "Quick 5-minute tutorial overview")
-	tutorialCmd.Flags().StringVar(&tutorialTopicFlag, "topic", "", "Focus on specific topic (init, serve, preview, build, deploy)")
+	tutorialCmd.Flags().
+		StringVar(&tutorialTopicFlag, "topic", "", "Focus on specific topic (init, serve, preview, build, deploy)")
 }
 
 func runTutorial(cmd *cobra.Command, args []string) error {
@@ -179,7 +180,10 @@ func (t *Tutorial) RunTopic(topic string) error {
 	case "advanced":
 		return t.runAdvancedTopic()
 	default:
-		return fmt.Errorf("unknown topic: %s. Available: init, serve, preview, build, advanced", topic)
+		return fmt.Errorf(
+			"unknown topic: %s. Available: init, serve, preview, build, advanced",
+			topic,
+		)
 	}
 }
 

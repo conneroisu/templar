@@ -67,7 +67,12 @@ func TestSkipList_PercentileCalculation(t *testing.T) {
 	for _, test := range tests {
 		result := sl.GetPercentile(test.percentile)
 		if result != test.expected {
-			t.Errorf("Percentile %.0f: expected %.1f, got %.1f", test.percentile, test.expected, result)
+			t.Errorf(
+				"Percentile %.0f: expected %.1f, got %.1f",
+				test.percentile,
+				test.expected,
+				result,
+			)
 		}
 	}
 }
@@ -366,7 +371,9 @@ func TestPercentileCalculator_MemoryEfficiency(t *testing.T) {
 		footprint := pc.MemoryFootprint()
 		expectedRange := size * 56 // Skip list overhead: ~56 bytes per element (realistic)
 
-		if footprint > int(float64(expectedRange)*1.5) { // Allow 50% overhead for measurement variance
+		if footprint > int(
+			float64(expectedRange)*1.5,
+		) { // Allow 50% overhead for measurement variance
 			t.Errorf("Memory footprint too high for size %d: %d bytes (expected ~%d)",
 				size, footprint, expectedRange)
 		}

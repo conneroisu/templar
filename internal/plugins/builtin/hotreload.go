@@ -123,7 +123,10 @@ func (hrp *HotReloadPlugin) Middleware() []plugins.MiddlewareFunc {
 }
 
 // WebSocketHandler handles WebSocket connections for hot reload
-func (hrp *HotReloadPlugin) WebSocketHandler(ctx context.Context, conn plugins.WebSocketConnection) error {
+func (hrp *HotReloadPlugin) WebSocketHandler(
+	ctx context.Context,
+	conn plugins.WebSocketConnection,
+) error {
 	if !hrp.enabled {
 		return fmt.Errorf("hot reload plugin is disabled")
 	}
@@ -196,7 +199,10 @@ func (hrp *HotReloadPlugin) WatchPatterns() []string {
 }
 
 // HandleFileChange handles file change events for hot reload
-func (hrp *HotReloadPlugin) HandleFileChange(ctx context.Context, event plugins.FileChangeEvent) error {
+func (hrp *HotReloadPlugin) HandleFileChange(
+	ctx context.Context,
+	event plugins.FileChangeEvent,
+) error {
 	if !hrp.enabled {
 		return nil
 	}

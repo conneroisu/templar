@@ -25,7 +25,10 @@ func NewTemplCompiler() *TemplCompiler {
 }
 
 // Compile compiles a component using templ generate with context-based timeout
-func (tc *TemplCompiler) Compile(ctx context.Context, component *types.ComponentInfo) ([]byte, error) {
+func (tc *TemplCompiler) Compile(
+	ctx context.Context,
+	component *types.ComponentInfo,
+) ([]byte, error) {
 	// Validate command and arguments to prevent command injection
 	if err := tc.validateCommand(); err != nil {
 		return nil, fmt.Errorf("command validation failed: %w", err)
@@ -48,7 +51,11 @@ func (tc *TemplCompiler) Compile(ctx context.Context, component *types.Component
 }
 
 // CompileWithPools performs compilation using object pools for memory efficiency with context-based timeout
-func (tc *TemplCompiler) CompileWithPools(ctx context.Context, component *types.ComponentInfo, pools *ObjectPools) ([]byte, error) {
+func (tc *TemplCompiler) CompileWithPools(
+	ctx context.Context,
+	component *types.ComponentInfo,
+	pools *ObjectPools,
+) ([]byte, error) {
 	// Validate command and arguments to prevent command injection
 	if err := tc.validateCommand(); err != nil {
 		return nil, fmt.Errorf("command validation failed: %w", err)

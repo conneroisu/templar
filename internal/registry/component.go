@@ -254,7 +254,8 @@ func sanitizeIdentifier(identifier string) string {
 	// Only allow alphanumeric characters, underscores, and dots (for package names)
 	var cleaned []rune
 	for _, r := range identifier {
-		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_' || r == '.' {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_' ||
+			r == '.' {
 			cleaned = append(cleaned, r)
 		}
 	}
@@ -262,7 +263,17 @@ func sanitizeIdentifier(identifier string) string {
 	cleanedId := string(cleaned)
 
 	// Additional security check for dangerous system identifiers
-	dangerousPatterns := []string{"etc", "system32", "windows", "usr", "bin", "var", "tmp", "passwd", "shadow"}
+	dangerousPatterns := []string{
+		"etc",
+		"system32",
+		"windows",
+		"usr",
+		"bin",
+		"var",
+		"tmp",
+		"passwd",
+		"shadow",
+	}
 	lowerCleaned := strings.ToLower(cleanedId)
 	for _, pattern := range dangerousPatterns {
 		if strings.Contains(lowerCleaned, pattern) {

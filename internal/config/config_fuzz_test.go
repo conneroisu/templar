@@ -75,7 +75,10 @@ components:
 			}
 
 			// Ensure host doesn't contain control characters
-			if strings.ContainsAny(config.Server.Host, "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f") {
+			if strings.ContainsAny(
+				config.Server.Host,
+				"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f",
+			) {
 				t.Errorf("Host contains control characters: %q", config.Server.Host)
 			}
 
@@ -84,7 +87,10 @@ components:
 				if strings.Contains(path, "..") && !strings.HasPrefix(path, "./") {
 					t.Errorf("Potentially dangerous path traversal: %q", path)
 				}
-				if strings.ContainsAny(path, "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f") {
+				if strings.ContainsAny(
+					path,
+					"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f",
+				) {
 					t.Errorf("Path contains control characters: %q", path)
 				}
 			}
@@ -95,7 +101,9 @@ components:
 // FuzzConfigValidation tests validation of configuration structures
 func FuzzConfigValidation(f *testing.F) {
 	// Seed with various config structures
-	f.Add(`{"server":{"port":8080,"host":"localhost"},"components":{"scan_paths":["./components"]}}`)
+	f.Add(
+		`{"server":{"port":8080,"host":"localhost"},"components":{"scan_paths":["./components"]}}`,
+	)
 	f.Add(`{"server":{"port":"8080","host":"localhost"}}`)
 	f.Add(`{"server":{"port":999999,"host":"localhost"}}`)
 	f.Add(`{"malformed":"json"}`)
@@ -189,7 +197,10 @@ func FuzzEnvironmentVariables(f *testing.F) {
 		}
 
 		// Skip if contains control characters that could break parsing
-		if strings.ContainsAny(envVar, "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f") {
+		if strings.ContainsAny(
+			envVar,
+			"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f",
+		) {
 			t.Skip("Environment variable contains control characters")
 		}
 

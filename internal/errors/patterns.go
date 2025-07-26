@@ -61,7 +61,11 @@ func ServeServiceError(operation, message string, cause error) *TemplarError {
 // DataError creates data layer errors with consistent formatting
 func DataError(operation, resource, message string, cause error) *TemplarError {
 	code := fmt.Sprintf("ERR_DATA_%s", operation)
-	return WrapIO(cause, code, fmt.Sprintf("data %s failed for %s: %s", operation, resource, message))
+	return WrapIO(
+		cause,
+		code,
+		fmt.Sprintf("data %s failed for %s: %s", operation, resource, message),
+	)
 }
 
 // FileOperationError creates file operation errors
@@ -181,7 +185,11 @@ func SecurityViolation(operation, detail string, context map[string]interface{})
 }
 
 // ValidationFailure creates validation errors with suggestions
-func ValidationFailure(field, message string, value interface{}, suggestions ...string) *TemplarError {
+func ValidationFailure(
+	field, message string,
+	value interface{},
+	suggestions ...string,
+) *TemplarError {
 	fieldErr := NewFieldValidationError(field, value, message, suggestions...)
 	return fieldErr.ToTemplarError()
 }

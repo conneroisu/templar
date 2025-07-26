@@ -50,7 +50,11 @@ func TestMetricsCollector(t *testing.T) {
 		collector := NewMetricsCollector("test", "")
 
 		collector.Gauge("memory_usage", 100.5, map[string]string{"type": "heap"})
-		collector.Gauge("memory_usage", 150.7, map[string]string{"type": "heap"}) // Should overwrite
+		collector.Gauge(
+			"memory_usage",
+			150.7,
+			map[string]string{"type": "heap"},
+		) // Should overwrite
 
 		metrics := collector.GatherMetrics()
 

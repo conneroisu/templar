@@ -189,7 +189,10 @@ func (c *ServiceContainer) Get(name string) (interface{}, error) {
 }
 
 // getWithResolver retrieves a service with circular dependency detection
-func (c *ServiceContainer) getWithResolver(name string, resolving map[string]bool) (interface{}, error) {
+func (c *ServiceContainer) getWithResolver(
+	name string,
+	resolving map[string]bool,
+) (interface{}, error) {
 	// Check for circular dependencies
 	if resolving[name] {
 		return nil, fmt.Errorf("circular dependency detected for service '%s'", name)
@@ -290,7 +293,10 @@ func (c *ServiceContainer) getWithResolver(name string, resolving map[string]boo
 }
 
 // createInstanceSafely creates an instance with dependency resolution
-func (c *ServiceContainer) createInstanceSafely(factory FactoryFunc, resolving map[string]bool) (interface{}, error) {
+func (c *ServiceContainer) createInstanceSafely(
+	factory FactoryFunc,
+	resolving map[string]bool,
+) (interface{}, error) {
 	if factory == nil {
 		return nil, fmt.Errorf("factory is nil")
 	}
@@ -483,7 +489,10 @@ func (c *ServiceContainer) Shutdown(ctx context.Context) error {
 		if instance, exists := c.singletons[serviceName]; exists {
 			if shutdownable, ok := instance.(interface{ Shutdown(context.Context) error }); ok {
 				if err := shutdownable.Shutdown(ctx); err != nil {
-					errors = append(errors, fmt.Errorf("failed to shutdown %s: %w", serviceName, err))
+					errors = append(
+						errors,
+						fmt.Errorf("failed to shutdown %s: %w", serviceName, err),
+					)
 				}
 			}
 		}

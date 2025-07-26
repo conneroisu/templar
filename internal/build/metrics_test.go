@@ -106,10 +106,26 @@ func TestBuildMetrics_RateCalculations(t *testing.T) {
 	t.Run("mixed builds", func(t *testing.T) {
 		// 4 total builds: 3 successful (2 cache hits), 1 failed (1 cache hit)
 		builds := []BuildResult{
-			{Duration: 100 * time.Millisecond, Error: nil, CacheHit: true},                                              // success + cache
-			{Duration: 150 * time.Millisecond, Error: nil, CacheHit: true},                                              // success + cache
-			{Duration: 200 * time.Millisecond, Error: nil, CacheHit: false},                                             // success, no cache
-			{Duration: 50 * time.Millisecond, Error: errors.NewBuildError("BUILD_FAILED", "fail", nil), CacheHit: true}, // failed + cache
+			{
+				Duration: 100 * time.Millisecond,
+				Error:    nil,
+				CacheHit: true,
+			}, // success + cache
+			{
+				Duration: 150 * time.Millisecond,
+				Error:    nil,
+				CacheHit: true,
+			}, // success + cache
+			{
+				Duration: 200 * time.Millisecond,
+				Error:    nil,
+				CacheHit: false,
+			}, // success, no cache
+			{
+				Duration: 50 * time.Millisecond,
+				Error:    errors.NewBuildError("BUILD_FAILED", "fail", nil),
+				CacheHit: true,
+			}, // failed + cache
 		}
 
 		for _, build := range builds {
@@ -425,7 +441,11 @@ func TestBuildMetrics_PerformanceSummary(t *testing.T) {
 
 	// Populate with sample data
 	successResult := BuildResult{Duration: 100 * time.Millisecond, Error: nil, CacheHit: true}
-	failResult := BuildResult{Duration: 50 * time.Millisecond, Error: errors.NewBuildError("BUILD_FAILED", "fail", nil), CacheHit: false}
+	failResult := BuildResult{
+		Duration: 50 * time.Millisecond,
+		Error:    errors.NewBuildError("BUILD_FAILED", "fail", nil),
+		CacheHit: false,
+	}
 
 	metrics.RecordBuild(successResult)
 	metrics.RecordBuild(failResult)
@@ -447,8 +467,12 @@ func TestBuildMetrics_PerformanceSummary(t *testing.T) {
 
 	buildPerf := summary["build_performance"].(map[string]interface{})
 	assert.Equal(t, int64(2), buildPerf["total_builds"])
-	assert.Equal(t, 50.0, buildPerf["success_rate"])                    // 1 success / 2 total = 50%
-	assert.Equal(t, 50.0, buildPerf["cache_hit_rate"])                  // 1 cache hit / 2 total = 50%
+	assert.Equal(t, 50.0, buildPerf["success_rate"]) // 1 success / 2 total = 50%
+	assert.Equal(
+		t,
+		50.0,
+		buildPerf["cache_hit_rate"],
+	) // 1 cache hit / 2 total = 50%
 	assert.Equal(t, 75*time.Millisecond, buildPerf["average_duration"]) // (100 + 50) / 2 = 75ms
 
 	parallelProc := summary["parallel_processing"].(map[string]interface{})

@@ -226,7 +226,12 @@ func (p *ASTParsingPool) worker() {
 		select {
 		case job := <-p.jobChan:
 			// Parse the AST
-			astFile, err := parser.ParseFile(job.fileSet, job.filePath, job.content, parser.ParseComments)
+			astFile, err := parser.ParseFile(
+				job.fileSet,
+				job.filePath,
+				job.content,
+				parser.ParseComments,
+			)
 
 			// Send result back
 			select {
@@ -246,7 +251,11 @@ func (p *ASTParsingPool) worker() {
 }
 
 // ParseAsync submits an AST parsing job and returns a result channel
-func (p *ASTParsingPool) ParseAsync(filePath string, content []byte, fileSet *token.FileSet) <-chan ASTParseResult {
+func (p *ASTParsingPool) ParseAsync(
+	filePath string,
+	content []byte,
+	fileSet *token.FileSet,
+) <-chan ASTParseResult {
 	result := make(chan ASTParseResult, 1)
 
 	// For very large files, use optimized parsing approach
@@ -277,12 +286,22 @@ func (p *ASTParsingPool) ParseAsync(filePath string, content []byte, fileSet *to
 }
 
 // parseLargeFileAsync handles large file parsing with memory optimization
-func (p *ASTParsingPool) parseLargeFileAsync(filePath string, content []byte, fileSet *token.FileSet, result chan<- ASTParseResult) {
+func (p *ASTParsingPool) parseLargeFileAsync(
+	filePath string,
+	content []byte,
+	fileSet *token.FileSet,
+	result chan<- ASTParseResult,
+) {
 	defer close(result)
 
 	// For large files, use streaming approach with limited memory usage
 	// Parse with limited goroutines to prevent memory exhaustion
-	astFile, err := parser.ParseFile(fileSet, filePath, content, parser.ParseComments|parser.SkipObjectResolution)
+	astFile, err := parser.ParseFile(
+		fileSet,
+		filePath,
+		content,
+		parser.ParseComments|parser.SkipObjectResolution,
+	)
 
 	result <- ASTParseResult{
 		astFile:  astFile,
@@ -462,12 +481,19 @@ func (mc *MetadataCache) evictLRU() {
 }
 
 // NewComponentScanner creates a new component scanner with optimal worker pool
-func NewComponentScanner(registry *registry.ComponentRegistry, cfg ...*config.Config) *ComponentScanner {
+func NewComponentScanner(
+	registry *registry.ComponentRegistry,
+	cfg ...*config.Config,
+) *ComponentScanner {
 	return NewComponentScannerWithConcurrency(registry, 0, cfg...) // 0 = auto-detect optimal
 }
 
 // NewComponentScannerWithConcurrency creates a new component scanner with configurable concurrency
-func NewComponentScannerWithConcurrency(registry *registry.ComponentRegistry, maxWorkers int, cfg ...*config.Config) *ComponentScanner {
+func NewComponentScannerWithConcurrency(
+	registry *registry.ComponentRegistry,
+	maxWorkers int,
+	cfg ...*config.Config,
+) *ComponentScanner {
 	scanner := &ComponentScanner{
 		registry:   registry,
 		fileSet:    token.NewFileSet(),
@@ -644,7 +670,9 @@ func (s *ComponentScanner) Close() error {
 }
 
 // getCachedMetadata attempts to retrieve cached component metadata for a file
-func (s *ComponentScanner) getCachedMetadata(filePath, fileHash string) (*CachedComponentMetadata, bool) {
+func (s *ComponentScanner) getCachedMetadata(
+	filePath, fileHash string,
+) (*CachedComponentMetadata, bool) {
 	if s.metadataCache == nil {
 		return nil, false
 	}
@@ -671,7 +699,10 @@ func (s *ComponentScanner) getCachedMetadata(filePath, fileHash string) (*Cached
 }
 
 // setCachedMetadata stores component metadata in the cache
-func (s *ComponentScanner) setCachedMetadata(filePath, fileHash string, components []*types.ComponentInfo) {
+func (s *ComponentScanner) setCachedMetadata(
+	filePath, fileHash string,
+	components []*types.ComponentInfo,
+) {
 	if s.metadataCache == nil {
 		return
 	}
@@ -731,7 +762,8 @@ func (s *ComponentScanner) ScanDirectoryWithContext(ctx context.Context, dir str
 		// Update peak memory if this scan used more
 		for {
 			current := atomic.LoadUint64(&s.metrics.PeakMemoryUsage)
-			if memUsed <= current || atomic.CompareAndSwapUint64(&s.metrics.PeakMemoryUsage, current, memUsed) {
+			if memUsed <= current ||
+				atomic.CompareAndSwapUint64(&s.metrics.PeakMemoryUsage, current, memUsed) {
 				break
 			}
 		}
@@ -751,7 +783,10 @@ func (s *ComponentScanner) ScanDirectory(dir string) error {
 }
 
 // processBatchWithWorkerPoolWithContext processes files using the persistent worker pool with optimized batching and context support
-func (s *ComponentScanner) processBatchWithWorkerPoolWithContext(ctx context.Context, files []string) error {
+func (s *ComponentScanner) processBatchWithWorkerPoolWithContext(
+	ctx context.Context,
+	files []string,
+) error {
 	if len(files) == 0 {
 		return nil
 	}
@@ -975,7 +1010,11 @@ func (s *ComponentScanner) scanFileInternal(path string) error {
 // readFileStreaming removed - replaced by readFileStreamingOptimized
 
 // readFileStreamingOptimized reads large files using pooled buffers for better memory efficiency
-func (s *ComponentScanner) readFileStreamingOptimized(file *os.File, size int64, pooledBuffer []byte) ([]byte, error) {
+func (s *ComponentScanner) readFileStreamingOptimized(
+	file *os.File,
+	size int64,
+	pooledBuffer []byte,
+) ([]byte, error) {
 	const chunkSize = 32 * 1024 // 32KB chunks
 
 	// Use a reasonably-sized chunk buffer for reading
@@ -1346,7 +1385,8 @@ func (s *ComponentScanner) isInTestMode() bool {
 
 		name := fn.Name()
 		// Check if any caller is from the testing package or contains "test"
-		if strings.Contains(name, "testing.") || strings.Contains(name, "_test.") || strings.Contains(name, ".Test") {
+		if strings.Contains(name, "testing.") || strings.Contains(name, "_test.") ||
+			strings.Contains(name, ".Test") {
 			return true
 		}
 	}
@@ -1529,7 +1569,10 @@ type HashingStrategy struct {
 }
 
 // generateOptimizedHash creates an optimized hash based on file size and content characteristics
-func (s *ComponentScanner) generateOptimizedHash(content []byte, fileInfo os.FileInfo) (string, *HashingStrategy) {
+func (s *ComponentScanner) generateOptimizedHash(
+	content []byte,
+	fileInfo os.FileInfo,
+) (string, *HashingStrategy) {
 	start := time.Now()
 	fileSize := int64(len(content))
 

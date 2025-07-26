@@ -254,7 +254,10 @@ func BenchmarkBuildPipeline_WorkerPoolPerformance(b *testing.B) {
 						wg.Add(1)
 						go func(taskID int) {
 							defer wg.Done()
-							component := createTestComponent(fmt.Sprintf("Task%d", taskID), "simple")
+							component := createTestComponent(
+								fmt.Sprintf("Task%d", taskID),
+								"simple",
+							)
 							pipeline.Build(component)
 						}(j)
 					}

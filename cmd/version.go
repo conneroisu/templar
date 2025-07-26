@@ -37,7 +37,8 @@ Examples:
 func init() {
 	rootCmd.AddCommand(versionCmd)
 
-	versionCmd.Flags().StringVarP(&versionFormat, "format", "f", "text", "Output format (text, json)")
+	versionCmd.Flags().
+		StringVarP(&versionFormat, "format", "f", "text", "Output format (text, json)")
 	versionCmd.Flags().BoolVar(&versionShort, "short", false, "Show short version only")
 	versionCmd.Flags().Bool("detailed", false, "Show detailed version information")
 }

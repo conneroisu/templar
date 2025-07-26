@@ -64,7 +64,11 @@ func runProductionBuildCommand(cmd *cobra.Command, args []string) error {
 	// Get production configuration with environment overrides
 	prodConfig, err := cfg.GetProductionConfig(environment)
 	if err != nil {
-		return fmt.Errorf("failed to get production config for environment '%s': %w", environment, err)
+		return fmt.Errorf(
+			"failed to get production config for environment '%s': %w",
+			environment,
+			err,
+		)
 	}
 
 	// Override with command line flags if provided
@@ -202,11 +206,14 @@ func init() {
 	buildCmd.AddCommand(buildProductionCmd)
 
 	// Output options
-	buildProductionCmd.Flags().StringP("output", "o", "dist", "Output directory for production build")
-	buildProductionCmd.Flags().StringP("env", "e", "production", "Environment (production, staging, preview)")
+	buildProductionCmd.Flags().
+		StringP("output", "o", "dist", "Output directory for production build")
+	buildProductionCmd.Flags().
+		StringP("env", "e", "production", "Environment (production, staging, preview)")
 
 	// Build options
-	buildProductionCmd.Flags().Bool("static-only", false, "Generate static files only (no asset processing)")
+	buildProductionCmd.Flags().
+		Bool("static-only", false, "Generate static files only (no asset processing)")
 	buildProductionCmd.Flags().Bool("bundle", true, "Bundle and optimize assets")
 	buildProductionCmd.Flags().Bool("minify", true, "Minify CSS and JavaScript")
 	buildProductionCmd.Flags().Bool("compress", true, "Compress assets with gzip/brotli")
@@ -233,5 +240,6 @@ func init() {
 	buildProductionCmd.Flags().Bool("source-maps", true, "Generate source maps")
 	buildProductionCmd.Flags().Bool("sitemap", true, "Generate sitemap.xml")
 	buildProductionCmd.Flags().Bool("robots", true, "Generate robots.txt")
-	buildProductionCmd.Flags().StringSlice("error-pages", []string{"404", "500"}, "Error pages to generate")
+	buildProductionCmd.Flags().
+		StringSlice("error-pages", []string{"404", "500"}, "Error pages to generate")
 }

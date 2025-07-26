@@ -83,7 +83,12 @@ func TestConfigurationError(t *testing.T) {
 }
 
 func TestNetworkError(t *testing.T) {
-	err := NetworkError("CONNECT", "api.example.com:443", "connection timeout", fmt.Errorf("timeout"))
+	err := NetworkError(
+		"CONNECT",
+		"api.example.com:443",
+		"connection timeout",
+		fmt.Errorf("timeout"),
+	)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, ErrorTypeNetwork, err.Type)
@@ -94,7 +99,12 @@ func TestNetworkError(t *testing.T) {
 }
 
 func TestWebSocketError(t *testing.T) {
-	err := WebSocketError("SEND_MESSAGE", "client-123", "client disconnected", fmt.Errorf("broken pipe"))
+	err := WebSocketError(
+		"SEND_MESSAGE",
+		"client-123",
+		"client disconnected",
+		fmt.Errorf("broken pipe"),
+	)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, ErrorTypeNetwork, err.Type)
@@ -113,7 +123,13 @@ func TestServerError(t *testing.T) {
 }
 
 func TestComponentError(t *testing.T) {
-	err := ComponentError("PARSE", "Button", "/components/button.templ", "syntax error", fmt.Errorf("unexpected token"))
+	err := ComponentError(
+		"PARSE",
+		"Button",
+		"/components/button.templ",
+		"syntax error",
+		fmt.Errorf("unexpected token"),
+	)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, ErrorTypeBuild, err.Type)
@@ -127,7 +143,12 @@ func TestComponentError(t *testing.T) {
 }
 
 func TestScannerError(t *testing.T) {
-	err := ScannerError("DIRECTORY", "/components", "access denied", fmt.Errorf("permission denied"))
+	err := ScannerError(
+		"DIRECTORY",
+		"/components",
+		"access denied",
+		fmt.Errorf("permission denied"),
+	)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, ErrorTypeBuild, err.Type)
@@ -169,7 +190,11 @@ func TestFlagError(t *testing.T) {
 }
 
 func TestArgumentError(t *testing.T) {
-	err := ArgumentError("project_name", "too many arguments provided", []string{"arg1", "arg2", "arg3"})
+	err := ArgumentError(
+		"project_name",
+		"too many arguments provided",
+		[]string{"arg1", "arg2", "arg3"},
+	)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, ErrorTypeValidation, err.Type)
@@ -197,7 +222,12 @@ func TestSecurityViolation(t *testing.T) {
 }
 
 func TestValidationFailure(t *testing.T) {
-	err := ValidationFailure("email", "invalid email format", "not-an-email", "Use format: user@domain.com")
+	err := ValidationFailure(
+		"email",
+		"invalid email format",
+		"not-an-email",
+		"Use format: user@domain.com",
+	)
 
 	assert.NotNil(t, err)
 	assert.Equal(t, ErrorTypeValidation, err.Type)

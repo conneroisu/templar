@@ -26,7 +26,11 @@ func NewAssetOptimizer(cfg *config.Config) *AssetOptimizer {
 }
 
 // Optimize applies optimizations to assets in the specified directory
-func (o *AssetOptimizer) Optimize(ctx context.Context, assetsDir string, options OptimizerOptions) error {
+func (o *AssetOptimizer) Optimize(
+	ctx context.Context,
+	assetsDir string,
+	options OptimizerOptions,
+) error {
 	if options.Images {
 		if err := o.optimizeImages(ctx, assetsDir); err != nil {
 			return fmt.Errorf("image optimization failed: %w", err)

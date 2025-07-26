@@ -532,7 +532,10 @@ func BenchmarkHashProvider_MmapVsRegular(b *testing.B) {
 	tempDir := b.TempDir()
 
 	// Create large file
-	largeContent := strings.Repeat("This is benchmark content for comparing mmap vs regular read.\n", 2000)
+	largeContent := strings.Repeat(
+		"This is benchmark content for comparing mmap vs regular read.\n",
+		2000,
+	)
 	testFile := filepath.Join(tempDir, "large_benchmark.templ")
 	err := os.WriteFile(testFile, []byte(largeContent), 0644)
 	require.NoError(b, err)

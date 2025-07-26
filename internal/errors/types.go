@@ -341,7 +341,12 @@ func (fve *FieldValidationError) ToTemplarError() *TemplarError {
 }
 
 // NewFieldValidationError creates a new field validation error
-func NewFieldValidationError(field string, value interface{}, message string, suggestions ...string) *FieldValidationError {
+func NewFieldValidationError(
+	field string,
+	value interface{},
+	message string,
+	suggestions ...string,
+) *FieldValidationError {
 	return &FieldValidationError{
 		FieldName:    field,
 		FieldValue:   value,
@@ -372,7 +377,12 @@ func (vec *ValidationErrorCollection) Add(err ValidationError) {
 }
 
 // AddField adds a field validation error to the collection
-func (vec *ValidationErrorCollection) AddField(field string, value interface{}, message string, suggestions ...string) {
+func (vec *ValidationErrorCollection) AddField(
+	field string,
+	value interface{},
+	message string,
+	suggestions ...string,
+) {
 	vec.Add(NewFieldValidationError(field, value, message, suggestions...))
 }
 
@@ -421,7 +431,10 @@ func ErrPathTraversal(path string) *TemplarError {
 
 // ErrCommandInjection creates a command injection security error
 func ErrCommandInjection(command string) *TemplarError {
-	return NewSecurityError(ErrCodeCommandInjection, fmt.Sprintf("command injection attempt: %s", command))
+	return NewSecurityError(
+		ErrCodeCommandInjection,
+		fmt.Sprintf("command injection attempt: %s", command),
+	)
 }
 
 // ErrInvalidOrigin creates an invalid origin security error
@@ -431,10 +444,17 @@ func ErrInvalidOrigin(origin string) *TemplarError {
 
 // ErrComponentNotFound creates a component not found error
 func ErrComponentNotFound(name string) *TemplarError {
-	return NewValidationError(ErrCodeComponentNotFound, fmt.Sprintf("component not found: %s", name))
+	return NewValidationError(
+		ErrCodeComponentNotFound,
+		fmt.Sprintf("component not found: %s", name),
+	)
 }
 
 // ErrBuildFailed creates a build failure error
 func ErrBuildFailed(component string, cause error) *TemplarError {
-	return NewBuildError(ErrCodeBuildFailed, fmt.Sprintf("build failed for component: %s", component), cause)
+	return NewBuildError(
+		ErrCodeBuildFailed,
+		fmt.Sprintf("build failed for component: %s", component),
+		cause,
+	)
 }

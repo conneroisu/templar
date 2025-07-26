@@ -22,7 +22,14 @@ func verifyParsedErrors(t *testing.T, parser *ErrorParser, testCase struct {
 }) {
 	errors := parser.ParseError(testCase.output)
 
-	require.Len(t, errors, testCase.expectedCount, "Expected %d errors, got %d", testCase.expectedCount, len(errors))
+	require.Len(
+		t,
+		errors,
+		testCase.expectedCount,
+		"Expected %d errors, got %d",
+		testCase.expectedCount,
+		len(errors),
+	)
 
 	if testCase.expectedCount > 0 {
 		err := errors[0]
@@ -256,7 +263,11 @@ func TestParseError_MalformedOutput(t *testing.T) {
 				// Verify basic error structure
 				for _, err := range errors {
 					assert.NotEmpty(t, err.RawError, "RawError should not be empty")
-					assert.True(t, err.Severity >= ErrorSeverityInfo && err.Severity <= ErrorSeverityFatal, "Severity should be valid")
+					assert.True(
+						t,
+						err.Severity >= ErrorSeverityInfo && err.Severity <= ErrorSeverityFatal,
+						"Severity should be valid",
+					)
 				}
 			} else {
 				assert.Len(t, errors, 0, tt.description)
@@ -381,7 +392,11 @@ func TestParseError_LineNumberExtraction(t *testing.T) {
 
 				// Should have meaningful content
 				assert.NotEmpty(t, err.RawError, "RawError should not be empty")
-				assert.True(t, err.Severity >= ErrorSeverityInfo && err.Severity <= ErrorSeverityFatal, "Severity should be valid")
+				assert.True(
+					t,
+					err.Severity >= ErrorSeverityInfo && err.Severity <= ErrorSeverityFatal,
+					"Severity should be valid",
+				)
 			}
 		})
 	}
@@ -465,14 +480,23 @@ Build failed with issues`
 
 		// All errors should have basic valid structure
 		assert.NotEmpty(t, err.RawError, "RawError should not be empty")
-		assert.True(t, err.Severity >= ErrorSeverityInfo && err.Severity <= ErrorSeverityFatal, "Severity should be valid")
+		assert.True(
+			t,
+			err.Severity >= ErrorSeverityInfo && err.Severity <= ErrorSeverityFatal,
+			"Severity should be valid",
+		)
 	}
 
 	// Should have parsed at least some specific file errors
 	assert.Greater(t, fileMatches, 0, "Should find errors with specific file locations")
 
 	// Should have some templ-related errors
-	assert.Greater(t, errorTypes[BuildErrorTypeTemplSyntax]+errorTypes[BuildErrorTypeTemplSemantics], 0, "Should find templ-related errors")
+	assert.Greater(
+		t,
+		errorTypes[BuildErrorTypeTemplSyntax]+errorTypes[BuildErrorTypeTemplSemantics],
+		0,
+		"Should find templ-related errors",
+	)
 }
 
 // TestParseError_ContextLines tests context line extraction
@@ -506,7 +530,11 @@ line 5`
 	// Check context formatting
 	assert.Contains(t, mainError.Context[0], "line 1")
 	assert.Contains(t, mainError.Context[1], "line 2 before error")
-	assert.Contains(t, mainError.Context[2], "→ file.go:3:1: error on this line") // Current line marked with →
+	assert.Contains(
+		t,
+		mainError.Context[2],
+		"→ file.go:3:1: error on this line",
+	) // Current line marked with →
 	assert.Contains(t, mainError.Context[3], "line 4 after error")
 	assert.Contains(t, mainError.Context[4], "line 5")
 }
@@ -603,7 +631,13 @@ func TestParsedError_FormatError(t *testing.T) {
 			formatted := tt.error.FormatError()
 
 			for _, expected := range tt.expected {
-				assert.Contains(t, formatted, expected, "Formatted output should contain: %s", expected)
+				assert.Contains(
+					t,
+					formatted,
+					expected,
+					"Formatted output should contain: %s",
+					expected,
+				)
 			}
 		})
 	}
@@ -768,7 +802,10 @@ func TestParseError_EdgeCases(t *testing.T) {
 
 			// All errors should have valid severity
 			for _, err := range errors {
-				assert.True(t, err.Severity >= ErrorSeverityInfo && err.Severity <= ErrorSeverityFatal)
+				assert.True(
+					t,
+					err.Severity >= ErrorSeverityInfo && err.Severity <= ErrorSeverityFatal,
+				)
 			}
 		})
 	}

@@ -110,7 +110,12 @@ templ TestComponent() {
 }
 
 // createLargeTestComponents creates large test component files for mmap testing
-func createLargeTestComponents(t testing.TB, tempDir string, count int, size int) []*types.ComponentInfo {
+func createLargeTestComponents(
+	t testing.TB,
+	tempDir string,
+	count int,
+	size int,
+) []*types.ComponentInfo {
 	var components []*types.ComponentInfo
 
 	baseContent := `package components

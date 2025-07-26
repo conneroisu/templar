@@ -76,21 +76,34 @@ Examples:
 func init() {
 	rootCmd.AddCommand(auditCmd)
 
-	auditCmd.Flags().StringVarP(&auditComponentName, "component", "c", "", "Specific component to audit (if not provided as argument)")
-	auditCmd.Flags().StringVarP(&auditWCAGLevel, "wcag-level", "w", "AA", "WCAG compliance level to test against (A, AA, AAA)")
-	auditCmd.Flags().StringVarP(&auditOutputFormat, "output", "o", "console", "Output format (console, json, html, markdown)")
-	auditCmd.Flags().StringVarP(&auditOutputFile, "output-file", "f", "", "Output file path (stdout if not specified)")
-	auditCmd.Flags().BoolVar(&auditIncludeHTML, "include-html", false, "Include HTML snapshot in report")
-	auditCmd.Flags().BoolVar(&auditFixableOnly, "fixable-only", false, "Show only issues that can be automatically fixed")
-	auditCmd.Flags().StringVarP(&auditSeverityFilter, "severity", "s", "", "Filter by severity level (error, warning, info)")
+	auditCmd.Flags().
+		StringVarP(&auditComponentName, "component", "c", "", "Specific component to audit (if not provided as argument)")
+	auditCmd.Flags().
+		StringVarP(&auditWCAGLevel, "wcag-level", "w", "AA", "WCAG compliance level to test against (A, AA, AAA)")
+	auditCmd.Flags().
+		StringVarP(&auditOutputFormat, "output", "o", "console", "Output format (console, json, html, markdown)")
+	auditCmd.Flags().
+		StringVarP(&auditOutputFile, "output-file", "f", "", "Output file path (stdout if not specified)")
+	auditCmd.Flags().
+		BoolVar(&auditIncludeHTML, "include-html", false, "Include HTML snapshot in report")
+	auditCmd.Flags().
+		BoolVar(&auditFixableOnly, "fixable-only", false, "Show only issues that can be automatically fixed")
+	auditCmd.Flags().
+		StringVarP(&auditSeverityFilter, "severity", "s", "", "Filter by severity level (error, warning, info)")
 	auditCmd.Flags().BoolVarP(&auditQuiet, "quiet", "q", false, "Suppress non-error output")
 	auditCmd.Flags().BoolVarP(&auditVerbose, "verbose", "v", false, "Enable verbose output")
-	auditCmd.Flags().IntVarP(&auditMaxViolations, "max-violations", "m", 0, "Maximum number of violations to report (0 = unlimited)")
-	auditCmd.Flags().BoolVar(&auditGenerateReport, "generate-report", false, "Generate detailed accessibility report")
-	auditCmd.Flags().BoolVar(&auditShowSuggestions, "show-suggestions", true, "Include suggestions in output")
-	auditCmd.Flags().BoolVar(&auditAutoFix, "auto-fix", false, "Attempt to automatically fix issues where possible")
-	auditCmd.Flags().BoolVar(&auditShowGuidance, "show-guidance", false, "Include detailed accessibility guidance")
-	auditCmd.Flags().BoolVar(&auditGuidanceOnly, "guidance-only", false, "Show only guidance without running audit")
+	auditCmd.Flags().
+		IntVarP(&auditMaxViolations, "max-violations", "m", 0, "Maximum number of violations to report (0 = unlimited)")
+	auditCmd.Flags().
+		BoolVar(&auditGenerateReport, "generate-report", false, "Generate detailed accessibility report")
+	auditCmd.Flags().
+		BoolVar(&auditShowSuggestions, "show-suggestions", true, "Include suggestions in output")
+	auditCmd.Flags().
+		BoolVar(&auditAutoFix, "auto-fix", false, "Attempt to automatically fix issues where possible")
+	auditCmd.Flags().
+		BoolVar(&auditShowGuidance, "show-guidance", false, "Include detailed accessibility guidance")
+	auditCmd.Flags().
+		BoolVar(&auditGuidanceOnly, "guidance-only", false, "Show only guidance without running audit")
 }
 
 func runAuditCommand(cmd *cobra.Command, args []string) error {
@@ -167,7 +180,12 @@ func runAuditCommand(cmd *cobra.Command, args []string) error {
 	}
 }
 
-func runSingleComponentAudit(ctx context.Context, tester accessibility.AccessibilityTester, componentName string, logger logging.Logger) error {
+func runSingleComponentAudit(
+	ctx context.Context,
+	tester accessibility.AccessibilityTester,
+	componentName string,
+	logger logging.Logger,
+) error {
 	if !auditQuiet {
 		logger.Info(ctx, "Running accessibility audit", "component", componentName)
 	}
@@ -195,7 +213,12 @@ func runSingleComponentAudit(ctx context.Context, tester accessibility.Accessibi
 	return outputAuditResults([]*accessibility.AccessibilityReport{report}, logger)
 }
 
-func runAllComponentsAudit(ctx context.Context, tester accessibility.AccessibilityTester, registry interfaces.ComponentRegistry, logger logging.Logger) error {
+func runAllComponentsAudit(
+	ctx context.Context,
+	tester accessibility.AccessibilityTester,
+	registry interfaces.ComponentRegistry,
+	logger logging.Logger,
+) error {
 	components := registry.GetAll()
 
 	if !auditQuiet {
@@ -251,7 +274,9 @@ func runAllComponentsAudit(ctx context.Context, tester accessibility.Accessibili
 	return outputAuditResults(reports, logger)
 }
 
-func applyReportFilters(report *accessibility.AccessibilityReport) *accessibility.AccessibilityReport {
+func applyReportFilters(
+	report *accessibility.AccessibilityReport,
+) *accessibility.AccessibilityReport {
 	filteredViolations := []accessibility.AccessibilityViolation{}
 
 	for _, violation := range report.Violations {
@@ -285,7 +310,11 @@ func applyReportFilters(report *accessibility.AccessibilityReport) *accessibilit
 	return report
 }
 
-func applyAutoFixes(ctx context.Context, tester accessibility.AccessibilityTester, report *accessibility.AccessibilityReport) (int, error) {
+func applyAutoFixes(
+	ctx context.Context,
+	tester accessibility.AccessibilityTester,
+	report *accessibility.AccessibilityReport,
+) (int, error) {
 	if componentTester, ok := tester.(*accessibility.ComponentAccessibilityTester); ok {
 		autoFixableViolations := []accessibility.AccessibilityViolation{}
 		for _, violation := range report.Violations {
@@ -537,7 +566,13 @@ func outputComponentSummary(report *accessibility.AccessibilityReport) {
 
 	scoreColor := getScoreColor(report.Summary.OverallScore)
 
-	fmt.Printf("📦 %s %s(%.1f/100)%s\n", componentName, scoreColor, report.Summary.OverallScore, "\033[0m")
+	fmt.Printf(
+		"📦 %s %s(%.1f/100)%s\n",
+		componentName,
+		scoreColor,
+		report.Summary.OverallScore,
+		"\033[0m",
+	)
 
 	if criticalCount > 0 {
 		fmt.Printf("   🚨 %d critical issue(s)\n", criticalCount)
@@ -634,7 +669,9 @@ func getScoreColor(score float64) string {
 	}
 }
 
-func aggregateSuggestions(reports []*accessibility.AccessibilityReport) []accessibility.AccessibilitySuggestion {
+func aggregateSuggestions(
+	reports []*accessibility.AccessibilityReport,
+) []accessibility.AccessibilitySuggestion {
 	suggestionMap := make(map[string]*accessibility.AccessibilitySuggestion)
 	suggestionCounts := make(map[string]int)
 
@@ -644,7 +681,8 @@ func aggregateSuggestions(reports []*accessibility.AccessibilityReport) []access
 				key := fmt.Sprintf("%s_%s", suggestion.Type, suggestion.Title)
 				suggestionCounts[key]++
 
-				if existing, exists := suggestionMap[key]; !exists || suggestion.Priority < existing.Priority {
+				if existing, exists := suggestionMap[key]; !exists ||
+					suggestion.Priority < existing.Priority {
 					suggestionCopy := suggestion
 					suggestionMap[key] = &suggestionCopy
 				}
@@ -668,7 +706,10 @@ func aggregateSuggestions(reports []*accessibility.AccessibilityReport) []access
 	return suggestions
 }
 
-func calculateAccessibilitySummary(violations []accessibility.AccessibilityViolation, passed []accessibility.AccessibilityRule) accessibility.AccessibilitySummary {
+func calculateAccessibilitySummary(
+	violations []accessibility.AccessibilityViolation,
+	passed []accessibility.AccessibilityRule,
+) accessibility.AccessibilitySummary {
 	summary := accessibility.AccessibilitySummary{
 		TotalRules:      len(passed) + len(violations),
 		PassedRules:     len(passed),
@@ -747,7 +788,10 @@ func generateHTMLReport(reports []*accessibility.AccessibilityReport) string {
 }
 
 func generateMarkdownReport(reports []*accessibility.AccessibilityReport) string {
-	md := fmt.Sprintf("# Accessibility Audit Report\n\nGenerated on: %s\n\n", time.Now().Format("2006-01-02 15:04:05"))
+	md := fmt.Sprintf(
+		"# Accessibility Audit Report\n\nGenerated on: %s\n\n",
+		time.Now().Format("2006-01-02 15:04:05"),
+	)
 
 	for _, report := range reports {
 		md += fmt.Sprintf("## %s\n\n", report.ComponentName)

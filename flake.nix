@@ -210,6 +210,8 @@
         projectRootFile = "flake.nix";
         programs = {
           alejandra.enable = true; # Nix formatter
+          gofmt.enable = true;
+          golines.enable = true;
         };
       };
     in

@@ -93,10 +93,12 @@ func BenchmarkComponentRegistry_Concurrent(b *testing.B) {
 		i := 0
 		for pb.Next() {
 			component := &types.ComponentInfo{
-				Name:         fmt.Sprintf("Component%d", i),
-				Package:      "test",
-				FilePath:     fmt.Sprintf("/path/to/component%d.templ", i),
-				Parameters:   []types.ParameterInfo{{Name: "param", Type: "string", Optional: false}},
+				Name:     fmt.Sprintf("Component%d", i),
+				Package:  "test",
+				FilePath: fmt.Sprintf("/path/to/component%d.templ", i),
+				Parameters: []types.ParameterInfo{
+					{Name: "param", Type: "string", Optional: false},
+				},
 				Imports:      []string{"context"},
 				LastMod:      time.Now(),
 				Hash:         fmt.Sprintf("hash%d", i),

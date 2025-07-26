@@ -207,7 +207,11 @@ func (b *AssetBundler) DiscoverAssets(ctx context.Context) (*AssetManifest, erro
 }
 
 // Bundle performs the actual bundling of assets
-func (b *AssetBundler) Bundle(ctx context.Context, manifest *AssetManifest, options BundlerOptions) ([]string, error) {
+func (b *AssetBundler) Bundle(
+	ctx context.Context,
+	manifest *AssetManifest,
+	options BundlerOptions,
+) ([]string, error) {
 	startTime := time.Now()
 	bundledFiles := make([]string, 0)
 
@@ -241,7 +245,11 @@ func (b *AssetBundler) Bundle(ctx context.Context, manifest *AssetManifest, opti
 }
 
 // bundleJavaScript handles JavaScript bundling with esbuild-like functionality
-func (b *AssetBundler) bundleJavaScript(ctx context.Context, jsFiles []AssetFile, options BundlerOptions) ([]string, error) {
+func (b *AssetBundler) bundleJavaScript(
+	ctx context.Context,
+	jsFiles []AssetFile,
+	options BundlerOptions,
+) ([]string, error) {
 	if len(jsFiles) == 0 {
 		return nil, nil
 	}
@@ -284,7 +292,11 @@ func (b *AssetBundler) bundleJavaScript(ctx context.Context, jsFiles []AssetFile
 }
 
 // bundleCSS handles CSS bundling and optimization
-func (b *AssetBundler) bundleCSS(ctx context.Context, cssFiles []AssetFile, options BundlerOptions) ([]string, error) {
+func (b *AssetBundler) bundleCSS(
+	ctx context.Context,
+	cssFiles []AssetFile,
+	options BundlerOptions,
+) ([]string, error) {
 	if len(cssFiles) == 0 {
 		return nil, nil
 	}
@@ -326,7 +338,11 @@ func (b *AssetBundler) bundleCSS(ctx context.Context, cssFiles []AssetFile, opti
 }
 
 // processOtherAssets handles images, fonts, and other static assets
-func (b *AssetBundler) processOtherAssets(ctx context.Context, manifest *AssetManifest, options BundlerOptions) ([]string, error) {
+func (b *AssetBundler) processOtherAssets(
+	ctx context.Context,
+	manifest *AssetManifest,
+	options BundlerOptions,
+) ([]string, error) {
 	processedFiles := make([]string, 0)
 
 	// Process images
@@ -472,7 +488,11 @@ func (b *AssetBundler) findEntryPoints(files []AssetFile) []AssetFile {
 }
 
 // simpleJSBundle creates a simple JavaScript bundle (replace with real bundler)
-func (b *AssetBundler) simpleJSBundle(entry AssetFile, allFiles []AssetFile, options BundlerOptions) (string, error) {
+func (b *AssetBundler) simpleJSBundle(
+	entry AssetFile,
+	allFiles []AssetFile,
+	options BundlerOptions,
+) (string, error) {
 	var bundle strings.Builder
 
 	// Add bundle header

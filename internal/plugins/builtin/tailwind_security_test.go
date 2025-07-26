@@ -441,7 +441,10 @@ func TestTailwindPlugin_ConfigPathCommandInjection(t *testing.T) {
 
 			if tt.shouldFail {
 				if err == nil {
-					t.Errorf("Expected error for malicious config path %q, but got none", tt.configPath)
+					t.Errorf(
+						"Expected error for malicious config path %q, but got none",
+						tt.configPath,
+					)
 				} else if !strings.Contains(strings.ToLower(err.Error()), strings.ToLower(tt.errorMsg)) {
 					t.Errorf("Expected error containing %q, got: %v", tt.errorMsg, err)
 				}
@@ -510,7 +513,10 @@ func TestTailwindPlugin_CommandValidation(t *testing.T) {
 
 			if tt.shouldFail {
 				if err == nil {
-					t.Errorf("Expected error for malicious tailwind path %q, but got none", tt.tailwindPath)
+					t.Errorf(
+						"Expected error for malicious tailwind path %q, but got none",
+						tt.tailwindPath,
+					)
 				} else if !strings.Contains(strings.ToLower(err.Error()), strings.ToLower(tt.errorMsg)) {
 					t.Errorf("Expected error containing %q, got: %v", tt.errorMsg, err)
 				}

@@ -54,7 +54,12 @@ func TestCompiler_UnicodeSecurityAttacks(t *testing.T) {
 
 				err := testCompiler.validateCommand()
 				assert.Error(t, err, attack.reason)
-				assert.Contains(t, err.Error(), "invalid argument", "Should identify as invalid argument")
+				assert.Contains(
+					t,
+					err.Error(),
+					"invalid argument",
+					"Should identify as invalid argument",
+				)
 			})
 		}
 	})
@@ -563,7 +568,12 @@ func TestCompiler_SecurityBoundaries(t *testing.T) {
 
 				err := testCompiler.validateCommand()
 				assert.Error(t, err, "Command %s should be disallowed", cmd)
-				assert.Contains(t, err.Error(), "not allowed", "Error should indicate command is not allowed")
+				assert.Contains(
+					t,
+					err.Error(),
+					"not allowed",
+					"Error should indicate command is not allowed",
+				)
 			})
 		}
 	})

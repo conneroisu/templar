@@ -114,7 +114,10 @@ func (tp *TailwindPlugin) Health() plugins.PluginHealth {
 }
 
 // HandleComponent processes components to extract Tailwind classes
-func (tp *TailwindPlugin) HandleComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error) {
+func (tp *TailwindPlugin) HandleComponent(
+	ctx context.Context,
+	component *types.ComponentInfo,
+) (*types.ComponentInfo, error) {
 	if !tp.enabled {
 		return component, nil
 	}
@@ -153,7 +156,11 @@ func (tp *TailwindPlugin) PreBuild(ctx context.Context, components []*types.Comp
 }
 
 // PostBuild generates CSS after components are built
-func (tp *TailwindPlugin) PostBuild(ctx context.Context, components []*types.ComponentInfo, buildResult plugins.BuildResult) error {
+func (tp *TailwindPlugin) PostBuild(
+	ctx context.Context,
+	components []*types.ComponentInfo,
+	buildResult plugins.BuildResult,
+) error {
 	if !tp.enabled || !buildResult.Success {
 		return nil
 	}
@@ -177,7 +184,10 @@ func (tp *TailwindPlugin) PostBuild(ctx context.Context, components []*types.Com
 }
 
 // TransformBuildCommand allows modifying the build command
-func (tp *TailwindPlugin) TransformBuildCommand(ctx context.Context, command []string) ([]string, error) {
+func (tp *TailwindPlugin) TransformBuildCommand(
+	ctx context.Context,
+	command []string,
+) ([]string, error) {
 	// For Tailwind, we don't need to modify the build command
 	return command, nil
 }

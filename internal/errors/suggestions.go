@@ -61,8 +61,11 @@ func ComponentNotFoundError(componentName string, ctx *SuggestionContext) []Erro
 			}
 
 			suggestions = append(suggestions, ErrorSuggestion{
-				Title:       "Available components",
-				Description: "These components are currently available: " + strings.Join(componentNames, ", "),
+				Title: "Available components",
+				Description: "These components are currently available: " + strings.Join(
+					componentNames,
+					", ",
+				),
 			})
 
 			// Suggest similar component names
@@ -172,7 +175,11 @@ func ServerStartError(err error, port int, ctx *SuggestionContext) []ErrorSugges
 }
 
 // ConfigurationErrorSuggestions generates suggestions for configuration issues
-func ConfigurationErrorSuggestions(configError string, configPath string, ctx *SuggestionContext) []ErrorSuggestion {
+func ConfigurationErrorSuggestions(
+	configError string,
+	configPath string,
+	ctx *SuggestionContext,
+) []ErrorSuggestion {
 	suggestions := []ErrorSuggestion{
 		{
 			Title:       "Check configuration file",
@@ -287,7 +294,11 @@ func (e *EnhancedError) Unwrap() error {
 }
 
 // NewEnhancedError creates a new enhanced error with suggestions
-func NewEnhancedError(title string, originalError error, suggestions []ErrorSuggestion) *EnhancedError {
+func NewEnhancedError(
+	title string,
+	originalError error,
+	suggestions []ErrorSuggestion,
+) *EnhancedError {
 	return &EnhancedError{
 		OriginalError: originalError,
 		Title:         title,

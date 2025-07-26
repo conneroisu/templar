@@ -152,7 +152,11 @@ func (pm *PerformanceMonitor) TrackOperation(name string, fn func() error) error
 }
 
 // TrackOperationWithContext tracks operation with context
-func (pm *PerformanceMonitor) TrackOperationWithContext(ctx context.Context, name string, fn func(context.Context) error) error {
+func (pm *PerformanceMonitor) TrackOperationWithContext(
+	ctx context.Context,
+	name string,
+	fn func(context.Context) error,
+) error {
 	if !pm.trackingEnabled {
 		return fn(ctx)
 	}
@@ -408,7 +412,11 @@ func (pm *PerformanceMonitor) buildResourceSummary() ResourceSummary {
 
 	// Calculate file descriptor percentage
 	if pm.resourceMetrics.MaxFiles > 0 {
-		summary.FileDescPercent = float64(pm.resourceMetrics.OpenFiles) / float64(pm.resourceMetrics.MaxFiles) * 100
+		summary.FileDescPercent = float64(
+			pm.resourceMetrics.OpenFiles,
+		) / float64(
+			pm.resourceMetrics.MaxFiles,
+		) * 100
 	}
 
 	return summary
@@ -521,7 +529,12 @@ func (pm *PerformanceMonitor) StartBackgroundUpdates(interval time.Duration) {
 		}
 	}()
 
-	pm.logger.Info(context.Background(), "Background performance updates started", "interval", interval)
+	pm.logger.Info(
+		context.Background(),
+		"Background performance updates started",
+		"interval",
+		interval,
+	)
 }
 
 // PerformanceMiddleware creates HTTP middleware for performance tracking
@@ -530,10 +543,14 @@ func (pm *PerformanceMonitor) PerformanceMiddleware() func(http.Handler) http.Ha
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			operationName := fmt.Sprintf("http_%s_%s", r.Method, r.URL.Path)
 
-			err := pm.TrackOperationWithContext(r.Context(), operationName, func(ctx context.Context) error {
-				next.ServeHTTP(w, r.WithContext(ctx))
-				return nil
-			})
+			err := pm.TrackOperationWithContext(
+				r.Context(),
+				operationName,
+				func(ctx context.Context) error {
+					next.ServeHTTP(w, r.WithContext(ctx))
+					return nil
+				},
+			)
 
 			if err != nil {
 				pm.logger.Error(r.Context(), err, "HTTP request performance tracking failed")

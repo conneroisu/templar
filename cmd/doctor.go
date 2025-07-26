@@ -76,9 +76,12 @@ type ReportSummary struct {
 func init() {
 	rootCmd.AddCommand(doctorCmd)
 
-	doctorCmd.Flags().BoolVarP(&doctorVerbose, "verbose", "v", false, "Show verbose diagnostic information")
-	doctorCmd.Flags().BoolVar(&doctorFix, "fix", false, "Automatically fix common issues where possible")
-	doctorCmd.Flags().StringVarP(&doctorFormat, "format", "f", "table", "Output format (table|json|yaml)")
+	doctorCmd.Flags().
+		BoolVarP(&doctorVerbose, "verbose", "v", false, "Show verbose diagnostic information")
+	doctorCmd.Flags().
+		BoolVar(&doctorFix, "fix", false, "Automatically fix common issues where possible")
+	doctorCmd.Flags().
+		StringVarP(&doctorFormat, "format", "f", "table", "Output format (table|json|yaml)")
 }
 
 func runDoctor(cmd *cobra.Command, args []string) error {
@@ -285,7 +288,10 @@ func checkGoEnvironment(ctx context.Context, report *DoctorReport) DiagnosticRes
 	// Check Go version compatibility
 	if strings.Contains(goVersion, "go1.19") || strings.Contains(goVersion, "go1.18") {
 		result.Status = "warning"
-		result.Message = fmt.Sprintf("Go version may be outdated for optimal templ support: %s", goVersion)
+		result.Message = fmt.Sprintf(
+			"Go version may be outdated for optimal templ support: %s",
+			goVersion,
+		)
 		result.Suggestion = "Consider upgrading to Go 1.20+ for better generics and templ support"
 	}
 
@@ -372,7 +378,10 @@ func checkAirIntegration(ctx context.Context, report *DoctorReport) DiagnosticRe
 
 	if !airConfigExists {
 		result.Status = "warning"
-		result.Message = fmt.Sprintf("Air installed (%s) but no .air.toml configuration found", version)
+		result.Message = fmt.Sprintf(
+			"Air installed (%s) but no .air.toml configuration found",
+			version,
+		)
 		result.Suggestion = "Create .air.toml with: air init, or integrate with Templar using our air config template"
 		result.AutoFixable = true
 	} else {
@@ -664,22 +673,34 @@ func checkDevelopmentWorkflow(ctx context.Context, report *DoctorReport) Diagnos
 		switch prevResult.Name {
 		case "Air Integration":
 			if prevResult.Status == "ok" {
-				recommendations = append(recommendations, "✅ Air + Templar: Use 'air' for Go hot reload and 'templar serve' for component preview")
+				recommendations = append(
+					recommendations,
+					"✅ Air + Templar: Use 'air' for Go hot reload and 'templar serve' for component preview",
+				)
 				workflowScore++
 			}
 		case "Tailwind CSS Integration":
 			if prevResult.Status == "ok" {
-				recommendations = append(recommendations, "✅ Tailwind + Templar: Run 'tailwindcss --watch' alongside 'templar serve'")
+				recommendations = append(
+					recommendations,
+					"✅ Tailwind + Templar: Run 'tailwindcss --watch' alongside 'templar serve'",
+				)
 				workflowScore++
 			}
 		case "VS Code Integration":
 			if prevResult.Status == "ok" {
-				recommendations = append(recommendations, "✅ VS Code: Install templ extension for syntax highlighting")
+				recommendations = append(
+					recommendations,
+					"✅ VS Code: Install templ extension for syntax highlighting",
+				)
 				workflowScore++
 			}
 		case "Git Integration":
 			if prevResult.Status == "ok" {
-				recommendations = append(recommendations, "✅ Git: Exclude *_templ.go files from version control")
+				recommendations = append(
+					recommendations,
+					"✅ Git: Exclude *_templ.go files from version control",
+				)
 				workflowScore++
 			}
 		}
@@ -783,7 +804,13 @@ func displayResult(result DiagnosticResult) {
 		icon = "•"
 	}
 
-	fmt.Printf("%s [%s] %s: %s\n", icon, strings.ToUpper(result.Category), result.Name, result.Message)
+	fmt.Printf(
+		"%s [%s] %s: %s\n",
+		icon,
+		strings.ToUpper(result.Category),
+		result.Name,
+		result.Message,
+	)
 
 	if result.Suggestion != "" {
 		fmt.Printf("   💡 %s\n", result.Suggestion)

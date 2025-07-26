@@ -181,8 +181,11 @@ func TestStatisticalValidator_TDistributionVsNormal(t *testing.T) {
 	// Small sample should have lower confidence for same effect size
 	// (due to t-distribution having fatter tails)
 	if smallResult.Confidence >= largeResult.Confidence {
-		t.Errorf("Expected small sample confidence (%.4f) < large sample confidence (%.4f) for same effect size",
-			smallResult.Confidence, largeResult.Confidence)
+		t.Errorf(
+			"Expected small sample confidence (%.4f) < large sample confidence (%.4f) for same effect size",
+			smallResult.Confidence,
+			largeResult.Confidence,
+		)
 	}
 }
 
@@ -216,8 +219,11 @@ func TestStatisticalValidator_MultipleComparisonCorrection(t *testing.T) {
 	extremeResult := validator.CalculateStatisticalConfidence(currentValue, baseline, 1000)
 
 	if extremeResult.Confidence >= multipleResult.Confidence {
-		t.Errorf("Expected extreme multiple comparison confidence (%.4f) < moderate multiple (%.4f)",
-			extremeResult.Confidence, multipleResult.Confidence)
+		t.Errorf(
+			"Expected extreme multiple comparison confidence (%.4f) < moderate multiple (%.4f)",
+			extremeResult.Confidence,
+			multipleResult.Confidence,
+		)
 	}
 
 	// Confidence should be bounded [0, 1]
@@ -385,13 +391,19 @@ func TestStatisticalValidator_EdgeCases(t *testing.T) {
 
 	sameResult := validator.CalculateStatisticalConfidence(100.0, zeroVarSame, 1)
 	if sameResult.Confidence != 1.0 {
-		t.Errorf("Expected 1.0 confidence for identical value with zero variance, got %.4f", sameResult.Confidence)
+		t.Errorf(
+			"Expected 1.0 confidence for identical value with zero variance, got %.4f",
+			sameResult.Confidence,
+		)
 	}
 
 	// Zero variance baseline with different value
 	diffResult := validator.CalculateStatisticalConfidence(101.0, zeroVarSame, 1)
 	if diffResult.Confidence < 0.99 {
-		t.Errorf("Expected high confidence (>=0.99) for different value with zero variance, got %.4f", diffResult.Confidence)
+		t.Errorf(
+			"Expected high confidence (>=0.99) for different value with zero variance, got %.4f",
+			diffResult.Confidence,
+		)
 	}
 	if diffResult.TestType != "no_baseline_variance" {
 		t.Errorf("Expected 'no_baseline_variance' test type, got '%s'", diffResult.TestType)

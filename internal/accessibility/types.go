@@ -265,13 +265,25 @@ type AccessibilityIncomplete struct {
 // AccessibilityTester is the main interface for running accessibility tests
 type AccessibilityTester interface {
 	// TestComponent runs accessibility tests on a single component
-	TestComponent(ctx context.Context, componentName string, props map[string]interface{}) (*AccessibilityReport, error)
+	TestComponent(
+		ctx context.Context,
+		componentName string,
+		props map[string]interface{},
+	) (*AccessibilityReport, error)
 
 	// TestHTML runs accessibility tests on raw HTML content
-	TestHTML(ctx context.Context, html string, config AuditConfiguration) (*AccessibilityReport, error)
+	TestHTML(
+		ctx context.Context,
+		html string,
+		config AuditConfiguration,
+	) (*AccessibilityReport, error)
 
 	// TestURL runs accessibility tests on a live web page
-	TestURL(ctx context.Context, url string, config AuditConfiguration) (*AccessibilityReport, error)
+	TestURL(
+		ctx context.Context,
+		url string,
+		config AuditConfiguration,
+	) (*AccessibilityReport, error)
 
 	// GetAvailableRules returns all available accessibility rules
 	GetAvailableRules() []AccessibilityRule
@@ -286,10 +298,17 @@ type AccessibilityEngine interface {
 	Initialize(ctx context.Context, config EngineConfig) error
 
 	// Analyze performs accessibility analysis on HTML content
-	Analyze(ctx context.Context, html string, config AuditConfiguration) (*AccessibilityReport, error)
+	Analyze(
+		ctx context.Context,
+		html string,
+		config AuditConfiguration,
+	) (*AccessibilityReport, error)
 
 	// GetSuggestions generates actionable suggestions for violations
-	GetSuggestions(ctx context.Context, violation AccessibilityViolation) ([]AccessibilitySuggestion, error)
+	GetSuggestions(
+		ctx context.Context,
+		violation AccessibilityViolation,
+	) ([]AccessibilitySuggestion, error)
 
 	// AutoFix attempts to automatically fix simple accessibility issues
 	AutoFix(ctx context.Context, html string, violations []AccessibilityViolation) (string, error)

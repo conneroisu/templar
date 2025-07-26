@@ -175,7 +175,13 @@ func (p *TailwindPlugin) Setup(ctx context.Context, config FrameworkConfig) erro
 // setupWithNPM sets up Tailwind using npm
 func (p *TailwindPlugin) setupWithNPM(ctx context.Context, config FrameworkConfig) error {
 	// Install Tailwind via npm
-	cmd := exec.CommandContext(ctx, "npm", "install", "-D", fmt.Sprintf("tailwindcss@%s", config.Version))
+	cmd := exec.CommandContext(
+		ctx,
+		"npm",
+		"install",
+		"-D",
+		fmt.Sprintf("tailwindcss@%s", config.Version),
+	)
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to install Tailwind via npm: %w", err)
 	}
@@ -477,7 +483,8 @@ func (p *TailwindPlugin) ValidateConfig(configPath string) error {
 	}
 
 	// Basic validation - check for required exports
-	if !strings.Contains(string(content), "module.exports") && !strings.Contains(string(content), "export default") {
+	if !strings.Contains(string(content), "module.exports") &&
+		!strings.Contains(string(content), "export default") {
 		return fmt.Errorf("config file must export a configuration object")
 	}
 
@@ -485,7 +492,11 @@ func (p *TailwindPlugin) ValidateConfig(configPath string) error {
 }
 
 // ProcessCSS processes CSS using Tailwind
-func (p *TailwindPlugin) ProcessCSS(ctx context.Context, input []byte, options ProcessingOptions) ([]byte, error) {
+func (p *TailwindPlugin) ProcessCSS(
+	ctx context.Context,
+	input []byte,
+	options ProcessingOptions,
+) ([]byte, error) {
 	// Create temporary input file
 	tmpDir := os.TempDir()
 	inputFile := filepath.Join(tmpDir, "input.css")
@@ -631,7 +642,11 @@ func (p *TailwindPlugin) isTailwindClass(className string) bool {
 }
 
 // OptimizeCSS optimizes CSS for Tailwind
-func (p *TailwindPlugin) OptimizeCSS(ctx context.Context, css []byte, usedClasses []string) ([]byte, error) {
+func (p *TailwindPlugin) OptimizeCSS(
+	ctx context.Context,
+	css []byte,
+	usedClasses []string,
+) ([]byte, error) {
 	// For Tailwind, optimization is typically done during the build process
 	// We can implement purging here if needed
 
@@ -871,7 +886,15 @@ func getTailwindTemplates() []ComponentTemplate {
 					},
 				},
 			},
-			Classes: []string{"px-4", "py-2", "rounded", "font-medium", "bg-blue-500", "text-white", "hover:bg-blue-600"},
+			Classes: []string{
+				"px-4",
+				"py-2",
+				"rounded",
+				"font-medium",
+				"bg-blue-500",
+				"text-white",
+				"hover:bg-blue-600",
+			},
 		},
 		{
 			Name:        "Card",
@@ -888,7 +911,16 @@ func getTailwindTemplates() []ComponentTemplate {
 				{Name: "title", Type: "string", Optional: false},
 				{Name: "content", Type: "string", Optional: false},
 			},
-			Classes: []string{"bg-white", "rounded-lg", "shadow-md", "p-6", "text-lg", "font-semibold", "mb-2", "text-gray-600"},
+			Classes: []string{
+				"bg-white",
+				"rounded-lg",
+				"shadow-md",
+				"p-6",
+				"text-lg",
+				"font-semibold",
+				"mb-2",
+				"text-gray-600",
+			},
 		},
 	}
 }

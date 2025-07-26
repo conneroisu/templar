@@ -119,8 +119,14 @@ func (s *E2ETestSystem) startServer() error {
 			Timestamp: time.Now(),
 			Version:   "test-e2e",
 			Checks: map[string]interface{}{
-				"server":   map[string]interface{}{"status": "healthy", "message": "HTTP server operational"},
-				"registry": map[string]interface{}{"status": "healthy", "components": len(s.Registry.GetAll())},
+				"server": map[string]interface{}{
+					"status":  "healthy",
+					"message": "HTTP server operational",
+				},
+				"registry": map[string]interface{}{
+					"status":     "healthy",
+					"components": len(s.Registry.GetAll()),
+				},
 			},
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -547,7 +553,11 @@ templ Modal(title string, visible bool) {
 			defer resp.Body.Close()
 
 			if resp.StatusCode != http.StatusOK {
-				return fmt.Errorf("expected status 200 for %s, got %d", componentName, resp.StatusCode)
+				return fmt.Errorf(
+					"expected status 200 for %s, got %d",
+					componentName,
+					resp.StatusCode,
+				)
 			}
 
 			body, readErr := io.ReadAll(resp.Body)
@@ -556,7 +566,10 @@ templ Modal(title string, visible bool) {
 			}
 
 			if !strings.Contains(string(body), "Component: "+componentName) {
-				return fmt.Errorf("response doesn't contain expected component name: %s", componentName)
+				return fmt.Errorf(
+					"response doesn't contain expected component name: %s",
+					componentName,
+				)
 			}
 
 			return nil

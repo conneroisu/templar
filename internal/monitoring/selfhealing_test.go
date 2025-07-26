@@ -200,7 +200,12 @@ func TestSelfHealingSystem_BasicRecovery(t *testing.T) {
 	require.Contains(t, history, "test_check")
 
 	checkHistory := history["test_check"]
-	assert.Greater(t, checkHistory.ConsecutiveFailures, 1, "Should have recorded consecutive failures")
+	assert.Greater(
+		t,
+		checkHistory.ConsecutiveFailures,
+		1,
+		"Should have recorded consecutive failures",
+	)
 	assert.Greater(t, checkHistory.RecoveryAttempts, 0, "Should have recorded recovery attempts")
 }
 
@@ -254,7 +259,10 @@ func TestSelfHealingSystem_CooldownPeriod(t *testing.T) {
 	// Debug: Check if the recovery was actually blocked
 	executed := recoveryAction.WasExecuted()
 	if executed {
-		t.Logf("DEBUG: Second recovery was executed (should have been blocked). Cooldown period: %v", rule.CooldownPeriod)
+		t.Logf(
+			"DEBUG: Second recovery was executed (should have been blocked). Cooldown period: %v",
+			rule.CooldownPeriod,
+		)
 	}
 	assert.False(t, executed, "Second recovery should be blocked by cooldown")
 

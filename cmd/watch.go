@@ -43,7 +43,8 @@ func init() {
 	rootCmd.AddCommand(watchCmd)
 
 	watchCmd.Flags().BoolVarP(&watchVerbose, "verbose", "v", false, "Verbose output")
-	watchCmd.Flags().StringVarP(&watchCommand, "command", "c", "", "Custom command to run on changes")
+	watchCmd.Flags().
+		StringVarP(&watchCommand, "command", "c", "", "Custom command to run on changes")
 }
 
 func runWatch(cmd *cobra.Command, args []string) error {
@@ -266,7 +267,10 @@ func validateGitCommand(args []string) error {
 
 	subcommand := args[0]
 	if !safeGitCommands[subcommand] {
-		return fmt.Errorf("git subcommand '%s' is not allowed (only read-only operations permitted)", subcommand)
+		return fmt.Errorf(
+			"git subcommand '%s' is not allowed (only read-only operations permitted)",
+			subcommand,
+		)
 	}
 
 	return nil
@@ -352,7 +356,9 @@ func runBuildCommand(cfg *config.Config) error {
 	// Check if templ is available
 	if parts[0] == "templ" {
 		if _, err := exec.LookPath("templ"); err != nil {
-			return errors.New("templ command not found. Please install it with: go install github.com/a-h/templ/cmd/templ@v0.3.819")
+			return errors.New(
+				"templ command not found. Please install it with: go install github.com/a-h/templ/cmd/templ@v0.3.819",
+			)
 		}
 	}
 

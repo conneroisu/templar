@@ -149,7 +149,11 @@ func TestIntegration_ConfigurationLoading(t *testing.T) {
 			verify: func(t *testing.T, cfg *config.Config) {
 				assert.Equal(t, 8080, cfg.Server.Port)
 				assert.Equal(t, "localhost", cfg.Server.Host)
-				assert.Equal(t, []string{"./components", "./views", "./examples"}, cfg.Components.ScanPaths)
+				assert.Equal(
+					t,
+					[]string{"./components", "./views", "./examples"},
+					cfg.Components.ScanPaths,
+				)
 			},
 		},
 		{

@@ -42,8 +42,14 @@ type WorkerManager struct {
 }
 
 // NewWorkerManager creates a new worker manager with the specified configuration.
-func NewWorkerManager(workers int, compiler *TemplCompiler, hashProvider interfaces.HashProvider,
-	metrics *BuildMetrics, objectPools *ObjectPools, errorParser *errors.ErrorParser) *WorkerManager {
+func NewWorkerManager(
+	workers int,
+	compiler *TemplCompiler,
+	hashProvider interfaces.HashProvider,
+	metrics *BuildMetrics,
+	objectPools *ObjectPools,
+	errorParser *errors.ErrorParser,
+) *WorkerManager {
 	return &WorkerManager{
 		workers:      workers,
 		workerPool:   NewWorkerPool(),

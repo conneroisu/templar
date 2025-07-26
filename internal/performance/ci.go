@@ -18,7 +18,11 @@ type CIIntegration struct {
 }
 
 // NewCIIntegration creates a new CI integration
-func NewCIIntegration(detector *PerformanceDetector, outputFormat string, failOnRegression bool) *CIIntegration {
+func NewCIIntegration(
+	detector *PerformanceDetector,
+	outputFormat string,
+	failOnRegression bool,
+) *CIIntegration {
 	return &CIIntegration{
 		detector:         detector,
 		outputFormat:     outputFormat,
@@ -181,7 +185,10 @@ type ReportSummary struct {
 }
 
 // GenerateReport creates comprehensive performance report
-func (ci *CIIntegration) GenerateReport(results []BenchmarkResult, regressions []RegressionDetection) PerformanceReport {
+func (ci *CIIntegration) GenerateReport(
+	results []BenchmarkResult,
+	regressions []RegressionDetection,
+) PerformanceReport {
 	summary := ci.calculateSummary(results, regressions)
 
 	return PerformanceReport{
@@ -196,7 +203,10 @@ func (ci *CIIntegration) GenerateReport(results []BenchmarkResult, regressions [
 }
 
 // calculateSummary computes report summary statistics
-func (ci *CIIntegration) calculateSummary(results []BenchmarkResult, regressions []RegressionDetection) ReportSummary {
+func (ci *CIIntegration) calculateSummary(
+	results []BenchmarkResult,
+	regressions []RegressionDetection,
+) ReportSummary {
 	summary := ReportSummary{
 		TotalBenchmarks:  len(results),
 		RegressionsFound: len(regressions),
@@ -288,7 +298,9 @@ func (ci *CIIntegration) outputText(report PerformanceReport, outputFile string)
 	output.WriteString(fmt.Sprintf("📊 Summary:\n"))
 	output.WriteString(fmt.Sprintf("  • Total Benchmarks: %d\n", report.Summary.TotalBenchmarks))
 	output.WriteString(fmt.Sprintf("  • Regressions Found: %d\n", report.Summary.RegressionsFound))
-	output.WriteString(fmt.Sprintf("  • Health Score: %.1f/100\n", report.Summary.OverallHealthScore))
+	output.WriteString(
+		fmt.Sprintf("  • Health Score: %.1f/100\n", report.Summary.OverallHealthScore),
+	)
 
 	if report.GitCommit != "" {
 		output.WriteString(fmt.Sprintf("  • Git Commit: %s\n", report.GitCommit))
@@ -322,7 +334,14 @@ func (ci *CIIntegration) outputText(report PerformanceReport, outputFile string)
 				minorCount++
 			}
 
-			output.WriteString(fmt.Sprintf("%s %s [%s]\n", icon, regression.BenchmarkName, strings.ToUpper(regression.Severity)))
+			output.WriteString(
+				fmt.Sprintf(
+					"%s %s [%s]\n",
+					icon,
+					regression.BenchmarkName,
+					strings.ToUpper(regression.Severity),
+				),
+			)
 			output.WriteString(fmt.Sprintf("    Type: %s regression\n", regression.RegressionType))
 			output.WriteString(fmt.Sprintf("    Change: %.1f%% (%.2f → %.2f)\n",
 				regression.PercentageChange, regression.BaselineValue, regression.CurrentValue))
@@ -354,7 +373,9 @@ func (ci *CIIntegration) outputText(report PerformanceReport, outputFile string)
 
 		for i := 0; i < count; i++ {
 			result := sortedResults[i]
-			output.WriteString(fmt.Sprintf("  %d. %s: %.2f ns/op", i+1, result.Name, result.NsPerOp))
+			output.WriteString(
+				fmt.Sprintf("  %d. %s: %.2f ns/op", i+1, result.Name, result.NsPerOp),
+			)
 			if result.BytesPerOp > 0 {
 				output.WriteString(fmt.Sprintf(" | %d B/op", result.BytesPerOp))
 			}
@@ -389,9 +410,17 @@ func (ci *CIIntegration) outputGitHub(report PerformanceReport, outputFile strin
 			level = "error"
 		}
 
-		output.WriteString(fmt.Sprintf("::%s::Performance regression detected in %s: %.1f%% %s degradation (%.2f → %.2f)\n",
-			level, regression.BenchmarkName, regression.PercentageChange, regression.RegressionType,
-			regression.BaselineValue, regression.CurrentValue))
+		output.WriteString(
+			fmt.Sprintf(
+				"::%s::Performance regression detected in %s: %.1f%% %s degradation (%.2f → %.2f)\n",
+				level,
+				regression.BenchmarkName,
+				regression.PercentageChange,
+				regression.RegressionType,
+				regression.BaselineValue,
+				regression.CurrentValue,
+			),
+		)
 	}
 
 	// Summary comment
@@ -417,8 +446,10 @@ func (ci *CIIntegration) outputJUnit(report PerformanceReport, outputFile string
 	var output strings.Builder
 
 	output.WriteString(`<?xml version="1.0" encoding="UTF-8"?>` + "\n")
-	output.WriteString(fmt.Sprintf(`<testsuite name="performance" tests="%d" failures="%d" time="%.3f">`,
-		report.Summary.TotalBenchmarks, report.Summary.RegressionsFound, 0.0) + "\n")
+	output.WriteString(
+		fmt.Sprintf(`<testsuite name="performance" tests="%d" failures="%d" time="%.3f">`,
+			report.Summary.TotalBenchmarks, report.Summary.RegressionsFound, 0.0) + "\n",
+	)
 
 	// Add test cases for each benchmark
 	for _, result := range report.Results {
@@ -430,8 +461,13 @@ func (ci *CIIntegration) outputJUnit(report PerformanceReport, outputFile string
 		for _, regression := range report.Regressions {
 			if regression.BenchmarkName == result.Name {
 				output.WriteString("\n")
-				output.WriteString(fmt.Sprintf(`    <failure message="Performance regression: %.1f%% %s degradation" type="regression">`,
-					regression.PercentageChange, regression.RegressionType))
+				output.WriteString(
+					fmt.Sprintf(
+						`    <failure message="Performance regression: %.1f%% %s degradation" type="regression">`,
+						regression.PercentageChange,
+						regression.RegressionType,
+					),
+				)
 				output.WriteString(fmt.Sprintf("Baseline: %.2f, Current: %.2f, Threshold: %.2f",
 					regression.BaselineValue, regression.CurrentValue, regression.Threshold))
 				output.WriteString("</failure>\n")

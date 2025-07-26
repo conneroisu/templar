@@ -208,7 +208,12 @@ func generateMockValue(paramType string) interface{} {
 	}
 }
 
-func createPreviewServer(cfg *config.Config, component *types.ComponentInfo, props map[string]interface{}, mockData map[string]interface{}) (*server.PreviewServer, error) {
+func createPreviewServer(
+	cfg *config.Config,
+	component *types.ComponentInfo,
+	props map[string]interface{},
+	mockData map[string]interface{},
+) (*server.PreviewServer, error) {
 	// Create a new registry with just the preview component
 	previewRegistry := registry.NewComponentRegistry()
 	previewRegistry.Register(component)
@@ -242,7 +247,12 @@ func createPreviewServer(cfg *config.Config, component *types.ComponentInfo, pro
 	return srv, nil
 }
 
-func generatePreviewHTML(component *types.ComponentInfo, props map[string]interface{}, mockData map[string]interface{}, renderer *renderer.ComponentRenderer) (string, error) {
+func generatePreviewHTML(
+	component *types.ComponentInfo,
+	props map[string]interface{},
+	mockData map[string]interface{},
+	renderer *renderer.ComponentRenderer,
+) (string, error) {
 	// Use provided props or generated mock data
 	data := props
 	if data == nil {
@@ -261,7 +271,11 @@ func generatePreviewHTML(component *types.ComponentInfo, props map[string]interf
 	return wrapperHTML, nil
 }
 
-func generateWrapperHTML(component *types.ComponentInfo, data map[string]interface{}, componentHTML string) string {
+func generateWrapperHTML(
+	component *types.ComponentInfo,
+	data map[string]interface{},
+	componentHTML string,
+) string {
 	// Create a simple wrapper if custom wrapper is not specified
 	if previewFlags.Wrapper == "" {
 		return fmt.Sprintf(`<!DOCTYPE html>

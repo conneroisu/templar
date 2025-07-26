@@ -16,7 +16,10 @@ type RegistryIntegration struct {
 }
 
 // NewRegistryIntegration creates a new registry integration
-func NewRegistryIntegration(registry *registry.ComponentRegistry, pluginManager *EnhancedPluginManager) *RegistryIntegration {
+func NewRegistryIntegration(
+	registry *registry.ComponentRegistry,
+	pluginManager *EnhancedPluginManager,
+) *RegistryIntegration {
 	return &RegistryIntegration{
 		registry:      registry,
 		pluginManager: pluginManager,
@@ -24,7 +27,10 @@ func NewRegistryIntegration(registry *registry.ComponentRegistry, pluginManager 
 }
 
 // ProcessComponent processes a component through plugins before registering
-func (ri *RegistryIntegration) ProcessComponent(ctx context.Context, component *types.ComponentInfo) error {
+func (ri *RegistryIntegration) ProcessComponent(
+	ctx context.Context,
+	component *types.ComponentInfo,
+) error {
 	ri.mu.RLock()
 	defer ri.mu.RUnlock()
 
@@ -100,7 +106,10 @@ func (bpa *BuildPipelineAdapter) RemovePlugin(pluginName string) error {
 }
 
 // ExecutePreBuildHooks executes all registered pre-build hooks
-func (bpa *BuildPipelineAdapter) ExecutePreBuildHooks(ctx context.Context, components []*types.ComponentInfo) error {
+func (bpa *BuildPipelineAdapter) ExecutePreBuildHooks(
+	ctx context.Context,
+	components []*types.ComponentInfo,
+) error {
 	bpa.mu.RLock()
 	defer bpa.mu.RUnlock()
 
@@ -114,7 +123,11 @@ func (bpa *BuildPipelineAdapter) ExecutePreBuildHooks(ctx context.Context, compo
 }
 
 // ExecutePostBuildHooks executes all registered post-build hooks
-func (bpa *BuildPipelineAdapter) ExecutePostBuildHooks(ctx context.Context, components []*types.ComponentInfo, result BuildResult) error {
+func (bpa *BuildPipelineAdapter) ExecutePostBuildHooks(
+	ctx context.Context,
+	components []*types.ComponentInfo,
+	result BuildResult,
+) error {
 	bpa.mu.RLock()
 	defer bpa.mu.RUnlock()
 

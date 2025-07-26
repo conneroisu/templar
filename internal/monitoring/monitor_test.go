@@ -340,15 +340,19 @@ func TestMonitorAlerting(t *testing.T) {
 	require.NoError(t, err)
 
 	// Register an unhealthy check
-	unhealthyCheck := NewHealthCheckFunc("failing_check", true, func(ctx context.Context) HealthCheck {
-		return HealthCheck{
-			Name:        "failing_check",
-			Status:      HealthStatusUnhealthy,
-			Message:     "This check always fails",
-			LastChecked: time.Now(),
-			Critical:    true,
-		}
-	})
+	unhealthyCheck := NewHealthCheckFunc(
+		"failing_check",
+		true,
+		func(ctx context.Context) HealthCheck {
+			return HealthCheck{
+				Name:        "failing_check",
+				Status:      HealthStatusUnhealthy,
+				Message:     "This check always fails",
+				LastChecked: time.Now(),
+				Critical:    true,
+			}
+		},
+	)
 
 	monitor.RegisterHealthCheck(unhealthyCheck)
 

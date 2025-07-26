@@ -247,7 +247,16 @@ func TestLoggingIntegration(t *testing.T) {
 
 	t.Run("log with metrics - error", func(t *testing.T) {
 		testErr := errors.New("test error")
-		integration.LogWithMetrics(context.Background(), logging.LevelError, "test_component", "test_operation", testErr, "Test error message", "key", "value")
+		integration.LogWithMetrics(
+			context.Background(),
+			logging.LevelError,
+			"test_component",
+			"test_operation",
+			testErr,
+			"Test error message",
+			"key",
+			"value",
+		)
 
 		// Verify error metrics were recorded
 		metrics := monitor.metrics.GatherMetrics()
@@ -255,7 +264,8 @@ func TestLoggingIntegration(t *testing.T) {
 		logFound := false
 
 		for _, metric := range metrics {
-			if metric.Name == "templar_errors_total" && metric.Labels["category"] == "test_component" {
+			if metric.Name == "templar_errors_total" &&
+				metric.Labels["category"] == "test_component" {
 				errorFound = true
 			}
 			if metric.Name == "templar_log_entries_total" && metric.Labels["level"] == "ERROR" {
@@ -268,7 +278,16 @@ func TestLoggingIntegration(t *testing.T) {
 	})
 
 	t.Run("log with metrics - info", func(t *testing.T) {
-		integration.LogWithMetrics(context.Background(), logging.LevelInfo, "test_component", "test_operation", nil, "Test info message", "key", "value")
+		integration.LogWithMetrics(
+			context.Background(),
+			logging.LevelInfo,
+			"test_component",
+			"test_operation",
+			nil,
+			"Test info message",
+			"key",
+			"value",
+		)
 
 		// Verify log metrics were recorded
 		metrics := monitor.metrics.GatherMetrics()
@@ -297,10 +316,14 @@ func TestOperationTracker(t *testing.T) {
 
 	t.Run("successful operation", func(t *testing.T) {
 		executed := false
-		err := tracker.TrackOperation(context.Background(), "test_operation", func(ctx context.Context) error {
-			executed = true
-			return nil
-		})
+		err := tracker.TrackOperation(
+			context.Background(),
+			"test_operation",
+			func(ctx context.Context) error {
+				executed = true
+				return nil
+			},
+		)
 
 		assert.NoError(t, err)
 		assert.True(t, executed)
@@ -320,9 +343,13 @@ func TestOperationTracker(t *testing.T) {
 
 	t.Run("failed operation", func(t *testing.T) {
 		testErr := errors.New("operation failed")
-		err := tracker.TrackOperation(context.Background(), "failing_operation", func(ctx context.Context) error {
-			return testErr
-		})
+		err := tracker.TrackOperation(
+			context.Background(),
+			"failing_operation",
+			func(ctx context.Context) error {
+				return testErr
+			},
+		)
 
 		assert.Equal(t, testErr, err)
 
@@ -330,7 +357,8 @@ func TestOperationTracker(t *testing.T) {
 		metrics := monitor.metrics.GatherMetrics()
 		found := false
 		for _, metric := range metrics {
-			if metric.Name == "templar_errors_total" && metric.Labels["category"] == "test_component" {
+			if metric.Name == "templar_errors_total" &&
+				metric.Labels["category"] == "test_component" {
 				found = true
 				break
 			}
@@ -453,10 +481,15 @@ func TestGlobalFunctions(t *testing.T) {
 
 	t.Run("track operation globally", func(t *testing.T) {
 		executed := false
-		err := TrackOperation(context.Background(), "global_component", "global_operation", func(ctx context.Context) error {
-			executed = true
-			return nil
-		})
+		err := TrackOperation(
+			context.Background(),
+			"global_component",
+			"global_operation",
+			func(ctx context.Context) error {
+				executed = true
+				return nil
+			},
+		)
 
 		assert.NoError(t, err)
 		assert.True(t, executed)
@@ -464,13 +497,28 @@ func TestGlobalFunctions(t *testing.T) {
 
 	t.Run("log error globally", func(t *testing.T) {
 		testErr := errors.New("global error")
-		LogError(context.Background(), "global_component", "global_operation", testErr, "Test error message", "key", "value")
+		LogError(
+			context.Background(),
+			"global_component",
+			"global_operation",
+			testErr,
+			"Test error message",
+			"key",
+			"value",
+		)
 
 		// Function should not panic
 	})
 
 	t.Run("log info globally", func(t *testing.T) {
-		LogInfo(context.Background(), "global_component", "global_operation", "Test info message", "key", "value")
+		LogInfo(
+			context.Background(),
+			"global_component",
+			"global_operation",
+			"Test info message",
+			"key",
+			"value",
+		)
 
 		// Function should not panic
 	})
@@ -479,9 +527,14 @@ func TestGlobalFunctions(t *testing.T) {
 		SetGlobalMonitor(nil)
 
 		// These should not panic
-		err := TrackOperation(context.Background(), "component", "operation", func(ctx context.Context) error {
-			return nil
-		})
+		err := TrackOperation(
+			context.Background(),
+			"component",
+			"operation",
+			func(ctx context.Context) error {
+				return nil
+			},
+		)
 		assert.NoError(t, err)
 
 		LogError(context.Background(), "component", "operation", errors.New("test"), "message")
@@ -524,9 +577,13 @@ func BenchmarkOperationTracking(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		err := tracker.TrackOperation(context.Background(), "benchmark_operation", func(ctx context.Context) error {
-			return nil
-		})
+		err := tracker.TrackOperation(
+			context.Background(),
+			"benchmark_operation",
+			func(ctx context.Context) error {
+				return nil
+			},
+		)
 		require.NoError(b, err)
 	}
 }

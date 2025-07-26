@@ -82,7 +82,13 @@ func TestPluginBuildPipelineIntegration(t *testing.T) {
 		// Verify build lifecycle events were called in correct order
 		expectedEvents := []string{"Initialize", "PreBuild", "PostBuild"}
 		for _, expectedEvent := range expectedEvents {
-			assert.Contains(t, buildPlugin.events, expectedEvent, "Event %s should have been called", expectedEvent)
+			assert.Contains(
+				t,
+				buildPlugin.events,
+				expectedEvent,
+				"Event %s should have been called",
+				expectedEvent,
+			)
 		}
 
 		err = manager.Shutdown()
@@ -506,9 +512,24 @@ func TestPluginBuildPipelineErrorHandling(t *testing.T) {
 		}
 
 		// Verify that failures were handled gracefully
-		assert.Greater(t, successCount, 0, "Some components should have been processed successfully")
-		assert.Greater(t, failureCount, 0, "Some failures should have occurred due to plugin issues")
-		assert.Equal(t, numComponents, successCount+failureCount, "All components should have been processed")
+		assert.Greater(
+			t,
+			successCount,
+			0,
+			"Some components should have been processed successfully",
+		)
+		assert.Greater(
+			t,
+			failureCount,
+			0,
+			"Some failures should have occurred due to plugin issues",
+		)
+		assert.Equal(
+			t,
+			numComponents,
+			successCount+failureCount,
+			"All components should have been processed",
+		)
 
 		err = manager.Shutdown()
 		assert.NoError(t, err)
@@ -588,21 +609,31 @@ func (m *MockBuildLifecyclePlugin) Initialize(ctx context.Context, config Plugin
 	return nil
 }
 
-func (m *MockBuildLifecyclePlugin) PreBuild(ctx context.Context, components []*types.ComponentInfo) error {
+func (m *MockBuildLifecyclePlugin) PreBuild(
+	ctx context.Context,
+	components []*types.ComponentInfo,
+) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	m.events = append(m.events, "PreBuild")
 	return nil
 }
 
-func (m *MockBuildLifecyclePlugin) PostBuild(ctx context.Context, components []*types.ComponentInfo, result BuildResult) error {
+func (m *MockBuildLifecyclePlugin) PostBuild(
+	ctx context.Context,
+	components []*types.ComponentInfo,
+	result BuildResult,
+) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	m.events = append(m.events, "PostBuild")
 	return nil
 }
 
-func (m *MockBuildLifecyclePlugin) TransformBuildCommand(ctx context.Context, command []string) ([]string, error) {
+func (m *MockBuildLifecyclePlugin) TransformBuildCommand(
+	ctx context.Context,
+	command []string,
+) ([]string, error) {
 	return command, nil
 }
 
@@ -617,7 +648,10 @@ func (m *MockConcurrentBuildPlugin) Initialize(ctx context.Context, config Plugi
 	return nil
 }
 
-func (m *MockConcurrentBuildPlugin) HandleComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error) {
+func (m *MockConcurrentBuildPlugin) HandleComponent(
+	ctx context.Context,
+	component *types.ComponentInfo,
+) (*types.ComponentInfo, error) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
@@ -644,7 +678,10 @@ func (m *MockResourceTrackingPlugin) Initialize(ctx context.Context, config Plug
 	return nil
 }
 
-func (m *MockResourceTrackingPlugin) HandleComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error) {
+func (m *MockResourceTrackingPlugin) HandleComponent(
+	ctx context.Context,
+	component *types.ComponentInfo,
+) (*types.ComponentInfo, error) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
@@ -689,7 +726,10 @@ func (m *MockCoordinatorPlugin) SendMessage(message string) {
 	}
 }
 
-func (m *MockCoordinatorPlugin) HandleComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error) {
+func (m *MockCoordinatorPlugin) HandleComponent(
+	ctx context.Context,
+	component *types.ComponentInfo,
+) (*types.ComponentInfo, error) {
 	m.SendMessage(fmt.Sprintf("coordinator processing %s", component.Name))
 	if component.Metadata == nil {
 		component.Metadata = make(map[string]interface{})
@@ -711,7 +751,10 @@ func (m *MockWorkerPlugin) Initialize(ctx context.Context, config PluginConfig) 
 	return nil
 }
 
-func (m *MockWorkerPlugin) HandleComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error) {
+func (m *MockWorkerPlugin) HandleComponent(
+	ctx context.Context,
+	component *types.ComponentInfo,
+) (*types.ComponentInfo, error) {
 	if m.coordinator != nil {
 		m.coordinator.SendMessage(fmt.Sprintf("worker processed %s", component.Name))
 	}
@@ -736,7 +779,10 @@ func (m *MockPerformancePlugin) Initialize(ctx context.Context, config PluginCon
 	return nil
 }
 
-func (m *MockPerformancePlugin) HandleComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error) {
+func (m *MockPerformancePlugin) HandleComponent(
+	ctx context.Context,
+	component *types.ComponentInfo,
+) (*types.ComponentInfo, error) {
 	start := time.Now()
 
 	// Simulate minimal processing
@@ -768,7 +814,10 @@ func (m *MockMemoryEfficientPlugin) Initialize(ctx context.Context, config Plugi
 	return nil
 }
 
-func (m *MockMemoryEfficientPlugin) HandleComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error) {
+func (m *MockMemoryEfficientPlugin) HandleComponent(
+	ctx context.Context,
+	component *types.ComponentInfo,
+) (*types.ComponentInfo, error) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
@@ -803,7 +852,10 @@ func (m *MockIntermittentFailurePlugin) Initialize(ctx context.Context, config P
 	return nil
 }
 
-func (m *MockIntermittentFailurePlugin) HandleComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error) {
+func (m *MockIntermittentFailurePlugin) HandleComponent(
+	ctx context.Context,
+	component *types.ComponentInfo,
+) (*types.ComponentInfo, error) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 

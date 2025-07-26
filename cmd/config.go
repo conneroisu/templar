@@ -99,10 +99,12 @@ func init() {
 	configCmd.AddCommand(configShowCmd)
 
 	// Wizard flags
-	configWizardCmd.Flags().StringVarP(&configOutput, "output", "o", ".templar.yml", "Output configuration file")
+	configWizardCmd.Flags().
+		StringVarP(&configOutput, "output", "o", ".templar.yml", "Output configuration file")
 
 	// Validate flags
-	configValidateCmd.Flags().StringVarP(&configFile, "file", "f", "", "Configuration file to validate (default: .templar.yml)")
+	configValidateCmd.Flags().
+		StringVarP(&configFile, "file", "f", "", "Configuration file to validate (default: .templar.yml)")
 	configValidateCmd.Flags().BoolVar(&configStrict, "strict", false, "Treat warnings as errors")
 
 	// Show flags
@@ -228,11 +230,17 @@ func runConfigValidate(cmd *cobra.Command, args []string) error {
 		fmt.Print(validation.String())
 
 		if configStrict {
-			return fmt.Errorf("configuration validation failed in strict mode with %d warnings", len(validation.Warnings))
+			return fmt.Errorf(
+				"configuration validation failed in strict mode with %d warnings",
+				len(validation.Warnings),
+			)
 		}
 
 		fmt.Println("✅ Configuration is valid with warnings.")
-		fmt.Printf("Found %d warnings. Use --strict to treat warnings as errors.\n", len(validation.Warnings))
+		fmt.Printf(
+			"Found %d warnings. Use --strict to treat warnings as errors.\n",
+			len(validation.Warnings),
+		)
 	}
 
 	return nil

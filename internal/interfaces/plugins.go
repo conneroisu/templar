@@ -33,7 +33,10 @@ type ComponentPlugin interface {
 	// Returns:
 	//   Modified component (or original if unchanged)
 	//   Error if processing failed
-	HandleComponent(ctx context.Context, component *types.ComponentInfo) (*types.ComponentInfo, error)
+	HandleComponent(
+		ctx context.Context,
+		component *types.ComponentInfo,
+	) (*types.ComponentInfo, error)
 }
 
 // BuildPlugin extends Plugin for build process hooks

@@ -50,8 +50,10 @@ func init() {
 	rootCmd.AddCommand(healthCmd)
 
 	healthCmd.Flags().IntVarP(&healthPort, "port", "p", 8080, "Port to check for HTTP server")
-	healthCmd.Flags().StringVarP(&healthHost, "host", "H", "localhost", "Host to check for HTTP server")
-	healthCmd.Flags().DurationVarP(&healthTimeout, "timeout", "t", 3*time.Second, "Timeout for health checks")
+	healthCmd.Flags().
+		StringVarP(&healthHost, "host", "H", "localhost", "Host to check for HTTP server")
+	healthCmd.Flags().
+		DurationVarP(&healthTimeout, "timeout", "t", 3*time.Second, "Timeout for health checks")
 	healthCmd.Flags().BoolVarP(&healthVerbose, "verbose", "v", false, "Verbose health check output")
 }
 

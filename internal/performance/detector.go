@@ -88,7 +88,10 @@ type PerformanceDetector struct {
 }
 
 // NewPerformanceDetector creates a new performance detector
-func NewPerformanceDetector(baselineDir string, thresholds RegressionThresholds) *PerformanceDetector {
+func NewPerformanceDetector(
+	baselineDir string,
+	thresholds RegressionThresholds,
+) *PerformanceDetector {
 	// Create statistical validator with 95% confidence level and minimum 3 samples
 	statisticalValidator := NewStatisticalValidator(thresholds.ConfidenceLevel, 3)
 
@@ -221,7 +224,9 @@ func (pd *PerformanceDetector) UpdateBaselines(results []BenchmarkResult) error 
 }
 
 // DetectRegressions analyzes benchmark results against baselines for regressions
-func (pd *PerformanceDetector) DetectRegressions(results []BenchmarkResult) ([]RegressionDetection, error) {
+func (pd *PerformanceDetector) DetectRegressions(
+	results []BenchmarkResult,
+) ([]RegressionDetection, error) {
 	var regressions []RegressionDetection
 
 	// Calculate total number of statistical comparisons for multiple testing correction
@@ -547,7 +552,10 @@ func (pd *PerformanceDetector) saveBaseline(baseline *PerformanceBaseline) error
 }
 
 // getPerformanceRecommendation provides actionable recommendations for performance regressions
-func (pd *PerformanceDetector) getPerformanceRecommendation(severity string, percentageChange float64) string {
+func (pd *PerformanceDetector) getPerformanceRecommendation(
+	severity string,
+	percentageChange float64,
+) string {
 	switch severity {
 	case "critical":
 		return fmt.Sprintf("CRITICAL: %.1f%% performance degradation. "+
@@ -556,12 +564,18 @@ func (pd *PerformanceDetector) getPerformanceRecommendation(severity string, per
 		return fmt.Sprintf("MAJOR: %.1f%% performance degradation. "+
 			"Review recent commits for performance impact.", percentageChange)
 	default:
-		return fmt.Sprintf("MINOR: %.1f%% performance degradation. Monitor for trends.", percentageChange)
+		return fmt.Sprintf(
+			"MINOR: %.1f%% performance degradation. Monitor for trends.",
+			percentageChange,
+		)
 	}
 }
 
 // getMemoryRecommendation provides actionable recommendations for memory regressions
-func (pd *PerformanceDetector) getMemoryRecommendation(severity string, percentageChange float64) string {
+func (pd *PerformanceDetector) getMemoryRecommendation(
+	severity string,
+	percentageChange float64,
+) string {
 	switch severity {
 	case "critical":
 		return fmt.Sprintf("CRITICAL: %.1f%% memory increase. "+
@@ -576,7 +590,10 @@ func (pd *PerformanceDetector) getMemoryRecommendation(severity string, percenta
 }
 
 // getAllocationRecommendation provides actionable recommendations for allocation regressions
-func (pd *PerformanceDetector) getAllocationRecommendation(severity string, percentageChange float64) string {
+func (pd *PerformanceDetector) getAllocationRecommendation(
+	severity string,
+	percentageChange float64,
+) string {
 	switch severity {
 	case "critical":
 		return fmt.Sprintf("CRITICAL: %.1f%% allocation increase. "+

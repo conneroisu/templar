@@ -31,7 +31,11 @@ func NewBuildValidator(cfg *config.Config) *BuildValidator {
 }
 
 // Validate performs quality checks on build artifacts
-func (v *BuildValidator) Validate(ctx context.Context, artifacts *BuildArtifacts, options ValidationOptions) (*ValidationResults, error) {
+func (v *BuildValidator) Validate(
+	ctx context.Context,
+	artifacts *BuildArtifacts,
+	options ValidationOptions,
+) (*ValidationResults, error) {
 	results := &ValidationResults{
 		Errors:           make([]string, 0),
 		SecurityIssues:   make([]string, 0),

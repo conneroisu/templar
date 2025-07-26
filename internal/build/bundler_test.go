@@ -208,9 +208,24 @@ func TestDiscoverAssets_PathTraversalSecurity(t *testing.T) {
 	}
 
 	for _, path := range allPaths {
-		assert.False(t, strings.Contains(path, ".git"), "Path should not include .git files: %s", path)
-		assert.False(t, strings.Contains(path, "node_modules"), "Path should not include node_modules: %s", path)
-		assert.False(t, strings.HasPrefix(filepath.Base(path), "."), "Hidden files should be ignored: %s", path)
+		assert.False(
+			t,
+			strings.Contains(path, ".git"),
+			"Path should not include .git files: %s",
+			path,
+		)
+		assert.False(
+			t,
+			strings.Contains(path, "node_modules"),
+			"Path should not include node_modules: %s",
+			path,
+		)
+		assert.False(
+			t,
+			strings.HasPrefix(filepath.Base(path), "."),
+			"Hidden files should be ignored: %s",
+			path,
+		)
 	}
 }
 

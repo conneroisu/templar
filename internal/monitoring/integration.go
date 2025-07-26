@@ -26,11 +26,15 @@ func MonitoringMiddleware(monitor *Monitor) func(http.Handler) http.Handler {
 					monitor.appMetrics.ServerRequest(r.Method, r.URL.Path, wrapper.statusCode)
 
 					// Track request duration
-					monitor.metrics.Histogram("http_request_duration_seconds", duration.Seconds(), map[string]string{
-						"method": r.Method,
-						"path":   r.URL.Path,
-						"status": fmt.Sprintf("%d", wrapper.statusCode),
-					})
+					monitor.metrics.Histogram(
+						"http_request_duration_seconds",
+						duration.Seconds(),
+						map[string]string{
+							"method": r.Method,
+							"path":   r.URL.Path,
+							"status": fmt.Sprintf("%d", wrapper.statusCode),
+						},
+					)
 				}
 
 				// Log the request
@@ -72,36 +76,40 @@ func (rw *responseWriter) WriteHeader(code int) {
 
 // ComponentHealthChecker creates a health check for component operations
 func ComponentHealthChecker(componentName string, checkFn func() error) HealthChecker {
-	return NewHealthCheckFunc(fmt.Sprintf("component_%s", componentName), false, func(ctx context.Context) HealthCheck {
-		start := time.Now()
+	return NewHealthCheckFunc(
+		fmt.Sprintf("component_%s", componentName),
+		false,
+		func(ctx context.Context) HealthCheck {
+			start := time.Now()
 
-		if err := checkFn(); err != nil {
+			if err := checkFn(); err != nil {
+				return HealthCheck{
+					Name:        fmt.Sprintf("component_%s", componentName),
+					Status:      HealthStatusUnhealthy,
+					Message:     fmt.Sprintf("Component check failed: %v", err),
+					LastChecked: time.Now(),
+					Duration:    time.Since(start),
+					Critical:    false,
+					Metadata: map[string]interface{}{
+						"component": componentName,
+						"error":     err.Error(),
+					},
+				}
+			}
+
 			return HealthCheck{
 				Name:        fmt.Sprintf("component_%s", componentName),
-				Status:      HealthStatusUnhealthy,
-				Message:     fmt.Sprintf("Component check failed: %v", err),
+				Status:      HealthStatusHealthy,
+				Message:     "Component is functioning correctly",
 				LastChecked: time.Now(),
 				Duration:    time.Since(start),
 				Critical:    false,
 				Metadata: map[string]interface{}{
 					"component": componentName,
-					"error":     err.Error(),
 				},
 			}
-		}
-
-		return HealthCheck{
-			Name:        fmt.Sprintf("component_%s", componentName),
-			Status:      HealthStatusHealthy,
-			Message:     "Component is functioning correctly",
-			LastChecked: time.Now(),
-			Duration:    time.Since(start),
-			Critical:    false,
-			Metadata: map[string]interface{}{
-				"component": componentName,
-			},
-		}
-	})
+		},
+	)
 }
 
 // BuildPipelineHealthChecker creates a health check for build pipeline
@@ -260,7 +268,11 @@ type OperationTracker struct {
 }
 
 // NewOperationTracker creates a new operation tracker
-func NewOperationTracker(monitor *Monitor, logger logging.Logger, component string) *OperationTracker {
+func NewOperationTracker(
+	monitor *Monitor,
+	logger logging.Logger,
+	component string,
+) *OperationTracker {
 	return &OperationTracker{
 		monitor:   monitor,
 		logger:    logger.WithComponent(component),
@@ -269,7 +281,11 @@ func NewOperationTracker(monitor *Monitor, logger logging.Logger, component stri
 }
 
 // TrackOperation tracks an operation with logging and metrics
-func (ot *OperationTracker) TrackOperation(ctx context.Context, operation string, fn func(ctx context.Context) error) error {
+func (ot *OperationTracker) TrackOperation(
+	ctx context.Context,
+	operation string,
+	fn func(ctx context.Context) error,
+) error {
 	start := time.Now()
 
 	// Log operation start
@@ -278,10 +294,14 @@ func (ot *OperationTracker) TrackOperation(ctx context.Context, operation string
 	// Track metrics if monitor is available
 	var timer func()
 	if ot.monitor != nil && ot.monitor.metrics != nil {
-		timer = ot.monitor.metrics.TimerContext(ctx, fmt.Sprintf("%s_%s", ot.component, operation), map[string]string{
-			"component": ot.component,
-			"operation": operation,
-		})
+		timer = ot.monitor.metrics.TimerContext(
+			ctx,
+			fmt.Sprintf("%s_%s", ot.component, operation),
+			map[string]string{
+				"component": ot.component,
+				"operation": operation,
+			},
+		)
 	}
 
 	// Execute operation
@@ -327,7 +347,12 @@ type BatchTracker struct {
 }
 
 // NewBatchTracker creates a new batch tracker
-func NewBatchTracker(monitor *Monitor, logger logging.Logger, component string, batchSize int) *BatchTracker {
+func NewBatchTracker(
+	monitor *Monitor,
+	logger logging.Logger,
+	component string,
+	batchSize int,
+) *BatchTracker {
 	return &BatchTracker{
 		operationTracker: NewOperationTracker(monitor, logger, component),
 		batchSize:        batchSize,
@@ -374,13 +399,21 @@ func (bt *BatchTracker) Complete(ctx context.Context) {
 
 	// Record batch metrics
 	if bt.operationTracker.monitor != nil && bt.operationTracker.monitor.metrics != nil {
-		bt.operationTracker.monitor.metrics.Histogram("batch_processing_duration_seconds", duration.Seconds(), map[string]string{
-			"component": bt.operationTracker.component,
-		})
+		bt.operationTracker.monitor.metrics.Histogram(
+			"batch_processing_duration_seconds",
+			duration.Seconds(),
+			map[string]string{
+				"component": bt.operationTracker.component,
+			},
+		)
 
-		bt.operationTracker.monitor.metrics.Gauge("batch_success_rate", float64(successCount)/float64(bt.processedCount), map[string]string{
-			"component": bt.operationTracker.component,
-		})
+		bt.operationTracker.monitor.metrics.Gauge(
+			"batch_success_rate",
+			float64(successCount)/float64(bt.processedCount),
+			map[string]string{
+				"component": bt.operationTracker.component,
+			},
+		)
 	}
 }
 
@@ -446,7 +479,11 @@ func GetMiddleware() func(http.Handler) http.Handler {
 }
 
 // TrackOperation is a convenience function for tracking operations globally
-func TrackOperation(ctx context.Context, component, operation string, fn func(ctx context.Context) error) error {
+func TrackOperation(
+	ctx context.Context,
+	component, operation string,
+	fn func(ctx context.Context) error,
+) error {
 	monitor := GetGlobalMonitor()
 	if monitor == nil {
 		return fn(ctx)
@@ -457,23 +494,48 @@ func TrackOperation(ctx context.Context, component, operation string, fn func(ct
 }
 
 // LogError is a convenience function for logging errors with metrics
-func LogError(ctx context.Context, component, operation string, err error, message string, fields ...interface{}) {
+func LogError(
+	ctx context.Context,
+	component, operation string,
+	err error,
+	message string,
+	fields ...interface{},
+) {
 	monitor := GetGlobalMonitor()
 	if monitor == nil {
 		return
 	}
 
 	integration := NewLoggingIntegration(monitor, monitor.GetLogger())
-	integration.LogWithMetrics(ctx, logging.LevelError, component, operation, err, message, fields...)
+	integration.LogWithMetrics(
+		ctx,
+		logging.LevelError,
+		component,
+		operation,
+		err,
+		message,
+		fields...)
 }
 
 // LogInfo is a convenience function for logging info with metrics
-func LogInfo(ctx context.Context, component, operation string, message string, fields ...interface{}) {
+func LogInfo(
+	ctx context.Context,
+	component, operation string,
+	message string,
+	fields ...interface{},
+) {
 	monitor := GetGlobalMonitor()
 	if monitor == nil {
 		return
 	}
 
 	integration := NewLoggingIntegration(monitor, monitor.GetLogger())
-	integration.LogWithMetrics(ctx, logging.LevelInfo, component, operation, nil, message, fields...)
+	integration.LogWithMetrics(
+		ctx,
+		logging.LevelInfo,
+		component,
+		operation,
+		nil,
+		message,
+		fields...)
 }

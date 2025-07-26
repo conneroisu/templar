@@ -74,11 +74,18 @@ func TestValidateBaselineDirectory_PathTraversal(t *testing.T) {
 
 			if tt.shouldError {
 				if err == nil {
-					t.Errorf("Expected error for baseline directory %s, but got none", tt.baselineDir)
+					t.Errorf(
+						"Expected error for baseline directory %s, but got none",
+						tt.baselineDir,
+					)
 					return
 				}
 				if tt.errorMsg != "" && !containsErrorMessage(err.Error(), tt.errorMsg) {
-					t.Errorf("Expected error message to contain '%s', got: %s", tt.errorMsg, err.Error())
+					t.Errorf(
+						"Expected error message to contain '%s', got: %s",
+						tt.errorMsg,
+						err.Error(),
+					)
 				}
 			} else {
 				if err != nil {
@@ -157,7 +164,11 @@ func TestSaveBaseline_PathValidation(t *testing.T) {
 					return
 				}
 				if tt.errorMsg != "" && !containsErrorMessage(err.Error(), tt.errorMsg) {
-					t.Errorf("Expected error message to contain '%s', got: %s", tt.errorMsg, err.Error())
+					t.Errorf(
+						"Expected error message to contain '%s', got: %s",
+						tt.errorMsg,
+						err.Error(),
+					)
 				}
 			} else {
 				if err != nil {
@@ -208,11 +219,18 @@ func TestUpdateBaselines_SecurityValidation(t *testing.T) {
 
 			if tt.shouldError {
 				if err == nil {
-					t.Errorf("Expected error for baseline directory %s, but got none", tt.baselineDir)
+					t.Errorf(
+						"Expected error for baseline directory %s, but got none",
+						tt.baselineDir,
+					)
 					return
 				}
 				if tt.errorMsg != "" && !containsErrorMessage(err.Error(), tt.errorMsg) {
-					t.Errorf("Expected error message to contain '%s', got: %s", tt.errorMsg, err.Error())
+					t.Errorf(
+						"Expected error message to contain '%s', got: %s",
+						tt.errorMsg,
+						err.Error(),
+					)
 				}
 			} else {
 				if err != nil {

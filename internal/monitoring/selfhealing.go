@@ -40,7 +40,10 @@ func (r *RecoveryActionFunc) Description() string {
 }
 
 // NewRecoveryActionFunc creates a new recovery action function
-func NewRecoveryActionFunc(name, description string, actionFn func(ctx context.Context, check HealthCheck) error) *RecoveryActionFunc {
+func NewRecoveryActionFunc(
+	name, description string,
+	actionFn func(ctx context.Context, check HealthCheck) error,
+) *RecoveryActionFunc {
 	return &RecoveryActionFunc{
 		name:        name,
 		description: description,
@@ -184,10 +187,17 @@ func (shs *SelfHealingSystem) checkAndRecover() {
 
 		// Check if we should attempt recovery
 		if shs.shouldAttemptRecovery(history, rule) {
-			shs.logger.Warn(context.Background(), nil, "Triggering recovery for failed health check",
-				"check_name", checkName,
-				"consecutive_failures", history.ConsecutiveFailures,
-				"recovery_attempt", history.RecoveryAttempts+1)
+			shs.logger.Warn(
+				context.Background(),
+				nil,
+				"Triggering recovery for failed health check",
+				"check_name",
+				checkName,
+				"consecutive_failures",
+				history.ConsecutiveFailures,
+				"recovery_attempt",
+				history.RecoveryAttempts+1,
+			)
 
 			shs.attemptRecovery(checkName, check, rule, history)
 		}
@@ -195,7 +205,10 @@ func (shs *SelfHealingSystem) checkAndRecover() {
 }
 
 // shouldAttemptRecovery determines if recovery should be attempted
-func (shs *SelfHealingSystem) shouldAttemptRecovery(history *RecoveryHistory, rule *RecoveryRule) bool {
+func (shs *SelfHealingSystem) shouldAttemptRecovery(
+	history *RecoveryHistory,
+	rule *RecoveryRule,
+) bool {
 	// Check minimum failure count
 	if history.ConsecutiveFailures < rule.MinFailureCount {
 		return false
@@ -207,7 +220,8 @@ func (shs *SelfHealingSystem) shouldAttemptRecovery(history *RecoveryHistory, ru
 	}
 
 	// Check cooldown period (handle zero time case)
-	if !history.LastRecoveryTime.IsZero() && time.Since(history.LastRecoveryTime) < rule.CooldownPeriod {
+	if !history.LastRecoveryTime.IsZero() &&
+		time.Since(history.LastRecoveryTime) < rule.CooldownPeriod {
 		return false
 	}
 
@@ -215,7 +229,12 @@ func (shs *SelfHealingSystem) shouldAttemptRecovery(history *RecoveryHistory, ru
 }
 
 // attemptRecovery executes recovery actions for a failed health check
-func (shs *SelfHealingSystem) attemptRecovery(checkName string, check HealthCheck, rule *RecoveryRule, history *RecoveryHistory) {
+func (shs *SelfHealingSystem) attemptRecovery(
+	checkName string,
+	check HealthCheck,
+	rule *RecoveryRule,
+	history *RecoveryHistory,
+) {
 	history.RecoveryAttempts++
 	history.LastRecoveryTime = time.Now()
 	history.RecoverySuccessful = false
@@ -259,7 +278,8 @@ func (shs *SelfHealingSystem) attemptRecovery(checkName string, check HealthChec
 
 		// Re-check health status to see if recovery was effective
 		currentHealth := shs.healthMonitor.GetHealth()
-		if currentCheck, exists := currentHealth.Checks[checkName]; exists && currentCheck.Status == HealthStatusHealthy {
+		if currentCheck, exists := currentHealth.Checks[checkName]; exists &&
+			currentCheck.Status == HealthStatusHealthy {
 			shs.logger.Info(ctx, "Recovery successful - health check now passing",
 				"check_name", checkName,
 				"action", action.Name(),
