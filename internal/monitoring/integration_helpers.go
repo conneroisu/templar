@@ -86,13 +86,11 @@ func (chs *ComprehensiveHealthSystem) Stop() {
 func (chs *ComprehensiveHealthSystem) HTTPHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Route health-related requests
-		switch {
-		case r.URL.Path == "/health":
+		switch r.URL.Path {
+		case "/health":
 			// Standard health endpoint
 			chs.HealthMonitor.HTTPHandler()(w, r)
-		case r.URL.Path == "/health-dashboard" ||
-			r.URL.Path == "/health-dashboard/api/data" ||
-			r.URL.Path == "/health-dashboard/api/recovery":
+		case "/health-dashboard", "/health-dashboard/api/data", "/health-dashboard/api/recovery":
 			// Dashboard endpoints
 			chs.Dashboard.ServeHTTP(w, r)
 		default:

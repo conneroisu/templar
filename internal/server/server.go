@@ -269,9 +269,7 @@ func (s *PreviewServer) setupFileWatcher(ctx context.Context) {
 	s.watcher.AddHandler(func(events []interfaces.ChangeEvent) error {
 		// Convert to local watcher events
 		changeEvents := make([]watcher.ChangeEvent, len(events))
-		for i, event := range events {
-			changeEvents[i] = event
-		}
+		copy(changeEvents, events)
 		return s.handleFileChange(changeEvents)
 	})
 

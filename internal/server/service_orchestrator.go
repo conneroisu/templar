@@ -193,12 +193,7 @@ func (so *ServiceOrchestrator) setupFileWatcher(ctx context.Context) {
 		changeEvents := make([]watcher.ChangeEvent, len(events))
 		for i, event := range events {
 			// Convert interfaces.ChangeEvent to watcher.ChangeEvent
-			changeEvents[i] = watcher.ChangeEvent{
-				Type:    event.Type,
-				Path:    event.Path,
-				ModTime: event.ModTime,
-				Size:    event.Size,
-			}
+			changeEvents[i] = watcher.ChangeEvent(event)
 		}
 		return so.handleFileChange(changeEvents)
 	})

@@ -251,7 +251,7 @@ func (epm *EnhancedPluginManager) loadPlugin(
 	}
 
 	// Register with base plugin manager
-	if err := epm.PluginManager.RegisterPlugin(plugin, pluginConfig); err != nil {
+	if err := epm.RegisterPlugin(plugin, pluginConfig); err != nil {
 		epm.pluginStates[name] = PluginStateError
 		return fmt.Errorf("failed to register plugin %s: %w", name, err)
 	}
@@ -492,7 +492,7 @@ func (epm *EnhancedPluginManager) DisablePlugin(ctx context.Context, name string
 	}
 
 	// Unregister from base manager
-	epm.PluginManager.UnregisterPlugin(name)
+	epm.UnregisterPlugin(name)
 
 	// Update state
 	loaded.State = PluginStateDisabled

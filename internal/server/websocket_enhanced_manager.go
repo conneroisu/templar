@@ -433,7 +433,7 @@ func (em *EnhancedWebSocketManager) IsHealthy() bool {
 	}
 
 	// Check base manager health
-	if !em.WebSocketManager.IsShutdown() {
+	if !em.IsShutdown() {
 		// Check memory manager health
 		if !em.memoryManager.IsHealthy() {
 			return false

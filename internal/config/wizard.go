@@ -186,10 +186,8 @@ func (w *ConfigWizard) configureComponents() error {
 	}
 
 	// Allow custom paths
-	for {
-		if !w.askBool("Add custom scan path", false) {
-			break
-		}
+	for w.askBool("Add custom scan path", false) {
+
 		customPath := w.askString("Custom scan path", "")
 		if customPath != "" && customPath != "y" && customPath != "n" {
 			scanPaths = append(scanPaths, customPath)
@@ -212,10 +210,8 @@ func (w *ConfigWizard) configureComponents() error {
 	}
 
 	// Allow custom exclusion patterns
-	for {
-		if !w.askBool("Add custom exclusion pattern", false) {
-			break
-		}
+	for w.askBool("Add custom exclusion pattern", false) {
+
 		customPattern := w.askString("Custom exclusion pattern", "")
 		if customPattern != "" && customPattern != "y" && customPattern != "n" {
 			excludePatterns = append(excludePatterns, customPattern)

@@ -444,12 +444,16 @@ func (s *PreviewServer) handleFileList(w http.ResponseWriter, req FileRequest) {
 	// Build file list
 	var files []FileInfo
 	for _, entry := range entries {
+		info, err := entry.Info()
+		if err != nil {
+			continue // Skip entries we can't get info for
+		}
 		fileInfo := FileInfo{
 			Name:         entry.Name(),
 			Path:         filepath.Join(dirPath, entry.Name()),
 			IsDirectory:  entry.IsDir(),
-			Size:         entry.Size(),
-			ModifiedTime: entry.ModTime(),
+			Size:         info.Size(),
+			ModifiedTime: info.ModTime(),
 			IsComponent:  strings.HasSuffix(entry.Name(), ".templ"),
 		}
 		files = append(files, fileInfo)

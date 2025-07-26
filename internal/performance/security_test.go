@@ -10,6 +10,7 @@ package performance
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -403,7 +404,7 @@ func TestMemorySafety_LockFreeOperations(t *testing.T) {
 			for j := 0; j < opsPerGoroutine; j++ {
 				// Record metrics with various edge case values
 				values := []float64{
-					0.0, -0.0, 1.0, -1.0,
+					0.0, math.Copysign(0, -1), 1.0, -1.0,
 					1e-300, 1e300, // Very small and large numbers
 					float64(id*opsPerGoroutine + j), // Unique values
 				}

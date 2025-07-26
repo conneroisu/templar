@@ -390,7 +390,7 @@ func (l *TemplarLogger) WithRequestID(requestID string) *ContextLogger {
 // WithUserID adds user ID to logger context
 func (c *ContextLogger) WithUserID(userID string) *ContextLogger {
 	return &ContextLogger{
-		Logger: c.Logger.With("user_id", userID),
+		Logger: c.With("user_id", userID),
 		userID: userID,
 	}
 }
@@ -637,7 +637,7 @@ func (r *ResilientLogger) ErrorWithRetry(
 					success = true
 				}
 			}()
-			r.Logger.Error(ctx, err, msg, fields...)
+			r.Error(ctx, err, msg, fields...)
 		}()
 
 		// If logging succeeded, return

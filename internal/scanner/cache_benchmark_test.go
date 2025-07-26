@@ -213,17 +213,17 @@ func generateRealisticComponent(index int) string {
 	componentType := componentTypes[index%len(componentTypes)]
 
 	var content strings.Builder
-	content.WriteString(fmt.Sprintf("package components\n\n"))
-	content.WriteString(fmt.Sprintf("import (\n"))
-	content.WriteString(fmt.Sprintf("\t\"fmt\"\n"))
-	content.WriteString(fmt.Sprintf("\t\"strings\"\n"))
+	content.WriteString("package components\n\n")
+	content.WriteString("import (\n")
+	content.WriteString("\t\"fmt\"\n")
+	content.WriteString("\t\"strings\"\n")
 	if index%3 == 0 {
-		content.WriteString(fmt.Sprintf("\t\"time\"\n"))
+		content.WriteString("\t\"time\"\n")
 	}
 	if index%4 == 0 {
-		content.WriteString(fmt.Sprintf("\t\"context\"\n"))
+		content.WriteString("\t\"context\"\n")
 	}
-	content.WriteString(fmt.Sprintf(")\n\n"))
+	content.WriteString(")\n\n")
 
 	// Add multiple components per file for realism
 	for j := 0; j < 1+(index%3); j++ {
@@ -258,9 +258,9 @@ func generateRealisticComponent(index int) string {
 
 		// Add some conditional logic to make parsing more complex
 		if index%2 == 0 {
-			content.WriteString(fmt.Sprintf("\t\tif title != \"\" {\n"))
-			content.WriteString(fmt.Sprintf("\t\t\t<h2>{ title }</h2>\n"))
-			content.WriteString(fmt.Sprintf("\t\t}\n"))
+			content.WriteString("\t\tif title != \"\" {\n")
+			content.WriteString("\t\t\t<h2>{ title }</h2>\n")
+			content.WriteString("\t\t}\n")
 		}
 
 		content.WriteString(
@@ -272,8 +272,8 @@ func generateRealisticComponent(index int) string {
 			content.WriteString(fmt.Sprintf("\t\t@Icon%d(\"check\")\n", index%3))
 		}
 
-		content.WriteString(fmt.Sprintf("\t</div>\n"))
-		content.WriteString(fmt.Sprintf("}\n\n"))
+		content.WriteString("\t</div>\n")
+		content.WriteString("}\n\n")
 	}
 
 	return content.String()

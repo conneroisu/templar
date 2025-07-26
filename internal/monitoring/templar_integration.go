@@ -315,18 +315,18 @@ func (tm *TemplarMonitor) CreateTemplarMiddleware() func(http.Handler) http.Hand
 			// Add request-specific tracking
 			if tm.appMetrics != nil {
 				// Track specific endpoint patterns
-				switch {
-				case r.URL.Path == "/api/components":
+				switch r.URL.Path {
+				case "/api/components":
 					tm.metrics.Counter("api_component_requests_total", map[string]string{
 						"method": r.Method,
 					})
-				case r.URL.Path == "/api/build":
+				case "/api/build":
 					tm.metrics.Counter("api_build_requests_total", map[string]string{
 						"method": r.Method,
 					})
-				case r.URL.Path == "/ws":
+				case "/ws":
 					tm.metrics.Counter("websocket_connection_attempts_total", nil)
-				case r.URL.Path == "/preview":
+				case "/preview":
 					tm.metrics.Counter("preview_requests_total", map[string]string{
 						"component": r.URL.Query().Get("component"),
 					})

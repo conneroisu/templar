@@ -453,7 +453,7 @@ func (pd *PerformanceDetector) calculateStatistics(baseline *PerformanceBaseline
 	// Calculate standard deviation
 	var variance float64
 	for _, sample := range baseline.Samples {
-		variance += math.Pow(sample-baseline.Mean, 2)
+		variance += (sample - baseline.Mean) * (sample - baseline.Mean)
 	}
 	variance /= float64(len(baseline.Samples))
 	baseline.StdDev = math.Sqrt(variance)

@@ -230,7 +230,7 @@ func testBuildPipelineContract(t *testing.T) {
 		t.Error("Expected GetMetrics() to return non-nil metrics")
 	}
 	// Verify it implements the BuildMetrics interface
-	var _ interfaces.BuildMetrics = metrics
+	var _ = metrics
 	t.Log("✓ GetMetrics returns valid BuildMetrics interface")
 
 	// Test cache interface
@@ -239,7 +239,7 @@ func testBuildPipelineContract(t *testing.T) {
 		t.Error("Expected GetCache() to return non-nil cache stats")
 	}
 	// Verify it implements the CacheStats interface
-	var _ interfaces.CacheStats = cacheStats
+	var _ = cacheStats
 	t.Log("✓ GetCache returns valid CacheStats interface")
 
 	// Test callback registration

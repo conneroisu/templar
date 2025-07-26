@@ -109,8 +109,8 @@ func handleComponentRender(
 	// TODO: Integrate with actual renderer implementation
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf("<h1>Rendered Component: %s</h1><p>File: %s</p>",
-		component.Name, component.FilePath)))
+	fmt.Fprintf(w, "<h1>Rendered Component: %s</h1><p>File: %s</p>",
+		component.Name, component.FilePath)
 }
 
 // handleStaticFiles handles static file requests
