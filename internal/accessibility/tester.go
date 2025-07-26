@@ -235,10 +235,9 @@ func (tester *ComponentAccessibilityTester) renderComponentToHTML(ctx context.Co
 	// Render the component
 	// Note: This is simplified - in a real implementation, we'd need to properly
 	// render the templ component with the provided props
-	componentHTML := fmt.Sprintf("<!-- Component: %s -->", component.Name)
-
+	
 	// For now, we'll create a mock HTML structure based on common patterns
-	componentHTML = tester.generateMockHTML(component, props)
+	componentHTML := tester.generateMockHTML(component, props)
 
 	return fmt.Sprintf(wrapper, componentHTML), nil
 }

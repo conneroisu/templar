@@ -51,7 +51,11 @@ func (engine *DefaultAccessibilityEngine) Initialize(ctx context.Context, config
 }
 
 // Analyze performs accessibility analysis on HTML content
-func (engine *DefaultAccessibilityEngine) Analyze(ctx context.Context, htmlContent string, config AuditConfiguration) (*AccessibilityReport, error) {
+func (engine *DefaultAccessibilityEngine) Analyze(
+	ctx context.Context, 
+	htmlContent string, 
+	config AuditConfiguration,
+) (*AccessibilityReport, error) {
 	start := time.Now()
 
 	// Parse HTML
@@ -116,7 +120,10 @@ func (engine *DefaultAccessibilityEngine) Analyze(ctx context.Context, htmlConte
 }
 
 // GetSuggestions generates actionable suggestions for violations
-func (engine *DefaultAccessibilityEngine) GetSuggestions(ctx context.Context, violation AccessibilityViolation) ([]AccessibilitySuggestion, error) {
+func (engine *DefaultAccessibilityEngine) GetSuggestions(
+	ctx context.Context, 
+	violation AccessibilityViolation,
+) ([]AccessibilitySuggestion, error) {
 	suggestions := []AccessibilitySuggestion{}
 
 	switch violation.Rule {
@@ -200,7 +207,11 @@ func (engine *DefaultAccessibilityEngine) GetSuggestions(ctx context.Context, vi
 }
 
 // AutoFix attempts to automatically fix simple accessibility issues
-func (engine *DefaultAccessibilityEngine) AutoFix(ctx context.Context, htmlContent string, violations []AccessibilityViolation) (string, error) {
+func (engine *DefaultAccessibilityEngine) AutoFix(
+	ctx context.Context, 
+	htmlContent string, 
+	violations []AccessibilityViolation,
+) (string, error) {
 	fixed := htmlContent
 
 	for _, violation := range violations {
@@ -375,7 +386,12 @@ func (engine *DefaultAccessibilityEngine) isRuleApplicableForLevel(rule Accessib
 }
 
 // checkRule runs a specific accessibility rule against elements
-func (engine *DefaultAccessibilityEngine) checkRule(ctx context.Context, rule AccessibilityRule, elements []HTMLElement, config AuditConfiguration) ([]AccessibilityViolation, error) {
+func (engine *DefaultAccessibilityEngine) checkRule(
+	ctx context.Context, 
+	rule AccessibilityRule, 
+	elements []HTMLElement, 
+	config AuditConfiguration,
+) ([]AccessibilityViolation, error) {
 	violations := []AccessibilityViolation{}
 
 	switch rule.ID {
@@ -448,7 +464,11 @@ func (engine *DefaultAccessibilityEngine) checkRule(ctx context.Context, rule Ac
 }
 
 // createViolation creates a new accessibility violation
-func (engine *DefaultAccessibilityEngine) createViolation(rule AccessibilityRule, element HTMLElement, message string) AccessibilityViolation {
+func (engine *DefaultAccessibilityEngine) createViolation(
+	rule AccessibilityRule, 
+	element HTMLElement, 
+	message string,
+) AccessibilityViolation {
 	violation := AccessibilityViolation{
 		ID:          generateViolationID(),
 		Rule:        rule.ID,
@@ -628,7 +648,11 @@ func (engine *DefaultAccessibilityEngine) hasAccessibleName(element HTMLElement)
 	return false
 }
 
-func (engine *DefaultAccessibilityEngine) generateSummary(violations []AccessibilityViolation, passedRules []AccessibilityRule, totalRules []AccessibilityRule) AccessibilitySummary {
+func (engine *DefaultAccessibilityEngine) generateSummary(
+	violations []AccessibilityViolation, 
+	passedRules []AccessibilityRule, 
+	totalRules []AccessibilityRule,
+) AccessibilitySummary {
 	summary := AccessibilitySummary{
 		TotalRules:      len(totalRules),
 		PassedRules:     len(passedRules),

@@ -99,7 +99,8 @@ func (p *BulmaPlugin) GetDefaultConfig() FrameworkConfig {
 			"danger":  "#f14668",
 
 			// Typography
-			"family-sans-serif": "BlinkMacSystemFont, -apple-system, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
+			"family-sans-serif": "BlinkMacSystemFont, -apple-system, 'Segoe UI', 'Roboto', 'Oxygen', " +
+				"'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
 			"family-monospace":  "monospace",
 			"size-1":            "3rem",
 			"size-2":            "2.5rem",

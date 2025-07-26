@@ -388,7 +388,10 @@ templ {{.ComponentName}}(action string, method string, title string) {
 }
 
 // {{.ComponentName}}Field renders a form field with label and validation
-templ {{.ComponentName}}Field(name string, label string, fieldType string, required bool, placeholder string, value string, errorMsg string) {
+templ {{.ComponentName}}Field(
+	name string, label string, fieldType string, required bool, 
+	placeholder string, value string, errorMsg string,
+) {
 	<div class="form-field">
 		<label for={ name } class="form-label">
 			{ label }

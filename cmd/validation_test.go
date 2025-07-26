@@ -1,8 +1,9 @@
 package cmd
 
 import (
-	"github.com/conneroisu/templar/internal/validation"
 	"testing"
+
+	"github.com/conneroisu/templar/internal/validation"
 )
 
 func TestValidateArgument(t *testing.T) {

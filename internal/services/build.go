@@ -55,7 +55,7 @@ func (s *BuildService) Build(ctx context.Context, opts BuildOptions) (*BuildResu
 		// Try to initialize a basic monitor for build tracking
 		config := monitoring.DefaultMonitorConfig()
 		config.HTTPEnabled = false // Disable HTTP for build command
-		monitor = nil
+		// monitor remains nil for build command
 	}
 
 	// Track the overall build operation
