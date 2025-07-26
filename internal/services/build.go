@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"time"
@@ -89,6 +90,7 @@ func (s *BuildService) Build(ctx context.Context, opts BuildOptions) (*BuildResu
 		defer func() {
 			if shutdownErr := container.Shutdown(ctx); shutdownErr != nil {
 				// Log shutdown error but don't fail the build
+				fmt.Fprintf(os.Stderr, "Warning: service container shutdown error: %v\n", shutdownErr)
 			}
 		}()
 
@@ -120,7 +122,11 @@ func (s *BuildService) Build(ctx context.Context, opts BuildOptions) (*BuildResu
 		if err := buildPipeline.Start(ctx); err != nil {
 			return errors.BuildServiceError("START_PIPELINE", "failed to start build pipeline", err)
 		}
-		defer buildPipeline.Stop()
+		defer func() {
+			if err := buildPipeline.Stop(); err != nil {
+				log.Printf("Error stopping build pipeline: %v", err)
+			}
+		}()
 
 		// Process all components
 		components := componentRegistry.GetAll()

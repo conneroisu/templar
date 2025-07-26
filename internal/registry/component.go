@@ -17,6 +17,35 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
+const (
+	// Channel buffer size for watchers to prevent blocking.
+	watcherChannelBuffer = 100
+
+	// Safe component name for dangerous identifiers.
+	safeComponentName = "safe_component"
+
+	// Safe component file name for dangerous paths.
+	safeComponentFilename = "safe_component.templ"
+)
+
+var (
+	// Dangerous system path patterns.
+	dangerousSystemPaths = []string{
+		"etc",
+		"system32",
+		"windows",
+		"usr",
+		"bin",
+		"var",
+		"tmp",
+		"passwd",
+		"shadow",
+	}
+
+	// Shorter dangerous system paths for file path validation.
+	dangerousFilePaths = []string{"etc", "system32", "windows", "usr", "bin", "var", "tmp"}
+)
+
 // ComponentRegistry manages all discovered components with thread-safe operations
 // and event-driven notifications.
 //
@@ -189,7 +218,7 @@ func (r *ComponentRegistry) Watch() <-chan types.ComponentEvent {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
-	ch := make(chan types.ComponentEvent, 100)
+	ch := make(chan types.ComponentEvent, watcherChannelBuffer)
 	r.watchers = append(r.watchers, ch)
 
 	return ch
@@ -265,31 +294,20 @@ func sanitizeIdentifier(identifier string) string {
 		}
 	}
 
-	cleanedId := string(cleaned)
+	cleanedID := string(cleaned)
 
 	// Additional security check for dangerous system identifiers
-	dangerousPatterns := []string{
-		"etc",
-		"system32",
-		"windows",
-		"usr",
-		"bin",
-		"var",
-		"tmp",
-		"passwd",
-		"shadow",
-	}
-	lowerCleaned := strings.ToLower(cleanedId)
-	for _, pattern := range dangerousPatterns {
+	lowerCleaned := strings.ToLower(cleanedID)
+	for _, pattern := range dangerousSystemPaths {
 		if strings.Contains(lowerCleaned, pattern) {
 			// Replace with safe alternative
-			cleanedId = "safe_component"
+			cleanedID = safeComponentName
 
 			break
 		}
 	}
 
-	return cleanedId
+	return cleanedID
 }
 
 // sanitizeFilePath removes control characters and prevents path traversal attacks.
@@ -314,12 +332,11 @@ func sanitizeFilePath(path string) string {
 	cleanedPath = filepath.Clean(cleanedPath)
 
 	// Check for dangerous system paths before preserving absolute paths
-	dangerousPatterns := []string{"etc", "system32", "windows", "usr", "bin", "var", "tmp"}
 	lowerPath := strings.ToLower(cleanedPath)
-	for _, pattern := range dangerousPatterns {
+	for _, pattern := range dangerousFilePaths {
 		if strings.Contains(lowerPath, pattern) {
 			// Replace with safe alternative
-			return "safe_component.templ"
+			return safeComponentFilename
 		}
 	}
 
@@ -330,7 +347,7 @@ func sanitizeFilePath(path string) string {
 			strings.Contains(lowerPath, "usr") || strings.Contains(lowerPath, "bin") ||
 			strings.Contains(lowerPath, "var") || strings.Contains(lowerPath, "tmp")) {
 		// Path contains dangerous system directories, return safe default
-		return "safe_component.templ"
+		return safeComponentFilename
 	}
 
 	return cleanedPath

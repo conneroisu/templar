@@ -20,14 +20,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Preview-specific constants
-const (
-	// Type aliases for backward compatibility
-	typeSliceString = TypeStringSlice
-	typeSliceInt    = TypeIntSlice
-)
-
-// Error message constants specific to preview command
+// Error message constants specific to preview command.
 const (
 	errorInvalidFlags        = "invalid flags: %w"
 	errorParseProps          = "failed to parse component properties: %w"
