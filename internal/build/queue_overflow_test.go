@@ -32,6 +32,11 @@ func TestQueueOverflowProtection(t *testing.T) {
 		workers:     1, // Single worker to slow processing
 	}
 
+	// Start the pipeline
+	ctx := context.Background()
+	pipeline.Start(ctx)
+	defer pipeline.Stop()
+
 	// Create test components
 	numComponents := 10 // More than queue capacity
 	components := make([]*types.ComponentInfo, numComponents)
