@@ -242,7 +242,7 @@ func TestComprehensiveMonitoringIntegration(t *testing.T) {
 		mux.Handle("/alerts/", alertManager.HTTPHandler())
 
 		server := httptest.NewServer(mux)
-		defer server.Close()
+		defer func() { server.Close() }()
 
 		// Test health endpoint
 		resp, err := http.Get(server.URL + "/health")

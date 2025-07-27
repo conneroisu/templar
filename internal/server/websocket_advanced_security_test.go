@@ -680,7 +680,7 @@ func TestWebSocketOriginValidationComprehensive(t *testing.T) {
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		server.handleWebSocket(w, r)
 	}))
-	defer testServer.Close()
+	defer func() { testServer.Close() }()
 
 	for _, test := range maliciousOrigins {
 		t.Run(test.attackType, func(t *testing.T) {
@@ -731,7 +731,7 @@ func TestWebSocketSecurityHeaders(t *testing.T) {
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		server.handleWebSocket(w, r)
 	}))
-	defer testServer.Close()
+	defer func() { testServer.Close() }()
 
 	// Make a request to WebSocket endpoint
 	client := &http.Client{

@@ -205,7 +205,7 @@ func readWebSocketTestMessage(
 
 func TestIntegration_ServerWebSocket_BasicConnection(t *testing.T) {
 	server := createTestWebSocketServer()
-	defer server.Close()
+	defer func() { server.Close() }()
 
 	// Connect WebSocket client
 	conn, err := connectWebSocketTestClient(server.URL)
@@ -225,7 +225,7 @@ func TestIntegration_ServerWebSocket_BasicConnection(t *testing.T) {
 
 func TestIntegration_ServerWebSocket_MessageBroadcasting(t *testing.T) {
 	server := createTestWebSocketServer()
-	defer server.Close()
+	defer func() { server.Close() }()
 
 	// Connect multiple WebSocket clients
 	client1, err := connectWebSocketTestClient(server.URL)
@@ -295,7 +295,7 @@ func TestIntegration_ServerWebSocket_MessageBroadcasting(t *testing.T) {
 
 func TestIntegration_ServerWebSocket_ClientConnectionManagement(t *testing.T) {
 	server := createTestWebSocketServer()
-	defer server.Close()
+	defer func() { server.Close() }()
 
 	// Test multiple connection cycles
 	connectionCount := 10
@@ -366,7 +366,7 @@ func TestIntegration_ServerWebSocket_ClientConnectionManagement(t *testing.T) {
 
 func TestIntegration_ServerWebSocket_ConcurrentMessaging(t *testing.T) {
 	server := createTestWebSocketServer()
-	defer server.Close()
+	defer func() { server.Close() }()
 
 	// Connect clients
 	clientCount := 5
@@ -449,7 +449,7 @@ func TestIntegration_ServerWebSocket_ConcurrentMessaging(t *testing.T) {
 
 func TestIntegration_ServerWebSocket_ErrorHandling(t *testing.T) {
 	server := createTestWebSocketServer()
-	defer server.Close()
+	defer func() { server.Close() }()
 
 	// Connect a client
 	client, err := connectWebSocketTestClient(server.URL)
@@ -495,7 +495,7 @@ func TestIntegration_ServerWebSocket_LoadTesting(t *testing.T) {
 	}
 
 	server := createTestWebSocketServer()
-	defer server.Close()
+	defer func() { server.Close() }()
 
 	// Create many concurrent connections
 	connectionCount := 50
@@ -576,7 +576,7 @@ func TestIntegration_ServerWebSocket_LoadTesting(t *testing.T) {
 
 func TestIntegration_ServerWebSocket_MessageOrdering(t *testing.T) {
 	server := createTestWebSocketServer()
-	defer server.Close()
+	defer func() { server.Close() }()
 
 	// Connect client
 	client, err := connectWebSocketTestClient(server.URL)
@@ -650,7 +650,7 @@ func TestIntegration_ServerWebSocket_MessageOrdering(t *testing.T) {
 
 func TestIntegration_ServerWebSocket_LargeMessageHandling(t *testing.T) {
 	server := createTestWebSocketServer()
-	defer server.Close()
+	defer func() { server.Close() }()
 
 	// Connect client
 	client, err := connectWebSocketTestClient(server.URL)

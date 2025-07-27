@@ -186,7 +186,7 @@ func TestClient_String(t *testing.T) {
 		// Keep connection alive for test
 		<-time.After(100 * time.Millisecond)
 	}))
-	defer server.Close()
+	defer func() { server.Close() }()
 
 	// Connect to the test server
 	wsURL := "ws" + server.URL[4:] // Replace http with ws

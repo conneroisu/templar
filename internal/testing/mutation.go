@@ -635,7 +635,7 @@ func (mt *MutationTester) analyzeWeakSpots(results []MutationTestResult) []WeakS
 func (mt *MutationTester) extractFunctionName(filename string, line int) string {
 	content, err := os.ReadFile(filename)
 	if err != nil {
-		return "unknown"
+		return StatusUnknown
 	}
 
 	lines := strings.Split(string(content), "\n")

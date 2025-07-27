@@ -57,7 +57,7 @@ func TestWebSocketRateLimitBypassVulnerability(t *testing.T) {
 					server.handleWebSocket(w, r)
 				}),
 			)
-			defer testServer.Close()
+			defer func() { testServer.Close() }()
 
 			wsURL := "ws" + strings.TrimPrefix(testServer.URL, "http")
 

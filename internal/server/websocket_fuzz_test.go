@@ -146,7 +146,7 @@ func FuzzWebSocketMessage(f *testing.F) {
 				}
 			}
 		}))
-		defer server.Close()
+		defer func() { server.Close() }()
 
 		// Convert HTTP URL to WebSocket URL
 		wsURL := "ws" + strings.TrimPrefix(server.URL, "http")

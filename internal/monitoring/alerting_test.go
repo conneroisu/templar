@@ -253,7 +253,7 @@ func TestWebhookChannel(t *testing.T) {
 
 		w.WriteHeader(http.StatusOK)
 	}))
-	defer server.Close()
+	defer func() { server.Close() }()
 
 	logger := logging.NewLogger(logging.DefaultConfig())
 	channel := NewWebhookChannel(server.URL, logger)

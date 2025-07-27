@@ -95,7 +95,7 @@ func TestMonitorHTTPEndpoints(t *testing.T) {
 	// Create test server
 	monitor.setupHTTPServer()
 	server := httptest.NewServer(monitor.httpServer.Handler)
-	defer server.Close()
+	defer func() { server.Close() }()
 
 	t.Run("health endpoint", func(t *testing.T) {
 		resp, err := http.Get(server.URL + "/health")
