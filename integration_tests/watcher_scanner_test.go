@@ -308,7 +308,7 @@ func TestIntegration_WatcherScanner_FileDeletion(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
 	}
-	
+
 	testDir := fmt.Sprintf("integration_test_%d", time.Now().UnixNano())
 	require.NoError(t, os.MkdirAll(testDir, 0755))
 	defer func() { _ = os.RemoveAll(testDir) }()

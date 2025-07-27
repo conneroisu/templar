@@ -243,7 +243,7 @@ func TestPreviewServer_FileWatcherIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
 	}
-	
+
 	cfg := &config.Config{
 		Server: config.ServerConfig{
 			Port: 8080,

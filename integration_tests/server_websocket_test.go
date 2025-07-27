@@ -207,7 +207,7 @@ func TestIntegration_ServerWebSocket_BasicConnection(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
 	}
-	
+
 	server := createTestWebSocketServer()
 	defer func() { server.Close() }()
 
@@ -231,7 +231,7 @@ func TestIntegration_ServerWebSocket_MessageBroadcasting(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
 	}
-	
+
 	server := createTestWebSocketServer()
 	defer func() { server.Close() }()
 
@@ -660,7 +660,7 @@ func TestIntegration_ServerWebSocket_LargeMessageHandling(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
 	}
-	
+
 	server := createTestWebSocketServer()
 	defer func() { server.Close() }()
 
