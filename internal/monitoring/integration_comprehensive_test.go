@@ -617,6 +617,10 @@ func TestRealWorldScenarios(t *testing.T) {
 	})
 
 	t.Run("error scenarios and recovery", func(t *testing.T) {
+		// Set global monitor for this test so global functions work
+		SetGlobalMonitor(monitor)
+		defer SetGlobalMonitor(nil)
+
 		ctx := context.Background()
 
 		// Simulate various error conditions
@@ -660,9 +664,8 @@ func TestRealWorldScenarios(t *testing.T) {
 
 		foundErrorMetrics := false
 		for _, metric := range metrics {
-			if metric.Name == "test_errors_total" {
+			if metric.Name == "templar_errors_total" {
 				foundErrorMetrics = true
-
 				break
 			}
 		}

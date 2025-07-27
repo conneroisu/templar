@@ -223,7 +223,7 @@ func TestHistogram(t *testing.T) {
 		}
 
 		assert.Equal(t, int64(10), hist.GetCount())
-		assert.Equal(t, 4.5, hist.GetSum()) // 0 + 0.1 + 0.2 + ... + 0.9
+		assert.InDelta(t, 4.5, hist.GetSum(), 0.001) // 0 + 0.1 + 0.2 + ... + 0.9 (allow for floating point precision)
 	})
 }
 
