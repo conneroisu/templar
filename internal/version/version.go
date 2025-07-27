@@ -125,7 +125,7 @@ func GetDetailedVersion() string {
 	var parts []string
 	parts = append(parts, "Version: "+info.Version)
 
-	if info.GitCommit != "unknown" {
+	if info.GitCommit != UnknownCommit {
 		parts = append(parts, "Commit: "+info.GitCommit)
 	}
 

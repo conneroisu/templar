@@ -256,7 +256,7 @@ func createPreviewServer(
 		return nil, fmt.Errorf(errorCreatePreviewDir, err)
 	}
 
-	if err := os.WriteFile(previewPath, []byte(html), 0o644); err != nil {
+	if err := os.WriteFile(previewPath, []byte(html), 0o600); err != nil {
 		return nil, fmt.Errorf(errorWritePreviewHTML, err)
 	}
 

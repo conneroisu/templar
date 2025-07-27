@@ -617,7 +617,7 @@ func checkFileSystemPermissions(ctx context.Context, report *DoctorReport) Diagn
 
 	// Check write permissions in current directory
 	testFile := ".templar-permission-test"
-	if err := os.WriteFile(testFile, []byte("test"), 0o644); err != nil {
+	if err := os.WriteFile(testFile, []byte("test"), 0o600); err != nil {
 		result.Status = SeverityError
 		result.Message = "Cannot write to current directory"
 		result.Suggestion = "Check directory permissions or change to a writable directory"

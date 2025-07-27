@@ -28,7 +28,7 @@ func BenchmarkCacheHashGeneration(b *testing.B) {
 	components := make([]*types.ComponentInfo, len(testFiles))
 	for i, file := range testFiles {
 		filePath := filepath.Join(tempDir, file.name)
-		if err := os.WriteFile(filePath, []byte(file.content), 0o644); err != nil {
+		if err := os.WriteFile(filePath, []byte(file.content), 0o600); err != nil {
 			b.Fatalf("Failed to create test file: %v", err)
 		}
 
@@ -103,7 +103,7 @@ func BenchmarkBatchHashGeneration(b *testing.B) {
 		filePath := filepath.Join(tempDir, fileName)
 		content := fmt.Sprintf("component %d content with some text", i)
 
-		if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
+		if err := os.WriteFile(filePath, []byte(content), 0o600); err != nil {
 			b.Fatalf("Failed to create test file: %v", err)
 		}
 
@@ -144,7 +144,7 @@ func TestCacheOptimizationCorrectness(t *testing.T) {
 	// Create a test file
 	filePath := filepath.Join(tempDir, "test.templ")
 	originalContent := "original content for testing cache optimization system"
-	if err := os.WriteFile(filePath, []byte(originalContent), 0o644); err != nil {
+	if err := os.WriteFile(filePath, []byte(originalContent), 0o600); err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
 
@@ -173,7 +173,7 @@ func TestCacheOptimizationCorrectness(t *testing.T) {
 	// Modify file content - ensure enough time passes for filesystem timestamp resolution
 	time.Sleep(10 * time.Millisecond)
 	modifiedContent := "completely different content for testing cache invalidation properly"
-	if err := os.WriteFile(filePath, []byte(modifiedContent), 0o644); err != nil {
+	if err := os.WriteFile(filePath, []byte(modifiedContent), 0o600); err != nil {
 		t.Fatalf("Failed to modify test file: %v", err)
 	}
 
@@ -223,7 +223,7 @@ func TestFileIOReduction(t *testing.T) {
 	for i, fileName := range files {
 		filePath := filepath.Join(tempDir, fileName)
 		content := "content for " + fileName
-		if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
+		if err := os.WriteFile(filePath, []byte(content), 0o600); err != nil {
 			t.Fatalf("Failed to create test file: %v", err)
 		}
 

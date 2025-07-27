@@ -41,7 +41,7 @@ templ %s(text string) {
 	<div class="component">{ text }</div>
 }`, componentName)
 
-			if err := os.WriteFile(componentFile, []byte(componentContent), 0o644); err != nil {
+			if err := os.WriteFile(componentFile, []byte(componentContent), 0o600); err != nil {
 				return true // Skip on write error
 			}
 
@@ -161,7 +161,7 @@ templ %s(%s %s) {
 			// Parse template by creating temporary file
 			tempDir := t.TempDir()
 			tempFile := filepath.Join(tempDir, "test.templ")
-			_ = os.WriteFile(tempFile, []byte(template), 0o644)
+			_ = os.WriteFile(tempFile, []byte(template), 0o600)
 
 			err := scanner.ScanFile(tempFile)
 			components := registry.GetAll()
@@ -285,7 +285,7 @@ func BenchmarkScannerPropertyTests(b *testing.B) {
 templ Component%d(text string) {
 	<div>{ text }</div>
 }`, i)
-		_ = os.WriteFile(componentFile, []byte(content), 0o644)
+		_ = os.WriteFile(componentFile, []byte(content), 0o600)
 	}
 
 	b.ResetTimer()
@@ -319,7 +319,7 @@ func TestScannerConcurrencyProperties(t *testing.T) {
 templ TestComponent(text string) {
 	<div>{ text }</div>
 }`
-			if err := os.WriteFile(componentFile, []byte(content), 0o644); err != nil {
+			if err := os.WriteFile(componentFile, []byte(content), 0o600); err != nil {
 				return true
 			}
 

@@ -92,7 +92,7 @@ func TestTailwindPlugin_SecureFileOperations(t *testing.T) {
 		content := "@tailwind base;\n@tailwind components;\n@tailwind utilities;\n"
 
 		// This should use os.WriteFile, not shell commands
-		err := os.WriteFile(testFile, []byte(content), 0o644)
+		err := os.WriteFile(testFile, []byte(content), 0o600)
 		if err != nil {
 			t.Fatalf("Failed to write file: %v", err)
 		}
@@ -113,7 +113,7 @@ func TestTailwindPlugin_SecureFileOperations(t *testing.T) {
 		// Create test file in current working directory
 		testFile := "test_secure_reading.templ"
 		content := `<div class="bg-blue-500 text-white p-4">Test</div>`
-		err := os.WriteFile(testFile, []byte(content), 0o644)
+		err := os.WriteFile(testFile, []byte(content), 0o600)
 		if err != nil {
 			t.Fatalf("Failed to write test file: %v", err)
 		}
@@ -149,7 +149,7 @@ func TestTailwindPlugin_NoShellCommandsInCodePaths(t *testing.T) {
 	// Create a test file in current working directory to pass path validation
 	testFile := "test_no_shell_commands.templ"
 	content := `<div class="bg-red-500">Test</div>`
-	err := os.WriteFile(testFile, []byte(content), 0o644)
+	err := os.WriteFile(testFile, []byte(content), 0o600)
 	if err != nil {
 		t.Fatalf("Failed to write test file: %v", err)
 	}
@@ -313,7 +313,7 @@ func TestTailwindPlugin_PathValidationInExtractClasses(t *testing.T) {
 		validFile := filepath.Join(tempDir, "valid.templ")
 
 		content := `<div class="bg-blue-500">Valid content</div>`
-		err := os.WriteFile(validFile, []byte(content), 0o644)
+		err := os.WriteFile(validFile, []byte(content), 0o600)
 		if err != nil {
 			t.Fatalf("Failed to create test file: %v", err)
 		}

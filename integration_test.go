@@ -105,7 +105,7 @@ templ NewComponent(title string) {
 	<h1>{ title }</h1>
 	<p>This is a new component</p>
 }
-`), 0o644)
+`), 0o600)
 	require.NoError(t, err)
 
 	// Give file watcher time to detect the change
@@ -215,7 +215,7 @@ package main
 templ TestComponent(title string) {
 	<h1>{ title }</h1>
 }
-`), 0o644)
+`), 0o600)
 	require.NoError(t, err)
 
 	// Set up configuration
@@ -289,7 +289,7 @@ templ Component2(content string) {
 	}
 
 	for _, comp := range components {
-		err := os.WriteFile(comp.path, []byte(comp.content), 0o644)
+		err := os.WriteFile(comp.path, []byte(comp.content), 0o600)
 		require.NoError(t, err)
 	}
 
@@ -396,7 +396,7 @@ templ TestComponent(title string) {
 	<h1>{ title }</h1>
 	<p>Integration test component</p>
 }
-`), 0o644)
+`), 0o600)
 	require.NoError(t, err)
 
 	// Set up configuration
@@ -437,7 +437,7 @@ templ TestComponent(title string) {
 	<h1>{ title }</h1>
 	<p>Modified integration test component</p>
 }
-`), 0o644)
+`), 0o600)
 	require.NoError(t, err)
 
 	// Give file watcher time to detect change

@@ -138,7 +138,7 @@ templ Button(text string) {
 }
 `
 
-	err := os.WriteFile(srcFile, []byte(content), 0o644)
+	err := os.WriteFile(srcFile, []byte(content), 0o600)
 	require.NoError(t, err)
 
 	// Test copying and modifying
@@ -237,7 +237,7 @@ templ SimpleButton(text string) {
 }
 `
 
-	err := os.WriteFile(templFile, []byte(templContent), 0o644)
+	err := os.WriteFile(templFile, []byte(templContent), 0o600)
 	require.NoError(t, err)
 
 	// Update the component file path

@@ -256,7 +256,7 @@ func TestInitService_createGoModule(t *testing.T) {
 
 go 1.21
 `
-				err := os.WriteFile(filepath.Join(tempDir, "go.mod"), []byte(existingContent), 0o644)
+				err := os.WriteFile(filepath.Join(tempDir, "go.mod"), []byte(existingContent), 0o600)
 				require.NoError(t, err)
 			}
 

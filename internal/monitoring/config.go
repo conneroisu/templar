@@ -547,7 +547,7 @@ func SaveConfiguration(config *MonitoringConfiguration, path string) error {
 	}
 
 	// Write to file
-	if err := os.WriteFile(cleanPath, data, 0o644); err != nil {
+	if err := os.WriteFile(cleanPath, data, 0o600); err != nil {
 		return fmt.Errorf("failed to write config file: %w", err)
 	}
 

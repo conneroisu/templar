@@ -9,7 +9,6 @@ import (
 	"time"
 )
 
-
 // TestSkipList_BasicOperations tests basic skip list functionality.
 func TestSkipList_BasicOperations(t *testing.T) {
 	sl := NewSkipList()

@@ -185,7 +185,7 @@ func TestListCommand(t *testing.T) {
 
 	componentContent := TestComponentContent
 
-	err = os.WriteFile(filepath.Join(componentDir, TestTemplFile), []byte(componentContent), 0o644)
+	err = os.WriteFile(filepath.Join(componentDir, TestTemplFile), []byte(componentContent), 0o600)
 	require.NoError(t, err)
 
 	// Set up viper configuration
@@ -215,7 +215,7 @@ func TestListCommandJSON(t *testing.T) {
 
 	componentContent := TestComponentContent
 
-	err = os.WriteFile(filepath.Join(componentDir, TestTemplFile), []byte(componentContent), 0o644)
+	err = os.WriteFile(filepath.Join(componentDir, TestTemplFile), []byte(componentContent), 0o600)
 	require.NoError(t, err)
 
 	// Set up viper configuration
@@ -272,7 +272,7 @@ func TestBuildCommand(t *testing.T) {
 			err = os.WriteFile(
 				filepath.Join(componentDir, TestTemplFile),
 				[]byte(componentContent),
-				0o644,
+				0o600,
 			)
 			require.NoError(t, err)
 
@@ -370,7 +370,7 @@ func TestServeCommand(t *testing.T) {
   host: localhost
 components:
   scan_paths: ["` + ComponentsDir + `"]`
-	err = os.WriteFile(filepath.Join(tempDir, TemplarConfigFile), []byte(configContent), 0o644)
+	err = os.WriteFile(filepath.Join(tempDir, TemplarConfigFile), []byte(configContent), 0o600)
 	require.NoError(t, err)
 
 	// Create component files
@@ -380,7 +380,7 @@ components:
 
 	componentContent := TestComponentContent
 
-	err = os.WriteFile(filepath.Join(componentDir, TestTemplFile), []byte(componentContent), 0o644)
+	err = os.WriteFile(filepath.Join(componentDir, TestTemplFile), []byte(componentContent), 0o600)
 	require.NoError(t, err)
 
 	// Test serve command with context cancellation (quick test)
@@ -419,7 +419,7 @@ func TestWatchCommand(t *testing.T) {
   host: localhost
 components:
   scan_paths: ["` + ComponentsDir + `"]`
-	err = os.WriteFile(filepath.Join(tempDir, TemplarConfigFile), []byte(configContent), 0o644)
+	err = os.WriteFile(filepath.Join(tempDir, TemplarConfigFile), []byte(configContent), 0o600)
 	require.NoError(t, err)
 
 	// Create component files
@@ -429,7 +429,7 @@ components:
 
 	componentContent := TestComponentContent
 
-	err = os.WriteFile(filepath.Join(componentDir, TestTemplFile), []byte(componentContent), 0o644)
+	err = os.WriteFile(filepath.Join(componentDir, TestTemplFile), []byte(componentContent), 0o600)
 	require.NoError(t, err)
 
 	// Reset watch flags
@@ -470,7 +470,7 @@ func TestPreviewCommand(t *testing.T) {
   host: localhost
 components:
   scan_paths: ["` + ComponentsDir + `"]`
-	err = os.WriteFile(filepath.Join(tempDir, TemplarConfigFile), []byte(configContent), 0o644)
+	err = os.WriteFile(filepath.Join(tempDir, TemplarConfigFile), []byte(configContent), 0o600)
 	require.NoError(t, err)
 
 	// Create component files
@@ -480,7 +480,7 @@ components:
 
 	componentContent := TestComponentContent
 
-	err = os.WriteFile(filepath.Join(componentDir, TestTemplFile), []byte(componentContent), 0o644)
+	err = os.WriteFile(filepath.Join(componentDir, TestTemplFile), []byte(componentContent), 0o600)
 	require.NoError(t, err)
 
 	// Preview flags are now handled via StandardFlags structure
@@ -576,7 +576,7 @@ server:
 development:
   hot_reload: true
 `
-	err = os.WriteFile(TemplarConfigFile, []byte(config), 0o644)
+	err = os.WriteFile(TemplarConfigFile, []byte(config), 0o600)
 	require.NoError(t, err)
 
 	// Test doctor command execution

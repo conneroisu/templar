@@ -227,7 +227,7 @@ func (p *BulmaPlugin) setupWithCDN(ctx context.Context, config FrameworkConfig) 
 	}
 
 	// Write CSS file
-	if err := os.WriteFile(config.OutputPath, []byte(cssContent), 0o644); err != nil {
+	if err := os.WriteFile(config.OutputPath, []byte(cssContent), 0o600); err != nil {
 		return fmt.Errorf(plugins.ErrFailedWriteCSSFile, err)
 	}
 
@@ -243,7 +243,7 @@ func (p *BulmaPlugin) setupStandalone(ctx context.Context, config FrameworkConfi
 
 	// Create basic Bulma CSS (simplified)
 	basicCSS := p.generateBasicBulmaCSS(config)
-	if err := os.WriteFile(config.OutputPath, []byte(basicCSS), 0o644); err != nil {
+	if err := os.WriteFile(config.OutputPath, []byte(basicCSS), 0o600); err != nil {
 		return fmt.Errorf(plugins.ErrFailedWriteCSSFile, err)
 	}
 
@@ -260,7 +260,7 @@ func (p *BulmaPlugin) createEntryPoint(config FrameworkConfig) error {
 	// Generate Sass content
 	sassContent := p.generateBulmaSass(config)
 
-	if err := os.WriteFile(config.EntryPoint, []byte(sassContent), 0o644); err != nil {
+	if err := os.WriteFile(config.EntryPoint, []byte(sassContent), 0o600); err != nil {
 		return fmt.Errorf(plugins.ErrFailedWriteEntryPointFile, err)
 	}
 
@@ -624,7 +624,7 @@ func (p *BulmaPlugin) compileSass(
 	inputFile := filepath.Join(tmpDir, "input.sass")
 	outputFile := filepath.Join(tmpDir, plugins.OutputCSSFileName)
 
-	if err := os.WriteFile(inputFile, input, 0o644); err != nil {
+	if err := os.WriteFile(inputFile, input, 0o600); err != nil {
 		return nil, fmt.Errorf(plugins.ErrFailedWriteTempInputFile, err)
 	}
 	defer func() { _ = os.Remove(inputFile) }()

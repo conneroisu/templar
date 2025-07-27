@@ -227,7 +227,7 @@ func (p *BootstrapPlugin) createEntryPoint(config FrameworkConfig) error {
 	// Generate SCSS content
 	scssContent := p.generateBootstrapSCSS(config)
 
-	if err := os.WriteFile(config.EntryPoint, []byte(scssContent), 0o644); err != nil {
+	if err := os.WriteFile(config.EntryPoint, []byte(scssContent), 0o600); err != nil {
 		return fmt.Errorf(plugins.ErrFailedWriteEntryPointFile, err)
 	}
 
@@ -441,7 +441,7 @@ func (p *BootstrapPlugin) compileSCSS(
 	inputFile := filepath.Join(tmpDir, "input.scss")
 	outputFile := filepath.Join(tmpDir, plugins.OutputCSSFileName)
 
-	if err := os.WriteFile(inputFile, input, 0o644); err != nil {
+	if err := os.WriteFile(inputFile, input, 0o600); err != nil {
 		return nil, fmt.Errorf(plugins.ErrFailedWriteTempInputFile, err)
 	}
 	defer func() { _ = os.Remove(inputFile) }()

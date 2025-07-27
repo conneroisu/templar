@@ -146,7 +146,7 @@ templ %s() {
 	<div>Test content %d</div>
 }`, componentName, i)
 
-		if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
+		if err := os.WriteFile(filePath, []byte(content), 0o600); err != nil {
 			t.Fatalf("Failed to create test file: %v", err)
 		}
 
@@ -183,7 +183,7 @@ templ %s() {
 	if err := os.WriteFile(testComponent.FilePath, []byte(`package test
 templ ResponsiveTest() {
 	<div>Responsive test</div>
-}`), 0o644); err != nil {
+}`), 0o600); err != nil {
 		t.Fatalf("Failed to create responsive test file: %v", err)
 	}
 

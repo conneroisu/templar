@@ -108,7 +108,7 @@ func TestMetadataBasedCaching(t *testing.T) {
 
 	// Modify file content
 	modifiedContent := []byte("modified content with different size")
-	if err := os.WriteFile(tempFile.Name(), modifiedContent, 0o644); err != nil {
+	if err := os.WriteFile(tempFile.Name(), modifiedContent, 0o600); err != nil {
 		t.Fatalf("Failed to modify file: %v", err)
 	}
 
@@ -146,7 +146,7 @@ func BenchmarkHashCachingPerformance(b *testing.B) {
 			for i := range content {
 				content[i] = byte('A' + i%26)
 			}
-			if err := os.WriteFile(tempFile.Name(), content, 0o644); err != nil {
+			if err := os.WriteFile(tempFile.Name(), content, 0o600); err != nil {
 				b.Fatalf("Failed to write test content: %v", err)
 			}
 
@@ -178,7 +178,7 @@ func BenchmarkHashCachingPerformance(b *testing.B) {
 			for i := range content {
 				content[i] = byte('A' + i%26)
 			}
-			if err := os.WriteFile(tempFile.Name(), content, 0o644); err != nil {
+			if err := os.WriteFile(tempFile.Name(), content, 0o600); err != nil {
 				b.Fatalf("Failed to write test content: %v", err)
 			}
 
@@ -236,7 +236,7 @@ func TestCacheEvictionUnderMemoryPressure(t *testing.T) {
 		for j := range content {
 			content[j] = byte('A' + (i+j)%26)
 		}
-		if err := os.WriteFile(tempFile.Name(), content, 0o644); err != nil {
+		if err := os.WriteFile(tempFile.Name(), content, 0o600); err != nil {
 			t.Fatalf("Failed to write content to file %d: %v", i, err)
 		}
 		_ = tempFile.Close()
@@ -314,7 +314,7 @@ func TestCacheConcurrency(t *testing.T) {
 	for i := range content {
 		content[i] = byte('A' + i%26)
 	}
-	if err := os.WriteFile(tempFile.Name(), content, 0o644); err != nil {
+	if err := os.WriteFile(tempFile.Name(), content, 0o600); err != nil {
 		t.Fatalf("Failed to write test content: %v", err)
 	}
 

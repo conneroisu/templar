@@ -93,7 +93,7 @@ type mockFileInfo struct {
 
 func (m *mockFileInfo) Name() string       { return "test.templ" }
 func (m *mockFileInfo) Size() int64        { return m.size }
-func (m *mockFileInfo) Mode() os.FileMode  { return 0o644 }
+func (m *mockFileInfo) Mode() os.FileMode  { return 0o600 }
 func (m *mockFileInfo) ModTime() time.Time { return m.modTime }
 func (m *mockFileInfo) IsDir() bool        { return false }
 func (m *mockFileInfo) Sys() interface{}   { return nil }

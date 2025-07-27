@@ -88,7 +88,7 @@ templ Valid() {
 		// Parse template by creating temporary file - should not crash
 		tempDir := "/tmp"
 		tempFile := filepath.Join(tempDir, "fuzz_test.templ")
-		_ = os.WriteFile(tempFile, []byte(template), 0o644) // Error not relevant for fuzz test
+		_ = os.WriteFile(tempFile, []byte(template), 0o600) // Error not relevant for fuzz test
 		defer func() { _ = os.Remove(tempFile) }()
 
 		err := scanner.ScanFile(tempFile)

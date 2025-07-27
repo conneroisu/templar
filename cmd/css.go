@@ -180,7 +180,7 @@ var cssStyleguideCmd = &cobra.Command{
 			return fmt.Errorf("failed to generate style guide: %w", err)
 		}
 
-		if err := os.WriteFile(outputPath, styleGuide, 0o644); err != nil {
+		if err := os.WriteFile(outputPath, styleGuide, 0o600); err != nil {
 			return fmt.Errorf("failed to write style guide to %s: %w", outputPath, err)
 		}
 
@@ -264,7 +264,7 @@ var cssThemeExtractCmd = &cobra.Command{
 
 		jsonContent.WriteString("\n}")
 
-		if err := os.WriteFile(outputPath, []byte(jsonContent.String()), 0o644); err != nil {
+		if err := os.WriteFile(outputPath, []byte(jsonContent.String()), 0o600); err != nil {
 			return fmt.Errorf("failed to write variables to %s: %w", outputPath, err)
 		}
 
@@ -352,7 +352,7 @@ The variables file should be in JSON format with variable names and values:
 			return fmt.Errorf("failed to generate theme: %w", err)
 		}
 
-		if err := os.WriteFile(outputPath, themeCSS, 0o644); err != nil {
+		if err := os.WriteFile(outputPath, themeCSS, 0o600); err != nil {
 			return fmt.Errorf("failed to write theme to %s: %w", outputPath, err)
 		}
 

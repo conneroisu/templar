@@ -238,6 +238,7 @@ func NewBroadcastPool() *BroadcastPool {
 		clientSlicePool: sync.Pool{
 			New: func() interface{} {
 				slice := make([]*OptimizedClient, 0, 100)
+
 				return &slice
 			},
 		},

@@ -231,13 +231,13 @@ func TestDevelopmentVsProductionCSP(t *testing.T) {
 	}
 
 	// Development with nonce should not contain unsafe directives
-	if strings.Contains(devCSP, "'unsafe-inline'") || strings.Contains(devCSP, "'unsafe-eval'") {
+	if strings.Contains(devCSP, UnsafeInline) || strings.Contains(devCSP, UnsafeEval) {
 		t.Error("Development CSP should not contain unsafe directives when nonce is used")
 	}
 
 	// Production should not allow unsafe directives
 	prodCSP := buildCSPHeader(prodConfig.CSP, "test-nonce")
-	if strings.Contains(prodCSP, "'unsafe-inline'") || strings.Contains(prodCSP, "'unsafe-eval'") {
+	if strings.Contains(prodCSP, UnsafeInline) || strings.Contains(prodCSP, UnsafeEval) {
 		t.Error("Production CSP should not contain unsafe directives")
 	}
 

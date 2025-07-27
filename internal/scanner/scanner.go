@@ -77,6 +77,7 @@ func NewBufferPool() *BufferPool {
 			New: func() interface{} {
 				// Pre-allocate 64KB buffers for typical component files
 				buf := make([]byte, 0, 64*1024)
+
 				return &buf
 			},
 		},

@@ -11,7 +11,6 @@ import (
 	"time"
 )
 
-
 // CIIntegration handles CI/CD pipeline integration for performance monitoring.
 type CIIntegration struct {
 	detector         *PerformanceDetector
@@ -286,7 +285,7 @@ func (ci *CIIntegration) outputJSON(report PerformanceReport, outputFile string)
 	}
 
 	if outputFile != "" {
-		return os.WriteFile(outputFile, data, 0o644)
+		return os.WriteFile(outputFile, data, 0o600)
 	}
 
 	fmt.Println(string(data))
@@ -399,7 +398,7 @@ func (ci *CIIntegration) outputText(report PerformanceReport, outputFile string)
 	result := output.String()
 
 	if outputFile != "" {
-		return os.WriteFile(outputFile, []byte(result), 0o644)
+		return os.WriteFile(outputFile, []byte(result), 0o600)
 	}
 
 	fmt.Print(result)
@@ -442,7 +441,7 @@ func (ci *CIIntegration) outputGitHub(report PerformanceReport, outputFile strin
 	result := output.String()
 
 	if outputFile != "" {
-		return os.WriteFile(outputFile, []byte(result), 0o644)
+		return os.WriteFile(outputFile, []byte(result), 0o600)
 	}
 
 	fmt.Print(result)
@@ -500,7 +499,7 @@ func (ci *CIIntegration) outputJUnit(report PerformanceReport, outputFile string
 	result := output.String()
 
 	if outputFile != "" {
-		return os.WriteFile(outputFile, []byte(result), 0o644)
+		return os.WriteFile(outputFile, []byte(result), 0o600)
 	}
 
 	fmt.Print(result)
@@ -593,5 +592,5 @@ jobs:
 		return fmt.Errorf("creating workflow directory: %w", err)
 	}
 
-	return os.WriteFile(workflowPath, []byte(workflowContent), 0o644)
+	return os.WriteFile(workflowPath, []byte(workflowContent), 0o600)
 }

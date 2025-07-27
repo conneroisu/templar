@@ -567,7 +567,7 @@ func outputComponentDetails(report *accessibility.AccessibilityReport) {
 	if len(warningViolations) > 0 {
 		fmt.Printf("   ⚠️  Warnings (%d):\n", len(warningViolations))
 		for i := range warningViolations {
-		violation := &warningViolations[i]
+			violation := warningViolations[i]
 			outputViolation(violation, ViolationIndent)
 		}
 	}
@@ -662,7 +662,7 @@ func writeOutput(content string) error {
 		}
 
 		// Write to file
-		if err := os.WriteFile(auditOutputFile, []byte(content), 0o644); err != nil {
+		if err := os.WriteFile(auditOutputFile, []byte(content), 0o600); err != nil {
 			return fmt.Errorf("failed to write output file: %w", err)
 		}
 

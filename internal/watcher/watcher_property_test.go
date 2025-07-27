@@ -34,7 +34,7 @@ func TestFileWatcherProperties(t *testing.T) {
 			testFile := filepath.Join(tempDir, TestTemplFileName)
 
 			// Create initial file
-			if err := os.WriteFile(testFile, []byte("initial content"), 0o644); err != nil {
+			if err := os.WriteFile(testFile, []byte("initial content"), 0o600); err != nil {
 				return true
 			}
 
@@ -68,7 +68,7 @@ func TestFileWatcherProperties(t *testing.T) {
 			// Make rapid changes to file
 			for i := 0; i < changeCount; i++ {
 				content := []byte("content " + string(rune(i)))
-				if err := os.WriteFile(testFile, content, 0o644); err != nil {
+				if err := os.WriteFile(testFile, content, 0o600); err != nil {
 					continue
 				}
 				time.Sleep(
@@ -112,7 +112,7 @@ func TestFileWatcherProperties(t *testing.T) {
 
 				// Create test file in each directory
 				testFile := filepath.Join(dirPath, TestTemplFileName)
-				if err := os.WriteFile(testFile, []byte("content"), 0o644); err != nil {
+				if err := os.WriteFile(testFile, []byte("content"), 0o600); err != nil {
 					return true
 				}
 			}
@@ -144,7 +144,7 @@ func TestFileWatcherProperties(t *testing.T) {
 			for i, dir := range dirs {
 				testFile := filepath.Join(dir, TestTemplFileName)
 				content := []byte("updated content " + string(rune(i)))
-				if err := os.WriteFile(testFile, content, 0o644); err != nil {
+				if err := os.WriteFile(testFile, content, 0o600); err != nil {
 					continue
 				}
 			}
@@ -202,7 +202,7 @@ func TestFileWatcherProperties(t *testing.T) {
 				filePaths[i] = filePath
 
 				content := []byte("content " + string(rune(i)))
-				if err := os.WriteFile(filePath, content, 0o644); err != nil {
+				if err := os.WriteFile(filePath, content, 0o600); err != nil {
 					continue
 				}
 			}
@@ -298,7 +298,7 @@ func TestFileWatcherProperties(t *testing.T) {
 
 					// Create a file to trigger events
 					testFile := filepath.Join(dir, "concurrent.templ")
-					_ = os.WriteFile(testFile, []byte("concurrent content"), 0o644)
+					_ = os.WriteFile(testFile, []byte("concurrent content"), 0o600)
 				}(dirs[i])
 			}
 
@@ -378,7 +378,7 @@ func TestWatcherEventOrderingProperties(t *testing.T) {
 			// Perform sequential operations with spacing to allow debouncing
 			for i := 0; i < operationCount; i++ {
 				content := []byte("content iteration " + string(rune(i)))
-				if err := os.WriteFile(testFile, content, 0o644); err != nil {
+				if err := os.WriteFile(testFile, content, 0o600); err != nil {
 					continue
 				}
 				time.Sleep(100 * time.Millisecond) // Space out operations

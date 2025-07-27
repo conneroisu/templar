@@ -538,7 +538,7 @@ func (mt *MutationTester) applyMutation(mutation Mutation) error {
 
 	mutatedContent := strings.Join(lines, "\n")
 
-	return os.WriteFile(mutation.File, []byte(mutatedContent), 0o644)
+	return os.WriteFile(mutation.File, []byte(mutatedContent), 0o600)
 }
 
 // restoreMutation restores the original code after testing.
@@ -560,7 +560,7 @@ func (mt *MutationTester) restoreMutation(mutation Mutation) error {
 
 	restoredContent := strings.Join(lines, "\n")
 
-	return os.WriteFile(mutation.File, []byte(restoredContent), 0o644)
+	return os.WriteFile(mutation.File, []byte(restoredContent), 0o600)
 }
 
 // runTests executes the test suite and returns pass/fail status and output.
@@ -778,5 +778,5 @@ func (mt *MutationTester) GenerateReport(summary *MutationTestSummary, outputPat
 	}
 
 	// Write report to file
-	return os.WriteFile(outputPath, []byte(report.String()), 0o644)
+	return os.WriteFile(outputPath, []byte(report.String()), 0o600)
 }

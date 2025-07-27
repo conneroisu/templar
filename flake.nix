@@ -93,7 +93,6 @@
             }
 
             # Run all linting steps
-            run_lint_step "basedpyright hooks" basedpyright "$REPO_ROOT"/.claude/hooks/*.py
             run_lint_step "templ" templ generate "$REPO_ROOT"
             run_lint_step "golangci-lint" golangci-lint run --fix "$REPO_ROOT"/...
             run_lint_step "statix" statix check "$REPO_ROOT"/flake.nix

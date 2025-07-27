@@ -389,7 +389,7 @@ func outputReportTable(report performance.PerformanceReport, output string) erro
 	content += fmt.Sprintf("\nRecommendations: %d active\n", len(report.Recommendations))
 
 	if output != "" {
-		return os.WriteFile(output, []byte(content), 0o644)
+		return os.WriteFile(output, []byte(content), 0o600)
 	}
 
 	fmt.Print(content)
@@ -403,7 +403,7 @@ func outputJSON(data interface{}, output string) error {
 	}
 
 	if output != "" {
-		return os.WriteFile(output, jsonData, 0o644)
+		return os.WriteFile(output, jsonData, 0o600)
 	}
 
 	fmt.Println(string(jsonData))

@@ -280,7 +280,7 @@ func (mc *MetricsCollector) FlushMetrics() error {
 	}
 
 	// Write metrics to file
-	file, err := os.OpenFile(mc.outputPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644)
+	file, err := os.OpenFile(mc.outputPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
 	if err != nil {
 		return fmt.Errorf("failed to open metrics file: %w", err)
 	}

@@ -273,7 +273,7 @@ func (b *AssetBundler) bundleJavaScript(
 		}
 
 		// Write bundle
-		if err := os.WriteFile(bundlePath, []byte(content), 0o644); err != nil {
+		if err := os.WriteFile(bundlePath, []byte(content), 0o600); err != nil {
 			return nil, fmt.Errorf("failed to write bundle %s: %w", bundlePath, err)
 		}
 
@@ -283,7 +283,7 @@ func (b *AssetBundler) bundleJavaScript(
 		if options.SourceMaps {
 			sourceMapPath := bundlePath + ".map"
 			sourceMap := b.generateSimpleSourceMap(entry, bundleName)
-			if err := os.WriteFile(sourceMapPath, []byte(sourceMap), 0o644); err != nil {
+			if err := os.WriteFile(sourceMapPath, []byte(sourceMap), 0o600); err != nil {
 				return nil, fmt.Errorf("failed to write source map %s: %w", sourceMapPath, err)
 			}
 			bundledFiles = append(bundledFiles, sourceMapPath)
@@ -331,7 +331,7 @@ func (b *AssetBundler) bundleCSS(
 	}
 
 	// Write bundle
-	if err := os.WriteFile(bundlePath, []byte(finalCSS), 0o644); err != nil {
+	if err := os.WriteFile(bundlePath, []byte(finalCSS), 0o600); err != nil {
 		return nil, fmt.Errorf("failed to write CSS bundle %s: %w", bundlePath, err)
 	}
 
@@ -745,7 +745,7 @@ func writeJSONFile(path string, data interface{}) error {
 		return fmt.Errorf("failed to marshal JSON: %w", err)
 	}
 
-	if err := os.WriteFile(path, jsonData, 0o644); err != nil {
+	if err := os.WriteFile(path, jsonData, 0o600); err != nil {
 		return fmt.Errorf("failed to write file: %w", err)
 	}
 

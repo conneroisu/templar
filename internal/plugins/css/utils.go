@@ -49,4 +49,3 @@ func purgeUnusedClasses(css string, usedClasses []string, shouldKeepRule func(st
 
 	return strings.Join(result, "\n")
 }
-

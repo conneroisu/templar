@@ -286,7 +286,7 @@ func generateGoCode(
 
 	content += fmt.Sprintf(templateRenderFunction, component.Name, component.Name, component.Name, component.Name)
 
-	if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
+	if err := os.WriteFile(filePath, []byte(content), 0o600); err != nil {
 		return fmt.Errorf(errorWriteGoFile, err)
 	}
 
@@ -317,7 +317,7 @@ func generateTypeDefinitions(
 
 	content += "}\n"
 
-	if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
+	if err := os.WriteFile(filePath, []byte(content), 0o600); err != nil {
 		return fmt.Errorf("failed to write types file: %w", err)
 	}
 
@@ -344,7 +344,7 @@ func generateMockDataFile(
 		return fmt.Errorf("failed to marshal mock data: %w", err)
 	}
 
-	if err := os.WriteFile(filePath, data, 0o644); err != nil {
+	if err := os.WriteFile(filePath, data, 0o600); err != nil {
 		return fmt.Errorf("failed to write mock file: %w", err)
 	}
 
@@ -406,7 +406,7 @@ func generateDocumentation(
 
 	content += ")\n```\n"
 
-	if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
+	if err := os.WriteFile(filePath, []byte(content), 0o600); err != nil {
 		return fmt.Errorf("failed to write documentation file: %w", err)
 	}
 

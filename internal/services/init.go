@@ -193,7 +193,7 @@ development:
 		cfg.Development.ErrorOverlay,
 	)
 
-	return os.WriteFile(path, []byte(content), 0o644)
+	return os.WriteFile(path, []byte(content), 0o600)
 }
 
 // createConfigWithWizard creates configuration using interactive wizard.
@@ -219,7 +219,7 @@ require (
 )
 `, filepath.Base(projectDir))
 
-	return os.WriteFile(modFile, []byte(content), 0o644)
+	return os.WriteFile(modFile, []byte(content), 0o600)
 }
 
 // createExampleComponents creates example component files.
@@ -235,7 +235,7 @@ templ Button(text string, variant string) {
 `
 
 	buttonPath := filepath.Join(projectDir, "components", "button.templ")
-	if err := os.WriteFile(buttonPath, []byte(buttonContent), 0o644); err != nil {
+	if err := os.WriteFile(buttonPath, []byte(buttonContent), 0o600); err != nil {
 		return errors.FileOperationError(
 			"CREATE_COMPONENT",
 			buttonPath,
@@ -260,7 +260,7 @@ templ Card(title string, content string) {
 `
 
 	cardPath := filepath.Join(projectDir, "components", "card.templ")
-	if err := os.WriteFile(cardPath, []byte(cardContent), 0o644); err != nil {
+	if err := os.WriteFile(cardPath, []byte(cardContent), 0o600); err != nil {
 		return errors.FileOperationError(
 			"CREATE_COMPONENT",
 			cardPath,
@@ -307,7 +307,7 @@ templ Card(title string, content string) {
 `
 
 	cssPath := filepath.Join(projectDir, "static", "css", "styles.css")
-	if err := os.WriteFile(cssPath, []byte(cssContent), 0o644); err != nil {
+	if err := os.WriteFile(cssPath, []byte(cssContent), 0o600); err != nil {
 		return errors.FileOperationError("CREATE_CSS", cssPath, "failed to create CSS file", err)
 	}
 
@@ -331,7 +331,7 @@ templ Layout(title string) {
 `
 
 	layoutPath := filepath.Join(projectDir, "views", "layout.templ")
-	if err := os.WriteFile(layoutPath, []byte(layoutContent), 0o644); err != nil {
+	if err := os.WriteFile(layoutPath, []byte(layoutContent), 0o600); err != nil {
 		return errors.FileOperationError(
 			"CREATE_LAYOUT",
 			layoutPath,
@@ -362,7 +362,7 @@ templ Demo() {
 `
 
 	demoPath := filepath.Join(projectDir, "examples", "demo.templ")
-	if err := os.WriteFile(demoPath, []byte(demoContent), 0o644); err != nil {
+	if err := os.WriteFile(demoPath, []byte(demoContent), 0o600); err != nil {
 		return errors.FileOperationError(
 			"CREATE_DEMO",
 			demoPath,
@@ -412,7 +412,7 @@ templ Wrapper() {
 
 	wrapperPath := filepath.Join(projectDir, "preview", "wrapper.templ")
 
-	return os.WriteFile(wrapperPath, []byte(wrapperContent), 0o644)
+	return os.WriteFile(wrapperPath, []byte(wrapperContent), 0o600)
 }
 
 // createFromTemplate creates files from the specified template.
@@ -431,7 +431,7 @@ templ Hello(name string) {
 `
 		helloPath := filepath.Join(projectDir, "components", "hello.templ")
 
-		return os.WriteFile(helloPath, []byte(helloContent), 0o644)
+		return os.WriteFile(helloPath, []byte(helloContent), 0o600)
 	case "blog", "dashboard", "landing", "ecommerce", "documentation":
 		// For now, just create basic structure - full templates would be implemented here
 		return s.createExampleComponents(projectDir)

@@ -34,7 +34,7 @@ templ Button(text string, variant string) {
 	</button>
 }`
 
-	err = os.WriteFile(componentFile, []byte(componentContent), 0o644)
+	err = os.WriteFile(componentFile, []byte(componentContent), 0o600)
 	require.NoError(t, err)
 
 	// Initialize registry and pipeline
@@ -88,7 +88,7 @@ templ BrokenComponent(text string) {
 	// Missing closing </div>
 }`
 
-	err = os.WriteFile(componentFile, []byte(brokenContent), 0o644)
+	err = os.WriteFile(componentFile, []byte(brokenContent), 0o600)
 	require.NoError(t, err)
 
 	reg := registry.NewComponentRegistry()
@@ -179,7 +179,7 @@ templ Nav(items []string) {
 
 	for filename, content := range components {
 		filepath := filepath.Join(componentsDir, filename)
-		err = os.WriteFile(filepath, []byte(content), 0o644)
+		err = os.WriteFile(filepath, []byte(content), 0o600)
 		require.NoError(t, err)
 	}
 

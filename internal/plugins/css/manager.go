@@ -127,7 +127,7 @@ func (m *FrameworkManager) SetupFramework(
 		}
 
 		configPath := filepath.Join(m.projectPath, config.ConfigFile)
-		if err := os.WriteFile(configPath, configContent, 0o644); err != nil {
+		if err := os.WriteFile(configPath, configContent, 0o600); err != nil {
 			return fmt.Errorf("failed to write config file %s: %w", configPath, err)
 		}
 	}

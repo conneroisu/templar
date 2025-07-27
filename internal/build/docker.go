@@ -111,7 +111,7 @@ func (d *DockerBuilder) Build(
 	}
 
 	// Write Dockerfile
-	if err := os.WriteFile(dockerfilePath, []byte(dockerfileContent), 0o644); err != nil {
+	if err := os.WriteFile(dockerfilePath, []byte(dockerfileContent), 0o600); err != nil {
 		return "", "", fmt.Errorf("failed to write Dockerfile: %w", err)
 	}
 

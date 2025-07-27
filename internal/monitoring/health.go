@@ -362,7 +362,7 @@ func FileSystemHealthChecker(path string) HealthChecker {
 		// Try to create and remove a temp file
 		tempFile := fmt.Sprintf("%s/.health_check_%d", path, time.Now().UnixNano())
 
-		if err := os.WriteFile(tempFile, []byte("health_check"), 0o644); err != nil {
+		if err := os.WriteFile(tempFile, []byte("health_check"), 0o600); err != nil {
 			return HealthCheck{
 				Name:        "filesystem",
 				Status:      HealthStatusUnhealthy,

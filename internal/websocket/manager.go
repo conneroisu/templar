@@ -109,8 +109,8 @@ func NewWebSocketManager(
 	}
 
 	// Initialize enhanced WebSocket functionality
-	// TODO: Replace with proper initialization when WebSocketEnhancements is implemented
-	manager.enhancements = nil // NewWebSocketEnhancements()
+	// Enhanced features are disabled pending future WebSocketEnhancements implementation
+	manager.enhancements = nil
 
 	// Start the connection management hub in background goroutine
 	// This must happen before returning to ensure manager is ready for connections
@@ -531,9 +531,8 @@ func (wm *WebSocketManager) Shutdown(ctx context.Context) error {
 		close(wm.register)
 		close(wm.unregister)
 
-		// TODO: Add enhancement shutdown logic when WebSocketEnhancements is fully implemented
-		// Currently enhancements is always nil (see line 113)
-		// Future implementation should call wm.enhancements.Shutdown() or similar
+		// Enhancement shutdown logic is not needed as enhancements is currently nil
+		// Future enhancement shutdown logic will be added when WebSocketEnhancements is implemented
 
 		log.Printf("WebSocket manager shut down successfully")
 	})

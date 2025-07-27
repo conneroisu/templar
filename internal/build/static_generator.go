@@ -193,7 +193,7 @@ func (s *StaticSiteGenerator) generateComponentPage(
 	}
 
 	// Write HTML file
-	if err := os.WriteFile(pagePath, []byte(htmlContent), 0o644); err != nil {
+	if err := os.WriteFile(pagePath, []byte(htmlContent), 0o600); err != nil {
 		return nil, fmt.Errorf("failed to write HTML file: %w", err)
 	}
 	generatedFiles = append(generatedFiles, pagePath)
@@ -206,7 +206,7 @@ func (s *StaticSiteGenerator) generateComponentPage(
 			return nil, fmt.Errorf("failed to generate JSON: %w", err)
 		}
 
-		if err := os.WriteFile(jsonPath, []byte(jsonContent), 0o644); err != nil {
+		if err := os.WriteFile(jsonPath, []byte(jsonContent), 0o600); err != nil {
 			return nil, fmt.Errorf("failed to write JSON file: %w", err)
 		}
 		generatedFiles = append(generatedFiles, jsonPath)
@@ -226,7 +226,7 @@ func (s *StaticSiteGenerator) generateComponentPage(
 				return nil, fmt.Errorf("failed to render variant %s: %w", example.Name, err)
 			}
 
-			if err := os.WriteFile(variantPath, []byte(variantHTML), 0o644); err != nil {
+			if err := os.WriteFile(variantPath, []byte(variantHTML), 0o600); err != nil {
 				return nil, fmt.Errorf("failed to write variant file: %w", err)
 			}
 			generatedFiles = append(generatedFiles, variantPath)
@@ -261,7 +261,7 @@ func (s *StaticSiteGenerator) generateCustomPage(
 	}
 
 	// Write file
-	if err := os.WriteFile(pagePath, []byte(htmlContent), 0o644); err != nil {
+	if err := os.WriteFile(pagePath, []byte(htmlContent), 0o600); err != nil {
 		return "", fmt.Errorf("failed to write custom page: %w", err)
 	}
 
@@ -285,7 +285,7 @@ func (s *StaticSiteGenerator) generateErrorPage(
 	}
 
 	// Write file
-	if err := os.WriteFile(pagePath, []byte(htmlContent), 0o644); err != nil {
+	if err := os.WriteFile(pagePath, []byte(htmlContent), 0o600); err != nil {
 		return "", fmt.Errorf("failed to write error page: %w", err)
 	}
 
@@ -335,7 +335,7 @@ func (s *StaticSiteGenerator) generateSitemap(
 	sitemap.WriteString("</urlset>\n")
 
 	// Write sitemap
-	if err := os.WriteFile(sitemapPath, []byte(sitemap.String()), 0o644); err != nil {
+	if err := os.WriteFile(sitemapPath, []byte(sitemap.String()), 0o600); err != nil {
 		return "", fmt.Errorf("failed to write sitemap: %w", err)
 	}
 
@@ -361,7 +361,7 @@ func (s *StaticSiteGenerator) generateRobotsTxt(
 	}
 
 	// Write robots.txt
-	if err := os.WriteFile(robotsPath, []byte(robotsContent), 0o644); err != nil {
+	if err := os.WriteFile(robotsPath, []byte(robotsContent), 0o600); err != nil {
 		return "", fmt.Errorf("failed to write robots.txt: %w", err)
 	}
 
@@ -385,7 +385,7 @@ func (s *StaticSiteGenerator) generateIndexPage(
 	}
 
 	// Write index file
-	if err := os.WriteFile(indexPath, []byte(htmlContent), 0o644); err != nil {
+	if err := os.WriteFile(indexPath, []byte(htmlContent), 0o600); err != nil {
 		return "", fmt.Errorf("failed to write index page: %w", err)
 	}
 

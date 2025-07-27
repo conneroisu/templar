@@ -33,7 +33,7 @@ func createTestComponents(count int) string {
 		}
 
 		filename := filepath.Join(tempDir, fmt.Sprintf("component_%d.templ", i))
-		if err := os.WriteFile(filename, []byte(content), 0o644); err != nil {
+		if err := os.WriteFile(filename, []byte(content), 0o600); err != nil {
 			panic(err)
 		}
 	}

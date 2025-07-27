@@ -93,7 +93,7 @@ func TestEnhancedWebSocket_Integration(t *testing.T) {
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		server.handleWebSocketEnhanced(w, r)
 	}))
-	defer testServer.Close()
+	defer func() { testServer.Close() }()
 
 	wsURL := "ws" + strings.TrimPrefix(testServer.URL, "http")
 
@@ -156,7 +156,7 @@ func TestEnhancedWebSocket_RateLimiting(t *testing.T) {
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		server.handleWebSocketEnhanced(w, r)
 	}))
-	defer testServer.Close()
+	defer func() { testServer.Close() }()
 
 	wsURL := "ws" + strings.TrimPrefix(testServer.URL, "http")
 
@@ -229,7 +229,7 @@ func TestEnhancedWebSocket_Broadcasting(t *testing.T) {
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		server.handleWebSocketEnhanced(w, r)
 	}))
-	defer testServer.Close()
+	defer func() { testServer.Close() }()
 
 	wsURL := "ws" + strings.TrimPrefix(testServer.URL, "http")
 
@@ -311,7 +311,7 @@ func benchmarkEnhancedWebSocket(b *testing.B, numClients int) {
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		server.handleWebSocketEnhanced(w, r)
 	}))
-	defer testServer.Close()
+	defer func() { testServer.Close() }()
 
 	wsURL := "ws" + strings.TrimPrefix(testServer.URL, "http")
 
@@ -416,7 +416,7 @@ func benchmarkOriginalWebSocket(b *testing.B, numClients int) {
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		server.handleWebSocket(w, r)
 	}))
-	defer testServer.Close()
+	defer func() { testServer.Close() }()
 
 	wsURL := "ws" + strings.TrimPrefix(testServer.URL, "http")
 

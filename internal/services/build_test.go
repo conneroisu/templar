@@ -145,12 +145,12 @@ func TestBuildService_cleanBuildArtifacts(t *testing.T) {
 	require.NoError(t, err)
 
 	cacheFile := filepath.Join(cacheDir, "test-cache.dat")
-	err = os.WriteFile(cacheFile, []byte("cache data"), 0o644)
+	err = os.WriteFile(cacheFile, []byte("cache data"), 0o600)
 	require.NoError(t, err)
 
 	// Create some generated files
 	generatedFile := filepath.Join(tempDir, "test_templ.go")
-	err = os.WriteFile(generatedFile, []byte("generated content"), 0o644)
+	err = os.WriteFile(generatedFile, []byte("generated content"), 0o600)
 	require.NoError(t, err)
 
 	// Test cleaning
@@ -186,7 +186,7 @@ func TestBuildService_cleanGeneratedFiles(t *testing.T) {
 
 	for filename := range files {
 		filePath := filepath.Join(testPath, filename)
-		writeErr := os.WriteFile(filePath, []byte("test content"), 0o644)
+		writeErr := os.WriteFile(filePath, []byte("test content"), 0o600)
 		require.NoError(t, writeErr)
 	}
 
@@ -227,7 +227,7 @@ templ TestComponent(title string) {
 	scanErr := os.WriteFile(
 		filepath.Join(componentDir, "test.templ"),
 		[]byte(componentContent),
-		0o644,
+		0o600,
 	)
 	require.NoError(t, scanErr)
 
@@ -356,5 +356,5 @@ templ AnotherComponent(count int) {
 	<div>Count: { fmt.Sprintf("%d", count) }</div>
 }`
 
-	return os.WriteFile(filepath.Join(componentDir, "test.templ"), []byte(componentContent), 0o644)
+	return os.WriteFile(filepath.Join(componentDir, "test.templ"), []byte(componentContent), 0o600)
 }

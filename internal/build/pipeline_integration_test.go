@@ -592,10 +592,10 @@ templ TestComponent2() {
 }
 `
 
-	err = os.WriteFile(filepath.Join(testDir, "component1.templ"), []byte(templContent1), 0o644)
+	err = os.WriteFile(filepath.Join(testDir, "component1.templ"), []byte(templContent1), 0o600)
 	require.NoError(t, err)
 
-	err = os.WriteFile(filepath.Join(testDir, "component2.templ"), []byte(templContent2), 0o644)
+	err = os.WriteFile(filepath.Join(testDir, "component2.templ"), []byte(templContent2), 0o600)
 	require.NoError(t, err)
 
 	return testDir
@@ -615,7 +615,7 @@ templ BenchComponent() {
 	<div>Benchmark Component</div>
 }
 `
-	err = os.WriteFile(filepath.Join(testDir, "bench.templ"), []byte(templContent), 0o644)
+	err = os.WriteFile(filepath.Join(testDir, "bench.templ"), []byte(templContent), 0o600)
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -654,7 +654,7 @@ templ ConcurrentBenchComponent() {
 	<div>Concurrent Benchmark Component</div>
 }
 `
-	err = os.WriteFile(filepath.Join(testDir, "concurrent.templ"), []byte(templContent), 0o644)
+	err = os.WriteFile(filepath.Join(testDir, "concurrent.templ"), []byte(templContent), 0o600)
 	if err != nil {
 		b.Fatal(err)
 	}

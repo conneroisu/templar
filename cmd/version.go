@@ -50,11 +50,12 @@ func runVersionCommand(cmd *cobra.Command, args []string) error {
 	case OutputFormatJSON:
 		return outputVersionJSON()
 	case "text":
-		if versionShort {
+		switch {
+		case versionShort:
 			return outputVersionShort()
-		} else if detailed {
+		case detailed:
 			return outputVersionDetailed()
-		} else {
+		default:
 			return outputVersionDefault()
 		}
 	default:

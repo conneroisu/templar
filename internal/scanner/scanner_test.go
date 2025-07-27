@@ -41,7 +41,7 @@ templ Card(title string, content string) {
 }
 `
 
-	err := os.WriteFile(templFile, []byte(templContent), 0o644)
+	err := os.WriteFile(templFile, []byte(templContent), 0o600)
 	require.NoError(t, err)
 
 	// Clean up after test
@@ -97,7 +97,7 @@ templ Button(text string) {
 	<button>{text}</button>
 }
 `
-	err = os.WriteFile(file1, []byte(content1), 0o644)
+	err = os.WriteFile(file1, []byte(content1), 0o600)
 	require.NoError(t, err)
 
 	// Create second file
@@ -110,12 +110,12 @@ templ Card(title string) {
 	</div>
 }
 `
-	err = os.WriteFile(file2, []byte(content2), 0o644)
+	err = os.WriteFile(file2, []byte(content2), 0o600)
 	require.NoError(t, err)
 
 	// Create non-templ file (should be ignored)
 	file3 := filepath.Join(tempDir, "readme.md")
-	err = os.WriteFile(file3, []byte("# Test"), 0o644)
+	err = os.WriteFile(file3, []byte("# Test"), 0o600)
 	require.NoError(t, err)
 
 	// Test scanning directory

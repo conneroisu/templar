@@ -33,7 +33,7 @@ func createTestFile(t *testing.T, path string, content string) {
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		t.Fatalf("Failed to create directory %s: %v", dir, err)
 	}
-	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
 		t.Fatalf("Failed to write test file %s: %v", path, err)
 	}
 }

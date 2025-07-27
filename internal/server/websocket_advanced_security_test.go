@@ -125,7 +125,7 @@ func TestWebSocketConnectionHijacking(t *testing.T) {
 					server.handleWebSocket(w, r)
 				}),
 			)
-			defer testServer.Close()
+			defer func() { testServer.Close() }()
 
 			// Setup attack
 			req, err := tt.setupAttack(testServer)
@@ -246,7 +246,7 @@ func TestWebSocketProtocolDowngradeAttacks(t *testing.T) {
 					server.handleWebSocket(w, r)
 				}),
 			)
-			defer testServer.Close()
+			defer func() { testServer.Close() }()
 
 			// Attempt connection
 			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
@@ -265,12 +265,10 @@ func TestWebSocketProtocolDowngradeAttacks(t *testing.T) {
 				require.NoError(t, err, tt.description)
 				require.NotNil(t, conn, tt.description)
 				_ = conn.Close(websocket.StatusNormalClosure, "")
-			} else {
+			} else if err == nil && response != nil && response.StatusCode == http.StatusSwitchingProtocols {
 				// Should be rejected - either error or non-101 status
-				if err == nil && response != nil && response.StatusCode == http.StatusSwitchingProtocols {
-					_ = conn.Close(websocket.StatusNormalClosure, "")
-					t.Errorf("%s: Expected protocol downgrade attack to be blocked", tt.description)
-				}
+				_ = conn.Close(websocket.StatusNormalClosure, "")
+				t.Errorf("%s: Expected protocol downgrade attack to be blocked", tt.description)
 			}
 		})
 	}
@@ -301,7 +299,7 @@ func TestWebSocketRateLimitingEdgeCases(t *testing.T) {
 						server.handleWebSocket(w, r)
 					}),
 				)
-				defer testServer.Close()
+				defer func() { testServer.Close() }()
 
 				// Attempt to create many connections rapidly
 				connections := make([]*websocket.Conn, 0, 100)
@@ -360,7 +358,7 @@ func TestWebSocketRateLimitingEdgeCases(t *testing.T) {
 						server.handleWebSocket(w, r)
 					}),
 				)
-				defer testServer.Close()
+				defer func() { testServer.Close() }()
 
 				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 				defer cancel()
@@ -403,7 +401,7 @@ func TestWebSocketRateLimitingEdgeCases(t *testing.T) {
 						server.handleWebSocket(w, r)
 					}),
 				)
-				defer testServer.Close()
+				defer func() { testServer.Close() }()
 
 				blocked := 0
 				for range 50 {
@@ -639,7 +637,7 @@ func TestWebSocketChaosTestingNetworkFailures(t *testing.T) {
 					server.handleWebSocket(w, r)
 				}),
 			)
-			defer testServer.Close()
+			defer func() { testServer.Close() }()
 
 			tt.chaosFunc(t, server, testServer)
 		})

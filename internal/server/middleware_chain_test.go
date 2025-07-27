@@ -365,11 +365,12 @@ func TestMiddlewareChain_CORSMiddleware(t *testing.T) {
 			wrappedHandler.ServeHTTP(recorder, req)
 
 			corsHeader := recorder.Header().Get("Access-Control-Allow-Origin")
-			if tc.expectCORSWildcard && corsHeader != "*" {
+			switch {
+			case tc.expectCORSWildcard && corsHeader != "*":
 				t.Errorf("Expected CORS wildcard '*', got '%s'", corsHeader)
-			} else if !tc.expectCORSWildcard && tc.expectedCORS != "" && corsHeader != tc.expectedCORS {
+			case !tc.expectCORSWildcard && tc.expectedCORS != "" && corsHeader != tc.expectedCORS:
 				t.Errorf("Expected CORS '%s', got '%s'", tc.expectedCORS, corsHeader)
-			} else if tc.expectedCORS == "" && corsHeader != "" {
+			case tc.expectedCORS == "" && corsHeader != "":
 				t.Errorf("Expected no CORS header, got '%s'", corsHeader)
 			}
 		})

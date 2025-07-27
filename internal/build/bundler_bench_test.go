@@ -218,7 +218,7 @@ func BenchmarkMemoryUsage(b *testing.B) {
 		// Create a large JavaScript file (1MB)
 		largeContent := "// Large content\n" + strings.Repeat("console.log('test');\n", 50000)
 		largeFile := filepath.Join(tempDir, "large.js")
-		err = os.WriteFile(largeFile, []byte(largeContent), 0o644)
+		err = os.WriteFile(largeFile, []byte(largeContent), 0o600)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -250,7 +250,7 @@ func BenchmarkMemoryUsage(b *testing.B) {
 			fileName := fmt.Sprintf("asset_%d.js", i)
 			filePath := filepath.Join(tempDir, fileName)
 
-			err := os.WriteFile(filePath, []byte(content), 0o644)
+			err := os.WriteFile(filePath, []byte(content), 0o600)
 			if err != nil {
 				b.Fatal(err)
 			}
@@ -300,7 +300,7 @@ func createFlatStructure(b *testing.B, baseDir string, numFiles int) {
 		filePath := filepath.Join(baseDir, fileName)
 
 		content := generateTestContent(ext, i)
-		err := os.WriteFile(filePath, []byte(content), 0o644)
+		err := os.WriteFile(filePath, []byte(content), 0o600)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -332,7 +332,7 @@ func createNestedStructure(b *testing.B, baseDir string, numFiles int) {
 		filePath := filepath.Join(dirPath, fileName)
 
 		content := generateTestContent(ext, i)
-		err = os.WriteFile(filePath, []byte(content), 0o644)
+		err = os.WriteFile(filePath, []byte(content), 0o600)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -443,7 +443,7 @@ func BenchmarkFileIOOperations(b *testing.B) {
 		filePath := filepath.Join(tempDir, fileName)
 		content := strings.Repeat("a", size)
 
-		err := os.WriteFile(filePath, []byte(content), 0o644)
+		err := os.WriteFile(filePath, []byte(content), 0o600)
 		if err != nil {
 			b.Fatal(err)
 		}

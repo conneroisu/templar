@@ -322,7 +322,7 @@ func (vrt *VisualRegressionTester) updateGoldenFile(path string, content []byte)
 		return err
 	}
 
-	return os.WriteFile(path, content, 0o644)
+	return os.WriteFile(path, content, 0o600)
 }
 
 // readGoldenFile reads content from a golden file.
@@ -378,11 +378,12 @@ func (vrt *VisualRegressionTester) GenerateReport(results []*RegressionResult) s
 	report.WriteString("# Visual Regression Test Report\n\n")
 
 	for _, result := range results {
-		if result.Error != nil {
+		switch {
+		case result.Error != nil:
 			errors++
-		} else if result.Passed {
+		case result.Passed:
 			passed++
-		} else {
+		default:
 			failed++
 		}
 	}
@@ -473,7 +474,7 @@ func (vrt *VisualRegressionTester) runScreenshotTest(
 	tempFile := filepath.Join(vrt.screenshotDir, testCase.Name+"_temp.html")
 	fullHTML := vrt.createFullHTMLPage(htmlContent, testCase)
 
-	if err := os.WriteFile(tempFile, []byte(fullHTML), 0o644); err != nil {
+	if err := os.WriteFile(tempFile, []byte(fullHTML), 0o600); err != nil {
 		return result, fmt.Errorf("failed to write temporary HTML file: %w", err)
 	}
 	defer func() { _ = os.Remove(tempFile) }()
@@ -734,7 +735,7 @@ func (vrt *VisualRegressionTester) compareImages(
 			return sizeDiff, percentDiff, err
 		}
 
-		if err := os.WriteFile(diffPath+".txt", []byte(diffInfo), 0o644); err != nil {
+		if err := os.WriteFile(diffPath+".txt", []byte(diffInfo), 0o600); err != nil {
 			return sizeDiff, percentDiff, err
 		}
 	}

@@ -57,6 +57,7 @@ const (
 // Security constants.
 const (
 	UnsafeInline = "'unsafe-inline'"
+	UnsafeEval   = "'unsafe-eval'"
 )
 
 // Error messages.

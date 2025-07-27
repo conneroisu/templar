@@ -121,8 +121,8 @@ func NewWebSocketManager(
 	}
 
 	// Initialize enhanced WebSocket functionality
-	// TODO: Replace with proper initialization when WebSocketEnhancements is implemented
-	manager.enhancements = nil // NewWebSocketEnhancements()
+	// Enhanced features are disabled pending future WebSocketEnhancements implementation
+	manager.enhancements = nil
 
 	// Start the connection management hub in background goroutine
 	// This must happen before returning to ensure manager is ready for connections

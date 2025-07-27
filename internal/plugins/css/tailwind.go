@@ -1013,7 +1013,7 @@ func validateVersionString(version string) error {
 	if version == "" {
 		return errors.New("version string cannot be empty")
 	}
-	
+
 	// Only allow alphanumeric characters, dots, hyphens and at symbols
 	matched, err := regexp.MatchString(`^[a-zA-Z0-9\.\-@^~]+$`, version)
 	if err != nil {
@@ -1022,12 +1022,12 @@ func validateVersionString(version string) error {
 	if !matched {
 		return errors.New("version string contains invalid characters")
 	}
-	
+
 	// Prevent command injection attempts
 	if strings.ContainsAny(version, ";&|$()`\\") {
 		return errors.New("version string contains potentially dangerous characters")
 	}
-	
+
 	return nil
 }
 
@@ -1036,29 +1036,29 @@ func validateCommandPath(path string) error {
 	if path == "" {
 		return errors.New("command path cannot be empty")
 	}
-	
+
 	// Allow only specific whitelisted commands
 	allowedCommands := []string{
 		"npm", "npx", "node", "tailwindcss", "tailwind",
 		"postcss", "autoprefixer", "yarn", "pnpm",
 	}
-	
+
 	// Extract basename for validation
 	basename := filepath.Base(path)
-	
+
 	// Remove common executable extensions for comparison
 	if runtime.GOOS == "windows" {
 		if strings.HasSuffix(basename, ".exe") || strings.HasSuffix(basename, ".cmd") || strings.HasSuffix(basename, ".bat") {
 			basename = strings.TrimSuffix(basename, filepath.Ext(basename))
 		}
 	}
-	
+
 	for _, allowed := range allowedCommands {
 		if basename == allowed {
 			return nil
 		}
 	}
-	
+
 	return fmt.Errorf("command '%s' is not in the allowlist", basename)
 }
 
@@ -1067,24 +1067,24 @@ func validateFilePath(path string) error {
 	if path == "" {
 		return errors.New("file path cannot be empty")
 	}
-	
+
 	// Clean the path to resolve any . or .. elements
 	cleanPath := filepath.Clean(path)
-	
+
 	// Check for directory traversal attempts
 	if strings.Contains(cleanPath, "..") {
 		return errors.New("file path contains directory traversal attempts")
 	}
-	
+
 	// Ensure path doesn't contain control characters
 	if strings.ContainsAny(path, "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f") {
 		return errors.New("file path contains control characters")
 	}
-	
+
 	// Prevent command injection attempts in file paths
 	if strings.ContainsAny(path, ";&|$()`\\") {
 		return errors.New("file path contains potentially dangerous characters")
 	}
-	
+
 	return nil
 }
