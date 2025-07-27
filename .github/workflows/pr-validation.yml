@@ -113,7 +113,7 @@ jobs:
       - name: Test binary
         run: |
           ./templar --help
-          timeout 5s ./templar serve --port 8081 || test $? = 124
+          timeout 5s ./templar serve --port 8089 || test $? = 124
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
