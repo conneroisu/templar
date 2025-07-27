@@ -347,7 +347,7 @@ func TestHTTPRouter_Start_NilContext(t *testing.T) {
 
 	router := NewHTTPRouter(cfg, handlers, middleware)
 
-	err := router.Start(context.TODO())
+	err := router.Start(nil)
 	if err == nil {
 		t.Error("Expected error for nil context, but got none")
 	}
