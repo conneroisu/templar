@@ -96,40 +96,41 @@ func (r *ComponentRegistry) Register(component *types.ComponentInfo) {
 	// Validate and sanitize component data
 	component = r.sanitizeComponent(component)
 
-	r.mutex.Lock()
+	// Analyze dependencies outside of lock to minimize lock time
+	var sanitizedDeps []string
+	if r.dependencyAnalyzer != nil {
+		deps, err := r.dependencyAnalyzer.AnalyzeComponent(component)
+		if err == nil {
+			// Sanitize dependencies to prevent path traversal
+			sanitizedDeps = make([]string, len(deps))
+			for i, dep := range deps {
+				sanitizedDeps[i] = sanitizeFilePath(dep)
+			}
+		}
+	}
 
+	// Single lock acquisition for atomic component registration
+	r.mutex.Lock()
 	eventType := types.EventTypeAdded
 	if _, exists := r.components[component.Name]; exists {
 		eventType = types.EventTypeUpdated
 	}
 
-	r.components[component.Name] = component
-	r.mutex.Unlock()
-
-	// Analyze dependencies for the component
-	if r.dependencyAnalyzer != nil {
-		deps, err := r.dependencyAnalyzer.AnalyzeComponent(component)
-		if err == nil {
-			// Sanitize dependencies to prevent path traversal
-			sanitizedDeps := make([]string, len(deps))
-			for i, dep := range deps {
-				sanitizedDeps[i] = sanitizeFilePath(dep)
-			}
-
-			r.mutex.Lock()
-			component.Dependencies = sanitizedDeps
-			r.mutex.Unlock()
-		}
+	// Update dependencies if analysis succeeded
+	if sanitizedDeps != nil {
+		component.Dependencies = sanitizedDeps
 	}
 
-	// Notify watchers
-	r.mutex.RLock()
+	r.components[component.Name] = component
+
+	// Create event while still holding the lock to ensure consistency
 	event := types.ComponentEvent{
 		Type:      eventType,
 		Component: component,
 		Timestamp: time.Now(),
 	}
 
+	// Notify watchers non-blocking
 	for _, watcher := range r.watchers {
 		select {
 		case watcher <- event:
@@ -137,7 +138,7 @@ func (r *ComponentRegistry) Register(component *types.ComponentInfo) {
 			// Skip if channel is full
 		}
 	}
-	r.mutex.RUnlock()
+	r.mutex.Unlock()
 }
 
 // Get retrieves a component by name.
@@ -301,13 +302,13 @@ func sanitizeIdentifier(identifier string) string {
 	lowerCleaned := strings.ToLower(cleanedID)
 	for _, pattern := range dangerousSystemPaths {
 		// Check for exact match or path-like patterns (with separators)
-		if lowerCleaned == pattern || 
-		   strings.HasPrefix(lowerCleaned, pattern+"/") ||
-		   strings.HasPrefix(lowerCleaned, pattern+"\\") ||
-		   strings.HasSuffix(lowerCleaned, "/"+pattern) ||
-		   strings.HasSuffix(lowerCleaned, "\\"+pattern) ||
-		   strings.Contains(lowerCleaned, "/"+pattern+"/") ||
-		   strings.Contains(lowerCleaned, "\\"+pattern+"\\") {
+		if lowerCleaned == pattern ||
+			strings.HasPrefix(lowerCleaned, pattern+"/") ||
+			strings.HasPrefix(lowerCleaned, pattern+"\\") ||
+			strings.HasSuffix(lowerCleaned, "/"+pattern) ||
+			strings.HasSuffix(lowerCleaned, "\\"+pattern) ||
+			strings.Contains(lowerCleaned, "/"+pattern+"/") ||
+			strings.Contains(lowerCleaned, "\\"+pattern+"\\") {
 			// Replace with safe alternative
 			cleanedID = safeComponentName
 

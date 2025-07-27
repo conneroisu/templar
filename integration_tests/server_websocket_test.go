@@ -194,7 +194,7 @@ func (s *testWebSocketServer) clientReadPump(conn *websocket.Conn) {
 	go func() {
 		ticker := time.NewTicker(30 * time.Second)
 		defer ticker.Stop()
-		
+
 		for {
 			select {
 			case <-ticker.C:

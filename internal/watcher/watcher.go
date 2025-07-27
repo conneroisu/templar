@@ -203,19 +203,19 @@ func isInTestMode() bool {
 	// Check for test binary name patterns
 	executable, err := os.Executable()
 	if err == nil {
-		if strings.Contains(executable, ".test") || 
+		if strings.Contains(executable, ".test") ||
 			strings.Contains(executable, "/go-build") ||
 			strings.Contains(executable, "TestTemp") {
 			return true
 		}
 	}
-	
+
 	// Check environment variables that indicate testing
-	if os.Getenv("GOTEST") != "" || 
+	if os.Getenv("GOTEST") != "" ||
 		os.Getenv("GO_TESTING") != "" {
 		return true
 	}
-	
+
 	// Check the call stack for test functions
 	pc := make([]uintptr, 15)
 	n := runtime.Callers(1, pc)
@@ -228,7 +228,7 @@ func isInTestMode() bool {
 
 		name := fn.Name()
 		// Check if any caller is from the testing package or contains "test"
-		if strings.Contains(name, "testing.") || 
+		if strings.Contains(name, "testing.") ||
 			strings.Contains(name, "_test.") ||
 			strings.Contains(name, ".Test") ||
 			strings.Contains(name, "/testing.") {
@@ -244,7 +244,7 @@ const developmentEnvironment = "development"
 // isInDevelopmentMode detects if we're running in development mode.
 func isInDevelopmentMode() bool {
 	// Check for common development environment indicators
-	if os.Getenv("GO_ENV") == developmentEnvironment || 
+	if os.Getenv("GO_ENV") == developmentEnvironment ||
 		os.Getenv("TEMPLAR_ENV") == developmentEnvironment ||
 		os.Getenv("NODE_ENV") == developmentEnvironment {
 		return true
@@ -286,7 +286,7 @@ func (fw *FileWatcher) validatePath(path string) (string, error) {
 			"/tmp/nix-build",
 			"/tmp/go-build",
 		}
-		
+
 		// Check exact matches and common test patterns
 		for _, prefix := range tempDirPrefixes {
 			if strings.HasPrefix(absPath, prefix) {
@@ -298,7 +298,7 @@ func (fw *FileWatcher) validatePath(path string) (string, error) {
 				return cleanPath, nil
 			}
 		}
-		
+
 		// Allow any path under /tmp that starts with Test (common Go test pattern)
 		if strings.HasPrefix(absPath, "/tmp/Test") {
 			// Still do basic security check for suspicious patterns

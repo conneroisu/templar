@@ -1323,10 +1323,10 @@ func (s *ComponentScanner) validatePath(path string) (string, error) {
 		tempDirPrefixes := []string{
 			os.TempDir(),
 			"/tmp/nix-shell",
-			"/tmp/nix-build", 
+			"/tmp/nix-build",
 			"/tmp/go-build",
 		}
-		
+
 		// Check exact matches and common test patterns
 		for _, prefix := range tempDirPrefixes {
 			if strings.HasPrefix(absPath, prefix) {
@@ -1339,7 +1339,7 @@ func (s *ComponentScanner) validatePath(path string) (string, error) {
 				return cleanPath, nil
 			}
 		}
-		
+
 		// Allow any path under /tmp that starts with Test (common Go test pattern)
 		if strings.HasPrefix(absPath, "/tmp/Test") {
 			// Still do basic security check for suspicious patterns
@@ -1422,23 +1422,23 @@ func (s *ComponentScanner) InvalidatePathCache() {
 func (s *ComponentScanner) isInTestMode() bool {
 	// Check if testing.Testing() flag is set (this works in most cases)
 	// However, since testing.Testing() is not exported, we use alternative detection methods
-	
+
 	// Method 1: Check for test binary name patterns
 	executable, err := os.Executable()
 	if err == nil {
-		if strings.Contains(executable, ".test") || 
+		if strings.Contains(executable, ".test") ||
 			strings.Contains(executable, "/go-build") ||
 			strings.Contains(executable, "TestTemp") {
 			return true
 		}
 	}
-	
+
 	// Method 2: Check environment variables that indicate testing
-	if os.Getenv("GOTEST") != "" || 
+	if os.Getenv("GOTEST") != "" ||
 		os.Getenv("GO_TESTING") != "" {
 		return true
 	}
-	
+
 	// Method 3: Check the call stack for test functions
 	pc := make([]uintptr, 15) // Increased stack depth for better detection
 	n := runtime.Callers(1, pc)
@@ -1451,7 +1451,7 @@ func (s *ComponentScanner) isInTestMode() bool {
 
 		name := fn.Name()
 		// Check if any caller is from the testing package or contains "test"
-		if strings.Contains(name, "testing.") || 
+		if strings.Contains(name, "testing.") ||
 			strings.Contains(name, "_test.") ||
 			strings.Contains(name, ".Test") ||
 			strings.Contains(name, "/testing.") {
@@ -1467,7 +1467,7 @@ const developmentEnvironment = "development"
 // isInDevelopmentMode detects if we're running in development mode.
 func (s *ComponentScanner) isInDevelopmentMode() bool {
 	// Check for common development environment indicators
-	if os.Getenv("GO_ENV") == developmentEnvironment || 
+	if os.Getenv("GO_ENV") == developmentEnvironment ||
 		os.Getenv("TEMPLAR_ENV") == developmentEnvironment ||
 		os.Getenv("NODE_ENV") == developmentEnvironment {
 		return true
@@ -1812,29 +1812,29 @@ func (s *ComponentScanner) generateMetadataHash(fileInfo os.FileInfo) uint32 {
 // getComponentsByDirectory returns all components in the registry that belong to the given directory.
 func (s *ComponentScanner) getComponentsByDirectory(dir string) map[string]*types.ComponentInfo {
 	result := make(map[string]*types.ComponentInfo)
-	
+
 	// Get absolute path for consistent comparison
 	absDir, err := filepath.Abs(dir)
 	if err != nil {
 		return result
 	}
-	
+
 	// Get all components from registry
 	allComponents := s.registry.GetAll()
-	
+
 	for _, component := range allComponents {
 		// Get absolute path of component file
 		absComponentPath, err := filepath.Abs(component.FilePath)
 		if err != nil {
 			continue
 		}
-		
+
 		// Check if component file is within the scanned directory
 		if strings.HasPrefix(absComponentPath, absDir) {
 			result[component.Name] = component
 		}
 	}
-	
+
 	return result
 }
 
@@ -1850,7 +1850,7 @@ func (s *ComponentScanner) handleDeletedComponents(componentsBeforeScan map[stri
 		}
 		currentFileSet[absFile] = true
 	}
-	
+
 	// Check each component that was in the registry before scanning
 	for componentName, component := range componentsBeforeScan {
 		// Get absolute path of component file
@@ -1858,7 +1858,7 @@ func (s *ComponentScanner) handleDeletedComponents(componentsBeforeScan map[stri
 		if err != nil {
 			continue
 		}
-		
+
 		// If the component's file is not in the current scan results, it was deleted
 		if !currentFileSet[absComponentPath] {
 			// Remove the component from the registry
