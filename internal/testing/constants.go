@@ -1,6 +1,6 @@
 package testing
 
-// Status constants
+// Status constants.
 const (
 	StatusUnknown = "unknown"
 )

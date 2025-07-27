@@ -133,7 +133,11 @@ func TestMetricsCollector(t *testing.T) {
 		collector := NewMetricsCollector(testPrefix, "")
 
 		ctx := context.Background()
-		timer := collector.TimerContext(ctx, "context_operation", map[string]string{"type": testPrefix})
+		timer := collector.TimerContext(
+			ctx,
+			"context_operation",
+			map[string]string{"type": testPrefix},
+		)
 		time.Sleep(5 * time.Millisecond)
 		timer()
 
@@ -223,7 +227,12 @@ func TestHistogram(t *testing.T) {
 		}
 
 		assert.Equal(t, int64(10), hist.GetCount())
-		assert.InDelta(t, 4.5, hist.GetSum(), 0.001) // 0 + 0.1 + 0.2 + ... + 0.9 (allow for floating point precision)
+		assert.InDelta(
+			t,
+			4.5,
+			hist.GetSum(),
+			0.001,
+		) // 0 + 0.1 + 0.2 + ... + 0.9 (allow for floating point precision)
 	})
 }
 
@@ -464,7 +473,7 @@ func TestMetricsCollectorStartStop(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-// Fast variant for CI
+// Fast variant for CI.
 func TestMetricsCollectorStartStop_Fast(t *testing.T) {
 	tmpDir := t.TempDir()
 	outputPath := tmpDir + "/metrics.json"

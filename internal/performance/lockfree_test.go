@@ -11,7 +11,9 @@ import (
 )
 
 // Global generator for benchmark tests (non-deterministic).
-var benchRng = mathrand.New(mathrand.NewSource(time.Now().UnixNano())) //nolint:gosec // Benchmark test data generation doesn't require cryptographic security
+var benchRng = mathrand.New(
+	mathrand.NewSource(time.Now().UnixNano()),
+) //nolint:gosec // Benchmark test data generation doesn't require cryptographic security
 
 // secureFloat64 generates a cryptographically secure random float64 value between 0.0 and 1.0.
 func secureFloat64() float64 {

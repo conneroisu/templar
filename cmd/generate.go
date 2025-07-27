@@ -284,7 +284,13 @@ func generateGoCode(
 
 	content += "}\n\n"
 
-	content += fmt.Sprintf(templateRenderFunction, component.Name, component.Name, component.Name, component.Name)
+	content += fmt.Sprintf(
+		templateRenderFunction,
+		component.Name,
+		component.Name,
+		component.Name,
+		component.Name,
+	)
 
 	if err := os.WriteFile(filePath, []byte(content), 0o600); err != nil {
 		return fmt.Errorf(errorWriteGoFile, err)

@@ -296,7 +296,9 @@ func addMonitoredRoutes(mux *http.ServeMux, monitor *monitoring.TemplarMonitor) 
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"status": "success", "message": "All components built successfully"}`))
+		_, _ = w.Write(
+			[]byte(`{"status": "success", "message": "All components built successfully"}`),
+		)
 	})
 
 	// WebSocket endpoint for live reload

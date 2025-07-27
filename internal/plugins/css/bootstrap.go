@@ -147,14 +147,25 @@ func (p *BootstrapPlugin) setupWithNPM(ctx context.Context, config FrameworkConf
 	}
 
 	// Install Bootstrap via npm - version is validated above
-	cmd := exec.CommandContext(ctx, "npm", plugins.InstallArg, "bootstrap@"+config.Version) //nolint:gosec // Version is validated
+	cmd := exec.CommandContext(
+		ctx,
+		"npm",
+		plugins.InstallArg,
+		"bootstrap@"+config.Version,
+	) //nolint:gosec // Version is validated
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to install Bootstrap via npm: %w", err)
 	}
 
 	// Install SCSS if needed
 	if contains(config.Preprocessing, "scss") {
-		cmd = exec.CommandContext(ctx, "npm", plugins.InstallArg, "--save-dev", "sass") //nolint:gosec // Using hardcoded safe arguments
+		cmd = exec.CommandContext(
+			ctx,
+			"npm",
+			plugins.InstallArg,
+			"--save-dev",
+			"sass",
+		) //nolint:gosec // Using hardcoded safe arguments
 		if err := cmd.Run(); err != nil {
 			return fmt.Errorf("failed to install sass: %w", err)
 		}
@@ -456,7 +467,10 @@ func (p *BootstrapPlugin) compileSCSS(
 		args = append(args, "--style=compressed")
 	}
 
-	cmd := exec.CommandContext(ctx, "sass", args...) //nolint:gosec // Using validated file paths and hardcoded arguments
+	cmd := exec.CommandContext(
+		ctx,
+		"sass",
+		args...) //nolint:gosec // Using validated file paths and hardcoded arguments
 	if err := cmd.Run(); err != nil {
 		return nil, fmt.Errorf("failed to compile SCSS: %w", err)
 	}
@@ -769,7 +783,9 @@ func validateVersion(version string) error {
 
 	// Allow semantic version format: major.minor.patch with optional pre-release and build metadata
 	// This regex is restrictive to prevent command injection
-	versionRegex := regexp.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9\-_.]+)?(\+[a-zA-Z0-9\-_.]+)?$`)
+	versionRegex := regexp.MustCompile(
+		`^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9\-_.]+)?(\+[a-zA-Z0-9\-_.]+)?$`,
+	)
 	if !versionRegex.MatchString(version) {
 		return fmt.Errorf("invalid version format: %s (must be semantic version)", version)
 	}

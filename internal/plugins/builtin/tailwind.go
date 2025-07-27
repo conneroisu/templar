@@ -383,7 +383,10 @@ func (tp *TailwindPlugin) generateCSS(ctx context.Context, classes map[string]bo
 			}
 			args = append(args, "--config", tp.configPath)
 		}
-		cmd = exec.CommandContext(ctx, args[0], args[1:]...) //nolint:gosec // Arguments validated via ValidateCommand and ValidatePath
+		cmd = exec.CommandContext(
+			ctx,
+			args[0],
+			args[1:]...) //nolint:gosec // Arguments validated via ValidateCommand and ValidatePath
 	} else {
 		// Validate tailwind command path
 		tailwindCmd := filepath.Base(tp.tailwindPath)

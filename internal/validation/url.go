@@ -55,7 +55,9 @@ func ValidateURL(rawURL string) error {
 
 	// Check for path traversal patterns that could bypass browser security
 	if strings.Contains(parsed.Path, "..") {
-		return errors.New("URL contains path traversal sequence '..' (potential directory traversal)")
+		return errors.New(
+			"URL contains path traversal sequence '..' (potential directory traversal)",
+		)
 	}
 
 	// Check for encoded path traversal attempts

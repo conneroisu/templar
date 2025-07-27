@@ -89,7 +89,12 @@ func runList(cmd *cobra.Command, args []string) error {
 	for _, scanPath := range cfg.Components.ScanPaths {
 		if err := componentScanner.ScanDirectory(scanPath); err != nil {
 			// Log error but continue with other paths
-			_, _ = fmt.Fprintf(os.Stderr, "Warning: failed to scan directory %s: %v\n", scanPath, err)
+			_, _ = fmt.Fprintf(
+				os.Stderr,
+				"Warning: failed to scan directory %s: %v\n",
+				scanPath,
+				err,
+			)
 		}
 	}
 

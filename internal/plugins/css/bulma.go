@@ -186,14 +186,25 @@ func (p *BulmaPlugin) setupWithNPM(ctx context.Context, config FrameworkConfig) 
 	}
 
 	// Install Bulma via npm - version is validated against allowlist
-	cmd := exec.CommandContext(ctx, plugins.NpmCommand, plugins.InstallArg, "bulma@"+config.Version) // #nosec G204 - Version validated against allowlist
+	cmd := exec.CommandContext(
+		ctx,
+		plugins.NpmCommand,
+		plugins.InstallArg,
+		"bulma@"+config.Version,
+	) // #nosec G204 - Version validated against allowlist
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to install Bulma via npm: %w", err)
 	}
 
 	// Install Sass if needed
 	if contains(config.Preprocessing, plugins.SassExtension) {
-		cmd = exec.CommandContext(ctx, plugins.NpmCommand, plugins.InstallArg, "--save-dev", plugins.SassExtension) // #nosec G204 - Using hardcoded safe arguments
+		cmd = exec.CommandContext(
+			ctx,
+			plugins.NpmCommand,
+			plugins.InstallArg,
+			"--save-dev",
+			plugins.SassExtension,
+		) // #nosec G204 - Using hardcoded safe arguments
 		if err := cmd.Run(); err != nil {
 			return fmt.Errorf("failed to install sass: %w", err)
 		}
@@ -639,7 +650,10 @@ func (p *BulmaPlugin) compileSass(
 		args = append(args, "--style=compressed")
 	}
 
-	cmd := exec.CommandContext(ctx, plugins.SassExtension, args...) // #nosec G204 - args built from validated inputs and hardcoded options
+	cmd := exec.CommandContext(
+		ctx,
+		plugins.SassExtension,
+		args...) // #nosec G204 - args built from validated inputs and hardcoded options
 	if err := cmd.Run(); err != nil {
 		return nil, fmt.Errorf("failed to compile Sass: %w", err)
 	}

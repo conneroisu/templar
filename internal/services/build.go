@@ -90,7 +90,11 @@ func (s *BuildService) Build(ctx context.Context, opts BuildOptions) (*BuildResu
 		defer func() {
 			if shutdownErr := container.Shutdown(ctx); shutdownErr != nil {
 				// Log shutdown error but don't fail the build
-				fmt.Fprintf(os.Stderr, "Warning: service container shutdown error: %v\n", shutdownErr)
+				fmt.Fprintf(
+					os.Stderr,
+					"Warning: service container shutdown error: %v\n",
+					shutdownErr,
+				)
 			}
 		}()
 

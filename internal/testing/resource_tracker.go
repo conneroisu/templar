@@ -210,11 +210,15 @@ func (rt *ResourceTracker) GetResourceUsage() ResourceUsage {
 		Duration:      time.Since(rt.startTime),
 		GoroutineDiff: currentSample.Goroutines - rt.initialGoroutines,
 		FileDiff:      currentSample.Files - rt.initialFiles,
-		MemoryDiff:    safeUint64ToInt64(currentSample.Memory) - safeUint64ToInt64(rt.initialMemory),
-		ObjectDiff:    currentSample.Objects - rt.initialObjects,
-		Initial:       rt.getInitialSample(),
-		Current:       currentSample,
-		SampleCount:   len(rt.samples),
+		MemoryDiff: safeUint64ToInt64(
+			currentSample.Memory,
+		) - safeUint64ToInt64(
+			rt.initialMemory,
+		),
+		ObjectDiff:  currentSample.Objects - rt.initialObjects,
+		Initial:     rt.getInitialSample(),
+		Current:     currentSample,
+		SampleCount: len(rt.samples),
 	}
 }
 

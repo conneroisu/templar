@@ -252,7 +252,7 @@ func TestMonitorMetricsFlush(t *testing.T) {
 	assert.Contains(t, metricsData, "system")
 }
 
-// Fast variant of metrics flush test for CI
+// Fast variant of metrics flush test for CI.
 func TestMonitorMetricsFlush_Fast(t *testing.T) {
 	tmpDir := t.TempDir()
 	config := DefaultMonitorConfig()
@@ -339,7 +339,7 @@ func TestMonitorHealthChecks(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// Fast variant of health checks test for CI
+// Fast variant of health checks test for CI.
 func TestMonitorHealthChecks_Fast(t *testing.T) {
 	config := DefaultMonitorConfig()
 	config.HealthCheckInterval = 10 * time.Millisecond // Much faster for CI
@@ -350,15 +350,19 @@ func TestMonitorHealthChecks_Fast(t *testing.T) {
 	require.NoError(t, err)
 
 	// Register a custom health check
-	customCheck := NewHealthCheckFunc("custom_check_fast", false, func(ctx context.Context) HealthCheck {
-		return HealthCheck{
-			Name:        "custom_check_fast",
-			Status:      HealthStatusHealthy,
-			Message:     "Custom check passed",
-			LastChecked: time.Now(),
-			Critical:    false,
-		}
-	})
+	customCheck := NewHealthCheckFunc(
+		"custom_check_fast",
+		false,
+		func(ctx context.Context) HealthCheck {
+			return HealthCheck{
+				Name:        "custom_check_fast",
+				Status:      HealthStatusHealthy,
+				Message:     "Custom check passed",
+				LastChecked: time.Now(),
+				Critical:    false,
+			}
+		},
+	)
 
 	monitor.RegisterHealthCheck(customCheck)
 
@@ -464,7 +468,7 @@ func TestMonitorAlerting(t *testing.T) {
 	// This test would require capturing log output to verify alerts were triggered
 }
 
-// Fast variant of alerting test for CI (when the test is enabled)
+// Fast variant of alerting test for CI (when the test is enabled).
 func TestMonitorAlerting_Fast(t *testing.T) {
 	t.Skip("Alerting tests require more complex setup - fast variant for CI")
 

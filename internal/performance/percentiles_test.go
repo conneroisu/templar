@@ -247,7 +247,9 @@ func BenchmarkPercentileCalculator_OldVsNew(t *testing.B) {
 	t.Run("Old_O(n²)_Incremental_Simulation", func(b *testing.B) {
 		// Simulate the old method with incremental updates
 		var allValues []float64
-		rng := mathrand.New(mathrand.NewSource(time.Now().UnixNano())) // #nosec G404 - Test data generation
+		rng := mathrand.New(
+			mathrand.NewSource(time.Now().UnixNano()),
+		) // #nosec G404 - Test data generation
 
 		b.ResetTimer()
 		for i := range b.N {
@@ -263,7 +265,9 @@ func BenchmarkPercentileCalculator_OldVsNew(t *testing.B) {
 
 	t.Run("New_SkipList_Incremental", func(b *testing.B) {
 		pc := NewPercentileCalculator(10000)
-		rng := mathrand.New(mathrand.NewSource(time.Now().UnixNano())) // #nosec G404 - Test data generation
+		rng := mathrand.New(
+			mathrand.NewSource(time.Now().UnixNano()),
+		) // #nosec G404 - Test data generation
 
 		b.ResetTimer()
 		for i := range b.N {
@@ -285,7 +289,9 @@ func BenchmarkPercentileCalculator_ScalingPerformance(t *testing.B) {
 
 	for _, size := range sizes {
 		values := make([]float64, size)
-		rng := mathrand.New(mathrand.NewSource(42)) // #nosec G404 - Deterministic test data generation
+		rng := mathrand.New(
+			mathrand.NewSource(42),
+		) // #nosec G404 - Deterministic test data generation
 		for i := range values {
 			values[i] = rng.Float64() * 1000
 		}

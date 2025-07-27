@@ -215,7 +215,7 @@ func TestSelfHealingSystem_BasicRecovery(t *testing.T) {
 	assert.Greater(t, checkHistory.RecoveryAttempts, 0, "Should have recorded recovery attempts")
 }
 
-// Fast variant of basic recovery test for CI
+// Fast variant of basic recovery test for CI.
 func TestSelfHealingSystem_BasicRecovery_Fast(t *testing.T) {
 	// Create mock logger
 	logger := &mockLogger{}
@@ -352,7 +352,7 @@ func TestSelfHealingSystem_CooldownPeriod(t *testing.T) {
 	assert.True(t, recoveryAction.WasExecuted(), "Recovery should work after cooldown expires")
 }
 
-// Fast variant of cooldown test for CI
+// Fast variant of cooldown test for CI.
 func TestSelfHealingSystem_CooldownPeriod_Fast(t *testing.T) {
 	t.Skip("Cooldown timing test requires more investigation - main optimization goal achieved")
 	logger := &mockLogger{}
@@ -469,7 +469,7 @@ func TestSelfHealingSystem_MaxAttempts(t *testing.T) {
 	assert.Equal(t, 2, history["max_attempts_test"].RecoveryAttempts)
 }
 
-// Fast variant of max attempts test for CI
+// Fast variant of max attempts test for CI.
 func TestSelfHealingSystem_MaxAttempts_Fast(t *testing.T) {
 	logger := &mockLogger{}
 	healthMonitor := NewHealthMonitor(logger)
@@ -491,6 +491,7 @@ func TestSelfHealingSystem_MaxAttempts_Fast(t *testing.T) {
 	recoveryAction := NewRecoveryActionFunc("counting_recovery_fast", "Count executions fast",
 		func(ctx context.Context, check HealthCheck) error {
 			executionCount++
+
 			return nil
 		})
 
@@ -587,7 +588,7 @@ func TestSelfHealingSystem_SuccessfulRecovery(t *testing.T) {
 	assert.Greater(t, history["toggle_test"].RecoveryAttempts, 0, "Should have attempted recovery")
 }
 
-// Fast variant of successful recovery test for CI
+// Fast variant of successful recovery test for CI.
 func TestSelfHealingSystem_SuccessfulRecovery_Fast(t *testing.T) {
 	logger := &mockLogger{}
 	healthMonitor := NewHealthMonitor(logger)
@@ -610,6 +611,7 @@ func TestSelfHealingSystem_SuccessfulRecovery_Fast(t *testing.T) {
 	recoveryAction := NewRecoveryActionFunc("fix_checker_fast", "Fix the checker fast",
 		func(ctx context.Context, check HealthCheck) error {
 			checker.fail = false // "Fix" the issue
+
 			return nil
 		})
 
@@ -641,7 +643,12 @@ func TestSelfHealingSystem_SuccessfulRecovery_Fast(t *testing.T) {
 	require.Contains(t, history, "toggle_test_fast")
 
 	// The consecutive failures should be reset after successful recovery
-	assert.Greater(t, history["toggle_test_fast"].RecoveryAttempts, 0, "Should have attempted recovery")
+	assert.Greater(
+		t,
+		history["toggle_test_fast"].RecoveryAttempts,
+		0,
+		"Should have attempted recovery",
+	)
 }
 
 func TestGarbageCollectAction(t *testing.T) {

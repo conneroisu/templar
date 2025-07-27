@@ -239,7 +239,10 @@ func (sov *ServerOriginValidator) IsAllowedOrigin(origin string) bool {
 	}
 
 	// Production: only allow same-origin
-	expectedOrigin := "http://" + net.JoinHostPort(sov.config.Server.Host, strconv.Itoa(sov.config.Server.Port))
+	expectedOrigin := "http://" + net.JoinHostPort(
+		sov.config.Server.Host,
+		strconv.Itoa(sov.config.Server.Port),
+	)
 
 	return origin == expectedOrigin
 }

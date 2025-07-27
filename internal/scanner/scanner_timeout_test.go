@@ -47,12 +47,12 @@ func TestScannerTimeout(t *testing.T) {
 	t.Run("scanner respects context cancellation in directory scan", func(t *testing.T) {
 		// Create temporary directory with multiple templ files to force worker pool usage
 		tempDir := t.TempDir()
-		
-		// Create 6 files to exceed the 5-file threshold for synchronous processing
-		for i := 0; i < 6; i++ {
-			templFile := filepath.Join(tempDir, "test"+string(rune('A'+i))+".templ")
-			err := os.WriteFile(templFile, []byte(`package test
 
+		// Create 6 files to exceed the 5-file threshold for synchronous processing
+		for i := range 6 {
+			templFile := filepath.Join(tempDir, "test"+string(rune('A'+i))+".templ")
+			err := os.WriteFile( // nolint:gosec
+				templFile, []byte(`package test
 templ TestComponent`+string(rune('A'+i))+`() {
 	<div>Test`+string(rune('A'+i))+`</div>
 }`), 0644)

@@ -6,7 +6,11 @@ import (
 
 // purgeUnusedClasses removes unused CSS classes from the provided CSS string.
 // This is a common utility function used by multiple CSS framework plugins.
-func purgeUnusedClasses(css string, usedClasses []string, shouldKeepRule func(string, map[string]bool) bool) string {
+func purgeUnusedClasses(
+	css string,
+	usedClasses []string,
+	shouldKeepRule func(string, map[string]bool) bool,
+) string {
 	// Create a map for fast lookup
 	usedMap := make(map[string]bool)
 	for _, class := range usedClasses {

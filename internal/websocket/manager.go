@@ -226,7 +226,10 @@ func (wm *WebSocketManager) HandleWebSocket(w http.ResponseWriter, r *http.Reque
 	if client.send == nil {
 		log.Printf("Failed to create send channel for WebSocket client")
 		if err := conn.Close(websocket.StatusInternalError, "Internal server error"); err != nil {
-			fmt.Printf("Warning: failed to close WebSocket connection after send channel creation failure: %v\n", err)
+			fmt.Printf(
+				"Warning: failed to close WebSocket connection after send channel creation failure: %v\n",
+				err,
+			)
 		}
 
 		return
@@ -332,7 +335,10 @@ func (wm *WebSocketManager) unregisterClient(conn *websocket.Conn) {
 
 	if exists {
 		if err := conn.Close(websocket.StatusNormalClosure, ""); err != nil {
-			fmt.Printf("Warning: failed to close WebSocket connection in unregisterClient: %v\n", err)
+			fmt.Printf(
+				"Warning: failed to close WebSocket connection in unregisterClient: %v\n",
+				err,
+			)
 		}
 		log.Printf("WebSocket client disconnected. Total clients: %d", len(wm.clients))
 	}
@@ -520,7 +526,10 @@ func (wm *WebSocketManager) Shutdown(ctx context.Context) error {
 		for conn, client := range wm.clients {
 			close(client.send)
 			if err := conn.Close(websocket.StatusNormalClosure, "Server shutdown"); err != nil {
-				fmt.Printf("Warning: failed to close WebSocket connection during shutdown: %v\n", err)
+				fmt.Printf(
+					"Warning: failed to close WebSocket connection during shutdown: %v\n",
+					err,
+				)
 			}
 		}
 		wm.clients = make(map[*websocket.Conn]*Client)

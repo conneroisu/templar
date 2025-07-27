@@ -65,7 +65,9 @@ func TestMemoryLeakPrevention(t *testing.T) {
 		diff := m2.Alloc - m1.Alloc
 		// Safe conversion: check for overflow before converting
 		if diff <= math.MaxInt64 {
-			memoryGrowth = int64(diff) //nolint:gosec // Overflow protection: checked diff <= math.MaxInt64
+			memoryGrowth = int64(
+				diff,
+			) //nolint:gosec // Overflow protection: checked diff <= math.MaxInt64
 		} else {
 			memoryGrowth = math.MaxInt64 // Cap at max int64
 		}

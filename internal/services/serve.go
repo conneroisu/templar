@@ -106,7 +106,10 @@ func (s *ServeService) Serve(ctx context.Context, opts ServeOptions) (*ServeResu
 	}
 
 	// Set server URL for result
-	result.ServerURL = "http://" + net.JoinHostPort(s.config.Server.Host, strconv.Itoa(s.config.Server.Port))
+	result.ServerURL = "http://" + net.JoinHostPort(
+		s.config.Server.Host,
+		strconv.Itoa(s.config.Server.Port),
+	)
 
 	// Create context that cancels on interrupt
 	serverCtx, cancel := context.WithCancel(ctx)
@@ -142,9 +145,12 @@ func (s *ServeService) Serve(ctx context.Context, opts ServeOptions) (*ServeResu
 // GetServerInfo returns information about the server configuration.
 func (s *ServeService) GetServerInfo(targetFiles []string) *ServerInfo {
 	info := &ServerInfo{
-		Host:        s.config.Server.Host,
-		Port:        s.config.Server.Port,
-		ServerURL:   "http://" + net.JoinHostPort(s.config.Server.Host, strconv.Itoa(s.config.Server.Port)),
+		Host: s.config.Server.Host,
+		Port: s.config.Server.Port,
+		ServerURL: "http://" + net.JoinHostPort(
+			s.config.Server.Host,
+			strconv.Itoa(s.config.Server.Port),
+		),
 		TargetFiles: targetFiles,
 	}
 

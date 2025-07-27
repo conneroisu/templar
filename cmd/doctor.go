@@ -954,7 +954,8 @@ func hasTemplarConfig(report *DoctorReport) bool {
 
 func hasIntegrationOpportunities(report *DoctorReport) bool {
 	for _, result := range report.Results {
-		if result.AutoFixable && (result.Status == SeverityWarning || result.Status == SeverityError) {
+		if result.AutoFixable &&
+			(result.Status == SeverityWarning || result.Status == SeverityError) {
 			return true
 		}
 	}

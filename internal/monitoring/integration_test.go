@@ -559,7 +559,13 @@ func TestGlobalFunctions(t *testing.T) {
 		)
 		assert.NoError(t, err)
 
-		LogError(context.Background(), GenericComponent, GenericOperation, errors.New("test"), "message")
+		LogError(
+			context.Background(),
+			GenericComponent,
+			GenericOperation,
+			errors.New("test"),
+			"message",
+		)
 		LogInfo(context.Background(), GenericComponent, GenericOperation, "message")
 
 		SetGlobalMonitor(monitor)

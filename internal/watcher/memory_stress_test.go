@@ -113,7 +113,9 @@ func TestMemoryGrowthUnderHighLoad(t *testing.T) {
 			diff := m.Alloc - m1.Alloc
 			// Safe conversion: check for overflow before converting
 			if diff <= math.MaxInt64 {
-				memGrowth = int64(diff) //nolint:gosec // Overflow protection: checked diff <= math.MaxInt64
+				memGrowth = int64(
+					diff,
+				) //nolint:gosec // Overflow protection: checked diff <= math.MaxInt64
 			} else {
 				memGrowth = math.MaxInt64 // Cap at max int64
 			}
@@ -144,7 +146,9 @@ func TestMemoryGrowthUnderHighLoad(t *testing.T) {
 		diff := m2.Alloc - m1.Alloc
 		// Safe conversion: check for overflow before converting
 		if diff <= math.MaxInt64 {
-			finalGrowth = int64(diff) //nolint:gosec // Overflow protection: checked diff <= math.MaxInt64
+			finalGrowth = int64(
+				diff,
+			) //nolint:gosec // Overflow protection: checked diff <= math.MaxInt64
 		} else {
 			finalGrowth = math.MaxInt64 // Cap at max int64
 		}

@@ -262,7 +262,13 @@ func (epm *EnhancedPluginManager) loadPlugin(
 	// Integrate with core systems
 	if err := epm.integratePlugin(plugin); err != nil {
 		epm.pluginStates[name] = PluginStateError
-		epm.logger.Error(ctx, err, "Failed to integrate plugin with core systems", PluginIdentifier, name)
+		epm.logger.Error(
+			ctx,
+			err,
+			"Failed to integrate plugin with core systems",
+			PluginIdentifier,
+			name,
+		)
 		// Continue anyway - plugin is still functional
 	}
 
@@ -278,7 +284,14 @@ func (epm *EnhancedPluginManager) loadPlugin(
 	epm.loadedPlugins[name] = loadedPlugin
 	epm.pluginStates[name] = PluginStateEnabled
 
-	epm.logger.Info(ctx, "Plugin loaded successfully", PluginIdentifier, name, "version", plugin.Version())
+	epm.logger.Info(
+		ctx,
+		"Plugin loaded successfully",
+		PluginIdentifier,
+		name,
+		"version",
+		plugin.Version(),
+	)
 
 	return nil
 }

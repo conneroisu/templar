@@ -377,7 +377,10 @@ func TestBuildMetrics_ConcurrentAccess(t *testing.T) {
 			for j := range operationsPerGoroutine {
 				// Safe conversion: j%8+1 is always in range [1, 8]
 				workers := j%8 + 1
-				metrics.RecordParallelProcessing(time.Duration(j)*time.Millisecond, int32(workers)) //nolint:gosec // workers is constrained to [1,8] range
+				metrics.RecordParallelProcessing(
+					time.Duration(j)*time.Millisecond,
+					int32(workers),
+				) //nolint:gosec // workers is constrained to [1,8] range
 			}
 		}()
 	}

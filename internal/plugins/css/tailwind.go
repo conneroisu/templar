@@ -253,7 +253,12 @@ func (p *TailwindPlugin) setupWithNPM(ctx context.Context, config FrameworkConfi
 	if err := validateCommandPath(plugins.TailwindCSSBinary); err != nil {
 		return fmt.Errorf("invalid tailwind binary: %w", err)
 	}
-	cmd = exec.CommandContext(ctx, plugins.NpxCommand, plugins.TailwindCSSBinary, "init") //nolint:gosec // G204: Commands validated above
+	cmd = exec.CommandContext(
+		ctx,
+		plugins.NpxCommand,
+		plugins.TailwindCSSBinary,
+		"init",
+	) //nolint:gosec // G204: Commands validated above
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to initialize Tailwind config: %w", err)
 	}
@@ -578,11 +583,21 @@ func (p *TailwindPlugin) ProcessCSS(
 			return nil, fmt.Errorf("invalid output file path: %w", err)
 		}
 
-		args := []string{plugins.NpxCommand, plugins.TailwindCSSBinary, "-i", inputFile, "-o", outputFile}
+		args := []string{
+			plugins.NpxCommand,
+			plugins.TailwindCSSBinary,
+			"-i",
+			inputFile,
+			"-o",
+			outputFile,
+		}
 		if options.Minify {
 			args = append(args, "--minify")
 		}
-		cmd = exec.CommandContext(ctx, args[0], args[1:]...) //nolint:gosec // G204: Commands validated above
+		cmd = exec.CommandContext(
+			ctx,
+			args[0],
+			args[1:]...) //nolint:gosec // G204: Commands validated above
 	} else {
 		// Validate tailwind path and file paths
 		if err := validateCommandPath(p.tailwindPath); err != nil {
@@ -1048,7 +1063,8 @@ func validateCommandPath(path string) error {
 
 	// Remove common executable extensions for comparison
 	if runtime.GOOS == "windows" {
-		if strings.HasSuffix(basename, ".exe") || strings.HasSuffix(basename, ".cmd") || strings.HasSuffix(basename, ".bat") {
+		if strings.HasSuffix(basename, ".exe") || strings.HasSuffix(basename, ".cmd") ||
+			strings.HasSuffix(basename, ".bat") {
 			basename = strings.TrimSuffix(basename, filepath.Ext(basename))
 		}
 	}
@@ -1077,7 +1093,10 @@ func validateFilePath(path string) error {
 	}
 
 	// Ensure path doesn't contain control characters
-	if strings.ContainsAny(path, "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f") {
+	if strings.ContainsAny(
+		path,
+		"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f",
+	) {
 		return errors.New("file path contains control characters")
 	}
 

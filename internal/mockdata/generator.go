@@ -22,7 +22,9 @@ type MockGenerator struct {
 // For cryptographic purposes, use crypto/rand directly.
 func NewMockGenerator() *MockGenerator {
 	return &MockGenerator{
-		rng: mathrand.New(mathrand.NewSource(time.Now().UnixNano())), //nolint:gosec // Mock data generation doesn't require cryptographic security
+		rng: mathrand.New(
+			mathrand.NewSource(time.Now().UnixNano()),
+		), //nolint:gosec // Mock data generation doesn't require cryptographic security
 	}
 }
 

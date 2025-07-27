@@ -205,7 +205,13 @@ func (tester *ComponentAccessibilityTester) TestAllComponents(
 
 		report, err := tester.TestComponent(ctx, component.Name, defaultProps)
 		if err != nil {
-			tester.logger.Warn(ctx, err, "Failed to test component", ComponentLogKey, component.Name)
+			tester.logger.Warn(
+				ctx,
+				err,
+				"Failed to test component",
+				ComponentLogKey,
+				component.Name,
+			)
 
 			continue
 		}

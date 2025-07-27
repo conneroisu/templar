@@ -40,7 +40,9 @@ func BenchmarkHashFunctions(b *testing.B) {
 			b.Run("MD5", func(b *testing.B) {
 				b.SetBytes(int64(size))
 				for range b.N {
-					_ = md5.Sum(data) // #nosec G401 - Used only for performance comparison in benchmarks
+					_ = md5.Sum(
+						data,
+					) // #nosec G401 - Used only for performance comparison in benchmarks
 				}
 			})
 

@@ -15,6 +15,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	TemplarErrorsTotal = "templar_errors_total"
+)
+
 // TestComprehensiveMonitoringIntegration tests the complete monitoring system.
 func TestComprehensiveMonitoringIntegration(t *testing.T) {
 	if testing.Short() {
@@ -252,7 +256,8 @@ func TestComprehensiveMonitoringIntegration(t *testing.T) {
 		resp, err := http.Get(server.URL + "/health")
 		require.NoError(t, err)
 		defer func() {
-			if err := resp.Body.Close(); err != nil {
+			dErr := resp.Body.Close()
+			if dErr != nil {
 				t.Logf("Failed to close response body: %v", err)
 			}
 		}()
@@ -268,7 +273,8 @@ func TestComprehensiveMonitoringIntegration(t *testing.T) {
 		resp, err = http.Get(server.URL + "/metrics")
 		require.NoError(t, err)
 		defer func() {
-			if err := resp.Body.Close(); err != nil {
+			dErr := resp.Body.Close()
+			if dErr != nil {
 				t.Logf("Failed to close response body: %v", err)
 			}
 		}()
@@ -279,7 +285,8 @@ func TestComprehensiveMonitoringIntegration(t *testing.T) {
 		resp, err = http.Get(server.URL + "/info")
 		require.NoError(t, err)
 		defer func() {
-			if err := resp.Body.Close(); err != nil {
+			dErr := resp.Body.Close()
+			if dErr != nil {
 				t.Logf("Failed to close response body: %v", err)
 			}
 		}()
@@ -652,7 +659,7 @@ func TestRealWorldScenarios(t *testing.T) {
 				scenario.component,
 				scenario.operation,
 				err,
-				map[string]interface{}{
+				map[string]any{
 					"scenario": "error_recovery_test",
 				},
 			)
@@ -664,8 +671,9 @@ func TestRealWorldScenarios(t *testing.T) {
 
 		foundErrorMetrics := false
 		for _, metric := range metrics {
-			if metric.Name == "templar_errors_total" {
+			if metric.Name == TemplarErrorsTotal {
 				foundErrorMetrics = true
+
 				break
 			}
 		}

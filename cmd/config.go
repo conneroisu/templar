@@ -109,7 +109,8 @@ func init() {
 	configValidateCmd.Flags().BoolVar(&configStrict, "strict", false, "Treat warnings as errors")
 
 	// Show flags
-	configShowCmd.Flags().StringVar(&configFormat, "format", OutputFormatYAML, "Output format (yaml, json)")
+	configShowCmd.Flags().
+		StringVar(&configFormat, "format", OutputFormatYAML, "Output format (yaml, json)")
 
 	// Main config command flags
 	configCmd.Flags().BoolVar(&configNoWizard, "no-wizard", false, "Skip wizard and use defaults")
@@ -131,7 +132,8 @@ func runConfigWizard(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		if response != ResponseY && response != "Y" && response != ResponseYes && response != "Yes" {
+		if response != ResponseY && response != "Y" && response != ResponseYes &&
+			response != "Yes" {
 			fmt.Println(ConfigCancelMessage)
 
 			return nil
@@ -167,7 +169,8 @@ func runConfigWizard(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		if response != ResponseY && response != "Y" && response != ResponseYes && response != "Yes" {
+		if response != ResponseY && response != "Y" && response != ResponseYes &&
+			response != "Yes" {
 			fmt.Println(ConfigCancelMessage)
 
 			return nil
