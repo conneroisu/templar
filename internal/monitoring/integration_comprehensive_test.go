@@ -17,6 +17,10 @@ import (
 
 // TestComprehensiveMonitoringIntegration tests the complete monitoring system.
 func TestComprehensiveMonitoringIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping comprehensive monitoring integration test in short mode")
+	}
+
 	// Create temporary directory for test outputs
 	tmpDir := t.TempDir()
 

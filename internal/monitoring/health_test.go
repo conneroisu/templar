@@ -154,6 +154,10 @@ func TestHealthMonitor(t *testing.T) {
 	})
 
 	t.Run("start and stop monitor", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("Skipping comprehensive start/stop monitor test in short mode")
+		}
+
 		monitor := NewHealthMonitor(logger)
 		monitor.interval = 50 * time.Millisecond
 
@@ -177,6 +181,34 @@ func TestHealthMonitor(t *testing.T) {
 		health := monitor.GetHealth()
 		assert.Contains(t, health.Checks, "test_check")
 		assert.NotZero(t, health.Checks["test_check"].LastChecked)
+
+		monitor.Stop()
+	})
+
+	t.Run("start and stop monitor fast", func(t *testing.T) {
+		monitor := NewHealthMonitor(logger)
+		monitor.interval = 10 * time.Millisecond // Much faster for CI
+
+		healthyCheck := NewHealthCheckFunc(
+			"test_check_fast",
+			false,
+			func(ctx context.Context) HealthCheck {
+				return HealthCheck{
+					Name:   "test_check_fast",
+					Status: HealthStatusHealthy,
+				}
+			},
+		)
+
+		monitor.RegisterCheck(healthyCheck)
+		monitor.Start()
+
+		// Wait for at least one check cycle (much shorter)
+		time.Sleep(20 * time.Millisecond)
+
+		health := monitor.GetHealth()
+		assert.Contains(t, health.Checks, "test_check_fast")
+		assert.NotZero(t, health.Checks["test_check_fast"].LastChecked)
 
 		monitor.Stop()
 	})

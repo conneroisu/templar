@@ -209,6 +209,10 @@ func TestMonitorOperationTracking(t *testing.T) {
 }
 
 func TestMonitorMetricsFlush(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping comprehensive metrics flush test in short mode")
+	}
+
 	tmpDir := t.TempDir()
 	config := DefaultMonitorConfig()
 	config.MetricsOutputPath = tmpDir + "/metrics.json"
@@ -248,7 +252,52 @@ func TestMonitorMetricsFlush(t *testing.T) {
 	assert.Contains(t, metricsData, "system")
 }
 
+// Fast variant of metrics flush test for CI
+func TestMonitorMetricsFlush_Fast(t *testing.T) {
+	tmpDir := t.TempDir()
+	config := DefaultMonitorConfig()
+	config.MetricsOutputPath = tmpDir + "/metrics.json"
+	config.MetricsInterval = 10 * time.Millisecond // Much faster for CI
+
+	logger := logging.NewLogger(logging.DefaultConfig())
+	monitor, err := NewMonitor(config, logger)
+	require.NoError(t, err)
+
+	err = monitor.Start()
+	require.NoError(t, err)
+
+	// Generate some metrics
+	monitor.TrackHTTPRequest("GET", "/test", 200)
+	monitor.TrackComponentOperation("build", "TestComponent", true)
+
+	// Wait for metrics to be flushed (much shorter)
+	time.Sleep(20 * time.Millisecond)
+
+	err = monitor.Stop()
+	require.NoError(t, err)
+
+	// Check if metrics file was created
+	_, err = os.Stat(config.MetricsOutputPath)
+	assert.NoError(t, err, "Metrics file should be created")
+
+	// Read and verify metrics file content
+	data, err := os.ReadFile(config.MetricsOutputPath)
+	require.NoError(t, err)
+
+	var metricsData map[string]interface{}
+	err = json.Unmarshal(data, &metricsData)
+	require.NoError(t, err)
+
+	assert.Contains(t, metricsData, "timestamp")
+	assert.Contains(t, metricsData, "metrics")
+	assert.Contains(t, metricsData, "system")
+}
+
 func TestMonitorHealthChecks(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping comprehensive health checks test in short mode")
+	}
+
 	config := DefaultMonitorConfig()
 	config.HealthCheckInterval = 100 * time.Millisecond
 	config.HTTPEnabled = false
@@ -282,6 +331,49 @@ func TestMonitorHealthChecks(t *testing.T) {
 	healthResponse := health.GetHealth()
 	assert.NotEmpty(t, healthResponse.Status)
 	assert.Contains(t, healthResponse.Checks, "custom_check")
+	assert.Contains(t, healthResponse.Checks, "filesystem")
+	assert.Contains(t, healthResponse.Checks, "memory")
+	assert.Contains(t, healthResponse.Checks, "goroutines")
+
+	err = monitor.Stop()
+	require.NoError(t, err)
+}
+
+// Fast variant of health checks test for CI
+func TestMonitorHealthChecks_Fast(t *testing.T) {
+	config := DefaultMonitorConfig()
+	config.HealthCheckInterval = 10 * time.Millisecond // Much faster for CI
+	config.HTTPEnabled = false
+
+	logger := logging.NewLogger(logging.DefaultConfig())
+	monitor, err := NewMonitor(config, logger)
+	require.NoError(t, err)
+
+	// Register a custom health check
+	customCheck := NewHealthCheckFunc("custom_check_fast", false, func(ctx context.Context) HealthCheck {
+		return HealthCheck{
+			Name:        "custom_check_fast",
+			Status:      HealthStatusHealthy,
+			Message:     "Custom check passed",
+			LastChecked: time.Now(),
+			Critical:    false,
+		}
+	})
+
+	monitor.RegisterHealthCheck(customCheck)
+
+	err = monitor.Start()
+	require.NoError(t, err)
+
+	// Wait for health checks to run (much shorter)
+	time.Sleep(20 * time.Millisecond)
+
+	health := monitor.GetHealth()
+	assert.NotNil(t, health)
+
+	healthResponse := health.GetHealth()
+	assert.NotEmpty(t, healthResponse.Status)
+	assert.Contains(t, healthResponse.Checks, "custom_check_fast")
 	assert.Contains(t, healthResponse.Checks, "filesystem")
 	assert.Contains(t, healthResponse.Checks, "memory")
 	assert.Contains(t, healthResponse.Checks, "goroutines")
@@ -329,6 +421,9 @@ func TestDefaultMonitorConfig(t *testing.T) {
 }
 
 func TestMonitorAlerting(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping comprehensive alerting test in short mode")
+	}
 	t.Skip("Alerting tests require more complex setup")
 
 	config := DefaultMonitorConfig()
@@ -362,6 +457,48 @@ func TestMonitorAlerting(t *testing.T) {
 
 	// Wait for alerts to trigger
 	time.Sleep(2 * time.Minute)
+
+	err = monitor.Stop()
+	require.NoError(t, err)
+
+	// This test would require capturing log output to verify alerts were triggered
+}
+
+// Fast variant of alerting test for CI (when the test is enabled)
+func TestMonitorAlerting_Fast(t *testing.T) {
+	t.Skip("Alerting tests require more complex setup - fast variant for CI")
+
+	config := DefaultMonitorConfig()
+	config.AlertingEnabled = true
+	config.AlertThresholds.UnhealthyComponents = 1
+	config.HTTPEnabled = false
+
+	logger := logging.NewLogger(logging.DefaultConfig())
+	monitor, err := NewMonitor(config, logger)
+	require.NoError(t, err)
+
+	// Register an unhealthy check
+	unhealthyCheck := NewHealthCheckFunc(
+		"failing_check_fast",
+		true,
+		func(ctx context.Context) HealthCheck {
+			return HealthCheck{
+				Name:        "failing_check_fast",
+				Status:      HealthStatusUnhealthy,
+				Message:     "This check always fails",
+				LastChecked: time.Now(),
+				Critical:    true,
+			}
+		},
+	)
+
+	monitor.RegisterHealthCheck(unhealthyCheck)
+
+	err = monitor.Start()
+	require.NoError(t, err)
+
+	// Wait for alerts to trigger (much shorter for CI)
+	time.Sleep(500 * time.Millisecond)
 
 	err = monitor.Stop()
 	require.NoError(t, err)

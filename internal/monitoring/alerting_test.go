@@ -138,6 +138,10 @@ func TestAlertManager(t *testing.T) {
 	})
 
 	t.Run("cooldown mechanism", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("Skipping comprehensive cooldown test in short mode")
+		}
+
 		logger := logging.NewLogger(logging.DefaultConfig())
 		am := NewAlertManager(logger)
 		rule := &AlertRule{
@@ -194,6 +198,65 @@ func TestAlertManager(t *testing.T) {
 
 			return len(testChannel.alerts) == 3
 		}, 100*time.Millisecond, 10*time.Millisecond, "Should trigger new alert after cooldown")
+	})
+
+	t.Run("cooldown mechanism fast", func(t *testing.T) {
+		logger := logging.NewLogger(logging.DefaultConfig())
+		am := NewAlertManager(logger)
+		rule := &AlertRule{
+			Name:      "memory_test_fast",
+			Component: "system",
+			Metric:    "memory_usage",
+			Condition: "gt",
+			Threshold: 100.0,
+			Level:     AlertLevelCritical,
+			Message:   "High memory",
+			Enabled:   true,
+			Cooldown:  20 * time.Millisecond, // Much shorter cooldown for CI
+		}
+		am.AddRule(rule)
+
+		testChannel := &TestChannel{alerts: make([]Alert, 0)}
+		am.AddChannel(testChannel)
+
+		ctx := context.Background()
+		metrics := []Metric{{Name: "memory_usage", Value: 150.0}}
+
+		// First alert should trigger
+		am.EvaluateMetrics(ctx, metrics)
+		assert.Eventually(t, func() bool {
+			testChannel.mutex.Lock()
+			defer testChannel.mutex.Unlock()
+
+			return len(testChannel.alerts) == 1
+		}, 50*time.Millisecond, 5*time.Millisecond, "First alert should be delivered")
+
+		// Resolve and immediately trigger again
+		metrics[0].Value = 50.0
+		am.EvaluateMetrics(ctx, metrics)
+		metrics[0].Value = 150.0
+		am.EvaluateMetrics(ctx, metrics)
+
+		// Should not trigger new alert due to cooldown
+		// Should have: initial alert + resolution = 2 alerts
+		assert.Eventually(t, func() bool {
+			testChannel.mutex.Lock()
+			defer testChannel.mutex.Unlock()
+
+			return len(testChannel.alerts) == 2
+		}, 50*time.Millisecond, 5*time.Millisecond, "Should have initial alert + resolution")
+
+		// Wait for cooldown to expire (much shorter)
+		time.Sleep(30 * time.Millisecond)
+		am.EvaluateMetrics(ctx, metrics)
+
+		// Now should trigger new alert
+		assert.Eventually(t, func() bool {
+			testChannel.mutex.Lock()
+			defer testChannel.mutex.Unlock()
+
+			return len(testChannel.alerts) == 3
+		}, 50*time.Millisecond, 5*time.Millisecond, "Should trigger new alert after cooldown")
 	})
 }
 

@@ -439,6 +439,10 @@ func TestApplicationMetrics(t *testing.T) {
 }
 
 func TestMetricsCollectorStartStop(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping comprehensive metrics collector start/stop test in short mode")
+	}
+
 	tmpDir := t.TempDir()
 	outputPath := tmpDir + "/metrics.json"
 
@@ -452,6 +456,29 @@ func TestMetricsCollectorStartStop(t *testing.T) {
 
 	// Wait for flush
 	time.Sleep(100 * time.Millisecond)
+
+	collector.Stop()
+
+	// Verify metrics file was created
+	_, err := os.Stat(outputPath)
+	assert.NoError(t, err)
+}
+
+// Fast variant for CI
+func TestMetricsCollectorStartStop_Fast(t *testing.T) {
+	tmpDir := t.TempDir()
+	outputPath := tmpDir + "/metrics.json"
+
+	collector := NewMetricsCollector(testPrefix, outputPath)
+	collector.flushPeriod = 10 * time.Millisecond // Much faster flush for CI
+
+	collector.Start()
+
+	// Add some metrics
+	collector.Counter("test_counter_fast", nil)
+
+	// Wait for flush (much shorter)
+	time.Sleep(20 * time.Millisecond)
 
 	collector.Stop()
 
