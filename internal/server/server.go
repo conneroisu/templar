@@ -395,8 +395,8 @@ func (s *PreviewServer) addMiddleware(handler http.Handler) http.Handler {
 		if s.rateLimiter == nil {
 			s.rateLimiter = NewRateLimiter(rateLimitConfig, nil)
 		}
-		s.shutdownMutex.Unlock()
 		rateLimitHandler := RateLimitMiddleware(s.rateLimiter)(securityHandler)
+		s.shutdownMutex.Unlock()
 		securityHandler = rateLimitHandler
 	}
 

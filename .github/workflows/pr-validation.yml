@@ -148,7 +148,7 @@ jobs:
 
       - name: Run current benchmarks
         run: |
-          nix develop --command go test -bench=. -benchmem -benchtime=3s $(go list ./... | grep -v templar-cache-benchmark) > current-bench.txt
+          nix develop --command go test -bench=. -benchmem -benchtime=100ms $(go list ./... | grep -v templar-cache-benchmark) > current-bench.txt
 
       - name: Checkout base branch
         run: |
@@ -158,7 +158,7 @@ jobs:
       - name: Run base benchmarks
         continue-on-error: true
         run: |
-          nix develop --command go test -bench=. -benchmem -benchtime=3s $(go list ./... | grep -v templar-cache-benchmark) > base-bench.txt
+          nix develop --command go test -bench=. -benchmem -benchtime=100ms $(go list ./... | grep -v templar-cache-benchmark) > base-bench.txt
 
       - name: Compare benchmarks
         continue-on-error: true
