@@ -750,6 +750,9 @@ func (s *ComponentScanner) ScanDirectoryWithContext(ctx context.Context, dir str
 			WithContext("directory", dir)
 	}
 
+	// Track components before scanning to detect deletions
+	componentsBeforeScan := s.getComponentsByDirectory(dir)
+
 	// Use concurrent directory walking for better performance on large codebases
 	files, err := s.walkDirectoryConcurrent(dir)
 
@@ -759,6 +762,13 @@ func (s *ComponentScanner) ScanDirectoryWithContext(ctx context.Context, dir str
 
 	// Process files using persistent worker pool with context (no goroutine creation overhead)
 	err = s.processBatchWithWorkerPoolWithContext(ctx, files)
+
+	if err != nil {
+		return err
+	}
+
+	// Check for deleted components and remove them from registry
+	s.handleDeletedComponents(componentsBeforeScan, files)
 
 	// Update metrics
 	if s.metrics != nil {
@@ -781,7 +791,7 @@ func (s *ComponentScanner) ScanDirectoryWithContext(ctx context.Context, dir str
 		}
 	}
 
-	return err
+	return nil
 }
 
 // ScanDirectory scans a directory for templ components (backward compatible wrapper).
@@ -1735,4 +1745,62 @@ func (s *ComponentScanner) generateMetadataHash(fileInfo os.FileInfo) uint32 {
 	metadata := fmt.Sprintf("%d:%d", fileInfo.Size(), fileInfo.ModTime().Unix())
 
 	return crc32.ChecksumIEEE([]byte(metadata))
+}
+
+// getComponentsByDirectory returns all components in the registry that belong to the given directory.
+func (s *ComponentScanner) getComponentsByDirectory(dir string) map[string]*types.ComponentInfo {
+	result := make(map[string]*types.ComponentInfo)
+	
+	// Get absolute path for consistent comparison
+	absDir, err := filepath.Abs(dir)
+	if err != nil {
+		return result
+	}
+	
+	// Get all components from registry
+	allComponents := s.registry.GetAll()
+	
+	for _, component := range allComponents {
+		// Get absolute path of component file
+		absComponentPath, err := filepath.Abs(component.FilePath)
+		if err != nil {
+			continue
+		}
+		
+		// Check if component file is within the scanned directory
+		if strings.HasPrefix(absComponentPath, absDir) {
+			result[component.Name] = component
+		}
+	}
+	
+	return result
+}
+
+// handleDeletedComponents removes components from the registry that no longer have corresponding files.
+func (s *ComponentScanner) handleDeletedComponents(componentsBeforeScan map[string]*types.ComponentInfo, currentFiles []string) {
+	// Convert current files to a set for fast lookup
+	currentFileSet := make(map[string]bool)
+	for _, file := range currentFiles {
+		// Get absolute path for consistent comparison
+		absFile, err := filepath.Abs(file)
+		if err != nil {
+			continue
+		}
+		currentFileSet[absFile] = true
+	}
+	
+	// Check each component that was in the registry before scanning
+	for componentName, component := range componentsBeforeScan {
+		// Get absolute path of component file
+		absComponentPath, err := filepath.Abs(component.FilePath)
+		if err != nil {
+			continue
+		}
+		
+		// If the component's file is not in the current scan results, it was deleted
+		if !currentFileSet[absComponentPath] {
+			// Remove the component from the registry
+			s.registry.Remove(componentName)
+		}
+	}
 }

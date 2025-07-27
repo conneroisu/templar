@@ -297,12 +297,19 @@ func sanitizeIdentifier(identifier string) string {
 	cleanedID := string(cleaned)
 
 	// Additional security check for dangerous system identifiers
+	// Only check for exact matches or path-like patterns to avoid false positives
 	lowerCleaned := strings.ToLower(cleanedID)
 	for _, pattern := range dangerousSystemPaths {
-		if strings.Contains(lowerCleaned, pattern) {
+		// Check for exact match or path-like patterns (with separators)
+		if lowerCleaned == pattern || 
+		   strings.HasPrefix(lowerCleaned, pattern+"/") ||
+		   strings.HasPrefix(lowerCleaned, pattern+"\\") ||
+		   strings.HasSuffix(lowerCleaned, "/"+pattern) ||
+		   strings.HasSuffix(lowerCleaned, "\\"+pattern) ||
+		   strings.Contains(lowerCleaned, "/"+pattern+"/") ||
+		   strings.Contains(lowerCleaned, "\\"+pattern+"\\") {
 			// Replace with safe alternative
 			cleanedID = safeComponentName
-
 			break
 		}
 	}

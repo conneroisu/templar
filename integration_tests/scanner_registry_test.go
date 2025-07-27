@@ -164,9 +164,6 @@ templ Button(text string, disabled bool) {
 }
 
 func TestIntegration_ScannerRegistry_ComponentDeletion(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
-	}
 	// Create test components
 	components := map[string]string{
 		"Button": `package components

@@ -305,9 +305,6 @@ templ Badge(text string, count int) {
 }
 
 func TestIntegration_WatcherScanner_FileDeletion(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
-	}
 
 	testDir := fmt.Sprintf("integration_test_%d", time.Now().UnixNano())
 	require.NoError(t, os.MkdirAll(testDir, 0755))
@@ -351,6 +348,10 @@ templ Card(title string) {
 	require.NoError(t, err)
 
 	err = fileWatcher.Start(ctx)
+	require.NoError(t, err)
+
+	// Perform initial scan since files were created before watcher started
+	err = componentScanner.ScanDirectory(testDir)
 	require.NoError(t, err)
 
 	// Wait for initial setup and scan
