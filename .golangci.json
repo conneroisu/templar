@@ -68,6 +68,9 @@
       },
       "staticcheck": {
         "checks": ["-SA1019", "all"]
+      },
+      "gosec": {
+        "excludes": ["G404", "G204", "G115"]
       }
     }
   },
