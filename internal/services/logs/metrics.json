@@ -3,8 +3,8 @@
     {
       "name": "templar_uptime_seconds",
       "type": "gauge",
-      "value": 0.019903797,
-      "timestamp": "2025-07-26T20:06:48.946103676-05:00",
+      "value": 0.0158473,
+      "timestamp": "2025-07-26T22:45:35.975440166-05:00",
       "help": "Application uptime in seconds"
     }
   ],
@@ -13,15 +13,15 @@
       "gc_pause_ns": 0,
       "gc_runs": 0,
       "goroutines": 99,
-      "memory_alloc": 2199616,
-      "memory_heap_alloc": 2199616,
-      "memory_heap_sys": 7372800,
+      "memory_alloc": 2202440,
+      "memory_heap_alloc": 2202440,
+      "memory_heap_sys": 7405568,
       "memory_sys": 13849864,
-      "memory_total": 2199616
+      "memory_total": 2202440
     },
     "process": {
-      "pid": 880730
+      "pid": 954777
     }
   },
-  "timestamp": "2025-07-26T20:06:48.946124008-05:00"
+  "timestamp": "2025-07-26T22:45:35.975466043-05:00"
 }

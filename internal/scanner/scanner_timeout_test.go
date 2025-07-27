@@ -2,6 +2,8 @@ package scanner
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -43,28 +45,41 @@ func TestScannerTimeout(t *testing.T) {
 	})
 
 	t.Run("scanner respects context cancellation in directory scan", func(t *testing.T) {
+		// Create temporary directory with multiple templ files to force worker pool usage
+		tempDir := t.TempDir()
+		
+		// Create 6 files to exceed the 5-file threshold for synchronous processing
+		for i := 0; i < 6; i++ {
+			templFile := filepath.Join(tempDir, "test"+string(rune('A'+i))+".templ")
+			err := os.WriteFile(templFile, []byte(`package test
+
+templ TestComponent`+string(rune('A'+i))+`() {
+	<div>Test`+string(rune('A'+i))+`</div>
+}`), 0644)
+			assert.NoError(t, err)
+		}
+
 		// Create registry
 		reg := registry.NewComponentRegistry()
 
 		// Create scanner
 		scanner := NewComponentScanner(reg)
 
-		// Create a very short timeout context
-		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Millisecond)
+		// Create a very short timeout context that will timeout during processing
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Nanosecond)
 		defer cancel()
 
-		// Wait for context to timeout
-		<-ctx.Done()
-
 		// Test scanning with cancelled context
-		err := scanner.ScanDirectoryWithContext(ctx, ".")
+		err := scanner.ScanDirectoryWithContext(ctx, tempDir)
 		assert.Error(t, err, "Should fail due to context timeout")
-		assert.Contains(
-			t,
-			err.Error(),
-			"context deadline exceeded",
-			"Error should mention context deadline",
-		)
+		if err != nil {
+			assert.Contains(
+				t,
+				err.Error(),
+				"context deadline exceeded",
+				"Error should mention context deadline",
+			)
+		}
 	})
 
 	t.Run("timeout configuration validation", func(t *testing.T) {
