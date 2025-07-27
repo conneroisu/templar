@@ -239,12 +239,14 @@ func isInTestMode() bool {
 	return false
 }
 
+const developmentEnvironment = "development"
+
 // isInDevelopmentMode detects if we're running in development mode.
 func isInDevelopmentMode() bool {
 	// Check for common development environment indicators
-	if os.Getenv("GO_ENV") == "development" || 
-		os.Getenv("TEMPLAR_ENV") == "development" ||
-		os.Getenv("NODE_ENV") == "development" {
+	if os.Getenv("GO_ENV") == developmentEnvironment || 
+		os.Getenv("TEMPLAR_ENV") == developmentEnvironment ||
+		os.Getenv("NODE_ENV") == developmentEnvironment {
 		return true
 	}
 

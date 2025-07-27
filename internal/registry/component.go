@@ -310,6 +310,7 @@ func sanitizeIdentifier(identifier string) string {
 		   strings.Contains(lowerCleaned, "\\"+pattern+"\\") {
 			// Replace with safe alternative
 			cleanedID = safeComponentName
+
 			break
 		}
 	}
