@@ -15,22 +15,29 @@ import (
 )
 
 const (
-	// File names and paths
-	TemplarConfigFile = ".templar.yml"
+	// File names and paths.
 	GoModFile         = "go.mod"
 	TestTemplFile     = "test.templ"
 	ComponentsDir     = "components"
 	TestComponentName = "TestComponent"
 
-	// Network
+	// Network.
 	LocalhostAddress = "localhost"
 	DefaultPort      = 8080
 
-	// Test project name
+	// Test project name.
 	TestProjectName = "test-project"
 
-	// Mock data values
+	// Mock data values.
 	MockText = "Mock Text"
+
+	// Test component content.
+	TestComponentContent = `package components
+
+templ TestComponent(title string) {
+	<h1>{ title }</h1>
+}
+`
 )
 
 func TestInitCommand(t *testing.T) {
@@ -173,17 +180,12 @@ func TestListCommand(t *testing.T) {
 
 	// Create component files
 	componentDir := filepath.Join(tempDir, ComponentsDir)
-	err := os.MkdirAll(componentDir, 0755)
+	err := os.MkdirAll(componentDir, 0o755)
 	require.NoError(t, err)
 
-	componentContent := `package components
+	componentContent := TestComponentContent
 
-templ TestComponent(title string) {
-	<h1>{ title }</h1>
-}
-`
-
-	err = os.WriteFile(filepath.Join(componentDir, TestTemplFile), []byte(componentContent), 0644)
+	err = os.WriteFile(filepath.Join(componentDir, TestTemplFile), []byte(componentContent), 0o644)
 	require.NoError(t, err)
 
 	// Set up viper configuration
@@ -193,7 +195,7 @@ templ TestComponent(title string) {
 	viper.Set("server.host", LocalhostAddress)
 
 	// Reset flags
-	listFlags.Format = "table"
+	listFlags.Format = OutputFormatTable
 	listWithDeps = false
 	listWithProps = false
 
@@ -208,17 +210,12 @@ func TestListCommandJSON(t *testing.T) {
 
 	// Create component files
 	componentDir := filepath.Join(tempDir, ComponentsDir)
-	err := os.MkdirAll(componentDir, 0755)
+	err := os.MkdirAll(componentDir, 0o755)
 	require.NoError(t, err)
 
-	componentContent := `package components
+	componentContent := TestComponentContent
 
-templ TestComponent(title string) {
-	<h1>{ title }</h1>
-}
-`
-
-	err = os.WriteFile(filepath.Join(componentDir, TestTemplFile), []byte(componentContent), 0644)
+	err = os.WriteFile(filepath.Join(componentDir, TestTemplFile), []byte(componentContent), 0o644)
 	require.NoError(t, err)
 
 	// Set up viper configuration
@@ -228,7 +225,7 @@ templ TestComponent(title string) {
 	viper.Set("server.host", LocalhostAddress)
 
 	// Set flags
-	listFlags.Format = "json"
+	listFlags.Format = OutputFormatJSON
 	listWithDeps = true
 	listWithProps = true
 
@@ -267,20 +264,15 @@ func TestBuildCommand(t *testing.T) {
 
 			// Create component files
 			componentDir := ComponentsDir
-			err = os.MkdirAll(componentDir, 0755)
+			err = os.MkdirAll(componentDir, 0o755)
 			require.NoError(t, err)
 
-			componentContent := `package components
-
-templ TestComponent(title string) {
-	<h1>{ title }</h1>
-}
-`
+			componentContent := TestComponentContent
 
 			err = os.WriteFile(
 				filepath.Join(componentDir, TestTemplFile),
 				[]byte(componentContent),
-				0644,
+				0o644,
 			)
 			require.NoError(t, err)
 
@@ -378,22 +370,17 @@ func TestServeCommand(t *testing.T) {
   host: localhost
 components:
   scan_paths: ["` + ComponentsDir + `"]`
-	err = os.WriteFile(filepath.Join(tempDir, TemplarConfigFile), []byte(configContent), 0644)
+	err = os.WriteFile(filepath.Join(tempDir, TemplarConfigFile), []byte(configContent), 0o644)
 	require.NoError(t, err)
 
 	// Create component files
 	componentDir := ComponentsDir
-	err = os.MkdirAll(componentDir, 0755)
+	err = os.MkdirAll(componentDir, 0o755)
 	require.NoError(t, err)
 
-	componentContent := `package components
+	componentContent := TestComponentContent
 
-templ TestComponent(title string) {
-	<h1>{ title }</h1>
-}
-`
-
-	err = os.WriteFile(filepath.Join(componentDir, TestTemplFile), []byte(componentContent), 0644)
+	err = os.WriteFile(filepath.Join(componentDir, TestTemplFile), []byte(componentContent), 0o644)
 	require.NoError(t, err)
 
 	// Test serve command with context cancellation (quick test)
@@ -432,22 +419,17 @@ func TestWatchCommand(t *testing.T) {
   host: localhost
 components:
   scan_paths: ["` + ComponentsDir + `"]`
-	err = os.WriteFile(filepath.Join(tempDir, TemplarConfigFile), []byte(configContent), 0644)
+	err = os.WriteFile(filepath.Join(tempDir, TemplarConfigFile), []byte(configContent), 0o644)
 	require.NoError(t, err)
 
 	// Create component files
 	componentDir := ComponentsDir
-	err = os.MkdirAll(componentDir, 0755)
+	err = os.MkdirAll(componentDir, 0o755)
 	require.NoError(t, err)
 
-	componentContent := `package components
+	componentContent := TestComponentContent
 
-templ TestComponent(title string) {
-	<h1>{ title }</h1>
-}
-`
-
-	err = os.WriteFile(filepath.Join(componentDir, TestTemplFile), []byte(componentContent), 0644)
+	err = os.WriteFile(filepath.Join(componentDir, TestTemplFile), []byte(componentContent), 0o644)
 	require.NoError(t, err)
 
 	// Reset watch flags
@@ -488,22 +470,17 @@ func TestPreviewCommand(t *testing.T) {
   host: localhost
 components:
   scan_paths: ["` + ComponentsDir + `"]`
-	err = os.WriteFile(filepath.Join(tempDir, TemplarConfigFile), []byte(configContent), 0644)
+	err = os.WriteFile(filepath.Join(tempDir, TemplarConfigFile), []byte(configContent), 0o644)
 	require.NoError(t, err)
 
 	// Create component files
 	componentDir := ComponentsDir
-	err = os.MkdirAll(componentDir, 0755)
+	err = os.MkdirAll(componentDir, 0o755)
 	require.NoError(t, err)
 
-	componentContent := `package components
+	componentContent := TestComponentContent
 
-templ TestComponent(title string) {
-	<h1>{ title }</h1>
-}
-`
-
-	err = os.WriteFile(filepath.Join(componentDir, TestTemplFile), []byte(componentContent), 0644)
+	err = os.WriteFile(filepath.Join(componentDir, TestTemplFile), []byte(componentContent), 0o644)
 	require.NoError(t, err)
 
 	// Preview flags are now handled via StandardFlags structure
@@ -599,7 +576,7 @@ server:
 development:
   hot_reload: true
 `
-	err = os.WriteFile(TemplarConfigFile, []byte(config), 0644)
+	err = os.WriteFile(TemplarConfigFile, []byte(config), 0o644)
 	require.NoError(t, err)
 
 	// Test doctor command execution

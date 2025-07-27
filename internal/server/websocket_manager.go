@@ -238,7 +238,7 @@ func (wm *WebSocketManager) HandleWebSocket(w http.ResponseWriter, r *http.Reque
 	// Verify client creation succeeded
 	if client.send == nil {
 		log.Printf("Failed to create send channel for WebSocket client")
-		conn.Close(websocket.StatusInternalError, "Internal server error")
+		_ = conn.Close(websocket.StatusInternalError, "Internal server error")
 
 		return
 	}
@@ -251,13 +251,13 @@ func (wm *WebSocketManager) HandleWebSocket(w http.ResponseWriter, r *http.Reque
 	case <-wm.ctx.Done():
 		// Manager is shutting down
 		log.Printf("WebSocket manager shutting down, rejecting new client")
-		conn.Close(websocket.StatusServiceRestart, "Server shutting down")
+		_ = conn.Close(websocket.StatusServiceRestart, "Server shutting down")
 
 		return
 	default:
 		// Registration channel full - should not happen with proper buffer size
 		log.Printf("WebSocket registration channel full, rejecting client")
-		conn.Close(websocket.StatusTryAgainLater, "Server busy")
+		_ = conn.Close(websocket.StatusTryAgainLater, "Server busy")
 
 		return
 	}
@@ -355,7 +355,7 @@ func (wm *WebSocketManager) unregisterClient(conn *websocket.Conn) {
 	wm.clientsMutex.Unlock()
 
 	if exists {
-		conn.Close(websocket.StatusNormalClosure, "")
+		_ = conn.Close(websocket.StatusNormalClosure, "")
 		log.Printf("WebSocket client disconnected. Total clients: %d", len(wm.clients))
 	}
 }
@@ -397,7 +397,7 @@ func (wm *WebSocketManager) handleClient(client *Client) {
 
 // readFromClient handles reading messages from a WebSocket client.
 func (wm *WebSocketManager) readFromClient(client *Client) {
-	defer client.conn.Close(websocket.StatusNormalClosure, "")
+	defer func() { _ = client.conn.Close(websocket.StatusNormalClosure, "") }()
 
 	for {
 		// Set read deadline using configured timeout
@@ -435,7 +435,7 @@ func (wm *WebSocketManager) readFromClient(client *Client) {
 func (wm *WebSocketManager) writeToClient(client *Client) {
 	ticker := time.NewTicker(54 * time.Second) // Ping interval
 	defer ticker.Stop()
-	defer client.conn.Close(websocket.StatusNormalClosure, "")
+	defer func() { _ = client.conn.Close(websocket.StatusNormalClosure, "") }()
 
 	for {
 		select {
@@ -536,7 +536,7 @@ func (wm *WebSocketManager) Shutdown(ctx context.Context) error {
 		wm.clientsMutex.Lock()
 		for conn, client := range wm.clients {
 			close(client.send)
-			conn.Close(websocket.StatusNormalClosure, "Server shutdown")
+			_ = conn.Close(websocket.StatusNormalClosure, "Server shutdown")
 		}
 		wm.clients = make(map[*websocket.Conn]*Client)
 		wm.clientsMutex.Unlock()
@@ -546,11 +546,8 @@ func (wm *WebSocketManager) Shutdown(ctx context.Context) error {
 		close(wm.register)
 		close(wm.unregister)
 
-		// Shutdown enhancements
-		if wm.enhancements != nil {
-			// Enhancement cleanup would go here
-			// wm.enhancements.Shutdown()
-		}
+		// Shutdown enhancements would go here when implemented
+		// Currently enhancements is always nil
 
 		log.Printf("WebSocket manager shut down successfully")
 	})

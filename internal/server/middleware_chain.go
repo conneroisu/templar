@@ -283,7 +283,7 @@ func (mc *MiddlewareChain) createCORSMiddleware() Middleware {
 
 			if mc.originValidator.IsAllowedOrigin(origin) {
 				w.Header().Set("Access-Control-Allow-Origin", origin)
-			} else if mc.config.Server.Environment == "development" {
+			} else if mc.config.Server.Environment == EnvironmentDevelopment {
 				// Only allow wildcard in development
 				w.Header().Set("Access-Control-Allow-Origin", "*")
 			}

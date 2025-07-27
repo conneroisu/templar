@@ -15,7 +15,7 @@ func TestShutdownRaceCondition(t *testing.T) {
 	// Create a test server
 	cfg := &config.Config{
 		Server: config.ServerConfig{
-			Host: "localhost",
+			Host: TestLocalhost,
 			Port: 0, // Use system-assigned port
 		},
 	}
@@ -26,7 +26,7 @@ func TestShutdownRaceCondition(t *testing.T) {
 	// Start the server in a goroutine
 	go func() {
 		ctx := context.Background()
-		server.Start(ctx)
+		_ = server.Start(ctx) // Error not relevant for shutdown test
 	}()
 
 	// Give the server time to start
@@ -67,7 +67,7 @@ func TestShutdownRaceCondition(t *testing.T) {
 func TestShutdownOnce(t *testing.T) {
 	cfg := &config.Config{
 		Server: config.ServerConfig{
-			Host: "localhost",
+			Host: TestLocalhost,
 			Port: 0,
 		},
 	}
@@ -97,7 +97,7 @@ func TestShutdownOnce(t *testing.T) {
 func TestChannelSafeClose(t *testing.T) {
 	cfg := &config.Config{
 		Server: config.ServerConfig{
-			Host: "localhost",
+			Host: TestLocalhost,
 			Port: 0,
 		},
 	}
@@ -119,7 +119,7 @@ func TestChannelSafeClose(t *testing.T) {
 func TestBuildPipelineShutdown(t *testing.T) {
 	cfg := &config.Config{
 		Server: config.ServerConfig{
-			Host: "localhost",
+			Host: TestLocalhost,
 			Port: 0,
 		},
 	}
@@ -132,7 +132,7 @@ func TestBuildPipelineShutdown(t *testing.T) {
 
 	// Start build pipeline
 	ctx := context.Background()
-	server.buildPipeline.Start(ctx)
+	_ = server.buildPipeline.Start(ctx) // Error not relevant for shutdown test
 
 	// Shutdown should stop build pipeline
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
@@ -147,7 +147,7 @@ func TestBuildPipelineShutdown(t *testing.T) {
 func TestFileWatcherShutdown(t *testing.T) {
 	cfg := &config.Config{
 		Server: config.ServerConfig{
-			Host: "localhost",
+			Host: TestLocalhost,
 			Port: 0,
 		},
 	}

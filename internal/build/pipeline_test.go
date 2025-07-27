@@ -228,7 +228,7 @@ func TestGenerateContentHash(t *testing.T) {
 	testFile := filepath.Join(tempDir, "test.templ")
 
 	content := "test content"
-	err := os.WriteFile(testFile, []byte(content), 0644)
+	err := os.WriteFile(testFile, []byte(content), 0o644)
 	require.NoError(t, err)
 
 	reg := NewMockComponentRegistry()
@@ -248,7 +248,7 @@ func TestGenerateContentHash(t *testing.T) {
 	assert.Equal(t, hash1, hash2)
 
 	// Different content should generate different hash
-	err = os.WriteFile(testFile, []byte("different content"), 0644)
+	err = os.WriteFile(testFile, []byte("different content"), 0o644)
 	require.NoError(t, err)
 
 	hash3 := bp.generateContentHash(component)

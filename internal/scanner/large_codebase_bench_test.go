@@ -23,7 +23,7 @@ func BenchmarkLargeCodebaseScanning(b *testing.B) {
 func benchmarkLargeCodebase(b *testing.B, componentCount int) {
 	// Create test directory with realistic component structure
 	testDir := createRealisticCodebase(b, componentCount)
-	defer os.RemoveAll(testDir)
+	defer func() { _ = os.RemoveAll(testDir) }()
 
 	b.ResetTimer()
 	b.ReportAllocs()
@@ -42,7 +42,7 @@ func benchmarkLargeCodebase(b *testing.B, componentCount int) {
 			b.Fatal("No components found")
 		}
 
-		scanner.Close()
+		_ = scanner.Close()
 	}
 }
 
@@ -64,7 +64,7 @@ func createRealisticCodebase(b *testing.B, componentCount int) string {
 	}
 
 	for _, dir := range dirs {
-		if err := os.MkdirAll(filepath.Join(tempDir, dir), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Join(tempDir, dir), 0o755); err != nil {
 			b.Fatal(err)
 		}
 	}
@@ -103,7 +103,7 @@ func createRealisticCodebase(b *testing.B, componentCount int) string {
 				dir,
 				fmt.Sprintf("component_%d.templ", componentIndex),
 			)
-			if err := os.WriteFile(filename, []byte(content), 0644); err != nil {
+			if err := os.WriteFile(filename, []byte(content), 0o600); err != nil {
 				b.Fatal(err)
 			}
 			componentIndex++
@@ -377,7 +377,7 @@ templ Modal%d(title string, isOpen bool, onClose string) {
 func BenchmarkMemoryUsageStability(b *testing.B) {
 	// Create a large codebase in current directory
 	testDir := createRealisticCodebase(b, 1000)
-	defer os.RemoveAll(testDir)
+	defer func() { _ = os.RemoveAll(testDir) }()
 
 	b.ResetTimer()
 	b.ReportAllocs()
@@ -391,7 +391,7 @@ func BenchmarkMemoryUsageStability(b *testing.B) {
 			b.Fatal(err)
 		}
 
-		scanner.Close()
+		_ = scanner.Close()
 
 		// Force GC to see if we're leaking memory
 		if i%10 == 0 {

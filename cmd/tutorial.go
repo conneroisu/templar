@@ -419,7 +419,7 @@ func (t *Tutorial) askBool(prompt string, defaultValue bool) bool {
 		return defaultValue
 	}
 
-	return input == "y" || input == "yes" || input == "true"
+	return input == ResponseY || input == ResponseYes || input == ResponseTrue
 }
 
 func (t *Tutorial) askChoice(prompt string, choices []string, defaultValue string) string {

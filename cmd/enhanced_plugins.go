@@ -173,9 +173,9 @@ func runEnhancedPluginsList(cmd *cobra.Command, args []string) error {
 	})
 
 	switch enhancedPluginsOutputFormat {
-	case "json":
+	case OutputFormatJSON:
 		return outputJSON(pluginData, "")
-	case "yaml":
+	case OutputFormatYAML:
 		return outputYAML(pluginData, "")
 	default:
 		return displayEnhancedPluginsTable(pluginData)
@@ -257,9 +257,9 @@ func runEnhancedPluginsInfo(cmd *cobra.Command, args []string) error {
 	}
 
 	switch enhancedPluginsOutputFormat {
-	case "json":
+	case OutputFormatJSON:
 		return outputJSON(detailedInfo, "")
-	case "yaml":
+	case OutputFormatYAML:
 		return outputYAML(detailedInfo, "")
 	default:
 		return displayEnhancedPluginDetailedInfo(detailedInfo)
@@ -296,9 +296,9 @@ func runEnhancedPluginsHealth(cmd *cobra.Command, args []string) error {
 	})
 
 	switch enhancedPluginsOutputFormat {
-	case "json":
+	case OutputFormatJSON:
 		return outputJSON(healthData, "")
-	case "yaml":
+	case OutputFormatYAML:
 		return outputYAML(healthData, "")
 	default:
 		return displayEnhancedPluginsHealthTable(healthData)
@@ -323,9 +323,9 @@ func runEnhancedPluginsDiscover(cmd *cobra.Command, args []string) error {
 	fmt.Printf("✅ Found %d plugins\n", len(discoveredPlugins))
 
 	switch enhancedPluginsOutputFormat {
-	case "json":
+	case OutputFormatJSON:
 		return outputJSON(discoveredPlugins, "")
-	case "yaml":
+	case OutputFormatYAML:
 		return outputYAML(discoveredPlugins, "")
 	default:
 		return displayDiscoveredPluginsTable(discoveredPlugins)
@@ -424,11 +424,11 @@ func displayEnhancedPluginsTable(plugins []EnhancedPluginListItem) error {
 
 		if enhancedPluginsVerbose {
 			interfaces := strings.Join(plugin.Interfaces, ",")
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+			_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
 				plugin.Name, plugin.Version, plugin.Source, plugin.State,
 				interfaces, healthStatus, plugin.Description)
 		} else {
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
+			_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
 				plugin.Name, plugin.Version, plugin.Source, plugin.State, plugin.Description)
 		}
 	}
@@ -496,7 +496,7 @@ func displayEnhancedPluginsHealthTable(plugins []EnhancedPluginHealthItem) error
 			errorMsg = "-"
 		}
 
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
+		_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
 			plugin.Name, plugin.State, plugin.Health.Status, lastCheck, errorMsg)
 	}
 
@@ -521,7 +521,7 @@ func displayDiscoveredPluginsTable(plugins map[string]plugins.EnhancedPluginInfo
 
 	for _, plugin := range pluginList {
 		interfaces := strings.Join(plugin.Interfaces, ",")
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
+		_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
 			plugin.Name, plugin.Version, plugin.Source, interfaces, plugin.Description)
 	}
 

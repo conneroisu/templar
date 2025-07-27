@@ -106,12 +106,12 @@ func (d *DockerBuilder) Build(
 	}
 
 	// Ensure docker directory exists
-	if err := os.MkdirAll(dockerDir, 0755); err != nil {
+	if err := os.MkdirAll(dockerDir, 0o755); err != nil {
 		return "", "", fmt.Errorf("failed to create docker directory: %w", err)
 	}
 
 	// Write Dockerfile
-	if err := os.WriteFile(dockerfilePath, []byte(dockerfileContent), 0644); err != nil {
+	if err := os.WriteFile(dockerfilePath, []byte(dockerfileContent), 0o644); err != nil {
 		return "", "", fmt.Errorf("failed to write Dockerfile: %w", err)
 	}
 
@@ -143,7 +143,7 @@ func (d *DockerBuilder) GenerateDeploymentArtifacts(
 	deploymentDir := filepath.Join(d.outputDir, "deployment")
 
 	// Ensure deployment directory exists
-	if err := os.MkdirAll(deploymentDir, 0755); err != nil {
+	if err := os.MkdirAll(deploymentDir, 0o755); err != nil {
 		return nil, fmt.Errorf("failed to create deployment directory: %w", err)
 	}
 

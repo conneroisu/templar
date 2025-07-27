@@ -38,7 +38,11 @@ func TestAdapterEliminationSuccess(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to create file watcher: %v", err)
 		}
-		defer fw.Stop()
+		defer func() {
+			if err := fw.Stop(); err != nil {
+				t.Logf("Failed to stop file watcher: %v", err)
+			}
+		}()
 
 		// Verify it implements the interface directly - no adapter needed
 		var _ interfaces.FileWatcher = fw
@@ -107,7 +111,11 @@ func TestNoAdapterAntiPatternRequired(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create file watcher: %v", err)
 	}
-	defer fw.Stop()
+	defer func() {
+		if err := fw.Stop(); err != nil {
+			t.Logf("Failed to stop file watcher: %v", err)
+		}
+	}()
 
 	cs := scanner.NewComponentScanner(reg)
 	bp := build.NewRefactoredBuildPipeline(2, reg)
@@ -158,7 +166,11 @@ func TestInterfaceSegregationPrinciple(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to create file watcher: %v", err)
 		}
-		defer fw.Stop()
+		defer func() {
+			if err := fw.Stop(); err != nil {
+				t.Logf("Failed to stop file watcher: %v", err)
+			}
+		}()
 
 		// FileWatcher should only implement FileWatcher interface, not others
 		var fileWatcherInterface interfaces.FileWatcher = fw
@@ -199,8 +211,10 @@ func TestMemoryLeakComplianceWithoutAdapters(t *testing.T) {
 		var _ interfaces.BuildPipeline = bp
 
 		// Clean up resources
-		fw.Stop()
-		bp.Stop()
+		_ = fw.Stop()
+		if err := bp.Stop(); err != nil {
+			t.Logf("Failed to stop build pipeline: %v", err)
+		}
 	}
 
 	result := checker.Check()
@@ -226,7 +240,11 @@ func TestAdapterPackageEliminationSuccess(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create file watcher: %v", err)
 	}
-	defer fw.Stop()
+	defer func() {
+		if err := fw.Stop(); err != nil {
+			t.Logf("Failed to stop file watcher: %v", err)
+		}
+	}()
 
 	cs := scanner.NewComponentScanner(reg)
 	bp := build.NewRefactoredBuildPipeline(2, reg)

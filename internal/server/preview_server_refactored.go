@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
+	"strconv"
 	"sync"
 
 	"github.com/conneroisu/templar/internal/config"
@@ -221,7 +223,7 @@ func (sov *ServerOriginValidator) IsAllowedOrigin(origin string) bool {
 	}
 
 	// Development environment allows more origins
-	if sov.config.Server.Environment == "development" {
+	if sov.config.Server.Environment == EnvironmentDevelopment {
 		allowedOrigins := []string{
 			fmt.Sprintf("http://localhost:%d", sov.config.Server.Port),
 			fmt.Sprintf("http://127.0.0.1:%d", sov.config.Server.Port),
@@ -237,7 +239,7 @@ func (sov *ServerOriginValidator) IsAllowedOrigin(origin string) bool {
 	}
 
 	// Production: only allow same-origin
-	expectedOrigin := fmt.Sprintf("http://%s:%d", sov.config.Server.Host, sov.config.Server.Port)
+	expectedOrigin := "http://" + net.JoinHostPort(sov.config.Server.Host, strconv.Itoa(sov.config.Server.Port))
 
 	return origin == expectedOrigin
 }
@@ -354,6 +356,6 @@ func (sha *ServerHandlerAdapter) HandleTargetFiles(w http.ResponseWriter, r *htt
 	handleTargetFilesPage(w, r, sha.config, sha.registry, sha.renderer)
 }
 
-// TODO: The handler implementations above need to be extracted from the original server.go
+// NOTE: Handler implementations should be extracted from the original server.go when refactoring
 // and placed into separate handler functions that take dependencies as parameters.
 // This maintains clean separation of concerns and allows for proper unit testing.

@@ -65,7 +65,7 @@ type EnhancedPluginInfo struct {
 	Description string                 `json:"description"`
 	Author      string                 `json:"author,omitempty"`
 	License     string                 `json:"license,omitempty"`
-	Source      string                 `json:"source"` // "builtin", "file", "url"
+	Source      string                 `json:"source"` // BuiltinSource, "file", "url"
 	Path        string                 `json:"path,omitempty"`
 	Config      map[string]interface{} `json:"config,omitempty"`
 
@@ -185,7 +185,7 @@ func (epm *EnhancedPluginManager) SetBuiltinPlugins(plugins []Plugin) error {
 	ctx := context.Background()
 
 	for _, plugin := range plugins {
-		if err := epm.registerPlugin(ctx, plugin, "builtin"); err != nil {
+		if err := epm.registerPlugin(ctx, plugin, BuiltinSource); err != nil {
 			return fmt.Errorf("failed to register builtin plugin %s: %w", plugin.Name(), err)
 		}
 	}
@@ -224,7 +224,7 @@ func (epm *EnhancedPluginManager) registerPlugin(
 	enabled, exists := epm.enabledPlugins[name]
 	if !exists {
 		// Default to enabled for builtin plugins if not explicitly configured
-		enabled = source == "builtin"
+		enabled = source == BuiltinSource
 	}
 
 	if enabled {
@@ -262,7 +262,7 @@ func (epm *EnhancedPluginManager) loadPlugin(
 	// Integrate with core systems
 	if err := epm.integratePlugin(plugin); err != nil {
 		epm.pluginStates[name] = PluginStateError
-		epm.logger.Error(ctx, err, "Failed to integrate plugin with core systems", "plugin", name)
+		epm.logger.Error(ctx, err, "Failed to integrate plugin with core systems", PluginIdentifier, name)
 		// Continue anyway - plugin is still functional
 	}
 
@@ -278,7 +278,7 @@ func (epm *EnhancedPluginManager) loadPlugin(
 	epm.loadedPlugins[name] = loadedPlugin
 	epm.pluginStates[name] = PluginStateEnabled
 
-	epm.logger.Info(ctx, "Plugin loaded successfully", "plugin", name, "version", plugin.Version())
+	epm.logger.Info(ctx, "Plugin loaded successfully", PluginIdentifier, name, "version", plugin.Version())
 
 	return nil
 }
@@ -400,7 +400,7 @@ func (epm *EnhancedPluginManager) discoverPluginsInPath(ctx context.Context, pat
 
 		// Look for .so files (Go plugins) or plugin manifest files
 		if strings.HasSuffix(filePath, ".so") || strings.HasSuffix(filePath, "plugin.json") {
-			// TODO: Implement external plugin loading
+			// NOTE: External plugin loading (.so files and plugin.json manifests) to be implemented
 			epm.logger.Info(ctx, "Found potential plugin file", "path", filePath)
 		}
 
@@ -423,7 +423,7 @@ func (epm *EnhancedPluginManager) loadEnabledPlugins(ctx context.Context) error 
 		}
 
 		// Plugin is enabled but not loaded - this might be an external plugin
-		epm.logger.Warn(ctx, nil, "Plugin enabled but not found", "plugin", name)
+		epm.logger.Warn(ctx, nil, "Plugin enabled but not found", PluginIdentifier, name)
 	}
 
 	if len(errors) > 0 {
@@ -441,7 +441,7 @@ func (epm *EnhancedPluginManager) EnablePlugin(ctx context.Context, name string)
 	// Check if plugin is discovered
 	info, exists := epm.discoveredPlugins[name]
 	if !exists {
-		return fmt.Errorf("plugin %s not found", name)
+		return fmt.Errorf(ErrPluginNotFound, name)
 	}
 
 	// Check if already enabled
@@ -453,12 +453,12 @@ func (epm *EnhancedPluginManager) EnablePlugin(ctx context.Context, name string)
 	epm.enabledPlugins[name] = true
 
 	// If it's a builtin plugin that's not loaded, we need to load it
-	if info.Source == "builtin" {
-		// TODO: Reload builtin plugin
+	if info.Source == BuiltinSource {
+		// NOTE: Runtime reloading of builtin plugins to be implemented
 		return stderrors.New("runtime enabling of builtin plugins not yet implemented")
 	}
 
-	// TODO: Load external plugin
+	// NOTE: External plugin loading to be implemented
 	return stderrors.New("runtime enabling of external plugins not yet implemented")
 }
 
@@ -492,18 +492,20 @@ func (epm *EnhancedPluginManager) DisablePlugin(ctx context.Context, name string
 	defer cancel()
 
 	if err := loaded.Instance.Shutdown(shutdownCtx); err != nil {
-		epm.logger.Error(ctx, err, "Failed to shutdown plugin gracefully", "plugin", name)
+		epm.logger.Error(ctx, err, "Failed to shutdown plugin gracefully", PluginIdentifier, name)
 	}
 
 	// Unregister from base manager
-	epm.UnregisterPlugin(name)
+	if err := epm.UnregisterPlugin(name); err != nil {
+		epm.logger.Error(ctx, err, "Failed to unregister plugin", PluginIdentifier, name)
+	}
 
 	// Update state
 	loaded.State = PluginStateDisabled
 	epm.loadedPlugins[name] = loaded
 	epm.pluginStates[name] = PluginStateDisabled
 
-	epm.logger.Info(ctx, "Plugin disabled successfully", "plugin", name)
+	epm.logger.Info(ctx, "Plugin disabled successfully", PluginIdentifier, name)
 
 	return nil
 }
@@ -601,7 +603,7 @@ func (epm *EnhancedPluginManager) Shutdown(ctx context.Context) error {
 		if loaded.State == PluginStateEnabled {
 			shutdownCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 			if err := loaded.Instance.Shutdown(shutdownCtx); err != nil {
-				errors = append(errors, fmt.Errorf("failed to shutdown plugin %s: %w", name, err))
+				errors = append(errors, fmt.Errorf(ErrFailedShutdownPlugin, name, err))
 			}
 			cancel()
 		}

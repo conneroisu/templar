@@ -113,7 +113,7 @@ func init() {
 	componentCreateCmd.Flags().
 		StringVarP(&componentOutput, "output", "o", "./components", "Output directory")
 	componentCreateCmd.Flags().
-		StringVarP(&componentPackage, "package", "p", "components", "Package name")
+		StringVarP(&componentPackage, "package", "p", ComponentDir, ComponentPackage)
 	componentCreateCmd.Flags().
 		BoolVar(&componentWithTests, "with-tests", false, "Generate test files")
 	componentCreateCmd.Flags().
@@ -133,7 +133,7 @@ func init() {
 	componentScaffoldCmd.Flags().
 		StringVarP(&componentOutput, "output", "o", ".", "Output directory")
 	componentScaffoldCmd.Flags().
-		StringVarP(&componentPackage, "package", "p", "components", "Package name")
+		StringVarP(&componentPackage, "package", "p", ComponentDir, ComponentPackage)
 	componentScaffoldCmd.Flags().StringVar(&componentAuthor, "author", "", "Project author")
 	componentScaffoldCmd.Flags().StringVar(&componentProject, "project", "", "Project name")
 }
@@ -216,9 +216,9 @@ func runComponentList(cmd *cobra.Command, args []string) error {
 	generator := scaffolding.NewComponentGenerator("", "", "", "")
 
 	switch componentFormat {
-	case "table":
+	case OutputFormatTable:
 		return listTemplatesTable(generator)
-	case "json":
+	case OutputFormatJSON:
 		return listTemplatesJSON(generator)
 	default:
 		return listTemplatesList(generator)

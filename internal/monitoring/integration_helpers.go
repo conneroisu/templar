@@ -148,6 +148,8 @@ func (chs *ComprehensiveHealthSystem) GetSystemSummary() string {
 		return "⚠️ System degraded - some non-critical components have issues"
 	case HealthStatusUnhealthy:
 		return "❌ System unhealthy - critical components are failing"
+	case HealthStatusUnknown:
+		return "❓ System status unknown"
 	default:
 		return "❓ System status unknown"
 	}

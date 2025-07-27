@@ -100,7 +100,7 @@ func (s *StaticSiteGenerator) Generate(
 	generatedFiles := make([]string, 0)
 
 	// Ensure output directory exists
-	if err := os.MkdirAll(s.outputDir, 0755); err != nil {
+	if err := os.MkdirAll(s.outputDir, 0o755); err != nil {
 		return nil, fmt.Errorf("failed to create output directory: %w", err)
 	}
 
@@ -177,7 +177,7 @@ func (s *StaticSiteGenerator) generateComponentPage(
 	pagePath := filepath.Join(s.outputDir, s.getComponentPagePath(component))
 
 	// Ensure directory exists
-	if err := os.MkdirAll(filepath.Dir(pagePath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(pagePath), 0o755); err != nil {
 		return nil, fmt.Errorf("failed to create page directory: %w", err)
 	}
 
@@ -193,7 +193,7 @@ func (s *StaticSiteGenerator) generateComponentPage(
 	}
 
 	// Write HTML file
-	if err := os.WriteFile(pagePath, []byte(htmlContent), 0644); err != nil {
+	if err := os.WriteFile(pagePath, []byte(htmlContent), 0o644); err != nil {
 		return nil, fmt.Errorf("failed to write HTML file: %w", err)
 	}
 	generatedFiles = append(generatedFiles, pagePath)
@@ -206,7 +206,7 @@ func (s *StaticSiteGenerator) generateComponentPage(
 			return nil, fmt.Errorf("failed to generate JSON: %w", err)
 		}
 
-		if err := os.WriteFile(jsonPath, []byte(jsonContent), 0644); err != nil {
+		if err := os.WriteFile(jsonPath, []byte(jsonContent), 0o644); err != nil {
 			return nil, fmt.Errorf("failed to write JSON file: %w", err)
 		}
 		generatedFiles = append(generatedFiles, jsonPath)
@@ -226,7 +226,7 @@ func (s *StaticSiteGenerator) generateComponentPage(
 				return nil, fmt.Errorf("failed to render variant %s: %w", example.Name, err)
 			}
 
-			if err := os.WriteFile(variantPath, []byte(variantHTML), 0644); err != nil {
+			if err := os.WriteFile(variantPath, []byte(variantHTML), 0o644); err != nil {
 				return nil, fmt.Errorf("failed to write variant file: %w", err)
 			}
 			generatedFiles = append(generatedFiles, variantPath)
@@ -245,7 +245,7 @@ func (s *StaticSiteGenerator) generateCustomPage(
 	pagePath := filepath.Join(s.outputDir, page.Path)
 
 	// Ensure directory exists
-	if err := os.MkdirAll(filepath.Dir(pagePath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(pagePath), 0o755); err != nil {
 		return "", fmt.Errorf("failed to create page directory: %w", err)
 	}
 
@@ -261,7 +261,7 @@ func (s *StaticSiteGenerator) generateCustomPage(
 	}
 
 	// Write file
-	if err := os.WriteFile(pagePath, []byte(htmlContent), 0644); err != nil {
+	if err := os.WriteFile(pagePath, []byte(htmlContent), 0o644); err != nil {
 		return "", fmt.Errorf("failed to write custom page: %w", err)
 	}
 
@@ -285,7 +285,7 @@ func (s *StaticSiteGenerator) generateErrorPage(
 	}
 
 	// Write file
-	if err := os.WriteFile(pagePath, []byte(htmlContent), 0644); err != nil {
+	if err := os.WriteFile(pagePath, []byte(htmlContent), 0o644); err != nil {
 		return "", fmt.Errorf("failed to write error page: %w", err)
 	}
 
@@ -335,7 +335,7 @@ func (s *StaticSiteGenerator) generateSitemap(
 	sitemap.WriteString("</urlset>\n")
 
 	// Write sitemap
-	if err := os.WriteFile(sitemapPath, []byte(sitemap.String()), 0644); err != nil {
+	if err := os.WriteFile(sitemapPath, []byte(sitemap.String()), 0o644); err != nil {
 		return "", fmt.Errorf("failed to write sitemap: %w", err)
 	}
 
@@ -361,7 +361,7 @@ func (s *StaticSiteGenerator) generateRobotsTxt(
 	}
 
 	// Write robots.txt
-	if err := os.WriteFile(robotsPath, []byte(robotsContent), 0644); err != nil {
+	if err := os.WriteFile(robotsPath, []byte(robotsContent), 0o644); err != nil {
 		return "", fmt.Errorf("failed to write robots.txt: %w", err)
 	}
 
@@ -385,7 +385,7 @@ func (s *StaticSiteGenerator) generateIndexPage(
 	}
 
 	// Write index file
-	if err := os.WriteFile(indexPath, []byte(htmlContent), 0644); err != nil {
+	if err := os.WriteFile(indexPath, []byte(htmlContent), 0o644); err != nil {
 		return "", fmt.Errorf("failed to write index page: %w", err)
 	}
 
@@ -401,29 +401,27 @@ func (s *StaticSiteGenerator) renderComponentHTML(
 ) (string, error) {
 	var html strings.Builder
 
-	html.WriteString("<!DOCTYPE html>\n")
-	html.WriteString("<html lang=\"en\">\n")
-	html.WriteString("<head>\n")
+	html.WriteString(HTMLDoctype)
+	html.WriteString(HTMLLangOpen)
+	html.WriteString(HTMLHeadOpen)
 	html.WriteString(fmt.Sprintf("  <title>%s - Component</title>\n", component.Name))
-	html.WriteString("  <meta charset=\"UTF-8\">\n")
-	html.WriteString(
-		"  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n",
-	)
+	html.WriteString(HTMLCharsetMeta)
+	html.WriteString(HTMLViewportMeta)
 
 	// Add meta description
 	if component.Description != "" {
 		html.WriteString(
-			fmt.Sprintf("  <meta name=\"description\" content=\"%s\">\n", component.Description),
+			fmt.Sprintf(HTMLDescMeta, component.Description),
 		)
 	}
 
 	// Add CSS
 	if options.CDNPath != "" {
 		html.WriteString(
-			fmt.Sprintf("  <link rel=\"stylesheet\" href=\"%s/css/main.css\">\n", options.CDNPath),
+			fmt.Sprintf(HTMLMainCSS, options.CDNPath),
 		)
 	} else {
-		html.WriteString("  <link rel=\"stylesheet\" href=\"/assets/css/main.css\">\n")
+		html.WriteString(HTMLAssetsCSS)
 	}
 
 	// Add critical CSS inline if enabled
@@ -436,12 +434,12 @@ func (s *StaticSiteGenerator) renderComponentHTML(
 		}
 	}
 
-	html.WriteString("</head>\n")
-	html.WriteString("<body>\n")
+	html.WriteString(HTMLHeadClose)
+	html.WriteString(HTMLBodyOpen)
 
 	// Add component content
-	html.WriteString("  <main>\n")
-	html.WriteString(fmt.Sprintf("    <h1>%s</h1>\n", component.Name))
+	html.WriteString(HTMLMainOpen)
+	html.WriteString(fmt.Sprintf(HTMLHeading1, component.Name))
 
 	if component.Description != "" {
 		html.WriteString(
@@ -458,7 +456,7 @@ func (s *StaticSiteGenerator) renderComponentHTML(
 			component.Name,
 		),
 	)
-	html.WriteString("    </div>\n")
+	html.WriteString(HTMLDivClose)
 
 	// Add component documentation
 	if len(component.Parameters) > 0 {
@@ -488,7 +486,7 @@ func (s *StaticSiteGenerator) renderComponentHTML(
 		html.WriteString("    </section>\n")
 	}
 
-	html.WriteString("  </main>\n")
+	html.WriteString(HTMLMainClose)
 
 	// Add JavaScript if needed
 	if options.CDNPath != "" {
@@ -499,8 +497,8 @@ func (s *StaticSiteGenerator) renderComponentHTML(
 		html.WriteString("  <script src=\"/assets/js/main.js\"></script>\n")
 	}
 
-	html.WriteString("</body>\n")
-	html.WriteString("</html>\n")
+	html.WriteString(HTMLBodyClose)
+	html.WriteString(HTMLClose)
 
 	return html.String(), nil
 }
@@ -513,16 +511,14 @@ func (s *StaticSiteGenerator) renderComponentVariant(
 ) (string, error) {
 	var html strings.Builder
 
-	html.WriteString("<!DOCTYPE html>\n")
-	html.WriteString("<html lang=\"en\">\n")
-	html.WriteString("<head>\n")
+	html.WriteString(HTMLDoctype)
+	html.WriteString(HTMLLangOpen)
+	html.WriteString(HTMLHeadOpen)
 	html.WriteString(
 		fmt.Sprintf("  <title>%s - %s Variant</title>\n", component.Name, example.Name),
 	)
-	html.WriteString("  <meta charset=\"UTF-8\">\n")
-	html.WriteString(
-		"  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n",
-	)
+	html.WriteString(HTMLCharsetMeta)
+	html.WriteString(HTMLViewportMeta)
 
 	// Add CSS
 	if options.CDNPath != "" {

@@ -68,7 +68,7 @@ templ ` + name + `() {
 	<div>Test component ` + string(rune(i)) + `</div>
 }`
 				filePath := filepath.Join(tempDir, name+".templ")
-				if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+				if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
 					return true // Skip on file creation error
 				}
 
@@ -125,7 +125,7 @@ templ TestComponent() {
 	<div>Test component</div>
 }`
 			filePath := filepath.Join(tempDir, componentName+".templ")
-			if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+			if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
 				return true
 			}
 
@@ -178,7 +178,7 @@ templ ` + componentName + `() {
 	<div>Test component</div>
 }`
 			filePath := filepath.Join(tempDir, componentName+".templ")
-			if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+			if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
 				return true
 			}
 
@@ -293,7 +293,7 @@ templ TestComponent` + fmt.Sprintf("%d", i) + `() {
 	<div>Component ` + fmt.Sprintf("%d", i) + `</div>
 }`
 				filePath := filepath.Join(tempDir, name+".templ")
-				if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+				if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
 					continue
 				}
 

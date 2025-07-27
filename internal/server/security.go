@@ -643,9 +643,9 @@ func getClientIP(r *http.Request) string {
 // SecurityConfigFromAppConfig creates security config from application config.
 func SecurityConfigFromAppConfig(cfg *config.Config) *SecurityConfig {
 	switch cfg.Server.Environment {
-	case "production":
+	case EnvironmentProduction:
 		return ProductionSecurityConfig()
-	case "development":
+	case EnvironmentDevelopment:
 		return DevelopmentSecurityConfig()
 	}
 

@@ -13,6 +13,59 @@ import (
 	"golang.org/x/net/html"
 )
 
+// Test constants.
+const (
+	TestHTMLElementCount  = 100
+	TestTimeoutDuration   = 5 * time.Second
+	TestPageTitle         = "Test Page"
+	TestFormTitle         = "Test Form"
+	TestButtonsTitle      = "Test Buttons"
+	TestHeadingsTitle     = "Test Headings"
+	TestDuplicateIDsTitle = "Test Duplicate IDs"
+	TestComponentName     = "component not found: %s"
+	TestElementIDPrefix   = "element-"
+	TestContent           = "Test content for accessibility engine"
+	TestImageAlt          = "Test image alt text"
+	TestImageSrc          = "test-image.jpg"
+)
+
+// setupDefaultEngine creates a new DefaultAccessibilityEngine with common test configuration.
+func setupDefaultEngine(t *testing.T) *DefaultAccessibilityEngine {
+	logger := logging.NewTestLogger()
+	engine := NewDefaultAccessibilityEngine(logger)
+
+	config := EngineConfig{
+		EnableBrowserEngine: false,
+		DefaultTimeout:      TestTimeoutDuration,
+	}
+	err := engine.Initialize(context.Background(), config)
+	require.NoError(t, err)
+
+	return engine
+}
+
+// createAuditConfig creates a standard audit configuration for tests.
+func createAuditConfig() AuditConfiguration {
+	return AuditConfiguration{
+		WCAGLevel:    WCAGLevelA,
+		ReportFormat: FormatJSON,
+		IncludeHTML:  true,
+		Timeout:      TestTimeoutDuration,
+	}
+}
+
+// extractViolationsByRule extracts all violations of a specific rule from a report.
+func extractViolationsByRule(report *AccessibilityReport, ruleID string) []AccessibilityViolation {
+	var violations []AccessibilityViolation
+	for _, violation := range report.Violations {
+		if violation.Rule == ruleID {
+			violations = append(violations, violation)
+		}
+	}
+
+	return violations
+}
+
 func TestDefaultAccessibilityEngine_Initialize(t *testing.T) {
 	logger := logging.NewTestLogger()
 	engine := NewDefaultAccessibilityEngine(logger)
@@ -20,7 +73,7 @@ func TestDefaultAccessibilityEngine_Initialize(t *testing.T) {
 	config := EngineConfig{
 		EnableBrowserEngine: false,
 		MaxConcurrentChecks: 5,
-		DefaultTimeout:      10 * time.Second,
+		DefaultTimeout:      TestTimeoutDuration,
 		CacheResults:        true,
 		CacheSize:           1000,
 		LogLevel:            "info",
@@ -31,8 +84,8 @@ func TestDefaultAccessibilityEngine_Initialize(t *testing.T) {
 
 	// Check that default rules were loaded
 	assert.NotEmpty(t, engine.rules)
-	assert.Contains(t, engine.rules, "missing-alt-text")
-	assert.Contains(t, engine.rules, "missing-form-label")
+	assert.Contains(t, engine.rules, RuleMissingAltText)
+	assert.Contains(t, engine.rules, RuleMissingFormLabel)
 }
 
 func TestDefaultAccessibilityEngine_AnalyzeMissingAltText(t *testing.T) {
@@ -41,7 +94,7 @@ func TestDefaultAccessibilityEngine_AnalyzeMissingAltText(t *testing.T) {
 
 	config := EngineConfig{
 		EnableBrowserEngine: false,
-		DefaultTimeout:      10 * time.Second,
+		DefaultTimeout:      TestTimeoutDuration,
 	}
 	err := engine.Initialize(context.Background(), config)
 	require.NoError(t, err)
@@ -53,7 +106,7 @@ func TestDefaultAccessibilityEngine_AnalyzeMissingAltText(t *testing.T) {
     <title>Test Page</title>
 </head>
 <body>
-    <img src="test.jpg" />
+    <img src=TestImageSrc />
     <img src="test2.jpg" alt="" />
     <img src="test3.jpg" alt="Proper alt text" />
 </body>
@@ -63,7 +116,7 @@ func TestDefaultAccessibilityEngine_AnalyzeMissingAltText(t *testing.T) {
 		WCAGLevel:    WCAGLevelA,
 		ReportFormat: FormatJSON,
 		IncludeHTML:  true,
-		Timeout:      10 * time.Second,
+		Timeout:      TestTimeoutDuration,
 	}
 
 	report, err := engine.Analyze(context.Background(), htmlWithMissingAlt, auditConfig)
@@ -72,7 +125,7 @@ func TestDefaultAccessibilityEngine_AnalyzeMissingAltText(t *testing.T) {
 	// Should find 2 violations (missing alt and empty alt)
 	violations := []AccessibilityViolation{}
 	for _, violation := range report.Violations {
-		if violation.Rule == "missing-alt-text" {
+		if violation.Rule == RuleMissingAltText {
 			violations = append(violations, violation)
 		}
 	}
@@ -81,7 +134,7 @@ func TestDefaultAccessibilityEngine_AnalyzeMissingAltText(t *testing.T) {
 
 	// Check violation details
 	violation := violations[0]
-	assert.Equal(t, "missing-alt-text", violation.Rule)
+	assert.Equal(t, RuleMissingAltText, violation.Rule)
 	assert.Equal(t, SeverityError, violation.Severity)
 	assert.Equal(t, ImpactCritical, violation.Impact)
 	assert.Equal(t, "img", violation.Element)
@@ -94,7 +147,7 @@ func TestDefaultAccessibilityEngine_AnalyzeMissingFormLabel(t *testing.T) {
 
 	config := EngineConfig{
 		EnableBrowserEngine: false,
-		DefaultTimeout:      10 * time.Second,
+		DefaultTimeout:      TestTimeoutDuration,
 	}
 	err := engine.Initialize(context.Background(), config)
 	require.NoError(t, err)
@@ -121,7 +174,7 @@ func TestDefaultAccessibilityEngine_AnalyzeMissingFormLabel(t *testing.T) {
 		WCAGLevel:    WCAGLevelA,
 		ReportFormat: FormatJSON,
 		IncludeHTML:  true,
-		Timeout:      10 * time.Second,
+		Timeout:      TestTimeoutDuration,
 	}
 
 	report, err := engine.Analyze(context.Background(), htmlWithMissingLabel, auditConfig)
@@ -130,7 +183,7 @@ func TestDefaultAccessibilityEngine_AnalyzeMissingFormLabel(t *testing.T) {
 	// Should find 1 violation (unlabeled input)
 	violations := []AccessibilityViolation{}
 	for _, violation := range report.Violations {
-		if violation.Rule == "missing-form-label" {
+		if violation.Rule == RuleMissingFormLabel {
 			violations = append(violations, violation)
 		}
 	}
@@ -138,7 +191,7 @@ func TestDefaultAccessibilityEngine_AnalyzeMissingFormLabel(t *testing.T) {
 	assert.Len(t, violations, 1, "Should find 1 missing form label violation")
 
 	violation := violations[0]
-	assert.Equal(t, "missing-form-label", violation.Rule)
+	assert.Equal(t, RuleMissingFormLabel, violation.Rule)
 	assert.Equal(t, ImpactCritical, violation.Impact)
 	assert.Contains(t, violation.Message, "Form control missing associated label")
 }
@@ -149,7 +202,7 @@ func TestDefaultAccessibilityEngine_AnalyzeMissingButtonText(t *testing.T) {
 
 	config := EngineConfig{
 		EnableBrowserEngine: false,
-		DefaultTimeout:      10 * time.Second,
+		DefaultTimeout:      TestTimeoutDuration,
 	}
 	err := engine.Initialize(context.Background(), config)
 	require.NoError(t, err)
@@ -171,7 +224,7 @@ func TestDefaultAccessibilityEngine_AnalyzeMissingButtonText(t *testing.T) {
 		WCAGLevel:    WCAGLevelA,
 		ReportFormat: FormatJSON,
 		IncludeHTML:  true,
-		Timeout:      10 * time.Second,
+		Timeout:      TestTimeoutDuration,
 	}
 
 	report, err := engine.Analyze(context.Background(), htmlWithMissingButtonText, auditConfig)
@@ -180,7 +233,7 @@ func TestDefaultAccessibilityEngine_AnalyzeMissingButtonText(t *testing.T) {
 	// Should find 1 violation (empty button)
 	violations := []AccessibilityViolation{}
 	for _, violation := range report.Violations {
-		if violation.Rule == "missing-button-text" {
+		if violation.Rule == RuleMissingButtonText {
 			violations = append(violations, violation)
 		}
 	}
@@ -189,15 +242,8 @@ func TestDefaultAccessibilityEngine_AnalyzeMissingButtonText(t *testing.T) {
 }
 
 func TestDefaultAccessibilityEngine_AnalyzeHeadingStructure(t *testing.T) {
-	logger := logging.NewTestLogger()
-	engine := NewDefaultAccessibilityEngine(logger)
-
-	config := EngineConfig{
-		EnableBrowserEngine: false,
-		DefaultTimeout:      10 * time.Second,
-	}
-	err := engine.Initialize(context.Background(), config)
-	require.NoError(t, err)
+	engine := setupDefaultEngine(t)
+	auditConfig := createAuditConfig()
 
 	// Test proper heading structure
 	htmlWithProperHeadings := `
@@ -226,35 +272,18 @@ func TestDefaultAccessibilityEngine_AnalyzeHeadingStructure(t *testing.T) {
 </body>
 </html>`
 
-	auditConfig := AuditConfiguration{
-		WCAGLevel:    WCAGLevelA,
-		ReportFormat: FormatJSON,
-		IncludeHTML:  true,
-		Timeout:      10 * time.Second,
-	}
-
 	// Test proper structure - should pass
 	report1, err := engine.Analyze(context.Background(), htmlWithProperHeadings, auditConfig)
 	require.NoError(t, err)
 
-	properHeadingViolations := []AccessibilityViolation{}
-	for _, violation := range report1.Violations {
-		if violation.Rule == "missing-heading-structure" {
-			properHeadingViolations = append(properHeadingViolations, violation)
-		}
-	}
+	properHeadingViolations := extractViolationsByRule(report1, RuleMissingHeadingStructure)
 	assert.Len(t, properHeadingViolations, 0, "Proper heading structure should not have violations")
 
 	// Test improper structure - should fail
 	report2, err := engine.Analyze(context.Background(), htmlWithImproperHeadings, auditConfig)
 	require.NoError(t, err)
 
-	improperHeadingViolations := []AccessibilityViolation{}
-	for _, violation := range report2.Violations {
-		if violation.Rule == "missing-heading-structure" {
-			improperHeadingViolations = append(improperHeadingViolations, violation)
-		}
-	}
+	improperHeadingViolations := extractViolationsByRule(report2, RuleMissingHeadingStructure)
 	assert.Len(t, improperHeadingViolations, 1, "Improper heading structure should have violation")
 }
 
@@ -264,7 +293,7 @@ func TestDefaultAccessibilityEngine_AnalyzeDuplicateIDs(t *testing.T) {
 
 	config := EngineConfig{
 		EnableBrowserEngine: false,
-		DefaultTimeout:      10 * time.Second,
+		DefaultTimeout:      TestTimeoutDuration,
 	}
 	err := engine.Initialize(context.Background(), config)
 	require.NoError(t, err)
@@ -277,8 +306,8 @@ func TestDefaultAccessibilityEngine_AnalyzeDuplicateIDs(t *testing.T) {
 </head>
 <body>
     <div id="unique-id">Unique element</div>
-    <div id="duplicate-id">First duplicate</div>
-    <div id="duplicate-id">Second duplicate</div>
+    <div id=RuleDuplicateID>First duplicate</div>
+    <div id=RuleDuplicateID>Second duplicate</div>
     <div id="another-unique">Another unique element</div>
 </body>
 </html>`
@@ -287,7 +316,7 @@ func TestDefaultAccessibilityEngine_AnalyzeDuplicateIDs(t *testing.T) {
 		WCAGLevel:    WCAGLevelA,
 		ReportFormat: FormatJSON,
 		IncludeHTML:  true,
-		Timeout:      10 * time.Second,
+		Timeout:      TestTimeoutDuration,
 	}
 
 	report, err := engine.Analyze(context.Background(), htmlWithDuplicateIDs, auditConfig)
@@ -296,7 +325,7 @@ func TestDefaultAccessibilityEngine_AnalyzeDuplicateIDs(t *testing.T) {
 	// Should find 2 violations (both duplicate elements)
 	violations := []AccessibilityViolation{}
 	for _, violation := range report.Violations {
-		if violation.Rule == "duplicate-id" {
+		if violation.Rule == RuleDuplicateID {
 			violations = append(violations, violation)
 		}
 	}
@@ -305,15 +334,8 @@ func TestDefaultAccessibilityEngine_AnalyzeDuplicateIDs(t *testing.T) {
 }
 
 func TestDefaultAccessibilityEngine_AnalyzeMissingLangAttribute(t *testing.T) {
-	logger := logging.NewTestLogger()
-	engine := NewDefaultAccessibilityEngine(logger)
-
-	config := EngineConfig{
-		EnableBrowserEngine: false,
-		DefaultTimeout:      10 * time.Second,
-	}
-	err := engine.Initialize(context.Background(), config)
-	require.NoError(t, err)
+	engine := setupDefaultEngine(t)
+	auditConfig := createAuditConfig()
 
 	htmlWithoutLang := `
 <!DOCTYPE html>
@@ -337,35 +359,18 @@ func TestDefaultAccessibilityEngine_AnalyzeMissingLangAttribute(t *testing.T) {
 </body>
 </html>`
 
-	auditConfig := AuditConfiguration{
-		WCAGLevel:    WCAGLevelA,
-		ReportFormat: FormatJSON,
-		IncludeHTML:  true,
-		Timeout:      10 * time.Second,
-	}
-
 	// Test without lang - should fail
 	report1, err := engine.Analyze(context.Background(), htmlWithoutLang, auditConfig)
 	require.NoError(t, err)
 
-	violations1 := []AccessibilityViolation{}
-	for _, violation := range report1.Violations {
-		if violation.Rule == "missing-lang-attribute" {
-			violations1 = append(violations1, violation)
-		}
-	}
+	violations1 := extractViolationsByRule(report1, RuleMissingLangAttribute)
 	assert.Len(t, violations1, 1, "Should find missing lang attribute violation")
 
 	// Test with lang - should pass
 	report2, err := engine.Analyze(context.Background(), htmlWithLang, auditConfig)
 	require.NoError(t, err)
 
-	violations2 := []AccessibilityViolation{}
-	for _, violation := range report2.Violations {
-		if violation.Rule == "missing-lang-attribute" {
-			violations2 = append(violations2, violation)
-		}
-	}
+	violations2 := extractViolationsByRule(report2, RuleMissingLangAttribute)
 	assert.Len(t, violations2, 0, "Should not find lang attribute violation when present")
 }
 
@@ -382,22 +387,22 @@ func TestDefaultAccessibilityEngine_GetSuggestions(t *testing.T) {
 		expectedTypes       []SuggestionType
 	}{
 		{
-			rule:                "missing-alt-text",
+			rule:                RuleMissingAltText,
 			expectedSuggestions: 1,
 			expectedTypes:       []SuggestionType{SuggestionCodeChange},
 		},
 		{
-			rule:                "missing-form-label",
+			rule:                RuleMissingFormLabel,
 			expectedSuggestions: 1,
 			expectedTypes:       []SuggestionType{SuggestionCodeChange},
 		},
 		{
-			rule:                "missing-button-text",
+			rule:                RuleMissingButtonText,
 			expectedSuggestions: 1,
 			expectedTypes:       []SuggestionType{SuggestionARIAAttribute},
 		},
 		{
-			rule:                "low-contrast",
+			rule:                RuleLowContrast,
 			expectedSuggestions: 1,
 			expectedTypes:       []SuggestionType{SuggestionDesign},
 		},
@@ -440,17 +445,17 @@ func TestDefaultAccessibilityEngine_AutoFix(t *testing.T) {
 
 	violations := []AccessibilityViolation{
 		{
-			Rule:        "missing-lang-attribute",
+			Rule:        RuleMissingLangAttribute,
 			CanAutoFix:  true,
 			AutoFixCode: `lang="en"`,
 		},
 		{
-			Rule:        "missing-title-element",
+			Rule:        RuleMissingTitleElement,
 			CanAutoFix:  true,
 			AutoFixCode: `<title>Untitled Page</title>`,
 		},
 		{
-			Rule:       "missing-alt-text",
+			Rule:       RuleMissingAltText,
 			CanAutoFix: false, // Not auto-fixable
 		},
 	}
@@ -471,7 +476,7 @@ func TestDefaultAccessibilityEngine_WCAGLevelFiltering(t *testing.T) {
 
 	config := EngineConfig{
 		EnableBrowserEngine: false,
-		DefaultTimeout:      10 * time.Second,
+		DefaultTimeout:      TestTimeoutDuration,
 	}
 	err := engine.Initialize(context.Background(), config)
 	require.NoError(t, err)
@@ -498,7 +503,7 @@ func TestDefaultAccessibilityEngine_WCAGLevelFiltering(t *testing.T) {
 		// Check if this rule has wcag2a tag (Level A rule)
 		hasWCAG2A := false
 		for _, tag := range rule.Tags {
-			if tag == "wcag2a" {
+			if tag == TagWCAG2A {
 				hasWCAG2A = true
 
 				break
@@ -516,7 +521,7 @@ func TestDefaultAccessibilityEngine_ReportGeneration(t *testing.T) {
 
 	config := EngineConfig{
 		EnableBrowserEngine: false,
-		DefaultTimeout:      10 * time.Second,
+		DefaultTimeout:      TestTimeoutDuration,
 	}
 	err := engine.Initialize(context.Background(), config)
 	require.NoError(t, err)
@@ -528,7 +533,7 @@ func TestDefaultAccessibilityEngine_ReportGeneration(t *testing.T) {
 <head>
 </head>
 <body>
-    <img src="test.jpg" />
+    <img src=TestImageSrc />
     <form>
         <input type="text" />
         <button></button>
@@ -542,7 +547,7 @@ func TestDefaultAccessibilityEngine_ReportGeneration(t *testing.T) {
 		WCAGLevel:    WCAGLevelAA,
 		ReportFormat: FormatJSON,
 		IncludeHTML:  true,
-		Timeout:      10 * time.Second,
+		Timeout:      TestTimeoutDuration,
 	}
 
 	report, err := engine.Analyze(context.Background(), complexHTML, auditConfig)
@@ -572,10 +577,10 @@ func TestDefaultAccessibilityEngine_ReportGeneration(t *testing.T) {
 }
 
 func TestDefaultHTMLElement_Implementation(t *testing.T) {
-	htmlContent := `<div id="test" class="example highlight" data-value="123">
-		<span>Test content</span>
-		<img src="test.jpg" alt="Test image" />
-	</div>`
+	htmlContent := fmt.Sprintf(`<div id="test" class="example highlight" data-value="123">
+		<span>%s</span>
+		<img src="%s" alt="%s" />
+	</div>`, TestContent, TestImageSrc, TestImageAlt)
 
 	doc, err := parseHTML(htmlContent)
 	require.NoError(t, err)
@@ -590,8 +595,8 @@ func TestDefaultHTMLElement_Implementation(t *testing.T) {
 	assert.Equal(t, "div", htmlElement.TagName())
 
 	// Test attributes
-	id, hasId := htmlElement.GetAttribute("id")
-	assert.True(t, hasId)
+	id, hasID := htmlElement.GetAttribute("id")
+	assert.True(t, hasID)
 	assert.Equal(t, "test", id)
 
 	class, hasClass := htmlElement.GetAttribute("class")
@@ -603,7 +608,7 @@ func TestDefaultHTMLElement_Implementation(t *testing.T) {
 
 	// Test text content
 	textContent := htmlElement.GetTextContent()
-	assert.Contains(t, textContent, "Test content")
+	assert.Contains(t, textContent, TestContent)
 
 	// Test HTML content
 	innerHTML := htmlElement.GetInnerHTML()
@@ -632,7 +637,7 @@ func TestDefaultHTMLElement_Implementation(t *testing.T) {
 
 	// Test accessible name
 	accessibleName := htmlElement.GetAriaLabel()
-	assert.Contains(t, accessibleName, "Test content")
+	assert.Contains(t, accessibleName, TestContent)
 }
 
 // Helper functions for tests.
@@ -661,18 +666,18 @@ func BenchmarkAccessibilityEngine_Analyze(b *testing.B) {
 
 	config := EngineConfig{
 		EnableBrowserEngine: false,
-		DefaultTimeout:      10 * time.Second,
+		DefaultTimeout:      TestTimeoutDuration,
 	}
 	err := engine.Initialize(context.Background(), config)
 	require.NoError(b, err)
 
-	complexHTML := generateComplexHTML(100) // Generate HTML with 100 elements
+	complexHTML := generateComplexHTML(TestHTMLElementCount) // Generate HTML with 100 elements
 
 	auditConfig := AuditConfiguration{
 		WCAGLevel:    WCAGLevelAA,
 		ReportFormat: FormatJSON,
 		IncludeHTML:  false,
-		Timeout:      10 * time.Second,
+		Timeout:      TestTimeoutDuration,
 	}
 
 	b.ResetTimer()
@@ -689,10 +694,10 @@ func generateComplexHTML(elementCount int) string {
 	html.WriteString(`<!DOCTYPE html><html lang="en"><head><title>Test</title></head><body>`)
 
 	for i := range elementCount {
-		html.WriteString(fmt.Sprintf(`<div id="element-%d" class="test-class">`, i))
+		html.WriteString(fmt.Sprintf(`<div id=TestElementIdPrefix + "%d" class="test-class">`, i))
 
 		if i%3 == 0 {
-			html.WriteString(`<img src="test.jpg" alt="Test image" />`)
+			html.WriteString(`<img src=TestImageSrc alt=TestImageAlt />`)
 		}
 		if i%4 == 0 {
 			html.WriteString(`<input type="text" />`)

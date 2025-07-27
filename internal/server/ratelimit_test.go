@@ -184,7 +184,7 @@ func TestRateLimitMiddleware(t *testing.T) {
 	// First 3 requests should pass
 	for i := range 3 {
 		req := httptest.NewRequest(http.MethodGet, "/test", nil)
-		req.RemoteAddr = "192.168.1.1:8080"
+		req.RemoteAddr = TestRateLimitAddr
 		w := httptest.NewRecorder()
 
 		handler.ServeHTTP(w, req)
@@ -199,7 +199,7 @@ func TestRateLimitMiddleware(t *testing.T) {
 
 	// 4th request should be rate limited
 	req := httptest.NewRequest(http.MethodGet, "/test", nil)
-	req.RemoteAddr = "192.168.1.1:8080"
+	req.RemoteAddr = TestRateLimitAddr
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -226,7 +226,7 @@ func TestRateLimitMiddleware_Headers(t *testing.T) {
 	}))
 
 	req := httptest.NewRequest(http.MethodGet, "/test", nil)
-	req.RemoteAddr = "192.168.1.1:8080"
+	req.RemoteAddr = TestRateLimitAddr
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -290,13 +290,13 @@ func TestWhitelistMiddleware(t *testing.T) {
 
 	// Non-whitelisted IP should be rate limited
 	req1 := httptest.NewRequest(http.MethodGet, "/test", nil)
-	req1.RemoteAddr = "192.168.1.1:8080"
+	req1.RemoteAddr = TestRateLimitAddr
 	w1 := httptest.NewRecorder()
 	handler.ServeHTTP(w1, req1)
 	assert.Equal(t, http.StatusOK, w1.Code) // First request allowed
 
 	req2 := httptest.NewRequest(http.MethodGet, "/test", nil)
-	req2.RemoteAddr = "192.168.1.1:8080"
+	req2.RemoteAddr = TestRateLimitAddr
 	w2 := httptest.NewRecorder()
 	handler.ServeHTTP(w2, req2)
 	assert.Equal(t, http.StatusTooManyRequests, w2.Code) // Second request blocked
@@ -395,7 +395,7 @@ func TestDDoSMiddleware(t *testing.T) {
 	// Send many requests quickly to trigger DDoS protection
 	for i := range 10 {
 		req := httptest.NewRequest(http.MethodGet, "/test", nil)
-		req.RemoteAddr = "192.168.1.1:8080"
+		req.RemoteAddr = TestRateLimitAddr
 		w := httptest.NewRecorder()
 
 		handler.ServeHTTP(w, req)
@@ -521,7 +521,7 @@ func BenchmarkRateLimitMiddleware(b *testing.B) {
 	}))
 
 	req := httptest.NewRequest(http.MethodGet, "/test", nil)
-	req.RemoteAddr = "192.168.1.1:8080"
+	req.RemoteAddr = TestRateLimitAddr
 
 	b.ResetTimer()
 	b.ReportAllocs()

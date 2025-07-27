@@ -48,8 +48,9 @@ func main() {
 	handler := monitoring.GetMiddleware()(mux)
 
 	server := &http.Server{
-		Addr:    ":8080",
-		Handler: handler,
+		Addr:              ":8080",
+		Handler:           handler,
+		ReadHeaderTimeout: 10 * time.Second,
 	}
 
 	// Start HTTP server
@@ -80,6 +81,7 @@ func main() {
 	defer cancel()
 
 	if err := server.Shutdown(ctx); err != nil {
+		cancel() // Ensure cancel is called before log.Fatalf
 		log.Fatalf("Server forced to shutdown: %v", err)
 	}
 

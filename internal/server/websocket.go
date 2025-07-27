@@ -135,7 +135,7 @@ func (s *PreviewServer) runWebSocketHub(ctx context.Context) {
 				if client, ok := s.clients[conn]; ok {
 					delete(s.clients, conn)
 					close(client.send)
-					conn.Close(websocket.StatusNormalClosure, "")
+					_ = conn.Close(websocket.StatusNormalClosure, "")
 					log.Printf("Client disconnected, total: %d", len(s.clients))
 				}
 			}
@@ -164,7 +164,7 @@ func (s *PreviewServer) runWebSocketHub(ctx context.Context) {
 						if client, ok := s.clients[conn]; ok {
 							delete(s.clients, conn)
 							close(client.send)
-							conn.Close(websocket.StatusNormalClosure, "")
+							_ = conn.Close(websocket.StatusNormalClosure, "")
 						}
 					}
 				}
@@ -178,7 +178,7 @@ func (s *PreviewServer) runWebSocketHub(ctx context.Context) {
 func (c *Client) readPump() {
 	defer func() {
 		c.server.unregister <- c.conn
-		c.conn.Close(websocket.StatusNormalClosure, "")
+		_ = c.conn.Close(websocket.StatusNormalClosure, "")
 	}()
 
 	// Set read limit
@@ -215,7 +215,7 @@ func (c *Client) readPump() {
 		if len(message) > 0 {
 			if !c.rateLimiter.IsAllowed() {
 				log.Printf("WebSocket rate limit exceeded for client (sliding window)")
-				c.conn.Close(websocket.StatusPolicyViolation, "Rate limit exceeded")
+				_ = c.conn.Close(websocket.StatusPolicyViolation, "Rate limit exceeded")
 
 				break
 			}
@@ -231,7 +231,7 @@ func (c *Client) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
-		c.conn.Close(websocket.StatusNormalClosure, "")
+		_ = c.conn.Close(websocket.StatusNormalClosure, "")
 	}()
 
 	ctx := context.Background()
@@ -241,7 +241,7 @@ func (c *Client) writePump() {
 		case message, ok := <-c.send:
 			writeCtx, cancel := context.WithTimeout(ctx, writeWait)
 			if !ok {
-				c.conn.Close(websocket.StatusNormalClosure, "")
+				_ = c.conn.Close(websocket.StatusNormalClosure, "")
 				cancel()
 
 				return

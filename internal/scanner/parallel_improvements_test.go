@@ -52,7 +52,7 @@ func BenchmarkConfigurableConcurrency(b *testing.B) {
 					)
 				}
 
-				scanner.Close()
+				_ = scanner.Close()
 			}
 		})
 	}
@@ -98,7 +98,7 @@ func BenchmarkMemoryEfficiency(b *testing.B) {
 					)
 				}
 
-				scanner.Close()
+				_ = scanner.Close()
 			}
 		})
 	}
@@ -129,7 +129,7 @@ func BenchmarkCacheEffectiveness(b *testing.B) {
 					elapsed, metrics.CacheHits, metrics.CacheMisses)
 			}
 
-			scanner.Close()
+			_ = scanner.Close()
 		}
 	})
 
@@ -169,7 +169,7 @@ func BenchmarkCacheEffectiveness(b *testing.B) {
 			}
 		}
 
-		scanner.Close()
+		_ = scanner.Close()
 	})
 }
 
@@ -181,7 +181,7 @@ func TestScannerMetricsAccuracy(t *testing.T) {
 
 	reg := registry.NewComponentRegistry()
 	scanner := NewComponentScanner(reg)
-	defer scanner.Close()
+	defer func() { _ = scanner.Close() }()
 
 	// First scan
 	err := scanner.ScanDirectory(tempDir)
@@ -278,7 +278,7 @@ func TestConfigurableConcurrency(t *testing.T) {
 		t.Run(fmt.Sprintf("Workers_%d", workers), func(t *testing.T) {
 			reg := registry.NewComponentRegistry()
 			scanner := NewComponentScannerWithConcurrency(reg, workers)
-			defer scanner.Close()
+			defer func() { _ = scanner.Close() }()
 
 			if scanner.GetWorkerCount() != workers {
 				t.Errorf("Expected %d workers, got %d", workers, scanner.GetWorkerCount())

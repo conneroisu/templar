@@ -11,6 +11,7 @@ import (
 	"time"
 )
 
+
 // CIIntegration handles CI/CD pipeline integration for performance monitoring.
 type CIIntegration struct {
 	detector         *PerformanceDetector
@@ -135,10 +136,10 @@ func validateSinglePackagePath(pkg string) error {
 func isSimplePackagePath(path string) bool {
 	// Allow simple package paths like "internal/build"
 	for _, char := range path {
-		if !((char >= 'a' && char <= 'z') ||
-			(char >= 'A' && char <= 'Z') ||
-			(char >= '0' && char <= '9') ||
-			char == '/' || char == '_' || char == '-') {
+		if (char < 'a' || char > 'z') &&
+			(char < 'A' || char > 'Z') &&
+			(char < '0' || char > '9') &&
+			char != '/' && char != '_' && char != '-' {
 			return false
 		}
 	}
@@ -222,11 +223,11 @@ func (ci *CIIntegration) calculateSummary(
 
 	for _, regression := range regressions {
 		switch regression.Severity {
-		case "critical":
+		case SeverityCritical:
 			summary.CriticalRegressions++
-		case "major":
+		case SeverityMajor:
 			summary.MajorRegressions++
-		case "minor":
+		case SeverityMinor:
 			summary.MinorRegressions++
 		}
 
@@ -285,7 +286,7 @@ func (ci *CIIntegration) outputJSON(report PerformanceReport, outputFile string)
 	}
 
 	if outputFile != "" {
-		return os.WriteFile(outputFile, data, 0644)
+		return os.WriteFile(outputFile, data, 0o644)
 	}
 
 	fmt.Println(string(data))
@@ -329,13 +330,13 @@ func (ci *CIIntegration) outputText(report PerformanceReport, outputFile string)
 		for _, regression := range report.Regressions {
 			icon := "🟡"
 			switch regression.Severity {
-			case "critical":
+			case SeverityCritical:
 				icon = "🔴"
 				criticalCount++
-			case "major":
+			case SeverityMajor:
 				icon = "🟠"
 				majorCount++
-			case "minor":
+			case SeverityMinor:
 				icon = "🟡"
 				minorCount++
 			}
@@ -398,7 +399,7 @@ func (ci *CIIntegration) outputText(report PerformanceReport, outputFile string)
 	result := output.String()
 
 	if outputFile != "" {
-		return os.WriteFile(outputFile, []byte(result), 0644)
+		return os.WriteFile(outputFile, []byte(result), 0o644)
 	}
 
 	fmt.Print(result)
@@ -413,7 +414,7 @@ func (ci *CIIntegration) outputGitHub(report PerformanceReport, outputFile strin
 	// GitHub Actions annotations
 	for _, regression := range report.Regressions {
 		level := "warning"
-		if regression.Severity == "critical" {
+		if regression.Severity == SeverityCritical {
 			level = "error"
 		}
 
@@ -441,7 +442,7 @@ func (ci *CIIntegration) outputGitHub(report PerformanceReport, outputFile strin
 	result := output.String()
 
 	if outputFile != "" {
-		return os.WriteFile(outputFile, []byte(result), 0644)
+		return os.WriteFile(outputFile, []byte(result), 0o644)
 	}
 
 	fmt.Print(result)
@@ -499,7 +500,7 @@ func (ci *CIIntegration) outputJUnit(report PerformanceReport, outputFile string
 	result := output.String()
 
 	if outputFile != "" {
-		return os.WriteFile(outputFile, []byte(result), 0644)
+		return os.WriteFile(outputFile, []byte(result), 0o644)
 	}
 
 	fmt.Print(result)
@@ -511,7 +512,7 @@ func (ci *CIIntegration) outputJUnit(report PerformanceReport, outputFile string
 func (ci *CIIntegration) countCriticalRegressions(regressions []RegressionDetection) int {
 	count := 0
 	for _, regression := range regressions {
-		if regression.Severity == "critical" {
+		if regression.Severity == SeverityCritical {
 			count++
 		}
 	}
@@ -588,9 +589,9 @@ jobs:
 `
 
 	workflowPath := filepath.Join(workflowDir, "performance.yml")
-	if err := os.MkdirAll(workflowDir, 0755); err != nil {
+	if err := os.MkdirAll(workflowDir, 0o755); err != nil {
 		return fmt.Errorf("creating workflow directory: %w", err)
 	}
 
-	return os.WriteFile(workflowPath, []byte(workflowContent), 0644)
+	return os.WriteFile(workflowPath, []byte(workflowContent), 0o644)
 }

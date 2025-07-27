@@ -322,13 +322,13 @@ func (tp *TailwindPlugin) generateCSS(ctx context.Context, classes map[string]bo
 	if err != nil {
 		return fmt.Errorf("failed to create temporary CSS file: %w", err)
 	}
-	defer tempFile.Close()
+	defer func() { _ = tempFile.Close() }()
 
 	tempFilePath := tempFile.Name()
 
 	// Write content to temporary file
 	if _, err := tempFile.Write([]byte(inputCSS)); err != nil {
-		os.Remove(tempFilePath) // Cleanup on error
+		_ = os.Remove(tempFilePath) // Cleanup on error
 
 		return fmt.Errorf("failed to write to temporary CSS file: %w", err)
 	}
@@ -350,7 +350,7 @@ func (tp *TailwindPlugin) generateCSS(ctx context.Context, classes map[string]bo
 
 	// Validate temp file path
 	if err := validation.ValidatePath(tempFilePath); err != nil {
-		os.Remove(tempFilePath) // Cleanup temp file
+		_ = os.Remove(tempFilePath) // Cleanup temp file
 
 		return fmt.Errorf("invalid temp file path: %w", err)
 	}
@@ -358,12 +358,12 @@ func (tp *TailwindPlugin) generateCSS(ctx context.Context, classes map[string]bo
 	if strings.Contains(tp.tailwindPath, "npx") {
 		// Validate commands
 		if err := validation.ValidateCommand("npx", allowedCommands); err != nil {
-			os.Remove(tempFilePath) // Cleanup temp file
+			_ = os.Remove(tempFilePath) // Cleanup temp file
 
 			return fmt.Errorf("command validation failed: %w", err)
 		}
 		if err := validation.ValidateCommand("tailwindcss", allowedCommands); err != nil {
-			os.Remove(tempFilePath) // Cleanup temp file
+			_ = os.Remove(tempFilePath) // Cleanup temp file
 
 			return fmt.Errorf("command validation failed: %w", err)
 		}
@@ -372,23 +372,23 @@ func (tp *TailwindPlugin) generateCSS(ctx context.Context, classes map[string]bo
 		if tp.configPath != "" {
 			// Validate config path for security before use
 			if err := validation.ValidatePath(tp.configPath); err != nil {
-				os.Remove(tempFilePath) // Cleanup temp file
+				_ = os.Remove(tempFilePath) // Cleanup temp file
 
 				return fmt.Errorf("invalid config path: %w", err)
 			}
 			if err := validation.ValidateArgument(tp.configPath); err != nil {
-				os.Remove(tempFilePath) // Cleanup temp file
+				_ = os.Remove(tempFilePath) // Cleanup temp file
 
 				return fmt.Errorf("invalid config path argument: %w", err)
 			}
 			args = append(args, "--config", tp.configPath)
 		}
-		cmd = exec.CommandContext(ctx, args[0], args[1:]...)
+		cmd = exec.CommandContext(ctx, args[0], args[1:]...) //nolint:gosec // Arguments validated via ValidateCommand and ValidatePath
 	} else {
 		// Validate tailwind command path
 		tailwindCmd := filepath.Base(tp.tailwindPath)
 		if err := validation.ValidateCommand(tailwindCmd, allowedCommands); err != nil {
-			os.Remove(tempFilePath) // Cleanup temp file
+			_ = os.Remove(tempFilePath) // Cleanup temp file
 
 			return fmt.Errorf("command validation failed: %w", err)
 		}
@@ -397,25 +397,25 @@ func (tp *TailwindPlugin) generateCSS(ctx context.Context, classes map[string]bo
 		if tp.configPath != "" {
 			// Validate config path for security before use
 			if err := validation.ValidatePath(tp.configPath); err != nil {
-				os.Remove(tempFilePath) // Cleanup temp file
+				_ = os.Remove(tempFilePath) // Cleanup temp file
 
 				return fmt.Errorf("invalid config path: %w", err)
 			}
 			if err := validation.ValidateArgument(tp.configPath); err != nil {
-				os.Remove(tempFilePath) // Cleanup temp file
+				_ = os.Remove(tempFilePath) // Cleanup temp file
 
 				return fmt.Errorf("invalid config path argument: %w", err)
 			}
 			args = append(args, "--config", tp.configPath)
 		}
-		cmd = exec.CommandContext(ctx, tp.tailwindPath, args...)
+		cmd = exec.CommandContext(ctx, tp.tailwindPath, args...) //nolint:gosec // Command path and arguments validated via ValidateCommand and ValidatePath
 	}
 
 	// Run Tailwind CSS generation
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		// Clean up temporary file on error
-		os.Remove(tempFilePath)
+		_ = os.Remove(tempFilePath)
 
 		return fmt.Errorf("tailwind CSS generation failed: %w\nOutput: %s", err, string(output))
 	}

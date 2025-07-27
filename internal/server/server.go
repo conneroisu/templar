@@ -176,7 +176,11 @@ func (s *PreviewServer) Start(ctx context.Context) error {
 	s.setupFileWatcher(ctx)
 
 	// Start build pipeline
-	s.buildPipeline.Start(ctx)
+	if err := s.buildPipeline.Start(ctx); err != nil {
+		log.Printf("Failed to start build pipeline: %v", err)
+
+		return fmt.Errorf("failed to start build pipeline: %w", err)
+	}
 
 	// Add build callback to handle errors and updates
 	s.buildPipeline.AddCallback(func(result interface{}) {
@@ -238,8 +242,9 @@ func (s *PreviewServer) Start(ctx context.Context) error {
 
 	s.serverMutex.Lock()
 	s.httpServer = &http.Server{
-		Addr:    addr,
-		Handler: handler,
+		Addr:              addr,
+		Handler:           handler,
+		ReadHeaderTimeout: 30 * time.Second, // Prevent slowloris attacks
 	}
 	server := s.httpServer // Get local copy for safe access
 	s.serverMutex.Unlock()
@@ -407,7 +412,7 @@ func (s *PreviewServer) addMiddleware(handler http.Handler) http.Handler {
 		origin := r.Header.Get("Origin")
 		if s.isAllowedOrigin(origin) {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
-		} else if s.config.Server.Environment == "development" {
+		} else if s.config.Server.Environment == EnvironmentDevelopment {
 			// Only allow wildcard in development
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
@@ -499,7 +504,9 @@ func (s *PreviewServer) handleBuildResult(result build.BuildResult) {
 func (s *PreviewServer) triggerFullRebuild() {
 	components := s.registry.GetAll()
 	for _, component := range components {
-		s.buildPipeline.Build(component)
+		if err := s.buildPipeline.Build(component); err != nil {
+			log.Printf("Failed to build component %s: %v", component.Name, err)
+		}
 	}
 }
 
@@ -540,12 +547,16 @@ func (s *PreviewServer) Shutdown(ctx context.Context) error {
 
 		// Stop build pipeline first
 		if s.buildPipeline != nil {
-			s.buildPipeline.Stop()
+			if err := s.buildPipeline.Stop(); err != nil {
+				log.Printf("Error stopping build pipeline: %v", err)
+			}
 		}
 
 		// Stop file watcher
 		if s.watcher != nil {
-			s.watcher.Stop()
+			if err := s.watcher.Stop(); err != nil {
+				log.Printf("Error stopping file watcher: %v", err)
+			}
 		}
 
 		// MEMORY LEAK FIX: Stop rate limiter to clean up goroutines
@@ -559,7 +570,7 @@ func (s *PreviewServer) Shutdown(ctx context.Context) error {
 		s.clientsMutex.Lock()
 		for conn, client := range s.clients {
 			close(client.send)
-			conn.Close(websocket.StatusNormalClosure, "")
+			_ = conn.Close(websocket.StatusNormalClosure, "")
 		}
 		s.clients = make(map[*websocket.Conn]*Client)
 		s.clientsMutex.Unlock()
@@ -629,7 +640,7 @@ func (s *PreviewServer) handleHealth(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(HeaderContentType, ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(health); err != nil {
@@ -650,12 +661,20 @@ func (s *PreviewServer) handleBuildStatus(w http.ResponseWriter, r *http.Request
 	errors := s.GetLastBuildErrors()
 
 	status := "healthy"
-	totalBuilds := uint64(buildMetrics.TotalBuilds)
-	failedBuilds := uint64(buildMetrics.FailedBuilds)
-	cacheHits := uint64(buildMetrics.CacheHits)
+	// Safe conversion: metrics should never be negative in practice
+	var totalBuilds, failedBuilds, cacheHits uint64
+	if buildMetrics.TotalBuilds >= 0 {
+		totalBuilds = uint64(buildMetrics.TotalBuilds)
+	}
+	if buildMetrics.FailedBuilds >= 0 {
+		failedBuilds = uint64(buildMetrics.FailedBuilds)
+	}
+	if buildMetrics.CacheHits >= 0 {
+		cacheHits = uint64(buildMetrics.CacheHits)
+	}
 
 	if len(errors) > 0 {
-		status = "error"
+		status = ErrorLevel
 	}
 
 	response := map[string]interface{}{
@@ -667,8 +686,11 @@ func (s *PreviewServer) handleBuildStatus(w http.ResponseWriter, r *http.Request
 		"timestamp":     time.Now().Unix(),
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	w.Header().Set(HeaderContentType, ContentTypeJSON)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Failed to encode build status response: %v", err)
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	}
 }
 
 // handleBuildMetrics returns detailed build metrics.
@@ -692,15 +714,12 @@ func (s *PreviewServer) handleBuildMetrics(w http.ResponseWriter, r *http.Reques
 		"total_duration":    metrics.TotalDuration.String(),
 	}
 
-	cacheMetrics := map[string]interface{}{}
-	if cache, ok := cacheInterface.(interfaces.CacheStats); ok {
-		cacheMetrics = map[string]interface{}{
-			"size":      cache.GetSize(),
-			"hits":      cache.GetHits(),
-			"misses":    cache.GetMisses(),
-			"hit_rate":  cache.GetHitRate(),
-			"evictions": cache.GetEvictions(),
-		}
+	cacheMetrics := map[string]interface{}{
+		"size":      cacheInterface.GetSize(),
+		"hits":      cacheInterface.GetHits(),
+		"misses":    cacheInterface.GetMisses(),
+		"hit_rate":  cacheInterface.GetHitRate(),
+		"evictions": cacheInterface.GetEvictions(),
 	}
 
 	response := map[string]interface{}{
@@ -709,8 +728,12 @@ func (s *PreviewServer) handleBuildMetrics(w http.ResponseWriter, r *http.Reques
 		"timestamp":     time.Now().Unix(),
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	w.Header().Set(HeaderContentType, ContentTypeJSON)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+
+		return
+	}
 }
 
 // handleBuildErrors returns the last build errors.
@@ -729,8 +752,12 @@ func (s *PreviewServer) handleBuildErrors(w http.ResponseWriter, r *http.Request
 		"timestamp": time.Now().Unix(),
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	w.Header().Set(HeaderContentType, ContentTypeJSON)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+
+		return
+	}
 }
 
 // handleBuildCache manages the build cache.
@@ -741,18 +768,19 @@ func (s *PreviewServer) handleBuildCache(w http.ResponseWriter, r *http.Request)
 		cacheInterface := s.buildPipeline.GetCache()
 		response := map[string]interface{}{
 			"timestamp": time.Now().Unix(),
+			"size":      cacheInterface.GetSize(),
+			"hits":      cacheInterface.GetHits(),
+			"misses":    cacheInterface.GetMisses(),
+			"hit_rate":  cacheInterface.GetHitRate(),
+			"evictions": cacheInterface.GetEvictions(),
 		}
 
-		if cache, ok := cacheInterface.(interfaces.CacheStats); ok {
-			response["size"] = cache.GetSize()
-			response["hits"] = cache.GetHits()
-			response["misses"] = cache.GetMisses()
-			response["hit_rate"] = cache.GetHitRate()
-			response["evictions"] = cache.GetEvictions()
-		}
+		w.Header().Set(HeaderContentType, ContentTypeJSON)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
+			return
+		}
 
 	case http.MethodDelete:
 		// Clear cache
@@ -763,8 +791,12 @@ func (s *PreviewServer) handleBuildCache(w http.ResponseWriter, r *http.Request)
 			"timestamp": time.Now().Unix(),
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
+		w.Header().Set(HeaderContentType, ContentTypeJSON)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+
+			return
+		}
 
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

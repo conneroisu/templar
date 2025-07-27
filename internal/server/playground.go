@@ -157,16 +157,16 @@ func (s *PreviewServer) handlePlaygroundComponent(w http.ResponseWriter, r *http
 
 	// Serve the playground interface
 	html := s.generatePlaygroundHTML(component)
-	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(html))
+	w.Header().Set(HeaderContentType, ContentTypeHTML)
+	_, _ = w.Write([]byte(html))
 }
 
 // handlePlaygroundIndex serves the main playground page with component list.
 func (s *PreviewServer) handlePlaygroundIndex(w http.ResponseWriter, r *http.Request) {
 	components := s.registry.GetAll()
 	html := s.generatePlaygroundIndexHTML(components)
-	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(html))
+	w.Header().Set(HeaderContentType, ContentTypeHTML)
+	_, _ = w.Write([]byte(html))
 }
 
 // renderComponentWithProps renders a component with custom props.
@@ -198,13 +198,13 @@ func (s *PreviewServer) generateMockValueForType(paramName, paramType string) in
 	paramLower := strings.ToLower(paramName)
 
 	switch paramType {
-	case "string":
+	case TypeString:
 		return s.generateMockString(paramLower)
-	case "int", "int64", "int32":
+	case TypeInt, TypeInt64, TypeInt32:
 		return s.generateMockInt(paramLower)
-	case "bool":
+	case TypeBool:
 		return s.generateMockBool(paramLower)
-	case "[]string":
+	case TypeStringSlice:
 		return s.generateMockStringSlice(paramLower)
 	case "float64", "float32":
 		return s.generateMockFloat(paramLower)
@@ -409,11 +409,11 @@ func (s *PreviewServer) generatePropDescription(name, propType string) string {
 // generatePropExamples creates example values for properties.
 func (s *PreviewServer) generatePropExamples(name, propType string) []string {
 	switch propType {
-	case "string":
+	case TypeString:
 		return s.getStringExamples(name)
 	case "bool":
 		return []string{"true", "false"}
-	case "int", "int64", "int32":
+	case TypeInt, TypeInt64, TypeInt32:
 		return s.getIntExamples(name)
 	case "[]string":
 		return []string{`["item1", "item2", "item3"]`, `["tag1", "tag2"]`}
@@ -472,7 +472,7 @@ func (s *PreviewServer) generateMockDataSuggestions(
 // generateMultipleMockValues creates multiple example values.
 func (s *PreviewServer) generateMultipleMockValues(name, propType string) interface{} {
 	switch propType {
-	case "string":
+	case TypeString:
 		examples := s.getStringExamples(name)
 		values := make([]string, len(examples))
 		for i, ex := range examples {
@@ -481,7 +481,7 @@ func (s *PreviewServer) generateMultipleMockValues(name, propType string) interf
 		}
 
 		return values
-	case "int", "int64", "int32":
+	case TypeInt, TypeInt64, TypeInt32:
 		examples := s.getIntExamples(name)
 		values := make([]int, len(examples))
 		for i, ex := range examples {
@@ -688,7 +688,7 @@ func (cmr *CustomMockRenderer) generateMockHTML(
 
 // writeJSONResponse writes a JSON response.
 func (s *PreviewServer) writeJSONResponse(w http.ResponseWriter, data interface{}) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(HeaderContentType, ContentTypeJSON)
 	if err := json.NewEncoder(w).Encode(data); err != nil {
 		http.Error(w, "Failed to encode JSON response", http.StatusInternalServerError)
 	}

@@ -536,7 +536,7 @@ func SaveConfiguration(config *MonitoringConfiguration, path string) error {
 
 	// Create directory if it doesn't exist
 	dir := filepath.Dir(cleanPath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return fmt.Errorf("failed to create config directory: %w", err)
 	}
 
@@ -547,7 +547,7 @@ func SaveConfiguration(config *MonitoringConfiguration, path string) error {
 	}
 
 	// Write to file
-	if err := os.WriteFile(cleanPath, data, 0644); err != nil {
+	if err := os.WriteFile(cleanPath, data, 0o644); err != nil {
 		return fmt.Errorf("failed to write config file: %w", err)
 	}
 

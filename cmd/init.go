@@ -66,17 +66,18 @@ func init() {
 func runInit(cmd *cobra.Command, args []string) error {
 	var projectDir string
 
-	if len(args) == 0 {
+	switch len(args) {
+	case 0:
 		// Initialize in current directory
 		cwd, err := os.Getwd()
 		if err != nil {
 			return errors.CLIError("INIT", "failed to get current directory", err)
 		}
 		projectDir = cwd
-	} else if len(args) == 1 {
+	case 1:
 		// Initialize in new directory
 		projectDir = args[0]
-	} else {
+	default:
 		// Too many arguments
 		return errors.ArgumentError("project_name", "too many arguments provided", args)
 	}

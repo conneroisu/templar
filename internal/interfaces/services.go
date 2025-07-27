@@ -530,7 +530,7 @@ func (ll LogLevel) String() string {
 	case LogLevelFatal:
 		return "FATAL"
 	default:
-		return "UNKNOWN"
+		return StatusUnknownUpperStr
 	}
 }
 
@@ -543,9 +543,9 @@ func (hs HealthStatus) String() string {
 	case HealthStatusDegraded:
 		return "DEGRADED"
 	case HealthStatusUnknown:
-		return "UNKNOWN"
+		return StatusUnknownUpperStr
 	default:
-		return "UNKNOWN"
+		return StatusUnknownUpperStr
 	}
 }
 
@@ -558,7 +558,7 @@ func (mf MetricFormat) String() string {
 	case MetricFormatInfluxDB:
 		return "influxdb"
 	default:
-		return "unknown"
+		return StatusUnknownStr
 	}
 }
 
@@ -571,7 +571,7 @@ func (nt NotificationType) String() string {
 	case NotificationTypeWebhook:
 		return "webhook"
 	default:
-		return "unknown"
+		return StatusUnknownStr
 	}
 }
 
@@ -586,7 +586,7 @@ func (np NotificationPriority) String() string {
 	case NotificationPriorityCritical:
 		return "critical"
 	default:
-		return "unknown"
+		return StatusUnknownStr
 	}
 }
 
@@ -601,7 +601,7 @@ func (ds DeliveryState) String() string {
 	case DeliveryStateRetrying:
 		return "retrying"
 	default:
-		return "unknown"
+		return StatusUnknownStr
 	}
 }
 
@@ -616,7 +616,7 @@ func (ct CredentialType) String() string {
 	case CredentialTypeCertificate:
 		return "certificate"
 	default:
-		return "unknown"
+		return StatusUnknownStr
 	}
 }
 
@@ -637,6 +637,6 @@ func (set SecurityEventType) String() string {
 	case SecurityEventTypeTokenRevoked:
 		return "token_revoked"
 	default:
-		return "unknown"
+		return StatusUnknownStr
 	}
 }

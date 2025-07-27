@@ -14,6 +14,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Test constants for component and operation names.
+const (
+	TestComponent      = "test_component"
+	TestOperation      = "test_operation"
+	GenericComponent   = "component"
+	GenericOperation   = "operation"
+	FailingComponent   = "failing_component"
+	FailingOperation   = "failing_operation"
+	GlobalComponent    = "global_component"
+	GlobalOperation    = "global_operation"
+	BenchmarkComponent = "benchmark_component"
+	BenchmarkOperation = "benchmark_operation"
+)
+
 func TestMonitoringMiddleware(t *testing.T) {
 	config := DefaultMonitorConfig()
 	config.HTTPEnabled = false
@@ -43,7 +57,7 @@ func TestMonitoringMiddleware(t *testing.T) {
 		found := false
 		for _, metric := range metrics {
 			if metric.Name == "templar_http_requests_total" {
-				if metric.Labels["method"] == "GET" && metric.Labels["status"] == "200" {
+				if metric.Labels["method"] == HTTPMethodGET && metric.Labels["status"] == "200" {
 					assert.Equal(t, 1.0, metric.Value)
 					found = true
 
@@ -72,7 +86,7 @@ func TestMonitoringMiddleware(t *testing.T) {
 		found := false
 		for _, metric := range metrics {
 			if metric.Name == "templar_http_requests_total" {
-				if metric.Labels["method"] == "POST" && metric.Labels["status"] == "500" {
+				if metric.Labels["method"] == HTTPMethodPOST && metric.Labels["status"] == "500" {
 					assert.Equal(t, 1.0, metric.Value)
 					found = true
 
@@ -130,7 +144,7 @@ func TestResponseWriter(t *testing.T) {
 
 func TestComponentHealthChecker(t *testing.T) {
 	t.Run("healthy component", func(t *testing.T) {
-		checker := ComponentHealthChecker("test_component", func() error {
+		checker := ComponentHealthChecker(TestComponent, func() error {
 			return nil
 		})
 
@@ -140,19 +154,19 @@ func TestComponentHealthChecker(t *testing.T) {
 		result := checker.Check(context.Background())
 		assert.Equal(t, HealthStatusHealthy, result.Status)
 		assert.Contains(t, result.Message, "functioning correctly")
-		assert.Equal(t, "test_component", result.Metadata["component"])
+		assert.Equal(t, TestComponent, result.Metadata["component"])
 	})
 
 	t.Run("unhealthy component", func(t *testing.T) {
 		testErr := errors.New("component failure")
-		checker := ComponentHealthChecker("failing_component", func() error {
+		checker := ComponentHealthChecker(FailingComponent, func() error {
 			return testErr
 		})
 
 		result := checker.Check(context.Background())
 		assert.Equal(t, HealthStatusUnhealthy, result.Status)
 		assert.Contains(t, result.Message, "Component check failed")
-		assert.Equal(t, "failing_component", result.Metadata["component"])
+		assert.Equal(t, FailingComponent, result.Metadata["component"])
 		assert.Equal(t, testErr.Error(), result.Metadata["error"])
 	})
 }
@@ -253,8 +267,8 @@ func TestLoggingIntegration(t *testing.T) {
 		integration.LogWithMetrics(
 			context.Background(),
 			logging.LevelError,
-			"test_component",
-			"test_operation",
+			TestComponent,
+			TestOperation,
 			testErr,
 			"Test error message",
 			"key",
@@ -268,7 +282,7 @@ func TestLoggingIntegration(t *testing.T) {
 
 		for _, metric := range metrics {
 			if metric.Name == "templar_errors_total" &&
-				metric.Labels["category"] == "test_component" {
+				metric.Labels["category"] == TestComponent {
 				errorFound = true
 			}
 			if metric.Name == "templar_log_entries_total" && metric.Labels["level"] == "ERROR" {
@@ -284,8 +298,8 @@ func TestLoggingIntegration(t *testing.T) {
 		integration.LogWithMetrics(
 			context.Background(),
 			logging.LevelInfo,
-			"test_component",
-			"test_operation",
+			TestComponent,
+			TestOperation,
 			nil,
 			"Test info message",
 			"key",
@@ -316,13 +330,13 @@ func TestOperationTracker(t *testing.T) {
 	monitor, err := NewMonitor(config, logger)
 	require.NoError(t, err)
 
-	tracker := NewOperationTracker(monitor, logger, "test_component")
+	tracker := NewOperationTracker(monitor, logger, TestComponent)
 
 	t.Run("successful operation", func(t *testing.T) {
 		executed := false
 		err := tracker.TrackOperation(
 			context.Background(),
-			"test_operation",
+			TestOperation,
 			func(ctx context.Context) error {
 				executed = true
 
@@ -351,7 +365,7 @@ func TestOperationTracker(t *testing.T) {
 		testErr := errors.New("operation failed")
 		err := tracker.TrackOperation(
 			context.Background(),
-			"failing_operation",
+			FailingOperation,
 			func(ctx context.Context) error {
 				return testErr
 			},
@@ -364,7 +378,7 @@ func TestOperationTracker(t *testing.T) {
 		found := false
 		for _, metric := range metrics {
 			if metric.Name == "templar_errors_total" &&
-				metric.Labels["category"] == "test_component" {
+				metric.Labels["category"] == TestComponent {
 				found = true
 
 				break
@@ -383,7 +397,7 @@ func TestBatchTracker(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("successful batch processing", func(t *testing.T) {
-		tracker := NewBatchTracker(monitor, logger, "test_component", 5)
+		tracker := NewBatchTracker(monitor, logger, TestComponent, 5)
 
 		// Process items
 		for i := range 5 {
@@ -400,7 +414,7 @@ func TestBatchTracker(t *testing.T) {
 	})
 
 	t.Run("batch processing with errors", func(t *testing.T) {
-		tracker := NewBatchTracker(monitor, logger, "test_component", 3)
+		tracker := NewBatchTracker(monitor, logger, TestComponent, 3)
 
 		// Process items with some errors
 		err1 := tracker.TrackItem(context.Background(), "item_1", func() error {
@@ -490,8 +504,8 @@ func TestGlobalFunctions(t *testing.T) {
 		executed := false
 		err := TrackOperation(
 			context.Background(),
-			"global_component",
-			"global_operation",
+			GlobalComponent,
+			GlobalOperation,
 			func(ctx context.Context) error {
 				executed = true
 
@@ -507,8 +521,8 @@ func TestGlobalFunctions(t *testing.T) {
 		testErr := errors.New("global error")
 		LogError(
 			context.Background(),
-			"global_component",
-			"global_operation",
+			GlobalComponent,
+			GlobalOperation,
 			testErr,
 			"Test error message",
 			"key",
@@ -521,8 +535,8 @@ func TestGlobalFunctions(t *testing.T) {
 	t.Run("log info globally", func(t *testing.T) {
 		LogInfo(
 			context.Background(),
-			"global_component",
-			"global_operation",
+			GlobalComponent,
+			GlobalOperation,
 			"Test info message",
 			"key",
 			"value",
@@ -537,16 +551,16 @@ func TestGlobalFunctions(t *testing.T) {
 		// These should not panic
 		err := TrackOperation(
 			context.Background(),
-			"component",
-			"operation",
+			GenericComponent,
+			GenericOperation,
 			func(ctx context.Context) error {
 				return nil
 			},
 		)
 		assert.NoError(t, err)
 
-		LogError(context.Background(), "component", "operation", errors.New("test"), "message")
-		LogInfo(context.Background(), "component", "operation", "message")
+		LogError(context.Background(), GenericComponent, GenericOperation, errors.New("test"), "message")
+		LogInfo(context.Background(), GenericComponent, GenericOperation, "message")
 
 		SetGlobalMonitor(monitor)
 	})
@@ -581,13 +595,13 @@ func BenchmarkOperationTracking(b *testing.B) {
 	monitor, err := NewMonitor(config, logger)
 	require.NoError(b, err)
 
-	tracker := NewOperationTracker(monitor, logger, "benchmark_component")
+	tracker := NewOperationTracker(monitor, logger, BenchmarkComponent)
 
 	b.ResetTimer()
 	for range b.N {
 		err := tracker.TrackOperation(
 			context.Background(),
-			"benchmark_operation",
+			BenchmarkOperation,
 			func(ctx context.Context) error {
 				return nil
 			},

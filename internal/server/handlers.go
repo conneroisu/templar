@@ -247,7 +247,7 @@ const indexHTML = `<!DOCTYPE html>
 </html>`
 
 func (s *PreviewServer) handleIndex(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set(HeaderContentType, ContentTypeHTML)
 	if _, err := w.Write([]byte(indexHTML)); err != nil {
 		log.Printf("Failed to write index response: %v", err)
 	}
@@ -256,8 +256,11 @@ func (s *PreviewServer) handleIndex(w http.ResponseWriter, r *http.Request) {
 func (s *PreviewServer) handleComponents(w http.ResponseWriter, r *http.Request) {
 	components := s.registry.GetAll()
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(components)
+	w.Header().Set(HeaderContentType, ContentTypeJSON)
+	if err := json.NewEncoder(w).Encode(components); err != nil {
+		log.Printf("Failed to encode components JSON: %v", err)
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	}
 }
 
 func (s *PreviewServer) handleComponent(w http.ResponseWriter, r *http.Request) {
@@ -281,8 +284,11 @@ func (s *PreviewServer) handleComponent(w http.ResponseWriter, r *http.Request) 
 
 	// For now, just return component info
 	// In a full implementation, this would render the component
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(component)
+	w.Header().Set(HeaderContentType, ContentTypeJSON)
+	if err := json.NewEncoder(w).Encode(component); err != nil {
+		log.Printf("Failed to encode component JSON: %v", err)
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	}
 }
 
 func (s *PreviewServer) handleStatic(w http.ResponseWriter, r *http.Request) {
@@ -400,7 +406,7 @@ func (s *PreviewServer) handleRender(w http.ResponseWriter, r *http.Request) {
 	// Wrap in layout with nonce support
 	fullHTML := s.renderer.RenderComponentWithLayoutAndNonce(componentName, html, nonce)
 
-	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set(HeaderContentType, ContentTypeHTML)
 	if _, err := w.Write([]byte(fullHTML)); err != nil {
 		log.Printf("Failed to write component response: %v", err)
 	}
@@ -429,7 +435,7 @@ func (s *PreviewServer) renderSingleComponent(
 	// Wrap in layout with nonce support
 	fullHTML := s.renderer.RenderComponentWithLayoutAndNonce(component.Name, html, nonce)
 
-	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set(HeaderContentType, ContentTypeHTML)
 	if _, err := w.Write([]byte(fullHTML)); err != nil {
 		log.Printf("Failed to write component response: %v", err)
 	}
@@ -466,7 +472,7 @@ func (s *PreviewServer) renderComponentSelection(
 </body>
 </html>`
 
-	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set(HeaderContentType, ContentTypeHTML)
 	if _, err := w.Write([]byte(html)); err != nil {
 		log.Printf("Failed to write component selection response: %v", err)
 	}
@@ -498,7 +504,7 @@ func (s *PreviewServer) renderFileSelection(w http.ResponseWriter, r *http.Reque
 </body>
 </html>`
 
-	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set(HeaderContentType, ContentTypeHTML)
 	if _, err := w.Write([]byte(html)); err != nil {
 		log.Printf("Failed to write file selection response: %v", err)
 	}

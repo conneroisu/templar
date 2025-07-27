@@ -10,6 +10,11 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
+const (
+	// StatusUnknown represents an unknown status.
+	StatusUnknown = "unknown"
+)
+
 // Forward declarations for concrete types from other packages
 // to avoid circular dependencies
 
@@ -48,7 +53,7 @@ func (e EventType) String() string {
 	case EventTypeRenamed:
 		return "renamed"
 	default:
-		return "unknown"
+		return StatusUnknown
 	}
 }
 

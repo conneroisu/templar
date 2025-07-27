@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -236,7 +237,7 @@ func (s *PreviewServer) handleEditorSave(w http.ResponseWriter, req EditorReques
 
 	// Ensure directory exists
 	dir := filepath.Dir(req.FilePath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		response.Success = false
 		response.Errors = []EditorError{{
 			Message:  "Failed to create directory: " + err.Error(),
@@ -249,7 +250,7 @@ func (s *PreviewServer) handleEditorSave(w http.ResponseWriter, req EditorReques
 	}
 
 	// Write file
-	if err := os.WriteFile(req.FilePath, []byte(req.Content), 0644); err != nil {
+	if err := os.WriteFile(req.FilePath, []byte(req.Content), 0o600); err != nil {
 		response.Success = false
 		response.Errors = []EditorError{{
 			Message:  "Failed to save file: " + err.Error(),
@@ -262,7 +263,9 @@ func (s *PreviewServer) handleEditorSave(w http.ResponseWriter, req EditorReques
 		// Trigger component scan to update registry
 		go func() {
 			time.Sleep(100 * time.Millisecond) // Small delay to ensure file is written
-			s.scanner.ScanDirectory(dir)
+			if err := s.scanner.ScanDirectory(dir); err != nil {
+				log.Printf("Failed to scan directory after file save: %v", err)
+			}
 		}()
 	}
 
@@ -323,7 +326,7 @@ func (s *PreviewServer) handleFileOpen(w http.ResponseWriter, req FileRequest) {
 	// Validate file path
 	if !s.isValidFilePath(req.FilePath) {
 		response.Success = false
-		response.Error = "Invalid file path"
+		response.Error = ErrorInvalidFilePath
 		s.writeJSONResponse(w, response)
 
 		return
@@ -348,14 +351,14 @@ func (s *PreviewServer) handleFileSave(w http.ResponseWriter, req FileRequest) {
 	// Validate file path
 	if !s.isValidFilePath(req.FilePath) {
 		response.Success = false
-		response.Error = "Invalid file path"
+		response.Error = ErrorInvalidFilePath
 		s.writeJSONResponse(w, response)
 
 		return
 	}
 
 	// Write file
-	if err := os.WriteFile(req.FilePath, []byte(req.Content), 0644); err != nil {
+	if err := os.WriteFile(req.FilePath, []byte(req.Content), 0o600); err != nil {
 		response.Success = false
 		response.Error = "Failed to save file: " + err.Error()
 	} else {
@@ -372,7 +375,7 @@ func (s *PreviewServer) handleFileCreate(w http.ResponseWriter, req FileRequest)
 	// Validate file path
 	if !s.isValidFilePath(req.FilePath) {
 		response.Success = false
-		response.Error = "Invalid file path"
+		response.Error = ErrorInvalidFilePath
 		s.writeJSONResponse(w, response)
 
 		return
@@ -389,7 +392,7 @@ func (s *PreviewServer) handleFileCreate(w http.ResponseWriter, req FileRequest)
 
 	// Create directory if needed
 	dir := filepath.Dir(req.FilePath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		response.Success = false
 		response.Error = "Failed to create directory: " + err.Error()
 		s.writeJSONResponse(w, response)
@@ -403,7 +406,7 @@ func (s *PreviewServer) handleFileCreate(w http.ResponseWriter, req FileRequest)
 		content = s.generateDefaultTemplContent(req.Name)
 	}
 
-	if err := os.WriteFile(req.FilePath, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(req.FilePath, []byte(content), 0o600); err != nil {
 		response.Success = false
 		response.Error = "Failed to create file: " + err.Error()
 	} else {
@@ -420,7 +423,7 @@ func (s *PreviewServer) handleFileDelete(w http.ResponseWriter, req FileRequest)
 	// Validate file path
 	if !s.isValidFilePath(req.FilePath) {
 		response.Success = false
-		response.Error = "Invalid file path"
+		response.Error = ErrorInvalidFilePath
 		s.writeJSONResponse(w, response)
 
 		return

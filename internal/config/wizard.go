@@ -10,6 +10,14 @@ import (
 	"strings"
 )
 
+// Project type constants.
+const (
+	ProjectTypeWeb       = "web"
+	ProjectTypeAPI       = "api"
+	ProjectTypeFullstack = "fullstack"
+	ProjectTypeLibrary   = "library"
+)
+
 // ConfigWizard provides an interactive setup experience for new projects.
 type ConfigWizard struct {
 	reader            *bufio.Reader
@@ -25,7 +33,7 @@ type ProjectStructure struct {
 	HasTailwindCSS   bool
 	HasTypeScript    bool
 	HasExistingTempl bool
-	ProjectType      string // "web", "api", "fullstack", "library"
+	ProjectType      string // ProjectTypeWeb, ProjectTypeAPI, ProjectTypeFullstack, ProjectTypeLibrary
 	ComponentDirs    []string
 }
 
@@ -144,7 +152,7 @@ func (w *ConfigWizard) configureServer() error {
 	w.config.Server.Open = w.askBool("Auto-open browser on start", true)
 
 	// Environment
-	env := w.askChoice("Environment", []string{"development", "production"}, "development")
+	env := w.askChoice("Environment", []string{EnvDevelopment, EnvProduction}, EnvDevelopment)
 	w.config.Server.Environment = env
 
 	// Middleware
@@ -325,8 +333,8 @@ func (w *ConfigWizard) configurePlugins() error {
 	tailwindDefault := false
 	if w.detectedStructure != nil {
 		tailwindDefault = w.detectedStructure.HasTailwindCSS ||
-			w.detectedStructure.ProjectType == "web" ||
-			w.detectedStructure.ProjectType == "fullstack"
+			w.detectedStructure.ProjectType == ProjectTypeWeb ||
+			w.detectedStructure.ProjectType == ProjectTypeFullstack
 	}
 	if tailwindDefault {
 		fmt.Println("💡 Tailwind CSS detected or recommended for web projects")
@@ -515,8 +523,8 @@ func (w *ConfigWizard) WriteConfigFile(filename string) error {
 	// Generate YAML content
 	content := w.generateYAMLConfig()
 
-	// Write to file
-	if err := os.WriteFile(filename, []byte(content), 0644); err != nil {
+	// Write to file with restrictive permissions for security
+	if err := os.WriteFile(filename, []byte(content), 0o600); err != nil {
 		return fmt.Errorf("failed to write configuration file: %w", err)
 	}
 
@@ -711,14 +719,14 @@ func (w *ConfigWizard) hasTemplFiles() bool {
 // inferProjectType determines the project type based on detected structure.
 func (w *ConfigWizard) inferProjectType() string {
 	if w.detectedStructure.HasNodeModules && w.detectedStructure.HasGoMod {
-		return "fullstack"
+		return ProjectTypeFullstack
 	}
 	if w.detectedStructure.HasTailwindCSS || len(w.detectedStructure.ComponentDirs) > 0 {
-		return "web"
+		return ProjectTypeWeb
 	}
 	if w.detectedStructure.HasGoMod && !w.detectedStructure.HasExistingTempl {
-		return "api"
+		return ProjectTypeAPI
 	}
 
-	return "web" // default
+	return ProjectTypeWeb // default
 }

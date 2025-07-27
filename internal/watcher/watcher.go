@@ -29,6 +29,32 @@ const (
 	CleanupInterval  = 30 * time.Second // How often to cleanup old state
 )
 
+// Constants for statistics keys.
+const (
+	StatsPendingEvents   = "pending_events"
+	StatsDroppedEvents   = "dropped_events"
+	StatsMaxPending      = "max_pending"
+	StatsMaxBatchSize    = "max_batch_size"
+	StatsPendingCapacity = "pending_capacity"
+	StatsLastCleanup     = "last_cleanup"
+	StatsTotalEvents     = "total_events"
+)
+
+// Constants for file extensions.
+const (
+	TemplFileExt = ".templ"
+	GoFileExt    = ".go"
+)
+
+// Constants for test-related strings.
+const (
+	ErrFailedToCreateFileWatcher = "Failed to create file watcher: %v"
+	TestFilePath                 = "/test/file.templ"
+	TestTemplFileName            = "test.templ"
+	TestMainGoFileName           = "main.go"
+	TestComponentTemplFileName   = "component.templ"
+)
+
 // Object pools for memory efficiency.
 var (
 	eventPool = sync.Pool{
@@ -473,10 +499,10 @@ func (d *Debouncer) flushLocked() {
 	eventsCopy := make([]ChangeEvent, len(batch))
 	copy(eventsCopy, batch)
 
-	// Return objects to pools for reuse
+	// Return objects to pools for reuse (clear to reduce memory footprint)
 	eventMapPool.Put(eventMap)
-	eventPool.Put(events)
-	eventBatchPool.Put(batch)
+	eventPool.Put(events[:0])     // nolint:staticcheck
+	eventBatchPool.Put(batch[:0]) // nolint:staticcheck
 
 	// Send debounced events (non-blocking with backpressure)
 	select {
@@ -520,11 +546,11 @@ func (d *Debouncer) cleanup() {
 
 // Common file filters.
 func TemplFilter(path string) bool {
-	return filepath.Ext(path) == ".templ"
+	return filepath.Ext(path) == TemplFileExt
 }
 
 func GoFilter(path string) bool {
-	return filepath.Ext(path) == ".go"
+	return filepath.Ext(path) == GoFileExt
 }
 
 func NoTestFilter(path string) bool {
@@ -549,12 +575,12 @@ func (fw *FileWatcher) GetStats() map[string]interface{} {
 	defer fw.debouncer.mutex.Unlock()
 
 	return map[string]interface{}{
-		"pending_events":   len(fw.debouncer.pending),
-		"dropped_events":   fw.debouncer.droppedEvents,
-		"total_events":     fw.debouncer.totalEvents,
-		"max_pending":      MaxPendingEvents,
-		"max_batch_size":   fw.debouncer.maxBatchSize,
-		"pending_capacity": cap(fw.debouncer.pending),
-		"last_cleanup":     fw.debouncer.lastCleanup,
+		StatsPendingEvents:   len(fw.debouncer.pending),
+		StatsDroppedEvents:   fw.debouncer.droppedEvents,
+		StatsTotalEvents:     fw.debouncer.totalEvents,
+		StatsMaxPending:      MaxPendingEvents,
+		StatsMaxBatchSize:    fw.debouncer.maxBatchSize,
+		StatsPendingCapacity: cap(fw.debouncer.pending),
+		StatsLastCleanup:     fw.debouncer.lastCleanup,
 	}
 }

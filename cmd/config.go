@@ -101,7 +101,7 @@ func init() {
 
 	// Wizard flags
 	configWizardCmd.Flags().
-		StringVarP(&configOutput, "output", "o", ".templar.yml", "Output configuration file")
+		StringVarP(&configOutput, "output", "o", TemplarConfigFile, "Output configuration file")
 
 	// Validate flags
 	configValidateCmd.Flags().
@@ -109,7 +109,7 @@ func init() {
 	configValidateCmd.Flags().BoolVar(&configStrict, "strict", false, "Treat warnings as errors")
 
 	// Show flags
-	configShowCmd.Flags().StringVar(&configFormat, "format", "yaml", "Output format (yaml, json)")
+	configShowCmd.Flags().StringVar(&configFormat, "format", OutputFormatYAML, "Output format (yaml, json)")
 
 	// Main config command flags
 	configCmd.Flags().BoolVar(&configNoWizard, "no-wizard", false, "Skip wizard and use defaults")
@@ -126,13 +126,13 @@ func runConfigWizard(cmd *cobra.Command, args []string) error {
 
 		var response string
 		if _, err := fmt.Scanln(&response); err != nil {
-			fmt.Printf("Failed to read input: %v\n", err)
+			fmt.Printf(InputErrorFormat, err)
 
 			return err
 		}
 
-		if response != "y" && response != "Y" && response != "yes" && response != "Yes" {
-			fmt.Println("Configuration wizard cancelled.")
+		if response != ResponseY && response != "Y" && response != ResponseYes && response != "Yes" {
+			fmt.Println(ConfigCancelMessage)
 
 			return nil
 		}
@@ -162,13 +162,13 @@ func runConfigWizard(cmd *cobra.Command, args []string) error {
 
 		var response string
 		if _, err := fmt.Scanln(&response); err != nil {
-			fmt.Printf("Failed to read input: %v\n", err)
+			fmt.Printf(InputErrorFormat, err)
 
 			return err
 		}
 
-		if response != "y" && response != "Y" && response != "yes" && response != "Yes" {
-			fmt.Println("Configuration wizard cancelled.")
+		if response != ResponseY && response != "Y" && response != ResponseYes && response != "Yes" {
+			fmt.Println(ConfigCancelMessage)
 
 			return nil
 		}
@@ -273,9 +273,9 @@ func runConfigShow(cmd *cobra.Command, args []string) error {
 
 	// Show configuration in requested format
 	switch configFormat {
-	case "yaml", "yml":
+	case OutputFormatYAML, "yml":
 		return showConfigYAML(cfg)
-	case "json":
+	case OutputFormatJSON:
 		return showConfigJSON(cfg)
 	default:
 		return fmt.Errorf("unsupported format: %s (supported: yaml, json)", configFormat)
@@ -290,7 +290,7 @@ func showConfigYAML(cfg *config.Config) error {
 	// Server configuration
 	fmt.Println("server:")
 	fmt.Printf("  port: %d\n", cfg.Server.Port)
-	fmt.Printf("  host: %s\n", cfg.Server.Host)
+	fmt.Printf(ConfigHostFormat, cfg.Server.Host)
 	fmt.Printf("  open: %t\n", cfg.Server.Open)
 	fmt.Printf("  environment: %s\n", cfg.Server.Environment)
 	if len(cfg.Server.Middleware) > 0 {
@@ -328,8 +328,8 @@ func showConfigYAML(cfg *config.Config) error {
 	// Preview configuration
 	fmt.Println("preview:")
 	fmt.Printf("  mock_data: \"%s\"\n", cfg.Preview.MockData)
-	fmt.Printf("  wrapper: \"%s\"\n", cfg.Preview.Wrapper)
-	fmt.Printf("  auto_props: %t\n", cfg.Preview.AutoProps)
+	fmt.Printf(ConfigWrapperFormat, cfg.Preview.Wrapper)
+	fmt.Printf(ConfigAutoPropsFormat, cfg.Preview.AutoProps)
 	fmt.Println()
 
 	// Components configuration
@@ -404,7 +404,7 @@ func showConfigJSON(cfg *config.Config) error {
 	fmt.Printf("    \"hot_reload\": %t,\n", cfg.Development.HotReload)
 	fmt.Printf("    \"css_injection\": %t,\n", cfg.Development.CSSInjection)
 	fmt.Printf("    \"error_overlay\": %t\n", cfg.Development.ErrorOverlay)
-	fmt.Printf("  }\n")
+	fmt.Print(ConfigCloseBrace)
 
 	fmt.Println("}")
 

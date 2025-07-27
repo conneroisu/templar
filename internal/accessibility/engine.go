@@ -10,6 +10,80 @@ import (
 	"golang.org/x/net/html"
 )
 
+// Rule IDs - accessibility rule constants.
+const (
+	RuleMissingAltText          = "missing-alt-text"
+	RuleMissingFormLabel        = "missing-form-label"
+	RuleMissingHeadingStructure = "missing-heading-structure"
+	RuleLowContrast             = "low-contrast"
+	RuleMissingButtonText       = "missing-button-text"
+	RuleMissingLangAttribute    = "missing-lang-attribute"
+	RuleMissingTitleElement     = "missing-title-element"
+	RuleInvalidAriaAttribute    = "invalid-aria-attribute"
+	RuleDuplicateID             = "duplicate-id"
+	RuleMissingSkipLink         = "missing-skip-link"
+)
+
+// HTML attributes.
+const (
+	AttrAlt            = "alt"
+	AttrClass          = "class"
+	AttrAriaLabel      = "aria-label"
+	AttrAriaLabelledBy = "aria-labelledby"
+	AttrHref           = "href"
+	AttrType           = "type"
+	AttrTitle          = "title"
+	AttrLang           = "lang"
+	AttrFor            = "for"
+	AttrID             = "id"
+)
+
+// HTML tags.
+const (
+	TagHTML     = "html"
+	TagImg      = "img"
+	TagButton   = "button"
+	TagLabel    = "label"
+	TagInput    = "input"
+	TagTextarea = "textarea"
+	TagSelect   = "select"
+	TagA        = "a"
+	TagH1       = "h1"
+	TagH2       = "h2"
+	TagH3       = "h3"
+	TagH4       = "h4"
+	TagH5       = "h5"
+	TagH6       = "h6"
+)
+
+// Input types.
+const (
+	InputTypeButton   = "button"
+	InputTypeSubmit   = "submit"
+	InputTypeReset    = "reset"
+	InputTypeCheckbox = "checkbox"
+	InputTypeRadio    = "radio"
+	InputTypeText     = "text"
+)
+
+// ARIA roles.
+const (
+	RoleButton   = "button"
+	RoleLink     = "link"
+	RoleCheckbox = "checkbox"
+	RoleRadio    = "radio"
+	RoleTextbox  = "textbox"
+	RoleHeading  = "heading"
+	RoleImg      = "img"
+)
+
+// WCAG tags.
+const (
+	TagWCAG2A   = "wcag2a"
+	TagWCAG2AA  = "wcag2aa"
+	TagWCAG2AAA = "wcag2aaa"
+)
+
 // DefaultAccessibilityEngine implements the AccessibilityEngine interface.
 type DefaultAccessibilityEngine struct {
 	config EngineConfig
@@ -135,7 +209,7 @@ func (engine *DefaultAccessibilityEngine) GetSuggestions(
 	suggestions := []AccessibilitySuggestion{}
 
 	switch violation.Rule {
-	case "missing-alt-text":
+	case RuleMissingAltText:
 		suggestions = append(suggestions, AccessibilitySuggestion{
 			Type:        SuggestionCodeChange,
 			Title:       "Add alt attribute to image",
@@ -151,7 +225,7 @@ func (engine *DefaultAccessibilityEngine) GetSuggestions(
 			},
 		})
 
-	case "missing-form-label":
+	case RuleMissingFormLabel:
 		suggestions = append(suggestions, AccessibilitySuggestion{
 			Type:        SuggestionCodeChange,
 			Title:       "Associate label with form control",
@@ -167,7 +241,7 @@ func (engine *DefaultAccessibilityEngine) GetSuggestions(
 			},
 		})
 
-	case "missing-heading-structure":
+	case RuleMissingHeadingStructure:
 		suggestions = append(suggestions, AccessibilitySuggestion{
 			Type:        SuggestionStructural,
 			Title:       "Fix heading hierarchy",
@@ -176,7 +250,7 @@ func (engine *DefaultAccessibilityEngine) GetSuggestions(
 			Priority:    2,
 		})
 
-	case "low-contrast":
+	case RuleLowContrast:
 		suggestions = append(suggestions, AccessibilitySuggestion{
 			Type:        SuggestionDesign,
 			Title:       "Increase color contrast",
@@ -191,7 +265,7 @@ func (engine *DefaultAccessibilityEngine) GetSuggestions(
 			},
 		})
 
-	case "missing-button-text":
+	case RuleMissingButtonText:
 		suggestions = append(suggestions, AccessibilitySuggestion{
 			Type:        SuggestionARIAAttribute,
 			Title:       "Add accessible name to button",
@@ -200,7 +274,7 @@ func (engine *DefaultAccessibilityEngine) GetSuggestions(
 			Priority:    1,
 		})
 
-	case "missing-lang-attribute":
+	case RuleMissingLangAttribute:
 		suggestions = append(suggestions, AccessibilitySuggestion{
 			Type:        SuggestionCodeChange,
 			Title:       "Add lang attribute to html element",
@@ -249,12 +323,12 @@ func (engine *DefaultAccessibilityEngine) AutoFix(
 
 		// Apply simple text-based fixes
 		switch violation.Rule {
-		case "missing-lang-attribute":
+		case RuleMissingLangAttribute:
 			if !strings.Contains(fixed, `lang="`) {
 				fixed = strings.Replace(fixed, "<html>", `<html lang="en">`, 1)
 			}
 
-		case "missing-title-element":
+		case RuleMissingTitleElement:
 			if !strings.Contains(fixed, "<title>") {
 				headIndex := strings.Index(fixed, "</head>")
 				if headIndex != -1 {
@@ -287,73 +361,73 @@ func (engine *DefaultAccessibilityEngine) Shutdown(ctx context.Context) error {
 func (engine *DefaultAccessibilityEngine) loadDefaultRules() {
 	rules := []AccessibilityRule{
 		{
-			ID:          "missing-alt-text",
+			ID:          RuleMissingAltText,
 			Description: "Images must have alternative text",
 			Impact:      string(ImpactCritical),
-			Tags:        []string{"wcag2a", "images"},
+			Tags:        []string{TagWCAG2A, "images"},
 			HelpURL:     "https://dequeuniversity.com/rules/axe/4.4/image-alt",
 		},
 		{
-			ID:          "missing-form-label",
+			ID:          RuleMissingFormLabel,
 			Description: "Form elements must have labels",
 			Impact:      string(ImpactCritical),
-			Tags:        []string{"wcag2a", "forms"},
+			Tags:        []string{TagWCAG2A, "forms"},
 			HelpURL:     "https://dequeuniversity.com/rules/axe/4.4/label",
 		},
 		{
-			ID:          "missing-heading-structure",
+			ID:          RuleMissingHeadingStructure,
 			Description: "Headings must be in logical order",
 			Impact:      string(ImpactSerious),
-			Tags:        []string{"wcag2a", "headings"},
+			Tags:        []string{TagWCAG2A, "headings"},
 			HelpURL:     "https://dequeuniversity.com/rules/axe/4.4/heading-order",
 		},
 		{
-			ID:          "low-contrast",
+			ID:          RuleLowContrast,
 			Description: "Text must have sufficient color contrast",
 			Impact:      string(ImpactSerious),
-			Tags:        []string{"wcag2aa", "color"},
+			Tags:        []string{TagWCAG2AA, "color"},
 			HelpURL:     "https://dequeuniversity.com/rules/axe/4.4/color-contrast",
 		},
 		{
-			ID:          "missing-button-text",
+			ID:          RuleMissingButtonText,
 			Description: "Buttons must have accessible names",
 			Impact:      string(ImpactCritical),
-			Tags:        []string{"wcag2a", "buttons"},
+			Tags:        []string{TagWCAG2A, "buttons"},
 			HelpURL:     "https://dequeuniversity.com/rules/axe/4.4/button-name",
 		},
 		{
-			ID:          "missing-lang-attribute",
+			ID:          RuleMissingLangAttribute,
 			Description: "HTML element must have a lang attribute",
 			Impact:      string(ImpactSerious),
-			Tags:        []string{"wcag2a", "language"},
+			Tags:        []string{TagWCAG2A, "language"},
 			HelpURL:     "https://dequeuniversity.com/rules/axe/4.4/html-has-lang",
 		},
 		{
-			ID:          "missing-title-element",
+			ID:          RuleMissingTitleElement,
 			Description: "Documents must contain a title element",
 			Impact:      string(ImpactSerious),
-			Tags:        []string{"wcag2a", "document"},
+			Tags:        []string{TagWCAG2A, "document"},
 			HelpURL:     "https://dequeuniversity.com/rules/axe/4.4/document-title",
 		},
 		{
-			ID:          "invalid-aria-attribute",
+			ID:          RuleInvalidAriaAttribute,
 			Description: "ARIA attributes must be valid",
 			Impact:      string(ImpactCritical),
-			Tags:        []string{"wcag2a", "aria"},
+			Tags:        []string{TagWCAG2A, "aria"},
 			HelpURL:     "https://dequeuniversity.com/rules/axe/4.4/aria-valid-attr",
 		},
 		{
-			ID:          "duplicate-id",
+			ID:          RuleDuplicateID,
 			Description: "IDs of active elements must be unique",
 			Impact:      string(ImpactSerious),
-			Tags:        []string{"wcag2a", "parsing"},
+			Tags:        []string{TagWCAG2A, "parsing"},
 			HelpURL:     "https://dequeuniversity.com/rules/axe/4.4/duplicate-id-active",
 		},
 		{
-			ID:          "missing-skip-link",
+			ID:          RuleMissingSkipLink,
 			Description: "Page should have skip navigation link",
 			Impact:      string(ImpactModerate),
-			Tags:        []string{"wcag2a", "navigation"},
+			Tags:        []string{TagWCAG2A, "navigation"},
 			HelpURL:     "https://dequeuniversity.com/rules/axe/4.4/bypass",
 		},
 	}
@@ -416,12 +490,12 @@ func (engine *DefaultAccessibilityEngine) isRuleApplicableForLevel(
 ) bool {
 	switch level {
 	case WCAGLevelA:
-		return contains(rule.Tags, "wcag2a")
+		return contains(rule.Tags, TagWCAG2A)
 	case WCAGLevelAA:
-		return contains(rule.Tags, "wcag2a") || contains(rule.Tags, "wcag2aa")
+		return contains(rule.Tags, TagWCAG2A) || contains(rule.Tags, TagWCAG2AA)
 	case WCAGLevelAAA:
-		return contains(rule.Tags, "wcag2a") || contains(rule.Tags, "wcag2aa") ||
-			contains(rule.Tags, "wcag2aaa")
+		return contains(rule.Tags, TagWCAG2A) || contains(rule.Tags, TagWCAG2AA) ||
+			contains(rule.Tags, TagWCAG2AAA)
 	default:
 		return true
 	}
@@ -437,10 +511,10 @@ func (engine *DefaultAccessibilityEngine) checkRule(
 	violations := []AccessibilityViolation{}
 
 	switch rule.ID {
-	case "missing-alt-text":
+	case RuleMissingAltText:
 		for _, element := range elements {
-			if element.TagName() == "img" {
-				if alt, hasAlt := element.GetAttribute("alt"); !hasAlt || alt == "" {
+			if element.TagName() == TagImg {
+				if alt, hasAlt := element.GetAttribute(AttrAlt); !hasAlt || alt == "" {
 					violations = append(
 						violations,
 						engine.createViolation(rule, element, "Image missing alt attribute"),
@@ -449,7 +523,7 @@ func (engine *DefaultAccessibilityEngine) checkRule(
 			}
 		}
 
-	case "missing-form-label":
+	case RuleMissingFormLabel:
 		for _, element := range elements {
 			if isFormControl(element.TagName()) {
 				if !engine.hasAssociatedLabel(element, elements) {
@@ -465,7 +539,7 @@ func (engine *DefaultAccessibilityEngine) checkRule(
 			}
 		}
 
-	case "missing-heading-structure":
+	case RuleMissingHeadingStructure:
 		headings := []HTMLElement{}
 		for _, element := range elements {
 			if isHeading(element.TagName()) {
@@ -481,9 +555,9 @@ func (engine *DefaultAccessibilityEngine) checkRule(
 			}
 		}
 
-	case "missing-button-text":
+	case RuleMissingButtonText:
 		for _, element := range elements {
-			if element.TagName() == "button" {
+			if element.TagName() == TagButton {
 				if !engine.hasAccessibleName(element) {
 					violations = append(
 						violations,
@@ -493,10 +567,10 @@ func (engine *DefaultAccessibilityEngine) checkRule(
 			}
 		}
 
-	case "missing-lang-attribute":
+	case RuleMissingLangAttribute:
 		for _, element := range elements {
-			if element.TagName() == "html" {
-				if _, hasLang := element.GetAttribute("lang"); !hasLang {
+			if element.TagName() == TagHTML {
+				if _, hasLang := element.GetAttribute(AttrLang); !hasLang {
 					violations = append(
 						violations,
 						engine.createViolation(
@@ -509,16 +583,16 @@ func (engine *DefaultAccessibilityEngine) checkRule(
 			}
 		}
 
-	case "duplicate-id":
+	case RuleDuplicateID:
 		idMap := make(map[string][]HTMLElement)
 		for _, element := range elements {
-			if id, hasId := element.GetAttribute("id"); hasId && id != "" {
+			if id, hasID := element.GetAttribute(AttrID); hasID && id != "" {
 				idMap[id] = append(idMap[id], element)
 			}
 		}
-		for id, elementsWithId := range idMap {
-			if len(elementsWithId) > 1 {
-				for _, element := range elementsWithId {
+		for id, elementsWithID := range idMap {
+			if len(elementsWithID) > 1 {
+				for _, element := range elementsWithID {
 					violations = append(
 						violations,
 						engine.createViolation(rule, element, "Duplicate ID: "+id),
@@ -604,11 +678,11 @@ func (engine *DefaultAccessibilityEngine) getWCAGFromRule(rule AccessibilityRule
 func (engine *DefaultAccessibilityEngine) generateSelector(element HTMLElement) string {
 	tagName := strings.ToLower(element.TagName())
 
-	if id, hasId := element.GetAttribute("id"); hasId {
+	if id, hasID := element.GetAttribute(AttrID); hasID {
 		return fmt.Sprintf("%s#%s", tagName, id)
 	}
 
-	if class, hasClass := element.GetAttribute("class"); hasClass {
+	if class, hasClass := element.GetAttribute(AttrClass); hasClass {
 		classes := strings.Fields(class)
 		if len(classes) > 0 {
 			return fmt.Sprintf("%s.%s", tagName, strings.Join(classes, "."))
@@ -620,8 +694,8 @@ func (engine *DefaultAccessibilityEngine) generateSelector(element HTMLElement) 
 
 func (engine *DefaultAccessibilityEngine) canAutoFix(ruleID string) bool {
 	autoFixableRules := []string{
-		"missing-lang-attribute",
-		"missing-title-element",
+		RuleMissingLangAttribute,
+		RuleMissingTitleElement,
 	}
 
 	return contains(autoFixableRules, ruleID)
@@ -632,20 +706,20 @@ func (engine *DefaultAccessibilityEngine) hasAssociatedLabel(
 	allElements []HTMLElement,
 ) bool {
 	// Check for aria-label
-	if _, hasAriaLabel := element.GetAttribute("aria-label"); hasAriaLabel {
+	if _, hasAriaLabel := element.GetAttribute(AttrAriaLabel); hasAriaLabel {
 		return true
 	}
 
 	// Check for aria-labelledby
-	if _, hasAriaLabelledBy := element.GetAttribute("aria-labelledby"); hasAriaLabelledBy {
+	if _, hasAriaLabelledBy := element.GetAttribute(AttrAriaLabelledBy); hasAriaLabelledBy {
 		return true
 	}
 
 	// Check for associated label element
-	if id, hasId := element.GetAttribute("id"); hasId {
+	if id, hasID := element.GetAttribute(AttrID); hasID {
 		for _, el := range allElements {
-			if el.TagName() == "label" {
-				if forAttr, hasFor := el.GetAttribute("for"); hasFor && forAttr == id {
+			if el.TagName() == TagLabel {
+				if forAttr, hasFor := el.GetAttribute(AttrFor); hasFor && forAttr == id {
 					return true
 				}
 			}
@@ -655,7 +729,7 @@ func (engine *DefaultAccessibilityEngine) hasAssociatedLabel(
 	// Check if wrapped in label
 	parent := element.GetParent()
 
-	return parent != nil && parent.TagName() == "label"
+	return parent != nil && parent.TagName() == TagLabel
 }
 
 func (engine *DefaultAccessibilityEngine) hasLogicalHeadingOrder(headings []HTMLElement) bool {
@@ -709,12 +783,12 @@ func (engine *DefaultAccessibilityEngine) hasAccessibleName(element HTMLElement)
 	}
 
 	// Check aria-label
-	if _, hasAriaLabel := element.GetAttribute("aria-label"); hasAriaLabel {
+	if _, hasAriaLabel := element.GetAttribute(AttrAriaLabel); hasAriaLabel {
 		return true
 	}
 
 	// Check aria-labelledby
-	if _, hasAriaLabelledBy := element.GetAttribute("aria-labelledby"); hasAriaLabelledBy {
+	if _, hasAriaLabelledBy := element.GetAttribute(AttrAriaLabelledBy); hasAriaLabelledBy {
 		return true
 	}
 
@@ -776,13 +850,13 @@ func contains(slice []string, item string) bool {
 }
 
 func isFormControl(tagName string) bool {
-	formControls := []string{"input", "textarea", "select", "button"}
+	formControls := []string{TagInput, TagTextarea, TagSelect, TagButton}
 
 	return contains(formControls, tagName)
 }
 
 func isHeading(tagName string) bool {
-	headings := []string{"h1", "h2", "h3", "h4", "h5", "h6"}
+	headings := []string{TagH1, TagH2, TagH3, TagH4, TagH5, TagH6}
 
 	return contains(headings, tagName)
 }
@@ -881,7 +955,7 @@ func (e *DefaultHTMLElement) QuerySelectorAll(selector string) []HTMLElement {
 }
 
 func (e *DefaultHTMLElement) HasClass(className string) bool {
-	if class, hasClass := e.GetAttribute("class"); hasClass {
+	if class, hasClass := e.GetAttribute(AttrClass); hasClass {
 		classes := strings.Fields(class)
 
 		return contains(classes, className)
@@ -908,7 +982,7 @@ func (e *DefaultHTMLElement) IsVisible() bool {
 
 func (e *DefaultHTMLElement) IsFocusable() bool {
 	tagName := e.TagName()
-	focusableTags := []string{"input", "button", "select", "textarea", "a"}
+	focusableTags := []string{TagInput, TagButton, TagSelect, TagTextarea, TagA}
 
 	if contains(focusableTags, tagName) {
 		return true
@@ -930,28 +1004,28 @@ func (e *DefaultHTMLElement) GetAriaRole() string {
 	tagName := e.TagName()
 	switch tagName {
 	case "button":
-		return "button"
+		return RoleButton
 	case "a":
-		if _, hasHref := e.GetAttribute("href"); hasHref {
-			return "link"
+		if _, hasHref := e.GetAttribute(AttrHref); hasHref {
+			return RoleLink
 		}
 	case "input":
-		if inputType, hasType := e.GetAttribute("type"); hasType {
+		if inputType, hasType := e.GetAttribute(AttrType); hasType {
 			switch inputType {
-			case "button", "submit", "reset":
-				return "button"
-			case "checkbox":
-				return "checkbox"
-			case "radio":
-				return "radio"
+			case InputTypeButton, InputTypeSubmit, InputTypeReset:
+				return RoleButton
+			case InputTypeCheckbox:
+				return RoleCheckbox
+			case InputTypeRadio:
+				return RoleRadio
 			}
 		}
 
-		return "textbox"
+		return RoleTextbox
 	case "h1", "h2", "h3", "h4", "h5", "h6":
-		return "heading"
+		return RoleHeading
 	case "img":
-		return "img"
+		return RoleImg
 	}
 
 	return ""
@@ -959,19 +1033,19 @@ func (e *DefaultHTMLElement) GetAriaRole() string {
 
 func (e *DefaultHTMLElement) GetAriaLabel() string {
 	// Check aria-label first
-	if ariaLabel, hasAriaLabel := e.GetAttribute("aria-label"); hasAriaLabel {
+	if ariaLabel, hasAriaLabel := e.GetAttribute(AttrAriaLabel); hasAriaLabel {
 		return ariaLabel
 	}
 
 	// Check aria-labelledby
-	if labelledBy, hasLabelledBy := e.GetAttribute("aria-labelledby"); hasLabelledBy {
+	if labelledBy, hasLabelledBy := e.GetAttribute(AttrAriaLabelledBy); hasLabelledBy {
 		// In a real implementation, we'd find the referenced elements and get their text
 		return labelledBy
 	}
 
 	// For images, use alt text
-	if e.TagName() == "img" {
-		if alt, hasAlt := e.GetAttribute("alt"); hasAlt {
+	if e.TagName() == TagImg {
+		if alt, hasAlt := e.GetAttribute(AttrAlt); hasAlt {
 			return alt
 		}
 	}
@@ -990,8 +1064,8 @@ func (e *DefaultHTMLElement) GetAriaDescription() string {
 	}
 
 	// For images, use title attribute
-	if e.TagName() == "img" {
-		if title, hasTitle := e.GetAttribute("title"); hasTitle {
+	if e.TagName() == TagImg {
+		if title, hasTitle := e.GetAttribute(AttrTitle); hasTitle {
 			return title
 		}
 	}

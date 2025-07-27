@@ -19,7 +19,7 @@ import (
 func TestWebSocketOriginValidation_Security(t *testing.T) {
 	// Create test server first to get the actual port
 	testServer := httptest.NewServer(nil)
-	defer testServer.Close()
+	defer func() { testServer.Close() }()
 
 	// Extract port from test server URL
 	u, err := url.Parse(testServer.URL)
@@ -146,14 +146,14 @@ func TestWebSocketOriginValidation_Security(t *testing.T) {
 			// Attempt WebSocket connection
 			conn, resp, err := websocket.Dial(ctx, wsURL, opts)
 			if resp != nil && resp.Body != nil {
-				defer resp.Body.Close()
+				defer func() { _ = resp.Body.Close() }()
 			}
 
 			if tt.expectUpgrade {
 				// Should successfully upgrade to WebSocket
 				assert.NoError(t, err, tt.description)
 				if conn != nil {
-					conn.Close(websocket.StatusNormalClosure, "")
+					_ = conn.Close(websocket.StatusNormalClosure, "")
 				}
 				if resp != nil {
 					assert.Equal(t, http.StatusSwitchingProtocols, resp.StatusCode,
@@ -165,7 +165,7 @@ func TestWebSocketOriginValidation_Security(t *testing.T) {
 					assert.NotEqual(t, http.StatusSwitchingProtocols, resp.StatusCode,
 						"Should not return 101 Switching Protocols for: %s", tt.description)
 					if conn != nil {
-						conn.Close(websocket.StatusNormalClosure, "")
+						_ = conn.Close(websocket.StatusNormalClosure, "")
 					}
 				} else {
 					// Connection failed as expected
@@ -191,7 +191,7 @@ func TestWebSocketSecurity_CSRF(t *testing.T) {
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		server.handleWebSocket(w, r)
 	}))
-	defer testServer.Close()
+	defer func() { testServer.Close() }()
 
 	// Test common CSRF attack vectors
 	csrfAttacks := []struct {
@@ -238,7 +238,7 @@ func TestWebSocketSecurity_CSRF(t *testing.T) {
 			wsURL := "ws" + testServer.URL[4:] + "/ws"
 			conn, resp, err := websocket.Dial(ctx, wsURL, opts)
 			if resp != nil && resp.Body != nil {
-				defer resp.Body.Close()
+				defer func() { _ = resp.Body.Close() }()
 			}
 
 			// Should fail to connect
@@ -246,7 +246,7 @@ func TestWebSocketSecurity_CSRF(t *testing.T) {
 				assert.NotEqual(t, http.StatusSwitchingProtocols, resp.StatusCode,
 					attack.description)
 				if conn != nil {
-					conn.Close(websocket.StatusNormalClosure, "")
+					_ = conn.Close(websocket.StatusNormalClosure, "")
 				}
 			} else {
 				// Connection failed as expected
@@ -269,7 +269,7 @@ func TestWebSocketSecurity_MessageValidation(t *testing.T) {
 
 			return
 		}
-		defer conn.Close(websocket.StatusNormalClosure, "")
+		defer func() { _ = conn.Close(websocket.StatusNormalClosure, "") }()
 
 		// Simple echo server for testing message handling
 		ctx := context.Background()
@@ -281,7 +281,7 @@ func TestWebSocketSecurity_MessageValidation(t *testing.T) {
 			// Just consume messages without echoing back
 		}
 	}))
-	defer testServer.Close()
+	defer func() { testServer.Close() }()
 
 	// Establish valid WebSocket connection
 	ctx := context.Background()
@@ -293,10 +293,10 @@ func TestWebSocketSecurity_MessageValidation(t *testing.T) {
 	wsURL := "ws" + testServer.URL[4:] + "/ws"
 	conn, resp, err := websocket.Dial(ctx, wsURL, opts)
 	if resp != nil && resp.Body != nil {
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 	}
 	require.NoError(t, err)
-	defer conn.Close(websocket.StatusNormalClosure, "")
+	defer func() { _ = conn.Close(websocket.StatusNormalClosure, "") }()
 
 	// Test malicious message patterns
 	maliciousMessages := []string{
@@ -346,7 +346,7 @@ func TestSecurityRegression_WebSocketHijacking(t *testing.T) {
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		server.handleWebSocket(w, r)
 	}))
-	defer testServer.Close()
+	defer func() { testServer.Close() }()
 
 	// Common WebSocket hijacking techniques
 	hijackingAttempts := []struct {
@@ -399,7 +399,7 @@ func TestSecurityRegression_WebSocketHijacking(t *testing.T) {
 			wsURL := "ws" + testServer.URL[4:] + "/ws"
 			conn, resp, err := websocket.Dial(ctx, wsURL, opts)
 			if resp != nil && resp.Body != nil {
-				defer resp.Body.Close()
+				defer func() { _ = resp.Body.Close() }()
 			}
 
 			// Should fail to establish connection
@@ -407,7 +407,7 @@ func TestSecurityRegression_WebSocketHijacking(t *testing.T) {
 				assert.NotEqual(t, http.StatusSwitchingProtocols, resp.StatusCode,
 					"WebSocket hijacking should be prevented: %s", attempt.name)
 				if conn != nil {
-					conn.Close(websocket.StatusNormalClosure, "")
+					_ = conn.Close(websocket.StatusNormalClosure, "")
 				}
 			} else {
 				// Connection failed as expected
@@ -421,7 +421,7 @@ func TestSecurityRegression_WebSocketHijacking(t *testing.T) {
 func TestWebSocketSecurityUnderLoad(t *testing.T) {
 	// Create test server
 	testServer := httptest.NewServer(nil)
-	defer testServer.Close()
+	defer func() { testServer.Close() }()
 
 	// Test server created for load testing
 
@@ -478,7 +478,7 @@ func TestWebSocketSecurityUnderLoad(t *testing.T) {
 			wsURL := "ws" + testServer.URL[4:] + "/ws"
 			conn, resp, err := websocket.Dial(ctx, wsURL, opts)
 			if resp != nil && resp.Body != nil {
-				resp.Body.Close()
+				_ = resp.Body.Close()
 			}
 
 			if err == nil && resp != nil && resp.StatusCode == http.StatusSwitchingProtocols {
@@ -489,7 +489,7 @@ func TestWebSocketSecurityUnderLoad(t *testing.T) {
 				if conn != nil {
 					// Keep connection alive briefly then close
 					time.Sleep(100 * time.Millisecond)
-					conn.Close(websocket.StatusNormalClosure, "")
+					_ = conn.Close(websocket.StatusNormalClosure, "")
 				}
 			}
 		}(i)
@@ -525,7 +525,7 @@ func TestWebSocketSecurityUnderLoad(t *testing.T) {
 			wsURL := "ws" + testServer.URL[4:] + "/ws"
 			conn, resp, err := websocket.Dial(ctx, wsURL, opts)
 			if resp != nil && resp.Body != nil {
-				resp.Body.Close()
+				_ = resp.Body.Close()
 			}
 
 			if err != nil || resp == nil || resp.StatusCode != http.StatusSwitchingProtocols {
@@ -540,7 +540,7 @@ func TestWebSocketSecurityUnderLoad(t *testing.T) {
 				mu.Unlock()
 
 				if conn != nil {
-					conn.Close(websocket.StatusNormalClosure, "")
+					_ = conn.Close(websocket.StatusNormalClosure, "")
 				}
 			}
 		}(i)

@@ -2,6 +2,7 @@ package plugins
 
 import (
 	"context"
+	"log"
 	"sync"
 
 	"github.com/conneroisu/templar/internal/registry"
@@ -242,7 +243,7 @@ func (wa *WatcherAdapter) HandleFileChange(ctx context.Context, event FileChange
 	for _, plugin := range wa.plugins {
 		if err := plugin.HandleFileChange(ctx, event); err != nil {
 			// Log error but continue with other plugins
-			// TODO: Add proper error logging
+			log.Printf("Plugin %T error handling file change for %s: %v", plugin, event.Path, err)
 		}
 	}
 

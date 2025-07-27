@@ -68,7 +68,7 @@ templ Modal(title string, active bool) {
 	}
 
 	testDir := createTestComponentsDir(components)
-	defer os.RemoveAll(testDir)
+	defer func() { _ = os.RemoveAll(testDir) }()
 
 	// Initialize scanner and registry
 	reg := registry.NewComponentRegistry()
@@ -112,7 +112,7 @@ func TestIntegration_ScannerRegistry_ComponentModification(t *testing.T) {
 	// Create initial test component
 	testDir := fmt.Sprintf("integration_test_%d", time.Now().UnixNano())
 	require.NoError(t, os.MkdirAll(testDir, 0755))
-	defer os.RemoveAll(testDir)
+	defer func() { _ = os.RemoveAll(testDir) }()
 
 	initialContent := `package components
 
@@ -179,7 +179,7 @@ templ Card(title string) {
 	}
 
 	testDir := createTestComponentsDir(components)
-	defer os.RemoveAll(testDir)
+	defer func() { _ = os.RemoveAll(testDir) }()
 
 	// Initialize scanner and registry
 	reg := registry.NewComponentRegistry()
@@ -224,7 +224,7 @@ templ %s(text string) {
 	}
 
 	testDir := createTestComponentsDir(components)
-	defer os.RemoveAll(testDir)
+	defer func() { _ = os.RemoveAll(testDir) }()
 
 	// Initialize scanner and registry
 	reg := registry.NewComponentRegistry()
@@ -290,7 +290,7 @@ templ %s(text string) {
 func TestIntegration_ScannerRegistry_ErrorHandling(t *testing.T) {
 	testDir := fmt.Sprintf("integration_test_%d", time.Now().UnixNano())
 	require.NoError(t, os.MkdirAll(testDir, 0755))
-	defer os.RemoveAll(testDir)
+	defer func() { _ = os.RemoveAll(testDir) }()
 
 	// Create component with syntax error
 	invalidContent := `package components
@@ -383,7 +383,7 @@ templ DataTable(headers []string, rows [][]string, sortBy string, ascending bool
 	}
 
 	testDir := createTestComponentsDir(components)
-	defer os.RemoveAll(testDir)
+	defer func() { _ = os.RemoveAll(testDir) }()
 
 	// Initialize scanner and registry
 	reg := registry.NewComponentRegistry()
@@ -430,7 +430,7 @@ templ DataTable(headers []string, rows [][]string, sortBy string, ascending bool
 func TestIntegration_ScannerRegistry_WatchEvents(t *testing.T) {
 	testDir := fmt.Sprintf("integration_test_%d", time.Now().UnixNano())
 	require.NoError(t, os.MkdirAll(testDir, 0755))
-	defer os.RemoveAll(testDir)
+	defer func() { _ = os.RemoveAll(testDir) }()
 
 	// Initialize scanner and registry
 	reg := registry.NewComponentRegistry()

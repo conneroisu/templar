@@ -77,7 +77,7 @@ func TestNewWebSocketManager_ValidInputs(t *testing.T) {
 	}
 
 	// Clean shutdown
-	manager.Shutdown(context.Background())
+	_ = manager.Shutdown(context.Background())
 }
 
 // TestNewWebSocketManager_NilOriginValidator tests panic on nil origin validator.
@@ -96,7 +96,7 @@ func TestNewWebSocketManager_NilRateLimiter(t *testing.T) {
 	validator := &MockOriginValidator{AllowAll: true}
 
 	manager := NewWebSocketManager(validator, nil)
-	defer manager.Shutdown(context.Background())
+	defer func() { _ = manager.Shutdown(context.Background()) }()
 
 	if manager == nil {
 		t.Fatal("NewWebSocketManager returned nil with nil rate limiter")
@@ -110,7 +110,7 @@ func TestNewWebSocketManager_NilRateLimiter(t *testing.T) {
 func TestWebSocketManager_HandleWebSocket_InvalidParameters(t *testing.T) {
 	validator := &MockOriginValidator{AllowAll: true}
 	manager := NewWebSocketManager(validator, nil)
-	defer manager.Shutdown(context.Background())
+	defer func() { _ = manager.Shutdown(context.Background()) }()
 
 	// Test nil ResponseWriter
 	req := httptest.NewRequest(http.MethodGet, "/ws", nil)
@@ -127,7 +127,7 @@ func TestWebSocketManager_HandleWebSocket_ShutdownState(t *testing.T) {
 	manager := NewWebSocketManager(validator, nil)
 
 	// Shutdown manager first
-	manager.Shutdown(context.Background())
+	_ = manager.Shutdown(context.Background())
 
 	// Try to handle WebSocket connection
 	req := httptest.NewRequest(http.MethodGet, "/ws", nil)
@@ -149,7 +149,7 @@ func TestWebSocketManager_HandleWebSocket_OriginValidation(t *testing.T) {
 		AllowAll:       false,
 	}
 	manager := NewWebSocketManager(validator, nil)
-	defer manager.Shutdown(context.Background())
+	defer func() { _ = manager.Shutdown(context.Background()) }()
 
 	testCases := []struct {
 		name           string
@@ -196,7 +196,7 @@ func TestWebSocketManager_HandleWebSocket_RateLimiting(t *testing.T) {
 
 	// Test with no rate limiter (current behavior always allows)
 	manager := NewWebSocketManager(validator, nil)
-	defer manager.Shutdown(context.Background())
+	defer func() { _ = manager.Shutdown(context.Background()) }()
 
 	req := httptest.NewRequest(http.MethodGet, "/ws", nil)
 	recorder := httptest.NewRecorder()
@@ -217,7 +217,7 @@ func TestWebSocketManager_HandleWebSocket_RateLimiting(t *testing.T) {
 func TestWebSocketManager_BroadcastMessage(t *testing.T) {
 	validator := &MockOriginValidator{AllowAll: true}
 	manager := NewWebSocketManager(validator, nil)
-	defer manager.Shutdown(context.Background())
+	defer func() { _ = manager.Shutdown(context.Background()) }()
 
 	// Test broadcasting with valid message
 	message := UpdateMessage{
@@ -236,7 +236,7 @@ func TestWebSocketManager_BroadcastMessage(t *testing.T) {
 func TestWebSocketManager_GetConnectedClients(t *testing.T) {
 	validator := &MockOriginValidator{AllowAll: true}
 	manager := NewWebSocketManager(validator, nil)
-	defer manager.Shutdown(context.Background())
+	defer func() { _ = manager.Shutdown(context.Background()) }()
 
 	// Initially should have no clients
 	count := manager.GetConnectedClients()
@@ -249,7 +249,7 @@ func TestWebSocketManager_GetConnectedClients(t *testing.T) {
 func TestWebSocketManager_GetClients(t *testing.T) {
 	validator := &MockOriginValidator{AllowAll: true}
 	manager := NewWebSocketManager(validator, nil)
-	defer manager.Shutdown(context.Background())
+	defer func() { _ = manager.Shutdown(context.Background()) }()
 
 	clients := manager.GetClients()
 	if clients == nil {
@@ -292,7 +292,7 @@ func TestWebSocketManager_ValidateWebSocketRequest(t *testing.T) {
 		AllowAll:       false,
 	}
 	manager := NewWebSocketManager(validator, nil)
-	defer manager.Shutdown(context.Background())
+	defer func() { _ = manager.Shutdown(context.Background()) }()
 
 	testCases := []struct {
 		name     string
@@ -335,7 +335,7 @@ func TestWebSocketManager_ValidateWebSocketRequest(t *testing.T) {
 func TestWebSocketManager_GetClientIP(t *testing.T) {
 	validator := &MockOriginValidator{AllowAll: true}
 	manager := NewWebSocketManager(validator, nil)
-	defer manager.Shutdown(context.Background())
+	defer func() { _ = manager.Shutdown(context.Background()) }()
 
 	testCases := []struct {
 		name             string
@@ -394,7 +394,7 @@ func TestWebSocketManager_GetClientIP(t *testing.T) {
 func BenchmarkWebSocketManager_BroadcastMessage(b *testing.B) {
 	validator := &MockOriginValidator{AllowAll: true}
 	manager := NewWebSocketManager(validator, nil)
-	defer manager.Shutdown(context.Background())
+	defer func() { _ = manager.Shutdown(context.Background()) }()
 
 	message := UpdateMessage{
 		Type:      "benchmark",
@@ -412,7 +412,7 @@ func BenchmarkWebSocketManager_BroadcastMessage(b *testing.B) {
 func BenchmarkWebSocketManager_GetConnectedClients(b *testing.B) {
 	validator := &MockOriginValidator{AllowAll: true}
 	manager := NewWebSocketManager(validator, nil)
-	defer manager.Shutdown(context.Background())
+	defer func() { _ = manager.Shutdown(context.Background()) }()
 
 	b.ResetTimer()
 	for range b.N {

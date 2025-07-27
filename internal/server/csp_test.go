@@ -135,13 +135,13 @@ func TestProductionCSPSecurity(t *testing.T) {
 
 	// Production config should not have unsafe directives
 	for _, src := range config.CSP.ScriptSrc {
-		if src == "'unsafe-inline'" || src == "'unsafe-eval'" {
+		if src == UnsafeInline || src == "'unsafe-eval'" {
 			t.Errorf("Production CSP should not contain unsafe directive: %s", src)
 		}
 	}
 
 	for _, src := range config.CSP.StyleSrc {
-		if src == "'unsafe-inline'" {
+		if src == UnsafeInline {
 			t.Errorf("Production CSP should not contain unsafe directive: %s", src)
 		}
 	}

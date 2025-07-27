@@ -123,7 +123,7 @@ func FuzzWebSocketMessage(f *testing.F) {
 			if err != nil {
 				return
 			}
-			defer conn.Close(websocket.StatusNormalClosure, "")
+			defer func() { _ = conn.Close(websocket.StatusNormalClosure, "") }()
 
 			// Test reading the fuzzed message
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -157,12 +157,12 @@ func FuzzWebSocketMessage(f *testing.F) {
 
 		conn, resp, err := websocket.Dial(ctx, wsURL, nil)
 		if resp != nil && resp.Body != nil {
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 		}
 		if err != nil {
 			t.Skip("Could not connect to test server")
 		}
-		defer conn.Close(websocket.StatusNormalClosure, "")
+		defer func() { _ = conn.Close(websocket.StatusNormalClosure, "") }()
 
 		// Send the fuzzed message
 		err = conn.Write(ctx, websocket.MessageText, []byte(message))

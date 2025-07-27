@@ -293,7 +293,7 @@ func (s *E2ETestSystem) handleRenderComponent(w http.ResponseWriter, r *http.Req
 </html>`
 
 	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(html))
+	_, _ = w.Write([]byte(html))
 }
 
 func TestE2E_CompleteWorkflow(t *testing.T) {
@@ -364,7 +364,7 @@ templ Card(title string, content string) {
 
 		t.Skip("API not accessible, but registry verification passed")
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var componentList []map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&componentList)
@@ -386,7 +386,7 @@ templ Card(title string, content string) {
 		if httpErr != nil {
 			return httpErr
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		if resp.StatusCode != http.StatusOK {
 			return fmt.Errorf("expected status 200, got %d", resp.StatusCode)
@@ -550,7 +550,7 @@ templ Modal(title string, visible bool) {
 			if httpErr != nil {
 				return httpErr
 			}
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 
 			if resp.StatusCode != http.StatusOK {
 				return fmt.Errorf(
@@ -748,7 +748,7 @@ templ Component%d(text string, id int) {
 			if httpErr != nil {
 				return httpErr
 			}
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 
 			if resp.StatusCode != http.StatusOK {
 				return fmt.Errorf("API returned status %d", resp.StatusCode)

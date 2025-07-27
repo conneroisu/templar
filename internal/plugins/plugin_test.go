@@ -88,7 +88,11 @@ func (mbp *MockBuildPlugin) TransformBuildCommand(
 
 func TestPluginManager_RegisterPlugin(t *testing.T) {
 	pm := NewPluginManager()
-	defer pm.Shutdown()
+	defer func() {
+		if err := pm.Shutdown(); err != nil {
+			t.Logf("Error shutting down plugin manager: %v", err)
+		}
+	}()
 
 	plugin := &MockPlugin{
 		name:    "test-plugin",
@@ -120,7 +124,11 @@ func TestPluginManager_RegisterPlugin(t *testing.T) {
 
 func TestPluginManager_UnregisterPlugin(t *testing.T) {
 	pm := NewPluginManager()
-	defer pm.Shutdown()
+	defer func() {
+		if err := pm.Shutdown(); err != nil {
+			t.Logf("Error shutting down plugin manager: %v", err)
+		}
+	}()
 
 	plugin := &MockPlugin{
 		name:    "test-plugin",
@@ -158,7 +166,11 @@ func TestPluginManager_UnregisterPlugin(t *testing.T) {
 
 func TestPluginManager_ComponentProcessing(t *testing.T) {
 	pm := NewPluginManager()
-	defer pm.Shutdown()
+	defer func() {
+		if err := pm.Shutdown(); err != nil {
+			t.Logf("Error shutting down plugin manager: %v", err)
+		}
+	}()
 
 	// Register component plugins with different priorities
 	plugin1 := &MockComponentPlugin{
@@ -217,7 +229,7 @@ func TestPluginManager_ComponentProcessing(t *testing.T) {
 
 func TestPluginManager_ListPlugins(t *testing.T) {
 	pm := NewPluginManager()
-	defer pm.Shutdown()
+	defer func() { _ = pm.Shutdown() }()
 
 	plugin1 := &MockPlugin{
 		name:    "plugin-1",
@@ -234,8 +246,12 @@ func TestPluginManager_ListPlugins(t *testing.T) {
 	config1 := PluginConfig{Name: "plugin-1", Enabled: true}
 	config2 := PluginConfig{Name: "plugin-2", Enabled: false}
 
-	pm.RegisterPlugin(plugin1, config1)
-	pm.RegisterPlugin(plugin2, config2)
+	if err := pm.RegisterPlugin(plugin1, config1); err != nil {
+		t.Fatalf("Failed to register plugin1: %v", err)
+	}
+	if err := pm.RegisterPlugin(plugin2, config2); err != nil {
+		t.Fatalf("Failed to register plugin2: %v", err)
+	}
 
 	plugins := pm.ListPlugins()
 	if len(plugins) != 2 {
@@ -267,7 +283,7 @@ func TestPluginManager_ListPlugins(t *testing.T) {
 
 func TestPluginManager_HealthChecks(t *testing.T) {
 	pm := NewPluginManager()
-	defer pm.Shutdown()
+	defer func() { _ = pm.Shutdown() }()
 
 	plugin := &MockPlugin{
 		name:    "health-test-plugin",
@@ -279,7 +295,9 @@ func TestPluginManager_HealthChecks(t *testing.T) {
 	}
 
 	config := PluginConfig{Enabled: true}
-	pm.RegisterPlugin(plugin, config)
+	if err := pm.RegisterPlugin(plugin, config); err != nil {
+		t.Fatalf("Failed to register plugin: %v", err)
+	}
 
 	// Start health checks with short interval
 	pm.StartHealthChecks(100 * time.Millisecond)
@@ -300,7 +318,7 @@ func TestPluginManager_HealthChecks(t *testing.T) {
 
 func TestBuildPlugin_Lifecycle(t *testing.T) {
 	pm := NewPluginManager()
-	defer pm.Shutdown()
+	defer func() { _ = pm.Shutdown() }()
 
 	buildPlugin := &MockBuildPlugin{
 		MockPlugin: MockPlugin{
@@ -428,7 +446,7 @@ func TestPluginConfig_Validation(t *testing.T) {
 
 func BenchmarkPluginManager_ProcessComponent(b *testing.B) {
 	pm := NewPluginManager()
-	defer pm.Shutdown()
+	defer func() { _ = pm.Shutdown() }()
 
 	// Register multiple component plugins
 	for i := range 5 {
@@ -442,7 +460,7 @@ func BenchmarkPluginManager_ProcessComponent(b *testing.B) {
 		}
 
 		config := PluginConfig{Enabled: true}
-		pm.RegisterPlugin(plugin, config)
+		_ = pm.RegisterPlugin(plugin, config)
 	}
 
 	component := &types.ComponentInfo{
@@ -462,7 +480,7 @@ func BenchmarkPluginManager_ProcessComponent(b *testing.B) {
 
 func BenchmarkPluginManager_ListPlugins(b *testing.B) {
 	pm := NewPluginManager()
-	defer pm.Shutdown()
+	defer func() { _ = pm.Shutdown() }()
 
 	// Register many plugins
 	for i := range 100 {
@@ -473,7 +491,7 @@ func BenchmarkPluginManager_ListPlugins(b *testing.B) {
 		}
 
 		config := PluginConfig{Enabled: true}
-		pm.RegisterPlugin(plugin, config)
+		_ = pm.RegisterPlugin(plugin, config)
 	}
 
 	b.ResetTimer()

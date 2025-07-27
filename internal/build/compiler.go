@@ -35,7 +35,7 @@ func (tc *TemplCompiler) Compile(
 	}
 
 	// Run templ generate command with context for timeout handling
-	cmd := exec.CommandContext(ctx, tc.command, tc.args...)
+	cmd := exec.CommandContext(ctx, tc.command, tc.args...) //nolint:gosec // G204: Command validated above
 	cmd.Dir = "." // Run in current directory
 
 	output, err := cmd.CombinedOutput()
@@ -67,7 +67,7 @@ func (tc *TemplCompiler) CompileWithPools(
 	defer pools.PutOutputBuffer(outputBuffer)
 
 	// Run templ generate command with context for timeout handling
-	cmd := exec.CommandContext(ctx, tc.command, tc.args...)
+	cmd := exec.CommandContext(ctx, tc.command, tc.args...) //nolint:gosec // G204: Command validated above
 	cmd.Dir = "." // Run in current directory
 
 	// Use pooled buffers for command output

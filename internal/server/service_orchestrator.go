@@ -148,7 +148,9 @@ func NewServiceOrchestrator(deps ServiceDependencies) *ServiceOrchestrator {
 func (so *ServiceOrchestrator) Start(ctx context.Context) error {
 	// Start build pipeline
 	if so.buildPipeline != nil {
-		so.buildPipeline.Start(ctx)
+		if err := so.buildPipeline.Start(ctx); err != nil {
+			return fmt.Errorf("failed to start build pipeline: %w", err)
+		}
 
 		// Add build result callback
 		so.buildPipeline.AddCallback(func(result interface{}) {
@@ -194,10 +196,7 @@ func (so *ServiceOrchestrator) setupFileWatcher(ctx context.Context) {
 	// Add change handler
 	so.fileWatcher.AddHandler(func(events []interfaces.ChangeEvent) error {
 		changeEvents := make([]watcher.ChangeEvent, len(events))
-		for i, event := range events {
-			// Convert interfaces.ChangeEvent to watcher.ChangeEvent
-			changeEvents[i] = watcher.ChangeEvent(event)
-		}
+		copy(changeEvents, events)
 
 		return so.handleFileChange(changeEvents)
 	})
@@ -285,7 +284,9 @@ func (so *ServiceOrchestrator) processTemplateFileChange(filePath string) error 
 			if component.FilePath == filePath {
 				// Trigger rebuild for this specific component
 				if so.buildPipeline != nil {
-					so.buildPipeline.Build(component)
+					if err := so.buildPipeline.Build(component); err != nil {
+						log.Printf("Failed to build component %s: %v", component.Name, err)
+					}
 				}
 
 				break
@@ -347,7 +348,9 @@ func (so *ServiceOrchestrator) triggerFullRebuild() {
 	components := so.registry.GetAll()
 	for _, component := range components {
 		if so.buildPipeline != nil {
-			so.buildPipeline.Build(component)
+			if err := so.buildPipeline.Build(component); err != nil {
+				log.Printf("Failed to build component %s: %v", component.Name, err)
+			}
 		}
 	}
 }
@@ -454,12 +457,16 @@ func (so *ServiceOrchestrator) Shutdown(ctx context.Context) error {
 
 		// Stop file watcher
 		if so.fileWatcher != nil {
-			so.fileWatcher.Stop()
+			if err := so.fileWatcher.Stop(); err != nil {
+				log.Printf("Error stopping file watcher: %v", err)
+			}
 		}
 
 		// Stop build pipeline
 		if so.buildPipeline != nil {
-			so.buildPipeline.Stop()
+			if err := so.buildPipeline.Stop(); err != nil {
+				log.Printf("Error stopping build pipeline: %v", err)
+			}
 		}
 
 		log.Printf("Service orchestrator shut down successfully")

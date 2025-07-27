@@ -24,7 +24,7 @@ import (
 func TestIntegration_WatcherScanner_FileChangeDetection(t *testing.T) {
 	testDir := fmt.Sprintf("integration_test_%d", time.Now().UnixNano())
 	require.NoError(t, os.MkdirAll(testDir, 0755))
-	defer os.RemoveAll(testDir)
+	defer func() { _ = os.RemoveAll(testDir) }()
 
 	// Create initial component
 	initialContent := `package components
@@ -96,7 +96,7 @@ templ Button(text string, disabled bool) {
 func TestIntegration_WatcherScanner_MultipleFileChanges(t *testing.T) {
 	testDir := fmt.Sprintf("integration_test_%d", time.Now().UnixNano())
 	require.NoError(t, os.MkdirAll(testDir, 0755))
-	defer os.RemoveAll(testDir)
+	defer func() { _ = os.RemoveAll(testDir) }()
 
 	// Create multiple components
 	components := map[string]string{
@@ -211,7 +211,7 @@ templ Modal(title string, visible bool) {
 func TestIntegration_WatcherScanner_NewFileCreation(t *testing.T) {
 	testDir := fmt.Sprintf("integration_test_%d", time.Now().UnixNano())
 	require.NoError(t, os.MkdirAll(testDir, 0755))
-	defer os.RemoveAll(testDir)
+	defer func() { _ = os.RemoveAll(testDir) }()
 
 	// Initialize components
 	reg := registry.NewComponentRegistry()
@@ -307,7 +307,7 @@ templ Badge(text string, count int) {
 func TestIntegration_WatcherScanner_FileDeletion(t *testing.T) {
 	testDir := fmt.Sprintf("integration_test_%d", time.Now().UnixNano())
 	require.NoError(t, os.MkdirAll(testDir, 0755))
-	defer os.RemoveAll(testDir)
+	defer func() { _ = os.RemoveAll(testDir) }()
 
 	// Create initial components
 	components := map[string]string{
@@ -378,7 +378,7 @@ templ Card(title string) {
 func TestIntegration_WatcherScanner_FilteringEfficiency(t *testing.T) {
 	testDir := fmt.Sprintf("integration_test_%d", time.Now().UnixNano())
 	require.NoError(t, os.MkdirAll(testDir, 0755))
-	defer os.RemoveAll(testDir)
+	defer func() { _ = os.RemoveAll(testDir) }()
 
 	// Create mix of files - only .templ should trigger scans
 	fileContents := map[string]string{
@@ -472,7 +472,7 @@ templ Component(text string) {
 func TestIntegration_WatcherScanner_ErrorResilience(t *testing.T) {
 	testDir := fmt.Sprintf("integration_test_%d", time.Now().UnixNano())
 	require.NoError(t, os.MkdirAll(testDir, 0755))
-	defer os.RemoveAll(testDir)
+	defer func() { _ = os.RemoveAll(testDir) }()
 
 	// Initialize components
 	reg := registry.NewComponentRegistry()
@@ -557,7 +557,7 @@ func TestIntegration_WatcherScanner_PerformanceUnderLoad(t *testing.T) {
 
 	testDir := fmt.Sprintf("integration_test_%d", time.Now().UnixNano())
 	require.NoError(t, os.MkdirAll(testDir, 0755))
-	defer os.RemoveAll(testDir)
+	defer func() { _ = os.RemoveAll(testDir) }()
 
 	// Initialize components
 	reg := registry.NewComponentRegistry()

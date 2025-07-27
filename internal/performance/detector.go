@@ -187,7 +187,7 @@ func (pd *PerformanceDetector) UpdateBaselines(results []BenchmarkResult) error 
 		return fmt.Errorf("invalid baseline directory: %w", err)
 	}
 
-	if err := os.MkdirAll(pd.baselineDir, 0700); err != nil { // More restrictive permissions
+	if err := os.MkdirAll(pd.baselineDir, 0o700); err != nil { // More restrictive permissions
 		return fmt.Errorf("creating baseline directory: %w", err)
 	}
 
@@ -418,12 +418,12 @@ func (pd *PerformanceDetector) detectAllocationRegressionWithStats(
 // calculateSeverity determines regression severity based on threshold ratio.
 func (pd *PerformanceDetector) calculateSeverity(ratio, threshold float64) string {
 	if ratio > threshold*2.0 {
-		return "critical"
+		return SeverityCritical
 	} else if ratio > threshold*1.15 {
-		return "major"
+		return SeverityMajor
 	}
 
-	return "minor"
+	return SeverityMinor
 }
 
 // calculateStatistics computes statistical measures for baseline samples.
@@ -544,8 +544,8 @@ func (pd *PerformanceDetector) saveBaseline(baseline *PerformanceBaseline) error
 		return fmt.Errorf("marshaling baseline: %w", err)
 	}
 
-	// Use more restrictive file permissions (0600 = read/write for owner only)
-	if err := os.WriteFile(filename, data, 0600); err != nil {
+	// Use more restrictive file permissions (0o600 = read/write for owner only)
+	if err := os.WriteFile(filename, data, 0o600); err != nil {
 		return fmt.Errorf("writing baseline file: %w", err)
 	}
 
@@ -558,10 +558,10 @@ func (pd *PerformanceDetector) getPerformanceRecommendation(
 	percentageChange float64,
 ) string {
 	switch severity {
-	case "critical":
+	case SeverityCritical:
 		return fmt.Sprintf("CRITICAL: %.1f%% performance degradation. "+
 			"Immediate investigation required. Consider reverting recent changes.", percentageChange)
-	case "major":
+	case SeverityMajor:
 		return fmt.Sprintf("MAJOR: %.1f%% performance degradation. "+
 			"Review recent commits for performance impact.", percentageChange)
 	default:
@@ -578,10 +578,10 @@ func (pd *PerformanceDetector) getMemoryRecommendation(
 	percentageChange float64,
 ) string {
 	switch severity {
-	case "critical":
+	case SeverityCritical:
 		return fmt.Sprintf("CRITICAL: %.1f%% memory increase. "+
 			"Check for memory leaks and excessive allocations.", percentageChange)
-	case "major":
+	case SeverityMajor:
 		return fmt.Sprintf("MAJOR: %.1f%% memory increase. "+
 			"Review data structures and caching strategies.", percentageChange)
 	default:
@@ -596,10 +596,10 @@ func (pd *PerformanceDetector) getAllocationRecommendation(
 	percentageChange float64,
 ) string {
 	switch severity {
-	case "critical":
+	case SeverityCritical:
 		return fmt.Sprintf("CRITICAL: %.1f%% allocation increase. "+
 			"Implement object pooling and reduce unnecessary allocations.", percentageChange)
-	case "major":
+	case SeverityMajor:
 		return fmt.Sprintf("MAJOR: %.1f%% allocation increase. "+
 			"Review slice growth patterns and string concatenations.", percentageChange)
 	default:

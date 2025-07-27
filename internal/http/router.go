@@ -145,8 +145,9 @@ func NewRouter(
 	// Thread-safe server initialization
 	router.serverMutex.Lock()
 	router.httpServer = &http.Server{
-		Addr:    addr,    // Bind address from configuration
-		Handler: handler, // Handler with complete middleware stack
+		Addr:              addr,             // Bind address from configuration
+		Handler:           handler,          // Handler with complete middleware stack
+		ReadHeaderTimeout: 10 * time.Second, // Prevent Slowloris attacks
 	}
 	router.serverMutex.Unlock()
 

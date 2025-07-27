@@ -5,6 +5,27 @@ import (
 	"testing"
 )
 
+const (
+	testComponent         = "TestComponent"
+	testErrorCode         = "TEST_ERROR"
+	testMessage           = "test message"
+	testGoFile            = "test.go"
+	buildFailedCode       = "BUILD_FAILED"
+	buildFailedMsg        = "build failed"
+	usernameField         = "username"
+	buildOpFailedMsg      = "build operation failed"
+	validationErrorMsg    = "validation failed"
+	validationFailedCode  = "VALIDATION_FAILED"
+	validationErrorCode   = "VALIDATION_ERROR"
+	invalidValue          = "invalid"
+	originalErrorMsg      = "original error"
+	testErrorMsg          = "test error"
+	errorOneMsg           = "error 1"
+	errorTwoMsg           = "error 2"
+	securityViolationCode = "SECURITY_VIOLATION"
+	securityErrorMsg      = "security error"
+)
+
 func TestTemplarError(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -15,8 +36,8 @@ func TestTemplarError(t *testing.T) {
 			name: "basic error",
 			err: &TemplarError{
 				Type:    ErrorTypeValidation,
-				Code:    "TEST_ERROR",
-				Message: "test message",
+				Code:    testErrorCode,
+				Message: testMessage,
 			},
 			expected: "[TEST_ERROR] test message",
 		},
@@ -24,9 +45,9 @@ func TestTemplarError(t *testing.T) {
 			name: "error with component",
 			err: &TemplarError{
 				Type:      ErrorTypeValidation,
-				Code:      "TEST_ERROR",
-				Message:   "test message",
-				Component: "TestComponent",
+				Code:      testErrorCode,
+				Message:   testMessage,
+				Component: testComponent,
 			},
 			expected: "[TEST_ERROR] component:TestComponent test message",
 		},
@@ -34,9 +55,9 @@ func TestTemplarError(t *testing.T) {
 			name: "error with location",
 			err: &TemplarError{
 				Type:     ErrorTypeValidation,
-				Code:     "TEST_ERROR",
-				Message:  "test message",
-				FilePath: "test.go",
+				Code:     testErrorCode,
+				Message:  testMessage,
+				FilePath: testGoFile,
 				Line:     10,
 				Column:   5,
 			},
@@ -46,8 +67,8 @@ func TestTemplarError(t *testing.T) {
 			name: "error with cause",
 			err: &TemplarError{
 				Type:    ErrorTypeValidation,
-				Code:    "TEST_ERROR",
-				Message: "test message",
+				Code:    testErrorCode,
+				Message: testMessage,
 				Cause:   errors.New("underlying error"),
 			},
 			expected: "[TEST_ERROR] test message: underlying error",
@@ -65,19 +86,19 @@ func TestTemplarError(t *testing.T) {
 
 func TestValidationError(t *testing.T) {
 	fieldErr := NewFieldValidationError(
-		"username",
-		"invalid",
+		usernameField,
+		invalidValue,
 		"must be at least 3 characters",
 		"Use a longer username",
 		"Avoid special characters",
 	)
 
-	if fieldErr.Field() != "username" {
-		t.Errorf("Field() = %v, want %v", fieldErr.Field(), "username")
+	if fieldErr.Field() != usernameField {
+		t.Errorf("Field() = %v, want %v", fieldErr.Field(), usernameField)
 	}
 
-	if fieldErr.Value() != "invalid" {
-		t.Errorf("Value() = %v, want %v", fieldErr.Value(), "invalid")
+	if fieldErr.Value() != invalidValue {
+		t.Errorf("Value() = %v, want %v", fieldErr.Value(), invalidValue)
 	}
 
 	suggestions := fieldErr.Suggestions()
@@ -85,14 +106,14 @@ func TestValidationError(t *testing.T) {
 		t.Errorf("Suggestions() length = %v, want %v", len(suggestions), 2)
 	}
 
-	expected := "validation error in field 'username': must be at least 3 characters"
+	expected := "validation error in field '" + usernameField + "': must be at least 3 characters"
 	if fieldErr.Error() != expected {
 		t.Errorf("Error() = %v, want %v", fieldErr.Error(), expected)
 	}
 }
 
 func TestValidationErrorCollection(t *testing.T) {
-	collection := &ValidationErrorCollection{}
+	collection := &ValidationCollectionError{}
 
 	// Test empty collection
 	if collection.HasErrors() {
@@ -131,10 +152,10 @@ func TestValidationErrorCollection(t *testing.T) {
 }
 
 func TestErrorWrapping(t *testing.T) {
-	originalErr := errors.New("original error")
+	originalErr := errors.New(originalErrorMsg)
 
 	// Test basic wrapping
-	wrappedErr := Wrap(originalErr, ErrorTypeBuild, "BUILD_FAILED", "build operation failed")
+	wrappedErr := Wrap(originalErr, ErrorTypeBuild, buildFailedCode, buildOpFailedMsg)
 	if wrappedErr == nil {
 		t.Fatal("Wrap() should not return nil")
 	}
@@ -150,13 +171,13 @@ func TestErrorWrapping(t *testing.T) {
 	// Test wrapping existing TemplarError
 	existingTemplErr := &TemplarError{
 		Type:      ErrorTypeValidation,
-		Code:      "VALIDATION_ERROR",
-		Message:   "validation failed",
-		Component: "TestComponent",
+		Code:      validationErrorCode,
+		Message:   validationErrorMsg,
+		Component: testComponent,
 	}
 
-	rewrappedErr := Wrap(existingTemplErr, ErrorTypeBuild, "BUILD_FAILED", "build operation failed")
-	if rewrappedErr.Component != "TestComponent" {
+	rewrappedErr := Wrap(existingTemplErr, ErrorTypeBuild, buildFailedCode, buildOpFailedMsg)
+	if rewrappedErr.Component != testComponent {
 		t.Errorf("Rewrapped error should preserve component = %v", rewrappedErr.Component)
 	}
 
@@ -166,19 +187,19 @@ func TestErrorWrapping(t *testing.T) {
 }
 
 func TestSpecializedWrappers(t *testing.T) {
-	originalErr := errors.New("test error")
+	originalErr := errors.New(testErrorMsg)
 
 	// Test build wrapper
-	buildErr := WrapBuild(originalErr, "BUILD_FAILED", "build failed", "TestComponent")
+	buildErr := WrapBuild(originalErr, buildFailedCode, buildFailedMsg, testComponent)
 	if buildErr.Type != ErrorTypeBuild {
 		t.Errorf("WrapBuild type = %v, want %v", buildErr.Type, ErrorTypeBuild)
 	}
-	if buildErr.Component != "TestComponent" {
-		t.Errorf("WrapBuild component = %v, want %v", buildErr.Component, "TestComponent")
+	if buildErr.Component != testComponent {
+		t.Errorf("WrapBuild component = %v, want %v", buildErr.Component, testComponent)
 	}
 
 	// Test security wrapper
-	securityErr := WrapSecurity(originalErr, "SECURITY_VIOLATION", "security error")
+	securityErr := WrapSecurity(originalErr, securityViolationCode, securityErrorMsg)
 	if securityErr.Type != ErrorTypeSecurity {
 		t.Errorf("WrapSecurity type = %v, want %v", securityErr.Type, ErrorTypeSecurity)
 	}
@@ -187,7 +208,7 @@ func TestSpecializedWrappers(t *testing.T) {
 	}
 
 	// Test validation wrapper
-	validationErr := WrapValidation(originalErr, "VALIDATION_FAILED", "validation error")
+	validationErr := WrapValidation(originalErr, validationFailedCode, validationErrorMsg)
 	if validationErr.Type != ErrorTypeValidation {
 		t.Errorf("WrapValidation type = %v, want %v", validationErr.Type, ErrorTypeValidation)
 	}
@@ -197,9 +218,9 @@ func TestSpecializedWrappers(t *testing.T) {
 }
 
 func TestErrorEnhancement(t *testing.T) {
-	originalErr := errors.New("original error")
+	originalErr := errors.New(originalErrorMsg)
 
-	enhancedErr := EnhanceError(originalErr, "TestComponent", "test.go", 10, 5)
+	enhancedErr := EnhanceError(originalErr, testComponent, testGoFile, 10, 5)
 	if enhancedErr == nil {
 		t.Fatal("EnhanceError should not return nil")
 	}
@@ -210,12 +231,12 @@ func TestErrorEnhancement(t *testing.T) {
 		t.Fatal("EnhanceError should return TemplarError")
 	}
 
-	if templErr.Component != "TestComponent" {
-		t.Errorf("Enhanced error component = %v, want %v", templErr.Component, "TestComponent")
+	if templErr.Component != testComponent {
+		t.Errorf("Enhanced error component = %v, want %v", templErr.Component, testComponent)
 	}
 
-	if templErr.FilePath != "test.go" {
-		t.Errorf("Enhanced error file path = %v, want %v", templErr.FilePath, "test.go")
+	if templErr.FilePath != testGoFile {
+		t.Errorf("Enhanced error file path = %v, want %v", templErr.FilePath, testGoFile)
 	}
 
 	if templErr.Line != 10 {
@@ -261,8 +282,8 @@ func TestErrorUtilities(t *testing.T) {
 }
 
 func TestErrorCollection(t *testing.T) {
-	err1 := errors.New("error 1")
-	err2 := errors.New("error 2")
+	err1 := errors.New(errorOneMsg)
+	err2 := errors.New(errorTwoMsg)
 	var nilErr error
 
 	// Test CollectErrors
@@ -296,10 +317,10 @@ func TestErrorCollection(t *testing.T) {
 func TestErrorContext(t *testing.T) {
 	err := &TemplarError{
 		Type:      ErrorTypeBuild,
-		Code:      "BUILD_FAILED",
-		Message:   "build failed",
-		Component: "TestComponent",
-		FilePath:  "test.go",
+		Code:      buildFailedCode,
+		Message:   buildFailedMsg,
+		Component: testComponent,
+		FilePath:  testGoFile,
 		Line:      10,
 		Column:    5,
 		Context: map[string]interface{}{
@@ -325,8 +346,8 @@ func TestErrorContext(t *testing.T) {
 		}
 	}
 
-	if context["component"] != "TestComponent" {
-		t.Errorf("Context component = %v, want %v", context["component"], "TestComponent")
+	if context["component"] != testComponent {
+		t.Errorf("Context component = %v, want %v", context["component"], testComponent)
 	}
 
 	if context["type"] != string(ErrorTypeBuild) {

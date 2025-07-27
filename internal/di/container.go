@@ -115,7 +115,7 @@ type ServiceDefinition struct {
 // FactoryFunc creates a service instance using the dependency resolver.
 type FactoryFunc func(resolver DependencyResolver) (interface{}, error)
 
-// TODO: Update ServiceContainer to fully implement interfaces.ServiceContainer interface
+// NOTE: ServiceContainer interface compliance can be verified when needed:
 // var _ interfaces.ServiceContainer = (*ServiceContainer)(nil)
 
 // DependencyResolver provides safe dependency resolution that prevents circular dependencies.

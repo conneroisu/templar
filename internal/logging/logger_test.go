@@ -37,13 +37,13 @@ func TestStructuredError(t *testing.T) {
 		err := NewStructuredError(ErrorCategoryFileSystem, "read_file", "permission denied").
 			WithComponent("scanner").
 			WithContext("file_path", "/test/path").
-			WithContext("permissions", "0644").
+			WithContext("permissions", "0o644").
 			WithRetryable(true).
 			WithSeverity("critical")
 
 		assert.Equal(t, "scanner", err.Component)
 		assert.Equal(t, "/test/path", err.Context["file_path"])
-		assert.Equal(t, "0644", err.Context["permissions"])
+		assert.Equal(t, "0o644", err.Context["permissions"])
 		assert.True(t, err.Retryable)
 		assert.Equal(t, "critical", err.Severity)
 	})

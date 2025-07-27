@@ -63,9 +63,9 @@ func runServe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		// Enhanced error for configuration issues
 		ctx := &errors.SuggestionContext{
-			ConfigPath: ".templar.yml",
+			ConfigPath: TemplarConfigFile,
 		}
-		suggestions := errors.ConfigurationErrorSuggestions(err.Error(), ".templar.yml", ctx)
+		suggestions := errors.ConfigurationErrorSuggestions(err.Error(), TemplarConfigFile, ctx)
 		enhancedErr := errors.NewEnhancedError(
 			"Failed to load configuration",
 			err,

@@ -8,9 +8,49 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 
+	"github.com/conneroisu/templar/internal/plugins"
 	"github.com/conneroisu/templar/internal/types"
+)
+
+// Constants for repeated string literals.
+const (
+	// Framework and tool names.
+	FrameworkNameTailwind = "tailwind"
+	PostCSSTool           = "postcss"
+	AutoprefixerTool      = "autoprefixer"
+
+	// File names and extensions.
+	TailwindConfigJS = "tailwind.config.js"
+	InputCSSFile     = "input.css"
+	OutputCSSFile    = "output.css"
+
+	// Command line flags.
+	FlagMinify     = "--minify"
+	FlagInstall    = "install"
+	FlagSaveDev    = "-D"
+	FlagInputFile  = "-i"
+	FlagOutputFile = "-o"
+	FlagInit       = "init"
+
+	// CSS directives and content.
+	TailwindBaseDirective      = "@tailwind base;\n"
+	TailwindComponentDirective = "@tailwind components;\n"
+	TailwindUtilityDirective   = "@tailwind utilities;\n\n"
+	LayerBaseStart             = "@layer base {\n"
+	RootSelectorStart          = "  :root {\n"
+	RootSelectorEnd            = "  }\n"
+	LayerEnd                   = "}\n"
+	LayerEndNewline            = "}\n\n"
+	CSSVariableFormat          = "    --%s: %s;\n"
+
+	// Tailwind-specific constants (non-duplicates).
+	ErrTailwindCSSGeneration = "tailwind CSS generation failed: %w"
+
+	// Module export patterns (Tailwind-specific).
+	ExportDefault = "export default"
 )
 
 // TailwindPlugin implements CSSFrameworkPlugin for Tailwind CSS framework.
@@ -45,10 +85,10 @@ func (p *TailwindPlugin) Initialize(ctx context.Context, config map[string]inter
 	p.config = config
 
 	// Check if Tailwind CLI is available
-	tailwindPath, err := exec.LookPath("tailwindcss")
+	tailwindPath, err := exec.LookPath(plugins.TailwindCSSBinary)
 	if err != nil {
 		// Try npx
-		if _, err := exec.LookPath("npx"); err == nil {
+		if _, err := exec.LookPath(plugins.NpxCommand); err == nil {
 			p.tailwindPath = "npx tailwindcss"
 		} else {
 			return errors.New("tailwindcss not found in PATH and npx not available")
@@ -138,7 +178,7 @@ func (p *TailwindPlugin) IsInstalled() bool {
 	}
 
 	// Check for standalone binary
-	if _, err := exec.LookPath("tailwindcss"); err == nil {
+	if _, err := exec.LookPath(plugins.TailwindCSSBinary); err == nil {
 		return true
 	}
 
@@ -162,21 +202,26 @@ func (p *TailwindPlugin) IsInstalled() bool {
 // Setup sets up Tailwind with the given configuration.
 func (p *TailwindPlugin) Setup(ctx context.Context, config FrameworkConfig) error {
 	switch config.InstallMethod {
-	case "npm":
+	case plugins.InstallMethodNPM:
 		return p.setupWithNPM(ctx, config)
-	case "cdn":
+	case plugins.InstallMethodCDN:
 		return p.setupWithCDN(ctx, config)
-	case "standalone":
+	case plugins.InstallMethodStandalone:
 		return p.setupStandalone(ctx, config)
 	default:
-		return fmt.Errorf("unsupported install method: %s", config.InstallMethod)
+		return fmt.Errorf(plugins.ErrUnsupportedInstallMethod, config.InstallMethod)
 	}
 }
 
 // setupWithNPM sets up Tailwind using npm.
 func (p *TailwindPlugin) setupWithNPM(ctx context.Context, config FrameworkConfig) error {
+	// Validate version string to prevent command injection
+	if err := validateVersionString(config.Version); err != nil {
+		return fmt.Errorf("invalid version string: %w", err)
+	}
+
 	// Install Tailwind via npm
-	cmd := exec.CommandContext(
+	cmd := exec.CommandContext( //nolint:gosec // G204: Version string validated above
 		ctx,
 		"npm",
 		"install",
@@ -197,11 +242,18 @@ func (p *TailwindPlugin) setupWithNPM(ctx context.Context, config FrameworkConfi
 
 	// Create entry point CSS file
 	if err := p.createEntryPoint(config); err != nil {
-		return fmt.Errorf("failed to create entry point: %w", err)
+		return fmt.Errorf(plugins.ErrFailedCreateEntryPoint, err)
 	}
 
 	// Initialize Tailwind config
-	cmd = exec.CommandContext(ctx, "npx", "tailwindcss", "init")
+	// Validate npx command and tailwind binary paths
+	if err := validateCommandPath(plugins.NpxCommand); err != nil {
+		return fmt.Errorf("invalid npx command: %w", err)
+	}
+	if err := validateCommandPath(plugins.TailwindCSSBinary); err != nil {
+		return fmt.Errorf("invalid tailwind binary: %w", err)
+	}
+	cmd = exec.CommandContext(ctx, plugins.NpxCommand, plugins.TailwindCSSBinary, "init") //nolint:gosec // G204: Commands validated above
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to initialize Tailwind config: %w", err)
 	}
@@ -211,23 +263,23 @@ func (p *TailwindPlugin) setupWithNPM(ctx context.Context, config FrameworkConfi
 
 // setupWithCDN sets up Tailwind using CDN.
 func (p *TailwindPlugin) setupWithCDN(ctx context.Context, config FrameworkConfig) error {
-	cdnUrl := config.CDNUrl
-	if cdnUrl == "" {
-		cdnUrl = "https://cdn.tailwindcss.com/" + config.Version
+	cdnURL := config.CdnURL
+	if cdnURL == "" {
+		cdnURL = "https://cdn.tailwindcss.com/" + config.Version
 	}
 
 	// Create a simple CSS file that imports from CDN
-	cssContent := fmt.Sprintf("@import url('%s');\n", cdnUrl)
+	cssContent := fmt.Sprintf(plugins.ImportURLTemplate, cdnURL)
 
 	// Ensure output directory exists
 	outputDir := filepath.Dir(config.OutputPath)
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
-		return fmt.Errorf("failed to create output directory: %w", err)
+	if err := os.MkdirAll(outputDir, 0o755); err != nil {
+		return fmt.Errorf(plugins.ErrFailedCreateOutputDirectory, err)
 	}
 
 	// Write CSS file
-	if err := os.WriteFile(config.OutputPath, []byte(cssContent), 0644); err != nil {
-		return fmt.Errorf("failed to write CSS file: %w", err)
+	if err := os.WriteFile(config.OutputPath, []byte(cssContent), 0o600); err != nil {
+		return fmt.Errorf(plugins.ErrFailedWriteCSSFile, err)
 	}
 
 	return nil
@@ -237,14 +289,14 @@ func (p *TailwindPlugin) setupWithCDN(ctx context.Context, config FrameworkConfi
 func (p *TailwindPlugin) setupStandalone(ctx context.Context, config FrameworkConfig) error {
 	// Download Tailwind CLI binary (simplified - in practice, you'd download from GitHub releases)
 	outputDir := filepath.Dir(config.OutputPath)
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
-		return fmt.Errorf("failed to create output directory: %w", err)
+	if err := os.MkdirAll(outputDir, 0o755); err != nil {
+		return fmt.Errorf(plugins.ErrFailedCreateOutputDirectory, err)
 	}
 
 	// Create basic Tailwind CSS (simplified)
 	basicCSS := p.generateBasicTailwindCSS(config)
-	if err := os.WriteFile(config.OutputPath, []byte(basicCSS), 0644); err != nil {
-		return fmt.Errorf("failed to write CSS file: %w", err)
+	if err := os.WriteFile(config.OutputPath, []byte(basicCSS), 0o600); err != nil {
+		return fmt.Errorf(plugins.ErrFailedWriteCSSFile, err)
 	}
 
 	return nil
@@ -253,15 +305,15 @@ func (p *TailwindPlugin) setupStandalone(ctx context.Context, config FrameworkCo
 // createEntryPoint creates the main CSS entry point file.
 func (p *TailwindPlugin) createEntryPoint(config FrameworkConfig) error {
 	entryDir := filepath.Dir(config.EntryPoint)
-	if err := os.MkdirAll(entryDir, 0755); err != nil {
-		return fmt.Errorf("failed to create entry point directory: %w", err)
+	if err := os.MkdirAll(entryDir, 0o755); err != nil {
+		return fmt.Errorf(plugins.ErrFailedCreateEntryPointDir, err)
 	}
 
 	// Generate CSS content
 	cssContent := p.generateTailwindCSS(config)
 
-	if err := os.WriteFile(config.EntryPoint, []byte(cssContent), 0644); err != nil {
-		return fmt.Errorf("failed to write entry point file: %w", err)
+	if err := os.WriteFile(config.EntryPoint, []byte(cssContent), 0o600); err != nil {
+		return fmt.Errorf(plugins.ErrFailedWriteEntryPointFile, err)
 	}
 
 	return nil
@@ -474,19 +526,19 @@ module.exports = {
 // ValidateConfig validates Tailwind configuration.
 func (p *TailwindPlugin) ValidateConfig(configPath string) error {
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		return fmt.Errorf("config file does not exist: %s", configPath)
+		return fmt.Errorf(plugins.ErrConfigFileNotExist, configPath)
 	}
 
 	// Read and validate config file content
 	content, err := os.ReadFile(configPath)
 	if err != nil {
-		return fmt.Errorf("failed to read config file: %w", err)
+		return fmt.Errorf(plugins.ErrFailedReadConfigFile, err)
 	}
 
 	// Basic validation - check for required exports
-	if !strings.Contains(string(content), "module.exports") &&
+	if !strings.Contains(string(content), plugins.ModuleExportsStr) &&
 		!strings.Contains(string(content), "export default") {
-		return errors.New("config file must export a configuration object")
+		return errors.New(plugins.ErrConfigMustExportObject)
 	}
 
 	return nil
@@ -501,28 +553,53 @@ func (p *TailwindPlugin) ProcessCSS(
 	// Create temporary input file
 	tmpDir := os.TempDir()
 	inputFile := filepath.Join(tmpDir, "input.css")
-	outputFile := filepath.Join(tmpDir, "output.css")
+	outputFile := filepath.Join(tmpDir, plugins.OutputCSSFileName)
 
-	if err := os.WriteFile(inputFile, input, 0644); err != nil {
-		return nil, fmt.Errorf("failed to write temporary input file: %w", err)
+	if err := os.WriteFile(inputFile, input, 0o600); err != nil {
+		return nil, fmt.Errorf(plugins.ErrFailedWriteTempInputFile, err)
 	}
-	defer os.Remove(inputFile)
-	defer os.Remove(outputFile)
+	defer func() { _ = os.Remove(inputFile) }()
+	defer func() { _ = os.Remove(outputFile) }()
 
 	// Build Tailwind command
 	var cmd *exec.Cmd
-	if strings.Contains(p.tailwindPath, "npx") {
-		args := []string{"npx", "tailwindcss", "-i", inputFile, "-o", outputFile}
+	if strings.Contains(p.tailwindPath, plugins.NpxCommand) {
+		// Validate command paths and file paths
+		if err := validateCommandPath(plugins.NpxCommand); err != nil {
+			return nil, fmt.Errorf("invalid npx command: %w", err)
+		}
+		if err := validateCommandPath(plugins.TailwindCSSBinary); err != nil {
+			return nil, fmt.Errorf("invalid tailwind binary: %w", err)
+		}
+		if err := validateFilePath(inputFile); err != nil {
+			return nil, fmt.Errorf("invalid input file path: %w", err)
+		}
+		if err := validateFilePath(outputFile); err != nil {
+			return nil, fmt.Errorf("invalid output file path: %w", err)
+		}
+
+		args := []string{plugins.NpxCommand, plugins.TailwindCSSBinary, "-i", inputFile, "-o", outputFile}
 		if options.Minify {
 			args = append(args, "--minify")
 		}
-		cmd = exec.CommandContext(ctx, args[0], args[1:]...)
+		cmd = exec.CommandContext(ctx, args[0], args[1:]...) //nolint:gosec // G204: Commands validated above
 	} else {
+		// Validate tailwind path and file paths
+		if err := validateCommandPath(p.tailwindPath); err != nil {
+			return nil, fmt.Errorf("invalid tailwind path: %w", err)
+		}
+		if err := validateFilePath(inputFile); err != nil {
+			return nil, fmt.Errorf("invalid input file path: %w", err)
+		}
+		if err := validateFilePath(outputFile); err != nil {
+			return nil, fmt.Errorf("invalid output file path: %w", err)
+		}
+
 		args := []string{"-i", inputFile, "-o", outputFile}
 		if options.Minify {
 			args = append(args, "--minify")
 		}
-		cmd = exec.CommandContext(ctx, p.tailwindPath, args...)
+		cmd = exec.CommandContext(ctx, p.tailwindPath, args...) //nolint:gosec // G204: Command and args validated above
 	}
 
 	// Run Tailwind CSS generation
@@ -533,7 +610,7 @@ func (p *TailwindPlugin) ProcessCSS(
 	// Read output
 	output, err := os.ReadFile(outputFile)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read compiled CSS: %w", err)
+		return nil, fmt.Errorf(plugins.ErrFailedReadCompiledCSS, err)
 	}
 
 	return output, nil
@@ -544,7 +621,7 @@ func (p *TailwindPlugin) ExtractClasses(content string) ([]string, error) {
 	var classes []string
 
 	// Extract from class attributes
-	classRegex := regexp.MustCompile(`class="([^"]*)"`)
+	classRegex := regexp.MustCompile(plugins.ClassRegexPattern)
 	matches := classRegex.FindAllStringSubmatch(content, -1)
 
 	for _, match := range matches {
@@ -661,10 +738,10 @@ func (p *TailwindPlugin) OptimizeCSS(
 	cssStr := string(css)
 
 	// Remove comments
-	cssStr = regexp.MustCompile(`/\*.*?\*/`).ReplaceAllString(cssStr, "")
+	cssStr = regexp.MustCompile(plugins.CommentRegexPattern).ReplaceAllString(cssStr, "")
 
 	// Remove extra whitespace
-	cssStr = regexp.MustCompile(`\s+`).ReplaceAllString(cssStr, " ")
+	cssStr = regexp.MustCompile(plugins.WhitespaceRegexPattern).ReplaceAllString(cssStr, " ")
 	cssStr = strings.TrimSpace(cssStr)
 
 	return []byte(cssStr), nil
@@ -675,7 +752,7 @@ func (p *TailwindPlugin) ExtractVariables(css []byte) (map[string]string, error)
 	variables := make(map[string]string)
 
 	// Extract CSS custom properties
-	varRegex := regexp.MustCompile(`--([a-zA-Z][a-zA-Z0-9_-]*)\s*:\s*([^;]+);`)
+	varRegex := regexp.MustCompile(plugins.CSSVarRegexPattern)
 	matches := varRegex.FindAllStringSubmatch(string(css), -1)
 
 	for _, match := range matches {
@@ -927,4 +1004,87 @@ func getTailwindTemplates() []ComponentTemplate {
 			},
 		},
 	}
+}
+
+// Security validation functions
+
+// validateVersionString validates that a version string is safe for use in commands.
+func validateVersionString(version string) error {
+	if version == "" {
+		return errors.New("version string cannot be empty")
+	}
+	
+	// Only allow alphanumeric characters, dots, hyphens and at symbols
+	matched, err := regexp.MatchString(`^[a-zA-Z0-9\.\-@^~]+$`, version)
+	if err != nil {
+		return fmt.Errorf("failed to validate version string: %w", err)
+	}
+	if !matched {
+		return errors.New("version string contains invalid characters")
+	}
+	
+	// Prevent command injection attempts
+	if strings.ContainsAny(version, ";&|$()`\\") {
+		return errors.New("version string contains potentially dangerous characters")
+	}
+	
+	return nil
+}
+
+// validateCommandPath validates that a command path is safe.
+func validateCommandPath(path string) error {
+	if path == "" {
+		return errors.New("command path cannot be empty")
+	}
+	
+	// Allow only specific whitelisted commands
+	allowedCommands := []string{
+		"npm", "npx", "node", "tailwindcss", "tailwind",
+		"postcss", "autoprefixer", "yarn", "pnpm",
+	}
+	
+	// Extract basename for validation
+	basename := filepath.Base(path)
+	
+	// Remove common executable extensions for comparison
+	if runtime.GOOS == "windows" {
+		if strings.HasSuffix(basename, ".exe") || strings.HasSuffix(basename, ".cmd") || strings.HasSuffix(basename, ".bat") {
+			basename = strings.TrimSuffix(basename, filepath.Ext(basename))
+		}
+	}
+	
+	for _, allowed := range allowedCommands {
+		if basename == allowed {
+			return nil
+		}
+	}
+	
+	return fmt.Errorf("command '%s' is not in the allowlist", basename)
+}
+
+// validateFilePath validates that a file path is safe and doesn't contain directory traversal attempts.
+func validateFilePath(path string) error {
+	if path == "" {
+		return errors.New("file path cannot be empty")
+	}
+	
+	// Clean the path to resolve any . or .. elements
+	cleanPath := filepath.Clean(path)
+	
+	// Check for directory traversal attempts
+	if strings.Contains(cleanPath, "..") {
+		return errors.New("file path contains directory traversal attempts")
+	}
+	
+	// Ensure path doesn't contain control characters
+	if strings.ContainsAny(path, "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f") {
+		return errors.New("file path contains control characters")
+	}
+	
+	// Prevent command injection attempts in file paths
+	if strings.ContainsAny(path, ";&|$()`\\") {
+		return errors.New("file path contains potentially dangerous characters")
+	}
+	
+	return nil
 }

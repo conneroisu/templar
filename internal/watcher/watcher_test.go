@@ -35,7 +35,11 @@ func TestEventTypeString(t *testing.T) {
 func TestNewFileWatcher(t *testing.T) {
 	watcher, err := NewFileWatcher(100 * time.Millisecond)
 	require.NoError(t, err)
-	defer watcher.Stop()
+	defer func() {
+		if err := watcher.Stop(); err != nil {
+			t.Logf("Error stopping watcher: %v", err)
+		}
+	}()
 
 	assert.NotNil(t, watcher.watcher)
 	assert.NotNil(t, watcher.debouncer)
@@ -46,7 +50,11 @@ func TestNewFileWatcher(t *testing.T) {
 func TestFileWatcherAddFilter(t *testing.T) {
 	watcher, err := NewFileWatcher(100 * time.Millisecond)
 	require.NoError(t, err)
-	defer watcher.Stop()
+	defer func() {
+		if err := watcher.Stop(); err != nil {
+			t.Logf("Error stopping watcher: %v", err)
+		}
+	}()
 
 	// Add templ filter
 	watcher.AddFilter(interfaces.FileFilterFunc(TemplFilter))
@@ -60,7 +68,11 @@ func TestFileWatcherAddFilter(t *testing.T) {
 func TestFileWatcherAddHandler(t *testing.T) {
 	watcher, err := NewFileWatcher(100 * time.Millisecond)
 	require.NoError(t, err)
-	defer watcher.Stop()
+	defer func() {
+		if err := watcher.Stop(); err != nil {
+			t.Logf("Error stopping watcher: %v", err)
+		}
+	}()
 
 	handlerCalled := false
 	handler := func(events []ChangeEvent) error {
@@ -75,7 +87,9 @@ func TestFileWatcherAddHandler(t *testing.T) {
 	// Simulate calling handler
 	watcher.mutex.RLock()
 	for _, h := range watcher.handlers {
-		h([]ChangeEvent{{Type: EventTypeCreated, Path: "test.go"}})
+		if err := h([]ChangeEvent{{Type: EventTypeCreated, Path: "test.go"}}); err != nil {
+			t.Errorf("Handler failed: %v", err)
+		}
 	}
 	watcher.mutex.RUnlock()
 
@@ -85,13 +99,17 @@ func TestFileWatcherAddHandler(t *testing.T) {
 func TestFileWatcherAddPath(t *testing.T) {
 	watcher, err := NewFileWatcher(100 * time.Millisecond)
 	require.NoError(t, err)
-	defer watcher.Stop()
+	defer func() {
+		if err := watcher.Stop(); err != nil {
+			t.Logf("Error stopping watcher: %v", err)
+		}
+	}()
 
 	// Create temporary directory within current working directory
 	tempDir := "test_temp_dir"
-	err = os.MkdirAll(tempDir, 0755)
+	err = os.MkdirAll(tempDir, 0o755)
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	// Test watching directory
 	err = watcher.AddPath(tempDir)
@@ -105,13 +123,17 @@ func TestFileWatcherAddPath(t *testing.T) {
 func TestFileWatcherStartStop(t *testing.T) {
 	watcher, err := NewFileWatcher(50 * time.Millisecond)
 	require.NoError(t, err)
-	defer watcher.Stop()
+	defer func() {
+		if err := watcher.Stop(); err != nil {
+			t.Logf("Error stopping watcher: %v", err)
+		}
+	}()
 
 	// Create temporary directory within current working directory
 	tempDir := "test_temp_start_stop"
-	err = os.MkdirAll(tempDir, 0755)
+	err = os.MkdirAll(tempDir, 0o755)
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	err = watcher.AddPath(tempDir)
 	require.NoError(t, err)
@@ -139,7 +161,7 @@ func TestFileWatcherStartStop(t *testing.T) {
 
 	// Create a file to trigger event
 	testFile := filepath.Join(tempDir, "test.txt")
-	err = os.WriteFile(testFile, []byte("test"), 0644)
+	err = os.WriteFile(testFile, []byte("test"), 0o600)
 	require.NoError(t, err)
 
 	// Wait for debouncing and event processing
@@ -162,8 +184,8 @@ func TestTemplFilter(t *testing.T) {
 		path     string
 		expected bool
 	}{
-		{"main.go", false},
-		{"component.templ", true},
+		{TestMainGoFileName, false},
+		{TestComponentTemplFileName, true},
 		{"script.js", false},
 		{"style.css", false},
 		{"README.md", false},
@@ -183,8 +205,8 @@ func TestGoFilter(t *testing.T) {
 		path     string
 		expected bool
 	}{
-		{"main.go", true},
-		{"component.templ", false},
+		{TestMainGoFileName, true},
+		{TestComponentTemplFileName, false},
 		{"script.js", false},
 		{"style.css", false},
 		{"README.md", false},
@@ -204,9 +226,9 @@ func TestNoTestFilter(t *testing.T) {
 		path     string
 		expected bool
 	}{
-		{"main.go", true},
+		{TestMainGoFileName, true},
 		{"main_test.go", false},
-		{"component.templ", true},
+		{TestComponentTemplFileName, true},
 		{"component_test.templ", false},
 		{"other.js", true},
 	}
@@ -227,7 +249,7 @@ func TestNoVendorFilter(t *testing.T) {
 		{"src/main.go", true},
 		{"vendor/package/index.js", false},
 		{"src/vendor/test.go", false},
-		{"main.go", true},
+		{TestMainGoFileName, true},
 	}
 
 	for _, tc := range testCases {
@@ -246,7 +268,7 @@ func TestNoGitFilter(t *testing.T) {
 		{"src/main.go", true},
 		{".git/config", false},
 		{"src/.git/test.go", false},
-		{"main.go", true},
+		{TestMainGoFileName, true},
 	}
 
 	for _, tc := range testCases {
@@ -326,7 +348,11 @@ func TestChangeEvent(t *testing.T) {
 func TestFileWatcherValidation(t *testing.T) {
 	watcher, err := NewFileWatcher(100 * time.Millisecond)
 	require.NoError(t, err)
-	defer watcher.Stop()
+	defer func() {
+		if err := watcher.Stop(); err != nil {
+			t.Logf("Error stopping watcher: %v", err)
+		}
+	}()
 
 	// Test watching with path traversal
 	err = watcher.AddPath("../../../etc")
@@ -341,13 +367,17 @@ func TestFileWatcherValidation(t *testing.T) {
 func TestFileWatcherConcurrency(t *testing.T) {
 	watcher, err := NewFileWatcher(50 * time.Millisecond)
 	require.NoError(t, err)
-	defer watcher.Stop()
+	defer func() {
+		if err := watcher.Stop(); err != nil {
+			t.Logf("Error stopping watcher: %v", err)
+		}
+	}()
 
 	// Create temporary directory within current working directory
 	tempDir := "test_temp_concurrency"
-	err = os.MkdirAll(tempDir, 0755)
+	err = os.MkdirAll(tempDir, 0o755)
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	err = watcher.AddPath(tempDir)
 	require.NoError(t, err)
@@ -379,7 +409,7 @@ func TestFileWatcherConcurrency(t *testing.T) {
 		go func(i int) {
 			defer wg.Done()
 			testFile := filepath.Join(tempDir, fmt.Sprintf("test%d.txt", i))
-			err := os.WriteFile(testFile, []byte("test"), 0644)
+			err := os.WriteFile(testFile, []byte("test"), 0o600)
 			assert.NoError(t, err)
 		}(i)
 	}
@@ -412,14 +442,18 @@ func TestFileWatcherErrorHandling(t *testing.T) {
 func TestAddRecursive(t *testing.T) {
 	watcher, err := NewFileWatcher(100 * time.Millisecond)
 	require.NoError(t, err)
-	defer watcher.Stop()
+	defer func() {
+		if err := watcher.Stop(); err != nil {
+			t.Logf("Error stopping watcher: %v", err)
+		}
+	}()
 
 	// Create temporary directory with subdirectories within current working directory
 	tempDir := "test_temp_recursive"
 	subDir := filepath.Join(tempDir, "subdir")
-	err = os.MkdirAll(subDir, 0755)
+	err = os.MkdirAll(subDir, 0o755)
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	// Test adding recursively
 	err = watcher.AddRecursive(tempDir)

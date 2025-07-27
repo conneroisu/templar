@@ -75,7 +75,7 @@ func TestBuildService_Build(t *testing.T) {
 			tempDir := t.TempDir()
 			oldDir, err := os.Getwd()
 			require.NoError(t, err)
-			defer os.Chdir(oldDir)
+			defer func() { _ = os.Chdir(oldDir) }()
 
 			err = os.Chdir(tempDir)
 			require.NoError(t, err)
@@ -141,16 +141,16 @@ func TestBuildService_cleanBuildArtifacts(t *testing.T) {
 
 	// Create cache directory with some files
 	cacheDir := cfg.Build.CacheDir
-	err := os.MkdirAll(cacheDir, 0755)
+	err := os.MkdirAll(cacheDir, 0o755)
 	require.NoError(t, err)
 
 	cacheFile := filepath.Join(cacheDir, "test-cache.dat")
-	err = os.WriteFile(cacheFile, []byte("cache data"), 0644)
+	err = os.WriteFile(cacheFile, []byte("cache data"), 0o644)
 	require.NoError(t, err)
 
 	// Create some generated files
 	generatedFile := filepath.Join(tempDir, "test_templ.go")
-	err = os.WriteFile(generatedFile, []byte("generated content"), 0644)
+	err = os.WriteFile(generatedFile, []byte("generated content"), 0o644)
 	require.NoError(t, err)
 
 	// Test cleaning
@@ -172,7 +172,7 @@ func TestBuildService_cleanGeneratedFiles(t *testing.T) {
 
 	// Create test directory structure
 	testPath := filepath.Join(tempDir, "components")
-	err := os.MkdirAll(testPath, 0755)
+	err := os.MkdirAll(testPath, 0o755)
 	require.NoError(t, err)
 
 	// Create various test files
@@ -186,7 +186,7 @@ func TestBuildService_cleanGeneratedFiles(t *testing.T) {
 
 	for filename := range files {
 		filePath := filepath.Join(testPath, filename)
-		writeErr := os.WriteFile(filePath, []byte("test content"), 0644)
+		writeErr := os.WriteFile(filePath, []byte("test content"), 0o644)
 		require.NoError(t, writeErr)
 	}
 
@@ -214,7 +214,7 @@ func TestBuildService_scanComponents(t *testing.T) {
 
 	// Create component directory
 	componentDir := filepath.Join(tempDir, "components")
-	err := os.MkdirAll(componentDir, 0755)
+	err := os.MkdirAll(componentDir, 0o755)
 	require.NoError(t, err)
 
 	// Create test component
@@ -227,7 +227,7 @@ templ TestComponent(title string) {
 	scanErr := os.WriteFile(
 		filepath.Join(componentDir, "test.templ"),
 		[]byte(componentContent),
-		0644,
+		0o644,
 	)
 	require.NoError(t, scanErr)
 
@@ -273,7 +273,7 @@ func TestBuildService_applyProductionOptimizations(t *testing.T) {
 	ctx := context.Background()
 	outputDir := filepath.Join(tempDir, "dist")
 
-	mkdirErr := os.MkdirAll(outputDir, 0755)
+	mkdirErr := os.MkdirAll(outputDir, 0o755)
 	require.NoError(t, mkdirErr)
 
 	optimizeErr := service.applyProductionOptimizations(ctx, outputDir)
@@ -342,7 +342,7 @@ func createTestConfig(tempDir string) *config.Config {
 
 func createTestComponents(tempDir string) error {
 	componentDir := filepath.Join(tempDir, "components")
-	if err := os.MkdirAll(componentDir, 0755); err != nil {
+	if err := os.MkdirAll(componentDir, 0o755); err != nil {
 		return err
 	}
 
@@ -356,5 +356,5 @@ templ AnotherComponent(count int) {
 	<div>Count: { fmt.Sprintf("%d", count) }</div>
 }`
 
-	return os.WriteFile(filepath.Join(componentDir, "test.templ"), []byte(componentContent), 0644)
+	return os.WriteFile(filepath.Join(componentDir, "test.templ"), []byte(componentContent), 0o644)
 }

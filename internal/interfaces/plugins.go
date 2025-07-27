@@ -8,6 +8,23 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
+// File operation constants.
+const (
+	FileOpCreate  = "CREATE"
+	FileOpModify  = "MODIFY"
+	FileOpDelete  = "DELETE"
+	FileOpRename  = "RENAME"
+	FileOpUnknown = "UNKNOWN"
+)
+
+// Validation severity constants.
+const (
+	SeverityError   = "ERROR"
+	SeverityWarning = "WARNING"
+	SeverityInfo    = "INFO"
+	SeverityUnknown = "UNKNOWN"
+)
+
 // Note: Plugin interface is defined in core.go to avoid duplication
 
 // ComponentPlugin extends Plugin for component-specific processing
@@ -284,15 +301,15 @@ func (pe *ParsedError) FormatError() string {
 func (op FileOperation) String() string {
 	switch op {
 	case FileOperationCreate:
-		return "CREATE"
+		return FileOpCreate
 	case FileOperationModify:
-		return "MODIFY"
+		return FileOpModify
 	case FileOperationDelete:
-		return "DELETE"
+		return FileOpDelete
 	case FileOperationRename:
-		return "RENAME"
+		return FileOpRename
 	default:
-		return "UNKNOWN"
+		return FileOpUnknown
 	}
 }
 
@@ -300,12 +317,12 @@ func (op FileOperation) String() string {
 func (vs ValidationSeverity) String() string {
 	switch vs {
 	case ValidationSeverityError:
-		return "ERROR"
+		return SeverityError
 	case ValidationSeverityWarning:
-		return "WARNING"
+		return SeverityWarning
 	case ValidationSeverityInfo:
-		return "INFO"
+		return SeverityInfo
 	default:
-		return "UNKNOWN"
+		return SeverityUnknown
 	}
 }

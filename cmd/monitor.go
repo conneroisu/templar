@@ -218,9 +218,9 @@ func runMonitorReport(cmd *cobra.Command, args []string) error {
 
 	// Output report
 	switch monitorFormat {
-	case "json":
+	case OutputFormatJSON:
 		return outputJSON(report, monitorOutput)
-	case "yaml":
+	case OutputFormatYAML:
 		return outputYAML(report, monitorOutput)
 	default:
 		return outputReportTable(report, monitorOutput)
@@ -260,9 +260,9 @@ display:
 	})
 
 	switch monitorFormat {
-	case "json":
+	case OutputFormatJSON:
 		return outputJSON(recommendations, monitorOutput)
-	case "yaml":
+	case OutputFormatYAML:
 		return outputYAML(recommendations, monitorOutput)
 	default:
 		return displayRecommendationsTable(recommendations)
@@ -286,9 +286,9 @@ func runMonitorMetrics(cmd *cobra.Command, args []string) error {
 	metrics := monitor.GetMetrics(metricType, since)
 
 	switch monitorFormat {
-	case "json":
+	case OutputFormatJSON:
 		return outputJSON(metrics, monitorOutput)
-	case "yaml":
+	case OutputFormatYAML:
 		return outputYAML(metrics, monitorOutput)
 	default:
 		return displayMetricsTable(metrics, metricType)
@@ -389,7 +389,7 @@ func outputReportTable(report performance.PerformanceReport, output string) erro
 	content += fmt.Sprintf("\nRecommendations: %d active\n", len(report.Recommendations))
 
 	if output != "" {
-		return os.WriteFile(output, []byte(content), 0644)
+		return os.WriteFile(output, []byte(content), 0o644)
 	}
 
 	fmt.Print(content)
@@ -403,7 +403,7 @@ func outputJSON(data interface{}, output string) error {
 	}
 
 	if output != "" {
-		return os.WriteFile(output, jsonData, 0644)
+		return os.WriteFile(output, jsonData, 0o644)
 	}
 
 	fmt.Println(string(jsonData))

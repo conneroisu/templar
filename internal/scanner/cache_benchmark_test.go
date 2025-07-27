@@ -184,7 +184,7 @@ func createLargeTestStructure(tb testing.TB, numFiles int) (string, func()) {
 	}
 
 	for _, dir := range dirs {
-		if err := os.MkdirAll(filepath.Join(tempDir, dir), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Join(tempDir, dir), 0o755); err != nil {
 			tb.Fatal(err)
 		}
 	}
@@ -197,12 +197,12 @@ func createLargeTestStructure(tb testing.TB, numFiles int) (string, func()) {
 		// Create realistic component content
 		content := generateRealisticComponent(i)
 
-		if err := os.WriteFile(filename, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(filename, []byte(content), 0o600); err != nil {
 			tb.Fatal(err)
 		}
 	}
 
-	return tempDir, func() { os.RemoveAll(tempDir) }
+	return tempDir, func() { _ = os.RemoveAll(tempDir) }
 }
 
 // generateRealisticComponent creates realistic templ component content.

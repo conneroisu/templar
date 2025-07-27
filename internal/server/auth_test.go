@@ -17,11 +17,13 @@ func TestAuthMiddleware_Disabled(t *testing.T) {
 	middleware := AuthMiddleware(authConfig)
 	handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("success"))
+		if _, err := w.Write([]byte("success")); err != nil {
+			t.Logf("Failed to write response: %v", err)
+		}
 	}))
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	req.RemoteAddr = "192.168.1.100:1234"
+	req.RemoteAddr = TestRemoteAddr1
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -44,7 +46,9 @@ func TestAuthMiddleware_LocalhostBypass(t *testing.T) {
 	middleware := AuthMiddleware(authConfig)
 	handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("success"))
+		if _, err := w.Write([]byte("success")); err != nil {
+			t.Logf("Failed to write response: %v", err)
+		}
 	}))
 
 	tests := []struct {
@@ -64,7 +68,7 @@ func TestAuthMiddleware_LocalhostBypass(t *testing.T) {
 		},
 		{
 			name:       "external_ip_no_auth",
-			remoteAddr: "192.168.1.100:1234",
+			remoteAddr: TestRemoteAddr1,
 			expectCode: http.StatusUnauthorized,
 		},
 	}
@@ -94,7 +98,9 @@ func TestAuthMiddleware_IPAllowlist(t *testing.T) {
 	middleware := AuthMiddleware(authConfig)
 	handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("success"))
+		if _, err := w.Write([]byte("success")); err != nil {
+			t.Logf("Failed to write response: %v", err)
+		}
 	}))
 
 	tests := []struct {
@@ -104,7 +110,7 @@ func TestAuthMiddleware_IPAllowlist(t *testing.T) {
 	}{
 		{
 			name:       "allowed_ip_1",
-			remoteAddr: "192.168.1.100:1234",
+			remoteAddr: TestRemoteAddr1,
 			expectCode: http.StatusOK,
 		},
 		{
@@ -147,7 +153,9 @@ func TestAuthMiddleware_BasicAuth(t *testing.T) {
 	middleware := AuthMiddleware(authConfig)
 	handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("success"))
+		if _, err := w.Write([]byte("success")); err != nil {
+			t.Logf("Failed to write response: %v", err)
+		}
 	}))
 
 	tests := []struct {
@@ -185,7 +193,7 @@ func TestAuthMiddleware_BasicAuth(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/", nil)
-			req.RemoteAddr = "192.168.1.100:1234"
+			req.RemoteAddr = TestRemoteAddr1
 
 			if tt.username != "" || tt.password != "" {
 				auth := base64.StdEncoding.EncodeToString([]byte(tt.username + ":" + tt.password))
@@ -224,7 +232,9 @@ func TestAuthMiddleware_TokenAuth(t *testing.T) {
 	middleware := AuthMiddleware(authConfig)
 	handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("success"))
+		if _, err := w.Write([]byte("success")); err != nil {
+			t.Logf("Failed to write response: %v", err)
+		}
 	}))
 
 	tests := []struct {
@@ -276,7 +286,7 @@ func TestAuthMiddleware_TokenAuth(t *testing.T) {
 					req.Header.Set("Authorization", "Bearer "+tt.token)
 				}
 			}
-			req.RemoteAddr = "192.168.1.100:1234"
+			req.RemoteAddr = TestRemoteAddr1
 
 			w := httptest.NewRecorder()
 			handler.ServeHTTP(w, req)
@@ -311,11 +321,13 @@ func TestAuthMiddleware_NoAuthRequired(t *testing.T) {
 	middleware := AuthMiddleware(authConfig)
 	handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("success"))
+		if _, err := w.Write([]byte("success")); err != nil {
+			t.Logf("Failed to write response: %v", err)
+		}
 	}))
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	req.RemoteAddr = "192.168.1.100:1234" // External IP
+	req.RemoteAddr = TestRemoteAddr1 // External IP
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)

@@ -107,13 +107,13 @@ func TestEnhancedWebSocket_Integration(t *testing.T) {
 		},
 	})
 	if resp != nil && resp.Body != nil {
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 	}
 
 	if err != nil {
 		t.Fatalf("Failed to connect to enhanced WebSocket: %v", err)
 	}
-	defer conn.Close(websocket.StatusNormalClosure, "")
+	defer func() { _ = conn.Close(websocket.StatusNormalClosure, "") }()
 
 	// Wait for connection to be processed
 	time.Sleep(200 * time.Millisecond)
@@ -171,7 +171,7 @@ func TestEnhancedWebSocket_RateLimiting(t *testing.T) {
 			},
 		})
 		if resp != nil && resp.Body != nil {
-			resp.Body.Close()
+			_ = resp.Body.Close()
 		}
 		cancel()
 
@@ -191,7 +191,7 @@ func TestEnhancedWebSocket_RateLimiting(t *testing.T) {
 		},
 	})
 	if resp != nil && resp.Body != nil {
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 	}
 
 	if err == nil {
@@ -203,7 +203,7 @@ func TestEnhancedWebSocket_RateLimiting(t *testing.T) {
 	// Clean up
 	for _, conn := range connections {
 		if conn != nil {
-			conn.Close(websocket.StatusNormalClosure, "")
+			_ = conn.Close(websocket.StatusNormalClosure, "")
 		}
 	}
 }
@@ -246,7 +246,7 @@ func TestEnhancedWebSocket_Broadcasting(t *testing.T) {
 			},
 		})
 		if resp != nil && resp.Body != nil {
-			resp.Body.Close()
+			_ = resp.Body.Close()
 		}
 		cancel()
 
@@ -274,7 +274,7 @@ func TestEnhancedWebSocket_Broadcasting(t *testing.T) {
 
 	// Clean up
 	for _, conn := range connections {
-		conn.Close(websocket.StatusNormalClosure, "")
+		_ = conn.Close(websocket.StatusNormalClosure, "")
 	}
 }
 
@@ -340,7 +340,7 @@ func benchmarkEnhancedWebSocket(b *testing.B, numClients int) {
 					},
 				})
 				if resp != nil && resp.Body != nil {
-					resp.Body.Close()
+					_ = resp.Body.Close()
 				}
 				if err != nil {
 					b.Errorf("Failed to connect client %d: %v", index, err)
@@ -369,7 +369,7 @@ func benchmarkEnhancedWebSocket(b *testing.B, numClients int) {
 		cleanup := time.Now()
 		for _, conn := range connections {
 			if conn != nil {
-				conn.Close(websocket.StatusNormalClosure, "")
+				_ = conn.Close(websocket.StatusNormalClosure, "")
 			}
 		}
 		cleanupTime := time.Since(cleanup)
@@ -445,7 +445,7 @@ func benchmarkOriginalWebSocket(b *testing.B, numClients int) {
 					},
 				})
 				if resp != nil && resp.Body != nil {
-					resp.Body.Close()
+					_ = resp.Body.Close()
 				}
 				if err != nil {
 					b.Errorf("Failed to connect client %d: %v", index, err)
@@ -478,7 +478,7 @@ func benchmarkOriginalWebSocket(b *testing.B, numClients int) {
 		cleanup := time.Now()
 		for _, conn := range connections {
 			if conn != nil {
-				conn.Close(websocket.StatusNormalClosure, "")
+				_ = conn.Close(websocket.StatusNormalClosure, "")
 			}
 		}
 		cleanupTime := time.Since(cleanup)

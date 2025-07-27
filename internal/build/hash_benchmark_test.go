@@ -1,7 +1,7 @@
 package build
 
 import (
-	"crypto/md5"
+	"crypto/md5" // #nosec G501 - Used only for performance comparison in benchmarks
 	"crypto/sha256"
 	"hash/crc32"
 	"hash/fnv"
@@ -40,7 +40,7 @@ func BenchmarkHashFunctions(b *testing.B) {
 			b.Run("MD5", func(b *testing.B) {
 				b.SetBytes(int64(size))
 				for range b.N {
-					_ = md5.Sum(data)
+					_ = md5.Sum(data) // #nosec G401 - Used only for performance comparison in benchmarks
 				}
 			})
 
@@ -57,7 +57,7 @@ func BenchmarkHashFunctions(b *testing.B) {
 				b.SetBytes(int64(size))
 				for range b.N {
 					h := fnv.New64a()
-					h.Write(data)
+					_, _ = h.Write(data)
 					_ = h.Sum64()
 				}
 			})
@@ -153,13 +153,14 @@ func formatHashInlineOptimized(hash uint32) string {
 
 // formatSize converts size to human readable string.
 func formatSize(size int) string {
-	if size >= 1024*1024 {
+	switch {
+	case size >= 1024*1024:
 		return "1MB"
-	} else if size >= 1024*100 {
+	case size >= 1024*100:
 		return "100KB"
-	} else if size >= 1024*10 {
+	case size >= 1024*10:
 		return "10KB"
-	} else {
+	default:
 		return "1KB"
 	}
 }

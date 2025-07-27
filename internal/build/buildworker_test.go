@@ -13,16 +13,34 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Constants for repeated string literals.
+const (
+	TestTempDir    = "TestTempDir"
+	TestOutputData = "TestOutputData"
+	TestErrorData  = "TestErrorData"
+	TestValue      = "value"
+	TestData       = "test data"
+	TestString     = "test"
+	ErrorMessage   = "error"
+	VarPrefix      = "VAR_"
+	ValuePrefix    = "value_"
+	IterEnvVar     = "ITER"
+	TestEnvVar     = "TEST"
+	TestFilePath   = "TestFilePath"
+	TestPackage    = "test"
+	TmpBenchDir    = "/tmp/bench"
+)
+
 func TestBuildWorker_Reset(t *testing.T) {
 	t.Run("reset clears all fields", func(t *testing.T) {
 		worker := &BuildWorker{
 			ID:    42,
 			State: WorkerBusy,
 			Context: &WorkerContext{
-				TempDir:      "/tmp/test",
-				OutputBuffer: []byte("test output"),
-				ErrorBuffer:  []byte("test error"),
-				Environment:  map[string]string{"TEST": "value"},
+				TempDir:      TestTempDir,
+				OutputBuffer: []byte(TestOutputData),
+				ErrorBuffer:  []byte(TestErrorData),
+				Environment:  map[string]string{TestEnvVar: TestValue},
 			},
 		}
 
@@ -52,9 +70,9 @@ func TestBuildWorker_Reset(t *testing.T) {
 func TestWorkerContext_Reset(t *testing.T) {
 	t.Run("reset clears all fields", func(t *testing.T) {
 		ctx := &WorkerContext{
-			TempDir:      "/tmp/test",
-			OutputBuffer: []byte("test output"),
-			ErrorBuffer:  []byte("test error"),
+			TempDir:      TestTempDir,
+			OutputBuffer: []byte(TestOutputData),
+			ErrorBuffer:  []byte(TestErrorData),
 			Environment: map[string]string{
 				"TEST1": "value1",
 				"TEST2": "value2",
@@ -132,7 +150,7 @@ func TestWorkerPool_GetPutWorker(t *testing.T) {
 		worker := pool.GetWorker()
 		worker.ID = 42
 		worker.State = WorkerBusy
-		worker.Context.TempDir = "/tmp/test"
+		worker.Context.TempDir = TestTempDir
 
 		// Put it back
 		pool.PutWorker(worker)
@@ -184,9 +202,9 @@ func TestWorkerPool_GetPutWorkerContext(t *testing.T) {
 
 		// Get a context and modify it
 		ctx := pool.GetWorkerContext()
-		ctx.TempDir = "/tmp/test"
-		ctx.OutputBuffer = append(ctx.OutputBuffer, []byte("test")...)
-		ctx.Environment["TEST"] = "value"
+		ctx.TempDir = TestTempDir
+		ctx.OutputBuffer = append(ctx.OutputBuffer, []byte(TestString)...)
+		ctx.Environment[TestEnvVar] = TestValue
 
 		// Put it back
 		pool.PutWorkerContext(ctx)
@@ -223,7 +241,7 @@ func TestWorkerPool_ConcurrentAccess(t *testing.T) {
 				// Modify worker to ensure reset works
 				worker.ID = id
 				worker.State = WorkerBusy
-				worker.Context.TempDir = "/tmp/test"
+				worker.Context.TempDir = TestTempDir
 
 				// Brief work simulation
 				time.Sleep(1 * time.Millisecond)
@@ -249,9 +267,9 @@ func TestWorkerPool_ConcurrentAccess(t *testing.T) {
 				assert.NotNil(t, ctx)
 
 				// Modify context to ensure reset works
-				ctx.TempDir = "/tmp/test"
-				ctx.OutputBuffer = append(ctx.OutputBuffer, []byte("test")...)
-				ctx.Environment["TEST"] = "value"
+				ctx.TempDir = TestTempDir
+				ctx.OutputBuffer = append(ctx.OutputBuffer, []byte(TestString)...)
+				ctx.Environment[TestEnvVar] = TestValue
 
 				// Brief work simulation
 				time.Sleep(1 * time.Millisecond)
@@ -286,7 +304,7 @@ func TestWorkerPool_MemoryManagement(t *testing.T) {
 		// Get a context, modify it, put it back
 		ctx1 := pool.GetWorkerContext()
 		ctx1Ptr := ctx1
-		ctx1.TempDir = "/tmp/test"
+		ctx1.TempDir = TestTempDir
 		pool.PutWorkerContext(ctx1)
 
 		// Get another context - should be the same object reused
@@ -326,7 +344,7 @@ func TestWorkerContext_BufferGrowth(t *testing.T) {
 		// Add data to buffer
 		initialCap := cap(ctx.OutputBuffer)
 		for range 1000 {
-			ctx.OutputBuffer = append(ctx.OutputBuffer, []byte("test data")...)
+			ctx.OutputBuffer = append(ctx.OutputBuffer, []byte(TestData)...)
 		}
 
 		assert.Greater(t, len(ctx.OutputBuffer), 0)
@@ -404,8 +422,8 @@ func BenchmarkWorkerPool_GetPutContext(b *testing.B) {
 
 	for range b.N {
 		ctx := pool.GetWorkerContext()
-		ctx.TempDir = "/tmp/test"
-		ctx.OutputBuffer = append(ctx.OutputBuffer, []byte("test")...)
+		ctx.TempDir = TestTempDir
+		ctx.OutputBuffer = append(ctx.OutputBuffer, []byte(TestString)...)
 		pool.PutWorkerContext(ctx)
 	}
 }
@@ -415,7 +433,7 @@ func BenchmarkWorkerReset(b *testing.B) {
 		ID:    42,
 		State: WorkerBusy,
 		Context: &WorkerContext{
-			TempDir:      "/tmp/test",
+			TempDir:      TestTempDir,
 			OutputBuffer: make([]byte, 1024),
 			ErrorBuffer:  make([]byte, 512),
 			Environment: map[string]string{
@@ -434,7 +452,7 @@ func BenchmarkWorkerReset(b *testing.B) {
 		worker.ID = 42
 		worker.State = WorkerBusy
 		worker.Context = &WorkerContext{
-			TempDir:      "/tmp/test",
+			TempDir:      TestTempDir,
 			OutputBuffer: make([]byte, 1024),
 			ErrorBuffer:  make([]byte, 512),
 			Environment: map[string]string{
@@ -447,7 +465,7 @@ func BenchmarkWorkerReset(b *testing.B) {
 
 func BenchmarkContextReset(b *testing.B) {
 	ctx := &WorkerContext{
-		TempDir:      "/tmp/test",
+		TempDir:      TestTempDir,
 		OutputBuffer: make([]byte, 1024),
 		ErrorBuffer:  make([]byte, 512),
 		Environment: map[string]string{
@@ -463,7 +481,7 @@ func BenchmarkContextReset(b *testing.B) {
 	for range b.N {
 		ctx.Reset()
 		// Restore state for next iteration
-		ctx.TempDir = "/tmp/test"
+		ctx.TempDir = TestTempDir
 		ctx.OutputBuffer = make([]byte, 1024)
 		ctx.ErrorBuffer = make([]byte, 512)
 		ctx.Environment = map[string]string{
@@ -490,8 +508,8 @@ func TestBuildWorker_CancellationScenarios(t *testing.T) {
 		// Add a component to build
 		component := &types.ComponentInfo{
 			Name:     "TestComponent",
-			FilePath: "/test/component.templ",
-			Package:  "test",
+			FilePath: "TestFilePath",
+			Package:  TestPackage,
 		}
 
 		// Cancel the context immediately
@@ -604,7 +622,7 @@ func TestBuildWorker_ErrorHandling(t *testing.T) {
 
 		// Add many environment variables to test cleanup
 		for i := range 1000 {
-			ctx.Environment[fmt.Sprintf("VAR_%d", i)] = fmt.Sprintf("value_%d", i)
+			ctx.Environment[fmt.Sprintf(VarPrefix+"%d", i)] = fmt.Sprintf(ValuePrefix+"%d", i)
 		}
 
 		assert.Equal(t, 1000, len(ctx.Environment))
@@ -674,8 +692,8 @@ func TestBuildWorker_PerformanceUnderLoad(t *testing.T) {
 			worker.State = WorkerBusy
 
 			// Simulate some work
-			worker.Context.OutputBuffer = append(worker.Context.OutputBuffer, []byte("test")...)
-			worker.Context.Environment["ITER"] = strconv.Itoa(i)
+			worker.Context.OutputBuffer = append(worker.Context.OutputBuffer, []byte(TestString)...)
+			worker.Context.Environment[IterEnvVar] = strconv.Itoa(i)
 
 			pool.PutWorker(worker)
 		}
@@ -690,7 +708,7 @@ func TestBuildWorker_PerformanceUnderLoad(t *testing.T) {
 
 	t.Run("context reset performance", func(t *testing.T) {
 		ctx := &WorkerContext{
-			TempDir:      "/tmp/test",
+			TempDir:      TestTempDir,
 			OutputBuffer: make([]byte, 0, 1024),
 			ErrorBuffer:  make([]byte, 0, 512),
 			Environment:  make(map[string]string),
@@ -698,9 +716,9 @@ func TestBuildWorker_PerformanceUnderLoad(t *testing.T) {
 
 		// Pre-populate with data
 		for i := range 100 {
-			ctx.OutputBuffer = append(ctx.OutputBuffer, []byte("test data")...)
-			ctx.ErrorBuffer = append(ctx.ErrorBuffer, []byte("error")...)
-			ctx.Environment[fmt.Sprintf("VAR_%d", i)] = fmt.Sprintf("value_%d", i)
+			ctx.OutputBuffer = append(ctx.OutputBuffer, []byte(TestData)...)
+			ctx.ErrorBuffer = append(ctx.ErrorBuffer, []byte(ErrorMessage)...)
+			ctx.Environment[fmt.Sprintf(VarPrefix+"%d", i)] = fmt.Sprintf(ValuePrefix+"%d", i)
 		}
 
 		iterations := 1000
@@ -710,9 +728,9 @@ func TestBuildWorker_PerformanceUnderLoad(t *testing.T) {
 			ctx.Reset()
 
 			// Add some data for next iteration
-			ctx.TempDir = "/tmp/test"
-			ctx.OutputBuffer = append(ctx.OutputBuffer, []byte("test")...)
-			ctx.Environment["TEST"] = "value"
+			ctx.TempDir = TestTempDir
+			ctx.OutputBuffer = append(ctx.OutputBuffer, []byte(TestString)...)
+			ctx.Environment[TestEnvVar] = TestValue
 		}
 
 		duration := time.Since(start)
@@ -780,7 +798,7 @@ func BenchmarkWorkerPool_HighContention(b *testing.B) {
 			worker := pool.GetWorker()
 			worker.ID = i
 			worker.State = WorkerBusy
-			worker.Context.TempDir = "/tmp/bench"
+			worker.Context.TempDir = "TmpBenchDir"
 			pool.PutWorker(worker)
 			i++
 		}

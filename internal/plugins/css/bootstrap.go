@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/conneroisu/templar/internal/plugins"
 	"github.com/conneroisu/templar/internal/types"
 )
 
@@ -17,7 +18,7 @@ import (
 type BootstrapPlugin struct {
 	name    string
 	version string
-	config  map[string]interface{}
+	config  map[string]any
 }
 
 // NewBootstrapPlugin creates a new Bootstrap plugin instance.
@@ -25,7 +26,7 @@ func NewBootstrapPlugin() *BootstrapPlugin {
 	return &BootstrapPlugin{
 		name:    "bootstrap",
 		version: "1.0.0",
-		config:  make(map[string]interface{}),
+		config:  make(map[string]any),
 	}
 }
 
@@ -40,7 +41,7 @@ func (p *BootstrapPlugin) GetVersion() string {
 }
 
 // Initialize initializes the Bootstrap plugin.
-func (p *BootstrapPlugin) Initialize(ctx context.Context, config map[string]interface{}) error {
+func (p *BootstrapPlugin) Initialize(_ context.Context, config map[string]any) error {
 	p.config = config
 
 	return nil
@@ -102,7 +103,7 @@ func (p *BootstrapPlugin) GetDefaultConfig() FrameworkConfig {
 			"dark":      "#212529",
 		},
 
-		Options: map[string]interface{}{
+		Options: map[string]any{
 			"enable_grid":      true,
 			"enable_utilities": true,
 			"enable_print":     true,
@@ -127,28 +128,33 @@ func (p *BootstrapPlugin) IsInstalled() bool {
 // Setup sets up Bootstrap with the given configuration.
 func (p *BootstrapPlugin) Setup(ctx context.Context, config FrameworkConfig) error {
 	switch config.InstallMethod {
-	case "npm":
+	case plugins.InstallMethodNPM:
 		return p.setupWithNPM(ctx, config)
-	case "cdn":
+	case plugins.InstallMethodCDN:
 		return p.setupWithCDN(ctx, config)
-	case "standalone":
+	case plugins.InstallMethodStandalone:
 		return p.setupStandalone(ctx, config)
 	default:
-		return fmt.Errorf("unsupported install method: %s", config.InstallMethod)
+		return fmt.Errorf(plugins.ErrUnsupportedInstallMethod, config.InstallMethod)
 	}
 }
 
 // setupWithNPM sets up Bootstrap using npm.
 func (p *BootstrapPlugin) setupWithNPM(ctx context.Context, config FrameworkConfig) error {
-	// Install Bootstrap via npm
-	cmd := exec.CommandContext(ctx, "npm", "install", "bootstrap@"+config.Version)
+	// Validate version string to prevent command injection
+	if err := validateVersion(config.Version); err != nil {
+		return fmt.Errorf("invalid version: %w", err)
+	}
+
+	// Install Bootstrap via npm - version is validated above
+	cmd := exec.CommandContext(ctx, "npm", plugins.InstallArg, "bootstrap@"+config.Version) //nolint:gosec // Version is validated
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to install Bootstrap via npm: %w", err)
 	}
 
 	// Install SCSS if needed
 	if contains(config.Preprocessing, "scss") {
-		cmd = exec.CommandContext(ctx, "npm", "install", "--save-dev", "sass")
+		cmd = exec.CommandContext(ctx, "npm", plugins.InstallArg, "--save-dev", "sass") //nolint:gosec // Using hardcoded safe arguments
 		if err := cmd.Run(); err != nil {
 			return fmt.Errorf("failed to install sass: %w", err)
 		}
@@ -156,7 +162,7 @@ func (p *BootstrapPlugin) setupWithNPM(ctx context.Context, config FrameworkConf
 
 	// Create entry point SCSS file
 	if err := p.createEntryPoint(config); err != nil {
-		return fmt.Errorf("failed to create entry point: %w", err)
+		return fmt.Errorf(plugins.ErrFailedCreateEntryPoint, err)
 	}
 
 	return nil
@@ -167,26 +173,26 @@ func (p *BootstrapPlugin) setupWithCDN(ctx context.Context, config FrameworkConf
 	// For CDN setup, we just need to provide the CDN links
 	// This would typically be integrated with HTML templates
 
-	cdnUrl := config.CDNUrl
-	if cdnUrl == "" {
-		cdnUrl = fmt.Sprintf(
+	cdnURL := config.CdnURL // nolint: revive
+	if cdnURL == "" {
+		cdnURL = fmt.Sprintf(
 			"https://cdn.jsdelivr.net/npm/bootstrap@%s/dist/css/bootstrap.min.css",
 			config.Version,
 		)
 	}
 
 	// Create a simple CSS file that imports from CDN
-	cssContent := fmt.Sprintf("@import url('%s');\n", cdnUrl)
+	cssContent := fmt.Sprintf(plugins.ImportURLTemplate, cdnURL)
 
 	// Ensure output directory exists
 	outputDir := filepath.Dir(config.OutputPath)
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
-		return fmt.Errorf("failed to create output directory: %w", err)
+	if err := os.MkdirAll(outputDir, 0o755); err != nil {
+		return fmt.Errorf(plugins.ErrFailedCreateOutputDirectory, err)
 	}
 
 	// Write CSS file
-	if err := os.WriteFile(config.OutputPath, []byte(cssContent), 0644); err != nil {
-		return fmt.Errorf("failed to write CSS file: %w", err)
+	if err := os.WriteFile(config.OutputPath, []byte(cssContent), 0o600); err != nil {
+		return fmt.Errorf(plugins.ErrFailedWriteCSSFile, err)
 	}
 
 	return nil
@@ -198,14 +204,14 @@ func (p *BootstrapPlugin) setupStandalone(ctx context.Context, config FrameworkC
 	// This is a simplified implementation - in practice, you'd download from official sources
 
 	outputDir := filepath.Dir(config.OutputPath)
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
-		return fmt.Errorf("failed to create output directory: %w", err)
+	if err := os.MkdirAll(outputDir, 0o755); err != nil {
+		return fmt.Errorf(plugins.ErrFailedCreateOutputDirectory, err)
 	}
 
 	// Create basic Bootstrap CSS (simplified)
 	basicCSS := p.generateBasicBootstrapCSS(config)
-	if err := os.WriteFile(config.OutputPath, []byte(basicCSS), 0644); err != nil {
-		return fmt.Errorf("failed to write CSS file: %w", err)
+	if err := os.WriteFile(config.OutputPath, []byte(basicCSS), 0o600); err != nil {
+		return fmt.Errorf(plugins.ErrFailedWriteCSSFile, err)
 	}
 
 	return nil
@@ -214,15 +220,15 @@ func (p *BootstrapPlugin) setupStandalone(ctx context.Context, config FrameworkC
 // createEntryPoint creates the main SCSS entry point file.
 func (p *BootstrapPlugin) createEntryPoint(config FrameworkConfig) error {
 	entryDir := filepath.Dir(config.EntryPoint)
-	if err := os.MkdirAll(entryDir, 0755); err != nil {
-		return fmt.Errorf("failed to create entry point directory: %w", err)
+	if err := os.MkdirAll(entryDir, 0o755); err != nil {
+		return fmt.Errorf(plugins.ErrFailedCreateEntryPointDir, err)
 	}
 
 	// Generate SCSS content
 	scssContent := p.generateBootstrapSCSS(config)
 
-	if err := os.WriteFile(config.EntryPoint, []byte(scssContent), 0644); err != nil {
-		return fmt.Errorf("failed to write entry point file: %w", err)
+	if err := os.WriteFile(config.EntryPoint, []byte(scssContent), 0o644); err != nil {
+		return fmt.Errorf(plugins.ErrFailedWriteEntryPointFile, err)
 	}
 
 	return nil
@@ -382,18 +388,18 @@ module.exports = {
 // ValidateConfig validates Bootstrap configuration.
 func (p *BootstrapPlugin) ValidateConfig(configPath string) error {
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		return fmt.Errorf("config file does not exist: %s", configPath)
+		return fmt.Errorf(plugins.ErrConfigFileNotExist, configPath)
 	}
 
 	// Read and validate config file content
 	content, err := os.ReadFile(configPath)
 	if err != nil {
-		return fmt.Errorf("failed to read config file: %w", err)
+		return fmt.Errorf(plugins.ErrFailedReadConfigFile, err)
 	}
 
 	// Basic validation - check for required exports
-	if !strings.Contains(string(content), "module.exports") {
-		return errors.New("config file must export a configuration object")
+	if !strings.Contains(string(content), plugins.ModuleExportsStr) {
+		return errors.New(plugins.ErrConfigMustExportObject)
 	}
 
 	return nil
@@ -433,13 +439,13 @@ func (p *BootstrapPlugin) compileSCSS(
 	// Create temporary input file
 	tmpDir := os.TempDir()
 	inputFile := filepath.Join(tmpDir, "input.scss")
-	outputFile := filepath.Join(tmpDir, "output.css")
+	outputFile := filepath.Join(tmpDir, plugins.OutputCSSFileName)
 
-	if err := os.WriteFile(inputFile, input, 0644); err != nil {
-		return nil, fmt.Errorf("failed to write temporary input file: %w", err)
+	if err := os.WriteFile(inputFile, input, 0o644); err != nil {
+		return nil, fmt.Errorf(plugins.ErrFailedWriteTempInputFile, err)
 	}
-	defer os.Remove(inputFile)
-	defer os.Remove(outputFile)
+	defer func() { _ = os.Remove(inputFile) }()
+	defer func() { _ = os.Remove(outputFile) }()
 
 	// Run sass compiler
 	args := []string{inputFile, outputFile}
@@ -450,7 +456,7 @@ func (p *BootstrapPlugin) compileSCSS(
 		args = append(args, "--style=compressed")
 	}
 
-	cmd := exec.CommandContext(ctx, "sass", args...)
+	cmd := exec.CommandContext(ctx, "sass", args...) //nolint:gosec // Using validated file paths and hardcoded arguments
 	if err := cmd.Run(); err != nil {
 		return nil, fmt.Errorf("failed to compile SCSS: %w", err)
 	}
@@ -485,46 +491,7 @@ func (p *BootstrapPlugin) optimizeCSS(css []byte, options ProcessingOptions) ([]
 
 // purgeUnusedClasses removes unused CSS classes.
 func (p *BootstrapPlugin) purgeUnusedClasses(css string, usedClasses []string) string {
-	// Create a map for fast lookup
-	usedMap := make(map[string]bool)
-	for _, class := range usedClasses {
-		usedMap[class] = true
-	}
-
-	// Simple purging - remove class rules that aren't used
-	// This is a basic implementation - a full implementation would use a CSS parser
-
-	lines := strings.Split(css, "\n")
-	var result []string
-
-	inRule := false
-	var currentRule strings.Builder
-
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-
-		if strings.HasPrefix(line, ".") && strings.Contains(line, "{") {
-			// Start of a class rule
-			inRule = true
-			currentRule.Reset()
-			currentRule.WriteString(line)
-		} else if inRule {
-			currentRule.WriteString("\n" + line)
-			if strings.Contains(line, "}") {
-				// End of rule
-				rule := currentRule.String()
-				if p.shouldKeepRule(rule, usedMap) {
-					result = append(result, rule)
-				}
-				inRule = false
-			}
-		} else if !inRule {
-			// Not in a class rule, keep as-is
-			result = append(result, line)
-		}
-	}
-
-	return strings.Join(result, "\n")
+	return purgeUnusedClasses(css, usedClasses, p.shouldKeepRule)
 }
 
 // shouldKeepRule determines if a CSS rule should be kept based on used classes.
@@ -791,6 +758,28 @@ func formatVariablesAsJS(variables map[string]string) string {
 	}
 
 	return "{\n" + strings.Join(parts, ",\n") + "\n  }"
+}
+
+// validateVersion validates that a version string is safe for use in command execution.
+// Only allows semantic version format with alphanumeric characters, dots, hyphens, and underscores.
+func validateVersion(version string) error {
+	if version == "" {
+		return errors.New("version cannot be empty")
+	}
+
+	// Allow semantic version format: major.minor.patch with optional pre-release and build metadata
+	// This regex is restrictive to prevent command injection
+	versionRegex := regexp.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9\-_.]+)?(\+[a-zA-Z0-9\-_.]+)?$`)
+	if !versionRegex.MatchString(version) {
+		return fmt.Errorf("invalid version format: %s (must be semantic version)", version)
+	}
+
+	// Additional security check: ensure no shell metacharacters
+	if strings.ContainsAny(version, ";|&$`(){}[]<>*?!~") {
+		return fmt.Errorf("version contains invalid characters: %s", version)
+	}
+
+	return nil
 }
 
 // getBootstrapTemplates returns built-in Bootstrap component templates.

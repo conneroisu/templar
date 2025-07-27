@@ -78,7 +78,7 @@ func (g *ComponentGenerator) Generate(opts GenerateOptions) error {
 	}
 
 	// Ensure output directory exists
-	if err := os.MkdirAll(opts.OutputDir, 0755); err != nil {
+	if err := os.MkdirAll(opts.OutputDir, 0o755); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
 
@@ -108,12 +108,12 @@ func (g *ComponentGenerator) Generate(opts GenerateOptions) error {
 	// Generate styles file if requested
 	if opts.WithStyles && tmpl.StylesCSS != "" {
 		stylesDir := filepath.Join(opts.OutputDir, "styles")
-		if err := os.MkdirAll(stylesDir, 0755); err != nil {
+		if err := os.MkdirAll(stylesDir, 0o755); err != nil {
 			return fmt.Errorf("failed to create styles directory: %w", err)
 		}
 
 		stylesFile := filepath.Join(stylesDir, strings.ToLower(opts.Name)+".css")
-		if err := os.WriteFile(stylesFile, []byte(tmpl.StylesCSS), 0644); err != nil {
+		if err := os.WriteFile(stylesFile, []byte(tmpl.StylesCSS), 0o600); err != nil {
 			return fmt.Errorf("failed to generate styles file: %w", err)
 		}
 		fmt.Printf("✅ Generated styles: %s\n", stylesFile)
@@ -122,7 +122,7 @@ func (g *ComponentGenerator) Generate(opts GenerateOptions) error {
 	// Generate documentation if requested
 	if opts.WithDocs && tmpl.DocContent != "" {
 		docsDir := filepath.Join(opts.OutputDir, "docs")
-		if err := os.MkdirAll(docsDir, 0755); err != nil {
+		if err := os.MkdirAll(docsDir, 0o755); err != nil {
 			return fmt.Errorf("failed to create docs directory: %w", err)
 		}
 
@@ -322,7 +322,7 @@ func (g *ComponentGenerator) CreateProjectScaffold(projectDir string) error {
 
 	for _, dir := range dirs {
 		fullPath := filepath.Join(projectDir, dir)
-		if err := os.MkdirAll(fullPath, 0755); err != nil {
+		if err := os.MkdirAll(fullPath, 0o755); err != nil {
 			return fmt.Errorf("failed to create directory %s: %w", dir, err)
 		}
 	}
@@ -406,7 +406,7 @@ body {
 .gap-8 { gap: 2rem; }
 `
 
-	if err := os.WriteFile(mainStylesPath, []byte(mainStyles), 0644); err != nil {
+	if err := os.WriteFile(mainStylesPath, []byte(mainStyles), 0o600); err != nil {
 		return fmt.Errorf("failed to create main styles: %w", err)
 	}
 

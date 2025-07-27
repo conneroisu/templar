@@ -79,12 +79,12 @@ func testConnectionWithoutMessages(t *testing.T, wsURL string) {
 		},
 	})
 	if resp != nil && resp.Body != nil {
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 	}
 	if err != nil {
 		t.Fatalf("Failed to connect to WebSocket: %v", err)
 	}
-	defer conn.Close(websocket.StatusNormalClosure, "")
+	defer func() { _ = conn.Close(websocket.StatusNormalClosure, "") }()
 
 	// Wait for longer than normal rate limit window would allow
 	// If rate limiting was applied on connection read attempts instead of actual messages,
@@ -113,12 +113,12 @@ func testRapidMessageBurst(t *testing.T, wsURL string) {
 		},
 	})
 	if resp != nil && resp.Body != nil {
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 	}
 	if err != nil {
 		t.Fatalf("Failed to connect to WebSocket: %v", err)
 	}
-	defer conn.Close(websocket.StatusNormalClosure, "")
+	defer func() { _ = conn.Close(websocket.StatusNormalClosure, "") }()
 
 	// Send messages rapidly to trigger rate limiting
 	// Default rate limit is 60 messages per minute, so send more than that
@@ -179,12 +179,12 @@ func testEmptyMessageHandling(t *testing.T, wsURL string) {
 		},
 	})
 	if resp != nil && resp.Body != nil {
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 	}
 	if err != nil {
 		t.Fatalf("Failed to connect to WebSocket: %v", err)
 	}
-	defer conn.Close(websocket.StatusNormalClosure, "")
+	defer func() { _ = conn.Close(websocket.StatusNormalClosure, "") }()
 
 	// Send many empty messages - these should not count towards rate limit
 	for i := range 100 {
@@ -224,12 +224,12 @@ func testRateLimitWindowBoundary(t *testing.T, wsURL string) {
 		},
 	})
 	if resp != nil && resp.Body != nil {
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 	}
 	if err != nil {
 		t.Fatalf("Failed to connect to WebSocket: %v", err)
 	}
-	defer conn.Close(websocket.StatusNormalClosure, "")
+	defer func() { _ = conn.Close(websocket.StatusNormalClosure, "") }()
 
 	// Send messages at a controlled rate just under the limit
 	messagesPerBatch := 30         // Half of the 60/minute limit
@@ -284,7 +284,7 @@ func testConcurrentConnections(t *testing.T, wsURL string) {
 			},
 		})
 		if resp != nil && resp.Body != nil {
-			resp.Body.Close()
+			_ = resp.Body.Close()
 		}
 		cancel()
 
@@ -292,7 +292,7 @@ func testConcurrentConnections(t *testing.T, wsURL string) {
 			t.Fatalf("Failed to establish connection %d: %v", i, err)
 		}
 		connections[i] = conn
-		defer conn.Close(websocket.StatusNormalClosure, "")
+		defer func() { _ = conn.Close(websocket.StatusNormalClosure, "") }()
 	}
 
 	// Each connection should be able to send messages up to its individual limit

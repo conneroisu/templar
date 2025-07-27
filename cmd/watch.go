@@ -189,7 +189,7 @@ func runCustomCommand(command string) error {
 	}
 
 	// Execute the command
-	cmd := exec.Command(parts[0], parts[1:]...)
+	cmd := exec.Command(parts[0], parts[1:]...) //nolint:gosec // G204: Command validated above
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
@@ -364,7 +364,7 @@ func runBuildCommand(cfg *config.Config) error {
 	}
 
 	// Execute the command
-	cmd := exec.Command(parts[0], parts[1:]...)
+	cmd := exec.Command(parts[0], parts[1:]...) //nolint:gosec // G204: Command validated above
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 

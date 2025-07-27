@@ -72,7 +72,7 @@ func TestFileWatcherInterface(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create file watcher: %v", err)
 	}
-	defer concreteWatcher.Stop()
+	defer func() { _ = concreteWatcher.Stop() }()
 
 	// Use concrete type directly and verify interface implementation
 	var iface interfaces.FileWatcher = concreteWatcher
@@ -96,7 +96,7 @@ func TestFileWatcherInterface(t *testing.T) {
 		t.Errorf("Failed to start watcher: %v", err)
 	}
 
-	iface.Stop()
+	_ = iface.Stop()
 }
 
 // TestComponentScannerInterface validates that concrete scanner implements ComponentScanner interface.
@@ -140,8 +140,8 @@ func TestBuildPipelineInterface(t *testing.T) {
 
 	// Test Start/Stop
 	ctx := context.Background()
-	iface.Start(ctx)
-	defer iface.Stop()
+	_ = iface.Start(ctx)
+	defer func() { _ = iface.Stop() }()
 
 	// Test callback addition
 	testCallback := func(result interface{}) {
@@ -156,7 +156,7 @@ func TestBuildPipelineInterface(t *testing.T) {
 		Package:  "test",
 	}
 
-	iface.Build(testComponent)
+	_ = iface.Build(testComponent)
 	iface.BuildWithPriority(testComponent)
 
 	// Test metrics (should not panic)
@@ -183,7 +183,7 @@ func TestFullInterfaceIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create file watcher: %v", err)
 	}
-	defer concreteWatcher.Stop()
+	defer func() { _ = concreteWatcher.Stop() }()
 
 	concreteScanner := scanner.NewComponentScanner(reg)
 	concretePipeline := build.NewRefactoredBuildPipeline(2, reg)
@@ -236,7 +236,7 @@ func TestInterfaceWorkflow(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create file watcher: %v", err)
 	}
-	defer concreteWatcher.Stop()
+	defer func() { _ = concreteWatcher.Stop() }()
 
 	concretePipeline := build.NewRefactoredBuildPipeline(2, reg)
 
@@ -249,8 +249,8 @@ func TestInterfaceWorkflow(t *testing.T) {
 	ctx := context.Background()
 
 	// Start build pipeline
-	buildPipeline.Start(ctx)
-	defer buildPipeline.Stop()
+	_ = buildPipeline.Start(ctx)
+	defer func() { _ = buildPipeline.Stop() }()
 
 	// Register a test component
 	testComponent := &types.ComponentInfo{
@@ -270,7 +270,7 @@ func TestInterfaceWorkflow(t *testing.T) {
 	}
 
 	// Test build pipeline
-	buildPipeline.Build(testComponent)
+	_ = buildPipeline.Build(testComponent)
 	buildPipeline.BuildWithPriority(testComponent)
 
 	// Test metrics
@@ -305,7 +305,7 @@ func TestInterfaceWorkflow(t *testing.T) {
 	if err := fileWatcher.Start(startCtx); err != nil {
 		t.Errorf("Failed to start file watcher: %v", err)
 	}
-	fileWatcher.Stop()
+	_ = fileWatcher.Stop()
 
 	t.Log("Interface workflow test completed successfully")
 }
@@ -317,8 +317,8 @@ func TestConcurrentInterfaceAccess(t *testing.T) {
 	pipelineAdapter := concretePipeline
 
 	ctx := context.Background()
-	pipelineAdapter.Start(ctx)
-	defer pipelineAdapter.Stop()
+	_ = pipelineAdapter.Start(ctx)
+	defer func() { _ = pipelineAdapter.Stop() }()
 
 	// Test concurrent registry access
 	t.Run("ConcurrentRegistry", func(t *testing.T) {
@@ -368,7 +368,7 @@ func TestConcurrentInterfaceAccess(t *testing.T) {
 						Package:  "test",
 					}
 
-					pipelineAdapter.Build(testComponent)
+					_ = pipelineAdapter.Build(testComponent)
 					if j%10 == 0 {
 						pipelineAdapter.BuildWithPriority(testComponent)
 					}

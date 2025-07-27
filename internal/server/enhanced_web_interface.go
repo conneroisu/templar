@@ -44,8 +44,8 @@ func (s *PreviewServer) handleComponentEditor(w http.ResponseWriter, r *http.Req
 
 	// Serve the enhanced editor interface
 	html := s.generateEnhancedEditorHTML(component)
-	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(html))
+	w.Header().Set(HeaderContentType, ContentTypeHTML)
+	_, _ = w.Write([]byte(html))
 }
 
 // handleInlineEditor handles AJAX requests for inline prop editing.
@@ -223,22 +223,22 @@ func (s *PreviewServer) findParameterByName(
 // isCompatibleType checks if value type is compatible with expected type.
 func (s *PreviewServer) isCompatibleType(value interface{}, expectedType string) bool {
 	switch expectedType {
-	case "string":
+	case TypeString:
 		_, ok := value.(string)
 
 		return ok
-	case "int", "int32", "int64":
+	case TypeInt, "int32", "int64":
 		switch value.(type) {
 		case int, int32, int64, float64: // JSON numbers come as float64
 			return true
 		default:
 			return false
 		}
-	case "bool":
+	case TypeBool:
 		_, ok := value.(bool)
 
 		return ok
-	case "[]string":
+	case TypeStringSlice:
 		if slice, ok := value.([]interface{}); ok {
 			for _, item := range slice {
 				if _, ok := item.(string); !ok {
@@ -286,8 +286,8 @@ func (s *PreviewServer) generatePropSuggestions(
 // handleEnhancedIndex serves the enhanced main interface.
 func (s *PreviewServer) handleEnhancedIndex(w http.ResponseWriter, r *http.Request) {
 	html := s.generateEnhancedIndexHTML()
-	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(html))
+	w.Header().Set(HeaderContentType, ContentTypeHTML)
+	_, _ = w.Write([]byte(html))
 }
 
 // ValidationError represents a prop validation error (already defined in playground.go).

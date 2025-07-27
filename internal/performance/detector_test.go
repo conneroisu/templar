@@ -62,7 +62,7 @@ PASS
 
 func TestPerformanceDetector_UpdateBaselines(t *testing.T) {
 	testDir := "test_baselines_update"
-	defer os.RemoveAll(testDir) // Clean up after test
+	defer func() { _ = os.RemoveAll(testDir) }() // Clean up after test
 	detector := NewPerformanceDetector(testDir, DefaultThresholds())
 
 	results := []BenchmarkResult{
@@ -114,7 +114,7 @@ func TestPerformanceDetector_UpdateBaselines(t *testing.T) {
 
 func TestPerformanceDetector_DetectRegressions(t *testing.T) {
 	testDir := "test_baselines_regressions"
-	defer os.RemoveAll(testDir) // Clean up after test
+	defer func() { _ = os.RemoveAll(testDir) }() // Clean up after test
 	thresholds := RegressionThresholds{
 		SlownessThreshold: 1.20, // 20% slower threshold
 		MemoryThreshold:   1.30, // 30% memory increase
@@ -278,7 +278,7 @@ func TestPerformanceDetector_PathValidation(t *testing.T) {
 
 func TestPerformanceDetector_MaxSamplesLimit(t *testing.T) {
 	testDir := "test_baselines_max_samples"
-	defer os.RemoveAll(testDir) // Clean up after test
+	defer func() { _ = os.RemoveAll(testDir) }() // Clean up after test
 	detector := NewPerformanceDetector(testDir, DefaultThresholds())
 
 	// Create results with more than max samples (100)
@@ -320,7 +320,7 @@ func TestPerformanceDetector_MaxSamplesLimit(t *testing.T) {
 
 func TestPerformanceDetector_MultipleRegressionTypes(t *testing.T) {
 	testDir := "test_baselines_multi_regression"
-	defer os.RemoveAll(testDir) // Clean up after test
+	defer func() { _ = os.RemoveAll(testDir) }() // Clean up after test
 	thresholds := RegressionThresholds{
 		SlownessThreshold: 1.20,
 		MemoryThreshold:   1.30,
@@ -460,7 +460,9 @@ func BenchmarkPerformanceDetector_DetectRegressions(b *testing.B) {
 		{Name: "TestBenchmark", NsPerOp: 950.0, Timestamp: time.Now()},
 	}
 
-	detector.UpdateBaselines(baselineResults)
+	if err := detector.UpdateBaselines(baselineResults); err != nil {
+		b.Fatalf("Failed to update baselines: %v", err)
+	}
 
 	currentResults := []BenchmarkResult{
 		{Name: "TestBenchmark", NsPerOp: 1300.0},

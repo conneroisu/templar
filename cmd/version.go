@@ -47,7 +47,7 @@ func runVersionCommand(cmd *cobra.Command, args []string) error {
 	detailed, _ := cmd.Flags().GetBool("detailed")
 
 	switch versionFormat {
-	case "json":
+	case OutputFormatJSON:
 		return outputVersionJSON()
 	case "text":
 		if versionShort {
@@ -73,7 +73,7 @@ func outputVersionDefault() error {
 
 	fmt.Printf("templar %s", info.Version)
 
-	if info.GitCommit != "unknown" && len(info.GitCommit) >= 7 {
+	if info.GitCommit != ResponseUnknown && len(info.GitCommit) >= 7 {
 		fmt.Printf(" (%s)", info.GitCommit[:7])
 	}
 

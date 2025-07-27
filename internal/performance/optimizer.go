@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math"
 	"runtime"
 	"sync"
 	"time"
@@ -197,11 +198,7 @@ func (ao *AdaptiveOptimizer) shouldApplyRecommendation(recommendation Recommenda
 		}
 	}
 
-	if recentActions >= ao.config.MaxActionsPerInterval {
-		return false
-	}
-
-	return true
+	return recentActions < ao.config.MaxActionsPerInterval
 }
 
 // applyOptimization applies a specific optimization action.
@@ -233,6 +230,9 @@ func (ao *AdaptiveOptimizer) applyOptimization(action Action) OptimizationResult
 		result = ao.adjustPollingRate(action, true)
 	case ActionClearCache:
 		result = ao.clearCache(action)
+	case ActionRestartComponent:
+		result.Success = false
+		result.Error = "Component restart action not yet implemented"
 	default:
 		result.Success = false
 		result.Error = fmt.Sprintf("Unknown action type: %s", action.Type)
@@ -538,14 +538,24 @@ func (ws *WorkerScaler) Scale(direction string, factor float64) int {
 
 	switch direction {
 	case "up":
-		ws.targetWorkers = int(float64(ws.currentWorkers) *
-			(1 + ws.scaleUpRate*factor))
+		newTarget := float64(ws.currentWorkers) * (1 + ws.scaleUpRate*factor)
+		// Prevent integer overflow
+		if newTarget <= float64(math.MaxInt) && newTarget >= 0 {
+			ws.targetWorkers = int(newTarget) //nolint:gosec // Overflow checked above
+		} else {
+			ws.targetWorkers = ws.maxWorkers // Use max as fallback
+		}
 		if ws.targetWorkers > ws.maxWorkers {
 			ws.targetWorkers = ws.maxWorkers
 		}
 	case "down":
-		ws.targetWorkers = int(float64(ws.currentWorkers) *
-			(1 - ws.scaleDownRate*factor))
+		newTarget := float64(ws.currentWorkers) * (1 - ws.scaleDownRate*factor)
+		// Prevent integer overflow and ensure non-negative
+		if newTarget <= float64(math.MaxInt) && newTarget >= 0 {
+			ws.targetWorkers = int(newTarget) //nolint:gosec // Overflow checked above
+		} else {
+			ws.targetWorkers = ws.minWorkers // Use min as fallback
+		}
 		if ws.targetWorkers < ws.minWorkers {
 			ws.targetWorkers = ws.minWorkers
 		}

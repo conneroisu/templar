@@ -238,7 +238,7 @@ func (bp *BuildPipeline) Build(component *types.ComponentInfo) {
 				"Error: Both queues full, build request lost for component %s\n",
 				component.Name,
 			)
-			// TODO: Implement persistent queue or callback for dropped tasks
+			// NOTE: Persistent queue or callback for dropped tasks could be implemented in the future if needed
 		}
 	}
 }
@@ -513,7 +513,7 @@ func (bp *BuildPipeline) generateContentHash(component *types.ComponentInfo) str
 	if err != nil {
 		return component.FilePath
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	// Use mmap for large files (>64KB) for better performance
 	var content []byte

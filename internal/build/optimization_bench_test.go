@@ -131,7 +131,7 @@ func BenchmarkConcurrentWorkerPool(b *testing.B) {
 						worker.Context.Environment["PATH"] = "/usr/bin"
 
 						// Cleanup
-						worker = nil
+						_ = worker // Mark as used
 					}
 				}()
 			}

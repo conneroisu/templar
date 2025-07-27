@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/conneroisu/templar/internal/plugins"
 	"github.com/conneroisu/templar/internal/types"
 )
 
@@ -61,18 +62,30 @@ func (p *BulmaPlugin) GetSupportedVersions() []string {
 	return []string{"1.0.2", "0.9.4", "0.9.3", "0.9.2", "0.9.1"}
 }
 
+// isValidVersion checks if the version is in the supported versions list.
+func (p *BulmaPlugin) isValidVersion(version string) bool {
+	supportedVersions := p.GetSupportedVersions()
+	for _, supportedVersion := range supportedVersions {
+		if version == supportedVersion {
+			return true
+		}
+	}
+
+	return false
+}
+
 // GetDefaultConfig returns default configuration for Bulma.
 func (p *BulmaPlugin) GetDefaultConfig() FrameworkConfig {
 	return FrameworkConfig{
 		Name:          "bulma",
 		Version:       "1.0.2",
-		InstallMethod: "npm",
+		InstallMethod: plugins.NpmCommand,
 		ConfigFile:    "bulma.config.js",
 		EntryPoint:    "src/sass/main.sass",
 		OutputPath:    "dist/css/bulma.min.css",
 		SourcePaths:   []string{"src/**/*.{templ,html,js,ts}"},
 
-		Preprocessing: []string{"sass"},
+		Preprocessing: []string{plugins.SassExtension},
 
 		Optimization: OptimizationConfig{
 			Enabled:   true,
@@ -87,7 +100,7 @@ func (p *BulmaPlugin) GetDefaultConfig() FrameworkConfig {
 			ExtractVariables: true,
 			GenerateTokens:   true,
 			StyleGuide:       true,
-			OutputFormat:     "sass",
+			OutputFormat:     plugins.SassExtension,
 			OutputFile:       "src/sass/_variables.sass",
 		},
 
@@ -154,28 +167,33 @@ func (p *BulmaPlugin) IsInstalled() bool {
 // Setup sets up Bulma with the given configuration.
 func (p *BulmaPlugin) Setup(ctx context.Context, config FrameworkConfig) error {
 	switch config.InstallMethod {
-	case "npm":
+	case plugins.InstallMethodNPM:
 		return p.setupWithNPM(ctx, config)
-	case "cdn":
+	case plugins.InstallMethodCDN:
 		return p.setupWithCDN(ctx, config)
-	case "standalone":
+	case plugins.InstallMethodStandalone:
 		return p.setupStandalone(ctx, config)
 	default:
-		return fmt.Errorf("unsupported install method: %s", config.InstallMethod)
+		return fmt.Errorf(plugins.ErrUnsupportedInstallMethod, config.InstallMethod)
 	}
 }
 
 // setupWithNPM sets up Bulma using npm.
 func (p *BulmaPlugin) setupWithNPM(ctx context.Context, config FrameworkConfig) error {
-	// Install Bulma via npm
-	cmd := exec.CommandContext(ctx, "npm", "install", "bulma@"+config.Version)
+	// Validate version is in supported list
+	if !p.isValidVersion(config.Version) {
+		return fmt.Errorf("unsupported Bulma version: %s", config.Version)
+	}
+
+	// Install Bulma via npm - version is validated against allowlist
+	cmd := exec.CommandContext(ctx, plugins.NpmCommand, plugins.InstallArg, "bulma@"+config.Version) // #nosec G204 - Version validated against allowlist
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to install Bulma via npm: %w", err)
 	}
 
 	// Install Sass if needed
-	if contains(config.Preprocessing, "sass") {
-		cmd = exec.CommandContext(ctx, "npm", "install", "--save-dev", "sass")
+	if contains(config.Preprocessing, plugins.SassExtension) {
+		cmd = exec.CommandContext(ctx, plugins.NpmCommand, plugins.InstallArg, "--save-dev", plugins.SassExtension) // #nosec G204 - Using hardcoded safe arguments
 		if err := cmd.Run(); err != nil {
 			return fmt.Errorf("failed to install sass: %w", err)
 		}
@@ -183,7 +201,7 @@ func (p *BulmaPlugin) setupWithNPM(ctx context.Context, config FrameworkConfig) 
 
 	// Create entry point Sass file
 	if err := p.createEntryPoint(config); err != nil {
-		return fmt.Errorf("failed to create entry point: %w", err)
+		return fmt.Errorf(plugins.ErrFailedCreateEntryPoint, err)
 	}
 
 	return nil
@@ -191,26 +209,26 @@ func (p *BulmaPlugin) setupWithNPM(ctx context.Context, config FrameworkConfig) 
 
 // setupWithCDN sets up Bulma using CDN.
 func (p *BulmaPlugin) setupWithCDN(ctx context.Context, config FrameworkConfig) error {
-	cdnUrl := config.CDNUrl
-	if cdnUrl == "" {
-		cdnUrl = fmt.Sprintf(
+	cdnURL := config.CdnURL
+	if cdnURL == "" {
+		cdnURL = fmt.Sprintf(
 			"https://cdn.jsdelivr.net/npm/bulma@%s/css/bulma.min.css",
 			config.Version,
 		)
 	}
 
 	// Create a simple CSS file that imports from CDN
-	cssContent := fmt.Sprintf("@import url('%s');\n", cdnUrl)
+	cssContent := fmt.Sprintf(plugins.ImportURLTemplate, cdnURL)
 
 	// Ensure output directory exists
 	outputDir := filepath.Dir(config.OutputPath)
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
-		return fmt.Errorf("failed to create output directory: %w", err)
+	if err := os.MkdirAll(outputDir, 0o755); err != nil {
+		return fmt.Errorf(plugins.ErrFailedCreateOutputDirectory, err)
 	}
 
 	// Write CSS file
-	if err := os.WriteFile(config.OutputPath, []byte(cssContent), 0644); err != nil {
-		return fmt.Errorf("failed to write CSS file: %w", err)
+	if err := os.WriteFile(config.OutputPath, []byte(cssContent), 0o644); err != nil {
+		return fmt.Errorf(plugins.ErrFailedWriteCSSFile, err)
 	}
 
 	return nil
@@ -219,14 +237,14 @@ func (p *BulmaPlugin) setupWithCDN(ctx context.Context, config FrameworkConfig) 
 // setupStandalone sets up Bulma as standalone files.
 func (p *BulmaPlugin) setupStandalone(ctx context.Context, config FrameworkConfig) error {
 	outputDir := filepath.Dir(config.OutputPath)
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
-		return fmt.Errorf("failed to create output directory: %w", err)
+	if err := os.MkdirAll(outputDir, 0o755); err != nil {
+		return fmt.Errorf(plugins.ErrFailedCreateOutputDirectory, err)
 	}
 
 	// Create basic Bulma CSS (simplified)
 	basicCSS := p.generateBasicBulmaCSS(config)
-	if err := os.WriteFile(config.OutputPath, []byte(basicCSS), 0644); err != nil {
-		return fmt.Errorf("failed to write CSS file: %w", err)
+	if err := os.WriteFile(config.OutputPath, []byte(basicCSS), 0o644); err != nil {
+		return fmt.Errorf(plugins.ErrFailedWriteCSSFile, err)
 	}
 
 	return nil
@@ -235,15 +253,15 @@ func (p *BulmaPlugin) setupStandalone(ctx context.Context, config FrameworkConfi
 // createEntryPoint creates the main Sass entry point file.
 func (p *BulmaPlugin) createEntryPoint(config FrameworkConfig) error {
 	entryDir := filepath.Dir(config.EntryPoint)
-	if err := os.MkdirAll(entryDir, 0755); err != nil {
-		return fmt.Errorf("failed to create entry point directory: %w", err)
+	if err := os.MkdirAll(entryDir, 0o755); err != nil {
+		return fmt.Errorf(plugins.ErrFailedCreateEntryPointDir, err)
 	}
 
 	// Generate Sass content
 	sassContent := p.generateBulmaSass(config)
 
-	if err := os.WriteFile(config.EntryPoint, []byte(sassContent), 0644); err != nil {
-		return fmt.Errorf("failed to write entry point file: %w", err)
+	if err := os.WriteFile(config.EntryPoint, []byte(sassContent), 0o644); err != nil {
+		return fmt.Errorf(plugins.ErrFailedWriteEntryPointFile, err)
 	}
 
 	return nil
@@ -552,18 +570,18 @@ module.exports = {
 // ValidateConfig validates Bulma configuration.
 func (p *BulmaPlugin) ValidateConfig(configPath string) error {
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		return fmt.Errorf("config file does not exist: %s", configPath)
+		return fmt.Errorf(plugins.ErrConfigFileNotExist, configPath)
 	}
 
 	// Read and validate config file content
 	content, err := os.ReadFile(configPath)
 	if err != nil {
-		return fmt.Errorf("failed to read config file: %w", err)
+		return fmt.Errorf(plugins.ErrFailedReadConfigFile, err)
 	}
 
 	// Basic validation - check for required exports
-	if !strings.Contains(string(content), "module.exports") {
-		return errors.New("config file must export a configuration object")
+	if !strings.Contains(string(content), plugins.ModuleExportsStr) {
+		return errors.New(plugins.ErrConfigMustExportObject)
 	}
 
 	return nil
@@ -604,13 +622,13 @@ func (p *BulmaPlugin) compileSass(
 	// Create temporary input file
 	tmpDir := os.TempDir()
 	inputFile := filepath.Join(tmpDir, "input.sass")
-	outputFile := filepath.Join(tmpDir, "output.css")
+	outputFile := filepath.Join(tmpDir, plugins.OutputCSSFileName)
 
-	if err := os.WriteFile(inputFile, input, 0644); err != nil {
-		return nil, fmt.Errorf("failed to write temporary input file: %w", err)
+	if err := os.WriteFile(inputFile, input, 0o644); err != nil {
+		return nil, fmt.Errorf(plugins.ErrFailedWriteTempInputFile, err)
 	}
-	defer os.Remove(inputFile)
-	defer os.Remove(outputFile)
+	defer func() { _ = os.Remove(inputFile) }()
+	defer func() { _ = os.Remove(outputFile) }()
 
 	// Run sass compiler
 	args := []string{inputFile, outputFile, "--indented"}
@@ -621,7 +639,7 @@ func (p *BulmaPlugin) compileSass(
 		args = append(args, "--style=compressed")
 	}
 
-	cmd := exec.CommandContext(ctx, "sass", args...)
+	cmd := exec.CommandContext(ctx, plugins.SassExtension, args...) // #nosec G204 - args built from validated inputs and hardcoded options
 	if err := cmd.Run(); err != nil {
 		return nil, fmt.Errorf("failed to compile Sass: %w", err)
 	}
@@ -629,7 +647,7 @@ func (p *BulmaPlugin) compileSass(
 	// Read output
 	output, err := os.ReadFile(outputFile)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read compiled CSS: %w", err)
+		return nil, fmt.Errorf(plugins.ErrFailedReadCompiledCSS, err)
 	}
 
 	return output, nil
@@ -640,10 +658,10 @@ func (p *BulmaPlugin) optimizeCSS(css []byte, options ProcessingOptions) ([]byte
 	cssStr := string(css)
 
 	// Remove comments
-	cssStr = regexp.MustCompile(`/\*.*?\*/`).ReplaceAllString(cssStr, "")
+	cssStr = regexp.MustCompile(plugins.CommentRegexPattern).ReplaceAllString(cssStr, "")
 
 	// Remove extra whitespace
-	cssStr = regexp.MustCompile(`\s+`).ReplaceAllString(cssStr, " ")
+	cssStr = regexp.MustCompile(plugins.WhitespaceRegexPattern).ReplaceAllString(cssStr, " ")
 	cssStr = strings.TrimSpace(cssStr)
 
 	// Purge unused classes if requested and used classes are provided
@@ -656,44 +674,7 @@ func (p *BulmaPlugin) optimizeCSS(css []byte, options ProcessingOptions) ([]byte
 
 // purgeUnusedClasses removes unused CSS classes.
 func (p *BulmaPlugin) purgeUnusedClasses(css string, usedClasses []string) string {
-	// Create a map for fast lookup
-	usedMap := make(map[string]bool)
-	for _, class := range usedClasses {
-		usedMap[class] = true
-	}
-
-	// Simple purging - remove class rules that aren't used
-	lines := strings.Split(css, "\n")
-	var result []string
-
-	inRule := false
-	var currentRule strings.Builder
-
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-
-		if strings.HasPrefix(line, ".") && strings.Contains(line, "{") {
-			// Start of a class rule
-			inRule = true
-			currentRule.Reset()
-			currentRule.WriteString(line)
-		} else if inRule {
-			currentRule.WriteString("\n" + line)
-			if strings.Contains(line, "}") {
-				// End of rule
-				rule := currentRule.String()
-				if p.shouldKeepRule(rule, usedMap) {
-					result = append(result, rule)
-				}
-				inRule = false
-			}
-		} else if !inRule {
-			// Not in a class rule, keep as-is
-			result = append(result, line)
-		}
-	}
-
-	return strings.Join(result, "\n")
+	return purgeUnusedClasses(css, usedClasses, p.shouldKeepRule)
 }
 
 // shouldKeepRule determines if a CSS rule should be kept based on used classes.
@@ -717,7 +698,7 @@ func (p *BulmaPlugin) shouldKeepRule(rule string, usedClasses map[string]bool) b
 // ExtractClasses extracts Bulma classes from content.
 func (p *BulmaPlugin) ExtractClasses(content string) ([]string, error) {
 	var classes []string
-	classRegex := regexp.MustCompile(`class="([^"]*)"`)
+	classRegex := regexp.MustCompile(plugins.ClassRegexPattern)
 
 	matches := classRegex.FindAllStringSubmatch(content, -1)
 	for _, match := range matches {
@@ -792,7 +773,7 @@ func (p *BulmaPlugin) ExtractVariables(css []byte) (map[string]string, error) {
 	variables := make(map[string]string)
 
 	// Extract CSS custom properties (--variable: value)
-	varRegex := regexp.MustCompile(`--([a-zA-Z][a-zA-Z0-9_-]*)\s*:\s*([^;]+);`)
+	varRegex := regexp.MustCompile(plugins.CSSVarRegexPattern)
 	matches := varRegex.FindAllStringSubmatch(string(css), -1)
 
 	for _, match := range matches {

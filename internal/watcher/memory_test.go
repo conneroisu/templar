@@ -1,6 +1,7 @@
 package watcher
 
 import (
+	"math"
 	"runtime"
 	"testing"
 	"time"
@@ -11,9 +12,13 @@ func TestMemoryLeakPrevention(t *testing.T) {
 	// Create a file watcher with short debounce delay
 	fw, err := NewFileWatcher(10 * time.Millisecond)
 	if err != nil {
-		t.Fatalf("Failed to create file watcher: %v", err)
+		t.Fatalf(ErrFailedToCreateFileWatcher, err)
 	}
-	defer fw.Stop()
+	defer func() {
+		if err := fw.Stop(); err != nil {
+			t.Logf("Warning: failed to stop file watcher: %v", err)
+		}
+	}()
 
 	// Add a handler that does nothing
 	fw.AddHandler(func(events []ChangeEvent) error {
@@ -29,7 +34,7 @@ func TestMemoryLeakPrevention(t *testing.T) {
 	for i := range 10000 {
 		event := ChangeEvent{
 			Type:    EventTypeModified,
-			Path:    "/test/file.templ",
+			Path:    TestFilePath,
 			ModTime: time.Now(),
 			Size:    1024,
 		}
@@ -57,7 +62,13 @@ func TestMemoryLeakPrevention(t *testing.T) {
 	// Check that memory usage hasn't grown excessively
 	var memoryGrowth int64
 	if m2.Alloc > m1.Alloc {
-		memoryGrowth = int64(m2.Alloc - m1.Alloc)
+		diff := m2.Alloc - m1.Alloc
+		// Safe conversion: check for overflow before converting
+		if diff <= math.MaxInt64 {
+			memoryGrowth = int64(diff) //nolint:gosec // Overflow protection: checked diff <= math.MaxInt64
+		} else {
+			memoryGrowth = math.MaxInt64 // Cap at max int64
+		}
 	} else {
 		memoryGrowth = 0 // Memory decreased or stayed same
 	}
@@ -79,15 +90,19 @@ func TestMemoryLeakPrevention(t *testing.T) {
 func TestBoundedEventQueue(t *testing.T) {
 	fw, err := NewFileWatcher(1 * time.Second) // Long delay to prevent flushing
 	if err != nil {
-		t.Fatalf("Failed to create file watcher: %v", err)
+		t.Fatalf(ErrFailedToCreateFileWatcher, err)
 	}
-	defer fw.Stop()
+	defer func() {
+		if err := fw.Stop(); err != nil {
+			t.Logf("Warning: failed to stop file watcher: %v", err)
+		}
+	}()
 
 	// Send more events than MaxPendingEvents
 	for range MaxPendingEvents + 500 {
 		event := ChangeEvent{
 			Type:    EventTypeModified,
-			Path:    "/test/file.templ",
+			Path:    TestFilePath,
 			ModTime: time.Now(),
 			Size:    1024,
 		}
@@ -114,15 +129,19 @@ func TestBoundedEventQueue(t *testing.T) {
 func TestObjectPoolEfficiency(t *testing.T) {
 	fw, err := NewFileWatcher(10 * time.Millisecond)
 	if err != nil {
-		t.Fatalf("Failed to create file watcher: %v", err)
+		t.Fatalf(ErrFailedToCreateFileWatcher, err)
 	}
-	defer fw.Stop()
+	defer func() {
+		if err := fw.Stop(); err != nil {
+			t.Logf("Warning: failed to stop file watcher: %v", err)
+		}
+	}()
 
 	// Add events and force multiple flushes
 	for i := range 100 {
 		event := ChangeEvent{
 			Type:    EventTypeModified,
-			Path:    "/test/file.templ",
+			Path:    TestFilePath,
 			ModTime: time.Now(),
 			Size:    1024,
 		}
@@ -142,9 +161,13 @@ func TestObjectPoolEfficiency(t *testing.T) {
 func TestCleanupPreventsGrowth(t *testing.T) {
 	fw, err := NewFileWatcher(10 * time.Millisecond)
 	if err != nil {
-		t.Fatalf("Failed to create file watcher: %v", err)
+		t.Fatalf(ErrFailedToCreateFileWatcher, err)
 	}
-	defer fw.Stop()
+	defer func() {
+		if err := fw.Stop(); err != nil {
+			t.Logf("Warning: failed to stop file watcher: %v", err)
+		}
+	}()
 
 	// Force cleanup by manipulating last cleanup time
 	fw.debouncer.lastCleanup = time.Now().Add(-CleanupInterval - time.Second)
@@ -153,7 +176,7 @@ func TestCleanupPreventsGrowth(t *testing.T) {
 	for range MaxPendingEvents * 2 {
 		event := ChangeEvent{
 			Type:    EventTypeModified,
-			Path:    "/test/file.templ",
+			Path:    TestFilePath,
 			ModTime: time.Now(),
 			Size:    1024,
 		}
@@ -181,9 +204,13 @@ func TestCleanupPreventsGrowth(t *testing.T) {
 func BenchmarkWatcherMemoryUsage(b *testing.B) {
 	fw, err := NewFileWatcher(10 * time.Millisecond)
 	if err != nil {
-		b.Fatalf("Failed to create file watcher: %v", err)
+		b.Fatalf(ErrFailedToCreateFileWatcher, err)
 	}
-	defer fw.Stop()
+	defer func() {
+		if err := fw.Stop(); err != nil {
+			b.Logf("Warning: failed to stop file watcher: %v", err)
+		}
+	}()
 
 	fw.AddHandler(func(events []ChangeEvent) error {
 		return nil
@@ -195,7 +222,7 @@ func BenchmarkWatcherMemoryUsage(b *testing.B) {
 	for range b.N {
 		event := ChangeEvent{
 			Type:    EventTypeModified,
-			Path:    "/test/file.templ",
+			Path:    TestFilePath,
 			ModTime: time.Now(),
 			Size:    1024,
 		}

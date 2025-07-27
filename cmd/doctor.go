@@ -82,7 +82,7 @@ func init() {
 	doctorCmd.Flags().
 		BoolVar(&doctorFix, "fix", false, "Automatically fix common issues where possible")
 	doctorCmd.Flags().
-		StringVarP(&doctorFormat, "format", "f", "table", "Output format (table|json|yaml)")
+		StringVarP(&doctorFormat, "format", "f", OutputFormatTable, "Output format (table|json|yaml)")
 }
 
 func runDoctor(cmd *cobra.Command, args []string) error {
@@ -124,7 +124,7 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 		result := check(ctx, report)
 		report.Results = append(report.Results, result)
 
-		if !doctorVerbose && result.Status == "info" {
+		if !doctorVerbose && result.Status == SeverityInfo {
 			continue
 		}
 
@@ -140,7 +140,7 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 	displaySummary(report.Summary)
 
 	// Output formatted report if requested
-	if doctorFormat != "table" {
+	if doctorFormat != OutputFormatTable {
 		fmt.Println("\n📋 Detailed Report")
 		fmt.Println("==================")
 		if err := outputReport(report, doctorFormat); err != nil {
@@ -186,7 +186,7 @@ func checkTemplarConfiguration(ctx context.Context, report *DoctorReport) Diagno
 	// Check if .templar.yml exists
 	configPath := ".templar.yml"
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		result.Status = "warning"
+		result.Status = SeverityWarning
 		result.Message = "No .templar.yml configuration file found"
 		result.Suggestion = "Run 'templar init' to create a new project or 'templar config wizard' for interactive setup"
 		result.AutoFixable = true
@@ -197,7 +197,7 @@ func checkTemplarConfiguration(ctx context.Context, report *DoctorReport) Diagno
 	// Try to load and validate configuration
 	cfg, err := config.Load()
 	if err != nil {
-		result.Status = "error"
+		result.Status = SeverityError
 		result.Message = fmt.Sprintf("Configuration file exists but has errors: %v", err)
 		result.Suggestion = "Fix configuration errors or run 'templar config wizard' to reconfigure"
 		result.AutoFixable = true
@@ -216,7 +216,7 @@ func checkTemplarConfiguration(ctx context.Context, report *DoctorReport) Diagno
 
 	// Check for common configuration issues
 	if len(cfg.Components.ScanPaths) == 0 {
-		result.Status = "warning"
+		result.Status = SeverityWarning
 		result.Message = "No component scan paths configured"
 		result.Suggestion = "Add component directories to scan_paths in .templar.yml"
 	}
@@ -235,7 +235,7 @@ func checkTemplTool(ctx context.Context, report *DoctorReport) DiagnosticResult 
 	cmd := exec.CommandContext(ctx, "templ", "version")
 	output, err := cmd.Output()
 	if err != nil {
-		result.Status = "error"
+		result.Status = SeverityError
 		result.Message = "Templ tool not found"
 		result.Suggestion = "Install templ with: go install github.com/a-h/templ/cmd/templ@latest"
 		result.AutoFixable = true
@@ -252,7 +252,7 @@ func checkTemplTool(ctx context.Context, report *DoctorReport) DiagnosticResult 
 
 	// Check if it's a recent version
 	if strings.Contains(version, "v0.2") {
-		result.Status = "warning"
+		result.Status = SeverityWarning
 		result.Message = "Templ version may be outdated: " + version
 		result.Suggestion = "Update templ with: go install github.com/a-h/templ/cmd/templ@latest"
 		result.AutoFixable = true
@@ -280,7 +280,7 @@ func checkGoEnvironment(ctx context.Context, report *DoctorReport) DiagnosticRes
 
 	// Check for go.mod file
 	if _, err := os.Stat("go.mod"); os.IsNotExist(err) {
-		result.Status = "warning"
+		result.Status = SeverityWarning
 		result.Message = "No go.mod file found in current directory"
 		result.Suggestion = "Initialize a Go module with: go mod init <module-name>"
 		result.AutoFixable = true
@@ -291,7 +291,7 @@ func checkGoEnvironment(ctx context.Context, report *DoctorReport) DiagnosticRes
 
 	// Check Go version compatibility
 	if strings.Contains(goVersion, "go1.19") || strings.Contains(goVersion, "go1.18") {
-		result.Status = "warning"
+		result.Status = SeverityWarning
 		result.Message = "Go version may be outdated for optimal templ support: " + goVersion
 		result.Suggestion = "Consider upgrading to Go 1.20+ for better generics and templ support"
 	}
@@ -319,7 +319,7 @@ func checkPortAvailability(ctx context.Context, report *DoctorReport) Diagnostic
 		} else {
 			conflictPorts = append(conflictPorts, port)
 			if port == 8080 { // Default Templar port
-				result.Status = "warning"
+				result.Status = SeverityWarning
 			}
 		}
 	}
@@ -351,7 +351,7 @@ func checkAirIntegration(ctx context.Context, report *DoctorReport) DiagnosticRe
 	result := DiagnosticResult{
 		Name:     "Air Integration",
 		Category: "Tools",
-		Status:   "info",
+		Status:   SeverityInfo,
 	}
 
 	// Check if air is installed
@@ -379,7 +379,7 @@ func checkAirIntegration(ctx context.Context, report *DoctorReport) DiagnosticRe
 	}
 
 	if !airConfigExists {
-		result.Status = "warning"
+		result.Status = SeverityWarning
 		result.Message = fmt.Sprintf(
 			"Air installed (%s) but no .air.toml configuration found",
 			version,
@@ -398,7 +398,7 @@ func checkTailwindIntegration(ctx context.Context, report *DoctorReport) Diagnos
 	result := DiagnosticResult{
 		Name:     "Tailwind CSS Integration",
 		Category: "Tools",
-		Status:   "info",
+		Status:   SeverityInfo,
 	}
 
 	// Check for tailwindcss installation
@@ -443,7 +443,7 @@ func checkTailwindIntegration(ctx context.Context, report *DoctorReport) Diagnos
 	}
 
 	if configFile == "" {
-		result.Status = "warning"
+		result.Status = SeverityWarning
 		result.Message = "Tailwind CSS found but no configuration file detected"
 		result.Suggestion = "Initialize Tailwind config: npx tailwindcss init"
 		result.AutoFixable = true
@@ -458,7 +458,7 @@ func checkVSCodeIntegration(ctx context.Context, report *DoctorReport) Diagnosti
 	result := DiagnosticResult{
 		Name:     "VS Code Integration",
 		Category: "Editor",
-		Status:   "info",
+		Status:   SeverityInfo,
 	}
 
 	// Check if VS Code is available
@@ -495,13 +495,13 @@ func checkVSCodeIntegration(ctx context.Context, report *DoctorReport) Diagnosti
 			result.Details["recommended_extensions"] = true
 			result.Message = "VS Code workspace properly configured"
 		} else {
-			result.Status = "warning"
+			result.Status = SeverityWarning
 			result.Message = "VS Code detected but no recommended extensions configured"
 			result.Suggestion = "Add templ extension recommendations to .vscode/extensions.json"
 			result.AutoFixable = true
 		}
 	} else {
-		result.Status = "warning"
+		result.Status = SeverityWarning
 		result.Message = "VS Code detected but no workspace configuration"
 		result.Suggestion = "Create .vscode/settings.json and extensions.json for better development experience"
 		result.AutoFixable = true
@@ -514,7 +514,7 @@ func checkGitIntegration(ctx context.Context, report *DoctorReport) DiagnosticRe
 	result := DiagnosticResult{
 		Name:     "Git Integration",
 		Category: "Version Control",
-		Status:   "info",
+		Status:   SeverityInfo,
 	}
 
 	// Check if we're in a git repository
@@ -536,7 +536,7 @@ func checkGitIntegration(ctx context.Context, report *DoctorReport) DiagnosticRe
 	}
 
 	if !gitignoreExists {
-		result.Status = "warning"
+		result.Status = SeverityWarning
 		result.Message = "Git repository found but no .gitignore file"
 		result.Suggestion = "Create .gitignore to exclude build artifacts and cache files"
 		result.AutoFixable = true
@@ -555,7 +555,7 @@ func checkGitIntegration(ctx context.Context, report *DoctorReport) DiagnosticRe
 			}
 
 			if len(missingPatterns) > 0 {
-				result.Status = "warning"
+				result.Status = SeverityWarning
 				result.Message = "Git configured but .gitignore may be missing templ-related patterns"
 				result.Suggestion = fmt.Sprintf("Add these patterns to .gitignore: %v", missingPatterns)
 				result.AutoFixable = true
@@ -596,7 +596,7 @@ func checkProcessConflicts(ctx context.Context, report *DoctorReport) Diagnostic
 	if len(conflictingProcesses) == 0 {
 		result.Message = "No conflicting development processes detected"
 	} else {
-		result.Status = "warning"
+		result.Status = SeverityWarning
 		result.Message = fmt.Sprintf("Development processes running: %v", conflictingProcesses)
 		result.Suggestion = "These processes might conflict with Templar. Consider coordinating or using different ports."
 	}
@@ -617,8 +617,8 @@ func checkFileSystemPermissions(ctx context.Context, report *DoctorReport) Diagn
 
 	// Check write permissions in current directory
 	testFile := ".templar-permission-test"
-	if err := os.WriteFile(testFile, []byte("test"), 0644); err != nil {
-		result.Status = "error"
+	if err := os.WriteFile(testFile, []byte("test"), 0o644); err != nil {
+		result.Status = SeverityError
 		result.Message = "Cannot write to current directory"
 		result.Suggestion = "Check directory permissions or change to a writable directory"
 
@@ -631,8 +631,8 @@ func checkFileSystemPermissions(ctx context.Context, report *DoctorReport) Diagn
 
 	// Check cache directory permissions
 	cacheDir := ".templar"
-	if err := os.MkdirAll(cacheDir, 0755); err != nil {
-		result.Status = "warning"
+	if err := os.MkdirAll(cacheDir, 0o755); err != nil {
+		result.Status = SeverityWarning
 		result.Message = "Cannot create .templar cache directory"
 		result.Suggestion = "Check permissions for creating directories in current location"
 
@@ -654,7 +654,7 @@ func checkNetworkConfiguration(ctx context.Context, report *DoctorReport) Diagno
 	// Check if we can bind to localhost
 	listener, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
-		result.Status = "error"
+		result.Status = SeverityError
 		result.Message = "Cannot bind to localhost"
 		result.Suggestion = "Check network configuration and firewall settings"
 
@@ -679,7 +679,7 @@ func checkDevelopmentWorkflow(ctx context.Context, report *DoctorReport) Diagnos
 	result := DiagnosticResult{
 		Name:     "Development Workflow",
 		Category: "Workflow",
-		Status:   "info",
+		Status:   SeverityInfo,
 	}
 
 	recommendations := []string{}
@@ -724,15 +724,16 @@ func checkDevelopmentWorkflow(ctx context.Context, report *DoctorReport) Diagnos
 	}
 
 	// Provide workflow quality assessment
-	if workflowScore >= 3 {
+	switch {
+	case workflowScore >= 3:
 		result.Status = "ok"
 		result.Message = "Well-integrated development workflow detected"
-	} else if workflowScore >= 1 {
-		result.Status = "warning"
+	case workflowScore >= 1:
+		result.Status = SeverityWarning
 		result.Message = "Partial development workflow integration"
 		result.Suggestion = "Consider integrating more development tools for optimal experience"
-	} else {
-		result.Status = "warning"
+	default:
+		result.Status = SeverityWarning
 		result.Message = "Basic development setup detected"
 		result.Suggestion = "Integrate development tools like Air, Tailwind, and VS Code for enhanced productivity"
 	}
@@ -804,15 +805,16 @@ func contains(slice []int, item int) bool {
 }
 
 func getIntegrationLevel(score int) string {
-	if score >= 4 {
+	switch {
+	case score >= 4:
 		return "excellent"
-	} else if score >= 2 {
+	case score >= 2:
 		return "good"
-	} else if score >= 1 {
+	case score >= 1:
 		return "basic"
+	default:
+		return "minimal"
 	}
-
-	return "minimal"
 }
 
 func displayResult(result DiagnosticResult) {
@@ -820,11 +822,11 @@ func displayResult(result DiagnosticResult) {
 	switch result.Status {
 	case "ok":
 		icon = "✅"
-	case "warning":
+	case SeverityWarning:
 		icon = "⚠️"
-	case "error":
+	case SeverityError:
 		icon = "❌"
-	case "info":
+	case SeverityInfo:
 		icon = "ℹ️"
 	default:
 		icon = "•"
@@ -858,11 +860,11 @@ func calculateSummary(results []DiagnosticResult) ReportSummary {
 		switch result.Status {
 		case "ok":
 			summary.OK++
-		case "warning":
+		case SeverityWarning:
 			summary.Warnings++
-		case "error":
+		case SeverityError:
 			summary.Errors++
-		case "info":
+		case SeverityInfo:
 			summary.Info++
 		}
 	}
@@ -884,12 +886,12 @@ func displaySummary(summary ReportSummary) {
 
 func outputReport(report *DoctorReport, format string) error {
 	switch format {
-	case "json":
+	case OutputFormatJSON:
 		encoder := json.NewEncoder(os.Stdout)
 		encoder.SetIndent("", "  ")
 
 		return encoder.Encode(report)
-	case "yaml":
+	case OutputFormatYAML:
 		encoder := yaml.NewEncoder(os.Stdout)
 
 		return encoder.Encode(report)
@@ -952,7 +954,7 @@ func hasTemplarConfig(report *DoctorReport) bool {
 
 func hasIntegrationOpportunities(report *DoctorReport) bool {
 	for _, result := range report.Results {
-		if result.AutoFixable && (result.Status == "warning" || result.Status == "error") {
+		if result.AutoFixable && (result.Status == SeverityWarning || result.Status == SeverityError) {
 			return true
 		}
 	}

@@ -34,9 +34,7 @@ Examples:
   templar build production --static-only
   templar build production --docker --env staging
   templar build production --output dist/prod --validate`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return runProductionBuildCommand(cmd, args)
-	},
+	RunE: runProductionBuildCommand,
 }
 
 func runProductionBuildCommand(cmd *cobra.Command, args []string) error {

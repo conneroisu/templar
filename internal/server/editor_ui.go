@@ -21,8 +21,8 @@ func (s *PreviewServer) handleEditorIndex(w http.ResponseWriter, r *http.Request
 
 	// Serve the main editor interface
 	html := s.generateEditorHTML()
-	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(html))
+	w.Header().Set(HeaderContentType, ContentTypeHTML)
+	_, _ = w.Write([]byte(html))
 }
 
 // handleComponentEditorView serves the editor for a specific component.
@@ -48,8 +48,8 @@ func (s *PreviewServer) handleComponentEditorView(
 
 	// Serve the component-specific editor interface
 	html := s.generateComponentEditorHTML(component)
-	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(html))
+	w.Header().Set(HeaderContentType, ContentTypeHTML)
+	_, _ = w.Write([]byte(html))
 }
 
 // generateEditorHTML generates the main editor interface HTML.

@@ -219,6 +219,9 @@ func (monitor *RealtimeAccessibilityMonitor) filterViolationsBySeverity(
 			if violation.Severity == SeverityError || violation.Severity == SeverityWarning {
 				filtered = append(filtered, violation)
 			}
+		case SeverityInfo:
+			// SeverityInfo case is already handled above - include all violations
+			filtered = append(filtered, violation)
 		}
 	}
 
@@ -238,6 +241,8 @@ func (monitor *RealtimeAccessibilityMonitor) getUpdateTypeFromViolations(
 			hasError = true
 		case SeverityWarning:
 			hasWarning = true
+		case SeverityInfo:
+			// Info violations don't affect error/warning state
 		}
 	}
 
@@ -269,6 +274,8 @@ func (monitor *RealtimeAccessibilityMonitor) generateUpdateMessage(
 			criticalCount++
 		case ImpactSerious:
 			seriousCount++
+		case ImpactModerate, ImpactMinor:
+			// Moderate and minor violations don't affect critical/serious counts
 		}
 	}
 

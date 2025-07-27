@@ -353,7 +353,11 @@ func (m *Monitor) checkAlerts() {
 	// Check memory usage from system info
 	if memCheck, exists := health.Checks["memory"]; exists {
 		if memoryUsage, ok := memCheck.Metadata["heap_alloc"].(uint64); ok {
-			if int64(memoryUsage) > m.config.AlertThresholds.MemoryUsage {
+			// Safely convert uint64 to int64, checking for overflow
+			if memoryUsage > 0x7FFFFFFFFFFFFFFF { // Max int64 value
+				m.logger.Error(context.Background(), nil, "Alert: Memory usage exceeds int64 range",
+					"current", memoryUsage)
+			} else if int64(memoryUsage) > m.config.AlertThresholds.MemoryUsage {
 				m.logger.Error(context.Background(), nil, "Alert: High memory usage",
 					"current", memoryUsage,
 					"threshold", m.config.AlertThresholds.MemoryUsage)

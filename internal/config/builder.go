@@ -8,6 +8,14 @@ import (
 	"github.com/spf13/viper"
 )
 
+// Environment constants.
+const (
+	EnvDevelopment = "development"
+	EnvStaging     = "staging"
+	EnvProduction  = "production"
+	EnvEnterprise  = "enterprise"
+)
+
 // ConfigBuilder provides a fluent interface for building configurations
 // with progressive complexity tiers and clear separation of concerns.
 //
@@ -53,7 +61,7 @@ func (cb *ConfigBuilder) WithBasicSettings() *ConfigBuilder {
 		Port:        8080,
 		Host:        "localhost",
 		Open:        true,
-		Environment: "development",
+		Environment: EnvDevelopment,
 	}
 	cb.config.Components = ComponentsConfig{
 		ScanPaths:       []string{"./components"},
@@ -243,24 +251,24 @@ func (cb *ConfigBuilder) WithPlugins(enabled []string, discoveryPaths []string) 
 // WithEnvironment applies environment-specific overrides.
 func (cb *ConfigBuilder) WithEnvironment(env string) *ConfigBuilder {
 	switch env {
-	case "development":
+	case EnvDevelopment:
 		cb.WithDevelopmentMode()
-		cb.config.Server.Environment = "development"
+		cb.config.Server.Environment = EnvDevelopment
 		cb.config.Monitoring.LogLevel = "debug"
-	case "staging":
+	case EnvStaging:
 		cb.WithDevelopmentMode()
 		cb.WithProductionOptimizations()
-		cb.config.Server.Environment = "staging"
+		cb.config.Server.Environment = EnvStaging
 		cb.config.Production.Security.Scan.Enabled = true
-	case "production":
+	case EnvProduction:
 		cb.WithProductionOptimizations()
-		cb.config.Server.Environment = "production"
+		cb.config.Server.Environment = EnvProduction
 		cb.config.Development.HotReload = false
 		cb.config.Development.ErrorOverlay = false
 		cb.config.Monitoring.LogLevel = "warn"
-	case "enterprise":
+	case EnvEnterprise:
 		cb.WithEnterpriseFeatures()
-		cb.config.Server.Environment = "production"
+		cb.config.Server.Environment = EnvProduction
 	}
 
 	return cb

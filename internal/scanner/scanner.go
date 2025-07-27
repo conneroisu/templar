@@ -76,7 +76,8 @@ func NewBufferPool() *BufferPool {
 		pool: sync.Pool{
 			New: func() interface{} {
 				// Pre-allocate 64KB buffers for typical component files
-				return make([]byte, 0, 64*1024)
+				buf := make([]byte, 0, 64*1024)
+				return &buf
 			},
 		},
 	}
@@ -84,14 +85,16 @@ func NewBufferPool() *BufferPool {
 
 // Get retrieves a buffer from the pool.
 func (bp *BufferPool) Get() []byte {
-	return bp.pool.Get().([]byte)[:0] // Reset length but keep capacity
+	return (*bp.pool.Get().(*[]byte))[:0] // Reset length but keep capacity
 }
 
 // Put returns a buffer to the pool.
 func (bp *BufferPool) Put(buf []byte) {
 	// Only pool reasonably-sized buffers to avoid memory leaks
 	if cap(buf) <= 1024*1024 { // 1MB limit
-		bp.pool.Put(buf)
+		// Clear slice length but keep capacity - use pointer to avoid SA6002 allocation warning
+		buf = buf[:0]
+		bp.pool.Put(&buf)
 	}
 }
 
@@ -520,11 +523,9 @@ func NewComponentScannerWithConcurrency(
 		if workerCount > 8 {
 			workerCount = 8 // Cap at 8 workers for diminishing returns
 		}
-	} else {
+	} else if workerCount > 64 {
 		// User-specified count, but enforce reasonable limits
-		if workerCount > 64 {
-			workerCount = 64 // Maximum safety limit
-		}
+		workerCount = 64 // Maximum safety limit
 	}
 
 	scanner.workerPool = NewWorkerPool(workerCount, scanner)
@@ -905,7 +906,7 @@ func (s *ComponentScanner) scanFileInternal(path string) error {
 	if err != nil {
 		return fmt.Errorf("opening file %s: %w", cleanPath, err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	// Get file info without separate Stat() call
 	info, err := file.Stat()
@@ -1125,8 +1126,7 @@ func (s *ComponentScanner) extractFromASTWithComponents(
 
 	// Walk the AST to find function declarations that might be templ components
 	ast.Inspect(astFile, func(n ast.Node) bool {
-		switch node := n.(type) {
-		case *ast.FuncDecl:
+		if node, ok := n.(*ast.FuncDecl); ok {
 			if node.Name != nil && node.Name.IsExported() {
 				// Check if this might be a templ component
 				if s.isTemplComponent(node) {
@@ -1632,7 +1632,7 @@ func (s *ComponentScanner) generateOptimizedHash(
 
 	// For collision resistance, incorporate secondary hash if available
 	if secondaryHash != 0 {
-		combinedHash = combinedHash ^ (secondaryHash >> 16)
+		combinedHash ^= (secondaryHash >> 16)
 	}
 
 	return strconv.FormatUint(uint64(combinedHash), 16), strategy

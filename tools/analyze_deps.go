@@ -135,7 +135,9 @@ func checkIndirectCircular(
 				}
 			}
 			if cycleStart >= 0 {
-				cycle := append(path[cycleStart:], currentPkg)
+				cycle := make([]string, 0, len(path[cycleStart:])+1)
+				cycle = append(cycle, path[cycleStart:]...)
+				cycle = append(cycle, currentPkg)
 				fmt.Printf("INDIRECT CIRCULAR: %s\n", strings.Join(cycle, " -> "))
 			}
 		}
@@ -144,7 +146,9 @@ func checkIndirectCircular(
 	}
 
 	visited[currentPkg] = true
-	newPath := append(path, currentPkg)
+	newPath := make([]string, len(path)+1)
+	copy(newPath, path)
+	newPath[len(path)] = currentPkg
 
 	if imports, ok := deps[currentPkg]; ok {
 		for _, imp := range imports {

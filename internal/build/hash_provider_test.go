@@ -56,7 +56,7 @@ func TestHashProvider_GenerateContentHash(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create test file
 			testFile := filepath.Join(tempDir, tt.name+".templ")
-			err := os.WriteFile(testFile, []byte(tt.content), 0644)
+			err := os.WriteFile(testFile, []byte(tt.content), 0o644)
 			require.NoError(t, err)
 
 			component := &types.ComponentInfo{
@@ -88,7 +88,7 @@ func TestHashProvider_GenerateContentHash_LargeFile(t *testing.T) {
 	// Create large file (>64KB to trigger mmap)
 	largeContent := strings.Repeat("This is a test line for memory mapping optimization.\n", 2000)
 	testFile := filepath.Join(tempDir, "large_file.templ")
-	err := os.WriteFile(testFile, []byte(largeContent), 0644)
+	err := os.WriteFile(testFile, []byte(largeContent), 0o644)
 	require.NoError(t, err)
 
 	component := &types.ComponentInfo{
@@ -128,12 +128,12 @@ func TestHashProvider_readFileWithMmap(t *testing.T) {
 	// Create test file
 	testContent := "This is test content for memory mapping"
 	testFile := filepath.Join(tempDir, "mmap_test.txt")
-	err := os.WriteFile(testFile, []byte(testContent), 0644)
+	err := os.WriteFile(testFile, []byte(testContent), 0o644)
 	require.NoError(t, err)
 
 	file, err := os.Open(testFile)
 	require.NoError(t, err)
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	stat, err := file.Stat()
 	require.NoError(t, err)
@@ -150,14 +150,14 @@ func TestHashProvider_readFileWithMmap_InvalidFd(t *testing.T) {
 	// Create a file and close it to get an invalid fd
 	tempDir := t.TempDir()
 	testFile := filepath.Join(tempDir, "test.txt")
-	err := os.WriteFile(testFile, []byte("test"), 0644)
+	err := os.WriteFile(testFile, []byte("test"), 0o644)
 	require.NoError(t, err)
 
 	file, err := os.Open(testFile)
 	require.NoError(t, err)
 	stat, err := file.Stat()
 	require.NoError(t, err)
-	file.Close() // Close to make fd invalid
+	_ = file.Close() // Close to make fd invalid
 
 	_, err = provider.readFileWithMmap(file, stat.Size())
 	assert.Error(t, err) // Should fail with invalid fd
@@ -173,7 +173,7 @@ func TestHashProvider_GenerateHashBatch(t *testing.T) {
 	for i := range 10 {
 		content := fmt.Sprintf("Component %d content\npackage component%d", i, i)
 		testFile := filepath.Join(tempDir, fmt.Sprintf("comp%d.templ", i))
-		err := os.WriteFile(testFile, []byte(content), 0644)
+		err := os.WriteFile(testFile, []byte(content), 0o644)
 		require.NoError(t, err)
 
 		components = append(components, &types.ComponentInfo{
@@ -214,7 +214,7 @@ func TestHashProvider_GenerateHashBatch_SmallBatch(t *testing.T) {
 	for i := range 3 {
 		content := fmt.Sprintf("Small batch component %d", i)
 		testFile := filepath.Join(tempDir, fmt.Sprintf("small%d.templ", i))
-		err := os.WriteFile(testFile, []byte(content), 0644)
+		err := os.WriteFile(testFile, []byte(content), 0o644)
 		require.NoError(t, err)
 
 		components = append(components, &types.ComponentInfo{
@@ -251,7 +251,7 @@ func TestHashProvider_GenerateHashBatch_AllCached(t *testing.T) {
 	for i := range 5 {
 		content := fmt.Sprintf("Cached component %d", i)
 		testFile := filepath.Join(tempDir, fmt.Sprintf("cached%d.templ", i))
-		err := os.WriteFile(testFile, []byte(content), 0644)
+		err := os.WriteFile(testFile, []byte(content), 0o644)
 		require.NoError(t, err)
 
 		components = append(components, &types.ComponentInfo{
@@ -320,7 +320,7 @@ func TestHashProvider_ContentHashConsistency(t *testing.T) {
 	// Create test file
 	testContent := "consistent content for hashing"
 	testFile := filepath.Join(tempDir, "consistency_test.templ")
-	err := os.WriteFile(testFile, []byte(testContent), 0644)
+	err := os.WriteFile(testFile, []byte(testContent), 0o644)
 	require.NoError(t, err)
 
 	component := &types.ComponentInfo{
@@ -350,13 +350,13 @@ func TestHashProvider_FileModificationDetection(t *testing.T) {
 	}
 
 	// Create initial file
-	err := os.WriteFile(testFile, []byte("initial content"), 0644)
+	err := os.WriteFile(testFile, []byte("initial content"), 0o644)
 	require.NoError(t, err)
 	hash1 := provider.GenerateContentHash(component)
 
 	// Wait a bit and modify file
 	time.Sleep(10 * time.Millisecond)
-	err = os.WriteFile(testFile, []byte("modified content"), 0644)
+	err = os.WriteFile(testFile, []byte("modified content"), 0o644)
 	require.NoError(t, err)
 
 	hash2 := provider.GenerateContentHash(component)
@@ -375,7 +375,7 @@ func TestHashProvider_ConcurrentAccess(t *testing.T) {
 	for i := range 20 {
 		content := fmt.Sprintf("Concurrent test content %d", i)
 		testFile := filepath.Join(tempDir, fmt.Sprintf("concurrent%d.templ", i))
-		err := os.WriteFile(testFile, []byte(content), 0644)
+		err := os.WriteFile(testFile, []byte(content), 0o644)
 		require.NoError(t, err)
 
 		components[i] = &types.ComponentInfo{
@@ -426,7 +426,7 @@ func TestHashProvider_MmapFallback(t *testing.T) {
 	// Create large content to trigger mmap path
 	largeContent := strings.Repeat("test content\n", 10000)
 	testFile := filepath.Join(tempDir, "mmap_fallback.templ")
-	err := os.WriteFile(testFile, []byte(largeContent), 0644)
+	err := os.WriteFile(testFile, []byte(largeContent), 0o644)
 	require.NoError(t, err)
 
 	component := &types.ComponentInfo{
@@ -489,7 +489,7 @@ func BenchmarkHashProvider_GenerateContentHash(b *testing.B) {
 	// Create test file
 	content := "benchmark test content for hash generation"
 	testFile := filepath.Join(tempDir, "benchmark.templ")
-	err := os.WriteFile(testFile, []byte(content), 0644)
+	err := os.WriteFile(testFile, []byte(content), 0o644)
 	require.NoError(b, err)
 
 	component := &types.ComponentInfo{
@@ -513,7 +513,7 @@ func BenchmarkHashProvider_GenerateHashBatch(b *testing.B) {
 	for i := range 10 {
 		content := fmt.Sprintf("Benchmark batch content %d", i)
 		testFile := filepath.Join(tempDir, fmt.Sprintf("batch%d.templ", i))
-		err := os.WriteFile(testFile, []byte(content), 0644)
+		err := os.WriteFile(testFile, []byte(content), 0o644)
 		require.NoError(b, err)
 
 		components[i] = &types.ComponentInfo{
@@ -537,7 +537,7 @@ func BenchmarkHashProvider_MmapVsRegular(b *testing.B) {
 		2000,
 	)
 	testFile := filepath.Join(tempDir, "large_benchmark.templ")
-	err := os.WriteFile(testFile, []byte(largeContent), 0644)
+	err := os.WriteFile(testFile, []byte(largeContent), 0o644)
 	require.NoError(b, err)
 
 	component := &types.ComponentInfo{

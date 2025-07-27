@@ -146,7 +146,7 @@ func checkServerConnection(baseURL string) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Any response (including errors) means server is accepting connections
 	return nil
@@ -158,7 +158,7 @@ func checkServerHealth(baseURL string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return false, fmt.Errorf("health check returned status %d", resp.StatusCode)

@@ -297,7 +297,13 @@ func (pm *PerformanceMonitor) UpdateResourceMetrics() {
 		pm.resourceMetrics.GCPauses = pm.resourceMetrics.GCPauses[1:]
 	}
 	if m.NumGC > 0 {
-		gcPause := time.Duration(m.PauseNs[(m.NumGC+255)%256])
+		// Safely convert uint64 to avoid integer overflow
+		pauseNs := m.PauseNs[(m.NumGC+255)%256]
+		if pauseNs > 0x7FFFFFFFFFFFFFFF { // Max int64 value
+			// Cap very large pause values to max int64
+			pauseNs = 0x7FFFFFFFFFFFFFFF
+		}
+		gcPause := time.Duration(pauseNs) //nolint:gosec // G115: Overflow checked above
 		pm.resourceMetrics.GCPauses = append(pm.resourceMetrics.GCPauses, gcPause)
 	}
 

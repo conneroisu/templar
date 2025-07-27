@@ -286,7 +286,7 @@ func TestNewServiceOrchestrator_ValidInputs(t *testing.T) {
 	}
 
 	// Clean shutdown
-	orchestrator.Shutdown(context.Background())
+	_ = orchestrator.Shutdown(context.Background()) // Error not relevant for test
 }
 
 // TestNewServiceOrchestrator_NilConfig tests panic on nil config.
@@ -325,7 +325,7 @@ func TestNewServiceOrchestrator_OptionalDependencies(t *testing.T) {
 	deps.WSManager = nil
 
 	orchestrator := NewServiceOrchestrator(deps)
-	defer orchestrator.Shutdown(context.Background())
+	defer func() { _ = orchestrator.Shutdown(context.Background()) }()
 
 	if orchestrator == nil {
 		t.Fatal("NewServiceOrchestrator returned nil with optional dependencies nil")
@@ -347,7 +347,7 @@ func TestNewServiceOrchestrator_OptionalDependencies(t *testing.T) {
 func TestServiceOrchestrator_Start(t *testing.T) {
 	deps := createTestServiceDependencies()
 	orchestrator := NewServiceOrchestrator(deps)
-	defer orchestrator.Shutdown(context.Background())
+	defer func() { _ = orchestrator.Shutdown(context.Background()) }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -390,7 +390,7 @@ func TestServiceOrchestrator_Start(t *testing.T) {
 func TestServiceOrchestrator_HandleBuildResult(t *testing.T) {
 	deps := createTestServiceDependencies()
 	orchestrator := NewServiceOrchestrator(deps)
-	defer orchestrator.Shutdown(context.Background())
+	defer func() { _ = orchestrator.Shutdown(context.Background()) }()
 
 	// Since WSManager is nil in our test deps, we'll test without WebSocket broadcasting
 
@@ -435,7 +435,7 @@ func TestServiceOrchestrator_HandleBuildResult(t *testing.T) {
 func TestServiceOrchestrator_GetBuildMetrics(t *testing.T) {
 	deps := createTestServiceDependencies()
 	orchestrator := NewServiceOrchestrator(deps)
-	defer orchestrator.Shutdown(context.Background())
+	defer func() { _ = orchestrator.Shutdown(context.Background()) }()
 
 	metrics := orchestrator.GetBuildMetrics()
 	if metrics == nil {
@@ -452,7 +452,7 @@ func TestServiceOrchestrator_GetBuildMetrics(t *testing.T) {
 func TestServiceOrchestrator_GetConnectedWebSocketClients(t *testing.T) {
 	deps := createTestServiceDependencies()
 	orchestrator := NewServiceOrchestrator(deps)
-	defer orchestrator.Shutdown(context.Background())
+	defer func() { _ = orchestrator.Shutdown(context.Background()) }()
 
 	// Since our test dependencies use nil WSManager, expect 0 clients
 	clientCount := orchestrator.GetConnectedWebSocketClients()
@@ -465,7 +465,7 @@ func TestServiceOrchestrator_GetConnectedWebSocketClients(t *testing.T) {
 func TestServiceOrchestrator_IsHealthy(t *testing.T) {
 	deps := createTestServiceDependencies()
 	orchestrator := NewServiceOrchestrator(deps)
-	defer orchestrator.Shutdown(context.Background())
+	defer func() { _ = orchestrator.Shutdown(context.Background()) }()
 
 	// Should be healthy with essential services
 	if !orchestrator.IsHealthy() {
@@ -488,7 +488,7 @@ func TestServiceOrchestrator_IsHealthy(t *testing.T) {
 func TestServiceOrchestrator_GetServiceStatus(t *testing.T) {
 	deps := createTestServiceDependencies()
 	orchestrator := NewServiceOrchestrator(deps)
-	defer orchestrator.Shutdown(context.Background())
+	defer func() { _ = orchestrator.Shutdown(context.Background()) }()
 
 	status := orchestrator.GetServiceStatus()
 
@@ -535,7 +535,9 @@ func TestServiceOrchestrator_Shutdown(t *testing.T) {
 	defer cancel()
 
 	// Start the orchestrator first
-	orchestrator.Start(ctx)
+	if err := orchestrator.Start(ctx); err != nil {
+		t.Fatalf("Failed to start orchestrator: %v", err)
+	}
 
 	// Perform shutdown
 	err := orchestrator.Shutdown(ctx)
@@ -568,7 +570,7 @@ func TestServiceOrchestrator_OpenBrowser(t *testing.T) {
 	// Test with browser opening disabled
 	deps.Config.Server.Open = false
 	orchestrator := NewServiceOrchestrator(deps)
-	defer orchestrator.Shutdown(context.Background())
+	defer func() { _ = orchestrator.Shutdown(context.Background()) }()
 
 	// Should not attempt to open browser
 	orchestrator.OpenBrowser("http://localhost:8080")
@@ -576,7 +578,7 @@ func TestServiceOrchestrator_OpenBrowser(t *testing.T) {
 	// Test with browser opening enabled
 	deps.Config.Server.Open = true
 	orchestrator2 := NewServiceOrchestrator(deps)
-	defer orchestrator2.Shutdown(context.Background())
+	defer func() { _ = orchestrator2.Shutdown(context.Background()) }()
 
 	// This will attempt to open browser but should not fail in tests
 	orchestrator2.OpenBrowser("http://localhost:8080")
@@ -586,7 +588,7 @@ func TestServiceOrchestrator_OpenBrowser(t *testing.T) {
 func BenchmarkServiceOrchestrator_HandleBuildResult(b *testing.B) {
 	deps := createTestServiceDependencies()
 	orchestrator := NewServiceOrchestrator(deps)
-	defer orchestrator.Shutdown(context.Background())
+	defer func() { _ = orchestrator.Shutdown(context.Background()) }()
 
 	buildResult := build.BuildResult{
 		ParsedErrors: []*errors.ParsedError{
@@ -608,7 +610,7 @@ func BenchmarkServiceOrchestrator_HandleBuildResult(b *testing.B) {
 func BenchmarkServiceOrchestrator_GetServiceStatus(b *testing.B) {
 	deps := createTestServiceDependencies()
 	orchestrator := NewServiceOrchestrator(deps)
-	defer orchestrator.Shutdown(context.Background())
+	defer func() { _ = orchestrator.Shutdown(context.Background()) }()
 
 	b.ResetTimer()
 	for range b.N {

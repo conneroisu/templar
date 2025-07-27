@@ -127,7 +127,7 @@ func registerServeHealthChecks(monitor *monitoring.TemplarMonitor) {
 					},
 				}
 			}
-			listener.Close()
+			_ = listener.Close()
 
 			return monitoring.HealthCheck{
 				Name:        "port_availability",

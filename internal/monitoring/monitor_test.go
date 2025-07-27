@@ -100,7 +100,7 @@ func TestMonitorHTTPEndpoints(t *testing.T) {
 	t.Run("health endpoint", func(t *testing.T) {
 		resp, err := http.Get(server.URL + "/health")
 		require.NoError(t, err)
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 		assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
@@ -115,7 +115,7 @@ func TestMonitorHTTPEndpoints(t *testing.T) {
 	t.Run("liveness endpoint", func(t *testing.T) {
 		resp, err := http.Get(server.URL + "/health/live")
 		require.NoError(t, err)
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 	})
@@ -123,7 +123,7 @@ func TestMonitorHTTPEndpoints(t *testing.T) {
 	t.Run("readiness endpoint", func(t *testing.T) {
 		resp, err := http.Get(server.URL + "/health/ready")
 		require.NoError(t, err)
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 	})
@@ -131,7 +131,7 @@ func TestMonitorHTTPEndpoints(t *testing.T) {
 	t.Run("metrics endpoint", func(t *testing.T) {
 		resp, err := http.Get(server.URL + "/metrics")
 		require.NoError(t, err)
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 		assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
@@ -146,7 +146,7 @@ func TestMonitorHTTPEndpoints(t *testing.T) {
 	t.Run("info endpoint", func(t *testing.T) {
 		resp, err := http.Get(server.URL + "/info")
 		require.NoError(t, err)
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 		assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))

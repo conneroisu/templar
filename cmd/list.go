@@ -89,7 +89,7 @@ func runList(cmd *cobra.Command, args []string) error {
 	for _, scanPath := range cfg.Components.ScanPaths {
 		if err := componentScanner.ScanDirectory(scanPath); err != nil {
 			// Log error but continue with other paths
-			fmt.Fprintf(os.Stderr, "Warning: failed to scan directory %s: %v\n", scanPath, err)
+			_, _ = fmt.Fprintf(os.Stderr, "Warning: failed to scan directory %s: %v\n", scanPath, err)
 		}
 	}
 
@@ -112,11 +112,11 @@ func runList(cmd *cobra.Command, args []string) error {
 
 	// Output in requested format
 	switch strings.ToLower(listFlags.Format) {
-	case "json":
+	case OutputFormatJSON:
 		return outputListJSON(componentSlice)
-	case "yaml":
+	case OutputFormatYAML:
 		return outputYAML(componentSlice)
-	case "table":
+	case OutputFormatTable:
 		return outputTable(componentSlice)
 	case "csv":
 		return outputListCSV(componentSlice)
@@ -192,7 +192,7 @@ func outputYAML(components []*types.ComponentInfo) error {
 	encoder := yaml.NewEncoder(os.Stdout)
 	defer func() {
 		if err := encoder.Close(); err != nil {
-			fmt.Fprintf(os.Stderr, "Warning: failed to close YAML encoder: %v\n", err)
+			_, _ = fmt.Fprintf(os.Stderr, "Warning: failed to close YAML encoder: %v\n", err)
 		}
 	}()
 
@@ -203,7 +203,7 @@ func outputTable(components []*types.ComponentInfo) error {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	defer func() {
 		if err := w.Flush(); err != nil {
-			fmt.Fprintf(os.Stderr, "Warning: failed to flush output: %v\n", err)
+			_, _ = fmt.Fprintf(os.Stderr, "Warning: failed to flush output: %v\n", err)
 		}
 	}()
 
@@ -215,7 +215,7 @@ func outputTable(components []*types.ComponentInfo) error {
 	if listWithDeps {
 		header += "\tDEPENDENCIES"
 	}
-	fmt.Fprintln(w, header)
+	_, _ = fmt.Fprintln(w, header)
 
 	// Write separator
 	separator := strings.Repeat(
@@ -237,7 +237,7 @@ func outputTable(components []*types.ComponentInfo) error {
 	if listWithDeps {
 		separator += "\t" + strings.Repeat("-", 12)
 	}
-	fmt.Fprintln(w, separator)
+	_, _ = fmt.Fprintln(w, separator)
 
 	// Write components
 	for _, component := range components {
@@ -260,11 +260,11 @@ func outputTable(components []*types.ComponentInfo) error {
 			row += "\t" + "" // Empty for now
 		}
 
-		fmt.Fprintln(w, row)
+		_, _ = fmt.Fprintln(w, row)
 	}
 
 	// Write summary
-	fmt.Fprintf(w, "\nTotal: %d components\n", len(components))
+	_, _ = fmt.Fprintf(w, "\nTotal: %d components\n", len(components))
 
 	return nil
 }

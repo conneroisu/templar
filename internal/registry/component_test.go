@@ -9,6 +9,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const (
+	// Test constants.
+	testComponentName = "TestComponent"
+	testPackageName   = "main"
+	testFilePath      = "/path/to/component.templ"
+	testParamName     = "title"
+	testParamType     = "string"
+)
+
 func TestNewComponentRegistry(t *testing.T) {
 	registry := NewComponentRegistry()
 
@@ -23,11 +32,11 @@ func TestComponentRegistry_Add(t *testing.T) {
 	registry := NewComponentRegistry()
 
 	component := &types.ComponentInfo{
-		Name:     "TestComponent",
-		FilePath: "/path/to/component.templ",
-		Package:  "main",
+		Name:     testComponentName,
+		FilePath: testFilePath,
+		Package:  testPackageName,
 		Parameters: []types.ParameterInfo{
-			{Name: "title", Type: "string"},
+			{Name: testParamName, Type: testParamType},
 		},
 	}
 
@@ -52,22 +61,22 @@ func TestComponentRegistry_Update(t *testing.T) {
 
 	// Add initial component
 	component := &types.ComponentInfo{
-		Name:     "TestComponent",
-		FilePath: "/path/to/component.templ",
-		Package:  "main",
+		Name:     testComponentName,
+		FilePath: testFilePath,
+		Package:  testPackageName,
 		Parameters: []types.ParameterInfo{
-			{Name: "title", Type: "string"},
+			{Name: testParamName, Type: testParamType},
 		},
 	}
 	registry.Register(component)
 
 	// Update component
 	updatedComponent := &types.ComponentInfo{
-		Name:     "TestComponent",
-		FilePath: "/path/to/component.templ",
-		Package:  "main",
+		Name:     testComponentName,
+		FilePath: testFilePath,
+		Package:  testPackageName,
 		Parameters: []types.ParameterInfo{
-			{Name: "title", Type: "string"},
+			{Name: testParamName, Type: testParamType},
 			{Name: "subtitle", Type: "string"},
 		},
 	}
@@ -120,17 +129,17 @@ func TestComponentRegistry_RemoveByPath(t *testing.T) {
 	component1 := &types.ComponentInfo{
 		Name:     "Component1",
 		FilePath: "/path/to/component1.templ",
-		Package:  "main",
+		Package:  testPackageName,
 	}
 	component2 := &types.ComponentInfo{
 		Name:     "Component2",
 		FilePath: "/path/to/component2.templ",
-		Package:  "main",
+		Package:  testPackageName,
 	}
 	component3 := &types.ComponentInfo{
 		Name:     "Component3",
 		FilePath: "/path/to/component1.templ", // Same path as component1
-		Package:  "main",
+		Package:  testPackageName,
 	}
 
 	registry.Register(component1)
@@ -214,9 +223,9 @@ func TestComponentRegistry_UnWatch(t *testing.T) {
 	go func() {
 		time.Sleep(10 * time.Millisecond)
 		registry.Register(&types.ComponentInfo{
-			Name:     "TestComponent",
-			FilePath: "/path/to/component.templ",
-			Package:  "main",
+			Name:     testComponentName,
+			FilePath: testFilePath,
+			Package:  testPackageName,
 		})
 	}()
 
@@ -255,11 +264,11 @@ func TestComponentRegistry_EventTypes(t *testing.T) {
 
 	// Test Update event
 	updatedComponent := &types.ComponentInfo{
-		Name:     "TestComponent",
-		FilePath: "/path/to/component.templ",
-		Package:  "main",
+		Name:     testComponentName,
+		FilePath: testFilePath,
+		Package:  testPackageName,
 		Parameters: []types.ParameterInfo{
-			{Name: "title", Type: "string"},
+			{Name: testParamName, Type: testParamType},
 		},
 	}
 
@@ -335,11 +344,11 @@ func TestComponentRegistry_ConcurrentAccess(t *testing.T) {
 
 func TestComponentInfo_Basic(t *testing.T) {
 	component := &types.ComponentInfo{
-		Name:     "TestComponent",
-		FilePath: "/path/to/component.templ",
-		Package:  "main",
+		Name:     testComponentName,
+		FilePath: testFilePath,
+		Package:  testPackageName,
 		Parameters: []types.ParameterInfo{
-			{Name: "title", Type: "string"},
+			{Name: testParamName, Type: testParamType},
 			{Name: "count", Type: "int"},
 		},
 	}

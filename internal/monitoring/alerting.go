@@ -352,7 +352,10 @@ func (am *AlertManager) handleAlertsAPI(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		am.logger.Error(context.Background(), err, "Failed to encode alerts response")
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
 }
 
 // handleActiveAlerts handles active alerts endpoint.
@@ -360,7 +363,10 @@ func (am *AlertManager) handleActiveAlerts(w http.ResponseWriter, r *http.Reques
 	alerts := am.GetActiveAlerts()
 
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(alerts)
+	if err := json.NewEncoder(w).Encode(alerts); err != nil {
+		am.logger.Error(context.Background(), err, "Failed to encode active alerts response")
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
 }
 
 // handleAlertHistory handles alert history endpoint.
@@ -368,14 +374,21 @@ func (am *AlertManager) handleAlertHistory(w http.ResponseWriter, r *http.Reques
 	hours := 24 // Default to 24 hours
 	if h := r.URL.Query().Get("hours"); h != "" {
 		if parsed, err := time.ParseDuration(h + "h"); err == nil {
-			hours = int(parsed.Hours())
+			parsedHours := parsed.Hours()
+			// Prevent integer overflow and ensure reasonable bounds
+			if parsedHours > 0 && parsedHours <= 8760 { // Max 1 year
+				hours = int(parsedHours) //nolint:gosec // Bounds checked above
+			}
 		}
 	}
 
 	alerts := am.GetAlertHistory(hours)
 
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(alerts)
+	if err := json.NewEncoder(w).Encode(alerts); err != nil {
+		am.logger.Error(context.Background(), err, "Failed to encode alert history response")
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
 }
 
 // handleAlertRules handles alert rules endpoint.
@@ -388,7 +401,10 @@ func (am *AlertManager) handleAlertRules(w http.ResponseWriter, r *http.Request)
 	am.mutex.RUnlock()
 
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(rules)
+	if err := json.NewEncoder(w).Encode(rules); err != nil {
+		am.logger.Error(context.Background(), err, "Failed to encode alert rules response")
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
 }
 
 // Utility functions
@@ -453,6 +469,10 @@ func (lc *LogChannel) Send(ctx context.Context, alert Alert) error {
 			"component", alert.Component,
 			"metric", alert.Metric,
 			"value", alert.Value)
+	case AlertLevelInfo:
+		lc.logger.Info(ctx, alert.Message,
+			"alert_id", alert.ID,
+			"component", alert.Component)
 	default:
 		lc.logger.Info(ctx, alert.Message,
 			"alert_id", alert.ID,
@@ -515,7 +535,11 @@ func (wc *WebhookChannel) Send(ctx context.Context, alert Alert) error {
 	if err != nil {
 		return fmt.Errorf("failed to send webhook: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			wc.logger.Error(ctx, err, "Failed to close response body")
+		}
+	}()
 
 	if resp.StatusCode >= 400 {
 		return fmt.Errorf("webhook returned status %d", resp.StatusCode)

@@ -330,7 +330,7 @@ func BenchmarkErrorInjector_ShouldFail(b *testing.B) {
 
 	b.ResetTimer()
 	for range b.N {
-		injector.ShouldFail("bench.operation")
+		_ = injector.ShouldFail("bench.operation")
 	}
 }
 
@@ -339,7 +339,7 @@ func BenchmarkErrorInjector_NoInjection(b *testing.B) {
 
 	b.ResetTimer()
 	for range b.N {
-		injector.ShouldFail("bench.operation")
+		_ = injector.ShouldFail("bench.operation")
 	}
 }
 
@@ -350,7 +350,7 @@ func BenchmarkErrorInjector_ConcurrentAccess(b *testing.B) {
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			injector.ShouldFail("concurrent.operation")
+			_ = injector.ShouldFail("concurrent.operation")
 		}
 	})
 }

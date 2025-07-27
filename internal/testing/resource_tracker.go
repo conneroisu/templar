@@ -2,6 +2,7 @@ package testing
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"runtime"
 	"sync"
@@ -82,7 +83,7 @@ func (rt *ResourceTracker) captureBaseline() {
 	rt.initialGoroutines = runtime.NumGoroutine()
 	rt.initialFiles = getOpenFileCount()
 	rt.initialMemory = memStats.Alloc
-	rt.initialObjects = int64(memStats.Mallocs - memStats.Frees)
+	rt.initialObjects = safeUint64ToInt64(memStats.Mallocs - memStats.Frees)
 
 	// Take initial sample
 	rt.samples = append(rt.samples, ResourceSample{
@@ -110,7 +111,7 @@ func (rt *ResourceTracker) TakeSample() ResourceSample {
 		Goroutines: runtime.NumGoroutine(),
 		Files:      getOpenFileCount(),
 		Memory:     memStats.Alloc,
-		Objects:    int64(memStats.Mallocs - memStats.Frees),
+		Objects:    safeUint64ToInt64(memStats.Mallocs - memStats.Frees),
 		HeapAlloc:  memStats.Alloc,
 		HeapSys:    memStats.Sys,
 		GCCycles:   memStats.NumGC,
@@ -167,9 +168,14 @@ func (rt *ResourceTracker) CheckLeaksWithLimits(t TestingInterface, limits Resou
 	}
 
 	// Check memory leaks (with tolerance)
-	memoryDiff := int64(currentSample.Memory) - int64(rt.initialMemory)
+	memoryDiff := safeUint64ToInt64(currentSample.Memory) - safeUint64ToInt64(rt.initialMemory)
 	toleranceBytes := int64(float64(rt.initialMemory) * limits.TolerancePercent)
-	if memoryDiff > int64(limits.MaxMemoryIncrease)+toleranceBytes {
+	// Safely convert uint64 to int64 for comparison
+	maxMemIncreaseInt64 := int64(limits.MaxMemoryIncrease)
+	if limits.MaxMemoryIncrease > 0x7FFFFFFFFFFFFFFF {
+		maxMemIncreaseInt64 = 0x7FFFFFFFFFFFFFFF
+	}
+	if memoryDiff > maxMemIncreaseInt64+toleranceBytes {
 		t.Errorf(
 			"%s: Memory leak detected: %d initial, %d current (+%d bytes, limit: +%d bytes + tolerance)",
 			rt.name,
@@ -204,7 +210,7 @@ func (rt *ResourceTracker) GetResourceUsage() ResourceUsage {
 		Duration:      time.Since(rt.startTime),
 		GoroutineDiff: currentSample.Goroutines - rt.initialGoroutines,
 		FileDiff:      currentSample.Files - rt.initialFiles,
-		MemoryDiff:    int64(currentSample.Memory) - int64(rt.initialMemory),
+		MemoryDiff:    safeUint64ToInt64(currentSample.Memory) - safeUint64ToInt64(rt.initialMemory),
 		ObjectDiff:    currentSample.Objects - rt.initialObjects,
 		Initial:       rt.getInitialSample(),
 		Current:       currentSample,
@@ -270,6 +276,15 @@ Samples Taken: %d
 }
 
 // Utility functions
+
+// safeUint64ToInt64 safely converts uint64 to int64, clamping to max int64 to prevent overflow.
+func safeUint64ToInt64(val uint64) int64 {
+	if val > math.MaxInt64 {
+		return math.MaxInt64 // Clamp to maximum safe value
+	}
+
+	return int64(val)
+}
 
 // getOpenFileCount returns the number of open file descriptors.
 func getOpenFileCount() int {

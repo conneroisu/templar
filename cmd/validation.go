@@ -36,7 +36,7 @@ func validateArgument(arg string) error {
 
 	// Reject path traversal attempts
 	if strings.Contains(arg, "..") {
-		return errors.New("path traversal attempt detected")
+		return errors.New(PathTraversalError)
 	}
 
 	// Additional validation for common patterns

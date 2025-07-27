@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"math"
 	"net"
 	"net/http"
 	"sync"
@@ -94,7 +95,19 @@ func (tb *tokenBucket) consume() bool {
 	// Refill tokens based on time elapsed
 	now := time.Now()
 	elapsed := now.Sub(tb.lastRefill)
-	tokensToAdd := int(elapsed / tb.refillRate)
+	// Calculate tokens to add with overflow protection
+	var tokensToAdd int
+	elapsedNanos := elapsed.Nanoseconds()
+	refillNanos := tb.refillRate.Nanoseconds()
+	if refillNanos > 0 && elapsedNanos >= 0 {
+		tokensToAddFloat := float64(elapsedNanos) / float64(refillNanos)
+		// Prevent integer overflow
+		if tokensToAddFloat <= float64(math.MaxInt) {
+			tokensToAdd = int(tokensToAddFloat) //nolint:gosec // Overflow checked above
+		} else {
+			tokensToAdd = math.MaxInt // Cap at maximum int value
+		}
+	}
 
 	if tokensToAdd > 0 {
 		tb.tokens = min(tb.maxTokens, tb.tokens+tokensToAdd)

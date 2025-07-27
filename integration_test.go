@@ -105,7 +105,7 @@ templ NewComponent(title string) {
 	<h1>{ title }</h1>
 	<p>This is a new component</p>
 }
-`), 0644)
+`), 0o644)
 	require.NoError(t, err)
 
 	// Give file watcher time to detect the change
@@ -128,7 +128,7 @@ func TestIntegration_ConfigurationLoading(t *testing.T) {
 		for _, env := range originalEnv {
 			parts := strings.SplitN(env, "=", 2)
 			if len(parts) == 2 {
-				os.Setenv(parts[0], parts[1])
+				_ = os.Setenv(parts[0], parts[1])
 			}
 		}
 	}()
@@ -215,7 +215,7 @@ package main
 templ TestComponent(title string) {
 	<h1>{ title }</h1>
 }
-`), 0644)
+`), 0o644)
 	require.NoError(t, err)
 
 	// Set up configuration
@@ -258,7 +258,7 @@ func TestIntegration_ComponentScanningAndRegistry(t *testing.T) {
 	// Create a temporary directory structure
 	tempDir := t.TempDir()
 	subDir := filepath.Join(tempDir, "subdir")
-	err := os.MkdirAll(subDir, 0755)
+	err := os.MkdirAll(subDir, 0o755)
 	require.NoError(t, err)
 
 	// Create multiple component files
@@ -289,7 +289,7 @@ templ Component2(content string) {
 	}
 
 	for _, comp := range components {
-		err := os.WriteFile(comp.path, []byte(comp.content), 0644)
+		err := os.WriteFile(comp.path, []byte(comp.content), 0o644)
 		require.NoError(t, err)
 	}
 
@@ -396,7 +396,7 @@ templ TestComponent(title string) {
 	<h1>{ title }</h1>
 	<p>Integration test component</p>
 }
-`), 0644)
+`), 0o644)
 	require.NoError(t, err)
 
 	// Set up configuration
@@ -437,7 +437,7 @@ templ TestComponent(title string) {
 	<h1>{ title }</h1>
 	<p>Modified integration test component</p>
 }
-`), 0644)
+`), 0o644)
 	require.NoError(t, err)
 
 	// Give file watcher time to detect change

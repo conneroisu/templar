@@ -127,9 +127,9 @@ func runPluginsList(cmd *cobra.Command, args []string) error {
 	})
 
 	switch pluginsOutputFormat {
-	case "json":
+	case OutputFormatJSON:
 		return outputJSON(pluginInfos, "")
-	case "yaml":
+	case OutputFormatYAML:
 		return outputYAML(pluginInfos, "")
 	default:
 		return displayPluginsTable(pluginInfos)
@@ -189,9 +189,9 @@ func runPluginsInfo(cmd *cobra.Command, args []string) error {
 	}
 
 	switch pluginsOutputFormat {
-	case "json":
+	case OutputFormatJSON:
 		return outputJSON(targetInfo, "")
-	case "yaml":
+	case OutputFormatYAML:
 		return outputYAML(targetInfo, "")
 	default:
 		return displayPluginInfo(plugin, *targetInfo)
@@ -209,9 +209,9 @@ func runPluginsHealth(cmd *cobra.Command, args []string) error {
 	pluginInfos := pm.ListPlugins()
 
 	switch pluginsOutputFormat {
-	case "json":
+	case OutputFormatJSON:
 		return outputJSON(pluginInfos, "")
-	case "yaml":
+	case OutputFormatYAML:
 		return outputYAML(pluginInfos, "")
 	default:
 		return displayPluginsHealthTable(pluginInfos)
@@ -286,7 +286,7 @@ func displayPluginsTable(pluginInfos []plugins.PluginInfo) error {
 			description = description[:47] + "..."
 		}
 
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s %s\t%s\n",
+		_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s %s\t%s\n",
 			info.Name,
 			info.Version,
 			status,
@@ -319,7 +319,7 @@ func displayPluginsHealthTable(pluginInfos []plugins.PluginInfo) error {
 			errorMsg = errorMsg[:37] + "..."
 		}
 
-		fmt.Fprintf(w, "%s\t%s %s\t%s\t%s\n",
+		_, _ = fmt.Fprintf(w, "%s\t%s %s\t%s\t%s\n",
 			info.Name,
 			healthIcon,
 			string(info.Health.Status),

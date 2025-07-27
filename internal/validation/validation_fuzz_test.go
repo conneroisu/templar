@@ -6,6 +6,13 @@ import (
 	"testing"
 )
 
+const (
+	// HTTPScheme represents the HTTP scheme.
+	HTTPScheme = "http"
+	// HTTPSScheme represents the HTTPS scheme.
+	HTTPSScheme = "https"
+)
+
 // FuzzValidateURL tests URL validation with various malicious and edge case inputs.
 func FuzzValidateURL(f *testing.F) {
 	// Seed with valid and invalid URLs
@@ -48,7 +55,7 @@ func FuzzValidateURL(f *testing.F) {
 			}
 
 			// Ensure only safe schemes are allowed
-			if parsed.Scheme != "http" && parsed.Scheme != "https" {
+			if parsed.Scheme != HTTPScheme && parsed.Scheme != HTTPSScheme {
 				t.Errorf("ValidateURL passed for dangerous scheme: %q", testURL)
 			}
 
@@ -157,7 +164,7 @@ func FuzzURLParsing(f *testing.F) {
 		err = ValidateURL(testURL)
 		if err == nil {
 			// If our validation passed, the URL should be safe
-			if parsed.Scheme != "http" && parsed.Scheme != "https" {
+			if parsed.Scheme != HTTPScheme && parsed.Scheme != HTTPSScheme {
 				t.Errorf("Our validation allowed dangerous scheme: %q", testURL)
 			}
 		}
@@ -231,7 +238,7 @@ func FuzzProtocolHandlers(f *testing.F) {
 		if err == nil {
 			parsed, parseErr := url.Parse(protocolURL)
 			if parseErr == nil {
-				if parsed.Scheme != "http" && parsed.Scheme != "https" {
+				if parsed.Scheme != HTTPScheme && parsed.Scheme != HTTPSScheme {
 					t.Errorf("Validation allowed dangerous protocol: %q", protocolURL)
 				}
 			}

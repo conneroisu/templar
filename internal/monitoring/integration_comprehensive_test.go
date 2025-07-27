@@ -247,7 +247,11 @@ func TestComprehensiveMonitoringIntegration(t *testing.T) {
 		// Test health endpoint
 		resp, err := http.Get(server.URL + "/health")
 		require.NoError(t, err)
-		defer resp.Body.Close()
+		defer func() {
+			if err := resp.Body.Close(); err != nil {
+				t.Logf("Failed to close response body: %v", err)
+			}
+		}()
 
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 
@@ -259,21 +263,33 @@ func TestComprehensiveMonitoringIntegration(t *testing.T) {
 		// Test metrics endpoint
 		resp, err = http.Get(server.URL + "/metrics")
 		require.NoError(t, err)
-		defer resp.Body.Close()
+		defer func() {
+			if err := resp.Body.Close(); err != nil {
+				t.Logf("Failed to close response body: %v", err)
+			}
+		}()
 
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 		// Test info endpoint
 		resp, err = http.Get(server.URL + "/info")
 		require.NoError(t, err)
-		defer resp.Body.Close()
+		defer func() {
+			if err := resp.Body.Close(); err != nil {
+				t.Logf("Failed to close response body: %v", err)
+			}
+		}()
 
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 		// Test alerts endpoint
 		resp, err = http.Get(server.URL + "/alerts")
 		require.NoError(t, err)
-		defer resp.Body.Close()
+		defer func() {
+			if err := resp.Body.Close(); err != nil {
+				t.Logf("Failed to close response body: %v", err)
+			}
+		}()
 
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 	})

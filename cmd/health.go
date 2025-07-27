@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
+	"strconv"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -102,7 +104,7 @@ func checkHTTPServer(status *HealthStatus) {
 		Timeout: healthTimeout,
 	}
 
-	url := fmt.Sprintf("http://%s:%d/health", healthHost, healthPort)
+	url := "http://" + net.JoinHostPort(healthHost, strconv.Itoa(healthPort)) + "/health"
 	resp, err := client.Get(url)
 
 	if err != nil {

@@ -210,7 +210,9 @@ func NewRingBuffer(size uint64) *RingBuffer {
 	// Ensure size is power of 2 for efficient modulo operations
 	if size&(size-1) != 0 {
 		// Round up to next power of 2
-		size = 1 << (64 - uint64(countLeadingZeros(size-1)))
+		leadingZeros := countLeadingZeros(size - 1)
+		// Safe conversion: countLeadingZeros returns values in range [0, 64]
+		size = 1 << (64 - uint64(leadingZeros)) //nolint:gosec // leadingZeros is constrained by countLeadingZeros function
 	}
 
 	return &RingBuffer{
@@ -235,7 +237,8 @@ func NewBroadcastPool() *BroadcastPool {
 		},
 		clientSlicePool: sync.Pool{
 			New: func() interface{} {
-				return make([]*OptimizedClient, 0, 100)
+				slice := make([]*OptimizedClient, 0, 100)
+				return &slice
 			},
 		},
 	}
@@ -327,7 +330,7 @@ func (cp *ClientPool) RemoveClient(clientID uint64) *OptimizedClient {
 // GetActiveClientsForBroadcast returns a pre-allocated slice of active clients.
 func (cp *ClientPool) GetActiveClientsForBroadcast(pool *BroadcastPool) []*OptimizedClient {
 	// Get pre-allocated slice from pool
-	activeClients := pool.clientSlicePool.Get().([]*OptimizedClient)
+	activeClients := *pool.clientSlicePool.Get().(*[]*OptimizedClient)
 	activeClients = activeClients[:0] // Reset length but keep capacity
 
 	cp.ringMu.RLock()
@@ -346,7 +349,9 @@ func (cp *ClientPool) GetActiveClientsForBroadcast(pool *BroadcastPool) []*Optim
 
 // ReturnClientsSlice returns a client slice to the pool.
 func (cp *ClientPool) ReturnClientsSlice(slice []*OptimizedClient, pool *BroadcastPool) {
-	pool.clientSlicePool.Put(slice)
+	// Clear slice length but keep capacity - use pointer to avoid SA6002 allocation warning
+	slice = slice[:0]
+	pool.clientSlicePool.Put(&slice)
 }
 
 // Push adds a message to the ring buffer with lock-free operation.
@@ -470,9 +475,13 @@ func (hub *OptimizedWebSocketHub) optimizedBroadcast(message *BroadcastMessage) 
 	}
 
 	// Track failed clients with pre-allocated slice
-	failedClients := hub.broadcastPool.clientSlicePool.Get().([]*OptimizedClient)
+	failedClients := *hub.broadcastPool.clientSlicePool.Get().(*[]*OptimizedClient)
 	failedClients = failedClients[:0]
-	defer hub.broadcastPool.clientSlicePool.Put(failedClients)
+	// Clear slice length but keep capacity when returning to pool
+	defer func() {
+		failedClients = failedClients[:0]
+		hub.broadcastPool.clientSlicePool.Put(&failedClients)
+	}()
 
 	// Efficient broadcast loop
 	for _, client := range activeClients {
@@ -567,7 +576,7 @@ func (pool *FailedClientPool) cleanupWorker() {
 			// Perform cleanup
 			if atomic.LoadInt32(&cleanup.Client.active) == 1 {
 				atomic.StoreInt32(&cleanup.Client.active, 0)
-				cleanup.Client.conn.Close(websocket.StatusNormalClosure, cleanup.Reason)
+				_ = cleanup.Client.conn.Close(websocket.StatusNormalClosure, cleanup.Reason)
 			}
 
 			// Return cleanup object to pool
@@ -580,7 +589,7 @@ func (pool *FailedClientPool) cleanupWorker() {
 func (hub *OptimizedWebSocketHub) cleanupClientImmediate(client *OptimizedClient) {
 	if atomic.LoadInt32(&client.active) == 1 {
 		atomic.StoreInt32(&client.active, 0)
-		client.conn.Close(websocket.StatusNormalClosure, "immediate_cleanup")
+		_ = client.conn.Close(websocket.StatusNormalClosure, "immediate_cleanup")
 	}
 }
 

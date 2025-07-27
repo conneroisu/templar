@@ -132,15 +132,15 @@ func runInteractiveInit() error {
 	case "2":
 		template = "blog"
 	case "3":
-		template = "dashboard"
+		template = ComponentDashboard
 	case "4":
-		template = "landing"
+		template = ComponentLanding
 	case "5":
 		template = "ecommerce"
 	case "6":
 		template = "documentation"
 	default:
-		template = "minimal"
+		template = TemplateMinimal
 	}
 
 	// Ask for minimal setup
@@ -153,10 +153,10 @@ func runInteractiveInit() error {
 	if projectName != "" {
 		args = append(args, projectName)
 	}
-	if template != "minimal" {
+	if template != TemplateMinimal {
 		args = append(args, "--template="+template)
 	}
-	if minimalChoice == "y" || minimalChoice == "yes" {
+	if minimalChoice == ResponseY || minimalChoice == ResponseYes {
 		args = append(args, "--minimal")
 	}
 
@@ -256,10 +256,10 @@ func runInteractiveBuild() error {
 
 	// Build command args
 	args := []string{}
-	if prodChoice == "y" || prodChoice == "yes" {
+	if prodChoice == ResponseY || prodChoice == ResponseYes {
 		args = append(args, "--production")
 	}
-	if analyzeChoice == "y" || analyzeChoice == "yes" {
+	if analyzeChoice == ResponseY || analyzeChoice == ResponseYes {
 		args = append(args, "--analyze")
 	}
 
@@ -289,7 +289,7 @@ func runInteractiveList() error {
 	case "3":
 		format = "yaml"
 	default:
-		format = "table"
+		format = OutputFormatTable
 	}
 
 	// Ask for additional info
@@ -306,10 +306,10 @@ func runInteractiveList() error {
 	if format != "table" {
 		args = append(args, "--format="+format)
 	}
-	if propsChoice == "y" || propsChoice == "yes" {
+	if propsChoice == ResponseY || propsChoice == ResponseYes {
 		args = append(args, "--with-props")
 	}
-	if depsChoice == "y" || depsChoice == "yes" {
+	if depsChoice == ResponseY || depsChoice == ResponseYes {
 		args = append(args, "--with-deps")
 	}
 
@@ -334,7 +334,7 @@ func runInteractiveWatch() error {
 
 	// Build command args
 	args := []string{}
-	if verboseChoice == "y" || verboseChoice == "yes" {
+	if verboseChoice == ResponseY || verboseChoice == ResponseYes {
 		args = append(args, "--verbose")
 	}
 	if commandInput != "" {

@@ -11,16 +11,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	testPrefix = "test"
+)
+
 func TestMetricsCollector(t *testing.T) {
 	t.Run("create new metrics collector", func(t *testing.T) {
-		collector := NewMetricsCollector("test", "")
+		collector := NewMetricsCollector(testPrefix, "")
 		assert.NotNil(t, collector)
-		assert.Equal(t, "test", collector.prefix)
+		assert.Equal(t, testPrefix, collector.prefix)
 		assert.True(t, collector.enabled)
 	})
 
 	t.Run("counter operations", func(t *testing.T) {
-		collector := NewMetricsCollector("test", "")
+		collector := NewMetricsCollector(testPrefix, "")
 
 		// Test counter increment
 		collector.Counter("requests", map[string]string{"method": "GET"})
@@ -48,7 +52,7 @@ func TestMetricsCollector(t *testing.T) {
 	})
 
 	t.Run("gauge operations", func(t *testing.T) {
-		collector := NewMetricsCollector("test", "")
+		collector := NewMetricsCollector(testPrefix, "")
 
 		collector.Gauge("memory_usage", 100.5, map[string]string{"type": "heap"})
 		collector.Gauge(
@@ -72,7 +76,7 @@ func TestMetricsCollector(t *testing.T) {
 	})
 
 	t.Run("histogram operations", func(t *testing.T) {
-		collector := NewMetricsCollector("test", "")
+		collector := NewMetricsCollector(testPrefix, "")
 
 		collector.Histogram("request_duration", 0.1, map[string]string{"method": "GET"})
 		collector.Histogram("request_duration", 0.5, map[string]string{"method": "GET"})
@@ -104,9 +108,9 @@ func TestMetricsCollector(t *testing.T) {
 	})
 
 	t.Run("timer functionality", func(t *testing.T) {
-		collector := NewMetricsCollector("test", "")
+		collector := NewMetricsCollector(testPrefix, "")
 
-		timer := collector.Timer("operation", map[string]string{"type": "test"})
+		timer := collector.Timer("operation", map[string]string{"type": testPrefix})
 		time.Sleep(10 * time.Millisecond)
 		timer()
 
@@ -126,10 +130,10 @@ func TestMetricsCollector(t *testing.T) {
 	})
 
 	t.Run("timer with context", func(t *testing.T) {
-		collector := NewMetricsCollector("test", "")
+		collector := NewMetricsCollector(testPrefix, "")
 
 		ctx := context.Background()
-		timer := collector.TimerContext(ctx, "context_operation", map[string]string{"type": "test"})
+		timer := collector.TimerContext(ctx, "context_operation", map[string]string{"type": testPrefix})
 		time.Sleep(5 * time.Millisecond)
 		timer()
 
@@ -156,7 +160,7 @@ func TestMetricsCollector(t *testing.T) {
 		tmpDir := t.TempDir()
 		outputPath := tmpDir + "/metrics.json"
 
-		collector := NewMetricsCollector("test", outputPath)
+		collector := NewMetricsCollector(testPrefix, outputPath)
 		collector.Counter("test_metric", nil)
 
 		err := collector.FlushMetrics()
@@ -225,7 +229,7 @@ func TestHistogram(t *testing.T) {
 
 func TestApplicationMetrics(t *testing.T) {
 	t.Run("component metrics", func(t *testing.T) {
-		collector := NewMetricsCollector("test", "")
+		collector := NewMetricsCollector(testPrefix, "")
 		appMetrics := NewApplicationMetrics(collector)
 
 		appMetrics.ComponentScanned("button")
@@ -246,9 +250,9 @@ func TestApplicationMetrics(t *testing.T) {
 				scannedCount += int(metric.Value)
 			case "test_components_built_total":
 				switch metric.Labels["status"] {
-				case "success":
+				case StatusSuccess:
 					builtSuccessCount += int(metric.Value)
-				case "error":
+				case StatusError:
 					builtErrorCount += int(metric.Value)
 				}
 			}
@@ -260,7 +264,7 @@ func TestApplicationMetrics(t *testing.T) {
 	})
 
 	t.Run("build duration tracking", func(t *testing.T) {
-		collector := NewMetricsCollector("test", "")
+		collector := NewMetricsCollector(testPrefix, "")
 		appMetrics := NewApplicationMetrics(collector)
 
 		appMetrics.BuildDuration("test_component", 150*time.Millisecond)
@@ -282,7 +286,7 @@ func TestApplicationMetrics(t *testing.T) {
 	})
 
 	t.Run("server request tracking", func(t *testing.T) {
-		collector := NewMetricsCollector("test", "")
+		collector := NewMetricsCollector(testPrefix, "")
 		appMetrics := NewApplicationMetrics(collector)
 
 		appMetrics.ServerRequest("GET", "/api/components", 200)
@@ -309,7 +313,7 @@ func TestApplicationMetrics(t *testing.T) {
 	})
 
 	t.Run("websocket event tracking", func(t *testing.T) {
-		collector := NewMetricsCollector("test", "")
+		collector := NewMetricsCollector(testPrefix, "")
 		appMetrics := NewApplicationMetrics(collector)
 
 		appMetrics.WebSocketConnection("opened")
@@ -336,7 +340,7 @@ func TestApplicationMetrics(t *testing.T) {
 	})
 
 	t.Run("cache operation tracking", func(t *testing.T) {
-		collector := NewMetricsCollector("test", "")
+		collector := NewMetricsCollector(testPrefix, "")
 		appMetrics := NewApplicationMetrics(collector)
 
 		appMetrics.CacheOperation("get", true)  // hit
@@ -352,9 +356,9 @@ func TestApplicationMetrics(t *testing.T) {
 		for _, metric := range metrics {
 			if metric.Name == "test_cache_operations_total" {
 				switch metric.Labels["result"] {
-				case "hit":
+				case ResultHit:
 					hits += int(metric.Value)
-				case "miss":
+				case ResultMiss:
 					misses += int(metric.Value)
 				}
 			}
@@ -365,7 +369,7 @@ func TestApplicationMetrics(t *testing.T) {
 	})
 
 	t.Run("error tracking", func(t *testing.T) {
-		collector := NewMetricsCollector("test", "")
+		collector := NewMetricsCollector(testPrefix, "")
 		appMetrics := NewApplicationMetrics(collector)
 
 		appMetrics.ErrorOccurred("build", "scanner")
@@ -394,7 +398,7 @@ func TestApplicationMetrics(t *testing.T) {
 	})
 
 	t.Run("custom gauge setting", func(t *testing.T) {
-		collector := NewMetricsCollector("test", "")
+		collector := NewMetricsCollector(testPrefix, "")
 		appMetrics := NewApplicationMetrics(collector)
 
 		appMetrics.SetGauge("custom_metric", 42.5, map[string]string{"type": "custom"})
@@ -414,7 +418,7 @@ func TestApplicationMetrics(t *testing.T) {
 	})
 
 	t.Run("uptime metric from collector interface", func(t *testing.T) {
-		collector := NewMetricsCollector("test", "")
+		collector := NewMetricsCollector(testPrefix, "")
 		appMetrics := NewApplicationMetrics(collector)
 
 		metrics := appMetrics.Collect()
@@ -438,7 +442,7 @@ func TestMetricsCollectorStartStop(t *testing.T) {
 	tmpDir := t.TempDir()
 	outputPath := tmpDir + "/metrics.json"
 
-	collector := NewMetricsCollector("test", outputPath)
+	collector := NewMetricsCollector(testPrefix, outputPath)
 	collector.flushPeriod = 50 * time.Millisecond // Fast flush for testing
 
 	collector.Start()
@@ -457,20 +461,20 @@ func TestMetricsCollectorStartStop(t *testing.T) {
 }
 
 func TestMetricsCollectorDisabled(t *testing.T) {
-	collector := NewMetricsCollector("test", "")
+	collector := NewMetricsCollector(testPrefix, "")
 	collector.enabled = false
 
 	// Operations should not panic when disabled
-	collector.Counter("test", nil)
-	collector.Gauge("test", 1.0, nil)
-	collector.Histogram("test", 1.0, nil)
+	collector.Counter(testPrefix, nil)
+	collector.Gauge(testPrefix, 1.0, nil)
+	collector.Histogram(testPrefix, 1.0, nil)
 
 	metrics := collector.GatherMetrics()
 	assert.Empty(t, metrics, "Should have no metrics when disabled")
 }
 
 func TestMetricsKeyGeneration(t *testing.T) {
-	collector := NewMetricsCollector("test", "")
+	collector := NewMetricsCollector(testPrefix, "")
 
 	t.Run("key without labels", func(t *testing.T) {
 		key := collector.getKey("metric_name", nil)
@@ -491,7 +495,7 @@ func TestMetricsKeyGeneration(t *testing.T) {
 }
 
 func TestMetricsSystemInfo(t *testing.T) {
-	collector := NewMetricsCollector("test", "")
+	collector := NewMetricsCollector(testPrefix, "")
 	systemInfo := collector.getSystemMetrics()
 
 	assert.Contains(t, systemInfo, "golang")

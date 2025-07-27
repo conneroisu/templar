@@ -80,7 +80,7 @@ func TestCacheRaceConditionFixes(t *testing.T) {
 			filePath := filepath.Join(tempDir, fileName)
 			content := fmt.Sprintf("test content %d", i)
 
-			err := os.WriteFile(filePath, []byte(content), 0644)
+			err := os.WriteFile(filePath, []byte(content), 0o644)
 			require.NoError(t, err)
 
 			testFiles[i] = filePath

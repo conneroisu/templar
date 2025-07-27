@@ -15,7 +15,7 @@ import (
 
 // handleHealthCheck handles health check requests.
 func handleHealthCheck(w http.ResponseWriter, r *http.Request, orchestrator *ServiceOrchestrator) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(HeaderContentType, ContentTypeJSON)
 
 	status := orchestrator.GetServiceStatus()
 	status["healthy"] = orchestrator.IsHealthy()
@@ -28,7 +28,7 @@ func handleHealthCheck(w http.ResponseWriter, r *http.Request, orchestrator *Ser
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write(response)
+	_, _ = w.Write(response)
 }
 
 // handleComponentsList handles requests for the components list.
@@ -37,7 +37,7 @@ func handleComponentsList(
 	r *http.Request,
 	registry interfaces.ComponentRegistry,
 ) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(HeaderContentType, ContentTypeJSON)
 
 	components := registry.GetAll()
 
@@ -49,7 +49,7 @@ func handleComponentsList(
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write(response)
+	_, _ = w.Write(response)
 }
 
 // handleComponentDetail handles requests for individual component details.
@@ -61,22 +61,22 @@ func handleComponentDetail(
 ) {
 	// Extract component name from URL path
 	path := r.URL.Path
-	componentName := path[len("/component/"):]
+	componentName := path[len(ComponentPathPrefix):]
 
 	if componentName == "" {
-		http.Error(w, "Component name required", http.StatusBadRequest)
+		http.Error(w, ErrComponentNameRequired, http.StatusBadRequest)
 
 		return
 	}
 
 	component, exists := registry.Get(componentName)
 	if !exists {
-		http.Error(w, "Component not found", http.StatusNotFound)
+		http.Error(w, ErrComponentNotFound, http.StatusNotFound)
 
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(HeaderContentType, ContentTypeJSON)
 	response, err := json.MarshalIndent(component, "", "  ")
 	if err != nil {
 		http.Error(w, "Failed to marshal component", http.StatusInternalServerError)
@@ -85,7 +85,7 @@ func handleComponentDetail(
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write(response)
+	_, _ = w.Write(response)
 }
 
 // handleComponentRender handles component rendering requests.
@@ -97,26 +97,26 @@ func handleComponentRender(
 ) {
 	// Extract component name from URL path
 	path := r.URL.Path
-	componentName := path[len("/render/"):]
+	componentName := path[len(RenderPathPrefix):]
 
 	if componentName == "" {
-		http.Error(w, "Component name required", http.StatusBadRequest)
+		http.Error(w, ErrComponentNameRequired, http.StatusBadRequest)
 
 		return
 	}
 
 	component, exists := registry.Get(componentName)
 	if !exists {
-		http.Error(w, "Component not found", http.StatusNotFound)
+		http.Error(w, ErrComponentNotFound, http.StatusNotFound)
 
 		return
 	}
 
 	// For now, return a placeholder response
-	// TODO: Integrate with actual renderer implementation
-	w.Header().Set("Content-Type", "text/html")
+	// NOTE: Renderer integration placeholder - to be replaced with actual implementation
+	w.Header().Set(HeaderContentType, ContentTypeHTML)
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "<h1>Rendered Component: %s</h1><p>File: %s</p>",
+	_, _ = fmt.Fprintf(w, "<h1>Rendered Component: %s</h1><p>File: %s</p>",
 		component.Name, component.FilePath)
 }
 
@@ -128,9 +128,9 @@ func handleStaticFiles(w http.ResponseWriter, r *http.Request) {
 
 // handlePlaygroundIndexPage handles playground index page.
 func handlePlaygroundIndexPage(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set(HeaderContentType, ContentTypeHTML)
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`
+	_, _ = w.Write([]byte(`
 		<html>
 		<head><title>Component Playground</title></head>
 		<body>
@@ -148,9 +148,9 @@ func handlePlaygroundComponentPage(
 	registry interfaces.ComponentRegistry,
 	renderer *renderer.ComponentRenderer,
 ) {
-	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set(HeaderContentType, ContentTypeHTML)
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`
+	_, _ = w.Write([]byte(`
 		<html>
 		<head><title>Playground Component</title></head>
 		<body>
@@ -168,9 +168,9 @@ func handlePlaygroundRenderAPI(
 	registry interfaces.ComponentRegistry,
 	renderer *renderer.ComponentRenderer,
 ) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(HeaderContentType, ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"status": "rendered", "message": "Playground render complete"}`))
+	_, _ = w.Write([]byte(JSONStatusRendered))
 }
 
 // handleEnhancedInterface handles enhanced web interface requests.
@@ -179,9 +179,9 @@ func handleEnhancedInterface(
 	r *http.Request,
 	registry interfaces.ComponentRegistry,
 ) {
-	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set(HeaderContentType, ContentTypeHTML)
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`
+	_, _ = w.Write([]byte(`
 		<html>
 		<head><title>Enhanced Interface</title></head>
 		<body>
@@ -194,9 +194,9 @@ func handleEnhancedInterface(
 
 // handleEditorInterface handles editor interface requests.
 func handleEditorInterface(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set(HeaderContentType, ContentTypeHTML)
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`
+	_, _ = w.Write([]byte(`
 		<html>
 		<head><title>Component Editor</title></head>
 		<body>
@@ -209,28 +209,28 @@ func handleEditorInterface(w http.ResponseWriter, r *http.Request) {
 
 // handleEditorAPI handles editor API requests.
 func handleEditorAPI(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(HeaderContentType, ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"status": "ok", "message": "Editor API ready"}`))
+	_, _ = w.Write([]byte(JSONStatusEditorReady))
 }
 
 // handleFileAPI handles file management API requests.
 func handleFileAPI(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(HeaderContentType, ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"status": "ok", "message": "File API ready"}`))
+	_, _ = w.Write([]byte(JSONStatusFileReady))
 }
 
 // handleInlineEditor handles inline editor requests.
 func handleInlineEditor(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(HeaderContentType, ContentTypeJSON)
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"status": "ok", "message": "Inline editor ready"}`))
+	_, _ = w.Write([]byte(JSONStatusInlineReady))
 }
 
 // handleBuildStatus handles build status API requests.
 func handleBuildStatus(w http.ResponseWriter, r *http.Request, orchestrator *ServiceOrchestrator) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(HeaderContentType, ContentTypeJSON)
 
 	buildErrors := orchestrator.GetLastBuildErrors()
 	status := map[string]interface{}{
@@ -247,12 +247,12 @@ func handleBuildStatus(w http.ResponseWriter, r *http.Request, orchestrator *Ser
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write(response)
+	_, _ = w.Write(response)
 }
 
 // handleBuildMetrics handles build metrics API requests.
 func handleBuildMetrics(w http.ResponseWriter, r *http.Request, orchestrator *ServiceOrchestrator) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(HeaderContentType, ContentTypeJSON)
 
 	metrics := orchestrator.GetBuildMetrics()
 
@@ -274,12 +274,12 @@ func handleBuildMetrics(w http.ResponseWriter, r *http.Request, orchestrator *Se
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write(response)
+	_, _ = w.Write(response)
 }
 
 // handleBuildErrors handles build errors API requests.
 func handleBuildErrors(w http.ResponseWriter, r *http.Request, orchestrator *ServiceOrchestrator) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(HeaderContentType, ContentTypeJSON)
 
 	buildErrors := orchestrator.GetLastBuildErrors()
 
@@ -291,27 +291,15 @@ func handleBuildErrors(w http.ResponseWriter, r *http.Request, orchestrator *Ser
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write(response)
+	_, _ = w.Write(response)
 }
 
 // handleBuildCache handles build cache API requests.
 func handleBuildCache(w http.ResponseWriter, r *http.Request, orchestrator *ServiceOrchestrator) {
-	w.Header().Set("Content-Type", "application/json")
-
-	status := map[string]interface{}{
-		"status":  "ok",
-		"message": "Build cache management ready",
-	}
-
-	response, err := json.MarshalIndent(status, "", "  ")
-	if err != nil {
-		http.Error(w, "Failed to marshal cache status", http.StatusInternalServerError)
-
-		return
-	}
+	w.Header().Set(HeaderContentType, ContentTypeJSON)
 
 	w.WriteHeader(http.StatusOK)
-	w.Write(response)
+	_, _ = w.Write([]byte(JSONStatusCacheReady))
 }
 
 // handleIndexPage handles the main index page.
@@ -320,7 +308,7 @@ func handleIndexPage(
 	r *http.Request,
 	registry interfaces.ComponentRegistry,
 ) {
-	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set(HeaderContentType, ContentTypeHTML)
 
 	componentCount := registry.Count()
 
@@ -343,7 +331,7 @@ func handleIndexPage(
 	`, componentCount)
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(html))
+	_, _ = w.Write([]byte(html))
 }
 
 // handleTargetFilesPage handles target files page.
@@ -354,7 +342,7 @@ func handleTargetFilesPage(
 	registry interfaces.ComponentRegistry,
 	renderer *renderer.ComponentRenderer,
 ) {
-	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set(HeaderContentType, ContentTypeHTML)
 
 	html := fmt.Sprintf(`
 		<html>
@@ -368,5 +356,5 @@ func handleTargetFilesPage(
 	`, config.TargetFiles, registry.Count())
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(html))
+	_, _ = w.Write([]byte(html))
 }

@@ -3,7 +3,7 @@ package mockdata
 
 import (
 	"fmt"
-	"math/rand"
+	mathrand "math/rand"
 	"regexp"
 	"strings"
 	"time"
@@ -12,14 +12,17 @@ import (
 )
 
 // MockGenerator generates intelligent mock data based on parameter names and types.
+// Uses crypto/rand for security-sensitive operations and math/rand for deterministic mock data.
 type MockGenerator struct {
-	rng *rand.Rand
+	rng *mathrand.Rand
 }
 
 // NewMockGenerator creates a new mock data generator.
+// Uses math/rand with time-based seed for deterministic but varied mock data.
+// For cryptographic purposes, use crypto/rand directly.
 func NewMockGenerator() *MockGenerator {
 	return &MockGenerator{
-		rng: rand.New(rand.NewSource(time.Now().UnixNano())),
+		rng: mathrand.New(mathrand.NewSource(time.Now().UnixNano())), //nolint:gosec // Mock data generation doesn't require cryptographic security
 	}
 }
 

@@ -201,7 +201,7 @@ func BenchmarkBroadcastPooling(b *testing.B) {
 
 		for range b.N {
 			// Get from pool
-			slice := broadcastPool.clientSlicePool.Get().([]*OptimizedClient)
+			slice := *broadcastPool.clientSlicePool.Get().(*[]*OptimizedClient)
 			slice = slice[:0]
 
 			// Simulate usage
@@ -209,8 +209,10 @@ func BenchmarkBroadcastPooling(b *testing.B) {
 				slice = append(slice, &OptimizedClient{})
 			}
 
-			// Return to pool
-			broadcastPool.clientSlicePool.Put(slice)
+			// Return to pool (clear slice to reduce memory footprint)
+			// Use pointer to avoid SA6002 allocation warning
+			resetSlice := slice[:0]
+			broadcastPool.clientSlicePool.Put(&resetSlice)
 		}
 	})
 
@@ -312,7 +314,7 @@ func BenchmarkMemoryUsage(b *testing.B) {
 
 		for range b.N {
 			// Get pre-allocated slice from pool
-			failedClients := pool.clientSlicePool.Get().([]*OptimizedClient)
+			failedClients := *pool.clientSlicePool.Get().(*[]*OptimizedClient)
 			failedClients = failedClients[:0]
 
 			// Simulate operations
@@ -321,7 +323,7 @@ func BenchmarkMemoryUsage(b *testing.B) {
 			}
 
 			// Return to pool
-			pool.clientSlicePool.Put(failedClients)
+			pool.clientSlicePool.Put(&failedClients)
 		}
 
 		runtime.GC()

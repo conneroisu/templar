@@ -149,15 +149,15 @@ func TestInitService_validateProjectDirectory(t *testing.T) {
 			projectPath := filepath.Join(tempDir, tt.projectDir)
 
 			if tt.setupDir {
-				err := os.MkdirAll(projectPath, 0755)
+				err := os.MkdirAll(projectPath, 0o755)
 				require.NoError(t, err)
 			}
 
 			if tt.makeReadOnly {
 				defer func() {
-					os.Chmod(projectPath, 0755) // Restore permissions for cleanup
+					_ = os.Chmod(projectPath, 0o755) // Restore permissions for cleanup
 				}()
-				os.Chmod(filepath.Dir(projectPath), 0444)
+				_ = os.Chmod(filepath.Dir(projectPath), 0o444) // Error not relevant for test setup
 			}
 
 			err := service.validateProjectDirectory(projectPath)
@@ -256,7 +256,7 @@ func TestInitService_createGoModule(t *testing.T) {
 
 go 1.21
 `
-				err := os.WriteFile(filepath.Join(tempDir, "go.mod"), []byte(existingContent), 0644)
+				err := os.WriteFile(filepath.Join(tempDir, "go.mod"), []byte(existingContent), 0o644)
 				require.NoError(t, err)
 			}
 

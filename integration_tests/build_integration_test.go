@@ -1,4 +1,4 @@
-package integration_tests
+package integrationtests
 
 import (
 	"os"
@@ -21,7 +21,7 @@ func TestBuildIntegration_FullWorkflow(t *testing.T) {
 	// Create temporary directory structure
 	tempDir := t.TempDir()
 	componentsDir := filepath.Join(tempDir, "components")
-	err := os.MkdirAll(componentsDir, 0755)
+	err := os.MkdirAll(componentsDir, 0o755)
 	require.NoError(t, err)
 
 	// Create test component file
@@ -34,7 +34,7 @@ templ Button(text string, variant string) {
 	</button>
 }`
 
-	err = os.WriteFile(componentFile, []byte(componentContent), 0644)
+	err = os.WriteFile(componentFile, []byte(componentContent), 0o644)
 	require.NoError(t, err)
 
 	// Initialize registry and pipeline
@@ -75,7 +75,7 @@ func TestBuildIntegration_ErrorHandling(t *testing.T) {
 
 	tempDir := t.TempDir()
 	componentsDir := filepath.Join(tempDir, "components")
-	err := os.MkdirAll(componentsDir, 0755)
+	err := os.MkdirAll(componentsDir, 0o755)
 	require.NoError(t, err)
 
 	// Create component with syntax error
@@ -88,7 +88,7 @@ templ BrokenComponent(text string) {
 	// Missing closing </div>
 }`
 
-	err = os.WriteFile(componentFile, []byte(brokenContent), 0644)
+	err = os.WriteFile(componentFile, []byte(brokenContent), 0o644)
 	require.NoError(t, err)
 
 	reg := registry.NewComponentRegistry()
@@ -119,7 +119,7 @@ func TestBuildIntegration_CacheValidation(t *testing.T) {
 
 	tempDir := t.TempDir()
 	cacheDir := filepath.Join(tempDir, ".templar", "cache")
-	err := os.MkdirAll(cacheDir, 0755)
+	err := os.MkdirAll(cacheDir, 0o755)
 	require.NoError(t, err)
 
 	reg := registry.NewComponentRegistry()
@@ -151,7 +151,7 @@ func TestBuildIntegration_MultipleComponents(t *testing.T) {
 
 	tempDir := t.TempDir()
 	componentsDir := filepath.Join(tempDir, "components")
-	err := os.MkdirAll(componentsDir, 0755)
+	err := os.MkdirAll(componentsDir, 0o755)
 	require.NoError(t, err)
 
 	// Create multiple component files
@@ -179,7 +179,7 @@ templ Nav(items []string) {
 
 	for filename, content := range components {
 		filepath := filepath.Join(componentsDir, filename)
-		err = os.WriteFile(filepath, []byte(content), 0644)
+		err = os.WriteFile(filepath, []byte(content), 0o644)
 		require.NoError(t, err)
 	}
 

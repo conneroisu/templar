@@ -701,7 +701,7 @@ func (m *MockResourceTrackingPlugin) HandleComponent(
 
 	// Simulate memory cleanup for older components
 	if m.allocatedMemory > 512*1024 { // 512KB
-		m.allocatedMemory = m.allocatedMemory / 2 // Simple cleanup simulation
+		m.allocatedMemory /= 2 // Simple cleanup simulation
 	}
 
 	if component.Metadata == nil {

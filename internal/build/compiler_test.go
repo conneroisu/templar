@@ -310,7 +310,7 @@ func TestTemplCompiler_Integration(t *testing.T) {
 		// Create a temporary templ file
 		tempFile, err := os.CreateTemp("", "test_*.templ")
 		require.NoError(t, err)
-		defer os.Remove(tempFile.Name())
+		defer func() { _ = os.Remove(tempFile.Name()) }()
 
 		// Write minimal templ content
 		templContent := `package test
@@ -321,7 +321,7 @@ templ TestComponent(title string) {
 `
 		_, err = tempFile.WriteString(templContent)
 		require.NoError(t, err)
-		tempFile.Close()
+		_ = tempFile.Close()
 
 		compiler := NewTemplCompiler()
 		component := &types.ComponentInfo{

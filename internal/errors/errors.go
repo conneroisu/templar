@@ -33,13 +33,13 @@ func (s ErrorSeverity) String() string {
 	case ErrorSeverityInfo:
 		return "info"
 	case ErrorSeverityWarning:
-		return "warning"
+		return SeverityWarningStr
 	case ErrorSeverityError:
-		return "error"
+		return SeverityErrorStr
 	case ErrorSeverityFatal:
-		return "fatal"
+		return SeverityFatalStr
 	default:
-		return "unknown"
+		return SeverityUnknownStr
 	}
 }
 
@@ -194,6 +194,9 @@ func (ec *ErrorCollector) ErrorOverlay() string {
 			severityColor = "#feca57"
 		case ErrorSeverityInfo:
 			severityColor = "#48dbfb"
+		case ErrorSeverityError, ErrorSeverityFatal:
+			// Default red color for error and fatal
+			severityColor = "#ff6b6b"
 		}
 
 		html += fmt.Sprintf(`

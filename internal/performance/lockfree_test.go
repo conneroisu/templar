@@ -1,14 +1,31 @@
 package performance
 
 import (
-	"math/rand"
+	"crypto/rand"
+	"encoding/binary"
+	"math"
+	mathrand "math/rand"
 	"sync"
 	"testing"
 	"time"
 )
 
 // Global generator for benchmark tests (non-deterministic).
-var benchRng = rand.New(rand.NewSource(time.Now().UnixNano()))
+var benchRng = mathrand.New(mathrand.NewSource(time.Now().UnixNano())) //nolint:gosec // Benchmark test data generation doesn't require cryptographic security
+
+// secureFloat64 generates a cryptographically secure random float64 value between 0.0 and 1.0.
+func secureFloat64() float64 {
+	var b [8]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		// Fallback to math/rand if crypto/rand fails (should never happen in practice)
+		return mathrand.Float64() // #nosec G404 - Fallback only for test data generation
+	}
+
+	// Convert bytes to uint64, then to float64 in range [0, 1)
+	u := binary.BigEndian.Uint64(b[:])
+
+	return float64(u) / math.MaxUint64
+}
 
 // TestLockFreeRingBuffer tests basic ring buffer operations.
 func TestLockFreeRingBuffer(t *testing.T) {
@@ -315,7 +332,7 @@ func BenchmarkLockFreeVsOriginal_ConcurrentRecord(t *testing.B) {
 		b.RunParallel(func(pb *testing.PB) {
 			metric := Metric{
 				Type:  MetricTypeBuildTime,
-				Value: rand.Float64() * 1000,
+				Value: secureFloat64() * 1000,
 			}
 
 			for pb.Next() {
@@ -330,7 +347,7 @@ func BenchmarkLockFreeVsOriginal_ConcurrentRecord(t *testing.B) {
 		b.RunParallel(func(pb *testing.PB) {
 			metric := Metric{
 				Type:  MetricTypeBuildTime,
-				Value: rand.Float64() * 1000,
+				Value: secureFloat64() * 1000,
 			}
 
 			for pb.Next() {

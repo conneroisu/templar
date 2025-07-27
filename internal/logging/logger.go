@@ -273,7 +273,7 @@ func NewFileLogger(config *LoggerConfig, logDir string) (*FileLogger, error) {
 		return nil, fmt.Errorf("invalid log directory path (contains path traversal): %s", logDir)
 	}
 
-	if err := os.MkdirAll(cleanLogDir, 0755); err != nil {
+	if err := os.MkdirAll(cleanLogDir, 0o755); err != nil {
 		return nil, fmt.Errorf("failed to create log directory %s: %w", cleanLogDir, err)
 	}
 
@@ -282,7 +282,7 @@ func NewFileLogger(config *LoggerConfig, logDir string) (*FileLogger, error) {
 	fileName := fmt.Sprintf("templar-%s.log", now.Format("2006-01-02"))
 	filePath := filepath.Join(cleanLogDir, fileName)
 
-	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open log file %s: %w", filePath, err)
 	}

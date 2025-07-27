@@ -375,7 +375,9 @@ func TestBuildMetrics_ConcurrentAccess(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			for j := range operationsPerGoroutine {
-				metrics.RecordParallelProcessing(time.Duration(j)*time.Millisecond, int32(j%8+1))
+				// Safe conversion: j%8+1 is always in range [1, 8]
+				workers := j%8 + 1
+				metrics.RecordParallelProcessing(time.Duration(j)*time.Millisecond, int32(workers)) //nolint:gosec // workers is constrained to [1,8] range
 			}
 		}()
 	}
@@ -525,7 +527,7 @@ func TestBuildMetrics_EdgeCases(t *testing.T) {
 			go func(concurrency int32) {
 				defer wg.Done()
 				metrics.RecordParallelProcessing(time.Millisecond, concurrency)
-			}(int32(i + 1))
+			}(int32(i + 1)) //nolint:gosec // Safe conversion: i+1 is in range [1, 50]
 		}
 
 		wg.Wait()

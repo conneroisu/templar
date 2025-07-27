@@ -21,6 +21,35 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	// Output formats.
+	OutputFormatConsole  = "console"
+	OutputFormatHTML     = "html"
+	OutputFormatMarkdown = "markdown"
+
+	// Component labels.
+	ComponentLabel   = "component"
+	ComponentsLabel  = "components"
+	UnknownComponent = "Unknown Component"
+
+	// Network hosts.
+	LocalhostHost = "localhost"
+
+	// ANSI color codes.
+	ColorReset  = "\033[0m"
+	ColorGreen  = "\033[32m"
+	ColorYellow = "\033[33m"
+	ColorRed    = "\033[31m"
+
+	// WCAG levels.
+	WCAGLevelA   = "A"
+	WCAGLevelAA  = "AA"
+	WCAGLevelAAA = "AAA"
+
+	// Indentation.
+	ViolationIndent = "     "
+)
+
 var (
 	auditComponentName   string
 	auditWCAGLevel       string
@@ -78,11 +107,11 @@ func init() {
 	rootCmd.AddCommand(auditCmd)
 
 	auditCmd.Flags().
-		StringVarP(&auditComponentName, "component", "c", "", "Specific component to audit (if not provided as argument)")
+		StringVarP(&auditComponentName, ComponentLabel, "c", "", "Specific component to audit (if not provided as argument)")
 	auditCmd.Flags().
 		StringVarP(&auditWCAGLevel, "wcag-level", "w", "AA", "WCAG compliance level to test against (A, AA, AAA)")
 	auditCmd.Flags().
-		StringVarP(&auditOutputFormat, "output", "o", "console", "Output format (console, json, html, markdown)")
+		StringVarP(&auditOutputFormat, "output", "o", OutputFormatConsole, "Output format (console, json, html, markdown)")
 	auditCmd.Flags().
 		StringVarP(&auditOutputFile, "output-file", "f", "", "Output file path (stdout if not specified)")
 	auditCmd.Flags().
@@ -188,7 +217,7 @@ func runSingleComponentAudit(
 	logger logging.Logger,
 ) error {
 	if !auditQuiet {
-		logger.Info(ctx, "Running accessibility audit", "component", componentName)
+		logger.Info(ctx, "Running accessibility audit", ComponentLabel, componentName)
 	}
 
 	// Run accessibility test
@@ -233,14 +262,14 @@ func runAllComponentsAudit(
 	for i, component := range components {
 		if auditVerbose {
 			logger.Info(ctx, "Auditing component",
-				"component", component.Name,
+				ComponentLabel, component.Name,
 				"progress", fmt.Sprintf("%d/%d", i+1, len(components)))
 		}
 
 		// Run accessibility test
 		report, err := tester.TestComponent(ctx, component.Name, nil)
 		if err != nil {
-			logger.Warn(ctx, err, "Failed to audit component", "component", component.Name)
+			logger.Warn(ctx, err, "Failed to audit component", ComponentLabel, component.Name)
 
 			continue
 		}
@@ -252,7 +281,7 @@ func runAllComponentsAudit(
 		if auditAutoFix && len(report.Violations) > 0 {
 			fixedCount, err := applyAutoFixes(ctx, tester, report)
 			if err != nil {
-				logger.Warn(ctx, err, "Failed to apply auto-fixes", "component", component.Name)
+				logger.Warn(ctx, err, "Failed to apply auto-fixes", ComponentLabel, component.Name)
 			} else {
 				totalAutoFixes += fixedCount
 			}
@@ -264,7 +293,7 @@ func runAllComponentsAudit(
 
 	if !auditQuiet {
 		logger.Info(ctx, "Audit completed",
-			"components", len(reports),
+			ComponentsLabel, len(reports),
 			"total_violations", totalViolations)
 
 		if auditAutoFix && totalAutoFixes > 0 {
@@ -281,7 +310,8 @@ func applyReportFilters(
 ) *accessibility.AccessibilityReport {
 	filteredViolations := []accessibility.AccessibilityViolation{}
 
-	for _, violation := range report.Violations {
+	for i := range report.Violations {
+		violation := &report.Violations[i]
 		// Apply severity filter
 		if auditSeverityFilter != "" {
 			expectedSeverity := parseSeverity(auditSeverityFilter)
@@ -295,7 +325,7 @@ func applyReportFilters(
 			continue
 		}
 
-		filteredViolations = append(filteredViolations, violation)
+		filteredViolations = append(filteredViolations, *violation)
 	}
 
 	// Apply max violations limit
@@ -319,9 +349,10 @@ func applyAutoFixes(
 ) (int, error) {
 	if componentTester, ok := tester.(*accessibility.ComponentAccessibilityTester); ok {
 		autoFixableViolations := []accessibility.AccessibilityViolation{}
-		for _, violation := range report.Violations {
+		for i := range report.Violations {
+			violation := &report.Violations[i]
 			if violation.CanAutoFix {
-				autoFixableViolations = append(autoFixableViolations, violation)
+				autoFixableViolations = append(autoFixableViolations, *violation)
 			}
 		}
 
@@ -343,13 +374,13 @@ func applyAutoFixes(
 
 func outputAuditResults(reports []*accessibility.AccessibilityReport, logger logging.Logger) error {
 	switch auditOutputFormat {
-	case "json":
+	case OutputFormatJSON:
 		return outputJSON(reports)
-	case "html":
+	case OutputFormatHTML:
 		return outputHTML(reports)
-	case "markdown":
+	case OutputFormatMarkdown:
 		return outputMarkdown(reports)
-	case "console":
+	case OutputFormatConsole:
 		fallthrough
 	default:
 		return outputConsole(reports, logger)
@@ -383,8 +414,7 @@ func outputMarkdown(reports []*accessibility.AccessibilityReport) error {
 }
 
 func outputConsole(reports []*accessibility.AccessibilityReport, logger logging.Logger) error {
-	ctx := context.Background()
-	_ = ctx // TODO: Use context in console output if needed
+	// Context can be added here for console output if needed in the future
 
 	if len(reports) == 0 {
 		fmt.Println("No components audited.")
@@ -407,7 +437,8 @@ func outputConsole(reports []*accessibility.AccessibilityReport, logger logging.
 			componentsWithIssues++
 		}
 
-		for _, violation := range report.Violations {
+		for i := range report.Violations {
+			violation := &report.Violations[i]
 			if violation.Impact == accessibility.ImpactCritical {
 				criticalViolations++
 			}
@@ -428,13 +459,14 @@ func outputConsole(reports []*accessibility.AccessibilityReport, logger logging.
 	// Overall status
 	var status string
 	var statusIcon string
-	if criticalViolations > 0 {
+	switch {
+	case criticalViolations > 0:
 		status = "CRITICAL ISSUES FOUND"
 		statusIcon = "🚨"
-	} else if totalViolations > 0 {
+	case totalViolations > 0:
 		status = "ISSUES FOUND"
 		statusIcon = "⚠️"
-	} else {
+	default:
 		status = "ALL CHECKS PASSED"
 		statusIcon = "✅"
 	}
@@ -491,13 +523,13 @@ func outputConsole(reports []*accessibility.AccessibilityReport, logger logging.
 func outputComponentDetails(report *accessibility.AccessibilityReport) {
 	componentName := report.ComponentName
 	if componentName == "" {
-		componentName = "Unknown Component"
+		componentName = UnknownComponent
 	}
 
 	scoreColor := getScoreColor(report.Summary.OverallScore)
 
 	fmt.Printf("📦 %s (Score: %s%.1f/100%s)\n",
-		componentName, scoreColor, report.Summary.OverallScore, "\033[0m")
+		componentName, scoreColor, report.Summary.OverallScore, ColorReset)
 	fmt.Printf("   File: %s\n", report.ComponentFile)
 
 	if len(report.Violations) == 0 {
@@ -511,36 +543,39 @@ func outputComponentDetails(report *accessibility.AccessibilityReport) {
 	warningViolations := []accessibility.AccessibilityViolation{}
 	infoViolations := []accessibility.AccessibilityViolation{}
 
-	for _, violation := range report.Violations {
+	for i := range report.Violations {
+		violation := &report.Violations[i]
 		switch violation.Severity {
 		case accessibility.SeverityError:
-			errorViolations = append(errorViolations, violation)
+			errorViolations = append(errorViolations, *violation)
 		case accessibility.SeverityWarning:
-			warningViolations = append(warningViolations, violation)
+			warningViolations = append(warningViolations, *violation)
 		case accessibility.SeverityInfo:
-			infoViolations = append(infoViolations, violation)
+			infoViolations = append(infoViolations, *violation)
 		}
 	}
 
 	// Output violations by severity
 	if len(errorViolations) > 0 {
 		fmt.Printf("   🚨 Errors (%d):\n", len(errorViolations))
-		for _, violation := range errorViolations {
-			outputViolation(violation, "     ")
+		for i := range errorViolations {
+			violation := errorViolations[i]
+			outputViolation(violation, ViolationIndent)
 		}
 	}
 
 	if len(warningViolations) > 0 {
 		fmt.Printf("   ⚠️  Warnings (%d):\n", len(warningViolations))
-		for _, violation := range warningViolations {
-			outputViolation(violation, "     ")
+		for i := range warningViolations {
+		violation := &warningViolations[i]
+			outputViolation(violation, ViolationIndent)
 		}
 	}
 
 	if len(infoViolations) > 0 && auditVerbose {
 		fmt.Printf("   ℹ️  Info (%d):\n", len(infoViolations))
 		for _, violation := range infoViolations {
-			outputViolation(violation, "     ")
+			outputViolation(violation, ViolationIndent)
 		}
 	}
 
@@ -550,7 +585,7 @@ func outputComponentDetails(report *accessibility.AccessibilityReport) {
 func outputComponentSummary(report *accessibility.AccessibilityReport) {
 	componentName := report.ComponentName
 	if componentName == "" {
-		componentName = "Unknown Component"
+		componentName = UnknownComponent
 	}
 
 	errorCount := 0
@@ -579,7 +614,7 @@ func outputComponentSummary(report *accessibility.AccessibilityReport) {
 		componentName,
 		scoreColor,
 		report.Summary.OverallScore,
-		"\033[0m",
+		ColorReset,
 	)
 
 	if criticalCount > 0 {
@@ -622,12 +657,12 @@ func writeOutput(content string) error {
 	if auditOutputFile != "" {
 		// Ensure output directory exists
 		dir := filepath.Dir(auditOutputFile)
-		if err := os.MkdirAll(dir, 0755); err != nil {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
 			return fmt.Errorf("failed to create output directory: %w", err)
 		}
 
 		// Write to file
-		if err := os.WriteFile(auditOutputFile, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(auditOutputFile, []byte(content), 0o644); err != nil {
 			return fmt.Errorf("failed to write output file: %w", err)
 		}
 
@@ -645,11 +680,11 @@ func writeOutput(content string) error {
 // Helper functions.
 func parseWCAGLevel(level string) accessibility.WCAGLevel {
 	switch strings.ToUpper(level) {
-	case "A":
+	case WCAGLevelA:
 		return accessibility.WCAGLevelA
-	case "AA":
+	case WCAGLevelAA:
 		return accessibility.WCAGLevelAA
-	case "AAA":
+	case WCAGLevelAAA:
 		return accessibility.WCAGLevelAAA
 	default:
 		return accessibility.WCAGLevelAA
@@ -658,11 +693,11 @@ func parseWCAGLevel(level string) accessibility.WCAGLevel {
 
 func parseSeverity(severity string) accessibility.ViolationSeverity {
 	switch strings.ToLower(severity) {
-	case "error":
+	case SeverityError:
 		return accessibility.SeverityError
-	case "warning":
+	case SeverityWarning:
 		return accessibility.SeverityWarning
-	case "info":
+	case SeverityInfo:
 		return accessibility.SeverityInfo
 	default:
 		return accessibility.SeverityWarning
@@ -670,12 +705,13 @@ func parseSeverity(severity string) accessibility.ViolationSeverity {
 }
 
 func getScoreColor(score float64) string {
-	if score >= 90 {
-		return "\033[32m" // Green
-	} else if score >= 70 {
-		return "\033[33m" // Yellow
-	} else {
-		return "\033[31m" // Red
+	switch {
+	case score >= 90:
+		return ColorGreen // Green
+	case score >= 70:
+		return ColorYellow // Yellow
+	default:
+		return ColorRed // Red
 	}
 }
 

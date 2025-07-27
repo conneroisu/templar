@@ -31,10 +31,10 @@ func TestFileWatcherProperties(t *testing.T) {
 			}
 
 			tempDir := t.TempDir()
-			testFile := filepath.Join(tempDir, "test.templ")
+			testFile := filepath.Join(tempDir, TestTemplFileName)
 
 			// Create initial file
-			if err := os.WriteFile(testFile, []byte("initial content"), 0644); err != nil {
+			if err := os.WriteFile(testFile, []byte("initial content"), 0o644); err != nil {
 				return true
 			}
 
@@ -68,7 +68,7 @@ func TestFileWatcherProperties(t *testing.T) {
 			// Make rapid changes to file
 			for i := 0; i < changeCount; i++ {
 				content := []byte("content " + string(rune(i)))
-				if err := os.WriteFile(testFile, content, 0644); err != nil {
+				if err := os.WriteFile(testFile, content, 0o644); err != nil {
 					continue
 				}
 				time.Sleep(
@@ -105,14 +105,14 @@ func TestFileWatcherProperties(t *testing.T) {
 			dirs := make([]string, dirCount)
 			for i := 0; i < dirCount; i++ {
 				dirPath := filepath.Join(baseDir, "dir"+fmt.Sprintf("%d", i))
-				if err := os.MkdirAll(dirPath, 0755); err != nil {
+				if err := os.MkdirAll(dirPath, 0o755); err != nil {
 					return true
 				}
 				dirs[i] = dirPath
 
 				// Create test file in each directory
-				testFile := filepath.Join(dirPath, "test.templ")
-				if err := os.WriteFile(testFile, []byte("content"), 0644); err != nil {
+				testFile := filepath.Join(dirPath, TestTemplFileName)
+				if err := os.WriteFile(testFile, []byte("content"), 0o644); err != nil {
 					return true
 				}
 			}
@@ -142,9 +142,9 @@ func TestFileWatcherProperties(t *testing.T) {
 
 			// Make changes to files in each directory
 			for i, dir := range dirs {
-				testFile := filepath.Join(dir, "test.templ")
+				testFile := filepath.Join(dir, TestTemplFileName)
 				content := []byte("updated content " + string(rune(i)))
-				if err := os.WriteFile(testFile, content, 0644); err != nil {
+				if err := os.WriteFile(testFile, content, 0o644); err != nil {
 					continue
 				}
 			}
@@ -202,7 +202,7 @@ func TestFileWatcherProperties(t *testing.T) {
 				filePaths[i] = filePath
 
 				content := []byte("content " + string(rune(i)))
-				if err := os.WriteFile(filePath, content, 0644); err != nil {
+				if err := os.WriteFile(filePath, content, 0o644); err != nil {
 					continue
 				}
 			}
@@ -212,7 +212,7 @@ func TestFileWatcherProperties(t *testing.T) {
 
 			// Delete files
 			for _, filePath := range filePaths {
-				os.Remove(filePath)
+				_ = os.Remove(filePath)
 			}
 
 			// Wait for deletion events
@@ -273,7 +273,7 @@ func TestFileWatcherProperties(t *testing.T) {
 			dirs := make([]string, goroutineCount)
 			for i := 0; i < goroutineCount; i++ {
 				dirPath := filepath.Join(baseDir, "subdir"+string(rune(i)))
-				if err := os.MkdirAll(dirPath, 0755); err != nil {
+				if err := os.MkdirAll(dirPath, 0o755); err != nil {
 					return true
 				}
 				dirs[i] = dirPath
@@ -298,7 +298,7 @@ func TestFileWatcherProperties(t *testing.T) {
 
 					// Create a file to trigger events
 					testFile := filepath.Join(dir, "concurrent.templ")
-					os.WriteFile(testFile, []byte("concurrent content"), 0644)
+					_ = os.WriteFile(testFile, []byte("concurrent content"), 0o644)
 				}(dirs[i])
 			}
 
@@ -378,7 +378,7 @@ func TestWatcherEventOrderingProperties(t *testing.T) {
 			// Perform sequential operations with spacing to allow debouncing
 			for i := 0; i < operationCount; i++ {
 				content := []byte("content iteration " + string(rune(i)))
-				if err := os.WriteFile(testFile, content, 0644); err != nil {
+				if err := os.WriteFile(testFile, content, 0o644); err != nil {
 					continue
 				}
 				time.Sleep(100 * time.Millisecond) // Space out operations

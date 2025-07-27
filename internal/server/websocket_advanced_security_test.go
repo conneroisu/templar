@@ -143,14 +143,14 @@ func TestWebSocketConnectionHijacking(t *testing.T) {
 				},
 			)
 			if response != nil && response.Body != nil {
-				defer response.Body.Close()
+				defer func() { _ = response.Body.Close() }()
 			}
 
 			if tt.expectBlock {
 				// Should be blocked - either connection fails or non-101 response
 				if err == nil && response != nil &&
 					response.StatusCode == http.StatusSwitchingProtocols {
-					conn.Close(websocket.StatusNormalClosure, "")
+					_ = conn.Close(websocket.StatusNormalClosure, "")
 					t.Errorf(
 						"%s: Expected connection to be blocked, but it succeeded",
 						tt.description,
@@ -160,7 +160,7 @@ func TestWebSocketConnectionHijacking(t *testing.T) {
 				// Should succeed
 				require.NoError(t, err, tt.description)
 				require.NotNil(t, conn, tt.description)
-				conn.Close(websocket.StatusNormalClosure, "")
+				_ = conn.Close(websocket.StatusNormalClosure, "")
 			}
 		})
 	}
@@ -258,17 +258,17 @@ func TestWebSocketProtocolDowngradeAttacks(t *testing.T) {
 				nil,
 			)
 			if response != nil && response.Body != nil {
-				defer response.Body.Close()
+				defer func() { _ = response.Body.Close() }()
 			}
 
 			if tt.expectUpgrade {
 				require.NoError(t, err, tt.description)
 				require.NotNil(t, conn, tt.description)
-				conn.Close(websocket.StatusNormalClosure, "")
+				_ = conn.Close(websocket.StatusNormalClosure, "")
 			} else {
 				// Should be rejected - either error or non-101 status
 				if err == nil && response != nil && response.StatusCode == http.StatusSwitchingProtocols {
-					conn.Close(websocket.StatusNormalClosure, "")
+					_ = conn.Close(websocket.StatusNormalClosure, "")
 					t.Errorf("%s: Expected protocol downgrade attack to be blocked", tt.description)
 				}
 			}
@@ -308,7 +308,7 @@ func TestWebSocketRateLimitingEdgeCases(t *testing.T) {
 				defer func() {
 					for _, conn := range connections {
 						if conn != nil {
-							conn.Close(websocket.StatusNormalClosure, "")
+							_ = conn.Close(websocket.StatusNormalClosure, "")
 						}
 					}
 				}()
@@ -328,7 +328,7 @@ func TestWebSocketRateLimitingEdgeCases(t *testing.T) {
 						},
 					)
 					if resp != nil && resp.Body != nil {
-						resp.Body.Close()
+						_ = resp.Body.Close()
 					}
 
 					if err != nil {
@@ -375,10 +375,10 @@ func TestWebSocketRateLimitingEdgeCases(t *testing.T) {
 					},
 				)
 				if resp != nil && resp.Body != nil {
-					defer resp.Body.Close()
+					defer func() { _ = resp.Body.Close() }()
 				}
 				require.NoError(t, err)
-				defer conn.Close(websocket.StatusNormalClosure, "")
+				defer func() { _ = conn.Close(websocket.StatusNormalClosure, "") }()
 
 				// Attempt to send oversized message
 				largeMessage := strings.Repeat("A", 100*1024) // 100KB message
@@ -419,7 +419,7 @@ func TestWebSocketRateLimitingEdgeCases(t *testing.T) {
 						},
 					)
 					if resp != nil && resp.Body != nil {
-						resp.Body.Close()
+						_ = resp.Body.Close()
 					}
 
 					if err != nil {
@@ -430,7 +430,7 @@ func TestWebSocketRateLimitingEdgeCases(t *testing.T) {
 					}
 
 					// Immediately close and reconnect
-					conn.Close(websocket.StatusNormalClosure, "")
+					_ = conn.Close(websocket.StatusNormalClosure, "")
 					cancel()
 				}
 
@@ -487,7 +487,7 @@ func TestWebSocketChaosTestingNetworkFailures(t *testing.T) {
 					},
 				)
 				if resp != nil && resp.Body != nil {
-					defer resp.Body.Close()
+					defer func() { _ = resp.Body.Close() }()
 				}
 				require.NoError(t, err)
 
@@ -496,7 +496,7 @@ func TestWebSocketChaosTestingNetworkFailures(t *testing.T) {
 				require.NoError(t, err)
 
 				// Forcefully close the connection
-				conn.Close(websocket.StatusInternalError, "simulated network failure")
+				_ = conn.Close(websocket.StatusInternalError, "simulated network failure")
 
 				// Try to send another message - should fail gracefully
 				err = conn.Write(ctx, websocket.MessageText, []byte("should_fail"))
@@ -515,7 +515,7 @@ func TestWebSocketChaosTestingNetworkFailures(t *testing.T) {
 				defer func() {
 					for _, conn := range connections {
 						if conn != nil {
-							conn.Close(websocket.StatusNormalClosure, "")
+							_ = conn.Close(websocket.StatusNormalClosure, "")
 						}
 					}
 				}()
@@ -532,7 +532,7 @@ func TestWebSocketChaosTestingNetworkFailures(t *testing.T) {
 						},
 					)
 					if resp != nil && resp.Body != nil {
-						resp.Body.Close()
+						_ = resp.Body.Close()
 					}
 					require.NoError(t, err)
 					connections[i] = conn
@@ -540,7 +540,7 @@ func TestWebSocketChaosTestingNetworkFailures(t *testing.T) {
 
 				// Simulate network partition by closing some connections abruptly
 				for i := range 2 {
-					connections[i].Close(websocket.StatusInternalError, "network partition")
+					_ = connections[i].Close(websocket.StatusInternalError, "network partition")
 				}
 
 				// Remaining connection should still work
@@ -569,10 +569,10 @@ func TestWebSocketChaosTestingNetworkFailures(t *testing.T) {
 					},
 				)
 				if resp != nil && resp.Body != nil {
-					defer resp.Body.Close()
+					defer func() { _ = resp.Body.Close() }()
 				}
 				require.NoError(t, err)
-				defer conn.Close(websocket.StatusNormalClosure, "")
+				defer func() { _ = conn.Close(websocket.StatusNormalClosure, "") }()
 
 				// Send initial message
 				err = conn.Write(ctx, websocket.MessageText, []byte("before_restart"))
@@ -603,10 +603,10 @@ func TestWebSocketChaosTestingNetworkFailures(t *testing.T) {
 					},
 				)
 				if resp != nil && resp.Body != nil {
-					defer resp.Body.Close()
+					defer func() { _ = resp.Body.Close() }()
 				}
 				require.NoError(t, err)
-				defer conn.Close(websocket.StatusNormalClosure, "")
+				defer func() { _ = conn.Close(websocket.StatusNormalClosure, "") }()
 
 				// Simulate intermittent connectivity by alternating successful and failed sends
 				for i := range 10 {
@@ -699,13 +699,13 @@ func TestWebSocketOriginValidationComprehensive(t *testing.T) {
 				},
 			)
 			if response != nil && response.Body != nil {
-				defer response.Body.Close()
+				defer func() { _ = response.Body.Close() }()
 			}
 
 			// All malicious origins should be blocked
 			if err == nil && response != nil &&
 				response.StatusCode == http.StatusSwitchingProtocols {
-				conn.Close(websocket.StatusNormalClosure, "")
+				_ = conn.Close(websocket.StatusNormalClosure, "")
 				t.Errorf(
 					"Origin validation failed: %s should have been blocked (%s)",
 					test.origin,
@@ -751,7 +751,7 @@ func TestWebSocketSecurityHeaders(t *testing.T) {
 
 	resp, err := client.Do(req)
 	require.NoError(t, err)
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Check that security headers are present (these should be set by middleware)
 	expectedHeaders := []string{
@@ -807,9 +807,7 @@ func BenchmarkWebSocketSecurityValidation(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			// Benchmark the origin validation function
-			if server.checkOrigin(req) {
-				// Valid origin processing
-			}
+			_ = server.checkOrigin(req)
 		}
 	})
 }

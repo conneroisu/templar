@@ -136,7 +136,7 @@ func TestCreateSecureTestEnvironment(t *testing.T) {
 	assert.Equal(t, filepath.Join(projectDir, ".templar", "cache"), cfg.Build.CacheDir)
 
 	// Verify cache directory has secure permissions
-	AssertDirectoryPermissions(t, cfg.Build.CacheDir, 0700)
+	AssertDirectoryPermissions(t, cfg.Build.CacheDir, 0o700)
 }
 
 func TestAssertFilePermissions(t *testing.T) {
@@ -144,15 +144,15 @@ func TestAssertFilePermissions(t *testing.T) {
 	testFile := filepath.Join(tempDir, "test.txt")
 
 	// Create file with specific permissions
-	err := os.WriteFile(testFile, []byte("test"), 0644)
+	err := os.WriteFile(testFile, []byte("test"), 0o644)
 	require.NoError(t, err)
 
 	// Test permission assertion
-	AssertFilePermissions(t, testFile, 0644)
+	AssertFilePermissions(t, testFile, 0o644)
 
 	// Test permission mismatch detection
 	assert.Panics(t, func() {
-		AssertFilePermissions(t, testFile, 0600)
+		AssertFilePermissions(t, testFile, 0o600)
 	})
 }
 
@@ -161,15 +161,15 @@ func TestAssertDirectoryPermissions(t *testing.T) {
 	testDir := filepath.Join(tempDir, "testdir")
 
 	// Create directory with specific permissions
-	err := os.MkdirAll(testDir, 0755)
+	err := os.MkdirAll(testDir, 0o755)
 	require.NoError(t, err)
 
 	// Test permission assertion
-	AssertDirectoryPermissions(t, testDir, 0755)
+	AssertDirectoryPermissions(t, testDir, 0o755)
 
 	// Test permission mismatch detection
 	assert.Panics(t, func() {
-		AssertDirectoryPermissions(t, testDir, 0700)
+		AssertDirectoryPermissions(t, testDir, 0o700)
 	})
 }
 
@@ -178,7 +178,7 @@ func TestWaitForFileChange(t *testing.T) {
 	testFile := filepath.Join(tempDir, "test.txt")
 
 	// Create initial file
-	err := os.WriteFile(testFile, []byte("initial"), 0644)
+	err := os.WriteFile(testFile, []byte("initial"), 0o644)
 	require.NoError(t, err)
 
 	info, err := os.Stat(testFile)
@@ -188,7 +188,9 @@ func TestWaitForFileChange(t *testing.T) {
 	// Modify file in background
 	go func() {
 		time.Sleep(50 * time.Millisecond)
-		os.WriteFile(testFile, []byte("modified"), 0644)
+		if err := os.WriteFile(testFile, []byte("modified"), 0o644); err != nil {
+			t.Logf("Failed to modify test file: %v", err)
+		}
 	}()
 
 	// Wait for file change
@@ -209,7 +211,7 @@ func TestWaitForFileChangeTimeout(t *testing.T) {
 	testFile := filepath.Join(tempDir, "test.txt")
 
 	// Create file but don't modify it
-	err := os.WriteFile(testFile, []byte("unchanged"), 0644)
+	err := os.WriteFile(testFile, []byte("unchanged"), 0o644)
 	require.NoError(t, err)
 
 	info, err := os.Stat(testFile)

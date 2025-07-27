@@ -33,7 +33,7 @@ type ComponentRenderer struct {
 // NewComponentRenderer creates a new component renderer.
 func NewComponentRenderer(registry interfaces.ComponentRegistry) *ComponentRenderer {
 	workDir := ".templar/render"
-	if err := os.MkdirAll(workDir, 0750); err != nil {
+	if err := os.MkdirAll(workDir, 0o750); err != nil {
 		log.Printf("Failed to create work directory %s: %v", workDir, err)
 		// Continue with renderer creation - work directory creation can be retried later
 	}
@@ -72,7 +72,7 @@ func (r *ComponentRenderer) RenderComponent(componentName string) (string, error
 		)
 		// Continue - directory removal failure is not critical if we can still create the new one
 	}
-	if err := os.MkdirAll(componentWorkDir, 0750); err != nil {
+	if err := os.MkdirAll(componentWorkDir, 0o750); err != nil {
 		return "", fmt.Errorf(
 			"failed to create component work directory %s: %w",
 			componentWorkDir,
@@ -91,7 +91,7 @@ func (r *ComponentRenderer) RenderComponent(componentName string) (string, error
 
 	// Write the Go file
 	goFile := filepath.Join(componentWorkDir, "main.go")
-	if err := os.WriteFile(goFile, []byte(goCode), 0600); err != nil {
+	if err := os.WriteFile(goFile, []byte(goCode), 0o600); err != nil {
 		return "", fmt.Errorf("writing Go file: %w", err)
 	}
 
@@ -267,7 +267,7 @@ func (r *ComponentRenderer) copyAndModifyTemplFile(src, dst string) error {
 
 	modifiedContent := strings.Join(lines, "\n")
 
-	return os.WriteFile(dst, []byte(modifiedContent), 0600)
+	return os.WriteFile(dst, []byte(modifiedContent), 0o600)
 }
 
 // runTemplGenerate runs templ generate in the work directory.

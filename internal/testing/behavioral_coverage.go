@@ -11,6 +11,11 @@ import (
 	"strings"
 )
 
+const (
+	// UnknownType represents an unknown type in behavioral coverage analysis.
+	UnknownType = "unknown"
+)
+
 // BehavioralCoverageAnalyzer analyzes test coverage from a behavioral perspective.
 type BehavioralCoverageAnalyzer struct {
 	ProjectRoot  string
@@ -954,11 +959,12 @@ func (bca *BehavioralCoverageAnalyzer) estimatePathCount(coverage *FileCoverage)
 	paths := 1
 
 	for _, behavior := range coverage.Behaviors {
-		if strings.Contains(behavior.Name, "conditional") {
+		switch {
+		case strings.Contains(behavior.Name, "conditional"):
 			paths *= 2 // Each conditional doubles paths
-		} else if strings.Contains(behavior.Name, "switch") {
+		case strings.Contains(behavior.Name, "switch"):
 			paths += behavior.Complexity // Add switch cases
-		} else if strings.Contains(behavior.Name, "loop") {
+		case strings.Contains(behavior.Name, "loop"):
 			paths += 3 // Zero, one, many iterations
 		}
 	}
@@ -994,7 +1000,7 @@ func (bca *BehavioralCoverageAnalyzer) extractTypeString(expr ast.Expr) string {
 	case *ast.StarExpr:
 		return "*" + bca.extractTypeString(t.X)
 	default:
-		return "unknown"
+		return UnknownType
 	}
 }
 

@@ -99,7 +99,7 @@ Examples:
 		method, _ := cmd.Flags().GetString("method")
 		version, _ := cmd.Flags().GetString("version")
 		outputPath, _ := cmd.Flags().GetString("output")
-		cdnUrl, _ := cmd.Flags().GetString("cdn-url")
+		cdnURL, _ := cmd.Flags().GetString("cdn-url")
 		force, _ := cmd.Flags().GetBool("force")
 		generateConfig, _ := cmd.Flags().GetBool("config")
 
@@ -118,7 +118,7 @@ Examples:
 		setupConfig := css.FrameworkSetupConfig{
 			InstallMethod:  method,
 			Version:        version,
-			CDNUrl:         cdnUrl,
+			CDNUrl:         cdnURL,
 			OutputPath:     outputPath,
 			SourcePaths:    []string{"src/**/*.{templ,html,js,ts}", "components/**/*.{templ,html}"},
 			GenerateConfig: generateConfig,
@@ -180,7 +180,7 @@ var cssStyleguideCmd = &cobra.Command{
 			return fmt.Errorf("failed to generate style guide: %w", err)
 		}
 
-		if err := os.WriteFile(outputPath, styleGuide, 0644); err != nil {
+		if err := os.WriteFile(outputPath, styleGuide, 0o644); err != nil {
 			return fmt.Errorf("failed to write style guide to %s: %w", outputPath, err)
 		}
 
@@ -264,7 +264,7 @@ var cssThemeExtractCmd = &cobra.Command{
 
 		jsonContent.WriteString("\n}")
 
-		if err := os.WriteFile(outputPath, []byte(jsonContent.String()), 0644); err != nil {
+		if err := os.WriteFile(outputPath, []byte(jsonContent.String()), 0o644); err != nil {
 			return fmt.Errorf("failed to write variables to %s: %w", outputPath, err)
 		}
 
@@ -352,7 +352,7 @@ The variables file should be in JSON format with variable names and values:
 			return fmt.Errorf("failed to generate theme: %w", err)
 		}
 
-		if err := os.WriteFile(outputPath, themeCSS, 0644); err != nil {
+		if err := os.WriteFile(outputPath, themeCSS, 0o644); err != nil {
 			return fmt.Errorf("failed to write theme to %s: %w", outputPath, err)
 		}
 
@@ -420,7 +420,7 @@ func init() {
 	cssThemeCmd.AddCommand(cssThemeGenerateCmd)
 
 	// Setup command flags
-	cssSetupCmd.Flags().StringP("method", "m", "npm", "Install method (npm, cdn, standalone)")
+	cssSetupCmd.Flags().StringP("method", "m", NPMCommand, "Install method (npm, cdn, standalone)")
 	cssSetupCmd.Flags().StringP("version", "v", "", "Framework version")
 	cssSetupCmd.Flags().StringP("output", "o", "dist/styles.css", "CSS output path")
 	cssSetupCmd.Flags().String("cdn-url", "", "Custom CDN URL")

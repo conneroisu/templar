@@ -337,6 +337,8 @@ func (hm *HealthMonitor) HTTPHandler() http.HandlerFunc {
 			w.WriteHeader(http.StatusOK) // 200 for degraded
 		case HealthStatusUnhealthy:
 			w.WriteHeader(http.StatusServiceUnavailable)
+		case HealthStatusUnknown:
+			w.WriteHeader(http.StatusInternalServerError)
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 		}
@@ -360,7 +362,7 @@ func FileSystemHealthChecker(path string) HealthChecker {
 		// Try to create and remove a temp file
 		tempFile := fmt.Sprintf("%s/.health_check_%d", path, time.Now().UnixNano())
 
-		if err := os.WriteFile(tempFile, []byte("health_check"), 0644); err != nil {
+		if err := os.WriteFile(tempFile, []byte("health_check"), 0o644); err != nil {
 			return HealthCheck{
 				Name:        "filesystem",
 				Status:      HealthStatusUnhealthy,

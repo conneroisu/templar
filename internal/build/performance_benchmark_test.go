@@ -95,7 +95,7 @@ templ TestComponent() {
 }
 `
 
-		if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
 			t.Fatalf("Failed to create test file: %v", err)
 		}
 
@@ -140,7 +140,7 @@ templ LargeComponent() {
 	for i := range count {
 		filePath := filepath.Join(tempDir, fmt.Sprintf("large_component%d.templ", i))
 
-		if err := os.WriteFile(filePath, []byte(baseContent), 0644); err != nil {
+		if err := os.WriteFile(filePath, []byte(baseContent), 0o644); err != nil {
 			t.Fatalf("Failed to create large test file: %v", err)
 		}
 

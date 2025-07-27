@@ -89,7 +89,7 @@ func runValidateCommand(cmd *cobra.Command, args []string) error {
 	// Scan for components
 	for _, path := range scanPaths {
 		if err := componentScanner.ScanDirectory(path); err != nil {
-			fmt.Fprintf(os.Stderr, "Warning: failed to scan directory %s: %v\n", path, err)
+			_, _ = fmt.Fprintf(os.Stderr, "Warning: failed to scan directory %s: %v\n", path, err)
 		}
 	}
 
@@ -116,7 +116,7 @@ func runValidateCommand(cmd *cobra.Command, args []string) error {
 			if comp, exists := componentMap[name]; exists {
 				componentsToValidate = append(componentsToValidate, comp)
 			} else {
-				fmt.Fprintf(os.Stderr, "Warning: component '%s' not found\n", name)
+				_, _ = fmt.Fprintf(os.Stderr, "Warning: component '%s' not found\n", name)
 			}
 		}
 	}
@@ -169,7 +169,7 @@ func runValidateCommand(cmd *cobra.Command, args []string) error {
 
 	// Output results
 	switch validateFormat {
-	case "json":
+	case OutputFormatJSON:
 		return outputValidationJSON(summary)
 	case "text":
 		return outputValidationText(summary)
@@ -216,7 +216,7 @@ func validateComponent(component *types.ComponentInfo) ValidationResult {
 		result.Valid = false
 		result.Errors = append(result.Errors, fmt.Sprintf("Cannot read file: %v", err))
 	} else {
-		file.Close()
+		_ = file.Close()
 	}
 
 	// Validate dependencies exist
@@ -263,7 +263,7 @@ func validateComponentName(name string) error {
 
 	// Reject names containing path traversal patterns
 	if strings.Contains(cleanName, "..") {
-		return errors.New("path traversal attempt detected")
+		return errors.New(PathTraversalError)
 	}
 
 	// Reject absolute paths
@@ -273,7 +273,7 @@ func validateComponentName(name string) error {
 
 	// Reject names with path separators (should be simple component names)
 	if strings.ContainsRune(cleanName, os.PathSeparator) {
-		return errors.New("path separators not allowed in component name")
+		return errors.New(PathSeparatorError)
 	}
 
 	// Reject special characters that could be used in injection attacks
@@ -332,7 +332,7 @@ func outputValidationText(summary ValidationSummary) error {
 
 	// Show component results
 	for _, result := range summary.Results {
-		status := "✅"
+		status := SymbolCheckmark
 		if !result.Valid {
 			status = "❌"
 		}
@@ -356,7 +356,7 @@ func outputValidationText(summary ValidationSummary) error {
 		return fmt.Errorf("validation failed: %d invalid components", summary.Invalid)
 	}
 
-	fmt.Println("✅ All components are valid!")
+	fmt.Println(SymbolCheckmark + " All components are valid!")
 
 	return nil
 }

@@ -11,6 +11,14 @@ import (
 	"github.com/conneroisu/templar/internal/config"
 )
 
+// Benchmark test constants.
+const (
+	EnvDevelopment = "development"
+	EnvProduction  = "production"
+	TargetES2020   = "es2020"
+	FormatESM      = "esm"
+)
+
 // createBenchConfig creates a config for benchmarking.
 func createBenchConfig(b *testing.B) *config.Config {
 	return &config.Config{
@@ -44,7 +52,7 @@ func BenchmarkDiscoverAssets(b *testing.B) {
 		b.Run(testDir.name, func(b *testing.B) {
 			// Create temporary directory structure
 			tempDir := createTestAssetStructure(b, testDir.numFiles, testDir.structure)
-			defer os.RemoveAll(tempDir)
+			defer func() { _ = os.RemoveAll(tempDir) }()
 
 			cfg := createBenchConfig(b)
 			bundler := NewAssetBundler(cfg, tempDir)
@@ -66,7 +74,7 @@ func BenchmarkDiscoverAssets(b *testing.B) {
 func BenchmarkBundle(b *testing.B) {
 	// Create test assets
 	tempDir := createTestAssetStructure(b, 50, "mixed")
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	cfg := createBenchConfig(b)
 	bundler := NewAssetBundler(cfg, tempDir)
@@ -82,7 +90,7 @@ func BenchmarkBundle(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	defer os.RemoveAll(outputDir)
+	defer func() { _ = os.RemoveAll(outputDir) }()
 
 	bundleTypes := []struct {
 		name   string
@@ -116,7 +124,7 @@ func BenchmarkBundle(b *testing.B) {
 // BenchmarkAssetProcessing benchmarks asset processing operations.
 func BenchmarkAssetProcessing(b *testing.B) {
 	tempDir := createTestAssetStructure(b, 100, "mixed")
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	cfg := createBenchConfig(b)
 	bundler := NewAssetBundler(cfg, tempDir)
@@ -138,7 +146,7 @@ func BenchmarkAssetProcessing(b *testing.B) {
 func BenchmarkConcurrentBundling(b *testing.B) {
 	// Create test assets
 	tempDir := createTestAssetStructure(b, 200, "mixed")
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	cfg := createBenchConfig(b)
 
@@ -205,12 +213,12 @@ func BenchmarkMemoryUsage(b *testing.B) {
 		if err != nil {
 			b.Fatal(err)
 		}
-		defer os.RemoveAll(tempDir)
+		defer func() { _ = os.RemoveAll(tempDir) }()
 
 		// Create a large JavaScript file (1MB)
 		largeContent := "// Large content\n" + strings.Repeat("console.log('test');\n", 50000)
 		largeFile := filepath.Join(tempDir, "large.js")
-		err = os.WriteFile(largeFile, []byte(largeContent), 0644)
+		err = os.WriteFile(largeFile, []byte(largeContent), 0o644)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -234,7 +242,7 @@ func BenchmarkMemoryUsage(b *testing.B) {
 		if err != nil {
 			b.Fatal(err)
 		}
-		defer os.RemoveAll(tempDir)
+		defer func() { _ = os.RemoveAll(tempDir) }()
 
 		// Create many small assets
 		for i := range 1000 {
@@ -242,7 +250,7 @@ func BenchmarkMemoryUsage(b *testing.B) {
 			fileName := fmt.Sprintf("asset_%d.js", i)
 			filePath := filepath.Join(tempDir, fileName)
 
-			err := os.WriteFile(filePath, []byte(content), 0644)
+			err := os.WriteFile(filePath, []byte(content), 0o644)
 			if err != nil {
 				b.Fatal(err)
 			}
@@ -272,11 +280,11 @@ func createTestAssetStructure(b *testing.B, numFiles int, structure string) stri
 	}
 
 	switch structure {
-	case "flat":
+	case StructureFlat:
 		createFlatStructure(b, tempDir, numFiles)
-	case "nested":
+	case StructureNested:
 		createNestedStructure(b, tempDir, numFiles)
-	case "mixed":
+	case StructureMixed:
 		createMixedStructure(b, tempDir, numFiles)
 	}
 
@@ -292,7 +300,7 @@ func createFlatStructure(b *testing.B, baseDir string, numFiles int) {
 		filePath := filepath.Join(baseDir, fileName)
 
 		content := generateTestContent(ext, i)
-		err := os.WriteFile(filePath, []byte(content), 0644)
+		err := os.WriteFile(filePath, []byte(content), 0o644)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -315,7 +323,7 @@ func createNestedStructure(b *testing.B, baseDir string, numFiles int) {
 		}
 
 		dirPath := filepath.Join(append([]string{baseDir}, pathParts...)...)
-		err := os.MkdirAll(dirPath, 0755)
+		err := os.MkdirAll(dirPath, 0o755)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -324,7 +332,7 @@ func createNestedStructure(b *testing.B, baseDir string, numFiles int) {
 		filePath := filepath.Join(dirPath, fileName)
 
 		content := generateTestContent(ext, i)
-		err = os.WriteFile(filePath, []byte(content), 0644)
+		err = os.WriteFile(filePath, []byte(content), 0o644)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -418,7 +426,7 @@ func BenchmarkFileIOOperations(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	// Create test files of different sizes
 	fileSizes := map[string]int{
@@ -435,7 +443,7 @@ func BenchmarkFileIOOperations(b *testing.B) {
 		filePath := filepath.Join(tempDir, fileName)
 		content := strings.Repeat("a", size)
 
-		err := os.WriteFile(filePath, []byte(content), 0644)
+		err := os.WriteFile(filePath, []byte(content), 0o644)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -461,7 +469,7 @@ func BenchmarkErrorHandling(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	cfg := createBenchConfig(b)
 	bundler := NewAssetBundler(cfg, tempDir)
@@ -471,7 +479,7 @@ func BenchmarkErrorHandling(b *testing.B) {
 		for i := range 10 {
 			fileName := fmt.Sprintf("invalid_%d.js", i)
 			filePath := filepath.Join(tempDir, fileName)
-			_ = os.WriteFile(filePath, []byte(""), 0000) // No permissions
+			_ = os.WriteFile(filePath, []byte(""), 0o000) // No permissions
 		}
 
 		ctx := context.Background()

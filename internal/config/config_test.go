@@ -182,20 +182,20 @@ func TestLoadWithEnvironment(t *testing.T) {
 	defer func() {
 		// Restore original environment
 		if originalPort != "" {
-			os.Setenv("TEMPLAR_SERVER_PORT", originalPort)
+			_ = os.Setenv("TEMPLAR_SERVER_PORT", originalPort)
 		} else {
-			os.Unsetenv("TEMPLAR_SERVER_PORT")
+			_ = os.Unsetenv("TEMPLAR_SERVER_PORT")
 		}
 		if originalHost != "" {
-			os.Setenv("TEMPLAR_SERVER_HOST", originalHost)
+			_ = os.Setenv("TEMPLAR_SERVER_HOST", originalHost)
 		} else {
-			os.Unsetenv("TEMPLAR_SERVER_HOST")
+			_ = os.Unsetenv("TEMPLAR_SERVER_HOST")
 		}
 	}()
 
 	// Set environment variables
-	os.Setenv("TEMPLAR_SERVER_PORT", "9999")
-	os.Setenv("TEMPLAR_SERVER_HOST", "0.0.0.0")
+	_ = os.Setenv("TEMPLAR_SERVER_PORT", "9999")
+	_ = os.Setenv("TEMPLAR_SERVER_HOST", "0.0.0.0")
 
 	viper.Reset()
 	viper.AutomaticEnv()

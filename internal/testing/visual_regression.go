@@ -318,11 +318,11 @@ func (vrt *VisualRegressionTester) hashContent(content []byte) string {
 func (vrt *VisualRegressionTester) updateGoldenFile(path string, content []byte) error {
 	// Ensure directory exists
 	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
 	}
 
-	return os.WriteFile(path, content, 0644)
+	return os.WriteFile(path, content, 0o644)
 }
 
 // readGoldenFile reads content from a golden file.
@@ -465,7 +465,7 @@ func (vrt *VisualRegressionTester) runScreenshotTest(
 	}
 
 	// Ensure screenshot directory exists
-	if err := os.MkdirAll(vrt.screenshotDir, 0755); err != nil {
+	if err := os.MkdirAll(vrt.screenshotDir, 0o755); err != nil {
 		return result, fmt.Errorf("failed to create screenshot directory: %w", err)
 	}
 
@@ -473,10 +473,10 @@ func (vrt *VisualRegressionTester) runScreenshotTest(
 	tempFile := filepath.Join(vrt.screenshotDir, testCase.Name+"_temp.html")
 	fullHTML := vrt.createFullHTMLPage(htmlContent, testCase)
 
-	if err := os.WriteFile(tempFile, []byte(fullHTML), 0644); err != nil {
+	if err := os.WriteFile(tempFile, []byte(fullHTML), 0o644); err != nil {
 		return result, fmt.Errorf("failed to write temporary HTML file: %w", err)
 	}
-	defer os.Remove(tempFile)
+	defer func() { _ = os.Remove(tempFile) }()
 
 	// Screenshot paths
 	screenshotPath := filepath.Join(vrt.screenshotDir, testCase.Name+".png")
@@ -637,7 +637,7 @@ func (vrt *VisualRegressionTester) takeScreenshot(
 	}
 
 	// Ensure output directory exists
-	if err := os.MkdirAll(filepath.Dir(outputPath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(outputPath), 0o755); err != nil {
 		return err
 	}
 
@@ -674,7 +674,7 @@ func (vrt *VisualRegressionTester) takeScreenshot(
 // updateBaseline copies the current screenshot as the new baseline.
 func (vrt *VisualRegressionTester) updateBaseline(screenshotPath, baselinePath string) error {
 	// Ensure baseline directory exists
-	if err := os.MkdirAll(filepath.Dir(baselinePath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(baselinePath), 0o755); err != nil {
 		return err
 	}
 
@@ -682,13 +682,13 @@ func (vrt *VisualRegressionTester) updateBaseline(screenshotPath, baselinePath s
 	if err != nil {
 		return err
 	}
-	defer src.Close()
+	defer func() { _ = src.Close() }()
 
 	dst, err := os.Create(baselinePath)
 	if err != nil {
 		return err
 	}
-	defer dst.Close()
+	defer func() { _ = dst.Close() }()
 
 	_, err = dst.ReadFrom(src)
 
@@ -730,11 +730,11 @@ func (vrt *VisualRegressionTester) compareImages(
 			percentDiff,
 		)
 
-		if err := os.MkdirAll(filepath.Dir(diffPath), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(diffPath), 0o755); err != nil {
 			return sizeDiff, percentDiff, err
 		}
 
-		if err := os.WriteFile(diffPath+".txt", []byte(diffInfo), 0644); err != nil {
+		if err := os.WriteFile(diffPath+".txt", []byte(diffInfo), 0o644); err != nil {
 			return sizeDiff, percentDiff, err
 		}
 	}
@@ -750,12 +750,13 @@ func (vrt *VisualRegressionTester) StartTestServer(ctx context.Context) (*http.S
 	mux.HandleFunc("/component/", vrt.handleComponentPreview)
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		_, _ = w.Write([]byte("OK"))
 	})
 
 	server := &http.Server{
-		Addr:    fmt.Sprintf(":%d", vrt.serverPort),
-		Handler: mux,
+		Addr:              fmt.Sprintf(":%d", vrt.serverPort),
+		Handler:           mux,
+		ReadHeaderTimeout: 10 * time.Second,
 	}
 
 	go func() {
@@ -778,5 +779,5 @@ func (vrt *VisualRegressionTester) handleComponentPreview(w http.ResponseWriter,
 	// This is a simplified implementation
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("<html><body><h1>Component Preview</h1></body></html>"))
+	_, _ = w.Write([]byte("<html><body><h1>Component Preview</h1></body></html>"))
 }

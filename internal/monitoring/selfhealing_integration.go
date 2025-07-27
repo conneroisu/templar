@@ -164,7 +164,7 @@ func cleanTempDirectory(dir string) error {
 		if info.ModTime().Before(cutoff) &&
 			(entry.Name() == ".templar_temp_" ||
 				entry.Name() == "templar-health-") {
-			os.Remove(dir + "/" + entry.Name())
+			_ = os.Remove(dir + "/" + entry.Name())
 		}
 	}
 
@@ -216,8 +216,12 @@ func RestartBuildPipelineAction(buildPipeline interfaces.BuildPipeline) Recovery
 			}
 
 			// Stop and restart the build pipeline
-			buildPipeline.Stop()
-			buildPipeline.Start(ctx)
+			if err := buildPipeline.Stop(); err != nil {
+				return fmt.Errorf("failed to stop build pipeline: %w", err)
+			}
+			if err := buildPipeline.Start(ctx); err != nil {
+				return fmt.Errorf("failed to start build pipeline: %w", err)
+			}
 
 			return nil
 		},
@@ -268,7 +272,9 @@ func RestartFileWatcherAction(fileWatcher interfaces.FileWatcher) RecoveryAction
 			}
 
 			// Stop and restart the file watcher
-			fileWatcher.Stop()
+			if err := fileWatcher.Stop(); err != nil {
+				return fmt.Errorf("failed to stop file watcher: %w", err)
+			}
 
 			// Add a brief delay to ensure cleanup
 			time.Sleep(1 * time.Second)

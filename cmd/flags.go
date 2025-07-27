@@ -47,7 +47,7 @@ func AddStandardFlags(cmd *cobra.Command, flagTypes ...string) *StandardFlags {
 			addServerFlags(cmd, flags)
 		case "component":
 			addComponentFlags(cmd, flags)
-		case "build":
+		case CommandBuild:
 			addBuildFlags(cmd, flags)
 		case "output":
 			addOutputFlags(cmd, flags)
@@ -61,7 +61,7 @@ func addServerFlags(cmd *cobra.Command, flags *StandardFlags) {
 	cmd.Flags().IntVarP(&flags.Port, "port", "p", 8080, "Port to serve on")
 	cmd.Flags().
 		StringVar(&flags.Host, "host", "localhost", "Host to bind to (use 0.0.0.0 for all interfaces)")
-	cmd.Flags().BoolVarP(&flags.NoOpen, "no-open", "n", false, "Don't automatically open browser")
+	cmd.Flags().BoolVarP(&flags.NoOpen, FlagNoOpen, "n", false, "Don't automatically open browser")
 }
 
 func addComponentFlags(cmd *cobra.Command, flags *StandardFlags) {
@@ -70,7 +70,7 @@ func addComponentFlags(cmd *cobra.Command, flags *StandardFlags) {
 	cmd.Flags().StringVarP(&flags.PropsFile, "props-file", "P", "", "Properties file path (JSON)")
 	cmd.Flags().
 		StringVarP(&flags.MockData, "mock", "m", "", "Mock data file, pattern, or 'auto' for generation")
-	cmd.Flags().StringVarP(&flags.Wrapper, "wrapper", "w", "", "Wrapper template path")
+	cmd.Flags().StringVarP(&flags.Wrapper, FlagWrapper, "w", "", FlagDescWrapper)
 }
 
 func addBuildFlags(cmd *cobra.Command, flags *StandardFlags) {
@@ -78,14 +78,14 @@ func addBuildFlags(cmd *cobra.Command, flags *StandardFlags) {
 		StringVarP(&flags.WatchPattern, "watch", "W", "**/*.templ", "File watch pattern for auto-rebuild")
 	cmd.Flags().
 		StringVarP(&flags.BuildCmd, "build-cmd", "B", "templ generate", "Build command to execute")
-	cmd.Flags().BoolVarP(&flags.Clean, "clean", "c", false, "Clean build artifacts before building")
+	cmd.Flags().BoolVarP(&flags.Clean, FlagClean, "c", false, FlagDescClean)
 }
 
 func addOutputFlags(cmd *cobra.Command, flags *StandardFlags) {
 	cmd.Flags().
 		StringVarP(&flags.Format, "format", "f", "table", "Output format (table|json|yaml|csv)")
 	cmd.Flags().StringVarP(&flags.Output, "output", "o", "", "Output directory or file")
-	cmd.Flags().BoolVarP(&flags.Verbose, "verbose", "v", false, "Enable verbose/detailed output")
+	cmd.Flags().BoolVarP(&flags.Verbose, FlagVerbose, "v", false, FlagDescVerbose)
 	cmd.Flags().BoolVarP(&flags.Quiet, "quiet", "q", false, "Suppress non-essential output")
 }
 
@@ -143,7 +143,7 @@ func (f *StandardFlags) ShouldOpenBrowser() bool {
 func (f *StandardFlags) ValidateFlags() error {
 	// Port validation
 	if f.Port < 1 || f.Port > 65535 {
-		return fmt.Errorf("port must be between 1 and 65535, got %d", f.Port)
+		return fmt.Errorf(PortValidationError, f.Port)
 	}
 
 	// Host validation
@@ -233,7 +233,7 @@ func ValidatePort(portStr string) error {
 	}
 
 	if port < 1 || port > 65535 {
-		return fmt.Errorf("port must be between 1 and 65535, got %d", port)
+		return fmt.Errorf(PortValidationError, port)
 	}
 
 	return nil
@@ -422,7 +422,7 @@ func AddEnhancedFlags(cmd *cobra.Command, flagTypes ...string) *EnhancedStandard
 			addEnhancedServerFlags(cmd, flags)
 		case "component":
 			addEnhancedComponentFlags(cmd, flags)
-		case "build":
+		case CommandBuild:
 			addEnhancedBuildFlags(cmd, flags)
 		case "output":
 			addEnhancedOutputFlags(cmd, flags)
@@ -450,7 +450,7 @@ func addEnhancedComponentFlags(cmd *cobra.Command, flags *EnhancedStandardFlags)
 	cmd.Flags().StringVarP(&flags.PropsFile, "props-file", "P", "", "Properties file path (JSON)")
 	cmd.Flags().
 		StringVarP(&flags.MockData, "mock", "m", "", "Mock data file, pattern, or 'auto' for generation")
-	cmd.Flags().StringVarP(&flags.Wrapper, "wrapper", "w", "", "Wrapper template path")
+	cmd.Flags().StringVarP(&flags.Wrapper, FlagWrapper, "w", "", FlagDescWrapper)
 
 	// Add validation for JSON props
 	AddFlagValidation(cmd, "props", ValidateJSON)
@@ -467,7 +467,7 @@ func addEnhancedOutputFlags(cmd *cobra.Command, flags *EnhancedStandardFlags) {
 	cmd.Flags().
 		StringVarP(&flags.Format, "format", "f", "table", "Output format (table|json|yaml|csv)")
 	cmd.Flags().StringVarP(&flags.Output, "output", "o", "", "Output directory or file")
-	cmd.Flags().BoolVarP(&flags.Verbose, "verbose", "v", false, "Enable verbose/detailed output")
+	cmd.Flags().BoolVarP(&flags.Verbose, FlagVerbose, "v", false, FlagDescVerbose)
 	cmd.Flags().BoolVarP(&flags.Quiet, "quiet", "q", false, "Suppress non-essential output")
 
 	// Add format validation with suggestions

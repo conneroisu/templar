@@ -18,7 +18,7 @@ func TestBuildPipeline_Integration(t *testing.T) {
 	t.Run("pipeline processes components end-to-end", func(t *testing.T) {
 		// Create a test directory with sample files
 		testDir := createTestFiles(t)
-		defer os.RemoveAll(testDir)
+		defer func() { _ = os.RemoveAll(testDir) }()
 
 		// Create build pipeline with 2 workers
 		bp := NewBuildPipeline(2, nil)
@@ -75,7 +75,7 @@ func TestBuildPipeline_Integration(t *testing.T) {
 
 	t.Run("pipeline handles priority builds", func(t *testing.T) {
 		testDir := createTestFiles(t)
-		defer os.RemoveAll(testDir)
+		defer func() { _ = os.RemoveAll(testDir) }()
 
 		bp := NewBuildPipeline(1, nil) // Single worker to test priority
 
@@ -121,7 +121,7 @@ func TestBuildPipeline_Integration(t *testing.T) {
 func TestBuildPipeline_CacheIntegration(t *testing.T) {
 	t.Run("cache improves build performance", func(t *testing.T) {
 		testDir := createTestFiles(t)
-		defer os.RemoveAll(testDir)
+		defer func() { _ = os.RemoveAll(testDir) }()
 
 		bp := NewBuildPipeline(1, nil)
 
@@ -182,7 +182,7 @@ func TestBuildPipeline_CacheIntegration(t *testing.T) {
 
 	t.Run("cache can be cleared", func(t *testing.T) {
 		testDir := createTestFiles(t)
-		defer os.RemoveAll(testDir)
+		defer func() { _ = os.RemoveAll(testDir) }()
 
 		bp := NewBuildPipeline(1, nil)
 		ctx := context.Background()
@@ -217,7 +217,7 @@ func TestBuildPipeline_CacheIntegration(t *testing.T) {
 func TestBuildPipeline_ConcurrentBuilds(t *testing.T) {
 	t.Run("pipeline handles concurrent builds safely", func(t *testing.T) {
 		testDir := createTestFiles(t)
-		defer os.RemoveAll(testDir)
+		defer func() { _ = os.RemoveAll(testDir) }()
 
 		bp := NewBuildPipeline(4, nil) // 4 workers for concurrency
 
@@ -321,7 +321,7 @@ func TestBuildPipeline_ConcurrentBuilds(t *testing.T) {
 func TestBuildPipeline_ErrorHandling(t *testing.T) {
 	t.Run("pipeline handles build errors gracefully", func(t *testing.T) {
 		testDir := createTestFiles(t)
-		defer os.RemoveAll(testDir)
+		defer func() { _ = os.RemoveAll(testDir) }()
 
 		bp := NewBuildPipeline(1, nil)
 
@@ -381,7 +381,7 @@ func TestBuildPipeline_ErrorHandling(t *testing.T) {
 
 	t.Run("pipeline continues after worker errors", func(t *testing.T) {
 		testDir := createTestFiles(t)
-		defer os.RemoveAll(testDir)
+		defer func() { _ = os.RemoveAll(testDir) }()
 
 		bp := NewBuildPipeline(2, nil)
 
@@ -427,7 +427,7 @@ func TestBuildPipeline_ErrorHandling(t *testing.T) {
 func TestBuildPipeline_ResourceManagement(t *testing.T) {
 	t.Run("pipeline manages worker pool resources", func(t *testing.T) {
 		testDir := createTestFiles(t)
-		defer os.RemoveAll(testDir)
+		defer func() { _ = os.RemoveAll(testDir) }()
 
 		numWorkers := 3
 		bp := NewBuildPipeline(numWorkers, nil)
@@ -459,7 +459,7 @@ func TestBuildPipeline_ResourceManagement(t *testing.T) {
 
 	t.Run("pipeline cleans up resources on stop", func(t *testing.T) {
 		testDir := createTestFiles(t)
-		defer os.RemoveAll(testDir)
+		defer func() { _ = os.RemoveAll(testDir) }()
 
 		bp := NewBuildPipeline(2, nil)
 		ctx := context.Background()
@@ -486,7 +486,7 @@ func TestBuildPipeline_ResourceManagement(t *testing.T) {
 func TestBuildPipeline_MetricsAndCallbacks(t *testing.T) {
 	t.Run("metrics track build statistics accurately", func(t *testing.T) {
 		testDir := createTestFiles(t)
-		defer os.RemoveAll(testDir)
+		defer func() { _ = os.RemoveAll(testDir) }()
 
 		bp := NewBuildPipeline(1, nil)
 
@@ -521,7 +521,7 @@ func TestBuildPipeline_MetricsAndCallbacks(t *testing.T) {
 
 	t.Run("callbacks receive all build results", func(t *testing.T) {
 		testDir := createTestFiles(t)
-		defer os.RemoveAll(testDir)
+		defer func() { _ = os.RemoveAll(testDir) }()
 
 		bp := NewBuildPipeline(1, nil)
 
@@ -592,10 +592,10 @@ templ TestComponent2() {
 }
 `
 
-	err = os.WriteFile(filepath.Join(testDir, "component1.templ"), []byte(templContent1), 0644)
+	err = os.WriteFile(filepath.Join(testDir, "component1.templ"), []byte(templContent1), 0o644)
 	require.NoError(t, err)
 
-	err = os.WriteFile(filepath.Join(testDir, "component2.templ"), []byte(templContent2), 0644)
+	err = os.WriteFile(filepath.Join(testDir, "component2.templ"), []byte(templContent2), 0o644)
 	require.NoError(t, err)
 
 	return testDir
@@ -607,7 +607,7 @@ func BenchmarkBuildPipeline_Integration(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	defer os.RemoveAll(testDir)
+	defer func() { _ = os.RemoveAll(testDir) }()
 
 	// Create test file
 	templContent := `package test
@@ -615,7 +615,7 @@ templ BenchComponent() {
 	<div>Benchmark Component</div>
 }
 `
-	err = os.WriteFile(filepath.Join(testDir, "bench.templ"), []byte(templContent), 0644)
+	err = os.WriteFile(filepath.Join(testDir, "bench.templ"), []byte(templContent), 0o644)
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -647,14 +647,14 @@ func BenchmarkBuildPipeline_ParallelBuilds(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	defer os.RemoveAll(testDir)
+	defer func() { _ = os.RemoveAll(testDir) }()
 
 	templContent := `package test
 templ ConcurrentBenchComponent() {
 	<div>Concurrent Benchmark Component</div>
 }
 `
-	err = os.WriteFile(filepath.Join(testDir, "concurrent.templ"), []byte(templContent), 0644)
+	err = os.WriteFile(filepath.Join(testDir, "concurrent.templ"), []byte(templContent), 0o644)
 	if err != nil {
 		b.Fatal(err)
 	}

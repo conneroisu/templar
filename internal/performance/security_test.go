@@ -116,10 +116,8 @@ func TestCI_CommandInjectionPrevention(t *testing.T) {
 						err.Error(),
 					)
 				}
-			} else {
-				if err != nil {
-					t.Errorf("Expected no error for %s, got: %v. %s", tt.name, err, tt.description)
-				}
+			} else if err != nil {
+				t.Errorf("Expected no error for %s, got: %v. %s", tt.name, err, tt.description)
 			}
 		})
 	}
@@ -137,7 +135,7 @@ func TestFileOperations_SecurityValidation(t *testing.T) {
 			name: "safe baseline directory creation",
 			operation: func() error {
 				detector := NewPerformanceDetector("test_safe_dir", DefaultThresholds())
-				defer os.RemoveAll("test_safe_dir")
+				defer func() { _ = os.RemoveAll("test_safe_dir") }()
 
 				return detector.validateBaselineDirectory()
 			},
@@ -168,8 +166,12 @@ func TestFileOperations_SecurityValidation(t *testing.T) {
 			operation: func() error {
 				// Create a symlink pointing outside the intended directory
 				testDir := "test_symlink_dir"
-				os.MkdirAll(testDir, 0755)
-				defer os.RemoveAll(testDir)
+				if err := os.MkdirAll(testDir, 0o755); err != nil {
+					t.Logf("Failed to create test directory: %v", err)
+
+					return nil
+				}
+				defer func() { _ = os.RemoveAll(testDir) }()
 
 				symlinkPath := filepath.Join(testDir, "malicious_link")
 				if err := os.Symlink("/etc/passwd", symlinkPath); err != nil {
@@ -202,10 +204,8 @@ func TestFileOperations_SecurityValidation(t *testing.T) {
 				if tt.errorMsg != "" && !strings.Contains(err.Error(), tt.errorMsg) {
 					t.Errorf("Expected error containing '%s', got: %s", tt.errorMsg, err.Error())
 				}
-			} else {
-				if err != nil {
-					t.Errorf("Expected no error for %s, got: %v", tt.name, err)
-				}
+			} else if err != nil {
+				t.Errorf("Expected no error for %s, got: %v", tt.name, err)
 			}
 		})
 	}
@@ -214,7 +214,7 @@ func TestFileOperations_SecurityValidation(t *testing.T) {
 // TestBenchmarkParser_MaliciousInput tests parser security against malicious input.
 func TestBenchmarkParser_MaliciousInput(t *testing.T) {
 	detector := NewPerformanceDetector("test_parser_security", DefaultThresholds())
-	defer os.RemoveAll("test_parser_security")
+	defer func() { _ = os.RemoveAll("test_parser_security") }()
 	detector.SetGitInfo("abc123", "main")
 
 	tests := []struct {
@@ -320,7 +320,7 @@ func TestConcurrentSafety_SecurityValidation(t *testing.T) {
 
 	// Test that concurrent operations don't create race conditions that could be exploited
 	detector := NewPerformanceDetector("test_concurrent_security", DefaultThresholds())
-	defer os.RemoveAll("test_concurrent_security")
+	defer func() { _ = os.RemoveAll("test_concurrent_security") }()
 
 	// This test ensures that concurrent access to the detector doesn't create
 	// security vulnerabilities like time-of-check-time-of-use (TOCTOU) issues
@@ -468,10 +468,12 @@ func TestMemorySafety_LockFreeOperations(t *testing.T) {
 // TestInputSanitization_FilenameValidation tests filename sanitization.
 func TestInputSanitization_FilenameValidation(t *testing.T) {
 	detector := NewPerformanceDetector("test_sanitization", DefaultThresholds())
-	defer os.RemoveAll("test_sanitization")
+	defer func() { _ = os.RemoveAll("test_sanitization") }()
 
 	// Create the baseline directory for testing
-	os.MkdirAll("test_sanitization", 0755)
+	if err := os.MkdirAll("test_sanitization", 0o755); err != nil {
+		t.Fatalf("Failed to create test directory: %v", err)
+	}
 
 	tests := []struct {
 		name        string

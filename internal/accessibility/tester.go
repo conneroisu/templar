@@ -13,6 +13,23 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
+// Constants for repeated string literals.
+const (
+	ComponentTargetType = "component"
+	ComponentLogKey     = "component"
+	TestPrefix          = "Test "
+	TestLinkURL         = "#test-link"
+	TestClassValue      = "test-class"
+	TestNameValue       = "test-name"
+	TestIDPrefix        = "test-"
+	DefaultVariant      = "default"
+	AltTextDescription  = "Descriptive alternative text for image"
+	TestContentText     = "Test content for accessibility validation"
+	FormLabelText       = "Form Label"
+	PlaceholderText     = "Enter value here"
+	TestTitleText       = "Test Title"
+)
+
 // ComponentAccessibilityTester implements AccessibilityTester for testing components.
 type ComponentAccessibilityTester struct {
 	engine   AccessibilityEngine
@@ -78,7 +95,7 @@ func (tester *ComponentAccessibilityTester) TestComponent(
 	start := time.Now()
 
 	tester.logger.Info(ctx, "Starting accessibility test for component",
-		"component", componentName,
+		ComponentLogKey, componentName,
 		"props", len(props))
 
 	// Get component info from registry
@@ -112,7 +129,7 @@ func (tester *ComponentAccessibilityTester) TestComponent(
 	report.ComponentName = componentName
 	report.ComponentFile = component.FilePath
 	report.Target.Name = componentName
-	report.Target.Type = "component"
+	report.Target.Type = ComponentTargetType
 
 	// Add component context to violations
 	for i := range report.Violations {
@@ -121,7 +138,7 @@ func (tester *ComponentAccessibilityTester) TestComponent(
 	}
 
 	tester.logger.Info(ctx, "Accessibility test completed",
-		"component", componentName,
+		ComponentLogKey, componentName,
 		"violations", len(report.Violations),
 		"duration", time.Since(start))
 
@@ -188,7 +205,7 @@ func (tester *ComponentAccessibilityTester) TestAllComponents(
 
 		report, err := tester.TestComponent(ctx, component.Name, defaultProps)
 		if err != nil {
-			tester.logger.Warn(ctx, err, "Failed to test component", "component", component.Name)
+			tester.logger.Warn(ctx, err, "Failed to test component", ComponentLogKey, component.Name)
 
 			continue
 		}
@@ -365,9 +382,9 @@ func (tester *ComponentAccessibilityTester) getDefaultPropsForComponent(
 	for _, param := range component.Parameters {
 		switch strings.ToLower(param.Name) {
 		case "text", "title", "label":
-			props[param.Name] = "Test " + param.Name
+			props[param.Name] = TestPrefix + param.Name
 		case "variant", "type":
-			props[param.Name] = "default"
+			props[param.Name] = DefaultVariant
 		case "disabled", "required":
 			props[param.Name] = false
 		case "placeholder":
@@ -421,23 +438,23 @@ func (tester *ComponentAccessibilityTester) generateMockString(paramName string)
 
 	switch {
 	case strings.Contains(name, "title"):
-		return "Test Title"
+		return TestTitleText
 	case strings.Contains(name, "text"), strings.Contains(name, "content"):
-		return "Test content for accessibility validation"
+		return TestContentText
 	case strings.Contains(name, "label"):
-		return "Form Label"
+		return FormLabelText
 	case strings.Contains(name, "placeholder"):
-		return "Enter value here"
+		return PlaceholderText
 	case strings.Contains(name, "alt"):
-		return "Descriptive alternative text for image"
+		return AltTextDescription
 	case strings.Contains(name, "href"), strings.Contains(name, "url"):
-		return "#test-link"
+		return TestLinkURL
 	case strings.Contains(name, "id"):
-		return "test-" + name
+		return TestIDPrefix + name
 	case strings.Contains(name, "class"):
-		return "test-class"
+		return TestClassValue
 	case strings.Contains(name, "name"):
-		return "test-name"
+		return TestNameValue
 	default:
 		return fmt.Sprintf("Test %s value", paramName)
 	}

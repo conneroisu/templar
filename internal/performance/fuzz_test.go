@@ -164,11 +164,9 @@ func FuzzBaselineOperations(f *testing.F) {
 			defer func() {
 				_ = removeDirectory(baselineDir)
 			}()
-		} else {
+		} else if len(err.Error()) > 200 {
 			// Verify error doesn't leak sensitive information
-			if len(err.Error()) > 200 {
-				t.Errorf("Error message too long: %s", err.Error())
-			}
+			t.Errorf("Error message too long: %s", err.Error())
 		}
 	})
 }

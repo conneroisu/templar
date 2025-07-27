@@ -531,12 +531,9 @@ func (wm *WebSocketManager) Shutdown(ctx context.Context) error {
 		close(wm.register)
 		close(wm.unregister)
 
-		// Shutdown enhancements
-		if wm.enhancements != nil {
-			// TODO: Add enhancement shutdown logic when WebSocketEnhancements is fully implemented
-			// Currently enhancements is always nil (see line 113)
-			// Future implementation should call wm.enhancements.Shutdown() or similar
-		}
+		// TODO: Add enhancement shutdown logic when WebSocketEnhancements is fully implemented
+		// Currently enhancements is always nil (see line 113)
+		// Future implementation should call wm.enhancements.Shutdown() or similar
 
 		log.Printf("WebSocket manager shut down successfully")
 	})

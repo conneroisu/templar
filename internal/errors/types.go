@@ -272,9 +272,16 @@ func (h *ErrorHandler) handleTemplarError(ctx context.Context, err *TemplarError
 				"code", err.Code,
 				"component", err.Component)
 		}
-	default:
+	case ErrorTypeIO, ErrorTypeNetwork, ErrorTypeConfig, ErrorTypeInternal:
 		if h.logger != nil {
 			h.logger.Error(ctx, err, "Error occurred",
+				"type", err.Type,
+				"code", err.Code,
+				"component", err.Component)
+		}
+	default:
+		if h.logger != nil {
+			h.logger.Error(ctx, err, "Unknown error occurred",
 				"type", err.Type,
 				"code", err.Code,
 				"component", err.Component)
@@ -362,13 +369,13 @@ func NewFieldValidationError(
 	}
 }
 
-// ValidationErrorCollection represents a collection of validation errors.
-type ValidationErrorCollection struct {
+// ValidationCollectionError represents a collection of validation errors.
+type ValidationCollectionError struct {
 	Errors []ValidationError
 }
 
 // Error implements the error interface.
-func (vec *ValidationErrorCollection) Error() string {
+func (vec *ValidationCollectionError) Error() string {
 	if len(vec.Errors) == 0 {
 		return "no validation errors"
 	}
@@ -380,12 +387,12 @@ func (vec *ValidationErrorCollection) Error() string {
 }
 
 // Add adds a validation error to the collection.
-func (vec *ValidationErrorCollection) Add(err ValidationError) {
+func (vec *ValidationCollectionError) Add(err ValidationError) {
 	vec.Errors = append(vec.Errors, err)
 }
 
 // AddField adds a field validation error to the collection.
-func (vec *ValidationErrorCollection) AddField(
+func (vec *ValidationCollectionError) AddField(
 	field string,
 	value interface{},
 	message string,
@@ -395,12 +402,12 @@ func (vec *ValidationErrorCollection) AddField(
 }
 
 // HasErrors returns true if there are any validation errors.
-func (vec *ValidationErrorCollection) HasErrors() bool {
+func (vec *ValidationCollectionError) HasErrors() bool {
 	return len(vec.Errors) > 0
 }
 
 // ToTemplarError converts the validation collection to a TemplarError.
-func (vec *ValidationErrorCollection) ToTemplarError() *TemplarError {
+func (vec *ValidationCollectionError) ToTemplarError() *TemplarError {
 	if !vec.HasErrors() {
 		return nil
 	}

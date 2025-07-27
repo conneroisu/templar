@@ -275,16 +275,22 @@ func (mc *MetricsCollector) FlushMetrics() error {
 
 	// Create output directory if it doesn't exist
 	dir := filepath.Dir(mc.outputPath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return fmt.Errorf("failed to create metrics directory: %w", err)
 	}
 
 	// Write metrics to file
-	file, err := os.OpenFile(mc.outputPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	file, err := os.OpenFile(mc.outputPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644)
 	if err != nil {
 		return fmt.Errorf("failed to open metrics file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		if closeErr := file.Close(); closeErr != nil {
+			// Note: We can't return this error since this is in a defer function
+			// In a production system, you might want to log this error
+			_ = closeErr // Acknowledge we're ignoring this error
+		}
+	}()
 
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")
@@ -336,7 +342,7 @@ func (mc *MetricsCollector) GatherMetrics() []Metric {
 			buckets := hist.GetBuckets()
 			for bucket, count := range buckets {
 				metricCopy := *metric
-				metricCopy.Name = metricCopy.Name + "_bucket"
+				metricCopy.Name += "_bucket"
 				metricCopy.Value = float64(count)
 				metricCopy.Timestamp = time.Now()
 				if metricCopy.Labels == nil {
@@ -348,13 +354,13 @@ func (mc *MetricsCollector) GatherMetrics() []Metric {
 
 			// Add count and sum metrics
 			metricCopy := *metric
-			metricCopy.Name = metricCopy.Name + "_count"
+			metricCopy.Name += "_count"
 			metricCopy.Value = float64(hist.GetCount())
 			metricCopy.Timestamp = time.Now()
 			allMetrics = append(allMetrics, metricCopy)
 
 			metricCopy = *metric
-			metricCopy.Name = metricCopy.Name + "_sum"
+			metricCopy.Name += "_sum"
 			metricCopy.Value = hist.GetSum()
 			metricCopy.Timestamp = time.Now()
 			allMetrics = append(allMetrics, metricCopy)
@@ -404,10 +410,8 @@ func (mc *MetricsCollector) getFullName(name string) string {
 // getKey generates a unique key for a metric with labels.
 func (mc *MetricsCollector) getKey(name string, labels map[string]string) string {
 	key := name
-	if labels != nil {
-		for k, v := range labels {
-			key += fmt.Sprintf("_%s_%s", k, v)
-		}
+	for k, v := range labels {
+		key += fmt.Sprintf("_%s_%s", k, v)
 	}
 
 	return key

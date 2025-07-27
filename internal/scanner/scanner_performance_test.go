@@ -85,7 +85,11 @@ func BenchmarkDirectoryScanSimulation(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	defer os.Chdir(originalDir)
+	defer func() {
+		if err := os.Chdir(originalDir); err != nil {
+			b.Logf("Failed to restore directory: %v", err)
+		}
+	}()
 
 	if err := os.Chdir(tempDir); err != nil {
 		b.Fatal(err)
@@ -170,7 +174,7 @@ func createTestDirectoryStructure(b *testing.B) (string, func()) {
 	}
 
 	for _, dir := range dirs {
-		if err := os.MkdirAll(filepath.Join(tempDir, dir), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Join(tempDir, dir), 0o755); err != nil {
 			b.Fatal(err)
 		}
 
@@ -181,13 +185,13 @@ func createTestDirectoryStructure(b *testing.B) (string, func()) {
 				i,
 				i,
 			)
-			if err := os.WriteFile(filename, []byte(content), 0644); err != nil {
+			if err := os.WriteFile(filename, []byte(content), 0o644); err != nil {
 				b.Fatal(err)
 			}
 		}
 	}
 
-	return tempDir, func() { os.RemoveAll(tempDir) }
+	return tempDir, func() { _ = os.RemoveAll(tempDir) }
 }
 
 // validatePathOriginal simulates the original implementation.

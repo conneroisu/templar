@@ -138,7 +138,7 @@ templ Button(text string) {
 }
 `
 
-	err := os.WriteFile(srcFile, []byte(content), 0644)
+	err := os.WriteFile(srcFile, []byte(content), 0o644)
 	require.NoError(t, err)
 
 	// Test copying and modifying
@@ -237,7 +237,7 @@ templ SimpleButton(text string) {
 }
 `
 
-	err := os.WriteFile(templFile, []byte(templContent), 0644)
+	err := os.WriteFile(templFile, []byte(templContent), 0o644)
 	require.NoError(t, err)
 
 	// Update the component file path
@@ -304,7 +304,7 @@ func TestWorkDirCreation(t *testing.T) {
 	mode := info.Mode()
 	assert.True(t, mode.IsDir())
 	// Check that it's not world-writable (security)
-	assert.Equal(t, os.FileMode(0), mode&os.FileMode(0002))
+	assert.Equal(t, os.FileMode(0), mode&os.FileMode(0o002))
 }
 
 func TestSecureFileOperations(t *testing.T) {
@@ -315,7 +315,7 @@ func TestSecureFileOperations(t *testing.T) {
 	tempDir := t.TempDir()
 	testFile := filepath.Join(tempDir, "test.go")
 
-	err := os.WriteFile(testFile, []byte("package main"), 0600)
+	err := os.WriteFile(testFile, []byte("package main"), 0o600)
 	require.NoError(t, err)
 
 	info, err := os.Stat(testFile)
@@ -323,5 +323,5 @@ func TestSecureFileOperations(t *testing.T) {
 
 	// Check that file has restricted permissions
 	mode := info.Mode()
-	assert.Equal(t, os.FileMode(0600), mode&os.FileMode(0777))
+	assert.Equal(t, os.FileMode(0o600), mode&os.FileMode(0o777))
 }

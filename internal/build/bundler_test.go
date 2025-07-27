@@ -22,7 +22,7 @@ func createTempDir(t *testing.T) string {
 	t.Helper()
 	tmpDir, err := os.MkdirTemp("", "templar-bundler-test-*")
 	require.NoError(t, err)
-	t.Cleanup(func() { os.RemoveAll(tmpDir) })
+	t.Cleanup(func() { _ = os.RemoveAll(tmpDir) })
 
 	return tmpDir
 }
@@ -30,10 +30,10 @@ func createTempDir(t *testing.T) string {
 func createTestFile(t *testing.T, path string, content string) {
 	t.Helper()
 	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		t.Fatalf("Failed to create directory %s: %v", dir, err)
 	}
-	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
 		t.Fatalf("Failed to write test file %s: %v", path, err)
 	}
 }
@@ -330,7 +330,7 @@ func TestCalculateFileHash(t *testing.T) {
 
 	// Calculate expected hash manually
 	hasher := sha256.New()
-	hasher.Write([]byte(testContent))
+	_, _ = hasher.Write([]byte(testContent))
 	expectedHash := hex.EncodeToString(hasher.Sum(nil))[:12]
 	assert.Equal(t, expectedHash, hash1)
 
@@ -394,9 +394,9 @@ func TestBundle_JavaScript(t *testing.T) {
 	}
 
 	// Ensure output directories exist
-	err := os.MkdirAll(filepath.Join(outputDir, "js"), 0755)
+	err := os.MkdirAll(filepath.Join(outputDir, "js"), 0o755)
 	require.NoError(t, err)
-	err = os.MkdirAll(filepath.Join(outputDir, "css"), 0755)
+	err = os.MkdirAll(filepath.Join(outputDir, "css"), 0o755)
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -471,9 +471,9 @@ func TestBundle_CSS(t *testing.T) {
 	}
 
 	// Ensure output directories exist
-	err := os.MkdirAll(filepath.Join(outputDir, "js"), 0755)
+	err := os.MkdirAll(filepath.Join(outputDir, "js"), 0o755)
 	require.NoError(t, err)
-	err = os.MkdirAll(filepath.Join(outputDir, "css"), 0755)
+	err = os.MkdirAll(filepath.Join(outputDir, "css"), 0o755)
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -565,9 +565,9 @@ body {
 	}
 
 	// Ensure output directories exist
-	err := os.MkdirAll(filepath.Join(outputDir, "js"), 0755)
+	err := os.MkdirAll(filepath.Join(outputDir, "js"), 0o755)
 	require.NoError(t, err)
-	err = os.MkdirAll(filepath.Join(outputDir, "css"), 0755)
+	err = os.MkdirAll(filepath.Join(outputDir, "css"), 0o755)
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -629,9 +629,9 @@ func TestBundle_WithSourceMaps(t *testing.T) {
 	}
 
 	// Ensure output directories exist
-	err := os.MkdirAll(filepath.Join(outputDir, "js"), 0755)
+	err := os.MkdirAll(filepath.Join(outputDir, "js"), 0o755)
 	require.NoError(t, err)
-	err = os.MkdirAll(filepath.Join(outputDir, "css"), 0755)
+	err = os.MkdirAll(filepath.Join(outputDir, "css"), 0o755)
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -789,9 +789,9 @@ document.write('<script>alert("XSS")</script>');
 	}
 
 	// Ensure output directories exist
-	err := os.MkdirAll(filepath.Join(outputDir, "js"), 0755)
+	err := os.MkdirAll(filepath.Join(outputDir, "js"), 0o755)
 	require.NoError(t, err)
-	err = os.MkdirAll(filepath.Join(outputDir, "css"), 0755)
+	err = os.MkdirAll(filepath.Join(outputDir, "css"), 0o755)
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -981,11 +981,12 @@ func TestProcessOtherAssets(t *testing.T) {
 	for _, processedFile := range processedFiles {
 		assert.FileExists(t, processedFile)
 
-		if strings.Contains(processedFile, "logo-img123.png") {
+		switch {
+		case strings.Contains(processedFile, "logo-img123.png"):
 			assert.Contains(t, processedFile, "images/logo-img123.png")
-		} else if strings.Contains(processedFile, "font-font456.woff2") {
+		case strings.Contains(processedFile, "font-font456.woff2"):
 			assert.Contains(t, processedFile, "fonts/font-font456.woff2")
-		} else if strings.Contains(processedFile, "data-data789.json") {
+		case strings.Contains(processedFile, "data-data789.json"):
 			assert.Contains(t, processedFile, "other/data-data789.json")
 		}
 	}

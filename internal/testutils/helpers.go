@@ -26,7 +26,7 @@ func CreateTempProject(t *testing.T) string {
 	}
 
 	for _, dir := range dirs {
-		err := os.MkdirAll(filepath.Join(tempDir, dir), 0755)
+		err := os.MkdirAll(filepath.Join(tempDir, dir), 0o755)
 		require.NoError(t, err)
 	}
 
@@ -36,7 +36,7 @@ func CreateTempProject(t *testing.T) string {
 // CreateTestComponent creates a test component file.
 func CreateTestComponent(t *testing.T, dir, name, content string) string {
 	componentPath := filepath.Join(dir, name+".templ")
-	err := os.WriteFile(componentPath, []byte(content), 0644)
+	err := os.WriteFile(componentPath, []byte(content), 0o600)
 	require.NoError(t, err)
 
 	return componentPath
@@ -232,7 +232,7 @@ func CreateSecureTestEnvironment(t *testing.T) (string, *config.Config) {
 
 	// Ensure secure permissions on cache directory
 	cacheDir := cfg.Build.CacheDir
-	err := os.Chmod(cacheDir, 0700)
+	err := os.Chmod(cacheDir, 0o700)
 	require.NoError(t, err)
 
 	return projectDir, cfg
@@ -244,9 +244,9 @@ func AssertFilePermissions(t *testing.T, path string, expectedMode os.FileMode) 
 	require.NoError(t, err)
 
 	actualMode := info.Mode()
-	require.Equal(t, expectedMode, actualMode&os.FileMode(0777),
+	require.Equal(t, expectedMode, actualMode&os.FileMode(0o777),
 		"File %s has incorrect permissions: got %o, want %o",
-		path, actualMode&os.FileMode(0777), expectedMode)
+		path, actualMode&os.FileMode(0o777), expectedMode)
 }
 
 // AssertDirectoryPermissions checks that directories have secure permissions.
@@ -256,9 +256,9 @@ func AssertDirectoryPermissions(t *testing.T, path string, expectedMode os.FileM
 	require.True(t, info.IsDir(), "Path %s is not a directory", path)
 
 	actualMode := info.Mode()
-	require.Equal(t, expectedMode, actualMode&os.FileMode(0777),
+	require.Equal(t, expectedMode, actualMode&os.FileMode(0o777),
 		"Directory %s has incorrect permissions: got %o, want %o",
-		path, actualMode&os.FileMode(0777), expectedMode)
+		path, actualMode&os.FileMode(0o777), expectedMode)
 }
 
 // CleanupTestEnvironment removes test files and directories.

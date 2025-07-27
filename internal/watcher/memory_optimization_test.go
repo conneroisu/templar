@@ -11,13 +11,17 @@ import (
 func TestEnhancedMemoryPooling(t *testing.T) {
 	fw, err := NewFileWatcher(10 * time.Millisecond)
 	if err != nil {
-		t.Fatalf("Failed to create file watcher: %v", err)
+		t.Fatalf(ErrFailedToCreateFileWatcher, err)
 	}
-	defer fw.Stop()
+	defer func() {
+		if err := fw.Stop(); err != nil {
+			t.Logf("Error stopping file watcher: %v", err)
+		}
+	}()
 
 	// Test that object pools are being used
 	initialBatch := eventBatchPool.Get().([]ChangeEvent)
-	eventBatchPool.Put(initialBatch)
+	eventBatchPool.Put(initialBatch[:0])
 
 	// Add many events to trigger multiple pool operations
 	for i := range 200 {
@@ -47,9 +51,13 @@ func TestEnhancedMemoryPooling(t *testing.T) {
 func TestBatchProcessing(t *testing.T) {
 	fw, err := NewFileWatcher(100 * time.Millisecond) // Longer delay to control batching
 	if err != nil {
-		t.Fatalf("Failed to create file watcher: %v", err)
+		t.Fatalf(ErrFailedToCreateFileWatcher, err)
 	}
-	defer fw.Stop()
+	defer func() {
+		if err := fw.Stop(); err != nil {
+			t.Logf("Error stopping file watcher: %v", err)
+		}
+	}()
 
 	batchesReceived := 0
 	totalEventsReceived := 0
@@ -112,9 +120,13 @@ func TestBatchProcessing(t *testing.T) {
 func TestLRUEviction(t *testing.T) {
 	fw, err := NewFileWatcher(1 * time.Second) // Long delay to prevent flushing
 	if err != nil {
-		t.Fatalf("Failed to create file watcher: %v", err)
+		t.Fatalf(ErrFailedToCreateFileWatcher, err)
 	}
-	defer fw.Stop()
+	defer func() {
+		if err := fw.Stop(); err != nil {
+			t.Logf("Error stopping file watcher: %v", err)
+		}
+	}()
 
 	// Fill up the pending queue beyond max capacity
 	eventsToAdd := MaxPendingEvents + 200
@@ -131,8 +143,8 @@ func TestLRUEviction(t *testing.T) {
 
 	// Check that eviction occurred
 	stats := fw.GetStats()
-	pendingCount := stats["pending_events"].(int)
-	droppedCount := stats["dropped_events"].(int64)
+	pendingCount := stats[StatsPendingEvents].(int)
+	droppedCount := stats[StatsDroppedEvents].(int64)
 
 	t.Logf("Pending events: %d, Dropped events: %d", pendingCount, droppedCount)
 
@@ -151,9 +163,13 @@ func TestLRUEviction(t *testing.T) {
 func TestBackpressureHandling(t *testing.T) {
 	fw, err := NewFileWatcher(1 * time.Millisecond)
 	if err != nil {
-		t.Fatalf("Failed to create file watcher: %v", err)
+		t.Fatalf(ErrFailedToCreateFileWatcher, err)
 	}
-	defer fw.Stop()
+	defer func() {
+		if err := fw.Stop(); err != nil {
+			t.Logf("Error stopping file watcher: %v", err)
+		}
+	}()
 
 	// Add a slow handler to create backpressure
 	processedCount := 0
@@ -193,7 +209,7 @@ func TestBackpressureHandling(t *testing.T) {
 	time.Sleep(500 * time.Millisecond)
 
 	stats := fw.GetStats()
-	droppedCount := stats["dropped_events"].(int64)
+	droppedCount := stats[StatsDroppedEvents].(int64)
 
 	t.Logf("Processed: %d events, Dropped: %d events", processedCount, droppedCount)
 
@@ -212,9 +228,13 @@ func TestBackpressureHandling(t *testing.T) {
 func TestMemoryGrowthPrevention(t *testing.T) {
 	fw, err := NewFileWatcher(1 * time.Millisecond)
 	if err != nil {
-		t.Fatalf("Failed to create file watcher: %v", err)
+		t.Fatalf(ErrFailedToCreateFileWatcher, err)
 	}
-	defer fw.Stop()
+	defer func() {
+		if err := fw.Stop(); err != nil {
+			t.Logf("Error stopping file watcher: %v", err)
+		}
+	}()
 
 	// Add handler
 	fw.AddHandler(func(events []ChangeEvent) error {
@@ -238,8 +258,8 @@ func TestMemoryGrowthPrevention(t *testing.T) {
 		time.Sleep(10 * time.Millisecond)
 
 		stats := fw.GetStats()
-		pendingCount := stats["pending_events"].(int)
-		pendingCapacity := stats["pending_capacity"].(int)
+		pendingCount := stats[StatsPendingEvents].(int)
+		pendingCapacity := stats[StatsPendingCapacity].(int)
 
 		t.Logf("Cycle %d: pending=%d, capacity=%d", cycle+1, pendingCount, pendingCapacity)
 
@@ -254,16 +274,20 @@ func TestMemoryGrowthPrevention(t *testing.T) {
 func TestStatsAccuracy(t *testing.T) {
 	fw, err := NewFileWatcher(10 * time.Millisecond)
 	if err != nil {
-		t.Fatalf("Failed to create file watcher: %v", err)
+		t.Fatalf(ErrFailedToCreateFileWatcher, err)
 	}
-	defer fw.Stop()
+	defer func() {
+		if err := fw.Stop(); err != nil {
+			t.Logf("Error stopping file watcher: %v", err)
+		}
+	}()
 
 	// Initial stats should be clean
 	stats := fw.GetStats()
-	if stats["pending_events"].(int) != 0 {
+	if stats[StatsPendingEvents].(int) != 0 {
 		t.Error("Expected 0 pending events initially")
 	}
-	if stats["dropped_events"].(int64) != 0 {
+	if stats[StatsDroppedEvents].(int64) != 0 {
 		t.Error("Expected 0 dropped events initially")
 	}
 
@@ -281,17 +305,17 @@ func TestStatsAccuracy(t *testing.T) {
 
 	// Check updated stats
 	stats = fw.GetStats()
-	pendingCount := stats["pending_events"].(int)
+	pendingCount := stats[StatsPendingEvents].(int)
 
 	if pendingCount != eventsAdded {
 		t.Errorf("Expected %d pending events, got %d", eventsAdded, pendingCount)
 	}
 
 	// Verify other stats are present and reasonable
-	if stats["max_pending"].(int) != MaxPendingEvents {
+	if stats[StatsMaxPending].(int) != MaxPendingEvents {
 		t.Error("Max pending events stat incorrect")
 	}
-	if stats["max_batch_size"].(int) <= 0 {
+	if stats[StatsMaxBatchSize].(int) <= 0 {
 		t.Error("Max batch size should be positive")
 	}
 }
@@ -300,9 +324,13 @@ func TestStatsAccuracy(t *testing.T) {
 func BenchmarkEnhancedWatcher(b *testing.B) {
 	fw, err := NewFileWatcher(1 * time.Millisecond)
 	if err != nil {
-		b.Fatalf("Failed to create file watcher: %v", err)
+		b.Fatalf(ErrFailedToCreateFileWatcher, err)
 	}
-	defer fw.Stop()
+	defer func() {
+		if err := fw.Stop(); err != nil {
+			b.Logf("Error stopping file watcher: %v", err)
+		}
+	}()
 
 	fw.AddHandler(func(events []ChangeEvent) error {
 		return nil

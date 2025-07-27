@@ -51,7 +51,7 @@ type FrameworkConfig struct {
 
 	// Installation options
 	InstallMethod string `json:"install_method" yaml:"install_method"` // "npm", "cdn", "standalone"
-	CDNUrl        string `json:"cdn_url,omitempty" yaml:"cdn_url,omitempty"`
+	CdnURL        string `json:"cdn_url,omitempty" yaml:"cdn_url,omitempty"`
 
 	// Build configuration
 	ConfigFile  string   `json:"config_file,omitempty" yaml:"config_file,omitempty"`

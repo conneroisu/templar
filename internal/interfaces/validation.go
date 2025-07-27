@@ -3,6 +3,7 @@ package interfaces
 import (
 	"context"
 	"fmt"
+	"math"
 	"reflect"
 	"runtime"
 	"time"
@@ -72,15 +73,16 @@ func (v *InterfaceValidator) ValidateComponentRegistry(reg ComponentRegistry) Va
 		}()
 
 		retrieved, exists := reg.Get("ValidationTest")
-		if !exists {
+		switch {
+		case !exists:
 			result.Warnings = append(
 				result.Warnings,
 				"Get method did not find registered component",
 			)
-		} else if retrieved == nil {
+		case retrieved == nil:
 			result.Errors = append(result.Errors, "Get method returned nil component")
 			result.Valid = false
-		} else if retrieved.Name != "ValidationTest" {
+		case retrieved.Name != "ValidationTest":
 			result.Errors = append(result.Errors, "Get method returned wrong component")
 			result.Valid = false
 		}
@@ -564,10 +566,28 @@ func (m *MemoryLeakChecker) Check() MemoryLeakResult {
 	runtime.GC()
 	runtime.ReadMemStats(&m.finalMem)
 
+	// Calculate allocation delta safely to avoid overflow
+	var allocDelta int64
+	if m.finalMem.Alloc >= m.initialMem.Alloc {
+		diff := m.finalMem.Alloc - m.initialMem.Alloc
+		if diff <= math.MaxInt64 {
+			allocDelta = int64(diff)
+		} else {
+			allocDelta = math.MaxInt64 // Cap at max int64
+		}
+	} else {
+		diff := m.initialMem.Alloc - m.finalMem.Alloc
+		if diff <= math.MaxInt64 {
+			allocDelta = -int64(diff)
+		} else {
+			allocDelta = math.MinInt64 // Cap at min int64
+		}
+	}
+
 	return MemoryLeakResult{
 		InitialAlloc: m.initialMem.Alloc,
 		FinalAlloc:   m.finalMem.Alloc,
-		AllocDelta:   int64(m.finalMem.Alloc) - int64(m.initialMem.Alloc),
+		AllocDelta:   allocDelta,
 		NumGC:        m.finalMem.NumGC - m.initialMem.NumGC,
 	}
 }

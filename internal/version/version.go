@@ -8,6 +8,14 @@ import (
 	"time"
 )
 
+const (
+	// DevVersion represents the development version identifier.
+	DevVersion = "dev"
+
+	// UnknownCommit represents an unknown git commit.
+	UnknownCommit = "unknown"
+)
+
 // BuildInfo contains version and build information.
 type BuildInfo struct {
 	Version   string    `json:"version"`
@@ -21,10 +29,10 @@ type BuildInfo struct {
 // These variables are set at build time using -ldflags.
 var (
 	// Version is the semantic version of the application.
-	Version = "dev"
+	Version = DevVersion
 
 	// GitCommit is the git commit hash when the binary was built.
-	GitCommit = "unknown"
+	GitCommit = UnknownCommit
 
 	// BuildTime is the time when the binary was built (RFC3339 format).
 	BuildTime = "unknown"
@@ -49,7 +57,7 @@ func GetBuildInfo() *BuildInfo {
 
 // GetVersion returns the application version.
 func GetVersion() string {
-	if Version != "" && Version != "dev" {
+	if Version != "" && Version != DevVersion {
 		return Version
 	}
 
@@ -67,12 +75,12 @@ func GetVersion() string {
 		}
 	}
 
-	return "dev"
+	return DevVersion
 }
 
 // GetGitCommit returns the git commit hash.
 func GetGitCommit() string {
-	if GitCommit != "" && GitCommit != "unknown" {
+	if GitCommit != "" && GitCommit != UnknownCommit {
 		return GitCommit
 	}
 
@@ -85,7 +93,7 @@ func GetGitCommit() string {
 		}
 	}
 
-	return "unknown"
+	return UnknownCommit
 }
 
 // GetBuildTime returns the build time.
@@ -98,7 +106,7 @@ func GetShortVersion() string {
 	version := GetVersion()
 	commit := GetGitCommit()
 
-	if commit != "unknown" && len(commit) >= 7 {
+	if commit != UnknownCommit && len(commit) >= 7 {
 		shortCommit := commit[:7]
 		if version != "dev" {
 			return fmt.Sprintf("%s (%s)", version, shortCommit)

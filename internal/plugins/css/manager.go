@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/conneroisu/templar/internal/config"
+	"github.com/conneroisu/templar/internal/plugins"
 )
 
 // FrameworkManager manages CSS framework integration and setup.
@@ -79,7 +80,7 @@ func (m *FrameworkManager) SetupFramework(
 ) error {
 	plugin, exists := m.registry.Get(frameworkName)
 	if !exists {
-		return fmt.Errorf("framework %s not found", frameworkName)
+		return fmt.Errorf(plugins.ErrFrameworkNotFound, frameworkName)
 	}
 
 	// Check if framework is already installed
@@ -99,7 +100,7 @@ func (m *FrameworkManager) SetupFramework(
 
 	// Apply setup options
 	if setupConfig.CDNUrl != "" {
-		config.CDNUrl = setupConfig.CDNUrl
+		config.CdnURL = setupConfig.CDNUrl
 	}
 	if setupConfig.Version != "" {
 		config.Version = setupConfig.Version
@@ -126,7 +127,7 @@ func (m *FrameworkManager) SetupFramework(
 		}
 
 		configPath := filepath.Join(m.projectPath, config.ConfigFile)
-		if err := os.WriteFile(configPath, configContent, 0644); err != nil {
+		if err := os.WriteFile(configPath, configContent, 0o644); err != nil {
 			return fmt.Errorf("failed to write config file %s: %w", configPath, err)
 		}
 	}
@@ -187,7 +188,7 @@ func (m *FrameworkManager) ProcessCSS(
 
 	plugin, exists := m.registry.Get(m.activeFramework)
 	if !exists {
-		return nil, fmt.Errorf("active framework %s not found", m.activeFramework)
+		return nil, fmt.Errorf(plugins.ErrActiveFrameworkNotFound, m.activeFramework)
 	}
 
 	return plugin.ProcessCSS(ctx, input, options)
@@ -201,7 +202,7 @@ func (m *FrameworkManager) ExtractClasses(content string) ([]string, error) {
 
 	plugin, exists := m.registry.Get(m.activeFramework)
 	if !exists {
-		return nil, fmt.Errorf("active framework %s not found", m.activeFramework)
+		return nil, fmt.Errorf(plugins.ErrActiveFrameworkNotFound, m.activeFramework)
 	}
 
 	return plugin.ExtractClasses(content)
@@ -219,7 +220,7 @@ func (m *FrameworkManager) OptimizeCSS(
 
 	plugin, exists := m.registry.Get(m.activeFramework)
 	if !exists {
-		return nil, fmt.Errorf("active framework %s not found", m.activeFramework)
+		return nil, fmt.Errorf(plugins.ErrActiveFrameworkNotFound, m.activeFramework)
 	}
 
 	return plugin.OptimizeCSS(ctx, css, usedClasses)
@@ -233,7 +234,7 @@ func (m *FrameworkManager) ExtractVariables(css []byte) (map[string]string, erro
 
 	plugin, exists := m.registry.Get(m.activeFramework)
 	if !exists {
-		return nil, fmt.Errorf("active framework %s not found", m.activeFramework)
+		return nil, fmt.Errorf(plugins.ErrActiveFrameworkNotFound, m.activeFramework)
 	}
 
 	return plugin.ExtractVariables(css)
@@ -247,7 +248,7 @@ func (m *FrameworkManager) GenerateTheme(variables map[string]string) ([]byte, e
 
 	plugin, exists := m.registry.Get(m.activeFramework)
 	if !exists {
-		return nil, fmt.Errorf("active framework %s not found", m.activeFramework)
+		return nil, fmt.Errorf(plugins.ErrActiveFrameworkNotFound, m.activeFramework)
 	}
 
 	return plugin.GenerateTheme(variables)
@@ -261,7 +262,7 @@ func (m *FrameworkManager) GenerateStyleGuide(ctx context.Context) ([]byte, erro
 
 	plugin, exists := m.registry.Get(m.activeFramework)
 	if !exists {
-		return nil, fmt.Errorf("active framework %s not found", m.activeFramework)
+		return nil, fmt.Errorf(plugins.ErrActiveFrameworkNotFound, m.activeFramework)
 	}
 
 	return plugin.GenerateStyleGuide(ctx)
@@ -272,7 +273,7 @@ func (m *FrameworkManager) GetFrameworkConfig(frameworkName string) (FrameworkCo
 	config, exists := m.registry.GetConfig(frameworkName)
 	if !exists {
 		return FrameworkConfig{}, fmt.Errorf(
-			"no configuration found for framework %s",
+			plugins.ErrNoConfigurationFound,
 			frameworkName,
 		)
 	}
@@ -284,12 +285,12 @@ func (m *FrameworkManager) GetFrameworkConfig(frameworkName string) (FrameworkCo
 func (m *FrameworkManager) ValidateFramework(frameworkName string) error {
 	plugin, exists := m.registry.Get(frameworkName)
 	if !exists {
-		return fmt.Errorf("framework %s not found", frameworkName)
+		return fmt.Errorf(plugins.ErrFrameworkNotFound, frameworkName)
 	}
 
 	config, exists := m.registry.GetConfig(frameworkName)
 	if !exists {
-		return fmt.Errorf("no configuration found for framework %s", frameworkName)
+		return fmt.Errorf(plugins.ErrNoConfigurationFound, frameworkName)
 	}
 
 	// Validate basic configuration
@@ -319,7 +320,7 @@ func (m *FrameworkManager) GetComponentTemplates(
 ) ([]ComponentTemplate, error) {
 	_, exists := m.registry.Get(frameworkName)
 	if !exists {
-		return nil, fmt.Errorf("framework %s not found", frameworkName)
+		return nil, fmt.Errorf(plugins.ErrFrameworkNotFound, frameworkName)
 	}
 
 	// For now, return built-in templates
@@ -380,7 +381,7 @@ func (m *FrameworkManager) updateProjectConfig(
 func (m *FrameworkManager) SwitchFramework(ctx context.Context, frameworkName string) error {
 	plugin, exists := m.registry.Get(frameworkName)
 	if !exists {
-		return fmt.Errorf("framework %s not found", frameworkName)
+		return fmt.Errorf(plugins.ErrFrameworkNotFound, frameworkName)
 	}
 
 	if !plugin.IsInstalled() {
@@ -407,12 +408,12 @@ func (m *FrameworkManager) SwitchFramework(ctx context.Context, frameworkName st
 func (m *FrameworkManager) RemoveFramework(ctx context.Context, frameworkName string) error {
 	plugin, exists := m.registry.Get(frameworkName)
 	if !exists {
-		return fmt.Errorf("framework %s not found", frameworkName)
+		return fmt.Errorf(plugins.ErrFrameworkNotFound, frameworkName)
 	}
 
 	config, exists := m.registry.GetConfig(frameworkName)
 	if !exists {
-		return fmt.Errorf("no configuration found for framework %s", frameworkName)
+		return fmt.Errorf(plugins.ErrNoConfigurationFound, frameworkName)
 	}
 
 	// Remove configuration file

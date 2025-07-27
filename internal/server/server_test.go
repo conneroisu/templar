@@ -126,7 +126,7 @@ func TestPreviewServer_Shutdown(t *testing.T) {
 	defer cancel()
 
 	go func() {
-		server.Start(ctx)
+		_ = server.Start(ctx) // Error not relevant for test
 	}()
 
 	// Give server time to start
@@ -181,7 +181,7 @@ func TestClient_String(t *testing.T) {
 
 			return
 		}
-		defer conn.Close(websocket.StatusNormalClosure, "")
+		defer func() { _ = conn.Close(websocket.StatusNormalClosure, "") }()
 
 		// Keep connection alive for test
 		<-time.After(100 * time.Millisecond)
@@ -194,9 +194,9 @@ func TestClient_String(t *testing.T) {
 	conn, resp, err := websocket.Dial(ctx, wsURL, nil)
 	require.NoError(t, err)
 	if resp != nil && resp.Body != nil {
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 	}
-	defer conn.Close(websocket.StatusNormalClosure, "")
+	defer func() { _ = conn.Close(websocket.StatusNormalClosure, "") }()
 
 	cfg := &config.Config{
 		Server: config.ServerConfig{
@@ -287,7 +287,7 @@ func TestPreviewServer_MiddlewareIntegration(t *testing.T) {
 	// Create a test handler
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("test"))
+		_, _ = w.Write([]byte("test"))
 	})
 
 	// Apply middleware
@@ -327,7 +327,7 @@ func TestPreviewServer_MiddlewareOptions(t *testing.T) {
 	// Create a test handler
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("should not reach here"))
+		_, _ = w.Write([]byte("should not reach here"))
 	})
 
 	// Apply middleware
@@ -347,6 +347,6 @@ func TestPreviewServer_MiddlewareOptions(t *testing.T) {
 // Helper function to stop the server (for tests that need cleanup).
 func (s *PreviewServer) Stop() {
 	if s.watcher != nil {
-		s.watcher.Stop()
+		_ = s.watcher.Stop() // Error not relevant for test cleanup
 	}
 }

@@ -44,7 +44,7 @@ func NewSkipList() *SkipList {
 	sl := &SkipList{
 		maxLevel: maxLevel,
 		p:        probability,
-		rng:      rand.New(rand.NewSource(time.Now().UnixNano())),
+		rng:      rand.New(rand.NewSource(time.Now().UnixNano())), //nolint:gosec // Skip list level randomization doesn't require cryptographic security
 	}
 
 	// Create header node with maximum level

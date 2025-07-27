@@ -14,7 +14,7 @@ import (
 // createTestComponents creates a directory with test component files.
 func createTestComponents(count int) string {
 	tempDir := fmt.Sprintf("scanner_bench_%d_%d", count, time.Now().UnixNano())
-	if err := os.MkdirAll(tempDir, 0755); err != nil {
+	if err := os.MkdirAll(tempDir, 0o755); err != nil {
 		panic(err)
 	}
 
@@ -33,7 +33,7 @@ func createTestComponents(count int) string {
 		}
 
 		filename := filepath.Join(tempDir, fmt.Sprintf("component_%d.templ", i))
-		if err := os.WriteFile(filename, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(filename, []byte(content), 0o644); err != nil {
 			panic(err)
 		}
 	}
@@ -266,7 +266,7 @@ func BenchmarkComponentScanner_ScanDirectory(b *testing.B) {
 	for _, count := range componentCounts {
 		b.Run(fmt.Sprintf("components-%d", count), func(b *testing.B) {
 			testDir := createTestComponents(count)
-			defer os.RemoveAll(testDir)
+			defer func() { _ = os.RemoveAll(testDir) }()
 
 			b.ResetTimer()
 			b.ReportAllocs()
@@ -303,12 +303,12 @@ func BenchmarkComponentScanner_ScanFile(b *testing.B) {
 			if err != nil {
 				b.Fatal(err)
 			}
-			defer os.Remove(tempFile.Name())
+			defer func() { _ = os.Remove(tempFile.Name()) }()
 
 			if _, err := tempFile.WriteString(content); err != nil {
 				b.Fatal(err)
 			}
-			tempFile.Close()
+			_ = tempFile.Close()
 
 			reg := registry.NewComponentRegistry()
 			scanner := NewComponentScanner(reg)
@@ -365,7 +365,7 @@ func BenchmarkComponentScanner_MemoryUsage(b *testing.B) {
 
 func benchmarkScannerMemoryUsage(b *testing.B, componentCount int) {
 	testDir := createTestComponents(componentCount)
-	defer os.RemoveAll(testDir)
+	defer func() { _ = os.RemoveAll(testDir) }()
 
 	b.ResetTimer()
 	b.ReportAllocs()
@@ -389,7 +389,7 @@ func benchmarkScannerMemoryUsage(b *testing.B, componentCount int) {
 // BenchmarkComponentScanner_ConcurrentScanning benchmarks concurrent scanning performance.
 func BenchmarkComponentScanner_ConcurrentScanning(b *testing.B) {
 	testDir := createTestComponents(100)
-	defer os.RemoveAll(testDir)
+	defer func() { _ = os.RemoveAll(testDir) }()
 
 	// Get list of component files
 	files, err := filepath.Glob(filepath.Join(testDir, "*.templ"))
@@ -488,7 +488,7 @@ func BenchmarkParallelVsSequential(b *testing.B) {
 
 	for _, count := range componentCounts {
 		testDir := createTestComponents(count)
-		defer os.RemoveAll(testDir)
+		defer func() { _ = os.RemoveAll(testDir) }()
 
 		b.Run(fmt.Sprintf("Sequential-%d", count), func(b *testing.B) {
 			reg := registry.NewComponentRegistry()
@@ -527,7 +527,7 @@ func BenchmarkParallelVsSequential(b *testing.B) {
 // BenchmarkWorkerCount benchmarks different worker counts for parallel scanning.
 func BenchmarkWorkerCount(b *testing.B) {
 	testDir := createTestComponents(500)
-	defer os.RemoveAll(testDir)
+	defer func() { _ = os.RemoveAll(testDir) }()
 
 	workerCounts := []int{1, 2, 4, 8, 16}
 

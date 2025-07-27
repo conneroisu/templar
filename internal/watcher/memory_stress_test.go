@@ -2,6 +2,7 @@ package watcher
 
 import (
 	"context"
+	"math"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -19,18 +20,22 @@ func TestMemoryGrowthUnderHighLoad(t *testing.T) {
 
 	// Create test directory in current working directory
 	tempDir := filepath.Join(".", "test_watcher_memory_"+string(rune(time.Now().UnixNano()%10000)))
-	err := os.MkdirAll(tempDir, 0755)
+	err := os.MkdirAll(tempDir, 0o755)
 	if err != nil {
 		t.Fatalf("Failed to create test directory: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	// Create watcher with very short debounce to maximize event processing
 	fw, err := NewFileWatcher(1 * time.Millisecond)
 	if err != nil {
-		t.Fatalf("Failed to create file watcher: %v", err)
+		t.Fatalf(ErrFailedToCreateFileWatcher, err)
 	}
-	defer fw.Stop()
+	defer func() {
+		if err := fw.Stop(); err != nil {
+			t.Logf("Failed to stop file watcher: %v", err)
+		}
+	}()
 
 	// Add handler that processes events
 	eventCount := 0
@@ -73,7 +78,7 @@ func TestMemoryGrowthUnderHighLoad(t *testing.T) {
 				content[j] = byte(i % 256)
 			}
 
-			if err := os.WriteFile(fileName, content, 0644); err != nil {
+			if err := os.WriteFile(fileName, content, 0o600); err != nil {
 				continue
 			}
 
@@ -92,7 +97,7 @@ func TestMemoryGrowthUnderHighLoad(t *testing.T) {
 				tempDir,
 				"stress_test_"+string(rune(cycle))+"_"+string(rune(i))+".templ",
 			)
-			os.Remove(fileName)
+			_ = os.Remove(fileName)
 		}
 
 		// Wait for deletion events
@@ -105,7 +110,13 @@ func TestMemoryGrowthUnderHighLoad(t *testing.T) {
 
 		memGrowth := int64(0)
 		if m.Alloc > m1.Alloc {
-			memGrowth = int64(m.Alloc - m1.Alloc)
+			diff := m.Alloc - m1.Alloc
+			// Safe conversion: check for overflow before converting
+			if diff <= math.MaxInt64 {
+				memGrowth = int64(diff) //nolint:gosec // Overflow protection: checked diff <= math.MaxInt64
+			} else {
+				memGrowth = math.MaxInt64 // Cap at max int64
+			}
 		}
 
 		t.Logf(
@@ -130,7 +141,13 @@ func TestMemoryGrowthUnderHighLoad(t *testing.T) {
 
 	finalGrowth := int64(0)
 	if m2.Alloc > m1.Alloc {
-		finalGrowth = int64(m2.Alloc - m1.Alloc)
+		diff := m2.Alloc - m1.Alloc
+		// Safe conversion: check for overflow before converting
+		if diff <= math.MaxInt64 {
+			finalGrowth = int64(diff) //nolint:gosec // Overflow protection: checked diff <= math.MaxInt64
+		} else {
+			finalGrowth = math.MaxInt64 // Cap at max int64
+		}
 	}
 
 	t.Logf("Final results:")
@@ -160,9 +177,13 @@ func TestChannelBufferOverflow(t *testing.T) {
 	// Create watcher with very long debounce to prevent flushing
 	fw, err := NewFileWatcher(10 * time.Second)
 	if err != nil {
-		t.Fatalf("Failed to create file watcher: %v", err)
+		t.Fatalf(ErrFailedToCreateFileWatcher, err)
 	}
-	defer fw.Stop()
+	defer func() {
+		if err := fw.Stop(); err != nil {
+			t.Logf("Failed to stop file watcher: %v", err)
+		}
+	}()
 
 	// Add handler (won't be called due to long debounce)
 	fw.AddHandler(func(events []ChangeEvent) error {
@@ -173,10 +194,11 @@ func TestChannelBufferOverflow(t *testing.T) {
 	eventsToSend := 150 // More than channel capacity (100)
 	sentEvents := 0
 
+eventLoop:
 	for range eventsToSend {
 		event := ChangeEvent{
 			Type:    EventTypeModified,
-			Path:    "/test/file.templ",
+			Path:    TestFilePath,
 			ModTime: time.Now(),
 			Size:    1024,
 		}
@@ -186,7 +208,7 @@ func TestChannelBufferOverflow(t *testing.T) {
 			sentEvents++
 		default:
 			// Channel full - this should happen
-			break
+			break eventLoop
 		}
 	}
 
@@ -207,9 +229,13 @@ func TestChannelBufferOverflow(t *testing.T) {
 func BenchmarkMemoryEfficiency(b *testing.B) {
 	fw, err := NewFileWatcher(10 * time.Millisecond)
 	if err != nil {
-		b.Fatalf("Failed to create file watcher: %v", err)
+		b.Fatalf(ErrFailedToCreateFileWatcher, err)
 	}
-	defer fw.Stop()
+	defer func() {
+		if err := fw.Stop(); err != nil {
+			b.Logf("Failed to stop file watcher: %v", err)
+		}
+	}()
 
 	fw.AddHandler(func(events []ChangeEvent) error {
 		return nil

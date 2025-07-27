@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 
@@ -104,7 +106,7 @@ func (s *ServeService) Serve(ctx context.Context, opts ServeOptions) (*ServeResu
 	}
 
 	// Set server URL for result
-	result.ServerURL = fmt.Sprintf("http://%s:%d", s.config.Server.Host, s.config.Server.Port)
+	result.ServerURL = "http://" + net.JoinHostPort(s.config.Server.Host, strconv.Itoa(s.config.Server.Port))
 
 	// Create context that cancels on interrupt
 	serverCtx, cancel := context.WithCancel(ctx)
@@ -142,7 +144,7 @@ func (s *ServeService) GetServerInfo(targetFiles []string) *ServerInfo {
 	info := &ServerInfo{
 		Host:        s.config.Server.Host,
 		Port:        s.config.Server.Port,
-		ServerURL:   fmt.Sprintf("http://%s:%d", s.config.Server.Host, s.config.Server.Port),
+		ServerURL:   "http://" + net.JoinHostPort(s.config.Server.Host, strconv.Itoa(s.config.Server.Port)),
 		TargetFiles: targetFiles,
 	}
 

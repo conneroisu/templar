@@ -68,7 +68,7 @@ func (hp *HashProvider) GenerateContentHash(component *types.ComponentInfo) stri
 	if err != nil {
 		return component.FilePath
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	// Use mmap for large files (>64KB) for better performance
 	var content []byte

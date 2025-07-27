@@ -364,7 +364,7 @@ func TestHTTPRouter_Start_AlreadyShutdown(t *testing.T) {
 	// Shutdown router first
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
-	router.Shutdown(ctx)
+	_ = router.Shutdown(ctx)
 
 	// Try to start shut down router
 	startCtx, startCancel := context.WithTimeout(context.Background(), 1*time.Second)

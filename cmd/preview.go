@@ -252,11 +252,11 @@ func createPreviewServer(
 	// Store preview HTML for serving
 	// In a real implementation, this would be integrated with the server
 	previewPath := filepath.Join(TemplarDir, PreviewHTML)
-	if err := os.MkdirAll(filepath.Dir(previewPath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(previewPath), 0o755); err != nil {
 		return nil, fmt.Errorf(errorCreatePreviewDir, err)
 	}
 
-	if err := os.WriteFile(previewPath, []byte(html), 0644); err != nil {
+	if err := os.WriteFile(previewPath, []byte(html), 0o644); err != nil {
 		return nil, fmt.Errorf(errorWritePreviewHTML, err)
 	}
 

@@ -353,6 +353,9 @@ func FormatErrorsForBrowser(errors []*ParsedError) string {
 			cssClass = "warning"
 		case ErrorSeverityInfo:
 			cssClass = "info"
+		case ErrorSeverityError, ErrorSeverityFatal:
+			// Default error class for error and fatal
+			cssClass = "error"
 		}
 
 		builder.WriteString(fmt.Sprintf(`    <div class="%s">`, cssClass))
@@ -421,6 +424,8 @@ func (pe *ParsedError) typeString() string {
 		return "File Not Found"
 	case BuildErrorTypePermission:
 		return "Permission"
+	case BuildErrorTypeUnknown:
+		return "Unknown"
 	default:
 		return "Unknown"
 	}

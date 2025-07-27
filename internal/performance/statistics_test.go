@@ -13,6 +13,13 @@ import (
 	"time"
 )
 
+// Test constants for string literals.
+const (
+	TestBenchmarkName = "TestBenchmark"
+	ZTestType         = "z-test"
+	TTestType         = "t-test"
+)
+
 // TestStatisticalValidator_BasicConfidenceCalculation tests basic statistical confidence.
 func TestStatisticalValidator_BasicConfidenceCalculation(t *testing.T) {
 	validator := NewStatisticalValidator(0.95, 3)
@@ -30,7 +37,7 @@ func TestStatisticalValidator_BasicConfidenceCalculation(t *testing.T) {
 			name:         "clear regression with good sample size",
 			currentValue: 2000.0,
 			baseline: &PerformanceBaseline{
-				BenchmarkName: "TestBenchmark",
+				BenchmarkName: TestBenchmarkName,
 				Samples:       []float64{1000, 1010, 990, 1005, 995, 1020, 980, 1015, 985, 1025},
 				Mean:          1002.5,
 				StdDev:        15.0,
@@ -45,7 +52,7 @@ func TestStatisticalValidator_BasicConfidenceCalculation(t *testing.T) {
 			name:         "marginal change with large variance",
 			currentValue: 1050.0,
 			baseline: &PerformanceBaseline{
-				BenchmarkName: "TestBenchmark",
+				BenchmarkName: TestBenchmarkName,
 				Samples:       []float64{900, 1200, 800, 1300, 700, 1400, 600, 1500, 1000, 1100},
 				Mean:          1050.0,
 				StdDev:        300.0,
@@ -60,7 +67,7 @@ func TestStatisticalValidator_BasicConfidenceCalculation(t *testing.T) {
 			name:         "small sample size t-test",
 			currentValue: 150.0,
 			baseline: &PerformanceBaseline{
-				BenchmarkName: "TestBenchmark",
+				BenchmarkName: TestBenchmarkName,
 				Samples:       []float64{100, 105, 95},
 				Mean:          100.0,
 				StdDev:        5.0,
@@ -75,7 +82,7 @@ func TestStatisticalValidator_BasicConfidenceCalculation(t *testing.T) {
 			name:         "multiple comparison correction",
 			currentValue: 1015.0, // Very small effect size that should become non-significant
 			baseline: &PerformanceBaseline{
-				BenchmarkName: "TestBenchmark",
+				BenchmarkName: TestBenchmarkName,
 				Samples:       []float64{1000, 1010, 990, 1020, 980, 1005, 995, 1025, 975, 1030},
 				Mean:          1003.5,
 				StdDev:        20.0, // Large standard deviation relative to difference
@@ -90,7 +97,7 @@ func TestStatisticalValidator_BasicConfidenceCalculation(t *testing.T) {
 			name:         "zero variance baseline",
 			currentValue: 1000.1,
 			baseline: &PerformanceBaseline{
-				BenchmarkName: "TestBenchmark",
+				BenchmarkName: TestBenchmarkName,
 				Samples:       []float64{1000, 1000, 1000, 1000, 1000},
 				Mean:          1000.0,
 				StdDev:        0.0,
@@ -153,7 +160,7 @@ func TestStatisticalValidator_TDistributionVsNormal(t *testing.T) {
 	}
 
 	smallResult := validator.CalculateStatisticalConfidence(150.0, smallSample, 1)
-	if smallResult.TestType != "t-test" {
+	if smallResult.TestType != TTestType {
 		t.Errorf("Expected t-test for small sample (n=%d), got %s",
 			smallSample.SampleCount, smallResult.TestType)
 	}
@@ -173,7 +180,7 @@ func TestStatisticalValidator_TDistributionVsNormal(t *testing.T) {
 	}
 
 	largeResult := validator.CalculateStatisticalConfidence(150.0, largeSample, 1)
-	if largeResult.TestType != "z-test" {
+	if largeResult.TestType != ZTestType {
 		t.Errorf("Expected z-test for large sample (n=%d), got %s",
 			largeSample.SampleCount, largeResult.TestType)
 	}
@@ -479,11 +486,11 @@ func TestStatisticalValidator_IntegrationWithDetector(t *testing.T) {
 
 	// Create baseline data with known statistical properties
 	baselineResults := []BenchmarkResult{
-		{Name: "TestBenchmark", NsPerOp: 1000, Timestamp: time.Now()},
-		{Name: "TestBenchmark", NsPerOp: 1010, Timestamp: time.Now()},
-		{Name: "TestBenchmark", NsPerOp: 990, Timestamp: time.Now()},
-		{Name: "TestBenchmark", NsPerOp: 1020, Timestamp: time.Now()},
-		{Name: "TestBenchmark", NsPerOp: 980, Timestamp: time.Now()},
+		{Name: TestBenchmarkName, NsPerOp: 1000, Timestamp: time.Now()},
+		{Name: TestBenchmarkName, NsPerOp: 1010, Timestamp: time.Now()},
+		{Name: TestBenchmarkName, NsPerOp: 990, Timestamp: time.Now()},
+		{Name: TestBenchmarkName, NsPerOp: 1020, Timestamp: time.Now()},
+		{Name: TestBenchmarkName, NsPerOp: 980, Timestamp: time.Now()},
 	}
 
 	// Update baselines
@@ -494,8 +501,8 @@ func TestStatisticalValidator_IntegrationWithDetector(t *testing.T) {
 
 	// Test regression detection with statistical validation
 	currentResults := []BenchmarkResult{
-		{Name: "TestBenchmark", NsPerOp: 2000, Timestamp: time.Now()},  // Clear regression
-		{Name: "TestBenchmark2", NsPerOp: 1000, Timestamp: time.Now()}, // No baseline yet
+		{Name: TestBenchmarkName, NsPerOp: 2000, Timestamp: time.Now()}, // Clear regression
+		{Name: "TestBenchmark2", NsPerOp: 1000, Timestamp: time.Now()},  // No baseline yet
 	}
 
 	regressions, err := detector.DetectRegressions(currentResults)
@@ -518,13 +525,13 @@ func TestStatisticalValidator_IntegrationWithDetector(t *testing.T) {
 			regression.Confidence)
 	}
 
-	if regression.BenchmarkName != "TestBenchmark" {
+	if regression.BenchmarkName != TestBenchmarkName {
 		t.Errorf("Expected benchmark name 'TestBenchmark', got '%s'",
 			regression.BenchmarkName)
 	}
 
-	if regression.RegressionType != "performance" {
-		t.Errorf("Expected regression type 'performance', got '%s'",
+	if regression.RegressionType != TestTypePerformance {
+		t.Errorf("Expected regression type '%s', got '%s'", TestTypePerformance,
 			regression.RegressionType)
 	}
 

@@ -92,7 +92,7 @@ func TestTailwindPlugin_SecureFileOperations(t *testing.T) {
 		content := "@tailwind base;\n@tailwind components;\n@tailwind utilities;\n"
 
 		// This should use os.WriteFile, not shell commands
-		err := os.WriteFile(testFile, []byte(content), 0644)
+		err := os.WriteFile(testFile, []byte(content), 0o644)
 		if err != nil {
 			t.Fatalf("Failed to write file: %v", err)
 		}
@@ -113,11 +113,11 @@ func TestTailwindPlugin_SecureFileOperations(t *testing.T) {
 		// Create test file in current working directory
 		testFile := "test_secure_reading.templ"
 		content := `<div class="bg-blue-500 text-white p-4">Test</div>`
-		err := os.WriteFile(testFile, []byte(content), 0644)
+		err := os.WriteFile(testFile, []byte(content), 0o644)
 		if err != nil {
 			t.Fatalf("Failed to write test file: %v", err)
 		}
-		defer os.Remove(testFile) // Clean up
+		defer func() { _ = os.Remove(testFile) }() // Clean up
 
 		// Test that file reading uses os.ReadFile, not shell commands
 		classes, err := plugin.extractTailwindClasses(testFile)
@@ -149,11 +149,11 @@ func TestTailwindPlugin_NoShellCommandsInCodePaths(t *testing.T) {
 	// Create a test file in current working directory to pass path validation
 	testFile := "test_no_shell_commands.templ"
 	content := `<div class="bg-red-500">Test</div>`
-	err := os.WriteFile(testFile, []byte(content), 0644)
+	err := os.WriteFile(testFile, []byte(content), 0o644)
 	if err != nil {
 		t.Fatalf("Failed to write test file: %v", err)
 	}
-	defer os.Remove(testFile) // Clean up
+	defer func() { _ = os.Remove(testFile) }() // Clean up
 
 	component := &types.ComponentInfo{
 		Name:     "test",
@@ -313,7 +313,7 @@ func TestTailwindPlugin_PathValidationInExtractClasses(t *testing.T) {
 		validFile := filepath.Join(tempDir, "valid.templ")
 
 		content := `<div class="bg-blue-500">Valid content</div>`
-		err := os.WriteFile(validFile, []byte(content), 0644)
+		err := os.WriteFile(validFile, []byte(content), 0o644)
 		if err != nil {
 			t.Fatalf("Failed to create test file: %v", err)
 		}
@@ -323,7 +323,11 @@ func TestTailwindPlugin_PathValidationInExtractClasses(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to get current directory: %v", err)
 		}
-		defer os.Chdir(oldDir)
+		defer func() {
+			if err := os.Chdir(oldDir); err != nil {
+				t.Logf("Failed to restore directory: %v", err)
+			}
+		}()
 
 		err = os.Chdir(tempDir)
 		if err != nil {
@@ -355,7 +359,10 @@ func BenchmarkValidatePath(b *testing.B) {
 
 	b.ResetTimer()
 	for range b.N {
-		validation.ValidatePath(path)
+		if err := validation.ValidatePath(path); err != nil {
+			// Expected in benchmark context - path validation may fail
+			continue
+		}
 	}
 }
 

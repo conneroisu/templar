@@ -55,7 +55,7 @@ components:
 		tmpDir := t.TempDir()
 		configFile := filepath.Join(tmpDir, ".templar.yml")
 
-		err := os.WriteFile(configFile, []byte(yamlContent), 0644)
+		err := os.WriteFile(configFile, []byte(yamlContent), 0o600)
 		if err != nil {
 			t.Skip("Could not write config file")
 		}
@@ -222,7 +222,7 @@ func FuzzEnvironmentVariables(f *testing.F) {
 		if err != nil {
 			t.Skip("Could not set environment variable")
 		}
-		defer os.Setenv(key, originalValue)
+		defer func() { _ = os.Setenv(key, originalValue) }()
 
 		// Reset viper and test configuration loading
 		viper.Reset()

@@ -431,14 +431,14 @@ func TestHealthMonitorConcurrency(t *testing.T) {
 func TestGetEnvironment(t *testing.T) {
 	t.Run("default environment", func(t *testing.T) {
 		// Clear the environment variable
-		os.Unsetenv("TEMPLAR_ENV")
+		_ = os.Unsetenv("TEMPLAR_ENV")
 		env := getEnvironment()
 		assert.Equal(t, "development", env)
 	})
 
 	t.Run("custom environment", func(t *testing.T) {
-		os.Setenv("TEMPLAR_ENV", "production")
-		defer os.Unsetenv("TEMPLAR_ENV")
+		_ = os.Setenv("TEMPLAR_ENV", "production")
+		defer func() { _ = os.Unsetenv("TEMPLAR_ENV") }()
 
 		env := getEnvironment()
 		assert.Equal(t, "production", env)

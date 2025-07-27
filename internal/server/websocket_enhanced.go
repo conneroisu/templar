@@ -181,7 +181,7 @@ func (s *PreviewServer) readPumpEnhanced(client *EnhancedClient) {
 		} else {
 			s.unregister <- client.conn
 		}
-		client.conn.Close(websocket.StatusNormalClosure, "")
+		_ = client.conn.Close(websocket.StatusNormalClosure, "")
 	}()
 
 	// Set enhanced read limit
@@ -234,7 +234,7 @@ func (s *PreviewServer) readPumpEnhanced(client *EnhancedClient) {
 
 			if !client.rateLimiter.IsAllowed() {
 				log.Printf("Enhanced WebSocket rate limit exceeded for client %s", client.id)
-				client.conn.Close(websocket.StatusPolicyViolation, "Rate limit exceeded")
+				_ = client.conn.Close(websocket.StatusPolicyViolation, "Rate limit exceeded")
 
 				break
 			}
@@ -247,7 +247,7 @@ func (s *PreviewServer) readPumpEnhanced(client *EnhancedClient) {
 
 				if ipRateExceeded {
 					log.Printf("Enhanced WebSocket IP rate limit exceeded for %s", client.ip)
-					client.conn.Close(websocket.StatusPolicyViolation, "IP rate limit exceeded")
+					_ = client.conn.Close(websocket.StatusPolicyViolation, "IP rate limit exceeded")
 
 					break
 				}
@@ -263,7 +263,7 @@ func (s *PreviewServer) readPumpEnhanced(client *EnhancedClient) {
 		// Update activity tracking
 		now := time.Now()
 		client.lastActivity = now
-		// TODO: Re-implement message counting with new structure
+		// NOTE: Message counting to be re-implemented with new WebSocket structure
 
 		// Update IP tracker if available
 		if ipTracker != nil {
@@ -295,7 +295,7 @@ func (s *PreviewServer) writePumpEnhanced(client *EnhancedClient) {
 		} else {
 			s.unregister <- client.conn
 		}
-		client.conn.Close(websocket.StatusNormalClosure, "")
+		_ = client.conn.Close(websocket.StatusNormalClosure, "")
 	}()
 
 	ctx := context.Background()
@@ -305,7 +305,7 @@ func (s *PreviewServer) writePumpEnhanced(client *EnhancedClient) {
 		case message, ok := <-client.send:
 			writeCtx, cancel := context.WithTimeout(ctx, writeWait)
 			if !ok {
-				client.conn.Close(websocket.StatusNormalClosure, "")
+				_ = client.conn.Close(websocket.StatusNormalClosure, "")
 				cancel()
 
 				return
@@ -383,7 +383,7 @@ func (s *PreviewServer) broadcastEnhanced(message []byte) {
 					if client, ok := s.clients[conn]; ok {
 						delete(s.clients, conn)
 						close(client.send)
-						conn.Close(websocket.StatusNormalClosure, "")
+						_ = conn.Close(websocket.StatusNormalClosure, "")
 					}
 				}
 				s.clientsMutex.Unlock()
@@ -397,7 +397,7 @@ func (s *PreviewServer) broadcastEnhanced(message []byte) {
 				if client, ok := s.clients[conn]; ok {
 					delete(s.clients, conn)
 					close(client.send)
-					conn.Close(websocket.StatusNormalClosure, "")
+					_ = conn.Close(websocket.StatusNormalClosure, "")
 				}
 			}
 		}
@@ -481,7 +481,7 @@ func (enhancements *WebSocketEnhancements) cleanupWorker() {
 
 			// This would normally integrate with server's unregister channel
 			// For now, just close the connection
-			conn.Close(websocket.StatusNormalClosure, "")
+			_ = conn.Close(websocket.StatusNormalClosure, "")
 		}
 	}
 }

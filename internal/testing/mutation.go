@@ -247,7 +247,7 @@ func (mt *MutationTester) mutateBinaryExpr(
 
 	// Get original code
 	var buf bytes.Buffer
-	format.Node(&buf, fset, expr)
+	_ = format.Node(&buf, fset, expr)
 	originalCode := buf.String()
 
 	// Mutation mappings for comparison operators
@@ -270,7 +270,7 @@ func (mt *MutationTester) mutateIfStmt(
 
 	// Get original condition
 	var buf bytes.Buffer
-	format.Node(&buf, fset, stmt.Cond)
+	_ = format.Node(&buf, fset, stmt.Cond)
 	originalCode := buf.String()
 
 	// Create negation mutation
@@ -304,7 +304,7 @@ func (mt *MutationTester) mutateBasicLit(
 	mutations := make([]Mutation, 0)
 	position := fset.Position(lit.Pos())
 
-	switch lit.Kind {
+	switch lit.Kind { //nolint:exhaustive // Only mutating specific token types
 	case token.INT:
 		// Mutate integer literals
 		if val, err := strconv.Atoi(lit.Value); err == nil {
@@ -317,6 +317,9 @@ func (mt *MutationTester) mutateBasicLit(
 		mutations = append(
 			mutations,
 			mt.createStringMutations(filename, position, lit.Value, mutationID)...)
+	default:
+		// Other token types (FLOAT, CHAR, etc.) are not currently mutated
+		// This is intentional - we only mutate INT and STRING literals
 	}
 
 	return mutations
@@ -353,8 +356,8 @@ func (mt *MutationTester) createOperatorMutations(
 
 			// Create mutated expression
 			var leftBuf, rightBuf bytes.Buffer
-			format.Node(&leftBuf, token.NewFileSet(), expr.X)
-			format.Node(&rightBuf, token.NewFileSet(), expr.Y)
+			_ = format.Node(&leftBuf, token.NewFileSet(), expr.X)
+			_ = format.Node(&rightBuf, token.NewFileSet(), expr.Y)
 
 			mutatedCode := leftBuf.String() + " " + replacement.String() + " " + rightBuf.String()
 
@@ -508,7 +511,7 @@ func (mt *MutationTester) testMutation(mutation Mutation) MutationTestResult {
 	result.Killed = !testsPassed // Mutation is "killed" if tests fail
 
 	// Restore original code
-	mt.restoreMutation(mutation)
+	_ = mt.restoreMutation(mutation)
 
 	result.Duration = time.Since(start)
 
@@ -535,7 +538,7 @@ func (mt *MutationTester) applyMutation(mutation Mutation) error {
 
 	mutatedContent := strings.Join(lines, "\n")
 
-	return os.WriteFile(mutation.File, []byte(mutatedContent), 0644)
+	return os.WriteFile(mutation.File, []byte(mutatedContent), 0o644)
 }
 
 // restoreMutation restores the original code after testing.
@@ -557,7 +560,7 @@ func (mt *MutationTester) restoreMutation(mutation Mutation) error {
 
 	restoredContent := strings.Join(lines, "\n")
 
-	return os.WriteFile(mutation.File, []byte(restoredContent), 0644)
+	return os.WriteFile(mutation.File, []byte(restoredContent), 0o644)
 }
 
 // runTests executes the test suite and returns pass/fail status and output.
@@ -775,5 +778,5 @@ func (mt *MutationTester) GenerateReport(summary *MutationTestSummary, outputPat
 	}
 
 	// Write report to file
-	return os.WriteFile(outputPath, []byte(report.String()), 0644)
+	return os.WriteFile(outputPath, []byte(report.String()), 0o644)
 }

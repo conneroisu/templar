@@ -88,10 +88,8 @@ func TestValidateBaselineDirectory_PathTraversal(t *testing.T) {
 						err.Error(),
 					)
 				}
-			} else {
-				if err != nil {
-					t.Errorf("Expected no error for baseline directory %s, got: %v", tt.baselineDir, err)
-				}
+			} else if err != nil {
+				t.Errorf("Expected no error for baseline directory %s, got: %v", tt.baselineDir, err)
 			}
 		})
 	}
@@ -104,7 +102,7 @@ func TestSaveBaseline_PathValidation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp directory: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	detector := NewPerformanceDetector(tempDir, DefaultThresholds())
 
@@ -172,10 +170,8 @@ func TestSaveBaseline_PathValidation(t *testing.T) {
 						err.Error(),
 					)
 				}
-			} else {
-				if err != nil {
-					t.Errorf("Expected no error for benchmark name %s, got: %v", tt.benchmarkName, err)
-				}
+			} else if err != nil {
+				t.Errorf("Expected no error for benchmark name %s, got: %v", tt.benchmarkName, err)
 			}
 		})
 	}
@@ -240,7 +236,7 @@ func TestUpdateBaselines_SecurityValidation(t *testing.T) {
 					t.Errorf("Expected no error for baseline directory %s, got: %v", tt.baselineDir, err)
 				} else {
 					// Clean up created directory after test
-					defer os.RemoveAll(tt.baselineDir)
+					defer func() { _ = os.RemoveAll(tt.baselineDir) }()
 
 					// Verify file was created with correct permissions
 					expectedFile := filepath.Join(tt.baselineDir, "BenchmarkTest.json")
@@ -251,9 +247,9 @@ func TestUpdateBaselines_SecurityValidation(t *testing.T) {
 						return
 					}
 
-					// Check file permissions are restrictive (0600)
-					if info.Mode().Perm() != 0600 {
-						t.Errorf("Expected file permissions 0600, got %o", info.Mode().Perm())
+					// Check file permissions are restrictive (0o600)
+					if info.Mode().Perm() != 0o600 {
+						t.Errorf("Expected file permissions 0o600, got %o", info.Mode().Perm())
 					}
 				}
 			}
@@ -268,7 +264,7 @@ func TestFilePermissions_Security(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp directory: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	detector := NewPerformanceDetector(tempDir, DefaultThresholds())
 
@@ -289,25 +285,25 @@ func TestFilePermissions_Security(t *testing.T) {
 		t.Fatalf("Failed to save baseline: %v", err)
 	}
 
-	// Check directory permissions (should be 0700)
+	// Check directory permissions (should be 0o700)
 	dirInfo, err := os.Stat(tempDir)
 	if err != nil {
 		t.Fatalf("Failed to stat directory: %v", err)
 	}
 
-	if dirInfo.Mode().Perm() != 0700 {
-		t.Errorf("Expected directory permissions 0700, got %o", dirInfo.Mode().Perm())
+	if dirInfo.Mode().Perm() != 0o700 {
+		t.Errorf("Expected directory permissions 0o700, got %o", dirInfo.Mode().Perm())
 	}
 
-	// Check file permissions (should be 0600)
+	// Check file permissions (should be 0o600)
 	filePath := filepath.Join(tempDir, "BenchmarkPermissionTest.json")
 	fileInfo, err := os.Stat(filePath)
 	if err != nil {
 		t.Fatalf("Failed to stat baseline file: %v", err)
 	}
 
-	if fileInfo.Mode().Perm() != 0600 {
-		t.Errorf("Expected file permissions 0600, got %o", fileInfo.Mode().Perm())
+	if fileInfo.Mode().Perm() != 0o600 {
+		t.Errorf("Expected file permissions 0o600, got %o", fileInfo.Mode().Perm())
 	}
 }
 
@@ -318,7 +314,7 @@ func TestSymlinkAttack_Prevention(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp directory: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	// Create a malicious target outside the temp directory
 	maliciousTarget := "/tmp/malicious-target"
