@@ -316,7 +316,7 @@ func TestHTTPRouter_Shutdown_NilContext(t *testing.T) {
 
 	router := NewHTTPRouter(cfg, handlers, middleware)
 
-	err := router.Shutdown(nil)
+	err := router.Shutdown(nil) //nolint:staticcheck // Testing nil context error handling
 	if err == nil {
 		t.Error("Expected error for nil context, but got none")
 	}
@@ -347,7 +347,7 @@ func TestHTTPRouter_Start_NilContext(t *testing.T) {
 
 	router := NewHTTPRouter(cfg, handlers, middleware)
 
-	err := router.Start(nil)
+	err := router.Start(nil) //nolint:staticcheck // Testing nil context error handling
 	if err == nil {
 		t.Error("Expected error for nil context, but got none")
 	}
