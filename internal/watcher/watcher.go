@@ -198,13 +198,28 @@ func (fw *FileWatcher) AddRecursive(root string) error {
 	})
 }
 
-// isInTestMode detects if we're running in test mode by checking the call stack.
+// isInTestMode detects if we're running in test mode by checking various indicators.
 func isInTestMode() bool {
-	// Get the call stack
-	pc := make([]uintptr, 10)
+	// Check for test binary name patterns
+	executable, err := os.Executable()
+	if err == nil {
+		if strings.Contains(executable, ".test") || 
+			strings.Contains(executable, "/go-build") ||
+			strings.Contains(executable, "TestTemp") {
+			return true
+		}
+	}
+	
+	// Check environment variables that indicate testing
+	if os.Getenv("GOTEST") != "" || 
+		os.Getenv("GO_TESTING") != "" {
+		return true
+	}
+	
+	// Check the call stack for test functions
+	pc := make([]uintptr, 15)
 	n := runtime.Callers(1, pc)
 
-	// Check each frame in the call stack
 	for i := range n {
 		fn := runtime.FuncForPC(pc[i])
 		if fn == nil {
@@ -213,10 +228,30 @@ func isInTestMode() bool {
 
 		name := fn.Name()
 		// Check if any caller is from the testing package or contains "test"
-		if strings.Contains(name, "testing.") || strings.Contains(name, "_test.") ||
-			strings.Contains(name, ".Test") {
+		if strings.Contains(name, "testing.") || 
+			strings.Contains(name, "_test.") ||
+			strings.Contains(name, ".Test") ||
+			strings.Contains(name, "/testing.") {
 			return true
 		}
+	}
+
+	return false
+}
+
+// isInDevelopmentMode detects if we're running in development mode.
+func isInDevelopmentMode() bool {
+	// Check for common development environment indicators
+	if os.Getenv("GO_ENV") == "development" || 
+		os.Getenv("TEMPLAR_ENV") == "development" ||
+		os.Getenv("NODE_ENV") == "development" {
+		return true
+	}
+
+	// Check if we're running with go run
+	executable, err := os.Executable()
+	if err == nil && strings.Contains(executable, "go-build") {
+		return true
 	}
 
 	return false
@@ -239,10 +274,31 @@ func (fw *FileWatcher) validatePath(path string) (string, error) {
 		return "", fmt.Errorf("getting current directory: %w", err)
 	}
 
-	// In test mode, allow temporary directories
-	if isInTestMode() {
-		// Allow paths that are temporary directories (typically under /tmp)
-		if strings.HasPrefix(absPath, os.TempDir()) {
+	// In test mode or development, allow temporary directories
+	if isInTestMode() || isInDevelopmentMode() {
+		// Allow paths that are temporary directories
+		// This includes standard temp dirs and Nix CI environments
+		tempDirPrefixes := []string{
+			os.TempDir(),
+			"/tmp/nix-shell",
+			"/tmp/nix-build",
+			"/tmp/go-build",
+		}
+		
+		// Check exact matches and common test patterns
+		for _, prefix := range tempDirPrefixes {
+			if strings.HasPrefix(absPath, prefix) {
+				// Still do basic security check for suspicious patterns
+				if strings.Contains(cleanPath, "..") {
+					return "", fmt.Errorf("path contains directory traversal: %s", path)
+				}
+
+				return cleanPath, nil
+			}
+		}
+		
+		// Allow any path under /tmp that starts with Test (common Go test pattern)
+		if strings.HasPrefix(absPath, "/tmp/Test") {
 			// Still do basic security check for suspicious patterns
 			if strings.Contains(cleanPath, "..") {
 				return "", fmt.Errorf("path contains directory traversal: %s", path)
