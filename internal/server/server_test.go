@@ -240,6 +240,10 @@ func TestUpdateMessage_Structure(t *testing.T) {
 }
 
 func TestPreviewServer_FileWatcherIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
+	
 	cfg := &config.Config{
 		Server: config.ServerConfig{
 			Port: 8080,
@@ -272,8 +276,9 @@ func TestPreviewServer_FileWatcherIntegration(t *testing.T) {
 func TestPreviewServer_MiddlewareIntegration(t *testing.T) {
 	cfg := &config.Config{
 		Server: config.ServerConfig{
-			Port: 8080,
-			Host: "localhost",
+			Port:        8080,
+			Host:        "localhost",
+			Environment: "development",
 		},
 		Components: config.ComponentsConfig{
 			ScanPaths: []string{"./components"},
