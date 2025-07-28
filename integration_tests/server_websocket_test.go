@@ -348,7 +348,7 @@ func TestIntegration_ServerWebSocket_MessageBroadcasting(t *testing.T) {
 			t.Errorf("Client %d received nil message", i)
 			continue
 		}
-		
+
 		assert.Equal(t, testMessage["type"], msg["type"],
 			"Client %d should receive correct message type", i)
 
