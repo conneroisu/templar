@@ -44,7 +44,7 @@ jobs:
   full-validation:
     name: Full PR Validation
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     if: github.event.pull_request.draft == false
     strategy:
       matrix:

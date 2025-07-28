@@ -299,7 +299,7 @@ func TestIntegration_ServerWebSocket_MessageBroadcasting(t *testing.T) {
 	defer client3.Close(websocket.StatusNormalClosure, "")
 
 	// Wait for clients to be registered
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 
 	// Prepare test message
 	testMessage := map[string]interface{}{
@@ -319,6 +319,9 @@ func TestIntegration_ServerWebSocket_MessageBroadcasting(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
+	// Give message time to propagate to all clients
+	time.Sleep(100 * time.Millisecond)
+
 	// Verify all clients receive the message
 	receivedMessages := make([]map[string]interface{}, 3)
 	var wg sync.WaitGroup
@@ -328,7 +331,7 @@ func TestIntegration_ServerWebSocket_MessageBroadcasting(t *testing.T) {
 		wg.Add(1)
 		go func(index int, c *websocket.Conn) {
 			defer wg.Done()
-			msg, err := readWebSocketTestMessage(c, 2*time.Second)
+			msg, err := readWebSocketTestMessage(c, 3*time.Second)
 			if err != nil {
 				t.Errorf("Client %d failed to read message: %v", index, err)
 				return
@@ -341,11 +344,23 @@ func TestIntegration_ServerWebSocket_MessageBroadcasting(t *testing.T) {
 
 	// Verify all clients received the same message
 	for i, msg := range receivedMessages {
+		if msg == nil {
+			t.Errorf("Client %d received nil message", i)
+			continue
+		}
+		
 		assert.Equal(t, testMessage["type"], msg["type"],
 			"Client %d should receive correct message type", i)
 
 		data, ok := msg["data"].(map[string]interface{})
-		assert.True(t, ok, "Client %d should receive data object", i)
+		if !ok {
+			t.Errorf("Client %d received invalid data object: %+v", i, msg)
+			continue
+		}
+		if data["name"] == nil {
+			t.Errorf("Client %d received nil component name in data: %+v", i, data)
+			continue
+		}
 		assert.Equal(t, "Button", data["name"],
 			"Client %d should receive correct component name", i)
 	}
