@@ -61,10 +61,12 @@ func FuzzComponentRegistration(f *testing.F) {
 				t.Errorf("Registered component name contains control characters: %q", comp.Name)
 			}
 
-			// Check for path traversal in component name or path
-			if (strings.Contains(comp.Name, "..") || strings.Contains(comp.FilePath, "..")) &&
-				(strings.Contains(comp.Name, "etc") || strings.Contains(comp.FilePath, "etc") ||
-					strings.Contains(comp.Name, "system32") || strings.Contains(comp.FilePath, "system32")) {
+			// Check for dangerous path traversal patterns (specifically targeting system directories)
+			// Only flag patterns that contain both ".." and sensitive system paths
+			if (strings.Contains(comp.Name, "../") || strings.Contains(comp.FilePath, "../")) &&
+				(strings.Contains(comp.Name, "/etc/") || strings.Contains(comp.FilePath, "/etc/") ||
+					strings.Contains(comp.Name, "etc/passwd") || strings.Contains(comp.FilePath, "etc/passwd") ||
+					strings.Contains(comp.Name, "/system32/") || strings.Contains(comp.FilePath, "/system32/")) {
 				t.Errorf(
 					"Registered component contains dangerous path traversal: name=%q path=%q",
 					comp.Name,

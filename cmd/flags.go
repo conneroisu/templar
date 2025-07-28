@@ -35,13 +35,19 @@ type StandardFlags struct {
 	Output  string `flag:"output,o" desc:"Output directory or file" default:""`
 	Verbose bool   `flag:"verbose,v" desc:"Enable verbose/detailed output" default:"false"`
 	Quiet   bool   `flag:"quiet,q" desc:"Suppress non-essential output" default:"false"`
+
+	// Internal tracking for validation
+	enabledFlagTypes map[string]bool
 }
 
 // AddStandardFlags adds standard flags to a command.
 func AddStandardFlags(cmd *cobra.Command, flagTypes ...string) *StandardFlags {
-	flags := &StandardFlags{}
+	flags := &StandardFlags{
+		enabledFlagTypes: make(map[string]bool),
+	}
 
 	for _, flagType := range flagTypes {
+		flags.enabledFlagTypes[flagType] = true
 		switch flagType {
 		case "server":
 			addServerFlags(cmd, flags)
@@ -141,41 +147,50 @@ func (f *StandardFlags) ShouldOpenBrowser() bool {
 
 // ValidateFlags validates flag combinations and values.
 func (f *StandardFlags) ValidateFlags() error {
-	// Port validation
-	if f.Port < 1 || f.Port > 65535 {
-		return fmt.Errorf(PortValidationError, f.Port)
+	// Only validate server flags if they were enabled
+	if f.enabledFlagTypes["server"] {
+		// Port validation
+		if f.Port < 1 || f.Port > 65535 {
+			return fmt.Errorf(PortValidationError, f.Port)
+		}
+
+		// Host validation
+		if f.Host == "" {
+			return errors.New("host cannot be empty")
+		}
 	}
 
-	// Host validation
-	if f.Host == "" {
-		return errors.New("host cannot be empty")
+	// Only validate component flags if they were enabled
+	if f.enabledFlagTypes["component"] {
+		// Props validation
+		if f.Props != "" && f.PropsFile != "" {
+			return errors.New("cannot specify both --props and --props-file")
+		}
 	}
 
-	// Props validation
-	if f.Props != "" && f.PropsFile != "" {
-		return errors.New("cannot specify both --props and --props-file")
-	}
+	// Only validate output flags if they were enabled
+	if f.enabledFlagTypes["output"] {
+		// Output format validation
+		validFormats := []string{"table", "json", "yaml", "csv"}
+		if f.Format != "" {
+			valid := false
+			for _, format := range validFormats {
+				if f.Format == format {
+					valid = true
 
-	// Output format validation
-	validFormats := []string{"table", "json", "yaml", "csv"}
-	if f.Format != "" {
-		valid := false
-		for _, format := range validFormats {
-			if f.Format == format {
-				valid = true
-
-				break
+					break
+				}
+			}
+			if !valid {
+				return fmt.Errorf("invalid output format %s, must be one of: %s",
+					f.Format, strings.Join(validFormats, ", "))
 			}
 		}
-		if !valid {
-			return fmt.Errorf("invalid output format %s, must be one of: %s",
-				f.Format, strings.Join(validFormats, ", "))
-		}
-	}
 
-	// Quiet and verbose are mutually exclusive
-	if f.Quiet && f.Verbose {
-		return errors.New("cannot specify both --quiet and --verbose")
+		// Quiet and verbose are mutually exclusive
+		if f.Quiet && f.Verbose {
+			return errors.New("cannot specify both --quiet and --verbose")
+		}
 	}
 
 	return nil
