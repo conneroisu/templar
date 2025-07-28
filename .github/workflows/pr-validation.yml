@@ -83,7 +83,7 @@ jobs:
       - name: Run integration tests
         if: matrix.test-suite == 'integration'
         run: |
-          nix develop --command go test -v -tags=integration ./integration_tests/... -short -timeout=15m
+          nix develop --command go test -v -tags=integration ./integration_tests/... -timeout=20m
 
       - name: Upload coverage reports
         if: matrix.test-suite == 'unit'
