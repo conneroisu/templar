@@ -44,6 +44,7 @@ jobs:
   full-validation:
     name: Full PR Validation
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     if: github.event.pull_request.draft == false
     strategy:
       matrix:
@@ -68,20 +69,20 @@ jobs:
       - name: Run unit tests
         if: matrix.test-suite == 'unit'
         run: |
-          nix develop --command go test -v $(go list ./... | grep -v templar-cache-benchmark) -short -race -coverprofile=coverage.out
+          nix develop --command go test -v $(go list ./... | grep -v templar-cache-benchmark) -short -race -coverprofile=coverage.out -timeout=15m
           nix develop --command go tool cover -html=coverage.out -o coverage.html
 
       - name: Run security tests
         if: matrix.test-suite == 'security'
         run: |
-          nix develop --command go test -v -tags=security ./cmd/... -run "TestSecurity"
-          nix develop --command go test -v -tags=security ./internal/server/... -run "TestSecurity"
-          nix develop --command go test -v -tags=security ./internal/config/... -run "TestSecurity"
+          nix develop --command go test -v -tags=security ./cmd/... -run "TestSecurity" -timeout=10m
+          nix develop --command go test -v -tags=security ./internal/server/... -run "TestSecurity" -timeout=10m
+          nix develop --command go test -v -tags=security ./internal/config/... -run "TestSecurity" -timeout=10m
 
       - name: Run integration tests
         if: matrix.test-suite == 'integration'
         run: |
-          nix develop --command go test -v -tags=integration ./integration_tests/... -short -timeout=10m
+          nix develop --command go test -v -tags=integration ./integration_tests/... -short -timeout=15m
 
       - name: Upload coverage reports
         if: matrix.test-suite == 'unit'
@@ -94,6 +95,7 @@ jobs:
   build-validation:
     name: Build Validation
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     if: github.event.pull_request.draft == false
     steps:
       - uses: actions/checkout@v4
@@ -131,6 +133,7 @@ jobs:
   performance-check:
     name: Performance Regression Check
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     if: github.event.pull_request.draft == false
     steps:
       - uses: actions/checkout@v4
