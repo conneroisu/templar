@@ -696,7 +696,7 @@ func TestIntegration_ServerWebSocket_MessageOrdering(t *testing.T) {
 		for i := 0; i < messageCount; i++ {
 			var msg map[string]interface{}
 			var err error
-			
+
 			// Try reading with retry logic
 			for attempt := 0; attempt < 3; attempt++ {
 				msg, err = readWebSocketTestMessage(client, 5*time.Second)
@@ -708,7 +708,7 @@ func TestIntegration_ServerWebSocket_MessageOrdering(t *testing.T) {
 					time.Sleep(200 * time.Millisecond)
 				}
 			}
-			
+
 			if err != nil {
 				t.Logf("Failed to read message %d after 3 attempts, stopping: %v", i, err)
 				break
@@ -758,12 +758,12 @@ func TestIntegration_ServerWebSocket_MessageOrdering(t *testing.T) {
 	for i, msg := range receivedMessages {
 		sequence, ok := msg["sequence"].(float64) // JSON numbers are float64
 		assert.True(t, ok, "Message %d should have sequence number", i)
-		
+
 		// Check that the sequence number is within expected range
 		assert.GreaterOrEqual(t, sequence, float64(0), "Sequence should be >= 0")
 		assert.Less(t, sequence, float64(messageCount), "Sequence should be < %d", messageCount)
 	}
-	
+
 	// If we received messages, verify they're in order
 	if len(receivedMessages) > 1 {
 		for i := 1; i < len(receivedMessages); i++ {
