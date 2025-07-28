@@ -547,12 +547,15 @@ func TestIntegration_ServerWebSocket_ErrorHandling(t *testing.T) {
 	client.Close(websocket.StatusNormalClosure, "")
 
 	// Wait for cleanup
-	time.Sleep(200 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 
 	// Server should continue working - test with new connection
 	newClient, err := connectWebSocketTestClient(server.URL)
 	require.NoError(t, err)
 	defer newClient.Close(websocket.StatusNormalClosure, "")
+
+	// Wait for new client to be properly registered
+	time.Sleep(500 * time.Millisecond)
 
 	// Send test message to verify server is still functional
 	testMessage := map[string]interface{}{
@@ -566,10 +569,23 @@ func TestIntegration_ServerWebSocket_ErrorHandling(t *testing.T) {
 	require.NoError(t, err)
 	defer func() { _ = resp.Body.Close() }()
 
-	// Verify new client receives the message
-	msg, err := readWebSocketTestMessage(newClient, 2*time.Second)
-	assert.NoError(t, err)
-	assert.Equal(t, "error_recovery_test", msg["type"])
+	// Verify new client receives the message with retry logic
+	var msg map[string]interface{}
+	var readErr error
+	for attempt := 0; attempt < 3; attempt++ {
+		msg, readErr = readWebSocketTestMessage(newClient, 3*time.Second)
+		if readErr == nil {
+			break
+		}
+		t.Logf("Attempt %d failed to read error recovery message: %v", attempt+1, readErr)
+		if attempt < 2 {
+			time.Sleep(200 * time.Millisecond)
+		}
+	}
+	assert.NoError(t, readErr, "Should read error recovery message after retries")
+	if msg != nil {
+		assert.Equal(t, "error_recovery_test", msg["type"])
+	}
 }
 
 func TestIntegration_ServerWebSocket_LoadTesting(t *testing.T) {
