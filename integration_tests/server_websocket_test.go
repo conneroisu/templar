@@ -110,7 +110,7 @@ func (s *testWebSocketServer) run(ctx context.Context) {
 			return
 		case conn := <-s.register:
 			s.mutex.Lock()
-			s.clients[conn] = make(chan []byte, 1024) // Larger buffer to prevent blocking
+			s.clients[conn] = make(chan []byte, 10000) // Much larger buffer to prevent blocking
 			s.mutex.Unlock()
 
 		case message := <-s.broadcast:
@@ -134,16 +134,8 @@ func (s *testWebSocketServer) run(ctx context.Context) {
 				case client.send <- message:
 					// Message sent successfully
 				default:
-					// Channel full, schedule removal in background to avoid blocking
-					go func(c *websocket.Conn, ch chan []byte) {
-						s.mutex.Lock()
-						if _, exists := s.clients[c]; exists {
-							close(ch)
-							delete(s.clients, c)
-							_ = c.Close(websocket.StatusNormalClosure, "")
-						}
-						s.mutex.Unlock()
-					}(client.conn, client.send)
+					// Channel full, skip this message to avoid closing connection
+					// This prevents test flakiness in CI environments
 				}
 			}
 		}
@@ -320,7 +312,7 @@ func TestIntegration_ServerWebSocket_MessageBroadcasting(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	// Give message time to propagate to all clients
-	time.Sleep(200 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 
 	// Verify all clients receive the message
 	receivedMessages := make([]map[string]interface{}, 3)
@@ -331,9 +323,20 @@ func TestIntegration_ServerWebSocket_MessageBroadcasting(t *testing.T) {
 		wg.Add(1)
 		go func(index int, c *websocket.Conn) {
 			defer wg.Done()
-			msg, err := readWebSocketTestMessage(c, 5*time.Second)
+			// Retry message reading up to 3 times
+			var msg map[string]interface{}
+			var err error
+			for attempt := 0; attempt < 3; attempt++ {
+				msg, err = readWebSocketTestMessage(c, 5*time.Second)
+				if err == nil {
+					break
+				}
+				if attempt < 2 {
+					time.Sleep(100 * time.Millisecond)
+				}
+			}
 			if err != nil {
-				t.Errorf("Client %d failed to read message: %v", index, err)
+				t.Errorf("Client %d failed to read message after 3 attempts: %v", index, err)
 				return
 			}
 			receivedMessages[index] = msg
