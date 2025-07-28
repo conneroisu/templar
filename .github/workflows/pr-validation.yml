@@ -47,6 +47,7 @@ jobs:
     timeout-minutes: 30
     if: github.event.pull_request.draft == false
     strategy:
+      fail-fast: false
       matrix:
         test-suite: [unit, security, integration]
     steps:
