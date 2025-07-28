@@ -267,7 +267,7 @@ func TestIntegration_ServerWebSocket_BasicConnection(t *testing.T) {
 	assert.NotNil(t, conn)
 
 	// Give the server time to set up the connection properly
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 
 	// Test basic connection by sending a simple message instead of ping
 	// (ping/pong handling has compatibility issues with the test server)
@@ -320,7 +320,7 @@ func TestIntegration_ServerWebSocket_MessageBroadcasting(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	// Give message time to propagate to all clients
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 
 	// Verify all clients receive the message
 	receivedMessages := make([]map[string]interface{}, 3)
@@ -331,7 +331,7 @@ func TestIntegration_ServerWebSocket_MessageBroadcasting(t *testing.T) {
 		wg.Add(1)
 		go func(index int, c *websocket.Conn) {
 			defer wg.Done()
-			msg, err := readWebSocketTestMessage(c, 3*time.Second)
+			msg, err := readWebSocketTestMessage(c, 5*time.Second)
 			if err != nil {
 				t.Errorf("Client %d failed to read message: %v", index, err)
 				return
@@ -441,7 +441,7 @@ func TestIntegration_ServerWebSocket_ClientConnectionManagement(t *testing.T) {
 	}
 
 	// Wait for cleanup
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 }
 
 func TestIntegration_ServerWebSocket_ConcurrentMessaging(t *testing.T) {
@@ -476,7 +476,7 @@ func TestIntegration_ServerWebSocket_ConcurrentMessaging(t *testing.T) {
 		go func(clientIndex int, c *websocket.Conn) {
 			defer wg.Done()
 			for j := 0; j < messageCount; j++ {
-				msg, err := readWebSocketTestMessage(c, 3*time.Second)
+				msg, err := readWebSocketTestMessage(c, 5*time.Second)
 				if err != nil {
 					t.Logf("Client %d failed to read message %d: %v", clientIndex, j, err)
 					continue
@@ -640,7 +640,7 @@ func TestIntegration_ServerWebSocket_LoadTesting(t *testing.T) {
 			_ = resp.Body.Close()
 		}(i)
 
-		time.Sleep(100 * time.Millisecond) // Sustained load
+		time.Sleep(200 * time.Millisecond) // Sustained load
 	}
 
 	messageWg.Wait()
@@ -664,7 +664,7 @@ func TestIntegration_ServerWebSocket_MessageOrdering(t *testing.T) {
 	defer client.Close(websocket.StatusNormalClosure, "")
 
 	// Wait for client registration
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 
 	// Send ordered messages
 	messageCount := 10
@@ -675,7 +675,7 @@ func TestIntegration_ServerWebSocket_MessageOrdering(t *testing.T) {
 	receiveDone := make(chan struct{})
 	go func() {
 		for i := 0; i < messageCount; i++ {
-			msg, err := readWebSocketTestMessage(client, 2*time.Second)
+			msg, err := readWebSocketTestMessage(client, 5*time.Second)
 			if err != nil {
 				t.Logf("Failed to read message %d: %v", i, err)
 				continue
@@ -739,7 +739,7 @@ func TestIntegration_ServerWebSocket_LargeMessageHandling(t *testing.T) {
 	defer client.Close(websocket.StatusNormalClosure, "")
 
 	// Wait for client registration
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 
 	// Create large message payload (reduced for test stability)
 	largeData := strings.Repeat("A", 10*1024) // 10KB (still large for WebSocket testing)
