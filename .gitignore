@@ -43,3 +43,8 @@ templar-cache-benchmark-*/
 templar-cache-benchmark-*.bak/
 *.log
 logs
+node_modules
+.direnv
+result
+playwright-report
+test-results/
