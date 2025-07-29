@@ -347,14 +347,15 @@ templar init --template ./my-template
 Use Templar in your existing build pipeline:
 
 ```bash
-# In package.json
-{
-  "scripts": {
-    "dev": "templar serve",
-    "build": "templar build --production",
-    "preview": "templar preview"
-  }
-}
+# In Makefile
+dev:
+	templar serve
+
+build:
+	templar build --production
+
+preview:
+	templar preview
 ```
 
 ### Performance Optimization

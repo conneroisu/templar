@@ -389,17 +389,6 @@ preview:
 	templar preview $(COMPONENT)
 ```
 
-#### With npm/yarn
-
-```json
-{
-  "scripts": {
-    "dev": "templar serve",
-    "build:components": "templar build",
-    "preview": "templar preview"
-  }
-}
-```
 
 ## Next Steps
 
