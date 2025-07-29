@@ -18,17 +18,43 @@ import (
 var listCmd = &cobra.Command{
 	Use:     "list",
 	Aliases: []string{"l"},
-	Short:   "List all discovered components",
+	Short:   "List all discovered components with metadata",
 	Long: `List all discovered components in the project with their metadata.
-Shows component names, file paths, and optionally parameters and dependencies.
+
+Scans configured directories for templ components and displays component names,
+file paths, parameters, and dependencies. Supports multiple output formats
+for integration with other tools and workflows.
 
 Examples:
   templar list                    # List all components in table format
-  templar list -f json            # Output as JSON (short flag)
-  templar list --format csv       # Output as CSV
-  templar list -p                 # Include component properties (short flag)
-  templar list -d                 # Include dependencies (short flag)
-  templar list -pd -f yaml        # Include properties and deps, output as YAML`,
+  templar list --format json      # Output as JSON for scripting
+  templar list --format csv       # Output as CSV for spreadsheets
+  templar list --format yaml      # Output as YAML for configuration
+  templar list --with-props       # Include component parameters
+  templar list --with-deps        # Include component dependencies
+  templar list --with-props --with-deps # Include both properties and dependencies
+  templar list --verbose          # Show detailed component information
+
+Output Formats:
+  table     Human-readable table with columns (default)
+  json      JSON array for programmatic processing
+  csv       CSV format for spreadsheet import
+  yaml      YAML format for configuration files
+
+Component Information:
+  • Component name and package
+  • Source file path and location
+  • Template parameters and types
+  • Component dependencies
+  • Build status and errors
+
+Pro Tips:
+  • Use --format json for CI/CD integration and scripting
+  • Combine --with-props --with-deps for complete component overview
+  • Output can be piped to other commands for further processing
+  • Use --verbose to troubleshoot component discovery issues
+
+See also: templar preview, templar serve, templar build`,
 	RunE: runList,
 }
 

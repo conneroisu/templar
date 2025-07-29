@@ -1,0 +1,20 @@
+name: event
+description: Template for event and calendar components
+fields:
+    attendees: '{{number.int}}'
+    capacity: '{{number.int}}'
+    category: '{{lorem.word}}'
+    description: '{{lorem.paragraph}}'
+    endDate: '{{time.future}}'
+    featured: '{{datatype.boolean}}'
+    location: '{{address.city}}'
+    organizer: '{{person.name}}'
+    price: '{{commerce.price}}'
+    startDate: '{{time.future}}'
+    title: '{{lorem.sentence}}'
+    venue: '{{company.name}} Hall'
+tags:
+    - event
+    - calendar
+    - meeting
+version: 1.0.0

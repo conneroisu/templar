@@ -2,6 +2,10 @@
 package build
 
 import (
+	"encoding/json"
+	"fmt"
+	"log"
+	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -43,7 +47,76 @@ type BuildMetrics struct {
 	PoolMisses   int64 // Object pool cache misses
 	MemoryReused int64 // Bytes of memory reused from pools
 
+	// Enhanced timing and performance metrics
+	buildTimes           []time.Duration // Historical build times for analysis
+	timingMutex          sync.RWMutex    // Separate mutex for timing data
+	maxTimingHistory     int             // Maximum timing entries to keep
+	performanceBaseline  time.Duration   // Performance baseline for regression detection
+	lastPerformanceCheck time.Time       // Last performance analysis timestamp
+	
+	// Phase-specific timing metrics
+	scanPhaseTime     int64 // Total time spent in scanning phase (nanoseconds)
+	compilePhaseTime  int64 // Total time spent in compilation phase (nanoseconds) 
+	validatePhaseTime int64 // Total time spent in validation phase (nanoseconds)
+	
+	// Real-time performance tracking
+	currentBuilds      map[string]*BuildTiming // Currently active builds
+	currentBuildsMutex sync.RWMutex            // Mutex for current builds map
+	
+	// Performance trend analysis
+	performanceTrends []PerformanceTrend // Historical performance trends
+	trendMutex        sync.RWMutex       // Mutex for trend data
+
 	mutex sync.RWMutex
+}
+
+// BuildTiming tracks timing information for individual builds.
+type BuildTiming struct {
+	BuildID       string        `json:"build_id"`
+	ComponentName string        `json:"component_name"`
+	StartTime     time.Time     `json:"start_time"`
+	EndTime       *time.Time    `json:"end_time,omitempty"`
+	Duration      time.Duration `json:"duration"`
+	
+	// Phase timings
+	ScanTime     time.Duration `json:"scan_time"`
+	CompileTime  time.Duration `json:"compile_time"`
+	ValidateTime time.Duration `json:"validate_time"`
+	
+	// Context information
+	CacheHit   bool   `json:"cache_hit"`
+	WorkerID   int    `json:"worker_id"`
+	Success    bool   `json:"success"`
+	ErrorMsg   string `json:"error_msg,omitempty"`
+}
+
+// PerformanceTrend represents performance analysis over time.
+type PerformanceTrend struct {
+	Timestamp        time.Time     `json:"timestamp"`
+	WindowStart      time.Time     `json:"window_start"`
+	WindowEnd        time.Time     `json:"window_end"`
+	BuildCount       int64         `json:"build_count"`
+	AverageTime      time.Duration `json:"average_time"`
+	MedianTime       time.Duration `json:"median_time"`
+	P95Time          time.Duration `json:"p95_time"`
+	SuccessRate      float64       `json:"success_rate"`
+	CacheHitRate     float64       `json:"cache_hit_rate"`
+	TrendDirection   string        `json:"trend_direction"` // "improving", "degrading", "stable"
+	PerformanceScore float64       `json:"performance_score"` // 0-100 overall score
+}
+
+// TimingStats provides statistical analysis of build times.
+type TimingStats struct {
+	Count      int64         `json:"count"`
+	Min        time.Duration `json:"min"`
+	Max        time.Duration `json:"max"`
+	Mean       time.Duration `json:"mean"`
+	Median     time.Duration `json:"median"`
+	P90        time.Duration `json:"p90"`
+	P95        time.Duration `json:"p95"`
+	P99        time.Duration `json:"p99"`
+	StdDev     time.Duration `json:"std_dev"`
+	Variance   time.Duration `json:"variance"`
 }
 
 // Ensure BuildMetrics implements the interfaces.BuildMetrics interface.
@@ -52,7 +125,13 @@ var _ interfaces.BuildMetrics = (*BuildMetrics)(nil)
 // NewBuildMetrics creates a new build metrics tracker.
 func NewBuildMetrics() *BuildMetrics {
 	return &BuildMetrics{
-		DropReasons: make(map[string]int64),
+		DropReasons:           make(map[string]int64),
+		buildTimes:            make([]time.Duration, 0, 1000),
+		maxTimingHistory:      1000,
+		performanceBaseline:   5 * time.Second, // Default 5s baseline
+		lastPerformanceCheck:  time.Now(),
+		currentBuilds:         make(map[string]*BuildTiming),
+		performanceTrends:     make([]PerformanceTrend, 0, 100),
 	}
 }
 
@@ -77,6 +156,31 @@ func (bm *BuildMetrics) RecordBuild(result BuildResult) {
 	// Update average duration
 	if bm.TotalBuilds > 0 {
 		bm.AverageDuration = bm.TotalDuration / time.Duration(bm.TotalBuilds)
+	}
+	
+	// Record timing history
+	bm.recordBuildTiming(result.Duration)
+	
+	// Log performance warning if build exceeds baseline
+	if result.Duration > bm.performanceBaseline {
+		log.Printf("Build performance warning: %v exceeds baseline %v", 
+			result.Duration, bm.performanceBaseline)
+	}
+}
+
+// recordBuildTiming adds a build time to the timing history.
+func (bm *BuildMetrics) recordBuildTiming(duration time.Duration) {
+	bm.timingMutex.Lock()
+	defer bm.timingMutex.Unlock()
+	
+	bm.buildTimes = append(bm.buildTimes, duration)
+	
+	// Keep history within limits
+	if len(bm.buildTimes) > bm.maxTimingHistory {
+		// Remove oldest 10% when at capacity
+		removeCount := bm.maxTimingHistory / 10
+		copy(bm.buildTimes, bm.buildTimes[removeCount:])
+		bm.buildTimes = bm.buildTimes[:len(bm.buildTimes)-removeCount]
 	}
 }
 
@@ -364,6 +468,7 @@ func (bm *BuildMetrics) GetPerformanceSummary() map[string]interface{} {
 	defer bm.mutex.RUnlock()
 
 	current, peak := bm.GetConcurrencyStats()
+	timingStats := bm.GetTimingStatistics()
 
 	return map[string]interface{}{
 		"build_performance": map[string]interface{}{
@@ -393,5 +498,322 @@ func (bm *BuildMetrics) GetPerformanceSummary() map[string]interface{} {
 			"dropped_results": bm.DroppedResults,
 			"drop_reasons":    bm.DropReasons,
 		},
+		"timing_analysis": timingStats,
+		"performance_baseline": map[string]interface{}{
+			"baseline_threshold": bm.performanceBaseline,
+			"last_check":         bm.lastPerformanceCheck,
+		},
 	}
+}
+
+// Enhanced timing and performance methods
+
+// StartBuildTiming starts timing tracking for a specific build.
+func (bm *BuildMetrics) StartBuildTiming(buildID, componentName string, workerID int) {
+	bm.currentBuildsMutex.Lock()
+	defer bm.currentBuildsMutex.Unlock()
+	
+	bm.currentBuilds[buildID] = &BuildTiming{
+		BuildID:       buildID,
+		ComponentName: componentName,
+		StartTime:     time.Now(),
+		WorkerID:      workerID,
+	}
+}
+
+// RecordBuildPhase records timing for a specific build phase.
+func (bm *BuildMetrics) RecordBuildPhase(buildID string, phase string, duration time.Duration) {
+	bm.currentBuildsMutex.Lock()
+	defer bm.currentBuildsMutex.Unlock()
+	
+	if buildTiming, exists := bm.currentBuilds[buildID]; exists {
+		switch phase {
+		case "scanning":
+			buildTiming.ScanTime = duration
+			atomic.AddInt64(&bm.scanPhaseTime, int64(duration))
+		case "compiling":
+			buildTiming.CompileTime = duration
+			atomic.AddInt64(&bm.compilePhaseTime, int64(duration))
+		case "validating":
+			buildTiming.ValidateTime = duration
+			atomic.AddInt64(&bm.validatePhaseTime, int64(duration))
+		}
+	}
+}
+
+// FinishBuildTiming completes timing tracking for a build.
+func (bm *BuildMetrics) FinishBuildTiming(buildID string, success bool, cacheHit bool, errorMsg string) *BuildTiming {
+	bm.currentBuildsMutex.Lock()
+	defer bm.currentBuildsMutex.Unlock()
+	
+	buildTiming, exists := bm.currentBuilds[buildID]
+	if !exists {
+		return nil
+	}
+	
+	now := time.Now()
+	buildTiming.EndTime = &now
+	buildTiming.Duration = now.Sub(buildTiming.StartTime)
+	buildTiming.Success = success
+	buildTiming.CacheHit = cacheHit
+	buildTiming.ErrorMsg = errorMsg
+	
+	// Remove from active builds
+	delete(bm.currentBuilds, buildID)
+	
+	return buildTiming
+}
+
+// GetTimingStatistics returns detailed timing statistics.
+func (bm *BuildMetrics) GetTimingStatistics() TimingStats {
+	bm.timingMutex.RLock()
+	defer bm.timingMutex.RUnlock()
+	
+	if len(bm.buildTimes) == 0 {
+		return TimingStats{}
+	}
+	
+	// Create a sorted copy for percentile calculations
+	sortedTimes := make([]time.Duration, len(bm.buildTimes))
+	copy(sortedTimes, bm.buildTimes)
+	sort.Slice(sortedTimes, func(i, j int) bool {
+		return sortedTimes[i] < sortedTimes[j]
+	})
+	
+	stats := TimingStats{
+		Count:  int64(len(sortedTimes)),
+		Min:    sortedTimes[0],
+		Max:    sortedTimes[len(sortedTimes)-1],
+		Median: sortedTimes[len(sortedTimes)/2],
+	}
+	
+	// Calculate mean
+	var total time.Duration
+	for _, t := range sortedTimes {
+		total += t
+	}
+	stats.Mean = total / time.Duration(len(sortedTimes))
+	
+	// Calculate percentiles
+	if len(sortedTimes) >= 10 {
+		stats.P90 = sortedTimes[int(float64(len(sortedTimes))*0.90)]
+		stats.P95 = sortedTimes[int(float64(len(sortedTimes))*0.95)]
+		if len(sortedTimes) >= 100 {
+			stats.P99 = sortedTimes[int(float64(len(sortedTimes))*0.99)]
+		}
+	}
+	
+	// Calculate standard deviation and variance
+	var sumSquaredDiff float64
+	meanNanos := float64(stats.Mean.Nanoseconds())
+	for _, t := range sortedTimes {
+		diff := float64(t.Nanoseconds()) - meanNanos
+		sumSquaredDiff += diff * diff
+	}
+	variance := sumSquaredDiff / float64(len(sortedTimes))
+	stats.Variance = time.Duration(int64(variance))
+	stats.StdDev = time.Duration(int64(variance))
+	
+	return stats
+}
+
+// GetPhaseTimingBreakdown returns timing breakdown by build phases.
+func (bm *BuildMetrics) GetPhaseTimingBreakdown() map[string]interface{} {
+	scanTime := time.Duration(atomic.LoadInt64(&bm.scanPhaseTime))
+	compileTime := time.Duration(atomic.LoadInt64(&bm.compilePhaseTime))
+	validateTime := time.Duration(atomic.LoadInt64(&bm.validatePhaseTime))
+	totalPhaseTime := scanTime + compileTime + validateTime
+	
+	breakdown := map[string]interface{}{
+		"scan_phase": map[string]interface{}{
+			"total_time": scanTime,
+			"percentage": 0.0,
+		},
+		"compile_phase": map[string]interface{}{
+			"total_time": compileTime,
+			"percentage": 0.0,
+		},
+		"validate_phase": map[string]interface{}{
+			"total_time": validateTime,
+			"percentage": 0.0,
+		},
+		"total_phase_time": totalPhaseTime,
+	}
+	
+	if totalPhaseTime > 0 {
+		breakdown["scan_phase"].(map[string]interface{})["percentage"] = 
+			float64(scanTime.Nanoseconds()) / float64(totalPhaseTime.Nanoseconds()) * 100
+		breakdown["compile_phase"].(map[string]interface{})["percentage"] = 
+			float64(compileTime.Nanoseconds()) / float64(totalPhaseTime.Nanoseconds()) * 100
+		breakdown["validate_phase"].(map[string]interface{})["percentage"] = 
+			float64(validateTime.Nanoseconds()) / float64(totalPhaseTime.Nanoseconds()) * 100
+	}
+	
+	return breakdown
+}
+
+// AnalyzePerformanceTrends analyzes performance trends over time.
+func (bm *BuildMetrics) AnalyzePerformanceTrends(windowDuration time.Duration) PerformanceTrend {
+	bm.timingMutex.RLock()
+	defer bm.timingMutex.RUnlock()
+	
+	now := time.Now()
+	windowStart := now.Add(-windowDuration)
+	
+	// For this implementation, we'll analyze the recent build times
+	// In a full implementation, we'd filter by timestamp
+	recentTimes := bm.buildTimes
+	if len(recentTimes) > 100 {
+		recentTimes = bm.buildTimes[len(bm.buildTimes)-100:]
+	}
+	
+	if len(recentTimes) == 0 {
+		return PerformanceTrend{
+			Timestamp:        now,
+			WindowStart:      windowStart,
+			WindowEnd:        now,
+			TrendDirection:   "stable",
+			PerformanceScore: 100.0,
+		}
+	}
+	
+	// Calculate statistics
+	var total time.Duration
+	successCount := int64(len(recentTimes)) // Simplified - actual implementation would track success/failure
+	
+	sortedTimes := make([]time.Duration, len(recentTimes))
+	copy(sortedTimes, recentTimes)
+	sort.Slice(sortedTimes, func(i, j int) bool {
+		return sortedTimes[i] < sortedTimes[j]
+	})
+	
+	for _, t := range recentTimes {
+		total += t
+	}
+	
+	trend := PerformanceTrend{
+		Timestamp:    now,
+		WindowStart:  windowStart,
+		WindowEnd:    now,
+		BuildCount:   int64(len(recentTimes)),
+		AverageTime:  total / time.Duration(len(recentTimes)),
+		MedianTime:   sortedTimes[len(sortedTimes)/2],
+		SuccessRate:  float64(successCount) / float64(len(recentTimes)) * 100,
+		CacheHitRate: bm.GetCacheHitRate(), // Use overall cache hit rate
+	}
+	
+	if len(sortedTimes) > 10 {
+		trend.P95Time = sortedTimes[int(float64(len(sortedTimes))*0.95)]
+	}
+	
+	// Determine trend direction (simplified)
+	if trend.AverageTime < bm.performanceBaseline {
+		trend.TrendDirection = "improving"
+		trend.PerformanceScore = 85.0
+	} else if trend.AverageTime > bm.performanceBaseline*2 {
+		trend.TrendDirection = "degrading"
+		trend.PerformanceScore = 45.0
+	} else {
+		trend.TrendDirection = "stable"
+		trend.PerformanceScore = 70.0
+	}
+	
+	// Store trend in history
+	bm.trendMutex.Lock()
+	bm.performanceTrends = append(bm.performanceTrends, trend)
+	if len(bm.performanceTrends) > 100 {
+		bm.performanceTrends = bm.performanceTrends[1:]
+	}
+	bm.trendMutex.Unlock()
+	
+	return trend
+}
+
+// GetPerformanceTrendHistory returns historical performance trends.
+func (bm *BuildMetrics) GetPerformanceTrendHistory(limit int) []PerformanceTrend {
+	bm.trendMutex.RLock()
+	defer bm.trendMutex.RUnlock()
+	
+	trends := make([]PerformanceTrend, len(bm.performanceTrends))
+	copy(trends, bm.performanceTrends)
+	
+	if limit > 0 && len(trends) > limit {
+		trends = trends[len(trends)-limit:]
+	}
+	
+	return trends
+}
+
+// SetPerformanceBaseline updates the performance baseline threshold.
+func (bm *BuildMetrics) SetPerformanceBaseline(baseline time.Duration) {
+	bm.mutex.Lock()
+	defer bm.mutex.Unlock()
+	
+	bm.performanceBaseline = baseline
+	bm.lastPerformanceCheck = time.Now()
+	
+	log.Printf("Performance baseline updated to %v", baseline)
+}
+
+// GetCurrentBuildTimings returns currently active build timings.
+func (bm *BuildMetrics) GetCurrentBuildTimings() map[string]*BuildTiming {
+	bm.currentBuildsMutex.RLock()
+	defer bm.currentBuildsMutex.RUnlock()
+	
+	timings := make(map[string]*BuildTiming, len(bm.currentBuilds))
+	for k, v := range bm.currentBuilds {
+		// Create a copy to avoid race conditions
+		timing := *v
+		timings[k] = &timing
+	}
+	
+	return timings
+}
+
+// CreateWebSocketTimingMessage creates a WebSocket message for timing updates.
+func (bm *BuildMetrics) CreateWebSocketTimingMessage() ([]byte, error) {
+	stats := bm.GetTimingStatistics()
+	phaseBreakdown := bm.GetPhaseTimingBreakdown()
+	currentBuilds := bm.GetCurrentBuildTimings()
+	
+	message := map[string]interface{}{
+		"type": "timing_metrics",
+		"data": map[string]interface{}{
+			"statistics":      stats,
+			"phase_breakdown": phaseBreakdown,
+			"current_builds":  currentBuilds,
+			"timestamp":       time.Now(),
+		},
+	}
+	
+	return json.Marshal(message)
+}
+
+// DetectPerformanceRegressions analyzes recent performance for regressions.
+func (bm *BuildMetrics) DetectPerformanceRegressions() []string {
+	stats := bm.GetTimingStatistics()
+	regressions := make([]string, 0)
+	
+	// Check if mean exceeds baseline significantly
+	if stats.Mean > bm.performanceBaseline*2 {
+		regressions = append(regressions, 
+			fmt.Sprintf("Average build time (%.2fs) is 2x slower than baseline (%.2fs)", 
+				stats.Mean.Seconds(), bm.performanceBaseline.Seconds()))
+	}
+	
+	// Check for high variance
+	if stats.Count > 10 && stats.StdDev > stats.Mean/2 {
+		regressions = append(regressions, 
+			fmt.Sprintf("High build time variance detected (stddev: %.2fs, mean: %.2fs)", 
+				stats.StdDev.Seconds(), stats.Mean.Seconds()))
+	}
+	
+	// Check P95 times
+	if stats.P95 > bm.performanceBaseline*3 {
+		regressions = append(regressions, 
+			fmt.Sprintf("P95 build time (%.2fs) is 3x slower than baseline", 
+				stats.P95.Seconds()))
+	}
+	
+	return regressions
 }

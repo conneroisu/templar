@@ -1,0 +1,14 @@
+name: default
+description: Default template with basic patterns
+fields:
+    active: '{{datatype.boolean}}'
+    count: '{{number.int}}'
+    date: '{{time.recent}}'
+    description: '{{lorem.paragraph}}'
+    email: '{{internet.email}}'
+    name: '{{person.name}}'
+    title: '{{lorem.sentence}}'
+tags:
+    - default
+    - basic
+version: 1.0.0

@@ -1,0 +1,20 @@
+name: user
+description: Template for user-related components
+fields:
+    address: '{{address.street}}'
+    age: '{{number.age}}'
+    avatar: '{{internet.avatar}}'
+    birthDate: '{{time.birthdate}}'
+    city: '{{address.city}}'
+    country: '{{address.country}}'
+    email: '{{internet.email}}'
+    firstName: '{{person.firstName}}'
+    isActive: '{{datatype.boolean}}'
+    joinedDate: '{{time.recent}}'
+    lastName: '{{person.lastName}}'
+    phone: '{{phone.number}}'
+tags:
+    - user
+    - person
+    - profile
+version: 1.0.0

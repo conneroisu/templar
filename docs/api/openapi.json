@@ -1,0 +1,1972 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Templar API",
+    "description": "REST API for the Templar component development server providing component management, rendering, and development tools.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Templar Team",
+      "url": "https://github.com/conneroisu/templar",
+      "email": "support@templar.dev"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Development server"
+    },
+    {
+      "url": "https://api.templar.dev",
+      "description": "Production server"
+    }
+  ],
+  "paths": {
+    "/api/build/cache": {
+      "get": {
+        "path": "/api/build/cache",
+        "method": "GET",
+        "handler": "handleBuildCache",
+        "summary": "handleBuildCache manages the build cache.",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "build"
+        ]
+      }
+    },
+    "/api/build/errors": {
+      "get": {
+        "path": "/api/build/errors",
+        "method": "GET",
+        "handler": "handleBuildErrors",
+        "summary": "handleBuildErrors returns the last build errors.",
+        "description": "",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of items to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Number of items to skip",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "build"
+        ]
+      }
+    },
+    "/api/build/metrics": {
+      "get": {
+        "path": "/api/build/metrics",
+        "method": "GET",
+        "handler": "handleBuildMetrics",
+        "summary": "handleBuildMetrics returns detailed build metrics.",
+        "description": "",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of items to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Number of items to skip",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "build"
+        ]
+      }
+    },
+    "/api/build/status": {
+      "get": {
+        "path": "/api/build/status",
+        "method": "GET",
+        "handler": "handleBuildStatus",
+        "summary": "handleBuildStatus returns the current build status.",
+        "description": "",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of items to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Number of items to skip",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "build"
+        ]
+      }
+    },
+    "/api/editor": {
+      "post": {
+        "path": "/api/editor",
+        "method": "POST",
+        "handler": "handleEditorAPI",
+        "summary": "handleEditorAPI handles editor API requests.",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "editor"
+        ]
+      }
+    },
+    "/api/files": {
+      "get": {
+        "path": "/api/files",
+        "method": "GET",
+        "handler": "handleFileAPI",
+        "summary": "handleFileAPI handles file management API requests.",
+        "description": "",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of items to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Number of items to skip",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "files"
+        ]
+      }
+    },
+    "/api/playground/render": {
+      "post": {
+        "path": "/api/playground/render",
+        "method": "POST",
+        "handler": "handlePlaygroundRender",
+        "summary": "handlePlaygroundRender handles interactive component playground rendering.",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "playground"
+        ]
+      }
+    },
+    "/apidocs": {
+      "get": {
+        "path": "/apidocs",
+        "method": "GET",
+        "handler": "handleAPIDocs",
+        "summary": "handleAPIDocs serves the API documentation interface.",
+        "description": "",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of items to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Number of items to skip",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/apispec": {
+      "get": {
+        "path": "/apispec",
+        "method": "GET",
+        "handler": "handleAPISpec",
+        "summary": "handleAPISpec serves the OpenAPI specification.",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/apiversions": {
+      "get": {
+        "path": "/apiversions",
+        "method": "GET",
+        "handler": "handleAPIVersions",
+        "summary": "handleAPIVersions serves available API versions.",
+        "description": "",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of items to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Number of items to skip",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/component-editor": {
+      "get": {
+        "path": "/component-editor",
+        "method": "GET",
+        "handler": "handleComponentEditor",
+        "summary": "handleComponentEditor handles the enhanced component editor interface.",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/component/{name}": {
+      "get": {
+        "path": "/component/{name}",
+        "method": "GET",
+        "handler": "handleComponent",
+        "summary": "",
+        "description": "",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "description": "The name identifier",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "components"
+        ]
+      }
+    },
+    "/components": {
+      "get": {
+        "path": "/components",
+        "method": "GET",
+        "handler": "handleComponents",
+        "summary": "",
+        "description": "",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of items to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Number of items to skip",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "components"
+        ]
+      }
+    },
+    "/editor": {
+      "get": {
+        "path": "/editor",
+        "method": "GET",
+        "handler": "handleEditorIndex",
+        "summary": "handleEditorIndex serves the main editor interface.",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "editor"
+        ]
+      }
+    },
+    "/editor-interface": {
+      "get": {
+        "path": "/editor-interface",
+        "method": "GET",
+        "handler": "handleEditorInterface",
+        "summary": "handleEditorInterface handles editor interface requests.",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/enhanced-index": {
+      "get": {
+        "path": "/enhanced-index",
+        "method": "GET",
+        "handler": "handleEnhancedIndex",
+        "summary": "handleEnhancedIndex serves the enhanced main interface.",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/handlebuildcache": {
+      "get": {
+        "path": "/handlebuildcache",
+        "method": "GET",
+        "handler": "HandleBuildCache",
+        "summary": "",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/handlebuilderrors": {
+      "get": {
+        "path": "/handlebuilderrors",
+        "method": "GET",
+        "handler": "HandleBuildErrors",
+        "summary": "",
+        "description": "",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of items to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Number of items to skip",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/handlebuildmetrics": {
+      "get": {
+        "path": "/handlebuildmetrics",
+        "method": "GET",
+        "handler": "HandleBuildMetrics",
+        "summary": "",
+        "description": "",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of items to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Number of items to skip",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/handlebuildstatus": {
+      "get": {
+        "path": "/handlebuildstatus",
+        "method": "GET",
+        "handler": "HandleBuildStatus",
+        "summary": "",
+        "description": "",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of items to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Number of items to skip",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/handlecomponent": {
+      "get": {
+        "path": "/handlecomponent",
+        "method": "GET",
+        "handler": "HandleComponent",
+        "summary": "",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/handlecomponents": {
+      "get": {
+        "path": "/handlecomponents",
+        "method": "GET",
+        "handler": "HandleComponents",
+        "summary": "",
+        "description": "",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of items to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Number of items to skip",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/handleeditorapi": {
+      "get": {
+        "path": "/handleeditorapi",
+        "method": "GET",
+        "handler": "HandleEditorAPI",
+        "summary": "",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/handleeditorindex": {
+      "get": {
+        "path": "/handleeditorindex",
+        "method": "GET",
+        "handler": "HandleEditorIndex",
+        "summary": "",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/handleenhancedindex": {
+      "get": {
+        "path": "/handleenhancedindex",
+        "method": "GET",
+        "handler": "HandleEnhancedIndex",
+        "summary": "",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/handlefileapi": {
+      "get": {
+        "path": "/handlefileapi",
+        "method": "GET",
+        "handler": "HandleFileAPI",
+        "summary": "",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/handlehealth": {
+      "get": {
+        "path": "/handlehealth",
+        "method": "GET",
+        "handler": "HandleHealth",
+        "summary": "",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/handleindex": {
+      "get": {
+        "path": "/handleindex",
+        "method": "GET",
+        "handler": "HandleIndex",
+        "summary": "",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/handleinlineeditor": {
+      "get": {
+        "path": "/handleinlineeditor",
+        "method": "GET",
+        "handler": "HandleInlineEditor",
+        "summary": "",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/handleplaygroundcomponent": {
+      "get": {
+        "path": "/handleplaygroundcomponent",
+        "method": "GET",
+        "handler": "HandlePlaygroundComponent",
+        "summary": "",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/handleplaygroundindex": {
+      "get": {
+        "path": "/handleplaygroundindex",
+        "method": "GET",
+        "handler": "HandlePlaygroundIndex",
+        "summary": "",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/handleplaygroundrender": {
+      "get": {
+        "path": "/handleplaygroundrender",
+        "method": "GET",
+        "handler": "HandlePlaygroundRender",
+        "summary": "",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/handlerender": {
+      "get": {
+        "path": "/handlerender",
+        "method": "GET",
+        "handler": "HandleRender",
+        "summary": "",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/handlestatic": {
+      "get": {
+        "path": "/handlestatic",
+        "method": "GET",
+        "handler": "HandleStatic",
+        "summary": "",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/handletargetfiles": {
+      "get": {
+        "path": "/handletargetfiles",
+        "method": "GET",
+        "handler": "HandleTargetFiles",
+        "summary": "",
+        "description": "",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of items to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Number of items to skip",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/handlewebsocket": {
+      "get": {
+        "path": "/handlewebsocket",
+        "method": "GET",
+        "handler": "HandleWebSocket",
+        "summary": "",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "path": "/health",
+        "method": "GET",
+        "handler": "handleHealth",
+        "summary": "handleHealth returns the server health status for health checks.",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/health-endpoint": {
+      "get": {
+        "path": "/health-endpoint",
+        "method": "GET",
+        "handler": "handleHealthEndpoint",
+        "summary": "handleHealthEndpoint handles HTTP requests for connection health.",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/index": {
+      "get": {
+        "path": "/index",
+        "method": "GET",
+        "handler": "handleIndex",
+        "summary": "",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inline-editor": {
+      "get": {
+        "path": "/inline-editor",
+        "method": "GET",
+        "handler": "handleInlineEditor",
+        "summary": "handleInlineEditor handles inline editor requests.",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/multiple-files": {
+      "get": {
+        "path": "/multiple-files",
+        "method": "GET",
+        "handler": "handleMultipleFiles",
+        "summary": "",
+        "description": "",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of items to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Number of items to skip",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/offline-mode-endpoint": {
+      "get": {
+        "path": "/offline-mode-endpoint",
+        "method": "GET",
+        "handler": "handleOfflineModeEndpoint",
+        "summary": "handleOfflineModeEndpoint handles offline mode management via HTTP.",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/playground": {
+      "get": {
+        "path": "/playground",
+        "method": "GET",
+        "handler": "handlePlaygroundIndex",
+        "summary": "handlePlaygroundIndex serves the main playground page with component list.",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "playground"
+        ]
+      }
+    },
+    "/playground-component": {
+      "get": {
+        "path": "/playground-component",
+        "method": "GET",
+        "handler": "handlePlaygroundComponent",
+        "summary": "handlePlaygroundComponent serves the interactive playground UI.",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/playground-index-page": {
+      "get": {
+        "path": "/playground-index-page",
+        "method": "GET",
+        "handler": "handlePlaygroundIndexPage",
+        "summary": "handlePlaygroundIndexPage handles playground index page.",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/render/{name}": {
+      "get": {
+        "path": "/render/{name}",
+        "method": "GET",
+        "handler": "handleRender",
+        "summary": "",
+        "description": "",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "description": "The name identifier",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "rendering"
+        ]
+      }
+    },
+    "/renderfileselection": {
+      "get": {
+        "path": "/renderfileselection",
+        "method": "GET",
+        "handler": "renderFileSelection",
+        "summary": "",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/serveapidocumentation": {
+      "get": {
+        "path": "/serveapidocumentation",
+        "method": "GET",
+        "handler": "serveAPIDocumentation",
+        "summary": "serveAPIDocumentation serves the interactive API documentation interface.",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/serveopenapijson": {
+      "get": {
+        "path": "/serveopenapijson",
+        "method": "GET",
+        "handler": "serveOpenAPIJSON",
+        "summary": "serveOpenAPIJSON serves the OpenAPI specification in JSON format.",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/serveopenapiyaml": {
+      "get": {
+        "path": "/serveopenapiyaml",
+        "method": "GET",
+        "handler": "serveOpenAPIYAML",
+        "summary": "serveOpenAPIYAML serves the OpenAPI specification in YAML format.",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/static-files": {
+      "get": {
+        "path": "/static-files",
+        "method": "GET",
+        "handler": "handleStaticFiles",
+        "summary": "handleStaticFiles handles static file requests.",
+        "description": "",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of items to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Number of items to skip",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/static/{path}": {
+      "get": {
+        "path": "/static/{path}",
+        "method": "GET",
+        "handler": "handleStatic",
+        "summary": "",
+        "description": "",
+        "parameters": [
+          {
+            "name": "path",
+            "in": "path",
+            "description": "The path identifier",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "static"
+        ]
+      }
+    },
+    "/status-endpoint": {
+      "get": {
+        "path": "/status-endpoint",
+        "method": "GET",
+        "handler": "handleStatusEndpoint",
+        "summary": "handleStatusEndpoint handles HTTP requests for WebSocket status.",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/target-files": {
+      "get": {
+        "path": "/target-files",
+        "method": "GET",
+        "handler": "handleTargetFiles",
+        "summary": "",
+        "description": "",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of items to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Number of items to skip",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/web-socket-enhanced": {
+      "get": {
+        "path": "/web-socket-enhanced",
+        "method": "GET",
+        "handler": "handleWebSocketEnhanced",
+        "summary": "Enhanced WebSocket handler that integrates with existing server.",
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ws": {
+      "get": {
+        "path": "/ws",
+        "method": "GET",
+        "handler": "handleWebSocket",
+        "summary": "",
+        "description": "",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of items to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Number of items to skip",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "websocket"
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BuildStatus": {
+        "type": "object",
+        "title": "BuildStatus",
+        "description": "Build system status information",
+        "properties": {
+          "cache_hits": {
+            "type": "integer",
+            "description": "Number of cache hits",
+            "minimum": 0
+          },
+          "errors": {
+            "type": "integer",
+            "description": "Number of current errors",
+            "minimum": 0
+          },
+          "failed_builds": {
+            "type": "integer",
+            "description": "Number of failed builds",
+            "minimum": 0
+          },
+          "status": {
+            "type": "string",
+            "description": "Build status",
+            "example": "healthy",
+            "enum": [
+              "healthy",
+              "error",
+              "building"
+            ]
+          },
+          "timestamp": {
+            "type": "integer",
+            "description": "Status timestamp (Unix timestamp)"
+          },
+          "total_builds": {
+            "type": "integer",
+            "description": "Total number of builds executed",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "status",
+          "timestamp"
+        ]
+      },
+      "ComponentExample": {
+        "type": "object",
+        "title": "ComponentExample",
+        "description": "Represents a usage example for a component",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "The example templ code",
+            "example": "@Button(text: \"Click me\", variant: \"primary\")"
+          },
+          "description": {
+            "type": "string",
+            "description": "Explains what this example demonstrates",
+            "example": "A primary button with blue background"
+          },
+          "name": {
+            "type": "string",
+            "description": "The example identifier",
+            "example": "primary-button"
+          },
+          "props": {
+            "type": "object",
+            "description": "The example parameter values"
+          }
+        },
+        "required": [
+          "name",
+          "description"
+        ]
+      },
+      "ComponentInfo": {
+        "type": "object",
+        "title": "ComponentInfo",
+        "description": "Comprehensive metadata about a discovered templ component",
+        "properties": {
+          "dependencies": {
+            "type": "array",
+            "description": "Other components or files this component depends on",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable documentation for the component"
+          },
+          "examples": {
+            "type": "array",
+            "description": "Sample usage scenarios for the component",
+            "items": {
+              "$ref": "#/components/schemas/ComponentExample"
+            }
+          },
+          "filePath": {
+            "type": "string",
+            "description": "The absolute path to the .templ file containing the component",
+            "example": "/app/components/button.templ"
+          },
+          "hash": {
+            "type": "string",
+            "description": "CRC32 checksum for efficient change detection",
+            "example": "a1b2c3d4"
+          },
+          "imports": {
+            "type": "array",
+            "description": "Go packages imported by the component template",
+            "items": {
+              "type": "string"
+            }
+          },
+          "isExported": {
+            "type": "boolean",
+            "description": "Indicates if the component function is exported (public)"
+          },
+          "isRenderable": {
+            "type": "boolean",
+            "description": "Indicates if the component can be rendered independently"
+          },
+          "lastMod": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last modification time for change detection"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Plugin-specific or custom component information"
+          },
+          "name": {
+            "type": "string",
+            "description": "The component identifier (e.g., 'Button', 'CardHeader')",
+            "example": "Button"
+          },
+          "package": {
+            "type": "string",
+            "description": "The Go package name where the component is defined",
+            "example": "components"
+          },
+          "parameters": {
+            "type": "array",
+            "description": "Component input parameters and their types",
+            "items": {
+              "$ref": "#/components/schemas/ParameterInfo"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "package",
+          "filePath"
+        ]
+      },
+      "Error": {
+        "type": "object",
+        "title": "Error",
+        "description": "Standard error response",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "Error code",
+            "example": 404
+          },
+          "details": {
+            "type": "string",
+            "description": "Additional error details"
+          },
+          "error": {
+            "type": "string",
+            "description": "Error message",
+            "example": "Component not found"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "HealthStatus": {
+        "type": "object",
+        "title": "HealthStatus",
+        "description": "Server health status information",
+        "properties": {
+          "checks": {
+            "type": "object",
+            "description": "Individual component health checks"
+          },
+          "status": {
+            "type": "string",
+            "description": "Overall health status",
+            "example": "healthy",
+            "enum": [
+              "healthy",
+              "unhealthy",
+              "degraded"
+            ]
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Health check timestamp"
+          },
+          "version": {
+            "type": "string",
+            "description": "Application version",
+            "example": "1.0.0"
+          }
+        },
+        "required": [
+          "status",
+          "timestamp"
+        ]
+      },
+      "ParameterInfo": {
+        "type": "object",
+        "title": "ParameterInfo",
+        "description": "Describes a component parameter extracted from the templ function signature",
+        "properties": {
+          "default": {
+            "description": "The default value if one is specified (may be null)"
+          },
+          "description": {
+            "type": "string",
+            "description": "Documentation for the parameter"
+          },
+          "name": {
+            "type": "string",
+            "description": "The parameter name as declared in the templ function",
+            "example": "text"
+          },
+          "optional": {
+            "type": "boolean",
+            "description": "Indicates if the parameter has a default value or is pointer type"
+          },
+          "type": {
+            "type": "string",
+            "description": "The Go type of the parameter (e.g., 'string', '*User', '[]Item')",
+            "example": "string"
+          }
+        },
+        "required": [
+          "name",
+          "type"
+        ]
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "system",
+      "description": "System health and status endpoints"
+    },
+    {
+      "name": "components",
+      "description": "Component management and discovery"
+    },
+    {
+      "name": "rendering",
+      "description": "Component rendering and preview"
+    },
+    {
+      "name": "build",
+      "description": "Build system monitoring and control"
+    },
+    {
+      "name": "playground",
+      "description": "Interactive component playground"
+    },
+    {
+      "name": "editor",
+      "description": "Component editing interface"
+    },
+    {
+      "name": "files",
+      "description": "File system operations"
+    },
+    {
+      "name": "websocket",
+      "description": "Real-time communication"
+    },
+    {
+      "name": "static",
+      "description": "Static file serving"
+    }
+  ]
+}

@@ -4,9 +4,9 @@ title: Create twerge documentation
 status: To Do
 assignee: []
 created_date: '2025-07-22'
+updated_date: '2025-07-29'
 labels: []
-dependencies:
-  - task-192
+dependencies: []
 ---
 
 ## Description

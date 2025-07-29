@@ -6,6 +6,7 @@ require (
 	github.com/a-h/templ v0.3.906
 	github.com/coder/websocket v1.8.13
 	github.com/fsnotify/fsnotify v1.9.0
+	github.com/go-faker/faker/v4 v4.6.1
 	github.com/leanovate/gopter v0.2.11
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/pflag v1.0.6
@@ -27,6 +28,7 @@ require (
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.12.0 // indirect
 	github.com/spf13/cast v1.7.1 // indirect
+	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect

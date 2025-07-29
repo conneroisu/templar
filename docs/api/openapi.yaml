@@ -1,0 +1,3693 @@
+openapi: 3.0.3
+info:
+  title: Templar API
+  description: REST API for the Templar component development server providing component management, rendering, and development tools.
+  version: 1.0.0
+  contact:
+    name: Templar Team
+    url: https://github.com/conneroisu/templar
+    email: support@templar.dev
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsofservice: ""
+servers:
+  - url: http://localhost:8080
+    description: Development server
+    variables: {}
+  - url: https://api.templar.dev
+    description: Production server
+    variables: {}
+paths:
+  /api/build/cache:
+    get:
+      path: /api/build/cache
+      method: GET
+      handler: handleBuildCache
+      summary: handleBuildCache manages the build cache.
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags:
+        - build
+      security: []
+      deprecated: false
+  /api/build/errors:
+    get:
+      path: /api/build/errors
+      method: GET
+      handler: handleBuildErrors
+      summary: handleBuildErrors returns the last build errors.
+      description: ""
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of items to return
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 20
+            minimum: 1
+            maximum: 100
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+        - name: offset
+          in: query
+          description: Number of items to skip
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 0
+            minimum: 0
+            maximum: null
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags:
+        - build
+      security: []
+      deprecated: false
+  /api/build/metrics:
+    get:
+      path: /api/build/metrics
+      method: GET
+      handler: handleBuildMetrics
+      summary: handleBuildMetrics returns detailed build metrics.
+      description: ""
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of items to return
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 20
+            minimum: 1
+            maximum: 100
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+        - name: offset
+          in: query
+          description: Number of items to skip
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 0
+            minimum: 0
+            maximum: null
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags:
+        - build
+      security: []
+      deprecated: false
+  /api/build/status:
+    get:
+      path: /api/build/status
+      method: GET
+      handler: handleBuildStatus
+      summary: handleBuildStatus returns the current build status.
+      description: ""
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of items to return
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 20
+            minimum: 1
+            maximum: 100
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+        - name: offset
+          in: query
+          description: Number of items to skip
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 0
+            minimum: 0
+            maximum: null
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags:
+        - build
+      security: []
+      deprecated: false
+  /api/editor:
+    post:
+      path: /api/editor
+      method: POST
+      handler: handleEditorAPI
+      summary: handleEditorAPI handles editor API requests.
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags:
+        - editor
+      security: []
+      deprecated: false
+  /api/files:
+    get:
+      path: /api/files
+      method: GET
+      handler: handleFileAPI
+      summary: handleFileAPI handles file management API requests.
+      description: ""
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of items to return
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 20
+            minimum: 1
+            maximum: 100
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+        - name: offset
+          in: query
+          description: Number of items to skip
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 0
+            minimum: 0
+            maximum: null
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags:
+        - files
+      security: []
+      deprecated: false
+  /api/playground/render:
+    post:
+      path: /api/playground/render
+      method: POST
+      handler: handlePlaygroundRender
+      summary: handlePlaygroundRender handles interactive component playground rendering.
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags:
+        - playground
+      security: []
+      deprecated: false
+  /apidocs:
+    get:
+      path: /apidocs
+      method: GET
+      handler: handleAPIDocs
+      summary: handleAPIDocs serves the API documentation interface.
+      description: ""
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of items to return
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 20
+            minimum: 1
+            maximum: 100
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+        - name: offset
+          in: query
+          description: Number of items to skip
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 0
+            minimum: 0
+            maximum: null
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /apispec:
+    get:
+      path: /apispec
+      method: GET
+      handler: handleAPISpec
+      summary: handleAPISpec serves the OpenAPI specification.
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /apiversions:
+    get:
+      path: /apiversions
+      method: GET
+      handler: handleAPIVersions
+      summary: handleAPIVersions serves available API versions.
+      description: ""
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of items to return
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 20
+            minimum: 1
+            maximum: 100
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+        - name: offset
+          in: query
+          description: Number of items to skip
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 0
+            minimum: 0
+            maximum: null
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /component-editor:
+    get:
+      path: /component-editor
+      method: GET
+      handler: handleComponentEditor
+      summary: handleComponentEditor handles the enhanced component editor interface.
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /component/{name}:
+    get:
+      path: /component/{name}
+      method: GET
+      handler: handleComponent
+      summary: ""
+      description: ""
+      parameters:
+        - name: name
+          in: path
+          description: The name identifier
+          required: true
+          schema:
+            type: string
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: null
+            minimum: null
+            maximum: null
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags:
+        - components
+      security: []
+      deprecated: false
+  /components:
+    get:
+      path: /components
+      method: GET
+      handler: handleComponents
+      summary: ""
+      description: ""
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of items to return
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 20
+            minimum: 1
+            maximum: 100
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+        - name: offset
+          in: query
+          description: Number of items to skip
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 0
+            minimum: 0
+            maximum: null
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags:
+        - components
+      security: []
+      deprecated: false
+  /editor:
+    get:
+      path: /editor
+      method: GET
+      handler: handleEditorIndex
+      summary: handleEditorIndex serves the main editor interface.
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags:
+        - editor
+      security: []
+      deprecated: false
+  /editor-interface:
+    get:
+      path: /editor-interface
+      method: GET
+      handler: handleEditorInterface
+      summary: handleEditorInterface handles editor interface requests.
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /enhanced-index:
+    get:
+      path: /enhanced-index
+      method: GET
+      handler: handleEnhancedIndex
+      summary: handleEnhancedIndex serves the enhanced main interface.
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /handlebuildcache:
+    get:
+      path: /handlebuildcache
+      method: GET
+      handler: HandleBuildCache
+      summary: ""
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /handlebuilderrors:
+    get:
+      path: /handlebuilderrors
+      method: GET
+      handler: HandleBuildErrors
+      summary: ""
+      description: ""
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of items to return
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 20
+            minimum: 1
+            maximum: 100
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+        - name: offset
+          in: query
+          description: Number of items to skip
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 0
+            minimum: 0
+            maximum: null
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /handlebuildmetrics:
+    get:
+      path: /handlebuildmetrics
+      method: GET
+      handler: HandleBuildMetrics
+      summary: ""
+      description: ""
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of items to return
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 20
+            minimum: 1
+            maximum: 100
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+        - name: offset
+          in: query
+          description: Number of items to skip
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 0
+            minimum: 0
+            maximum: null
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /handlebuildstatus:
+    get:
+      path: /handlebuildstatus
+      method: GET
+      handler: HandleBuildStatus
+      summary: ""
+      description: ""
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of items to return
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 20
+            minimum: 1
+            maximum: 100
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+        - name: offset
+          in: query
+          description: Number of items to skip
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 0
+            minimum: 0
+            maximum: null
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /handlecomponent:
+    get:
+      path: /handlecomponent
+      method: GET
+      handler: HandleComponent
+      summary: ""
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /handlecomponents:
+    get:
+      path: /handlecomponents
+      method: GET
+      handler: HandleComponents
+      summary: ""
+      description: ""
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of items to return
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 20
+            minimum: 1
+            maximum: 100
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+        - name: offset
+          in: query
+          description: Number of items to skip
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 0
+            minimum: 0
+            maximum: null
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /handleeditorapi:
+    get:
+      path: /handleeditorapi
+      method: GET
+      handler: HandleEditorAPI
+      summary: ""
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /handleeditorindex:
+    get:
+      path: /handleeditorindex
+      method: GET
+      handler: HandleEditorIndex
+      summary: ""
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /handleenhancedindex:
+    get:
+      path: /handleenhancedindex
+      method: GET
+      handler: HandleEnhancedIndex
+      summary: ""
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /handlefileapi:
+    get:
+      path: /handlefileapi
+      method: GET
+      handler: HandleFileAPI
+      summary: ""
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /handlehealth:
+    get:
+      path: /handlehealth
+      method: GET
+      handler: HandleHealth
+      summary: ""
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /handleindex:
+    get:
+      path: /handleindex
+      method: GET
+      handler: HandleIndex
+      summary: ""
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /handleinlineeditor:
+    get:
+      path: /handleinlineeditor
+      method: GET
+      handler: HandleInlineEditor
+      summary: ""
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /handleplaygroundcomponent:
+    get:
+      path: /handleplaygroundcomponent
+      method: GET
+      handler: HandlePlaygroundComponent
+      summary: ""
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /handleplaygroundindex:
+    get:
+      path: /handleplaygroundindex
+      method: GET
+      handler: HandlePlaygroundIndex
+      summary: ""
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /handleplaygroundrender:
+    get:
+      path: /handleplaygroundrender
+      method: GET
+      handler: HandlePlaygroundRender
+      summary: ""
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /handlerender:
+    get:
+      path: /handlerender
+      method: GET
+      handler: HandleRender
+      summary: ""
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /handlestatic:
+    get:
+      path: /handlestatic
+      method: GET
+      handler: HandleStatic
+      summary: ""
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /handletargetfiles:
+    get:
+      path: /handletargetfiles
+      method: GET
+      handler: HandleTargetFiles
+      summary: ""
+      description: ""
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of items to return
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 20
+            minimum: 1
+            maximum: 100
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+        - name: offset
+          in: query
+          description: Number of items to skip
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 0
+            minimum: 0
+            maximum: null
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /handlewebsocket:
+    get:
+      path: /handlewebsocket
+      method: GET
+      handler: HandleWebSocket
+      summary: ""
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /health:
+    get:
+      path: /health
+      method: GET
+      handler: handleHealth
+      summary: handleHealth returns the server health status for health checks.
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags:
+        - system
+      security: []
+      deprecated: false
+  /health-endpoint:
+    get:
+      path: /health-endpoint
+      method: GET
+      handler: handleHealthEndpoint
+      summary: handleHealthEndpoint handles HTTP requests for connection health.
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /index:
+    get:
+      path: /index
+      method: GET
+      handler: handleIndex
+      summary: ""
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /inline-editor:
+    get:
+      path: /inline-editor
+      method: GET
+      handler: handleInlineEditor
+      summary: handleInlineEditor handles inline editor requests.
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /multiple-files:
+    get:
+      path: /multiple-files
+      method: GET
+      handler: handleMultipleFiles
+      summary: ""
+      description: ""
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of items to return
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 20
+            minimum: 1
+            maximum: 100
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+        - name: offset
+          in: query
+          description: Number of items to skip
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 0
+            minimum: 0
+            maximum: null
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /offline-mode-endpoint:
+    get:
+      path: /offline-mode-endpoint
+      method: GET
+      handler: handleOfflineModeEndpoint
+      summary: handleOfflineModeEndpoint handles offline mode management via HTTP.
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /playground:
+    get:
+      path: /playground
+      method: GET
+      handler: handlePlaygroundIndex
+      summary: handlePlaygroundIndex serves the main playground page with component list.
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags:
+        - playground
+      security: []
+      deprecated: false
+  /playground-component:
+    get:
+      path: /playground-component
+      method: GET
+      handler: handlePlaygroundComponent
+      summary: handlePlaygroundComponent serves the interactive playground UI.
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /playground-index-page:
+    get:
+      path: /playground-index-page
+      method: GET
+      handler: handlePlaygroundIndexPage
+      summary: handlePlaygroundIndexPage handles playground index page.
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /render/{name}:
+    get:
+      path: /render/{name}
+      method: GET
+      handler: handleRender
+      summary: ""
+      description: ""
+      parameters:
+        - name: name
+          in: path
+          description: The name identifier
+          required: true
+          schema:
+            type: string
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: null
+            minimum: null
+            maximum: null
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags:
+        - rendering
+      security: []
+      deprecated: false
+  /renderfileselection:
+    get:
+      path: /renderfileselection
+      method: GET
+      handler: renderFileSelection
+      summary: ""
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /serveapidocumentation:
+    get:
+      path: /serveapidocumentation
+      method: GET
+      handler: serveAPIDocumentation
+      summary: serveAPIDocumentation serves the interactive API documentation interface.
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /serveopenapijson:
+    get:
+      path: /serveopenapijson
+      method: GET
+      handler: serveOpenAPIJSON
+      summary: serveOpenAPIJSON serves the OpenAPI specification in JSON format.
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /serveopenapiyaml:
+    get:
+      path: /serveopenapiyaml
+      method: GET
+      handler: serveOpenAPIYAML
+      summary: serveOpenAPIYAML serves the OpenAPI specification in YAML format.
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /static-files:
+    get:
+      path: /static-files
+      method: GET
+      handler: handleStaticFiles
+      summary: handleStaticFiles handles static file requests.
+      description: ""
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of items to return
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 20
+            minimum: 1
+            maximum: 100
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+        - name: offset
+          in: query
+          description: Number of items to skip
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 0
+            minimum: 0
+            maximum: null
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /static/{path}:
+    get:
+      path: /static/{path}
+      method: GET
+      handler: handleStatic
+      summary: ""
+      description: ""
+      parameters:
+        - name: path
+          in: path
+          description: The path identifier
+          required: true
+          schema:
+            type: string
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: null
+            minimum: null
+            maximum: null
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags:
+        - static
+      security: []
+      deprecated: false
+  /status-endpoint:
+    get:
+      path: /status-endpoint
+      method: GET
+      handler: handleStatusEndpoint
+      summary: handleStatusEndpoint handles HTTP requests for WebSocket status.
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /target-files:
+    get:
+      path: /target-files
+      method: GET
+      handler: handleTargetFiles
+      summary: ""
+      description: ""
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of items to return
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 20
+            minimum: 1
+            maximum: 100
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+        - name: offset
+          in: query
+          description: Number of items to skip
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 0
+            minimum: 0
+            maximum: null
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /web-socket-enhanced:
+    get:
+      path: /web-socket-enhanced
+      method: GET
+      handler: handleWebSocketEnhanced
+      summary: Enhanced WebSocket handler that integrates with existing server.
+      description: ""
+      parameters: []
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags: []
+      security: []
+      deprecated: false
+  /ws:
+    get:
+      path: /ws
+      method: GET
+      handler: handleWebSocket
+      summary: ""
+      description: ""
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of items to return
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 20
+            minimum: 1
+            maximum: 100
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+        - name: offset
+          in: query
+          description: Number of items to skip
+          required: false
+          schema:
+            type: integer
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: 0
+            minimum: 0
+            maximum: null
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          example: null
+      requestbody: null
+      responses:
+        "200":
+          description: Success
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                format: ""
+                title: ""
+                description: ""
+                properties: {}
+                items: null
+                required: []
+                example: null
+                enum: []
+                default: null
+                minimum: null
+                maximum: null
+                minlength: null
+                maxlength: null
+                pattern: ""
+                ref: ""
+              example: null
+              examples: {}
+      tags:
+        - websocket
+      security: []
+      deprecated: false
+components:
+  schemas:
+    BuildStatus:
+      type: object
+      format: ""
+      title: BuildStatus
+      description: Build system status information
+      properties:
+        cache_hits:
+          type: integer
+          format: ""
+          title: ""
+          description: Number of cache hits
+          properties: {}
+          items: null
+          required: []
+          example: null
+          enum: []
+          default: null
+          minimum: 0
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+        errors:
+          type: integer
+          format: ""
+          title: ""
+          description: Number of current errors
+          properties: {}
+          items: null
+          required: []
+          example: null
+          enum: []
+          default: null
+          minimum: 0
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+        failed_builds:
+          type: integer
+          format: ""
+          title: ""
+          description: Number of failed builds
+          properties: {}
+          items: null
+          required: []
+          example: null
+          enum: []
+          default: null
+          minimum: 0
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+        status:
+          type: string
+          format: ""
+          title: ""
+          description: Build status
+          properties: {}
+          items: null
+          required: []
+          example: healthy
+          enum:
+            - healthy
+            - error
+            - building
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+        timestamp:
+          type: integer
+          format: ""
+          title: ""
+          description: Status timestamp (Unix timestamp)
+          properties: {}
+          items: null
+          required: []
+          example: null
+          enum: []
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+        total_builds:
+          type: integer
+          format: ""
+          title: ""
+          description: Total number of builds executed
+          properties: {}
+          items: null
+          required: []
+          example: null
+          enum: []
+          default: null
+          minimum: 0
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+      items: null
+      required:
+        - status
+        - timestamp
+      example: null
+      enum: []
+      default: null
+      minimum: null
+      maximum: null
+      minlength: null
+      maxlength: null
+      pattern: ""
+      ref: ""
+    ComponentExample:
+      type: object
+      format: ""
+      title: ComponentExample
+      description: Represents a usage example for a component
+      properties:
+        code:
+          type: string
+          format: ""
+          title: ""
+          description: The example templ code
+          properties: {}
+          items: null
+          required: []
+          example: '@Button(text: "Click me", variant: "primary")'
+          enum: []
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+        description:
+          type: string
+          format: ""
+          title: ""
+          description: Explains what this example demonstrates
+          properties: {}
+          items: null
+          required: []
+          example: A primary button with blue background
+          enum: []
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+        name:
+          type: string
+          format: ""
+          title: ""
+          description: The example identifier
+          properties: {}
+          items: null
+          required: []
+          example: primary-button
+          enum: []
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+        props:
+          type: object
+          format: ""
+          title: ""
+          description: The example parameter values
+          properties: {}
+          items: null
+          required: []
+          example: null
+          enum: []
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+      items: null
+      required:
+        - name
+        - description
+      example: null
+      enum: []
+      default: null
+      minimum: null
+      maximum: null
+      minlength: null
+      maxlength: null
+      pattern: ""
+      ref: ""
+    ComponentInfo:
+      type: object
+      format: ""
+      title: ComponentInfo
+      description: Comprehensive metadata about a discovered templ component
+      properties:
+        dependencies:
+          type: array
+          format: ""
+          title: ""
+          description: Other components or files this component depends on
+          properties: {}
+          items:
+            type: string
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: null
+            minimum: null
+            maximum: null
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          required: []
+          example: null
+          enum: []
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+        description:
+          type: string
+          format: ""
+          title: ""
+          description: Human-readable documentation for the component
+          properties: {}
+          items: null
+          required: []
+          example: null
+          enum: []
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+        examples:
+          type: array
+          format: ""
+          title: ""
+          description: Sample usage scenarios for the component
+          properties: {}
+          items:
+            type: ""
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: null
+            minimum: null
+            maximum: null
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: '#/components/schemas/ComponentExample'
+          required: []
+          example: null
+          enum: []
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+        filePath:
+          type: string
+          format: ""
+          title: ""
+          description: The absolute path to the .templ file containing the component
+          properties: {}
+          items: null
+          required: []
+          example: /app/components/button.templ
+          enum: []
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+        hash:
+          type: string
+          format: ""
+          title: ""
+          description: CRC32 checksum for efficient change detection
+          properties: {}
+          items: null
+          required: []
+          example: a1b2c3d4
+          enum: []
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+        imports:
+          type: array
+          format: ""
+          title: ""
+          description: Go packages imported by the component template
+          properties: {}
+          items:
+            type: string
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: null
+            minimum: null
+            maximum: null
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: ""
+          required: []
+          example: null
+          enum: []
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+        isExported:
+          type: boolean
+          format: ""
+          title: ""
+          description: Indicates if the component function is exported (public)
+          properties: {}
+          items: null
+          required: []
+          example: null
+          enum: []
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+        isRenderable:
+          type: boolean
+          format: ""
+          title: ""
+          description: Indicates if the component can be rendered independently
+          properties: {}
+          items: null
+          required: []
+          example: null
+          enum: []
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+        lastMod:
+          type: string
+          format: date-time
+          title: ""
+          description: Last modification time for change detection
+          properties: {}
+          items: null
+          required: []
+          example: null
+          enum: []
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+        metadata:
+          type: object
+          format: ""
+          title: ""
+          description: Plugin-specific or custom component information
+          properties: {}
+          items: null
+          required: []
+          example: null
+          enum: []
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+        name:
+          type: string
+          format: ""
+          title: ""
+          description: The component identifier (e.g., 'Button', 'CardHeader')
+          properties: {}
+          items: null
+          required: []
+          example: Button
+          enum: []
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+        package:
+          type: string
+          format: ""
+          title: ""
+          description: The Go package name where the component is defined
+          properties: {}
+          items: null
+          required: []
+          example: components
+          enum: []
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+        parameters:
+          type: array
+          format: ""
+          title: ""
+          description: Component input parameters and their types
+          properties: {}
+          items:
+            type: ""
+            format: ""
+            title: ""
+            description: ""
+            properties: {}
+            items: null
+            required: []
+            example: null
+            enum: []
+            default: null
+            minimum: null
+            maximum: null
+            minlength: null
+            maxlength: null
+            pattern: ""
+            ref: '#/components/schemas/ParameterInfo'
+          required: []
+          example: null
+          enum: []
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+      items: null
+      required:
+        - name
+        - package
+        - filePath
+      example: null
+      enum: []
+      default: null
+      minimum: null
+      maximum: null
+      minlength: null
+      maxlength: null
+      pattern: ""
+      ref: ""
+    Error:
+      type: object
+      format: ""
+      title: Error
+      description: Standard error response
+      properties:
+        code:
+          type: integer
+          format: ""
+          title: ""
+          description: Error code
+          properties: {}
+          items: null
+          required: []
+          example: 404
+          enum: []
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+        details:
+          type: string
+          format: ""
+          title: ""
+          description: Additional error details
+          properties: {}
+          items: null
+          required: []
+          example: null
+          enum: []
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+        error:
+          type: string
+          format: ""
+          title: ""
+          description: Error message
+          properties: {}
+          items: null
+          required: []
+          example: Component not found
+          enum: []
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+      items: null
+      required:
+        - error
+      example: null
+      enum: []
+      default: null
+      minimum: null
+      maximum: null
+      minlength: null
+      maxlength: null
+      pattern: ""
+      ref: ""
+    HealthStatus:
+      type: object
+      format: ""
+      title: HealthStatus
+      description: Server health status information
+      properties:
+        checks:
+          type: object
+          format: ""
+          title: ""
+          description: Individual component health checks
+          properties: {}
+          items: null
+          required: []
+          example: null
+          enum: []
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+        status:
+          type: string
+          format: ""
+          title: ""
+          description: Overall health status
+          properties: {}
+          items: null
+          required: []
+          example: healthy
+          enum:
+            - healthy
+            - unhealthy
+            - degraded
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+        timestamp:
+          type: string
+          format: date-time
+          title: ""
+          description: Health check timestamp
+          properties: {}
+          items: null
+          required: []
+          example: null
+          enum: []
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+        version:
+          type: string
+          format: ""
+          title: ""
+          description: Application version
+          properties: {}
+          items: null
+          required: []
+          example: 1.0.0
+          enum: []
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+      items: null
+      required:
+        - status
+        - timestamp
+      example: null
+      enum: []
+      default: null
+      minimum: null
+      maximum: null
+      minlength: null
+      maxlength: null
+      pattern: ""
+      ref: ""
+    ParameterInfo:
+      type: object
+      format: ""
+      title: ParameterInfo
+      description: Describes a component parameter extracted from the templ function signature
+      properties:
+        default:
+          type: ""
+          format: ""
+          title: ""
+          description: The default value if one is specified (may be null)
+          properties: {}
+          items: null
+          required: []
+          example: null
+          enum: []
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+        description:
+          type: string
+          format: ""
+          title: ""
+          description: Documentation for the parameter
+          properties: {}
+          items: null
+          required: []
+          example: null
+          enum: []
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+        name:
+          type: string
+          format: ""
+          title: ""
+          description: The parameter name as declared in the templ function
+          properties: {}
+          items: null
+          required: []
+          example: text
+          enum: []
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+        optional:
+          type: boolean
+          format: ""
+          title: ""
+          description: Indicates if the parameter has a default value or is pointer type
+          properties: {}
+          items: null
+          required: []
+          example: null
+          enum: []
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+        type:
+          type: string
+          format: ""
+          title: ""
+          description: The Go type of the parameter (e.g., 'string', '*User', '[]Item')
+          properties: {}
+          items: null
+          required: []
+          example: string
+          enum: []
+          default: null
+          minimum: null
+          maximum: null
+          minlength: null
+          maxlength: null
+          pattern: ""
+          ref: ""
+      items: null
+      required:
+        - name
+        - type
+      example: null
+      enum: []
+      default: null
+      minimum: null
+      maximum: null
+      minlength: null
+      maxlength: null
+      pattern: ""
+      ref: ""
+  responses: {}
+  parameters: {}
+  requestbodies: {}
+  headers: {}
+  securityschemes: {}
+security: []
+tags:
+  - name: system
+    description: System health and status endpoints
+    externaldocs: null
+  - name: components
+    description: Component management and discovery
+    externaldocs: null
+  - name: rendering
+    description: Component rendering and preview
+    externaldocs: null
+  - name: build
+    description: Build system monitoring and control
+    externaldocs: null
+  - name: playground
+    description: Interactive component playground
+    externaldocs: null
+  - name: editor
+    description: Component editing interface
+    externaldocs: null
+  - name: files
+    description: File system operations
+    externaldocs: null
+  - name: websocket
+    description: Real-time communication
+    externaldocs: null
+  - name: static
+    description: Static file serving
+    externaldocs: null

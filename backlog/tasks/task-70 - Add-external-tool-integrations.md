@@ -17,5 +17,5 @@ Missing integrations with popular development tools like Tailwind CSS, VS Code, 
 - [ ] Implement 'templar tailwind setup' command
 - [ ] Add 'templar vscode setup' for IDE integration
 - [ ] Create 'templar git hooks' for pre-commit validation
-- [ ] Add 'templar docker generate' for containerization
+- [ ] Add 'templar eslint setup' for JavaScript/TypeScript linting
 - [ ] All integrations follow security best practices

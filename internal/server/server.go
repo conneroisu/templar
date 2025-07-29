@@ -227,6 +227,11 @@ func (s *PreviewServer) Start(ctx context.Context) error {
 	mux.HandleFunc("/api/build/errors", s.handleBuildErrors)
 	mux.HandleFunc("/api/build/cache", s.handleBuildCache)
 
+	// API Documentation routes
+	mux.HandleFunc("/api/docs", s.handleAPIDocs)
+	mux.HandleFunc("/api/spec", s.handleAPISpec)
+	mux.HandleFunc("/api/versions", s.handleAPIVersions)
+
 	// Root handler depends on whether specific files are targeted
 	if len(s.config.TargetFiles) > 0 {
 		mux.HandleFunc("/", s.handleTargetFiles)

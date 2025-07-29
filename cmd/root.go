@@ -32,33 +32,39 @@ var cfgFile string
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
 	Use:   "templar",
-	Short: "A rapid prototyping CLI helper tool for Go templ",
-	Long: `Templar is a rapid prototyping CLI helper tool for Go templ that provides
-browser preview functionality, hot reload capability, and streamlined development workflows.
+	Short: "Rapid prototyping CLI tool for Go templ components",
+	Long: `Templar is a rapid prototyping CLI tool for Go templ that provides browser 
+preview functionality, hot reload capability, and streamlined development workflows.
+
+Build, preview, and manage templ components with integrated development server, 
+component scanning, and production-ready build pipeline.
 
 Key Features:
   • Component discovery and scanning
-  • Hot reload development server
+  • Hot reload development server  
   • Component isolation and preview
   • Build pipeline integration
   • Mock data generation
   • WebSocket-based live updates
   • Accessibility testing and WCAG compliance
-  • Real-time accessibility warnings
-  • Automated accessibility guidance
 
 Quick Start:
-  templar init                    Initialize a new project
-  templar serve                   Start development server
-  templar list                    List all components
-  templar build                   Build all components
-  templar audit                   Run accessibility audit
-  templar interactive             Interactive command menu
+  templar init                    # Initialize a new project
+  templar serve                   # Start development server
+  templar list                    # List all components
+  templar build                   # Build all components
+  templar preview Button          # Preview specific component
 
-Command Aliases (for faster typing):
-  init (i), serve (s), preview (p), build (b), list (l), watch (w), interactive (m)
+Common Workflows:
+  templar init my-app             # Create new project
+  cd my-app && templar serve      # Start development
+  templar build --production      # Production build
 
-Documentation: https://github.com/conneroisu/templar`,
+Command Aliases:
+  init (i), serve (s), preview (p), build (b), list (l), watch (w)
+
+Documentation: https://github.com/conneroisu/templar
+Support: https://github.com/conneroisu/templar/issues`,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -70,9 +76,9 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().
-		StringVar(&cfgFile, "config", "", "config file (default is .templar.yml, can also use TEMPLAR_CONFIG_FILE env var)")
+		StringVar(&cfgFile, "config", "", "configuration file path (default: .templar.yml, env: TEMPLAR_CONFIG_FILE)")
 	rootCmd.PersistentFlags().
-		StringP("log-level", "l", "info", "log level (debug, info, warn, error)")
+		StringP("log-level", "l", "info", "logging level (options: debug, info, warn, error, default: info)")
 	_ = viper.BindPFlag("log-level", rootCmd.PersistentFlags().Lookup("log-level"))
 }
 

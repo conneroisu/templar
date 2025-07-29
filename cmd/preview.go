@@ -36,19 +36,44 @@ const (
 var previewCmd = &cobra.Command{
 	Use:     "preview <component>",
 	Aliases: []string{"p"},
-	Short:   "Preview a specific component in isolation",
+	Short:   "Preview a specific component in isolation with mock data",
 	Long: `Preview a specific component in isolation with optional mock data.
-This starts a lightweight server to preview just the specified component
-with configurable properties and mock data.
+
+Opens a browser window showing the component rendered with realistic data,
+allowing you to test appearance, behavior, and responsiveness without building
+a complete application. Starts a lightweight preview server for the component.
 
 Examples:
   templar preview Button                              # Preview Button component
   templar preview Button --props '{"text":"Click me"}' # Preview with inline props
   templar preview Button --props-file props.json     # Preview with props from file
-  templar preview Button --props @props.json         # Preview with props from file (alternative)
-  templar preview Card --mock ./mocks/card.json      # Preview with mock data
+  templar preview Card --mock ./mocks/card.json      # Preview with mock data file
   templar preview Button --wrapper ./layout.templ    # Preview with custom wrapper
-  templar preview Card --port 3000 --no-open         # Preview on port 3000 without opening browser`,
+  templar preview Card --port 3000 --no-open         # Preview on custom port
+  templar preview List --props '{"items":["a","b"]}'  # Preview with array data
+  templar preview Form --props @form-props.json      # Load props from file
+
+Preview Features:
+  • Component isolation testing
+  • Real-time prop modification
+  • Mock data integration
+  • Custom wrapper templates
+  • Responsive design testing
+  • Hot reload for development
+
+Mock Data Options:
+  • Inline JSON props via --props
+  • External JSON files via --props-file
+  • Intelligent mock data generation
+  • Type-aware data generation
+
+Pro Tips:
+  • Use templar list to see available components
+  • Props are validated against component parameters
+  • Wrapper templates provide layout context
+  • Preview server runs on isolated port for testing
+
+See also: templar list, templar serve, templar build`,
 	Args: cobra.ExactArgs(1),
 	RunE: runPreview,
 }
@@ -189,8 +214,9 @@ func loadMockData(mockFile string) (map[string]interface{}, error) {
 
 // generateIntelligentMockData generates intelligent mock data using the advanced mock generator.
 func generateIntelligentMockData(component *types.ComponentInfo) map[string]interface{} {
-	// Use the advanced mock generator for sophisticated mock data
-	generator := mockdata.NewAdvancedMockGenerator()
+	// Use the new intelligent mock generator for sophisticated mock data
+	config := mockdata.DefaultMockDataConfig()
+	generator := mockdata.NewIntelligentMockGenerator(config)
 
 	return generator.GenerateForComponent(component)
 }

@@ -1,6 +1,8 @@
 package testutils
 
 import (
+	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"testing"
@@ -9,6 +11,7 @@ import (
 	"github.com/conneroisu/templar/internal/config"
 	"github.com/conneroisu/templar/internal/registry"
 	"github.com/conneroisu/templar/internal/types"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -264,6 +267,134 @@ func AssertDirectoryPermissions(t *testing.T, path string, expectedMode os.FileM
 // CleanupTestEnvironment removes test files and directories.
 func CleanupTestEnvironment(projectDir string) error {
 	return os.RemoveAll(projectDir)
+}
+
+// CreateTestEnvironmentWithMocks creates a test environment with mock framework integration.
+func CreateTestEnvironmentWithMocks(t *testing.T) (string, *config.Config, *MockFramework) {
+	projectDir, cfg := CreateSecureTestEnvironment(t)
+	mf := NewMockFramework(t)
+	
+	// Set up cleanup
+	t.Cleanup(func() {
+		mf.Cleanup()
+	})
+	
+	return projectDir, cfg, mf
+}
+
+// SetupMockFileSystem configures common file system mocks for testing.
+func SetupMockFileSystem(mf *MockFramework, projectDir string, cfg *config.Config) {
+	// Mock common file operations
+	mf.FileSystem.On("Stat", projectDir).Return(nil, nil).Maybe()
+	mf.FileSystem.On("MkdirAll", cfg.Build.CacheDir, os.FileMode(0o755)).Return(nil).Maybe()
+	
+	// Create mock component files
+	for name, content := range StandardTemplContent {
+		filePath := filepath.Join(projectDir, "components", name+".templ")
+		mf.FileSystem.CreateFile(filePath, []byte(content), 0o644)
+		mf.FileSystem.On("ReadFile", filePath).Return([]byte(content), nil).Maybe()
+	}
+}
+
+// SetupMockTime configures deterministic time for testing.
+func SetupMockTime(mf *MockFramework, baseTime time.Time) {
+	mf.Time.SetTime(baseTime)
+	mf.Time.FreezeTime()
+	mf.Time.On("Now").Return(baseTime).Maybe()
+}
+
+// SetupMockCommands configures common command mocks for testing.
+func SetupMockCommands(mf *MockFramework) {
+	// Mock templ generate command
+	templResult := &CommandResult{
+		Stdout:   "Generated templates successfully",
+		Stderr:   "",
+		ExitCode: 0,
+		Error:    nil,
+	}
+	mf.CommandRunner.MockCommand("templ generate", templResult)
+	mf.CommandRunner.On("RunCommand", 
+		mock.AnythingOfType("*context.Context"), 
+		"templ", 
+		[]string{"generate"}).Return(templResult, nil).Maybe()
+	
+	// Mock go build command
+	buildResult := &CommandResult{
+		Stdout:   "Build successful",
+		Stderr:   "",
+		ExitCode: 0,
+		Error:    nil,
+	}
+	mf.CommandRunner.MockCommand("go build", buildResult)
+	mf.CommandRunner.On("RunCommand", 
+		mock.AnythingOfType("*context.Context"), 
+		"go", 
+		[]string{"build"}).Return(buildResult, nil).Maybe()
+}
+
+// MockBuildFailure configures mocks to simulate build failures.
+func MockBuildFailure(mf *MockFramework, errorMsg string) {
+	failureResult := &CommandResult{
+		Stdout:   "",
+		Stderr:   errorMsg,
+		ExitCode: 1,
+		Error:    fmt.Errorf("build failed: %s", errorMsg),
+	}
+	mf.CommandRunner.MockCommand("templ generate", failureResult)
+	mf.CommandRunner.On("RunCommand", 
+		mock.AnythingOfType("*context.Context"), 
+		"templ", 
+		[]string{"generate"}).Return(failureResult, failureResult.Error).Maybe()
+}
+
+// MockNetworkError configures mocks to simulate network failures.
+func MockNetworkError(mf *MockFramework, url string, errorMsg string) {
+	networkError := fmt.Errorf("network error: %s", errorMsg)
+	mf.Network.MockHTTPResponse(url, nil, networkError)
+	mf.Network.On("Get", url).Return((*http.Response)(nil), networkError).Maybe()
+}
+
+// MockFileSystemError configures mocks to simulate file system errors.
+func MockFileSystemError(mf *MockFramework, operation, path, errorMsg string) {
+	fsError := fmt.Errorf("filesystem error: %s", errorMsg)
+	
+	switch operation {
+	case "ReadFile":
+		mf.FileSystem.On("ReadFile", path).Return([]byte(nil), fsError).Maybe()
+	case "WriteFile":
+		mf.FileSystem.On("WriteFile", path, mock.Anything, mock.Anything).Return(fsError).Maybe()
+	case "Stat":
+		mf.FileSystem.On("Stat", path).Return(nil, fsError).Maybe()
+	case "MkdirAll":
+		mf.FileSystem.On("MkdirAll", path, mock.Anything).Return(fsError).Maybe()
+	case "Remove":
+		mf.FileSystem.On("Remove", path).Return(fsError).Maybe()
+	}
+}
+
+// AssertMockExpectations verifies all mock expectations were met.
+func AssertMockExpectations(t *testing.T, mf *MockFramework) {
+	mf.FileSystem.AssertExpectations(t)
+	mf.Network.AssertExpectations(t)
+	mf.Time.AssertExpectations(t)
+	mf.CommandRunner.AssertExpectations(t)
+}
+
+// CreateIsolatedTestSuite creates a completely isolated test environment with mocks.
+func CreateIsolatedTestSuite(t *testing.T) (*MockFramework, *TestEnvironmentAdapters, func()) {
+	mf := NewMockFramework(t)
+	adapters := NewMockAdapters(mf)
+	
+	// Set up base time for deterministic testing
+	baseTime := time.Date(2023, 1, 1, 12, 0, 0, 0, time.UTC)
+	SetupMockTime(mf, baseTime)
+	
+	cleanup := func() {
+		AssertMockExpectations(t, mf)
+		mf.Cleanup()
+	}
+	
+	return mf, adapters, cleanup
 }
 
 // WaitForFileChange waits for a file to be modified (useful for testing file watchers).

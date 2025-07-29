@@ -1,0 +1,20 @@
+name: product
+description: Template for product and e-commerce components
+fields:
+    brand: '{{company.name}}'
+    category: '{{commerce.department}}'
+    currency: '{{finance.currencyCode}}'
+    description: '{{commerce.productDescription}}'
+    imageUrl: '{{image.business}}'
+    inStock: '{{datatype.boolean}}'
+    name: '{{commerce.productName}}'
+    price: '{{commerce.price}}'
+    quantity: '{{number.int}}'
+    rating: '{{number.float}}'
+    reviews: '{{number.int}}'
+    sku: '{{commerce.productMaterial}}'
+tags:
+    - product
+    - commerce
+    - shopping
+version: 1.0.0

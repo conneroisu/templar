@@ -197,13 +197,13 @@ func (rbp *RefactoredBuildPipeline) GetQueueStats() QueueStats {
 }
 
 // GetWorkerStats returns current worker statistics.
-func (rbp *RefactoredBuildPipeline) GetWorkerStats() WorkerStats {
+func (rbp *RefactoredBuildPipeline) GetWorkerStats() WorkerPoolStats {
 	// Use concrete type access for extended functionality
 	if concreteWorker, ok := rbp.workerManager.(*WorkerManager); ok {
 		return concreteWorker.GetWorkerStats()
 	}
 
-	return WorkerStats{}
+	return WorkerPoolStats{}
 }
 
 // GetHashStats returns hash provider statistics.
@@ -249,7 +249,7 @@ func (rbp *RefactoredBuildPipeline) GetPipelineStats() PipelineStats {
 type PipelineStats struct {
 	Started      bool
 	QueueStats   QueueStats
-	WorkerStats  WorkerStats
+	WorkerStats  WorkerPoolStats
 	HashStats    HashCacheStats
 	MetricsStats interface{}
 }

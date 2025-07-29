@@ -15,26 +15,26 @@ import (
 // StandardFlags provides consistent flag definitions across commands.
 type StandardFlags struct {
 	// Server flags (consistent across serve, preview commands)
-	Port   int    `flag:"port,p" desc:"Port to serve on" default:"8080"`
-	Host   string `flag:"host,h" desc:"Host to bind to" default:"localhost"`
-	NoOpen bool   `flag:"no-open,n" desc:"Don't automatically open browser" default:"false"`
+	Port   int    `flag:"port,p" desc:"server port number (range: 1-65535, default: 8080)" default:"8080"`
+	Host   string `flag:"host,h" desc:"server host address to bind to (default: localhost)" default:"localhost"`
+	NoOpen bool   `flag:"no-open,n" desc:"disable automatic browser opening" default:"false"`
 
 	// Component flags (consistent property handling)
-	Props     string `flag:"props" desc:"Component properties (JSON or @file.json)" default:""`
-	PropsFile string `flag:"props-file,P" desc:"Properties file path (JSON)" default:""`
-	MockData  string `flag:"mock,m" desc:"Mock data file, pattern, or 'auto'" default:""`
-	Wrapper   string `flag:"wrapper,w" desc:"Wrapper template path" default:""`
+	Props     string `flag:"props" desc:"component properties as JSON string or @file.json" default:""`
+	PropsFile string `flag:"props-file,P" desc:"JSON file path containing component properties" default:""`
+	MockData  string `flag:"mock,m" desc:"mock data file path, pattern, or 'auto' for generation" default:""`
+	Wrapper   string `flag:"wrapper,w" desc:"wrapper template file path for component layout" default:""`
 
 	// Build flags (consistent build configuration)
-	WatchPattern string `flag:"watch,W" desc:"File watch pattern for auto-rebuild" default:"**/*.templ"`
-	BuildCmd     string `flag:"build-cmd,B" desc:"Build command to execute" default:"templ generate"`
-	Clean        bool   `flag:"clean,c" desc:"Clean build artifacts before building" default:"false"`
+	WatchPattern string `flag:"watch,W" desc:"file glob pattern to watch for changes (default: **/*.templ)" default:"**/*.templ"`
+	BuildCmd     string `flag:"build-cmd,B" desc:"build command to execute (default: templ generate)" default:"templ generate"`
+	Clean        bool   `flag:"clean,c" desc:"clean build artifacts before building" default:"false"`
 
 	// Output flags (consistent across all commands)
-	Format  string `flag:"format,f" desc:"Output format (table|json|yaml|csv)" default:"table"`
-	Output  string `flag:"output,o" desc:"Output directory or file" default:""`
-	Verbose bool   `flag:"verbose,v" desc:"Enable verbose/detailed output" default:"false"`
-	Quiet   bool   `flag:"quiet,q" desc:"Suppress non-essential output" default:"false"`
+	Format  string `flag:"format,f" desc:"output format (options: table, json, yaml, csv, default: table)" default:"table"`
+	Output  string `flag:"output,o" desc:"output directory path or file path" default:""`
+	Verbose bool   `flag:"verbose,v" desc:"enable verbose logging and detailed output" default:"false"`
+	Quiet   bool   `flag:"quiet,q" desc:"suppress non-essential output messages" default:"false"`
 
 	// Internal tracking for validation
 	enabledFlagTypes map[string]bool

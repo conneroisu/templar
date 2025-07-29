@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/conneroisu/templar/internal/types"
+	"github.com/conneroisu/templar/internal/version"
 )
 
 const indexHTML = `<!DOCTYPE html>
@@ -566,4 +567,481 @@ func validateComponentName(name string) error {
 	}
 
 	return nil
+}
+
+// handleAPIDocs serves the API documentation interface.
+func (s *PreviewServer) handleAPIDocs(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Generate and serve OpenAPI documentation
+	s.serveAPIDocumentation(w, r)
+}
+
+// handleAPISpec serves the OpenAPI specification.
+func (s *PreviewServer) handleAPISpec(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Determine format from query parameter or Accept header
+	format := r.URL.Query().Get("format")
+	if format == "" {
+		// Default to JSON
+		format = "json"
+	}
+
+	switch format {
+	case "json":
+		s.serveOpenAPIJSON(w, r)
+	case "yaml":
+		s.serveOpenAPIYAML(w, r)
+	default:
+		http.Error(w, "Unsupported format. Use ?format=json or ?format=yaml", http.StatusBadRequest)
+	}
+}
+
+// serveAPIDocumentation serves the interactive API documentation interface.
+func (s *PreviewServer) serveAPIDocumentation(w http.ResponseWriter, r *http.Request) {
+	// Get nonce from request context for CSP
+	nonce := GetNonceFromContext(r.Context())
+
+	html := fmt.Sprintf(`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Templar API Documentation</title>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui.css" />
+    <style nonce="%s">
+        html {
+            box-sizing: border-box;
+            overflow: -moz-scrollbars-vertical;
+            overflow-y: scroll;
+        }
+        
+        *, *:before, *:after {
+            box-sizing: inherit;
+        }
+        
+        body {
+            margin: 0;
+            background: #fafafa;
+        }
+        
+        .swagger-ui .topbar {
+            background-color: #007acc;
+        }
+        
+        .swagger-ui .topbar .download-url-wrapper .select-label {
+            color: #fff;
+        }
+        
+        .swagger-ui .info .title {
+            color: #007acc;
+        }
+        
+        .swagger-ui .btn.authorize {
+            background-color: #007acc;
+            border-color: #007acc;
+        }
+        
+        .swagger-ui .btn.authorize:hover {
+            background-color: #005a99;
+            border-color: #005a99;
+        }
+    </style>
+</head>
+<body>
+    <div id="swagger-ui"></div>
+    
+    <script nonce="%s" src="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui-bundle.js"></script>
+    <script nonce="%s" src="https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui-standalone-preset.js"></script>
+    <script nonce="%s">
+        window.onload = function() {
+            const ui = SwaggerUIBundle({
+                url: '/api/spec?format=json',
+                dom_id: '#swagger-ui',
+                deepLinking: true,
+                presets: [
+                    SwaggerUIBundle.presets.apis,
+                    SwaggerUIStandalonePreset
+                ],
+                plugins: [
+                    SwaggerUIBundle.plugins.DownloadUrl
+                ],
+                layout: "StandaloneLayout",
+                validatorUrl: null,
+                tryItOutEnabled: true,
+                supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
+                onComplete: function() {
+                    console.log('Swagger UI loaded successfully');
+                },
+                onFailure: function(data) {
+                    console.error('Failed to load Swagger UI:', data);
+                }
+            });
+        };
+    </script>
+</body>
+</html>`, nonce, nonce, nonce, nonce)
+
+	w.Header().Set(HeaderContentType, ContentTypeHTML)
+	if _, err := w.Write([]byte(html)); err != nil {
+		log.Printf("Failed to write API documentation response: %v", err)
+	}
+}
+
+// serveOpenAPIJSON serves the OpenAPI specification in JSON format.
+func (s *PreviewServer) serveOpenAPIJSON(w http.ResponseWriter, r *http.Request) {
+	spec, err := s.generateOpenAPISpec()
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to generate OpenAPI spec: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set(HeaderContentType, ContentTypeJSON)
+	w.Header().Set("Cache-Control", "public, max-age=300") // Cache for 5 minutes
+
+	if err := json.NewEncoder(w).Encode(spec); err != nil {
+		log.Printf("Failed to encode OpenAPI JSON: %v", err)
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	}
+}
+
+// serveOpenAPIYAML serves the OpenAPI specification in YAML format.
+func (s *PreviewServer) serveOpenAPIYAML(w http.ResponseWriter, r *http.Request) {
+	spec, err := s.generateOpenAPISpec()
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to generate OpenAPI spec: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/x-yaml")
+	w.Header().Set("Cache-Control", "public, max-age=300") // Cache for 5 minutes
+
+	// Convert to YAML (would need yaml package)
+	// For now, return JSON with a note
+	// TODO: Use the spec variable to generate actual YAML output
+	_ = spec // Suppress unused variable warning
+	w.Header().Set(HeaderContentType, ContentTypeJSON)
+	w.Write([]byte(`{"error": "YAML format not yet implemented. Use ?format=json"}`))
+}
+
+// generateOpenAPISpec generates the OpenAPI specification dynamically.
+func (s *PreviewServer) generateOpenAPISpec() (interface{}, error) {
+	// Determine API version from server configuration or version package
+	apiVersion := s.getAPIVersion()
+	
+	spec := map[string]interface{}{
+		"openapi": "3.0.3",
+		"info": map[string]interface{}{
+			"title":       "Templar API",
+			"description": "REST API for the Templar component development server providing component management, rendering, and development tools.",
+			"version":     apiVersion,
+			"contact": map[string]interface{}{
+				"name":  "Templar Team",
+				"url":   "https://github.com/conneroisu/templar",
+				"email": "support@templar.dev",
+			},
+			"license": map[string]interface{}{
+				"name": "MIT",
+				"url":  "https://opensource.org/licenses/MIT",
+			},
+			"termsOfService": "https://github.com/conneroisu/templar/blob/main/LICENSE",
+		},
+		"servers": []map[string]interface{}{
+			{
+				"url":         fmt.Sprintf("http://%s:%d", s.config.Server.Host, s.config.Server.Port),
+				"description": "Development server",
+			},
+		},
+		"paths": s.generatePaths(),
+		"components": map[string]interface{}{
+			"schemas": s.generateSchemas(),
+		},
+		"tags": []map[string]interface{}{
+			{"name": "system", "description": "System health and status endpoints"},
+			{"name": "components", "description": "Component management and discovery"},
+			{"name": "build", "description": "Build system monitoring and control"},
+			{"name": "playground", "description": "Interactive component playground"},
+			{"name": "editor", "description": "Component editing interface"},
+			{"name": "websocket", "description": "Real-time communication"},
+		},
+	}
+
+	return spec, nil
+}
+
+// generatePaths generates the OpenAPI paths specification.
+func (s *PreviewServer) generatePaths() map[string]interface{} {
+	return map[string]interface{}{
+		"/health": map[string]interface{}{
+			"get": map[string]interface{}{
+				"tags":        []string{"system"},
+				"summary":     "Health check endpoint",
+				"description": "Returns the current health status of the server and its components",
+				"responses": map[string]interface{}{
+					"200": map[string]interface{}{
+						"description": "Server is healthy",
+						"content": map[string]interface{}{
+							"application/json": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"$ref": "#/components/schemas/HealthStatus",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"/components": map[string]interface{}{
+			"get": map[string]interface{}{
+				"tags":        []string{"components"},
+				"summary":     "List all components",
+				"description": "Returns a list of all discovered templ components",
+				"responses": map[string]interface{}{
+					"200": map[string]interface{}{
+						"description": "List of components",
+						"content": map[string]interface{}{
+							"application/json": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"type": "object",
+									"additionalProperties": map[string]interface{}{
+										"$ref": "#/components/schemas/ComponentInfo",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"/component/{name}": map[string]interface{}{
+			"get": map[string]interface{}{
+				"tags":        []string{"components"},
+				"summary":     "Get component details",
+				"description": "Returns detailed information about a specific component",
+				"parameters": []map[string]interface{}{
+					{
+						"name":        "name",
+						"in":          "path",
+						"required":    true,
+						"description": "The component name",
+						"schema": map[string]interface{}{
+							"type": "string",
+						},
+					},
+				},
+				"responses": map[string]interface{}{
+					"200": map[string]interface{}{
+						"description": "Component details",
+						"content": map[string]interface{}{
+							"application/json": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"$ref": "#/components/schemas/ComponentInfo",
+								},
+							},
+						},
+					},
+					"404": map[string]interface{}{
+						"description": "Component not found",
+						"content": map[string]interface{}{
+							"application/json": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"$ref": "#/components/schemas/Error",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"/api/build/status": map[string]interface{}{
+			"get": map[string]interface{}{
+				"tags":        []string{"build"},
+				"summary":     "Get build status",
+				"description": "Returns the current build system status and metrics",
+				"responses": map[string]interface{}{
+					"200": map[string]interface{}{
+						"description": "Build status information",
+						"content": map[string]interface{}{
+							"application/json": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"$ref": "#/components/schemas/BuildStatus",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"/ws": map[string]interface{}{
+			"get": map[string]interface{}{
+				"tags":        []string{"websocket"},
+				"summary":     "WebSocket connection",
+				"description": "Establishes a WebSocket connection for real-time updates",
+				"responses": map[string]interface{}{
+					"101": map[string]interface{}{
+						"description": "WebSocket connection established",
+					},
+					"403": map[string]interface{}{
+						"description": "Forbidden - invalid origin",
+					},
+				},
+			},
+		},
+	}
+}
+
+// generateSchemas generates the OpenAPI schemas specification.
+func (s *PreviewServer) generateSchemas() map[string]interface{} {
+	return map[string]interface{}{
+		"ComponentInfo": map[string]interface{}{
+			"type":        "object",
+			"description": "Information about a templ component",
+			"properties": map[string]interface{}{
+				"name": map[string]interface{}{
+					"type":        "string",
+					"description": "Component name",
+					"example":     "Button",
+				},
+				"filePath": map[string]interface{}{
+					"type":        "string",
+					"description": "Path to the component file",
+					"example":     "/components/button.templ",
+				},
+				"package": map[string]interface{}{
+					"type":        "string",
+					"description": "Go package name",
+					"example":     "components",
+				},
+				"parameters": map[string]interface{}{
+					"type":        "array",
+					"description": "Component parameters",
+					"items": map[string]interface{}{
+						"$ref": "#/components/schemas/ParameterInfo",
+					},
+				},
+			},
+			"required": []string{"name", "filePath"},
+		},
+		"ParameterInfo": map[string]interface{}{
+			"type":        "object",
+			"description": "Information about a component parameter",
+			"properties": map[string]interface{}{
+				"name": map[string]interface{}{
+					"type":        "string",
+					"description": "Parameter name",
+					"example":     "text",
+				},
+				"type": map[string]interface{}{
+					"type":        "string",
+					"description": "Parameter type",
+					"example":     "string",
+				},
+			},
+			"required": []string{"name", "type"},
+		},
+		"HealthStatus": map[string]interface{}{
+			"type":        "object",
+			"description": "Server health status",
+			"properties": map[string]interface{}{
+				"status": map[string]interface{}{
+					"type":        "string",
+					"description": "Overall health status",
+					"enum":        []string{"healthy", "unhealthy"},
+					"example":     "healthy",
+				},
+				"timestamp": map[string]interface{}{
+					"type":        "string",
+					"format":      "date-time",
+					"description": "Health check timestamp",
+				},
+				"version": map[string]interface{}{
+					"type":        "string",
+					"description": "Application version",
+					"example":     "1.0.0",
+				},
+			},
+			"required": []string{"status", "timestamp"},
+		},
+		"BuildStatus": map[string]interface{}{
+			"type":        "object",
+			"description": "Build system status",
+			"properties": map[string]interface{}{
+				"status": map[string]interface{}{
+					"type":        "string",
+					"description": "Build status",
+					"enum":        []string{"healthy", "error"},
+					"example":     "healthy",
+				},
+				"total_builds": map[string]interface{}{
+					"type":        "integer",
+					"description": "Total number of builds",
+					"minimum":     0,
+				},
+				"failed_builds": map[string]interface{}{
+					"type":        "integer",
+					"description": "Number of failed builds",
+					"minimum":     0,
+				},
+			},
+		},
+		"Error": map[string]interface{}{
+			"type":        "object",
+			"description": "Error response",
+			"properties": map[string]interface{}{
+				"error": map[string]interface{}{
+					"type":        "string",
+					"description": "Error message",
+					"example":     "Component not found",
+				},
+				"code": map[string]interface{}{
+					"type":        "integer",
+					"description": "Error code",
+					"example":     404,
+				},
+			},
+			"required": []string{"error"},
+		},
+	}
+}
+
+// getAPIVersion returns the current API version.
+func (s *PreviewServer) getAPIVersion() string {
+	// Use version package to get application version
+	return version.GetVersion()
+}
+
+// handleAPIVersions serves available API versions.
+func (s *PreviewServer) handleAPIVersions(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	versions := map[string]interface{}{
+		"versions": []map[string]interface{}{
+			{
+				"version":     "1.0.0",
+				"status":      "stable",
+				"released":    "2025-07-29",
+				"deprecated":  false,
+				"docs_url":    "/api/docs",
+				"spec_url":    "/api/spec",
+				"changelog":   "https://github.com/conneroisu/templar/releases/tag/v1.0.0",
+			},
+		},
+		"current": "1.0.0",
+		"latest":  "1.0.0",
+	}
+
+	w.Header().Set(HeaderContentType, ContentTypeJSON)
+	if err := json.NewEncoder(w).Encode(versions); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	}
 }

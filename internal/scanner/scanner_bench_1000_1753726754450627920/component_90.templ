@@ -1,0 +1,102 @@
+package components
+
+import (
+	"fmt"
+	"strings"
+	"time"
+)
+
+type User90 struct {
+	ID   int
+	Name string
+	Role string
+}
+
+templ DataTable90(users []User90, sortBy string, ascending bool, pageSize int, currentPage int) {
+	<div class="data-table">
+		<div class="table-header">
+			<div class="table-controls">
+				<select name="pageSize">
+					<option value="10">10</option>
+					<option value="25">25</option>
+					<option value="50">50</option>
+				</select>
+				<input type="search" placeholder="Search users..." />
+			</div>
+		</div>
+		<table class="table">
+			<thead>
+				<tr>
+					<th 
+						class={ "sortable", templ.KV("ascending", sortBy == "id" && ascending), templ.KV("descending", sortBy == "id" && !ascending) }
+						data-sort="id"
+					>
+						ID
+					</th>
+					<th 
+						class={ "sortable", templ.KV("ascending", sortBy == "name" && ascending), templ.KV("descending", sortBy == "name" && !ascending) }
+						data-sort="name"
+					>
+						Name
+					</th>
+					<th 
+						class={ "sortable", templ.KV("ascending", sortBy == "role" && ascending), templ.KV("descending", sortBy == "role" && !ascending) }
+						data-sort="role"
+					>
+						Role
+					</th>
+					<th>Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				for i, user := range users {
+					if i >= currentPage * pageSize && i < (currentPage + 1) * pageSize {
+						<tr class={ templ.KV("even", i%2 == 0), templ.KV("odd", i%2 == 1) }>
+							<td>{fmt.Sprintf("%d", user.ID)}</td>
+							<td>
+								<div class="user-info">
+									<span class="user-name">{user.Name}</span>
+									if strings.Contains(user.Role, "admin") {
+										<span class="badge badge-admin">Admin</span>
+									}
+								</div>
+							</td>
+							<td>
+								<span class={ "role", fmt.Sprintf("role-%s", strings.ToLower(user.Role)) }>
+									{user.Role}
+								</span>
+							</td>
+							<td>
+								<div class="action-buttons">
+									<button class="btn btn-sm btn-primary" data-action="edit" data-id={fmt.Sprintf("%d", user.ID)}>
+										Edit
+									</button>
+									<button class="btn btn-sm btn-danger" data-action="delete" data-id={fmt.Sprintf("%d", user.ID)}>
+										Delete
+									</button>
+								</div>
+							</td>
+						</tr>
+					}
+				}
+			</tbody>
+		</table>
+		<div class="table-footer">
+			<div class="pagination">
+				if currentPage > 0 {
+					<button class="btn btn-outline" data-page={fmt.Sprintf("%d", currentPage-1)}>
+						Previous
+					</button>
+				}
+				<span class="page-info">
+					Page {fmt.Sprintf("%d", currentPage+1)} of {fmt.Sprintf("%d", (len(users)+pageSize-1)/pageSize)}
+				</span>
+				if (currentPage+1)*pageSize < len(users) {
+					<button class="btn btn-outline" data-page={fmt.Sprintf("%d", currentPage+1)}>
+						Next
+					</button>
+				}
+			</div>
+		</div>
+	</div>
+}

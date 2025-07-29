@@ -1,0 +1,24 @@
+server:
+  port: 8080
+  host: localhost
+  open: true
+
+components:
+  scan_paths:
+    - components
+    - views
+    - examples
+
+build:
+  command: templ generate
+  watch:
+    - **/*.templ
+  ignore:
+    - node_modules
+    - .git
+  cache_dir: .templar/cache
+
+development:
+  hot_reload: true
+  css_injection: true
+  error_overlay: true

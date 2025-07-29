@@ -12,36 +12,39 @@ import (
 var initCmd = &cobra.Command{
 	Use:     "init [name]",
 	Aliases: []string{"i"},
-	Short:   "Initialize a new templar project with templates and smart configuration",
-	Long: `Initialize a new templar project with the necessary directory structure
+	Short:   "Initialize a new Templar project with templates and configuration",
+	Long: `Initialize a new Templar project with the necessary directory structure
 and configuration files. If no name is provided, initializes in the current directory.
 
-The wizard provides smart defaults based on your project structure and helps
-you choose the right template for your use case.
+The initialization process creates a project structure optimized for templ component
+development with smart defaults and optional templates for common use cases.
 
 Examples:
-  templar init                         # Initialize in current directory with examples
-  templar init my-project              # Initialize in new directory 'my-project'
+  templar init                         # Initialize in current directory
+  templar init my-project              # Create new project directory
   templar init --minimal               # Minimal setup without examples
-  templar init --wizard                # Interactive configuration wizard (recommended)
-  templar init --template=blog         # Use blog template with posts and layouts
-  templar init --template=dashboard    # Use dashboard template with sidebar and cards  
-  templar init --template=landing      # Use landing page template with hero and features
-  templar init --template=ecommerce    # Use e-commerce template with products and cart
-  templar init --template=documentation # Use documentation template with navigation
+  templar init --wizard                # Interactive configuration wizard
+  templar init --template blog         # Use blog template with posts and layouts
+  templar init --template dashboard    # Use dashboard template with navigation
+  templar init --template landing      # Use landing page template with sections
+  templar init --template ecommerce    # Use e-commerce template with cart
+  templar init --template docs         # Use documentation template
 
 Available Templates:
-  minimal        Basic component setup
+  minimal        Basic component setup (default)
   blog          Blog posts, layouts, and content management
   dashboard     Admin dashboard with sidebar navigation and data cards
   landing       Marketing landing page with hero sections and feature lists
   ecommerce     Product listings, shopping cart, and purchase flows
-  documentation Technical documentation with navigation and code blocks
+  docs          Technical documentation with navigation and code blocks
 
 Pro Tips:
-  • Use --wizard for project-specific smart defaults
-  • Templates include production-ready components and styling
-  • All templates work with the development server and live preview`,
+  • Use --wizard for interactive project setup with smart defaults
+  • All templates include production-ready components and styling
+  • Templates work seamlessly with the development server and live preview
+  • Generated projects include .templar.yml configuration for customization
+
+See also: templar serve, templar list, templar build`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runInit,
 }

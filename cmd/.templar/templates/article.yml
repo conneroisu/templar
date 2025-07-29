@@ -1,0 +1,19 @@
+name: article
+description: Template for article and content components
+fields:
+    author: '{{person.name}}'
+    category: '{{lorem.word}}'
+    content: '{{lorem.paragraphs}}'
+    excerpt: '{{lorem.paragraph}}'
+    featured: '{{datatype.boolean}}'
+    imageUrl: '{{image.url}}'
+    publishDate: '{{time.recent}}'
+    slug: '{{lorem.slug}}'
+    tags: '{{lorem.words}}'
+    title: '{{lorem.sentence}}'
+    viewCount: '{{number.int}}'
+tags:
+    - article
+    - content
+    - blog
+version: 1.0.0

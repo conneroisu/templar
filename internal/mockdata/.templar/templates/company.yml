@@ -1,0 +1,20 @@
+name: company
+description: Template for company and business components
+fields:
+    address: '{{address.street}}'
+    city: '{{address.city}}'
+    country: '{{address.country}}'
+    description: '{{company.catchPhrase}}'
+    email: '{{internet.email}}'
+    employees: '{{number.int}}'
+    founded: '{{time.past}}'
+    industry: '{{commerce.department}}'
+    logo: '{{image.business}}'
+    name: '{{company.name}}'
+    phone: '{{phone.number}}'
+    website: '{{internet.url}}'
+tags:
+    - company
+    - business
+    - organization
+version: 1.0.0

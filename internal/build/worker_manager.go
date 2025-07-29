@@ -175,11 +175,11 @@ func (wm *WorkerManager) processBuildTask(ctx context.Context, task BuildTask) B
 }
 
 // GetWorkerStats returns current worker pool statistics.
-func (wm *WorkerManager) GetWorkerStats() WorkerStats {
+func (wm *WorkerManager) GetWorkerStats() WorkerPoolStats {
 	wm.mu.RLock()
 	defer wm.mu.RUnlock()
 
-	return WorkerStats{
+	return WorkerPoolStats{
 		ActiveWorkers: wm.workers,
 		// Note: Pool task tracking methods would need to be implemented
 		TotalTasks:      0,
@@ -189,8 +189,8 @@ func (wm *WorkerManager) GetWorkerStats() WorkerStats {
 	}
 }
 
-// WorkerStats provides worker pool performance metrics.
-type WorkerStats struct {
+// WorkerPoolStats provides worker pool performance metrics.
+type WorkerPoolStats struct {
 	ActiveWorkers   int
 	TotalTasks      int64
 	CompletedTasks  int64

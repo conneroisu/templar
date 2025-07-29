@@ -28,15 +28,27 @@ type TestServerConfig struct {
 	BaseRetryDelay      time.Duration
 }
 
-// DefaultTestConfig returns a default test configuration
+// DefaultTestConfig returns a default test configuration with optimized timeouts
 func DefaultTestConfig() *TestServerConfig {
 	return &TestServerConfig{
 		Host:                "localhost",
 		Port:                0, // Use random available port
-		ReadinessTimeout:    30 * time.Second,
-		HealthCheckInterval: 100 * time.Millisecond,
-		MaxRetries:          5,
-		BaseRetryDelay:      100 * time.Millisecond,
+		ReadinessTimeout:    15 * time.Second, // Reduced from 30s
+		HealthCheckInterval: 50 * time.Millisecond, // Reduced from 100ms for faster response
+		MaxRetries:          3, // Reduced from 5 for faster failure detection
+		BaseRetryDelay:      50 * time.Millisecond, // Reduced from 100ms
+	}
+}
+
+// FastTestConfig returns a configuration optimized for speed
+func FastTestConfig() *TestServerConfig {
+	return &TestServerConfig{
+		Host:                "localhost",
+		Port:                0,
+		ReadinessTimeout:    5 * time.Second,
+		HealthCheckInterval: 25 * time.Millisecond,
+		MaxRetries:          2,
+		BaseRetryDelay:      25 * time.Millisecond,
 	}
 }
 
@@ -243,10 +255,37 @@ func FindAvailablePort() (int, error) {
 	return addr.Port, nil
 }
 
-// CleanupTestDirectory removes test directory and handles errors appropriately
+// CleanupTestDirectory removes test directory and handles errors appropriately with retries
 func CleanupTestDirectory(t *testing.T, dir string) {
-	if err := os.RemoveAll(dir); err != nil {
-		t.Logf("Warning: failed to cleanup test directory %s: %v", dir, err)
+	if dir == "" {
+		return
+	}
+	
+	for attempt := 0; attempt < 3; attempt++ {
+		if err := os.RemoveAll(dir); err != nil {
+			if attempt == 2 { // Last attempt
+				t.Logf("Warning: failed to cleanup test directory %s after %d attempts: %v", dir, attempt+1, err)
+			} else {
+				time.Sleep(50 * time.Millisecond) // Brief pause before retry
+			}
+		} else {
+			break // Success
+		}
+	}
+}
+
+// SafeTestCleanup provides a safe cleanup mechanism for tests with panic recovery
+func SafeTestCleanup(t *testing.T, cleanup func() error) {
+	defer func() {
+		if r := recover(); r != nil {
+			t.Logf("Panic during cleanup: %v", r)
+		}
+	}()
+	
+	if cleanup != nil {
+		if err := cleanup(); err != nil {
+			t.Logf("Cleanup error: %v", err)
+		}
 	}
 }
 
@@ -258,15 +297,29 @@ func CreateTestComponent(t *testing.T, dir, name, content string) string {
 	return filePath
 }
 
-// WaitForFileSystemSync waits for file system operations to complete
+// WaitForFileSystemSync waits for file system operations to complete with optimized timing
 // This helps with race conditions between file creation and file watching
 func WaitForFileSystemSync() {
+	// Reduced base delay for faster execution
+	time.Sleep(25 * time.Millisecond)
+}
+
+// WaitForFileSystemSyncLong provides a longer wait for bulk operations
+func WaitForFileSystemSyncLong() {
 	time.Sleep(50 * time.Millisecond)
 }
 
 // WaitForComponentProcessing waits for component scanning and processing to complete
+// Optimized with shorter delays while maintaining reliability
 func WaitForComponentProcessing() {
-	time.Sleep(200 * time.Millisecond)
+	// Single optimized delay instead of exponential backoff
+	time.Sleep(150 * time.Millisecond)
+}
+
+// WaitForComponentProcessingBatch waits for batch component processing
+func WaitForComponentProcessingBatch() {
+	// Longer delay for batch operations
+	time.Sleep(300 * time.Millisecond)
 }
 
 // AssertEventuallyEqual checks that a condition becomes true within a timeout
@@ -287,6 +340,102 @@ func AssertEventuallyEqual(t *testing.T, expected interface{}, getValue func() i
 		case <-ticker.C:
 			if getValue() == expected {
 				return
+			}
+		}
+	}
+}
+
+// WaitForRegistryStable waits for the registry to reach a stable state with optimized timing
+// If expectedCount is -1, it waits for any stable state regardless of count
+func WaitForRegistryStable(registry interface{ Count() int }, expectedCount int, timeout time.Duration) error {
+	if timeout == 0 {
+		timeout = 3 * time.Second // Reduced default timeout
+	}
+	
+	stable := false
+	stableCount := 0
+	lastCount := -1
+	
+	ticker := time.NewTicker(10 * time.Millisecond) // Faster polling
+	defer ticker.Stop()
+	
+	timeoutChan := time.After(timeout)
+	
+	for {
+		select {
+		case <-timeoutChan:
+			if expectedCount == -1 {
+				return fmt.Errorf("registry never stabilized, last count: %d", lastCount)
+			}
+			return fmt.Errorf("registry never stabilized at count %d, last count: %d", expectedCount, lastCount)
+		case <-ticker.C:
+			currentCount := registry.Count()
+			
+			// Check if count matches expectation or if we don't care about specific count
+			countMatches := (expectedCount == -1) || (currentCount == expectedCount)
+			
+			if countMatches {
+				// Count matches (or we don't care) - check if it's stable
+				if currentCount == lastCount {
+					stableCount++
+					if stableCount >= 2 { // Reduced stability requirement for faster execution
+						stable = true
+					}
+				} else {
+					stableCount = 0 // Reset stability counter
+				}
+				
+				if stable {
+					return nil
+				}
+			} else {
+				stableCount = 0 // Reset if count doesn't match
+			}
+			
+			lastCount = currentCount
+		}
+	}
+}
+
+// WaitForServerHealthy performs comprehensive server health checking with retries
+func WaitForServerHealthy(baseURL string, timeout time.Duration) error {
+	if timeout == 0 {
+		timeout = 30 * time.Second
+	}
+	
+	client := &http.Client{
+		Timeout: 2 * time.Second,
+	}
+	
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
+	
+	timeoutChan := time.After(timeout)
+	
+	consecutiveSuccess := 0
+	requiredConsecutive := 3 // Require 3 consecutive successful health checks
+	
+	for {
+		select {
+		case <-timeoutChan:
+			return fmt.Errorf("server health check timed out after %v", timeout)
+		case <-ticker.C:
+			resp, err := client.Get(baseURL + "/health")
+			if err != nil {
+				consecutiveSuccess = 0
+				continue
+			}
+			
+			if resp.StatusCode == http.StatusOK {
+				consecutiveSuccess++
+				resp.Body.Close()
+				
+				if consecutiveSuccess >= requiredConsecutive {
+					return nil
+				}
+			} else {
+				consecutiveSuccess = 0
+				resp.Body.Close()
 			}
 		}
 	}

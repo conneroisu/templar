@@ -1,0 +1,338 @@
+name: Generate API Documentation
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'internal/server/**'
+      - 'cmd/**'
+      - 'internal/apidocs/**'
+      - '.github/workflows/api-docs.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'internal/server/**'
+      - 'cmd/**'
+      - 'internal/apidocs/**'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'API version to generate'
+        required: false
+        default: '1.0.0'
+      include_internal:
+        description: 'Include internal endpoints'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  generate-docs:
+    name: Generate API Documentation
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.24'
+        cache: true
+
+    - name: Install dependencies
+      run: |
+        go mod download
+        go mod verify
+
+    - name: Build Templar
+      run: |
+        go build -o templar ./cmd/templar
+        chmod +x templar
+
+    - name: Generate API documentation
+      run: |
+        VERSION="${{ github.event.inputs.version || '1.0.0' }}"
+        INCLUDE_INTERNAL="${{ github.event.inputs.include_internal || 'false' }}"
+        
+        mkdir -p docs/api
+        
+        # Generate comprehensive API documentation
+        ./templar docs \
+          --output docs/api \
+          --version "$VERSION" \
+          --format json,yaml,html,markdown \
+          $([ "$INCLUDE_INTERNAL" = "true" ] && echo "--include-internal")
+        
+        # Verify generated files
+        ls -la docs/api/
+        
+        # Add metadata file
+        cat > docs/api/metadata.json << EOF
+        {
+          "generated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+          "version": "$VERSION",
+          "commit": "${{ github.sha }}",
+          "branch": "${{ github.ref_name }}",
+          "workflow": "${{ github.workflow }}",
+          "run_id": "${{ github.run_id }}",
+          "include_internal": $INCLUDE_INTERNAL
+        }
+        EOF
+
+    - name: Validate OpenAPI specification
+      run: |
+        # Installing swagger-codegen for validation
+        wget https://repo1.maven.org/maven2/io/swagger/swagger-codegen-cli/2.4.28/swagger-codegen-cli-2.4.28.jar -O swagger-codegen-cli.jar
+        
+        # Validate JSON spec
+        java -jar swagger-codegen-cli.jar validate -i docs/api/openapi.json
+        
+        # Validate YAML spec if it exists
+        if [ -f docs/api/openapi.yaml ]; then
+          java -jar swagger-codegen-cli.jar validate -i docs/api/openapi.yaml
+        fi
+
+    - name: Upload documentation artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: api-documentation-${{ github.sha }}
+        path: docs/api/
+        retention-days: 30
+
+    - name: Setup Pages (main branch only)
+      if: github.ref == 'refs/heads/main'
+      uses: actions/configure-pages@v3
+
+    - name: Deploy to GitHub Pages (main branch only)
+      if: github.ref == 'refs/heads/main'
+      uses: actions/deploy-pages@v2
+      with:
+        artifact_name: api-documentation-${{ github.sha }}
+
+    - name: Comment on PR with documentation preview
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          
+          // Read metadata
+          const metadata = JSON.parse(fs.readFileSync('docs/api/metadata.json', 'utf8'));
+          
+          // Count endpoints from OpenAPI spec
+          const spec = JSON.parse(fs.readFileSync('docs/api/openapi.json', 'utf8'));
+          const endpointCount = Object.keys(spec.paths || {}).length;
+          const schemaCount = Object.keys(spec.components?.schemas || {}).length;
+          
+          const comment = `## 📚 API Documentation Preview
+          
+          API documentation has been generated for this PR:
+          
+          **📊 Documentation Stats:**
+          - **Version:** ${metadata.version}
+          - **Endpoints:** ${endpointCount}
+          - **Schemas:** ${schemaCount}
+          - **Generated:** ${metadata.generated_at}
+          - **Include Internal:** ${metadata.include_internal}
+          
+          **📁 Generated Files:**
+          - \`openapi.json\` - OpenAPI 3.0 specification
+          - \`openapi.yaml\` - YAML format specification  
+          - \`index.html\` - Interactive Swagger UI
+          - \`README.md\` - Human-readable documentation
+          
+          **🔗 Quick Links:**
+          - [Download Documentation Artifact](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          - [View OpenAPI Spec](https://github.com/${{ github.repository }}/blob/${{ github.sha }}/docs/api/openapi.json)
+          
+          The documentation will be automatically deployed to GitHub Pages when this PR is merged to main.`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+
+    - name: Create release documentation (tags only)
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        TAG_NAME=${GITHUB_REF#refs/tags/}
+        
+        # Create release-specific documentation
+        mkdir -p "releases/${TAG_NAME}"
+        cp -r docs/api/* "releases/${TAG_NAME}/"
+        
+        # Update version in spec
+        sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"${TAG_NAME}\"/" "releases/${TAG_NAME}/openapi.json"
+        
+        echo "Created documentation for release: ${TAG_NAME}"
+
+    - name: Commit and push documentation updates (main branch only)
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
+        # Add generated documentation
+        git add docs/api/
+        
+        # Check if there are changes to commit
+        if git diff --staged --quiet; then
+          echo "No documentation changes to commit"
+        else
+          git commit -m "docs: update API documentation [skip ci]
+          
+          Generated from commit ${{ github.sha }}
+          - Updated OpenAPI specification
+          - Refreshed interactive documentation
+          - Generated at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          
+          git push
+        fi
+
+  validate-examples:
+    name: Validate API Examples
+    runs-on: ubuntu-latest
+    needs: generate-docs
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download documentation artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: api-documentation-${{ github.sha }}
+        path: docs/api/
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install API testing tools
+      run: |
+        npm install -g newman @apidevtools/swagger-parser
+
+    - name: Validate OpenAPI specification
+      run: |
+        # Validate the OpenAPI spec structure
+        swagger-parser validate docs/api/openapi.json
+        
+        echo "✅ OpenAPI specification is valid"
+
+    - name: Generate API client examples
+      run: |
+        # This could generate client code examples in various languages
+        # For now, we'll just verify the spec can be processed
+        node -e "
+          const spec = require('./docs/api/openapi.json');
+          console.log('API Title:', spec.info.title);
+          console.log('API Version:', spec.info.version);
+          console.log('Endpoints:', Object.keys(spec.paths).length);
+          console.log('Schemas:', Object.keys(spec.components.schemas).length);
+        "
+
+  security-scan:
+    name: Security Scan Documentation
+    runs-on: ubuntu-latest
+    needs: generate-docs
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download documentation artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: api-documentation-${{ github.sha }}
+        path: docs/api/
+
+    - name: Scan for security issues
+      run: |
+        # Check for potential security issues in the generated documentation
+        
+        echo "🔍 Scanning generated documentation for security issues..."
+        
+        # Check for hardcoded secrets or credentials
+        if grep -r -i "password\|secret\|key\|token" docs/api/ --exclude="*.json" --exclude="*.yaml"; then
+          echo "⚠️  Warning: Potential credentials found in documentation"
+        else
+          echo "✅ No obvious credentials found in documentation"
+        fi
+        
+        # Check for internal URLs that shouldn't be exposed
+        if grep -r "localhost\|127.0.0.1\|internal\|private" docs/api/openapi.json; then
+          echo "⚠️  Warning: Internal URLs found in public documentation"
+        else
+          echo "✅ No internal URLs found in public documentation"
+        fi
+        
+        # Verify HTML output is safe
+        if [ -f docs/api/index.html ]; then
+          if grep -i "script.*src.*http:" docs/api/index.html; then
+            echo "⚠️  Warning: Insecure script sources found"
+            exit 1
+          else
+            echo "✅ HTML documentation appears secure"
+          fi
+        fi
+
+  performance-test:
+    name: Performance Test Documentation Server
+    runs-on: ubuntu-latest
+    needs: generate-docs
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download documentation artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: api-documentation-${{ github.sha }}
+        path: docs/api/
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.24'
+
+    - name: Test documentation server performance
+      run: |
+        echo "🚀 Testing documentation server performance..."
+        
+        # Build and start server in background
+        go build -o templar ./cmd/templar
+        ./templar serve --port 8080 &
+        SERVER_PID=$!
+        
+        # Wait for server to start
+        sleep 5
+        
+        # Test API documentation endpoints
+        echo "Testing /api/docs endpoint..."
+        curl -w "Time: %{time_total}s, Status: %{http_code}\n" -s -o /dev/null http://localhost:8080/api/docs
+        
+        echo "Testing /api/spec endpoint..."
+        curl -w "Time: %{time_total}s, Status: %{http_code}\n" -s -o /dev/null http://localhost:8080/api/spec
+        
+        echo "Testing /api/versions endpoint..."
+        curl -w "Time: %{time_total}s, Status: %{http_code}\n" -s -o /dev/null http://localhost:8080/api/versions
+        
+        # Clean up
+        kill $SERVER_PID || true
+        
+        echo "✅ Performance tests completed"
