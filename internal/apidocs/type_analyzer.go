@@ -122,6 +122,12 @@ func (ta *TypeAnalyzer) analyzeTypeInternal(goType reflect.Type) (*APISchema, er
 		return ta.analyzePointerType(goType)
 	case reflect.Interface:
 		return ta.analyzeInterfaceType(goType)
+	case reflect.Invalid, reflect.Uintptr, reflect.Complex64, reflect.Complex128, reflect.Chan, reflect.Func, reflect.UnsafePointer:
+		// Unsupported types - return generic object schema
+		return &APISchema{
+			Type:        "object",
+			Description: fmt.Sprintf("Unsupported Go type: %s", goType.Kind()),
+		}, nil
 	default:
 		// Fallback for unsupported types
 		return &APISchema{
