@@ -389,6 +389,8 @@ func (wsm *WebSocketStatusManager) IntegrateWithPreviewServer(server *PreviewSer
 }
 
 // handleStatusEndpoint handles HTTP requests for WebSocket status.
+// TODO: Integrate with HTTP router when status endpoints are needed
+//nolint:unused
 func (wsm *WebSocketStatusManager) handleStatusEndpoint(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	
@@ -404,6 +406,8 @@ func (wsm *WebSocketStatusManager) handleStatusEndpoint(w http.ResponseWriter, r
 }
 
 // handleHealthEndpoint handles HTTP requests for connection health.
+// TODO: Integrate with HTTP router when health endpoints are needed
+//nolint:unused
 func (wsm *WebSocketStatusManager) handleHealthEndpoint(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	
@@ -419,6 +423,8 @@ func (wsm *WebSocketStatusManager) handleHealthEndpoint(w http.ResponseWriter, r
 }
 
 // handleOfflineModeEndpoint handles offline mode management via HTTP.
+// TODO: Integrate with HTTP router when offline mode endpoints are needed
+//nolint:unused
 func (wsm *WebSocketStatusManager) handleOfflineModeEndpoint(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	

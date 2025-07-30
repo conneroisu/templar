@@ -83,8 +83,8 @@ type MockFile struct {
 	Entries    []fs.DirEntry
 	ReadPos    int64
 	WritePos   int64
-	closed     bool
-	mu         sync.RWMutex
+	closed     bool        //nolint:unused  // TODO: implement file closing tracking
+	mu         sync.RWMutex //nolint:unused  // TODO: implement proper concurrency control
 }
 
 // NewMockFileSystem creates a new mock file system.

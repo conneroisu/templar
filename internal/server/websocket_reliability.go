@@ -143,8 +143,9 @@ type WebSocketReliabilityManager struct {
 	metrics       *ConnectionMetrics
 	
 	// Internal state
-	reconnectTicker   *time.Ticker
-	healthTicker      *time.Ticker
+	// TODO: Implement periodic reconnect and health checking
+	reconnectTicker   *time.Ticker //nolint:unused
+	healthTicker      *time.Ticker //nolint:unused
 	currentDelay      time.Duration
 	attemptCount      int64
 	forceOffline      int32 // atomic bool

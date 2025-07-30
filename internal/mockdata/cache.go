@@ -100,6 +100,8 @@ func (c *MemoryMockDataCache) Size() int {
 }
 
 // cleanupExpired removes expired entries periodically.
+// TODO: Enable periodic cleanup in future version
+//nolint:unused
 func (c *MemoryMockDataCache) cleanupExpired() {
 	ticker := time.NewTicker(5 * time.Minute) // Cleanup every 5 minutes
 	defer ticker.Stop()
@@ -117,6 +119,7 @@ func (c *MemoryMockDataCache) cleanupExpired() {
 }
 
 // removeExpired removes expired entries from the cache.
+//nolint:unused
 func (c *MemoryMockDataCache) removeExpired() {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -303,6 +306,8 @@ func (c *LRUMockDataCache) evictLRU() {
 }
 
 // cleanupExpired removes expired entries periodically.
+// TODO: Enable periodic cleanup in future version  
+//nolint:unused
 func (c *LRUMockDataCache) cleanupExpired() {
 	ticker := time.NewTicker(5 * time.Minute) // Cleanup every 5 minutes
 	defer ticker.Stop()
@@ -320,6 +325,7 @@ func (c *LRUMockDataCache) cleanupExpired() {
 }
 
 // removeExpiredLRU removes expired entries from the LRU cache.
+//nolint:unused
 func (c *LRUMockDataCache) removeExpiredLRU() {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
