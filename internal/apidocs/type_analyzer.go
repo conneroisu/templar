@@ -187,6 +187,13 @@ func (ta *TypeAnalyzer) analyzeIntegerType(goType reflect.Type) (*APISchema, err
 		schema.Maximum = &[]float64{9223372036854775807}[0]
 	case reflect.Int, reflect.Int8, reflect.Int16:
 		schema.Format = "int32" // Default to int32 for compatibility
+	case reflect.Invalid, reflect.Bool,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr,
+		reflect.Float32, reflect.Float64, reflect.Complex64, reflect.Complex128,
+		reflect.Array, reflect.Chan, reflect.Func, reflect.Interface, reflect.Map,
+		reflect.Pointer, reflect.Slice, reflect.String, reflect.Struct, reflect.UnsafePointer:
+		// These shouldn't reach this function, but handle them for exhaustive checking
+		schema.Format = "int32"
 	default:
 		// Handle all other reflect.Kind values that shouldn't reach here
 		schema.Format = "int32"
@@ -212,6 +219,13 @@ func (ta *TypeAnalyzer) analyzeUintegerType(goType reflect.Type) (*APISchema, er
 		schema.Maximum = &[]float64{18446744073709551615}[0]
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uintptr:
 		schema.Format = "int32"
+	case reflect.Invalid, reflect.Bool,
+		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Float32, reflect.Float64, reflect.Complex64, reflect.Complex128,
+		reflect.Array, reflect.Chan, reflect.Func, reflect.Interface, reflect.Map,
+		reflect.Pointer, reflect.Slice, reflect.String, reflect.Struct, reflect.UnsafePointer:
+		// These shouldn't reach this function, but handle them for exhaustive checking
+		schema.Format = "int32"
 	default:
 		// Handle all other reflect.Kind values that shouldn't reach here
 		schema.Format = "int32"
@@ -232,6 +246,14 @@ func (ta *TypeAnalyzer) analyzeFloatType(goType reflect.Type) (*APISchema, error
 		schema.Format = "float"
 	case reflect.Float64:
 		schema.Format = "double"
+	case reflect.Invalid, reflect.Bool,
+		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr,
+		reflect.Complex64, reflect.Complex128,
+		reflect.Array, reflect.Chan, reflect.Func, reflect.Interface, reflect.Map,
+		reflect.Pointer, reflect.Slice, reflect.String, reflect.Struct, reflect.UnsafePointer:
+		// These shouldn't reach this function, but handle them for exhaustive checking
+		schema.Format = "float"
 	default:
 		// Handle all other reflect.Kind values that shouldn't reach here
 		schema.Format = "float"
