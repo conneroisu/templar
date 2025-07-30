@@ -28,7 +28,7 @@ func TestInitCommandErrorPaths(t *testing.T) {
 			setup:       createTempTestDir,
 			cleanup:     cleanupTestDir,
 			expectError: true,
-			errorContains: "invalid",
+			errorContains: "path traversal",
 		},
 		{
 			name:        "init with command injection attempt",
@@ -36,7 +36,7 @@ func TestInitCommandErrorPaths(t *testing.T) {
 			setup:       createTempTestDir,
 			cleanup:     cleanupTestDir,
 			expectError: true,
-			errorContains: "invalid",
+			errorContains: "dangerous character",
 		},
 		{
 			name:        "init with permission denied",

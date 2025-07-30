@@ -78,7 +78,10 @@ func runInit(cmd *cobra.Command, args []string) error {
 		}
 		projectDir = cwd
 	case 1:
-		// Initialize in new directory
+		// Initialize in new directory - validate the argument first
+		if err := validateArgument(args[0]); err != nil {
+			return errors.ValidationFailure("project_name", err.Error(), args[0], "Use a safe project name without special characters or path traversal sequences")
+		}
 		projectDir = args[0]
 	default:
 		// Too many arguments
