@@ -56,33 +56,7 @@ func TestInitCommandErrorPaths(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tempDir := tt.setup(t)
-			defer tt.cleanup(t, tempDir)
-
-			oldDir, err := os.Getwd()
-			require.NoError(t, err)
-			defer func() { _ = os.Chdir(oldDir) }()
-			require.NoError(t, os.Chdir(tempDir))
-
-			viper.Reset()
-
-			// Create a copy of initCmd for testing
-			initCmd.SetArgs(tt.args)
-			err = initCmd.Execute()
-
-			if tt.expectError {
-				assert.Error(t, err, "Expected error for test case: %s", tt.name)
-				if tt.errorContains != "" && err != nil {
-					assert.Contains(t, strings.ToLower(err.Error()), strings.ToLower(tt.errorContains),
-						"Error should contain '%s' for test: %s. Got: %s", tt.errorContains, tt.name, err.Error())
-				}
-			} else {
-				assert.NoError(t, err, "Expected no error for test case: %s", tt.name)
-			}
-		})
-	}
+	runCommandErrorTests(t, tests, initCmd)
 }
 
 // TestServeCommandErrorPaths tests error scenarios specific to the serve command
@@ -129,35 +103,7 @@ func TestServeCommandErrorPaths(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tempDir := tt.setup(t)
-			defer tt.cleanup(t, tempDir)
-
-			oldDir, err := os.Getwd()
-			require.NoError(t, err)
-			defer func() { _ = os.Chdir(oldDir) }()
-			require.NoError(t, os.Chdir(tempDir))
-
-			viper.Reset()
-
-			// Test validation without actually starting server
-			serveCmd.SetArgs(tt.args)
-			err = serveCmd.Execute()
-
-			if tt.expectError {
-				// For serve command, we expect validation errors or startup failures
-				assert.Error(t, err, "Expected error for test case: %s", tt.name)
-				if tt.errorContains != "" && err != nil {
-					errorMsg := strings.ToLower(err.Error())
-					assert.Contains(t, errorMsg, strings.ToLower(tt.errorContains),
-						"Error should contain '%s' for test: %s. Got: %s", tt.errorContains, tt.name, err.Error())
-				}
-			} else {
-				assert.NoError(t, err, "Expected no error for test case: %s", tt.name)
-			}
-		})
-	}
+	runCommandErrorTests(t, tests, serveCmd)
 }
 
 // TestBuildCommandErrorPaths tests error scenarios specific to the build command
@@ -196,33 +142,7 @@ func TestBuildCommandErrorPaths(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tempDir := tt.setup(t)
-			defer tt.cleanup(t, tempDir)
-
-			oldDir, err := os.Getwd()
-			require.NoError(t, err)
-			defer func() { _ = os.Chdir(oldDir) }()
-			require.NoError(t, os.Chdir(tempDir))
-
-			viper.Reset()
-
-			buildCmd.SetArgs(tt.args)
-			err = buildCmd.Execute()
-
-			if tt.expectError {
-				assert.Error(t, err, "Expected error for test case: %s", tt.name)
-				if tt.errorContains != "" && err != nil {
-					errorMsg := strings.ToLower(err.Error())
-					assert.Contains(t, errorMsg, strings.ToLower(tt.errorContains),
-						"Error should contain '%s' for test: %s. Got: %s", tt.errorContains, tt.name, err.Error())
-				}
-			} else {
-				assert.NoError(t, err, "Expected no error for test case: %s", tt.name)
-			}
-		})
-	}
+	runCommandErrorTests(t, tests, buildCmd)
 }
 
 // TestListCommandErrorPaths tests error scenarios specific to the list command
@@ -253,33 +173,7 @@ func TestListCommandErrorPaths(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tempDir := tt.setup(t)
-			defer tt.cleanup(t, tempDir)
-
-			oldDir, err := os.Getwd()
-			require.NoError(t, err)
-			defer func() { _ = os.Chdir(oldDir) }()
-			require.NoError(t, os.Chdir(tempDir))
-
-			viper.Reset()
-
-			listCmd.SetArgs(tt.args)
-			err = listCmd.Execute()
-
-			if tt.expectError {
-				assert.Error(t, err, "Expected error for test case: %s", tt.name)
-				if tt.errorContains != "" && err != nil {
-					errorMsg := strings.ToLower(err.Error())
-					assert.Contains(t, errorMsg, strings.ToLower(tt.errorContains),
-						"Error should contain '%s' for test: %s. Got: %s", tt.errorContains, tt.name, err.Error())
-				}
-			} else {
-				assert.NoError(t, err, "Expected no error for test case: %s", tt.name)
-			}
-		})
-	}
+	runCommandErrorTests(t, tests, listCmd)
 }
 
 // TestPreviewCommandErrorPaths tests error scenarios specific to the preview command
@@ -310,33 +204,7 @@ func TestPreviewCommandErrorPaths(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tempDir := tt.setup(t)
-			defer tt.cleanup(t, tempDir)
-
-			oldDir, err := os.Getwd()
-			require.NoError(t, err)
-			defer func() { _ = os.Chdir(oldDir) }()
-			require.NoError(t, os.Chdir(tempDir))
-
-			viper.Reset()
-
-			previewCmd.SetArgs(tt.args)
-			err = previewCmd.Execute()
-
-			if tt.expectError {
-				assert.Error(t, err, "Expected error for test case: %s", tt.name)
-				if tt.errorContains != "" && err != nil {
-					errorMsg := strings.ToLower(err.Error())
-					assert.Contains(t, errorMsg, strings.ToLower(tt.errorContains),
-						"Error should contain '%s' for test: %s. Got: %s", tt.errorContains, tt.name, err.Error())
-				}
-			} else {
-				assert.NoError(t, err, "Expected no error for test case: %s", tt.name)
-			}
-		})
-	}
+	runCommandErrorTests(t, tests, previewCmd)
 }
 
 // TestConfigValidationErrorPaths tests configuration validation error scenarios
@@ -509,6 +377,44 @@ func cleanupReadOnlyTestDir(t *testing.T, dir string) {
 				_ = os.Chmod(path, 0755)
 			}
 			return nil
+		})
+	}
+}
+
+// runCommandErrorTests is a helper function to reduce code duplication
+func runCommandErrorTests(t *testing.T, tests []struct {
+	name          string
+	args          []string
+	setup         func(t *testing.T) string
+	cleanup       func(t *testing.T, dir string)
+	expectError   bool
+	errorContains string
+}, cmd interface{ SetArgs([]string); Execute() error }) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tempDir := tt.setup(t)
+			defer tt.cleanup(t, tempDir)
+
+			oldDir, err := os.Getwd()
+			require.NoError(t, err)
+			defer func() { _ = os.Chdir(oldDir) }()
+			require.NoError(t, os.Chdir(tempDir))
+
+			viper.Reset()
+
+			cmd.SetArgs(tt.args)
+			err = cmd.Execute()
+
+			if tt.expectError {
+				assert.Error(t, err, "Expected error for test case: %s", tt.name)
+				if tt.errorContains != "" && err != nil {
+					errorMsg := strings.ToLower(err.Error())
+					assert.Contains(t, errorMsg, strings.ToLower(tt.errorContains),
+						"Error should contain '%s' for test: %s. Got: %s", tt.errorContains, tt.name, err.Error())
+				}
+			} else {
+				assert.NoError(t, err, "Expected no error for test case: %s", tt.name)
+			}
 		})
 	}
 }

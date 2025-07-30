@@ -183,8 +183,11 @@ func ExampleTestingErrorHandling(t *testing.T) {
 	assert.Contains(t, err.Error(), "permission denied")
 
 	// Test network error handling
-	_, err = adapters.Network.Get("http://api.example.com")
+	resp, err := adapters.Network.Get("http://api.example.com")
 	assert.Error(t, err)
+	if resp != nil && resp.Body != nil {
+		defer func() { _ = resp.Body.Close() }()
+	}
 	assert.Contains(t, err.Error(), "connection refused")
 
 	// Test command error handling

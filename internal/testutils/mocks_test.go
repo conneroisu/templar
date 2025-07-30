@@ -198,6 +198,7 @@ func TestMockNetwork_HTTPResponse(t *testing.T) {
 
 	result, err := mn.Get("http://example.com")
 	require.NoError(t, err)
+	defer func() { _ = result.Body.Close() }()
 	assert.Equal(t, 200, result.StatusCode)
 
 	body, err := io.ReadAll(result.Body)
@@ -214,8 +215,11 @@ func TestMockNetwork_HTTPError(t *testing.T) {
 	mn.MockHTTPResponse("http://bad-url.com", nil, expectedError)
 	mn.On("Get", "http://bad-url.com").Return((*http.Response)(nil), expectedError)
 
-	_, err := mn.Get("http://bad-url.com")
+	resp, err := mn.Get("http://bad-url.com")
 	assert.Error(t, err)
+	if resp != nil && resp.Body != nil {
+		defer func() { _ = resp.Body.Close() }()
+	}
 	assert.Equal(t, expectedError, err)
 
 	mn.AssertExpectations(t)
@@ -234,6 +238,7 @@ func TestMockNetwork_Post(t *testing.T) {
 
 	result, err := mn.Post("http://example.com/api", "application/json", body)
 	require.NoError(t, err)
+	defer func() { _ = result.Body.Close() }()
 	assert.Equal(t, 201, result.StatusCode)
 
 	mn.AssertExpectations(t)
@@ -389,6 +394,7 @@ func TestMockFramework_Integration(t *testing.T) {
 	// Test network
 	resp, err := mf.Network.Get("http://api.example.com/status")
 	require.NoError(t, err)
+	defer func() { _ = resp.Body.Close() }()
 	assert.Equal(t, 200, resp.StatusCode)
 
 	// Test time

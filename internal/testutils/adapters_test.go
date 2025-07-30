@@ -146,6 +146,7 @@ func TestMockNetworkAdapter(t *testing.T) {
 	// Test Get
 	resp, err := adapter.Get("http://example.com")
 	require.NoError(t, err)
+	defer func() { _ = resp.Body.Close() }()
 	assert.Equal(t, 200, resp.StatusCode)
 
 	mf.Network.AssertExpectations(t)

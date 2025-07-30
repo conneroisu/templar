@@ -217,7 +217,10 @@ func (wsrm *WebSocketReliabilityManager) Connect() error {
 	ctx, cancel := context.WithTimeout(wsrm.ctx, wsrm.config.ConnectionTimeout)
 	defer cancel()
 	
-	conn, _, err := websocket.Dial(ctx, wsrm.url, nil)
+	conn, resp, err := websocket.Dial(ctx, wsrm.url, nil)
+	if resp != nil && resp.Body != nil {
+		defer func() { _ = resp.Body.Close() }()
+	}
 	if err != nil {
 		atomic.AddInt64(&wsrm.metrics.FailedAttempts, 1)
 		atomic.AddInt64(&wsrm.metrics.ConsecutiveFailures, 1)
