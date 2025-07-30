@@ -13,6 +13,20 @@ import (
 	"time"
 )
 
+// Schema format constants
+const (
+	FormatInt32    = "int32"
+	FormatInt64    = "int64"
+	FormatFloat    = "float"
+	FormatDouble   = "double"
+	FormatEmail    = "email"
+	FormatUUID     = "uuid"
+	FormatDateTime = "date-time"
+	FormatDate     = "date"
+	FormatURI      = "uri"
+	FormatPassword = "password"
+)
+
 // TypeAnalyzer performs static analysis of Go types to generate JSON schemas.
 //
 // Design philosophy: Uses reflection and AST analysis to understand Go type
@@ -147,22 +161,22 @@ func (ta *TypeAnalyzer) analyzeStringType(goType reflect.Type) (*APISchema, erro
 	typeName := ta.getTypeName(goType)
 	switch {
 	case strings.Contains(typeName, "Time"):
-		schema.Format = "date-time"
+		schema.Format = FormatDateTime
 		schema.Example = time.Now().Format(time.RFC3339)
 	case strings.Contains(typeName, "Date"):
-		schema.Format = "date"
+		schema.Format = FormatDate
 		schema.Example = time.Now().Format("2006-01-02")
 	case strings.Contains(typeName, "Email"):
-		schema.Format = "email"
+		schema.Format = FormatEmail
 		schema.Example = "user@example.com"
 	case strings.Contains(typeName, "URL") || strings.Contains(typeName, "Uri"):
-		schema.Format = "uri"
+		schema.Format = FormatURI
 		schema.Example = "https://example.com"
 	case strings.Contains(typeName, "UUID"):
-		schema.Format = "uuid"
+		schema.Format = FormatUUID
 		schema.Example = "550e8400-e29b-41d4-a716-446655440000"
 	case strings.Contains(typeName, "Password"):
-		schema.Format = "password"
+		schema.Format = FormatPassword
 		schema.Example = "********"
 	}
 
@@ -178,25 +192,25 @@ func (ta *TypeAnalyzer) analyzeIntegerType(goType reflect.Type) (*APISchema, err
 	// Set format and constraints based on integer size
 	switch goType.Kind() {
 	case reflect.Int32:
-		schema.Format = "int32"
+		schema.Format = FormatInt32
 		schema.Minimum = &[]float64{-2147483648}[0]
 		schema.Maximum = &[]float64{2147483647}[0]
 	case reflect.Int64:
-		schema.Format = "int64"
+		schema.Format = FormatInt64
 		schema.Minimum = &[]float64{-9223372036854775808}[0]
 		schema.Maximum = &[]float64{9223372036854775807}[0]
 	case reflect.Int, reflect.Int8, reflect.Int16:
-		schema.Format = "int32" // Default to int32 for compatibility
+		schema.Format = FormatInt32 // Default to int32 for compatibility
 	case reflect.Invalid, reflect.Bool,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr,
 		reflect.Float32, reflect.Float64, reflect.Complex64, reflect.Complex128,
 		reflect.Array, reflect.Chan, reflect.Func, reflect.Interface, reflect.Map,
 		reflect.Pointer, reflect.Slice, reflect.String, reflect.Struct, reflect.UnsafePointer:
 		// These shouldn't reach this function, but handle them for exhaustive checking
-		schema.Format = "int32"
+		schema.Format = FormatInt32
 	default:
 		// Handle all other reflect.Kind values that shouldn't reach here
-		schema.Format = "int32"
+		schema.Format = FormatInt32
 	}
 
 	return schema, nil
@@ -212,23 +226,23 @@ func (ta *TypeAnalyzer) analyzeUintegerType(goType reflect.Type) (*APISchema, er
 	// Set format and maximum based on size
 	switch goType.Kind() {
 	case reflect.Uint32:
-		schema.Format = "int32"
+		schema.Format = FormatInt32
 		schema.Maximum = &[]float64{4294967295}[0]
 	case reflect.Uint64:
-		schema.Format = "int64"
+		schema.Format = FormatInt64
 		schema.Maximum = &[]float64{18446744073709551615}[0]
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uintptr:
-		schema.Format = "int32"
+		schema.Format = FormatInt32
 	case reflect.Invalid, reflect.Bool,
 		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Float32, reflect.Float64, reflect.Complex64, reflect.Complex128,
 		reflect.Array, reflect.Chan, reflect.Func, reflect.Interface, reflect.Map,
 		reflect.Pointer, reflect.Slice, reflect.String, reflect.Struct, reflect.UnsafePointer:
 		// These shouldn't reach this function, but handle them for exhaustive checking
-		schema.Format = "int32"
+		schema.Format = FormatInt32
 	default:
 		// Handle all other reflect.Kind values that shouldn't reach here
-		schema.Format = "int32"
+		schema.Format = FormatInt32
 	}
 
 	return schema, nil
@@ -243,9 +257,9 @@ func (ta *TypeAnalyzer) analyzeFloatType(goType reflect.Type) (*APISchema, error
 	// Set format based on precision
 	switch goType.Kind() {
 	case reflect.Float32:
-		schema.Format = "float"
+		schema.Format = FormatFloat
 	case reflect.Float64:
-		schema.Format = "double"
+		schema.Format = FormatDouble
 	case reflect.Invalid, reflect.Bool,
 		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr,
@@ -253,10 +267,10 @@ func (ta *TypeAnalyzer) analyzeFloatType(goType reflect.Type) (*APISchema, error
 		reflect.Array, reflect.Chan, reflect.Func, reflect.Interface, reflect.Map,
 		reflect.Pointer, reflect.Slice, reflect.String, reflect.Struct, reflect.UnsafePointer:
 		// These shouldn't reach this function, but handle them for exhaustive checking
-		schema.Format = "float"
+		schema.Format = FormatFloat
 	default:
 		// Handle all other reflect.Kind values that shouldn't reach here
-		schema.Format = "float"
+		schema.Format = FormatFloat
 	}
 
 	return schema, nil
@@ -497,9 +511,9 @@ func (ta *TypeAnalyzer) addValidationConstraints(field reflect.StructField, sche
 			} else if strings.HasPrefix(part, "max=") {
 				// Extract maximum value (simplified)
 			} else if part == "email" {
-				schema.Format = "email"
+				schema.Format = FormatEmail
 			} else if part == "uuid" {
-				schema.Format = "uuid"
+				schema.Format = FormatUUID
 			}
 		}
 	}
