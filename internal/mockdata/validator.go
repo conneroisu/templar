@@ -215,6 +215,12 @@ func (v *StandardMockDataValidator) validateType(value interface{}, expectedType
 		switch actualType.Kind() {
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 			// Valid integer types
+		case reflect.Invalid, reflect.Bool,
+			reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr,
+			reflect.Float32, reflect.Float64, reflect.Complex64, reflect.Complex128,
+			reflect.Array, reflect.Chan, reflect.Func, reflect.Interface, reflect.Map,
+			reflect.Pointer, reflect.Slice, reflect.String, reflect.Struct, reflect.UnsafePointer:
+			return fmt.Errorf("expected integer, got %s", actualType.Kind())
 		default:
 			return fmt.Errorf("expected integer, got %s", actualType.Kind())
 		}
@@ -222,6 +228,12 @@ func (v *StandardMockDataValidator) validateType(value interface{}, expectedType
 		switch actualType.Kind() {
 		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 			// Valid unsigned integer types
+		case reflect.Invalid, reflect.Bool,
+			reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uintptr,
+			reflect.Float32, reflect.Float64, reflect.Complex64, reflect.Complex128,
+			reflect.Array, reflect.Chan, reflect.Func, reflect.Interface, reflect.Map,
+			reflect.Pointer, reflect.Slice, reflect.String, reflect.Struct, reflect.UnsafePointer:
+			return fmt.Errorf("expected unsigned integer, got %s", actualType.Kind())
 		default:
 			return fmt.Errorf("expected unsigned integer, got %s", actualType.Kind())
 		}
@@ -229,6 +241,13 @@ func (v *StandardMockDataValidator) validateType(value interface{}, expectedType
 		switch actualType.Kind() {
 		case reflect.Float32, reflect.Float64:
 			// Valid float types
+		case reflect.Invalid, reflect.Bool,
+			reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+			reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr,
+			reflect.Complex64, reflect.Complex128,
+			reflect.Array, reflect.Chan, reflect.Func, reflect.Interface, reflect.Map,
+			reflect.Pointer, reflect.Slice, reflect.String, reflect.Struct, reflect.UnsafePointer:
+			return fmt.Errorf("expected float, got %s", actualType.Kind())
 		default:
 			return fmt.Errorf("expected float, got %s", actualType.Kind())
 		}
