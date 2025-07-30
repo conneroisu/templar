@@ -26,7 +26,7 @@ func TestHotReload_EdgeCases(t *testing.T) {
 		// Create temporary directory for test
 		tempDir := fmt.Sprintf("edge_case_test_%d", time.Now().UnixNano())
 		require.NoError(t, os.MkdirAll(tempDir, 0755))
-		defer os.RemoveAll(tempDir)
+		defer func() { _ = os.RemoveAll(tempDir) }()
 
 		// Set up test system
 		reg := registry.NewComponentRegistry()
@@ -62,7 +62,7 @@ func TestHotReload_EdgeCases(t *testing.T) {
 	t.Run("empty_component_file", func(t *testing.T) {
 		tempDir := fmt.Sprintf("empty_test_%d", time.Now().UnixNano())
 		require.NoError(t, os.MkdirAll(tempDir, 0755))
-		defer os.RemoveAll(tempDir)
+		defer func() { _ = os.RemoveAll(tempDir) }()
 
 		reg := registry.NewComponentRegistry()
 		componentScanner := scanner.NewComponentScanner(reg)
@@ -91,7 +91,7 @@ func TestHotReload_EdgeCases(t *testing.T) {
 
 		tempDir := fmt.Sprintf("permission_test_%d", time.Now().UnixNano())
 		require.NoError(t, os.MkdirAll(tempDir, 0755))
-		defer os.RemoveAll(tempDir)
+		defer func() { _ = os.RemoveAll(tempDir) }()
 
 		reg := registry.NewComponentRegistry()
 		componentScanner := scanner.NewComponentScanner(reg)
@@ -117,7 +117,7 @@ templ Restricted() {
 	t.Run("concurrent_file_deletion", func(t *testing.T) {
 		tempDir := fmt.Sprintf("deletion_test_%d", time.Now().UnixNano())
 		require.NoError(t, os.MkdirAll(tempDir, 0755))
-		defer os.RemoveAll(tempDir)
+		defer func() { _ = os.RemoveAll(tempDir) }()
 
 		reg := registry.NewComponentRegistry()
 		componentScanner := scanner.NewComponentScanner(reg)
@@ -153,7 +153,7 @@ templ Vanishing() {
 
 		// Delete the file while scans are in progress
 		time.Sleep(20 * time.Millisecond)
-		os.Remove(testFile)
+		_ = os.Remove(testFile)
 
 		wg.Wait()
 		t.Log("✅ Concurrent file deletion handling tested successfully")
@@ -162,7 +162,7 @@ templ Vanishing() {
 	t.Run("malformed_templ_syntax", func(t *testing.T) {
 		tempDir := fmt.Sprintf("malformed_test_%d", time.Now().UnixNano())
 		require.NoError(t, os.MkdirAll(tempDir, 0755))
-		defer os.RemoveAll(tempDir)
+		defer func() { _ = os.RemoveAll(tempDir) }()
 
 		reg := registry.NewComponentRegistry()
 		componentScanner := scanner.NewComponentScanner(reg)
@@ -230,7 +230,7 @@ templ InvalidHTML() {
 		defer cancel()
 
 		require.NoError(t, buildPipeline.Start(ctx))
-		defer buildPipeline.Stop()
+		defer func() { _ = buildPipeline.Stop() }()
 
 		// Test building non-existent component
 		nonExistentComponent := &types.ComponentInfo{
@@ -283,7 +283,7 @@ templ InvalidHTML() {
 	t.Run("large_component_file", func(t *testing.T) {
 		tempDir := fmt.Sprintf("large_test_%d", time.Now().UnixNano())
 		require.NoError(t, os.MkdirAll(tempDir, 0755))
-		defer os.RemoveAll(tempDir)
+		defer func() { _ = os.RemoveAll(tempDir) }()
 
 		reg := registry.NewComponentRegistry()
 		componentScanner := scanner.NewComponentScanner(reg)
@@ -322,11 +322,11 @@ templ InvalidHTML() {
 	t.Run("file_watcher_edge_cases", func(t *testing.T) {
 		tempDir := fmt.Sprintf("watcher_test_%d", time.Now().UnixNano())
 		require.NoError(t, os.MkdirAll(tempDir, 0755))
-		defer os.RemoveAll(tempDir)
+		defer func() { _ = os.RemoveAll(tempDir) }()
 
 		fileWatcher, err := watcher.NewFileWatcher(10 * time.Millisecond)
 		require.NoError(t, err)
-		defer fileWatcher.Stop()
+		defer func() { _ = fileWatcher.Stop() }()
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
@@ -355,7 +355,7 @@ templ InvalidHTML() {
 		for i := 0; i < 10; i++ {
 			require.NoError(t, os.WriteFile(testFile, []byte(fmt.Sprintf("// Version %d", i)), 0644))
 			time.Sleep(5 * time.Millisecond)
-			os.Remove(testFile)
+			_ = os.Remove(testFile)
 			time.Sleep(5 * time.Millisecond)
 		}
 
@@ -376,7 +376,7 @@ func TestHotReload_FailureRecovery(t *testing.T) {
 	t.Run("build_failure_recovery", func(t *testing.T) {
 		tempDir := fmt.Sprintf("recovery_test_%d", time.Now().UnixNano())
 		require.NoError(t, os.MkdirAll(tempDir, 0755))
-		defer os.RemoveAll(tempDir)
+		defer func() { _ = os.RemoveAll(tempDir) }()
 
 		reg := registry.NewComponentRegistry()
 		componentScanner := scanner.NewComponentScanner(reg)
@@ -386,7 +386,7 @@ func TestHotReload_FailureRecovery(t *testing.T) {
 		defer cancel()
 
 		require.NoError(t, buildPipeline.Start(ctx))
-		defer buildPipeline.Stop()
+		defer func() { _ = buildPipeline.Stop() }()
 
 		// Step 1: Create valid component
 		validFile := filepath.Join(tempDir, "recovery.templ")

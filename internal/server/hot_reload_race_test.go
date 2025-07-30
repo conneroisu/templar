@@ -25,14 +25,14 @@ func TestHotReloadRaceConditions(t *testing.T) {
 	componentScanner := scanner.NewComponentScanner(reg)
 	fileWatcher, err := watcher.NewFileWatcher(50 * time.Millisecond)
 	require.NoError(t, err)
-	defer fileWatcher.Stop()
+	defer func() { _ = fileWatcher.Stop() }()
 
 	buildPipeline := build.NewRefactoredBuildPipeline(2, reg)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	require.NoError(t, buildPipeline.Start(ctx))
-	defer buildPipeline.Stop()
+	defer func() { _ = buildPipeline.Stop() }()
 
 	// Create service orchestrator
 	cfg := &config.Config{
@@ -228,7 +228,7 @@ func TestBuildPipelineRaceConditions(t *testing.T) {
 	defer cancel()
 
 	require.NoError(t, buildPipeline.Start(ctx))
-	defer buildPipeline.Stop()
+	defer func() { _ = buildPipeline.Stop() }()
 
 	// Test concurrent build requests
 	t.Run("concurrent_builds", func(t *testing.T) {

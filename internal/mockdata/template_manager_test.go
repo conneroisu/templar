@@ -14,7 +14,7 @@ func TestFileTemplateManager_LoadTemplate(t *testing.T) {
 	// Create temporary directory for testing
 	tempDir, err := os.MkdirTemp("", "templar_template_test")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	// Override base directory for testing
 	manager := &FileTemplateManager{
@@ -40,7 +40,7 @@ func TestFileTemplateManager_SaveTemplate(t *testing.T) {
 	// Create temporary directory for testing
 	tempDir, err := os.MkdirTemp("", "templar_template_test")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	manager := &FileTemplateManager{
 		baseDir:   tempDir,
@@ -85,7 +85,7 @@ func TestFileTemplateManager_ResolveTemplate(t *testing.T) {
 	// Create temporary directory for testing
 	tempDir, err := os.MkdirTemp("", "templar_template_test")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	manager := &FileTemplateManager{
 		baseDir:   tempDir,
@@ -166,7 +166,7 @@ func TestFileTemplateManager_ListTemplates(t *testing.T) {
 	// Create temporary directory for testing
 	tempDir, err := os.MkdirTemp("", "templar_template_test")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	manager := &FileTemplateManager{
 		baseDir:   tempDir,
@@ -227,7 +227,7 @@ func TestFileTemplateManager_DeleteTemplate(t *testing.T) {
 	// Create temporary directory for testing
 	tempDir, err := os.MkdirTemp("", "templar_template_test")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	manager := &FileTemplateManager{
 		baseDir:   tempDir,
@@ -273,7 +273,7 @@ func TestFileTemplateManager_DefaultTemplates(t *testing.T) {
 	// Create temporary directory for testing
 	tempDir, err := os.MkdirTemp("", "templar_template_test")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	manager := &FileTemplateManager{
 		baseDir:   tempDir,
@@ -315,7 +315,7 @@ func TestFileTemplateManager_ConcurrentAccess(t *testing.T) {
 	// Create temporary directory for testing
 	tempDir, err := os.MkdirTemp("", "templar_template_test")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	manager := &FileTemplateManager{
 		baseDir:   tempDir,
@@ -360,7 +360,7 @@ func TestFileTemplateManager_InvalidTemplateHandling(t *testing.T) {
 	// Create temporary directory for testing
 	tempDir, err := os.MkdirTemp("", "templar_template_test")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	// Create invalid YAML file
 	invalidFile := filepath.Join(tempDir, "invalid.yml")

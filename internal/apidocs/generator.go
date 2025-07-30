@@ -133,7 +133,7 @@ func (g *APIDocumentationGenerator) writeJSONOutput(spec *APISpecification) erro
 	if err != nil {
 		return fmt.Errorf("failed to create JSON file: %w", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")
@@ -154,7 +154,7 @@ func (g *APIDocumentationGenerator) writeYAMLOutput(spec *APISpecification) erro
 	if err != nil {
 		return fmt.Errorf("failed to create YAML file: %w", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	encoder := yaml.NewEncoder(file)
 	encoder.SetIndent(2)

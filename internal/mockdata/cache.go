@@ -357,13 +357,11 @@ type TTLMockDataCache struct {
 
 // NewTTLMockDataCache creates a new TTL-based cache with a default TTL.
 func NewTTLMockDataCache(defaultTTL time.Duration) MockDataCache {
-	base := NewMemoryMockDataCache().(*MemoryMockDataCache)
 	return &TTLMockDataCache{
 		MemoryMockDataCache: MemoryMockDataCache{
-			data:    base.data,
-			mutex:   base.mutex,
-			cleanup: base.cleanup,
-			done:    base.done,
+			data:    make(map[string]*cacheEntry),
+			cleanup: make(chan struct{}),
+			done:    make(chan struct{}),
 		},
 		defaultTTL: defaultTTL,
 	}

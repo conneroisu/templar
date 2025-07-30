@@ -555,20 +555,18 @@ func watchCacheStats(cacheDir, component string) error {
 	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
 
-	for {
-		select {
-		case <-ticker.C:
-			stats, err := gatherCacheStats(cacheDir, component)
-			if err != nil {
-				return err
-			}
-			
-			// Clear screen and display updated stats
-			fmt.Print("\033[2J\033[H") // Clear screen
-			fmt.Println("📊 Cache Statistics (Live)")
-			displayCacheStats(stats, false)
+	for range ticker.C {
+		stats, err := gatherCacheStats(cacheDir, component)
+		if err != nil {
+			return err
 		}
+		
+		// Clear screen and display updated stats
+		fmt.Print("\033[2J\033[H") // Clear screen
+		fmt.Println("📊 Cache Statistics (Live)")
+		_ = displayCacheStats(stats, false)
 	}
+	return nil // This will never be reached but satisfies linter
 }
 
 // previewCacheClear shows what would be cleared without actually clearing.

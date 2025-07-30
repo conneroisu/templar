@@ -728,7 +728,7 @@ func (s *PreviewServer) serveOpenAPIYAML(w http.ResponseWriter, r *http.Request)
 	// TODO: Use the spec variable to generate actual YAML output
 	_ = spec // Suppress unused variable warning
 	w.Header().Set(HeaderContentType, ContentTypeJSON)
-	w.Write([]byte(`{"error": "YAML format not yet implemented. Use ?format=json"}`))
+	_, _ = w.Write([]byte(`{"error": "YAML format not yet implemented. Use ?format=json"}`))
 }
 
 // generateOpenAPISpec generates the OpenAPI specification dynamically.

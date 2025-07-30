@@ -18,7 +18,7 @@ func TestRealWorldTemplComponents(t *testing.T) {
 	t.Run("blog_post_component", func(t *testing.T) {
 		tempDir := fmt.Sprintf("blog_test_%d", time.Now().UnixNano())
 		require.NoError(t, os.MkdirAll(tempDir, 0755))
-		defer os.RemoveAll(tempDir)
+		defer func() { _ = os.RemoveAll(tempDir) }()
 
 		reg := registry.NewComponentRegistry()
 		scanner := scanner.NewComponentScanner(reg)
@@ -81,7 +81,7 @@ templ BlogPostCard(post BlogPost) {
 	t.Run("navigation_component", func(t *testing.T) {
 		tempDir := fmt.Sprintf("nav_test_%d", time.Now().UnixNano())
 		require.NoError(t, os.MkdirAll(tempDir, 0755))
-		defer os.RemoveAll(tempDir)
+		defer func() { _ = os.RemoveAll(tempDir) }()
 
 		reg := registry.NewComponentRegistry()
 		scanner := scanner.NewComponentScanner(reg)
@@ -181,7 +181,7 @@ templ Navigation(props NavigationProps) {
 	t.Run("form_component", func(t *testing.T) {
 		tempDir := fmt.Sprintf("form_test_%d", time.Now().UnixNano())
 		require.NoError(t, os.MkdirAll(tempDir, 0755))
-		defer os.RemoveAll(tempDir)
+		defer func() { _ = os.RemoveAll(tempDir) }()
 
 		reg := registry.NewComponentRegistry()
 		scanner := scanner.NewComponentScanner(reg)
@@ -326,7 +326,7 @@ func hasFieldError(fieldName string, errors []ValidationError) bool {
 	t.Run("dashboard_component", func(t *testing.T) {
 		tempDir := fmt.Sprintf("dashboard_test_%d", time.Now().UnixNano())
 		require.NoError(t, os.MkdirAll(tempDir, 0755))
-		defer os.RemoveAll(tempDir)
+		defer func() { _ = os.RemoveAll(tempDir) }()
 
 		reg := registry.NewComponentRegistry()
 		scanner := scanner.NewComponentScanner(reg)
@@ -451,7 +451,7 @@ templ LineChart(data ChartData) {
 	t.Run("e_commerce_product", func(t *testing.T) {
 		tempDir := fmt.Sprintf("product_test_%d", time.Now().UnixNano())
 		require.NoError(t, os.MkdirAll(tempDir, 0755))
-		defer os.RemoveAll(tempDir)
+		defer func() { _ = os.RemoveAll(tempDir) }()
 
 		reg := registry.NewComponentRegistry()
 		scanner := scanner.NewComponentScanner(reg)
@@ -632,7 +632,7 @@ templ StarRating(rating float64) {
 func TestRealWorldTemplModification(t *testing.T) {
 	tempDir := fmt.Sprintf("modification_test_%d", time.Now().UnixNano())
 	require.NoError(t, os.MkdirAll(tempDir, 0755))
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	reg := registry.NewComponentRegistry()
 	scanner := scanner.NewComponentScanner(reg)
