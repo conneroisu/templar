@@ -1,4 +1,4 @@
-package main
+package integration
 
 import (
 	"context"
@@ -99,7 +99,7 @@ func TestIntegration_ComponentRegistryWithFileWatcher(t *testing.T) {
 	// Create a component file
 	componentFile := filepath.Join(tempDir, "new_component.templ")
 	err = os.WriteFile(componentFile, []byte(`
-package main
+package integration
 
 templ NewComponent(title string) {
 	<h1>{ title }</h1>
@@ -210,7 +210,7 @@ func testServerSetupAndShutdown(t *testing.T, port int) {
 	// Create a test component file
 	componentFile := filepath.Join(tempDir, "test.templ")
 	err := os.WriteFile(componentFile, []byte(`
-package main
+package integration
 
 templ TestComponent(title string) {
 	<h1>{ title }</h1>
@@ -269,7 +269,7 @@ func TestIntegration_ComponentScanningAndRegistry(t *testing.T) {
 		{
 			path: filepath.Join(tempDir, "component1.templ"),
 			content: `
-package main
+package integration
 
 templ Component1(title string) {
 	<h1>{ title }</h1>
@@ -279,7 +279,7 @@ templ Component1(title string) {
 		{
 			path: filepath.Join(subDir, "component2.templ"),
 			content: `
-package main
+package integration
 
 templ Component2(content string) {
 	<p>{ content }</p>
@@ -390,7 +390,7 @@ func TestIntegration_FullSystem(t *testing.T) {
 	// Create a test component
 	componentFile := filepath.Join(tempDir, "test.templ")
 	err := os.WriteFile(componentFile, []byte(`
-package main
+package integration
 
 templ TestComponent(title string) {
 	<h1>{ title }</h1>
@@ -431,7 +431,7 @@ templ TestComponent(title string) {
 
 	// Modify the component to trigger file watching
 	err = os.WriteFile(componentFile, []byte(`
-package main
+package integration
 
 templ TestComponent(title string) {
 	<h1>{ title }</h1>

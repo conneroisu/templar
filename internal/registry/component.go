@@ -95,6 +95,9 @@ func NewComponentRegistry() *ComponentRegistry {
 func (r *ComponentRegistry) Register(component *types.ComponentInfo) {
 	// Validate and sanitize component data
 	component = r.sanitizeComponent(component)
+	if component == nil {
+		return // Skip registration of nil components
+	}
 
 	// Analyze dependencies outside of lock to minimize lock time
 	var sanitizedDeps []string

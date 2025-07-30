@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -45,7 +46,7 @@ func ExampleIsolatedTestSuite() {
 	var t *testing.T // In real code, this comes from the test function parameter
 	
 	// Create completely isolated test environment
-	mf, adapters, cleanup := CreateIsolatedTestSuite(t)
+	_, adapters, cleanup := CreateIsolatedTestSuite(t)
 	defer cleanup()
 
 	// Use adapters instead of direct os/http/time calls
@@ -109,7 +110,7 @@ func ExampleConvertingExistingTest(t *testing.T) {
 	mf.FileSystem.On("ReadFile", "/config/config.json").Return(configContent, nil)
 
 	// Create adapters
-	adapters := NewMockAdapters(mf)
+	_ = NewMockAdapters(mf)
 
 	// Test function that uses adapters instead of direct os calls
 	// config, err := ReadConfigWithAdapter(adapters.FileSystem, "/config/config.json")
