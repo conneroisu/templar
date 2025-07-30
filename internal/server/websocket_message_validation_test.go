@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 	"time"
@@ -317,7 +318,7 @@ func TestWebSocketMessageValidation(t *testing.T) {
 		assert.False(t, isShutdown, "Should not be shutdown initially")
 
 		// Test graceful shutdown
-		err := wsManager.Shutdown(nil)
+		err := wsManager.Shutdown(context.TODO())
 		assert.NoError(t, err, "Shutdown should succeed")
 
 		isShutdown = wsManager.IsShutdown()

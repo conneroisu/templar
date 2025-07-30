@@ -22,7 +22,7 @@ func TestEnhancedMemoryPooling(t *testing.T) {
 	// Test that object pools are being used
 	initialBatch := eventBatchPool.Get().([]ChangeEvent)
 	slicedBatch := initialBatch[:0]
-	eventBatchPool.Put(slicedBatch)
+	eventBatchPool.Put(&slicedBatch)
 
 	// Add many events to trigger multiple pool operations
 	for i := range 200 {
@@ -45,7 +45,8 @@ func TestEnhancedMemoryPooling(t *testing.T) {
 	if testBatch == nil {
 		t.Error("Event batch pool returned nil")
 	}
-	eventBatchPool.Put(testBatch[:0])
+	slicedTestBatch := testBatch[:0]
+	eventBatchPool.Put(&slicedTestBatch)
 }
 
 // TestBatchProcessing tests that events are processed in batches efficiently.

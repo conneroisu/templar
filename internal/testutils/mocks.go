@@ -100,8 +100,8 @@ func (mfs *MockFileSystem) Reset() {
 	mfs.mu.Lock()
 	defer mfs.mu.Unlock()
 	
-	mfs.Mock.ExpectedCalls = nil
-	mfs.Mock.Calls = nil
+	mfs.ExpectedCalls = nil
+	mfs.Calls = nil
 	mfs.files = make(map[string]*MockFile)
 	mfs.permissions = make(map[string]os.FileMode)
 }
@@ -260,8 +260,8 @@ func (mn *MockNetwork) Reset() {
 	mn.mu.Lock()
 	defer mn.mu.Unlock()
 	
-	mn.Mock.ExpectedCalls = nil
-	mn.Mock.Calls = nil
+	mn.ExpectedCalls = nil
+	mn.Calls = nil
 	mn.httpResponses = make(map[string]*http.Response)
 	mn.httpErrors = make(map[string]error)
 }
@@ -316,8 +316,8 @@ func (mt *MockTime) Reset() {
 	mt.mu.Lock()
 	defer mt.mu.Unlock()
 	
-	mt.Mock.ExpectedCalls = nil
-	mt.Mock.Calls = nil
+	mt.ExpectedCalls = nil
+	mt.Calls = nil
 	mt.currentTime = time.Now()
 	mt.frozen = false
 }
@@ -395,8 +395,8 @@ func (mcr *MockCommandRunner) Reset() {
 	mcr.mu.Lock()
 	defer mcr.mu.Unlock()
 	
-	mcr.Mock.ExpectedCalls = nil
-	mcr.Mock.Calls = nil
+	mcr.ExpectedCalls = nil
+	mcr.Calls = nil
 	mcr.commands = make(map[string]*CommandResult)
 }
 
