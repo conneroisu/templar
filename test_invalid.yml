@@ -1,5 +1,0 @@
-server:
-  port: 8080
-  host: localhost
-invalid_syntax: [unclosed
-EOF < /dev/null

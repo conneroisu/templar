@@ -16,6 +16,15 @@ import (
 	"strings"
 )
 
+const (
+	// Type constants for mock data generation
+	typeString  = "string"
+	typeInt     = "int"
+	typeBool    = "bool"
+	typeBoolean = "boolean"
+	typeFloat64 = "float64"
+)
+
 // AdvancedDataComposer handles composition of complex nested mock data structures.
 //
 // Design philosophy: Balances flexibility with safety by supporting arbitrary
@@ -243,13 +252,13 @@ func (c *AdvancedDataComposer) composeElementByType(
 	ctx *GenerationContext,
 ) (interface{}, error) {
 	switch strings.ToLower(elementType) {
-	case "string":
+	case typeString:
 		return c.generateString(ctx), nil
-	case "int", "integer":
+	case typeInt, "integer":
 		return c.generateInt(ctx), nil
 	case "float", "double":
 		return c.generateFloat(ctx), nil
-	case "bool", "boolean":
+	case typeBool, typeBoolean:
 		return c.generateBool(ctx), nil
 	case "date", "datetime":
 		return c.generateDate(ctx), nil

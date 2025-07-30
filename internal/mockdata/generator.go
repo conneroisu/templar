@@ -11,6 +11,14 @@ import (
 	"github.com/conneroisu/templar/internal/types"
 )
 
+const (
+	// Type constants specific to generator
+	typeInt32    = "int32"
+	typeInt64    = "int64"
+	typeFloat32  = "float32"
+	typeTimeTime = "time.time"
+)
+
 // MockGenerator generates intelligent mock data based on parameter names and types.
 // Uses crypto/rand for security-sensitive operations and math/rand for deterministic mock data.
 type MockGenerator struct {
@@ -120,15 +128,15 @@ func (g *MockGenerator) generateByNamePattern(name, _ string) interface{} {
 // generateByType generates mock data based on Go types.
 func (g *MockGenerator) generateByType(paramType string) interface{} {
 	switch strings.ToLower(paramType) {
-	case "string":
+	case typeString:
 		return "Sample text"
-	case "int", "int32", "int64":
+	case typeInt, typeInt32, typeInt64:
 		return g.rng.Intn(100) + 1
-	case "float32", "float64":
+	case typeFloat32, typeFloat64:
 		return g.rng.Float64() * 100
-	case "bool", "boolean":
+	case typeBool, typeBoolean:
 		return g.rng.Intn(2) == 1
-	case "time.time":
+	case typeTimeTime:
 		return time.Now().Format("2006-01-02T15:04:05Z07:00")
 	default:
 		// Handle slice types

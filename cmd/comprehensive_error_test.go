@@ -12,6 +12,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	windowsOS = "windows"
+)
+
 // TestInitCommandErrorPaths tests error scenarios specific to the init command
 func TestInitCommandErrorPaths(t *testing.T) {
 	tests := []struct {
@@ -299,7 +303,7 @@ func createEmptyTestDir(t *testing.T) string {
 
 func createReadOnlyTestDir(t *testing.T) string {
 	tempDir := t.TempDir()
-	if runtime.GOOS != "windows" {
+	if runtime.GOOS != windowsOS {
 		require.NoError(t, os.Chmod(tempDir, 0444))
 	}
 	return tempDir
@@ -349,7 +353,7 @@ func createReadOnlyCacheTestDir(t *testing.T) string {
 	tempDir := t.TempDir()
 	cacheDir := filepath.Join(tempDir, ".templar", "cache")
 	require.NoError(t, os.MkdirAll(cacheDir, 0755))
-	if runtime.GOOS != "windows" {
+	if runtime.GOOS != windowsOS {
 		require.NoError(t, os.Chmod(cacheDir, 0444))
 	}
 	return tempDir
@@ -359,7 +363,7 @@ func createReadOnlyComponentsTestDir(t *testing.T) string {
 	tempDir := t.TempDir()
 	componentsDir := filepath.Join(tempDir, "components")
 	require.NoError(t, os.Mkdir(componentsDir, 0755))
-	if runtime.GOOS != "windows" {
+	if runtime.GOOS != windowsOS {
 		require.NoError(t, os.Chmod(componentsDir, 0000))
 	}
 	return tempDir
@@ -370,7 +374,7 @@ func cleanupTestDir(t *testing.T, dir string) {
 }
 
 func cleanupReadOnlyTestDir(t *testing.T, dir string) {
-	if runtime.GOOS != "windows" {
+	if runtime.GOOS != windowsOS {
 		// Restore permissions before cleanup
 		_ = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 			if err == nil {
