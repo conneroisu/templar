@@ -213,7 +213,14 @@ templ InvalidHTML() {
 				assert.Error(t, err, "Should detect malformed syntax in %s", tc.name)
 
 				// No component should be registered
-				componentName := strings.ReplaceAll(strings.Title(tc.name), "_", "")
+				// Convert to title case manually to avoid deprecated strings.Title
+				words := strings.Split(tc.name, "_")
+				for i, word := range words {
+					if len(word) > 0 {
+						words[i] = strings.ToUpper(word[:1]) + word[1:]
+					}
+				}
+				componentName := strings.Join(words, "")
 				_, exists := reg.Get(componentName)
 				assert.False(t, exists, "Malformed component should not be registered: %s", componentName)
 			})
