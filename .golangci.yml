@@ -1,0 +1,36 @@
+version: 2
+
+linters:
+  enable-only:
+    - errcheck
+    - govet
+    - ineffassign
+    - bodyclose
+    - dupl
+    - unused
+
+linters-settings:
+  dupl:
+    threshold: 100  # Allow some duplication for readability
+  
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+    
+  staticcheck:
+    checks: ["all", "-SA1019"]  # Disable deprecation warnings
+
+run:
+  timeout: 5m
+  tests: true
+  
+issues:
+  exclude-rules:
+    # Exclude SA1019 (deprecated) warnings for known issues that will be fixed later
+    - linters:
+        - staticcheck
+      text: "SA1019:"
+    # Allow some unused parameters in test files
+    - path: "_test\\.go"
+      linters:
+        - unused
