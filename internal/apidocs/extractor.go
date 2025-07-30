@@ -26,6 +26,7 @@ type APIExtractor struct {
 	// fileSet tracks source file positions for error reporting
 	fileSet *token.FileSet
 	// packageCache caches parsed packages to avoid redundant parsing
+	//nolint:staticcheck // ast.Package deprecated but still functional for our use case
 	packageCache map[string]*ast.Package
 	// typeAnalyzer performs Go type analysis for schema generation
 	typeAnalyzer *TypeAnalyzer
@@ -37,6 +38,7 @@ type APIExtractor struct {
 func NewAPIExtractor(config *GenerationConfig) *APIExtractor {
 	return &APIExtractor{
 		fileSet:      token.NewFileSet(),
+		//nolint:staticcheck // ast.Package deprecated but still functional for our use case
 		packageCache: make(map[string]*ast.Package),
 		typeAnalyzer: NewTypeAnalyzer(),
 		config:       config,
@@ -89,6 +91,7 @@ func (e *APIExtractor) ExtractAPIs(serverPackagePath string) (*GenerationResult,
 }
 
 // parsePackage parses all Go files in the specified package directory.
+//nolint:staticcheck // ast.Package deprecated but still functional for our use case
 func (e *APIExtractor) parsePackage(packagePath string) (*ast.Package, error) {
 	// Check cache first
 	if pkg, exists := e.packageCache[packagePath]; exists {
@@ -121,6 +124,7 @@ func (e *APIExtractor) parsePackage(packagePath string) (*ast.Package, error) {
 }
 
 // discoverEndpoints finds HTTP handler functions and extracts their metadata.
+//nolint:staticcheck // ast.Package deprecated but still functional for our use case
 func (e *APIExtractor) discoverEndpoints(pkg *ast.Package) ([]*APIEndpoint, error) {
 	var endpoints []*APIEndpoint
 
