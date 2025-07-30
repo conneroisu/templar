@@ -426,7 +426,7 @@ func (e *APIExtractor) analyzeHandlerSignature(funcDecl *ast.FuncDecl, endpoint 
 	e.extractPathParameters(endpoint)
 
 	// Add common query parameters for GET requests
-	if endpoint.Method == "GET" {
+	if endpoint.Method == http.MethodGet {
 		e.addCommonQueryParameters(endpoint)
 	}
 }

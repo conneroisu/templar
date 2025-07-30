@@ -27,7 +27,7 @@ func ExampleBasicMockUsage() {
 	mf.FileSystem.On("ReadFile", "/config/app.json").Return([]byte(`{"port": 8080}`), nil)
 
 	// Set up network mock
-	response := &http.Response{StatusCode: 200}
+	response := &http.Response{StatusCode: http.StatusOK}
 	mf.Network.On("Get", "http://api.example.com").Return(response, nil)
 
 	// Set up time mock for deterministic testing
@@ -248,7 +248,7 @@ func ExampleMockingWebSocketConnections(t *testing.T) {
 
 	// Mock HTTP upgrade request for WebSocket
 	upgradeResponse := &http.Response{
-		StatusCode: 101, // Switching Protocols
+		StatusCode: http.StatusSwitchingProtocols,
 		Header:     make(http.Header),
 	}
 	upgradeResponse.Header.Set("Upgrade", "websocket")

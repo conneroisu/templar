@@ -138,7 +138,7 @@ func TestMockNetworkAdapter(t *testing.T) {
 
 	// Set up mock expectations
 	response := &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Body:       http.NoBody,
 	}
 	mf.Network.On("Get", "http://example.com").Return(response, nil)
