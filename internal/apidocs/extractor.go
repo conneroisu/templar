@@ -52,7 +52,7 @@ func NewAPIExtractor(config *GenerationConfig) *APIExtractor {
 // 2. Find HTTP handler functions by analyzing function signatures and names
 // 3. Extract endpoint metadata from function comments and code structure
 // 4. Generate JSON schemas for request/response types
-// 5. Build complete OpenAPI specification
+// 5. Build complete OpenAPI specification.
 func (e *APIExtractor) ExtractAPIs(serverPackagePath string) (*GenerationResult, error) {
 	log.Printf("Starting API extraction from: %s", serverPackagePath)
 

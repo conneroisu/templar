@@ -56,13 +56,11 @@ func TestRunInitValidation(t *testing.T) {
 					assert.Contains(t, strings.ToLower(err.Error()), strings.ToLower(tt.errorText), 
 						"Error should contain '%s' for test: %s. Got: %s", tt.errorText, tt.name, err.Error())
 				}
-			} else {
+			} else if err != nil {
 				// For valid cases, we might get other errors (like missing directories)
 				// but they shouldn't be validation errors
-				if err != nil {
-					assert.NotContains(t, err.Error(), "dangerous character")
-					assert.NotContains(t, err.Error(), "path traversal")
-				}
+				assert.NotContains(t, err.Error(), "dangerous character")
+				assert.NotContains(t, err.Error(), "path traversal")
 			}
 		})
 	}

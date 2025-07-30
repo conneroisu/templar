@@ -224,10 +224,8 @@ components:
 			if tt.expectError {
 				assert.Error(t, err, "Expected config validation error for: %s", tt.name)
 				assert.Nil(t, cfg, "Config should be nil on error")
-			} else {
-				if err != nil {
-					t.Logf("Config loading failed (may be expected in test environment): %v", err)
-				}
+			} else if err != nil {
+				t.Logf("Config loading failed (may be expected in test environment): %v", err)
 			}
 		})
 	}

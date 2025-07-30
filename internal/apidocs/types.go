@@ -38,7 +38,7 @@ type APIEndpoint struct {
 	Tags []string `json:"tags,omitempty"`
 	// Security specifies authentication requirements
 	Security []SecurityRequirement `json:"security,omitempty"`
-	// Deprecated indicates if the endpoint is deprecated
+	// Deprecated: indicates if the endpoint is deprecated
 	Deprecated bool `json:"deprecated,omitempty"`
 }
 
