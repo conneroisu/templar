@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestWebSocketMessageValidation validates WebSocket message structure and flow
+// TestWebSocketMessageValidation validates WebSocket message structure and flow.
 func TestWebSocketMessageValidation(t *testing.T) {
 	t.Run("update_message_structure", func(t *testing.T) {
 		// Test UpdateMessage structure and JSON serialization
@@ -224,7 +224,7 @@ func TestWebSocketMessageValidation(t *testing.T) {
 				err = json.Unmarshal(jsonData, &parsed)
 				require.NoError(t, err, "Should deserialize %s", tc.name)
 
-				assert.Equal(t, tc.content, parsed.Content, 
+				assert.Equal(t, tc.content, parsed.Content,
 					"Content should match for %s", tc.name)
 
 				t.Logf("✅ %s: content length %d", tc.name, len(tc.content))
@@ -305,7 +305,7 @@ func TestWebSocketMessageValidation(t *testing.T) {
 	t.Run("websocket_manager_configuration", func(t *testing.T) {
 		// Test WebSocket manager configuration and setup
 		validator := &simpleOriginValidator{}
-		
+
 		// Test creation without panicking
 		wsManager := NewWebSocketManager(validator, nil)
 		require.NotNil(t, wsManager, "WebSocket manager should be created")
@@ -335,6 +335,7 @@ func generateLargeContent(size int) string {
 	for i := range content {
 		content[i] = byte('A' + (i % 26))
 	}
+
 	return string(content)
 }
 

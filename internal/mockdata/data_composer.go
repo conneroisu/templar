@@ -12,12 +12,13 @@
 package mockdata
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
 
 const (
-	// Type constants for mock data generation
+	// Type constants for mock data generation.
 	typeString  = "string"
 	typeInt     = "int"
 	typeBool    = "bool"
@@ -35,7 +36,7 @@ const (
 // Safety measures:
 // - Maximum depth limiting prevents stack overflow in recursive structures
 // - Context tracking enables debugging and prevents circular references
-// - Graceful degradation returns placeholders when limits are reached
+// - Graceful degradation returns placeholders when limits are reached.
 type AdvancedDataComposer struct {
 	maxDepth int // Maximum nesting depth to prevent infinite recursion
 }
@@ -62,7 +63,7 @@ func NewAdvancedDataComposer() DataComposer {
 // Composition strategy:
 // 1. Check depth limits for safety
 // 2. Dispatch based on schema type
-// 3. Fall back to object composition for flexibility
+// 3. Fall back to object composition for flexibility.
 func (c *AdvancedDataComposer) ComposeData(
 	schema map[string]interface{},
 	ctx *GenerationContext,
@@ -103,7 +104,7 @@ func (c *AdvancedDataComposer) ComposeArray(
 	newCtx := c.createChildContext(ctx, "[]")
 	result := make([]interface{}, length)
 
-	for i := 0; i < length; i++ {
+	for i := range length {
 		element, err := c.composeElementByType(elementType, newCtx)
 		if err != nil {
 			return nil, fmt.Errorf("failed to compose array element %d: %w", i, err)
@@ -196,7 +197,7 @@ func (c *AdvancedDataComposer) composeNestedFromSchema(
 		return c.composeValue(structure, ctx)
 	}
 
-	return nil, fmt.Errorf("invalid nested schema definition")
+	return nil, errors.New("invalid nested schema definition")
 }
 
 // composeValueFromSchema creates a single value based on schema.
@@ -205,6 +206,7 @@ func (c *AdvancedDataComposer) composeValueFromSchema(
 	ctx *GenerationContext,
 ) (interface{}, error) {
 	valueType := c.getStringValue(schema, "type", "string")
+
 	return c.composeElementByType(valueType, ctx)
 }
 
@@ -243,6 +245,7 @@ func (c *AdvancedDataComposer) composeSlice(
 		}
 		result[i] = composedItem
 	}
+
 	return result, nil
 }
 
@@ -277,7 +280,8 @@ func (c *AdvancedDataComposer) composeElementByType(
 		if strings.Contains(elementType, ".") {
 			return c.interpolateTemplate("{{"+elementType+"}}", ctx)
 		}
-		return fmt.Sprintf("mock_%s", elementType), nil
+
+		return "mock_" + elementType, nil
 	}
 }
 
@@ -316,7 +320,7 @@ func (c *AdvancedDataComposer) interpolateTemplate(
 // - Handles single template expressions per string
 // - Maps faker expressions to internal generators for consistency
 // - Returns placeholder for unknown expressions to aid debugging
-// - Uses deterministic generation based on context seed
+// - Uses deterministic generation based on context seed.
 func (c *AdvancedDataComposer) processFakerTemplate(template string, ctx *GenerationContext) interface{} {
 	// Extract template expression using simple string parsing
 	start := strings.Index(template, "{{")
@@ -369,6 +373,7 @@ func (c *AdvancedDataComposer) processFakerTemplate(template string, ctx *Genera
 func (c *AdvancedDataComposer) generateString(ctx *GenerationContext) string {
 	words := []string{"sample", "demo", "test", "mock", "example"}
 	idx := ctx.Config.Seed % int64(len(words))
+
 	return words[idx]
 }
 
@@ -399,6 +404,7 @@ func (c *AdvancedDataComposer) generateEmail(ctx *GenerationContext) string {
 func (c *AdvancedDataComposer) generateName(ctx *GenerationContext) string {
 	names := []string{"John Doe", "Jane Smith", "Alex Johnson", "Taylor Brown"}
 	idx := ctx.Config.Seed % int64(len(names))
+
 	return names[idx]
 }
 
@@ -410,6 +416,7 @@ func (c *AdvancedDataComposer) generateText(ctx *GenerationContext) string {
 		"Ut labore et dolore magna aliqua.",
 	}
 	idx := ctx.Config.Seed % int64(len(texts))
+
 	return texts[idx]
 }
 
@@ -431,7 +438,7 @@ func (c *AdvancedDataComposer) generateURL(ctx *GenerationContext) string {
 // - Increments depth for recursion tracking
 // - Extends path for debugging and error reporting
 // - Preserves configuration and cache for consistency
-// - Maintains metadata for pattern analysis
+// - Maintains metadata for pattern analysis.
 func (c *AdvancedDataComposer) createChildContext(parent *GenerationContext, path string) *GenerationContext {
 	// Build new path by appending to parent path
 	newPath := make([]string, len(parent.Path)+1)
@@ -456,6 +463,7 @@ func (c *AdvancedDataComposer) isMetadataKey(key string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -465,6 +473,7 @@ func (c *AdvancedDataComposer) getStringValue(schema map[string]interface{}, key
 			return strValue
 		}
 	}
+
 	return defaultValue
 }
 
@@ -479,5 +488,6 @@ func (c *AdvancedDataComposer) getIntValue(schema map[string]interface{}, key st
 			// Could parse string to int if needed
 		}
 	}
+
 	return defaultValue
 }

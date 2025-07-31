@@ -37,7 +37,7 @@ type APIExtractor struct {
 // NewAPIExtractor creates a new API extractor with the specified configuration.
 func NewAPIExtractor(config *GenerationConfig) *APIExtractor {
 	return &APIExtractor{
-		fileSet:      token.NewFileSet(),
+		fileSet: token.NewFileSet(),
 		//nolint:staticcheck // ast.Package deprecated but still functional for our use case
 		packageCache: make(map[string]*ast.Package),
 		typeAnalyzer: NewTypeAnalyzer(),
@@ -91,6 +91,7 @@ func (e *APIExtractor) ExtractAPIs(serverPackagePath string) (*GenerationResult,
 }
 
 // parsePackage parses all Go files in the specified package directory.
+//
 //nolint:staticcheck // ast.Package deprecated but still functional for our use case
 func (e *APIExtractor) parsePackage(packagePath string) (*ast.Package, error) {
 	// Check cache first
@@ -109,6 +110,7 @@ func (e *APIExtractor) parsePackage(packagePath string) (*ast.Package, error) {
 	for _, p := range packages {
 		if !strings.HasSuffix(p.Name, "_test") {
 			pkg = p
+
 			break
 		}
 	}
@@ -124,6 +126,7 @@ func (e *APIExtractor) parsePackage(packagePath string) (*ast.Package, error) {
 }
 
 // discoverEndpoints finds HTTP handler functions and extracts their metadata.
+//
 //nolint:staticcheck // ast.Package deprecated but still functional for our use case
 func (e *APIExtractor) discoverEndpoints(pkg *ast.Package) ([]*APIEndpoint, error) {
 	var endpoints []*APIEndpoint
@@ -133,6 +136,7 @@ func (e *APIExtractor) discoverEndpoints(pkg *ast.Package) ([]*APIEndpoint, erro
 		fileEndpoints, err := e.analyzeFile(file)
 		if err != nil {
 			log.Printf("Warning: failed to analyze file: %v", err)
+
 			continue
 		}
 		endpoints = append(endpoints, fileEndpoints...)
@@ -152,6 +156,7 @@ func (e *APIExtractor) analyzeFile(file *ast.File) ([]*APIEndpoint, error) {
 				endpoints = append(endpoints, endpoint)
 			}
 		}
+
 		return true
 	})
 
@@ -165,7 +170,7 @@ func (e *APIExtractor) analyzeFile(file *ast.File) ([]*APIEndpoint, error) {
 // comprehensive endpoint documentation while maintaining high performance.
 //
 // Detection strategy:
-// 1. Signature validation: Must match standard HTTP handler pattern (ResponseWriter, *Request)  
+// 1. Signature validation: Must match standard HTTP handler pattern (ResponseWriter, *Request)
 // 2. Naming convention analysis: Follows common Go HTTP handler patterns (handle*, *Handler)
 // 3. Comment extraction: Parses function documentation for endpoint descriptions
 // 4. Parameter inference: Analyzes function signatures to determine request/response schemas
@@ -178,7 +183,7 @@ func (e *APIExtractor) analyzeFile(file *ast.File) ([]*APIEndpoint, error) {
 // Limitations:
 // - May miss dynamically registered handlers or unconventional patterns
 // - Requires consistent naming conventions for optimal endpoint discovery
-// - Complex middleware chains may obscure handler detection
+// - Complex middleware chains may obscure handler detection.
 func (e *APIExtractor) analyzeHandlerFunction(funcDecl *ast.FuncDecl) *APIEndpoint {
 	// Check if function matches HTTP handler signature - this is our primary filter
 	// to distinguish actual HTTP handlers from other functions in the server package
@@ -300,7 +305,7 @@ func (e *APIExtractor) isRequestType(expr ast.Expr) bool {
 // Performance implications:
 // - Regex compilation is cached implicitly by Go's regexp package
 // - O(n) complexity where n is the number of pattern rules (constant for this implementation)
-// - Pattern matching executes in microseconds per function, enabling large codebase analysis
+// - Pattern matching executes in microseconds per function, enabling large codebase analysis.
 func (e *APIExtractor) extractPathAndMethod(funcDecl *ast.FuncDecl, endpoint *APIEndpoint) {
 	funcName := funcDecl.Name.Name
 
@@ -311,19 +316,19 @@ func (e *APIExtractor) extractPathAndMethod(funcDecl *ast.FuncDecl, endpoint *AP
 	// - CRUD operation patterns: Resource-oriented handlers (handleUserCreate, handleUserUpdate)
 	// - Alternative naming: *Handler suffix, api* prefix patterns
 	patterns := map[string]string{
-		`handle(\w+)`:                "GET",     // handleUsers -> GET /users
-		`handleGet(\w+)`:             "GET",     // handleGetUser -> GET /user  
-		`handlePost(\w+)`:            "POST",    // handlePostUser -> POST /user
-		`handlePut(\w+)`:             "PUT",     // handlePutUser -> PUT /user
-		`handleDelete(\w+)`:          "DELETE",  // handleDeleteUser -> DELETE /user
-		`handlePatch(\w+)`:           "PATCH",   // handlePatchUser -> PATCH /user
-		`handleOptions(\w+)`:         "OPTIONS", // handleOptionsUser -> OPTIONS /user
-		`handle(\w+)List`:            "GET",     // handleUserList -> GET /user-list
-		`handle(\w+)Create`:          "POST",    // handleUserCreate -> POST /user-create
-		`handle(\w+)Update`:          "PUT",     // handleUserUpdate -> PUT /user-update
-		`handle(\w+)Delete`:          "DELETE",  // handleUserDelete -> DELETE /user-delete
-		`(\w+)Handler`:               "GET",     // userHandler -> GET /user
-		`api(\w+)`:                   "GET",     // apiUser -> GET /user
+		`handle(\w+)`:        "GET",     // handleUsers -> GET /users
+		`handleGet(\w+)`:     "GET",     // handleGetUser -> GET /user
+		`handlePost(\w+)`:    "POST",    // handlePostUser -> POST /user
+		`handlePut(\w+)`:     "PUT",     // handlePutUser -> PUT /user
+		`handleDelete(\w+)`:  "DELETE",  // handleDeleteUser -> DELETE /user
+		`handlePatch(\w+)`:   "PATCH",   // handlePatchUser -> PATCH /user
+		`handleOptions(\w+)`: "OPTIONS", // handleOptionsUser -> OPTIONS /user
+		`handle(\w+)List`:    "GET",     // handleUserList -> GET /user-list
+		`handle(\w+)Create`:  "POST",    // handleUserCreate -> POST /user-create
+		`handle(\w+)Update`:  "PUT",     // handleUserUpdate -> PUT /user-update
+		`handle(\w+)Delete`:  "DELETE",  // handleUserDelete -> DELETE /user-delete
+		`(\w+)Handler`:       "GET",     // userHandler -> GET /user
+		`api(\w+)`:           "GET",     // apiUser -> GET /user
 	}
 
 	// Execute pattern matching against function name
@@ -333,6 +338,7 @@ func (e *APIExtractor) extractPathAndMethod(funcDecl *ast.FuncDecl, endpoint *AP
 		if matches := re.FindStringSubmatch(funcName); len(matches) > 1 {
 			endpoint.Method = method
 			endpoint.Path = e.generatePathFromName(matches[1])
+
 			break
 		}
 	}
@@ -360,9 +366,9 @@ func (e *APIExtractor) extractTemplarPatterns(funcName string, endpoint *APIEndp
 		method string
 		tags   []string
 	}{
-		"handleHealth":            {"/health", "GET", []string{"system"}},
-		"handleComponents":        {"/components", "GET", []string{"components"}},
-		"handleComponent":         {"/component/{name}", "GET", []string{"components"}},
+		"handleHealth":           {"/health", "GET", []string{"system"}},
+		"handleComponents":       {"/components", "GET", []string{"components"}},
+		"handleComponent":        {"/component/{name}", "GET", []string{"components"}},
 		"handleRender":           {"/render/{name}", "GET", []string{"rendering"}},
 		"handleWebSocket":        {"/ws", "GET", []string{"websocket"}},
 		"handlePlaygroundIndex":  {"/playground", "GET", []string{"playground"}},
@@ -389,6 +395,7 @@ func (e *APIExtractor) generatePathFromName(name string) string {
 	// Convert camelCase to kebab-case
 	re := regexp.MustCompile(`([a-z])([A-Z])`)
 	kebab := re.ReplaceAllString(name, `$1-$2`)
+
 	return "/" + strings.ToLower(kebab)
 }
 

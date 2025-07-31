@@ -155,7 +155,7 @@ func (s *E2ETestSystem) startServer() error {
 
 	// Use robust readiness check with enhanced health validation
 	s.ServerURL = fmt.Sprintf("http://%s", addr)
-	
+
 	// First, wait for server to be ready
 	config := DefaultTestConfig()
 	readiness, err := WaitForServerReadiness(s.ctx, s.ServerURL, config)
@@ -166,7 +166,7 @@ func (s *E2ETestSystem) startServer() error {
 	if !readiness.Healthy {
 		return fmt.Errorf("server is not healthy after startup")
 	}
-	
+
 	// Then, perform additional stability check
 	if err := WaitForServerHealthy(s.ServerURL, 10*time.Second); err != nil {
 		return fmt.Errorf("server failed stability check: %w", err)
@@ -178,7 +178,7 @@ func (s *E2ETestSystem) startServer() error {
 // Stop shuts down the complete system with improved cleanup
 func (s *E2ETestSystem) Stop() error {
 	var errors []error
-	
+
 	// Cancel context first to signal shutdown
 	if s.cancel != nil {
 		s.cancel()
@@ -195,7 +195,7 @@ func (s *E2ETestSystem) Stop() error {
 	if s.Server != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-		
+
 		if err := s.Server.Shutdown(ctx); err != nil {
 			errors = append(errors, fmt.Errorf("failed to shutdown server: %w", err))
 			// Force close if graceful shutdown fails
@@ -372,7 +372,7 @@ func TestE2E_CompleteWorkflow(t *testing.T) {
 	// Create and start the system
 	system, err := NewE2ETestSystem()
 	require.NoError(t, err)
-	
+
 	// Setup improved cleanup with panic recovery
 	defer SafeTestCleanup(t, system.Stop)
 	defer CleanupTestDirectory(t, system.ProjectDir)
@@ -406,7 +406,7 @@ templ Card(title string, content string) {
 
 	// Wait for file watching to trigger scan with improved synchronization
 	WaitForFileSystemSync()
-	
+
 	// Use new registry stability checking with optimized timeout
 	err = WaitForRegistryStable(system, 2, 3*time.Second)
 	require.NoError(t, err, "Registry should stabilize with 2 components")
@@ -497,7 +497,7 @@ templ Button(text string, variant string) {
 
 	// Wait for file change detection with improved synchronization
 	WaitForFileSystemSync()
-	
+
 	// Wait for registry to stabilize after modification
 	err = WaitForRegistryStable(system, 2, 5*time.Second)
 	require.NoError(t, err, "Registry should remain stable with 2 components after modification")
@@ -542,7 +542,7 @@ func TestE2E_MultiComponentInteractions(t *testing.T) {
 
 	system, err := NewE2ETestSystem()
 	require.NoError(t, err)
-	
+
 	// Setup improved cleanup with panic recovery
 	defer SafeTestCleanup(t, system.Stop)
 	defer CleanupTestDirectory(t, system.ProjectDir)
@@ -672,7 +672,7 @@ templ Modal(title string, visible bool) {
 func TestE2E_ErrorRecoveryWorkflow(t *testing.T) {
 	system, err := NewE2ETestSystem()
 	require.NoError(t, err)
-	
+
 	// Setup improved cleanup with panic recovery
 	defer SafeTestCleanup(t, system.Stop)
 	defer CleanupTestDirectory(t, system.ProjectDir)
@@ -693,7 +693,7 @@ templ ValidComponent(text string) {
 	require.NoError(t, err)
 
 	WaitForFileSystemSync()
-	
+
 	// Use registry stability checking instead of eventual consistency
 	err = WaitForRegistryStable(system, 1, 5*time.Second)
 	require.NoError(t, err, "Registry should stabilize with valid component")
@@ -728,7 +728,7 @@ templ AnotherValidComponent(title string) {
 	require.NoError(t, err)
 
 	WaitForFileSystemSync()
-	
+
 	// Give the system some time to process the new component
 	// Since there's an invalid component, we can't rely on exact registry counts
 	WaitForComponentProcessing()
@@ -775,7 +775,7 @@ func TestE2E_PerformanceUnderLoad(t *testing.T) {
 
 	system, err := NewE2ETestSystem()
 	require.NoError(t, err)
-	
+
 	// Setup improved cleanup with panic recovery
 	defer SafeTestCleanup(t, system.Stop)
 	defer CleanupTestDirectory(t, system.ProjectDir)
@@ -799,7 +799,7 @@ func TestE2E_PerformanceUnderLoad(t *testing.T) {
 		wg.Add(1)
 		go func(index int) {
 			defer wg.Done()
-			
+
 			// Acquire semaphore
 			semaphore <- struct{}{}
 			defer func() { <-semaphore }()
@@ -833,11 +833,11 @@ templ Component%d(text string, id int) {
 
 	// Allow additional time for file system to settle with batch wait
 	WaitForFileSystemSyncLong()
-	
+
 	// Use registry stability checking with a reasonable timeout
 	finalCount := system.GetRegistryCount()
 	t.Logf("Created %d components, registry reports %d components", createdCount, finalCount)
-	
+
 	// Wait for registry to stabilize (may be less than componentCount due to race conditions)
 	err = WaitForRegistryStable(system, -1, 15*time.Second)
 	if err != nil {

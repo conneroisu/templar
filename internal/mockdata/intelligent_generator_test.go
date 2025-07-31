@@ -419,7 +419,7 @@ func TestIntelligentMockGenerator_Performance(t *testing.T) {
 	start := time.Now()
 	iterations := 1000
 
-	for i := 0; i < iterations; i++ {
+	for range iterations {
 		result := generator.GenerateForComponent(component)
 		assert.Len(t, result, 5)
 	}
@@ -454,12 +454,13 @@ func TestIntelligentMockGenerator_ConcurrentSafety(t *testing.T) {
 	results := make(chan map[string]interface{}, numGoroutines*iterationsPerGoroutine)
 	errors := make(chan error, numGoroutines*iterationsPerGoroutine)
 
-	for i := 0; i < numGoroutines; i++ {
+	for range numGoroutines {
 		go func() {
-			for j := 0; j < iterationsPerGoroutine; j++ {
+			for range iterationsPerGoroutine {
 				result := generator.GenerateForComponent(component)
 				if len(result) != 2 {
 					errors <- assert.AnError
+
 					return
 				}
 				results <- result
@@ -468,7 +469,7 @@ func TestIntelligentMockGenerator_ConcurrentSafety(t *testing.T) {
 	}
 
 	// Collect results
-	for i := 0; i < numGoroutines*iterationsPerGoroutine; i++ {
+	for range numGoroutines * iterationsPerGoroutine {
 		select {
 		case result := <-results:
 			assert.Len(t, result, 2)

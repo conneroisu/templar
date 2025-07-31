@@ -7,6 +7,7 @@
 package mockdata
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -22,7 +23,7 @@ import (
 // - File-based storage enables template sharing across project instances
 // - In-memory caching reduces disk I/O for frequently accessed templates
 // - RWMutex optimizes for read-heavy workloads (templates are read more than written)
-// - YAML format provides human-readable, version-controllable template definitions
+// - YAML format provides human-readable, version-controllable template definitions.
 type FileTemplateManager struct {
 	baseDir   string                       // Base directory for template storage (.templar/templates)
 	templates map[string]*MockDataTemplate // In-memory cache of loaded templates
@@ -88,7 +89,7 @@ func (tm *FileTemplateManager) SaveTemplate(template *MockDataTemplate) error {
 
 	// Validate template
 	if template.Name == "" {
-		return fmt.Errorf("template name cannot be empty")
+		return errors.New("template name cannot be empty")
 	}
 
 	// Marshal to YAML
@@ -229,7 +230,7 @@ func (tm *FileTemplateManager) DeleteTemplate(name string) error {
 // - Personal data (user profiles, contact info)
 // - Content management (articles, blogs)
 // - E-commerce (products, pricing)
-// - Business data (companies, events)
+// - Business data (companies, events).
 func (tm *FileTemplateManager) loadDefaultTemplates() {
 	defaultTemplates := []*MockDataTemplate{
 		{

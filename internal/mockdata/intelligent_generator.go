@@ -58,7 +58,7 @@ type PatternDefinition struct {
 // - Uses math/rand instead of crypto/rand for performance (mock data doesn't need cryptographic security)
 // - Seeds faker library to ensure deterministic behavior across generator instances
 // - Initializes all subsystems during construction to fail fast on configuration errors
-// - Pattern registration happens during construction to amortize setup cost
+// - Pattern registration happens during construction to amortize setup cost.
 func NewIntelligentMockGenerator(config *MockDataConfig) *IntelligentMockGenerator {
 	if config == nil {
 		config = DefaultMockDataConfig()
@@ -121,6 +121,7 @@ func (g *IntelligentMockGenerator) GenerateForComponent(
 		// Fallback to basic generation on error
 		return g.generateBasicMockData(component)
 	}
+
 	return result
 }
 
@@ -152,6 +153,7 @@ func (g *IntelligentMockGenerator) GenerateWithContext(
 		if options.CacheResults {
 			if cached, found := g.cache.Get(cacheKey); found {
 				mockData[param.Name] = cached
+
 				continue
 			}
 		}
@@ -209,6 +211,7 @@ func (g *IntelligentMockGenerator) generateIntelligentParameter(
 	if bestMatch != "" {
 		pattern := g.patterns[bestMatch]
 		ctx.Metadata["matched_pattern"] = bestMatch // Enable pattern analysis in tests
+
 		return pattern.Generator(g, param)
 	}
 
@@ -248,7 +251,7 @@ func (g *IntelligentMockGenerator) matchesPattern(
 //   - General patterns (name, description) get lower priority (70-90)
 //   - This ensures "userEmail" matches "email" pattern, not "user" pattern
 //
-// - Generator functions use method pointers for type safety and performance
+// - Generator functions use method pointers for type safety and performance.
 func (g *IntelligentMockGenerator) registerIntelligentPatterns() {
 	patterns := []*PatternDefinition{
 		// Personal Information (High Priority)
@@ -518,16 +521,19 @@ func (g *IntelligentMockGenerator) generateAddress(_ types.ParameterInfo) interf
 	streetNames := []string{"Main St", "Oak Ave", "Pine Rd", "Elm Dr", "Cedar Ln"}
 	streetNum := streetNumbers[g.rng.Intn(len(streetNumbers))]
 	streetName := streetNames[g.rng.Intn(len(streetNames))]
+
 	return fmt.Sprintf("%s %s", streetNum, streetName)
 }
 
 func (g *IntelligentMockGenerator) generateCity(_ types.ParameterInfo) interface{} {
 	cities := []string{"New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia"}
+
 	return cities[g.rng.Intn(len(cities))]
 }
 
 func (g *IntelligentMockGenerator) generateCountry(_ types.ParameterInfo) interface{} {
 	countries := []string{"United States", "Canada", "United Kingdom", "Germany", "France", "Australia"}
+
 	return countries[g.rng.Intn(len(countries))]
 }
 
@@ -539,6 +545,7 @@ func (g *IntelligentMockGenerator) generateCompanyName(_ types.ParameterInfo) in
 func (g *IntelligentMockGenerator) generateJobTitle(_ types.ParameterInfo) interface{} {
 	// Generate a simple job title
 	titles := []string{"Developer", "Designer", "Manager", "Analyst", "Engineer", "Consultant"}
+
 	return titles[g.rng.Intn(len(titles))]
 }
 
@@ -552,10 +559,11 @@ func (g *IntelligentMockGenerator) generateURL(_ types.ParameterInfo) interface{
 // 1. Provides actual images (not broken links) for realistic UI previews
 // 2. Random dimensions (200-600px) simulate real-world image variety
 // 3. HTTPS URLs ensure security in modern web applications
-// 4. Service is reliable and commonly used in development
+// 4. Service is reliable and commonly used in development.
 func (g *IntelligentMockGenerator) generateImageURL(_ types.ParameterInfo) interface{} {
 	width := 200 + g.rng.Intn(400)  // 200-600px width for realistic variety
 	height := 200 + g.rng.Intn(400) // 200-600px height for realistic variety
+
 	return fmt.Sprintf("https://picsum.photos/%d/%d", width, height)
 }
 
@@ -609,6 +617,7 @@ func (g *IntelligentMockGenerator) generateBoolean(_ types.ParameterInfo) interf
 
 func (g *IntelligentMockGenerator) generateColor(_ types.ParameterInfo) interface{} {
 	colors := []string{"#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7"}
+
 	return colors[g.rng.Intn(len(colors))]
 }
 
@@ -642,9 +651,10 @@ func (g *IntelligentMockGenerator) generateByTypeWithFaker(paramType, paramName 
 				g.config.Options.ArrayLength.Max-g.config.Options.ArrayLength.Min+1,
 			)
 			result := make([]interface{}, length)
-			for i := 0; i < length; i++ {
+			for i := range length {
 				result[i] = g.generateByTypeWithFaker(elementType, paramName)
 			}
+
 			return result
 		}
 
@@ -668,6 +678,7 @@ func (g *IntelligentMockGenerator) generateBasicMockData(
 	for _, param := range component.Parameters {
 		mockData[param.Name] = g.generateByTypeWithFaker(param.Type, param.Name)
 	}
+
 	return mockData
 }
 
@@ -678,7 +689,7 @@ func (g *IntelligentMockGenerator) generateCacheKey(
 	return componentName + ":" + paramName + ":" + paramType
 }
 
-// Implement remaining interface methods
+// Implement remaining interface methods.
 func (g *IntelligentMockGenerator) GenerateForParameter(param types.ParameterInfo) interface{} {
 	ctx := &GenerationContext{
 		Depth:    0,
@@ -687,6 +698,7 @@ func (g *IntelligentMockGenerator) GenerateForParameter(param types.ParameterInf
 		Cache:    make(map[string]interface{}),
 		Metadata: make(map[string]interface{}),
 	}
+
 	return g.generateIntelligentParameter(param, ctx)
 }
 
@@ -702,5 +714,6 @@ func (g *IntelligentMockGenerator) GetSupportedPatterns() []string {
 	for name := range g.patterns {
 		patterns = append(patterns, name)
 	}
+
 	return patterns
 }

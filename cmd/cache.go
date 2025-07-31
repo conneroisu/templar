@@ -209,25 +209,25 @@ Output helps with:
 
 // Cache command flags.
 var (
-	cacheDetailed    bool
-	cacheJSON        bool
-	cacheWatch       bool
-	cacheComponent   string
-	cacheOlderThan   string
-	cacheSize        string
-	cacheFailed      bool
-	cacheDryRun      bool
-	cacheCompress    bool
-	cacheDefrag      bool
-	cacheFast        bool
-	cacheVerify      bool
-	cacheCommon      bool
-	cachePattern     string
-	cacheDepsFirst   bool
-	cacheBackground  bool
-	cacheBreakdown   bool
-	cacheLargest     int
-	cacheTrends      bool
+	cacheDetailed   bool
+	cacheJSON       bool
+	cacheWatch      bool
+	cacheComponent  string
+	cacheOlderThan  string
+	cacheSize       string
+	cacheFailed     bool
+	cacheDryRun     bool
+	cacheCompress   bool
+	cacheDefrag     bool
+	cacheFast       bool
+	cacheVerify     bool
+	cacheCommon     bool
+	cachePattern    string
+	cacheDepsFirst  bool
+	cacheBackground bool
+	cacheBreakdown  bool
+	cacheLargest    int
+	cacheTrends     bool
 )
 
 func init() {
@@ -275,17 +275,18 @@ func init() {
 // runCacheStats shows cache statistics and performance metrics.
 func runCacheStats(cmd *cobra.Command, args []string) error {
 	fmt.Println("📊 Cache Statistics")
-	
+
 	cfg, err := config.Load()
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
 	cacheDir := getCacheDirectory(cfg)
-	
+
 	// Check if cache directory exists
 	if _, err := os.Stat(cacheDir); os.IsNotExist(err) {
 		fmt.Println("   No cache directory found. Cache is empty.")
+
 		return nil
 	}
 
@@ -296,11 +297,12 @@ func runCacheStats(cmd *cobra.Command, args []string) error {
 	}
 
 	// Display statistics based on format
-	if cacheJSON {
+	switch {
+	case cacheJSON:
 		return displayCacheStatsJSON(stats)
-	} else if cacheWatch {
+	case cacheWatch:
 		return watchCacheStats(cacheDir, cacheComponent)
-	} else {
+	default:
 		return displayCacheStats(stats, cacheDetailed)
 	}
 }
@@ -308,17 +310,18 @@ func runCacheStats(cmd *cobra.Command, args []string) error {
 // runCacheClear clears cache entries based on specified criteria.
 func runCacheClear(cmd *cobra.Command, args []string) error {
 	fmt.Println("🧹 Cache Clear")
-	
+
 	cfg, err := config.Load()
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
 	cacheDir := getCacheDirectory(cfg)
-	
+
 	// Check if cache directory exists
 	if _, err := os.Stat(cacheDir); os.IsNotExist(err) {
 		fmt.Println("   No cache directory found. Nothing to clear.")
+
 		return nil
 	}
 
@@ -342,17 +345,18 @@ func runCacheClear(cmd *cobra.Command, args []string) error {
 // runCacheOptimize optimizes cache performance and storage.
 func runCacheOptimize(cmd *cobra.Command, args []string) error {
 	fmt.Println("⚡ Cache Optimization")
-	
+
 	cfg, err := config.Load()
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
 	cacheDir := getCacheDirectory(cfg)
-	
+
 	// Check if cache directory exists
 	if _, err := os.Stat(cacheDir); os.IsNotExist(err) {
 		fmt.Println("   No cache directory found. Nothing to optimize.")
+
 		return nil
 	}
 
@@ -369,7 +373,7 @@ func runCacheOptimize(cmd *cobra.Command, args []string) error {
 // runCacheWarm pre-warms cache with commonly used components.
 func runCacheWarm(cmd *cobra.Command, args []string) error {
 	fmt.Println("🔥 Cache Warming")
-	
+
 	cfg, err := config.Load()
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
@@ -388,17 +392,18 @@ func runCacheWarm(cmd *cobra.Command, args []string) error {
 // runCacheSize shows detailed cache size information.
 func runCacheSize(cmd *cobra.Command, args []string) error {
 	fmt.Println("📏 Cache Size Analysis")
-	
+
 	cfg, err := config.Load()
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
 	cacheDir := getCacheDirectory(cfg)
-	
+
 	// Check if cache directory exists
 	if _, err := os.Stat(cacheDir); os.IsNotExist(err) {
 		fmt.Println("   No cache directory found. Cache is empty.")
+
 		return nil
 	}
 
@@ -414,13 +419,13 @@ func runCacheSize(cmd *cobra.Command, args []string) error {
 
 // Cache operation structures.
 type CacheStats struct {
-	TotalSize     int64     `json:"total_size"`
-	EntryCount    int64     `json:"entry_count"`
-	HitRate       float64   `json:"hit_rate"`
-	MissRate      float64   `json:"miss_rate"`
-	LastAccessed  time.Time `json:"last_accessed"`
-	AverageSize   int64     `json:"average_size"`
-	Components    map[string]ComponentCacheStats `json:"components,omitempty"`
+	TotalSize    int64                          `json:"total_size"`
+	EntryCount   int64                          `json:"entry_count"`
+	HitRate      float64                        `json:"hit_rate"`
+	MissRate     float64                        `json:"miss_rate"`
+	LastAccessed time.Time                      `json:"last_accessed"`
+	AverageSize  int64                          `json:"average_size"`
+	Components   map[string]ComponentCacheStats `json:"components,omitempty"`
 }
 
 type ComponentCacheStats struct {
@@ -466,6 +471,7 @@ func getCacheDirectory(cfg *config.Config) string {
 	if cfg.Build.CacheDir != "" {
 		return cfg.Build.CacheDir
 	}
+
 	return ".templar/cache"
 }
 
@@ -484,7 +490,7 @@ func gatherCacheStats(cacheDir, component string) (*CacheStats, error) {
 		if !info.IsDir() {
 			stats.TotalSize += info.Size()
 			stats.EntryCount++
-			
+
 			// Update last accessed time
 			if info.ModTime().After(stats.LastAccessed) {
 				stats.LastAccessed = info.ModTime()
@@ -504,7 +510,7 @@ func gatherCacheStats(cacheDir, component string) (*CacheStats, error) {
 	}
 
 	// Set default hit/miss rates (would be calculated from actual metrics in production)
-	stats.HitRate = 75.0 // Example: 75% hit rate
+	stats.HitRate = 75.0  // Example: 75% hit rate
 	stats.MissRate = 25.0 // Example: 25% miss rate
 
 	return stats, nil
@@ -516,7 +522,7 @@ func displayCacheStats(stats *CacheStats, detailed bool) error {
 	fmt.Printf("   Entries: %d\n", stats.EntryCount)
 	fmt.Printf("   Hit Rate: %.1f%%\n", stats.HitRate)
 	fmt.Printf("   Miss Rate: %.1f%%\n", stats.MissRate)
-	
+
 	if stats.EntryCount > 0 {
 		fmt.Printf("   Average Entry Size: %s\n", formatBytes(stats.AverageSize))
 		fmt.Printf("   Last Accessed: %s\n", stats.LastAccessed.Format("2006-01-02 15:04:05"))
@@ -525,7 +531,7 @@ func displayCacheStats(stats *CacheStats, detailed bool) error {
 	if detailed && len(stats.Components) > 0 {
 		fmt.Println("\n   Component Breakdown:")
 		for name, compStats := range stats.Components {
-			fmt.Printf("     %s: %s (%d entries, %.1f%% hit rate)\n", 
+			fmt.Printf("     %s: %s (%d entries, %.1f%% hit rate)\n",
 				name, formatBytes(compStats.Size), compStats.EntryCount, compStats.HitRate)
 		}
 	}
@@ -543,15 +549,16 @@ func displayCacheStatsJSON(stats *CacheStats) error {
   "miss_rate": %.1f,
   "last_accessed": "%s",
   "average_size": %d
-}`, stats.TotalSize, stats.EntryCount, stats.HitRate, stats.MissRate, 
+}`, stats.TotalSize, stats.EntryCount, stats.HitRate, stats.MissRate,
 		stats.LastAccessed.Format(time.RFC3339), stats.AverageSize)
+
 	return nil
 }
 
 // watchCacheStats monitors cache statistics in real-time.
 func watchCacheStats(cacheDir, component string) error {
 	fmt.Println("   Watching cache statistics... (Press Ctrl+C to stop)")
-	
+
 	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
 
@@ -560,33 +567,36 @@ func watchCacheStats(cacheDir, component string) error {
 		if err != nil {
 			return err
 		}
-		
+
 		// Clear screen and display updated stats
 		fmt.Print("\033[2J\033[H") // Clear screen
 		fmt.Println("📊 Cache Statistics (Live)")
 		_ = displayCacheStats(stats, false)
 	}
+
 	return nil // This will never be reached but satisfies linter
 }
 
 // previewCacheClear shows what would be cleared without actually clearing.
 func previewCacheClear(cacheDir string, opts ClearOptions) error {
 	fmt.Println("   Dry run - showing what would be cleared:")
-	
+
 	// In a real implementation, this would analyze what matches the criteria
-	if opts.Component != "" {
+	switch {
+	case opts.Component != "":
 		fmt.Printf("   - Would clear cache for component: %s\n", opts.Component)
-	} else if opts.OlderThan != "" {
+	case opts.OlderThan != "":
 		fmt.Printf("   - Would clear entries older than: %s\n", opts.OlderThan)
-	} else if opts.Size != "" {
+	case opts.Size != "":
 		fmt.Printf("   - Would clear ~%s of largest entries\n", opts.Size)
-	} else if opts.FailedOnly {
+	case opts.FailedOnly:
 		fmt.Println("   - Would clear failed/corrupted entries only")
-	} else {
+	default:
 		fmt.Println("   - Would clear ALL cache entries")
 	}
-	
+
 	fmt.Println("   Run without --dry-run to execute the operation.")
+
 	return nil
 }
 
@@ -612,39 +622,41 @@ func executeCacheClear(cacheDir string, opts ClearOptions) error {
 			return fmt.Errorf("failed to clear cache: %w", err)
 		}
 	}
-	
+
 	fmt.Println("   ✅ Cache cleared successfully")
+
 	return nil
 }
 
 // executeCacheOptimization performs cache optimization operations.
 func executeCacheOptimization(cacheDir string, opts OptimizeOptions) error {
 	fmt.Println("   Starting cache optimization...")
-	
+
 	if opts.Fast {
 		fmt.Println("   ⚡ Running fast optimization")
 	} else {
 		fmt.Println("   🔧 Running full optimization")
 	}
-	
+
 	// Simulate optimization phases
 	phases := []string{"Analyzing cache structure", "Defragmenting storage", "Compressing entries", "Updating indexes"}
 	if opts.Fast {
 		phases = phases[:2] // Only first two phases for fast optimization
 	}
-	
+
 	for i, phase := range phases {
 		fmt.Printf("   [%d/%d] %s...\n", i+1, len(phases), phase)
 		time.Sleep(500 * time.Millisecond) // Simulate work
 	}
-	
+
 	if opts.Verify {
 		fmt.Println("   🔍 Verifying optimization results...")
 		time.Sleep(200 * time.Millisecond)
 	}
-	
+
 	fmt.Println("   ✅ Cache optimization completed successfully")
 	fmt.Println("   💡 Cache access performance improved by ~15-25%")
+
 	return nil
 }
 
@@ -655,29 +667,29 @@ func executeCacheWarming(cfg *config.Config, opts WarmOptions) error {
 	} else {
 		fmt.Println("   Starting cache warming...")
 	}
-	
+
 	// Simulate component discovery and warming
 	components := []string{"Button", "Card", "Input", "Modal", "Navigation"}
 	if opts.Common {
 		components = components[:3] // Only first 3 for common components
 	}
-	
+
 	if opts.Pattern != "" {
 		fmt.Printf("   Warming components matching pattern: %s\n", opts.Pattern)
 	}
-	
+
 	for i, comp := range components {
 		if opts.DepsFirst {
 			fmt.Printf("   [%d/%d] Building dependencies for %s...\n", i+1, len(components), comp)
 		} else {
 			fmt.Printf("   [%d/%d] Warming cache for %s...\n", i+1, len(components), comp)
 		}
-		
+
 		if !opts.Background {
 			time.Sleep(300 * time.Millisecond) // Simulate build time
 		}
 	}
-	
+
 	if opts.Background {
 		fmt.Println("   🔥 Cache warming started in background")
 		fmt.Println("   Use 'templar cache stats' to monitor progress")
@@ -685,7 +697,7 @@ func executeCacheWarming(cfg *config.Config, opts WarmOptions) error {
 		fmt.Println("   ✅ Cache warming completed successfully")
 		fmt.Printf("   🔥 Warmed cache for %d components\n", len(components))
 	}
-	
+
 	return nil
 }
 
@@ -695,14 +707,14 @@ func analyzeCacheSize(cacheDir string, opts SizeOptions) error {
 	if err != nil {
 		return err
 	}
-	
+
 	fmt.Printf("   Total Cache Size: %s\n", formatBytes(stats.TotalSize))
 	fmt.Printf("   Number of Entries: %d\n", stats.EntryCount)
-	
+
 	if stats.EntryCount > 0 {
 		fmt.Printf("   Average Entry Size: %s\n", formatBytes(stats.AverageSize))
 	}
-	
+
 	if opts.Breakdown {
 		fmt.Println("\n   Size Breakdown by Type:")
 		// This would show breakdown by file type, component, etc.
@@ -710,7 +722,7 @@ func analyzeCacheSize(cacheDir string, opts SizeOptions) error {
 		fmt.Printf("     Dependencies: %s (15%%)\n", formatBytes(int64(float64(stats.TotalSize)*0.15)))
 		fmt.Printf("     Metadata: %s (5%%)\n", formatBytes(int64(float64(stats.TotalSize)*0.05)))
 	}
-	
+
 	if opts.Largest > 0 {
 		fmt.Printf("\n   %d Largest Cache Entries:\n", opts.Largest)
 		// This would show actual largest entries
@@ -718,14 +730,14 @@ func analyzeCacheSize(cacheDir string, opts SizeOptions) error {
 			fmt.Printf("     %d. component_%d.cache - %s\n", i, i, formatBytes(int64(1024*1024*i)))
 		}
 	}
-	
+
 	if opts.Trends {
 		fmt.Println("\n   Size Trends (Last 7 Days):")
 		fmt.Println("     📈 Cache size has grown by 12.5% this week")
 		fmt.Println("     📊 Average daily growth: 1.8%")
 		fmt.Println("     🔍 Recommended: Consider cache cleanup if growth continues")
 	}
-	
+
 	return nil
 }
 
@@ -740,5 +752,6 @@ func formatBytes(bytes int64) string {
 		div *= unit
 		exp++
 	}
+
 	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
 }

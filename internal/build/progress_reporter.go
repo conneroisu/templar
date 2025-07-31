@@ -64,32 +64,32 @@ type BuildProgressInfo struct {
 	BuildID       string `json:"build_id"`
 	ComponentName string `json:"component_name"`
 	ComponentPath string `json:"component_path"`
-	
+
 	// Progress tracking
 	Phase         string    `json:"phase"`
-	Progress      float64   `json:"progress"`      // 0.0 to 1.0
+	Progress      float64   `json:"progress"` // 0.0 to 1.0
 	StartTime     time.Time `json:"start_time"`
 	LastUpdate    time.Time `json:"last_update"`
 	Duration      string    `json:"duration"`
 	EstimatedTime string    `json:"estimated_time,omitempty"`
-	
+
 	// Build details
-	CacheHit      bool   `json:"cache_hit"`
-	OutputSize    int64  `json:"output_size,omitempty"`
-	ErrorMessage  string `json:"error_message,omitempty"`
-	
+	CacheHit     bool   `json:"cache_hit"`
+	OutputSize   int64  `json:"output_size,omitempty"`
+	ErrorMessage string `json:"error_message,omitempty"`
+
 	// Performance metrics
-	CompileTime   string `json:"compile_time,omitempty"`
+	CompileTime    string `json:"compile_time,omitempty"`
 	ValidationTime string `json:"validation_time,omitempty"`
-	QueueTime     string `json:"queue_time,omitempty"`
-	
+	QueueTime      string `json:"queue_time,omitempty"`
+
 	// Context information
-	WorkerID      int    `json:"worker_id,omitempty"`
-	Priority      int    `json:"priority"`
-	RetryCount    int    `json:"retry_count,omitempty"`
-	
+	WorkerID   int `json:"worker_id,omitempty"`
+	Priority   int `json:"priority"`
+	RetryCount int `json:"retry_count,omitempty"`
+
 	// Build artifacts
-	Warnings      []string `json:"warnings,omitempty"`
+	Warnings       []string `json:"warnings,omitempty"`
 	GeneratedFiles []string `json:"generated_files,omitempty"`
 }
 
@@ -98,58 +98,58 @@ type BuildProgressCallback func(progress BuildProgressInfo)
 
 // ProgressUpdate represents a single progress update event.
 type ProgressUpdate struct {
-	BuildID   string      `json:"build_id"`
-	Phase     BuildPhase  `json:"phase"`
-	Progress  float64     `json:"progress"`
-	Message   string      `json:"message,omitempty"`
-	Error     error       `json:"-"`
-	Timestamp time.Time   `json:"timestamp"`
-	WorkerID  int         `json:"worker_id,omitempty"`
+	BuildID   string     `json:"build_id"`
+	Phase     BuildPhase `json:"phase"`
+	Progress  float64    `json:"progress"`
+	Message   string     `json:"message,omitempty"`
+	Error     error      `json:"-"`
+	Timestamp time.Time  `json:"timestamp"`
+	WorkerID  int        `json:"worker_id,omitempty"`
 }
 
 // BuildProgressReporter manages build progress tracking and reporting.
 type BuildProgressReporter struct {
 	// Active build tracking
-	activeBuilds     map[string]*BuildProgressInfo
-	activeMutex      sync.RWMutex
-	
+	activeBuilds map[string]*BuildProgressInfo
+	activeMutex  sync.RWMutex
+
 	// Progress callbacks
-	callbacks        []BuildProgressCallback
-	callbackMutex    sync.RWMutex
-	
+	callbacks     []BuildProgressCallback
+	callbackMutex sync.RWMutex
+
 	// Statistics
-	totalBuilds      int64
-	completedBuilds  int64
-	failedBuilds     int64
-	cancelledBuilds  int64
-	
+	totalBuilds     int64
+	completedBuilds int64
+	failedBuilds    int64
+	cancelledBuilds int64
+
 	// Performance tracking
 	averageBuildTime time.Duration
 	totalBuildTime   time.Duration
 	buildTimes       []time.Duration
 	timesMutex       sync.Mutex
 	maxHistorySize   int
-	
+
 	// Queue monitoring
-	queueDepth       int64
-	maxQueueDepth    int64
-	queueWaitTimes   []time.Duration
-	
+	queueDepth     int64
+	maxQueueDepth  int64
+	queueWaitTimes []time.Duration
+
 	// Worker utilization
-	workerStats      map[int]*WorkerStats
-	workerMutex      sync.RWMutex
+	workerStats map[int]*WorkerStats
+	workerMutex sync.RWMutex
 }
 
 // WorkerStats tracks individual worker performance.
 type WorkerStats struct {
-	WorkerID        int           `json:"worker_id"`
-	TotalBuilds     int64         `json:"total_builds"`
-	CompletedBuilds int64         `json:"completed_builds"`
-	FailedBuilds    int64         `json:"failed_builds"`
+	WorkerID         int           `json:"worker_id"`
+	TotalBuilds      int64         `json:"total_builds"`
+	CompletedBuilds  int64         `json:"completed_builds"`
+	FailedBuilds     int64         `json:"failed_builds"`
 	AverageBuildTime time.Duration `json:"average_build_time"`
-	TotalBuildTime  time.Duration `json:"total_build_time"`
-	LastActive      time.Time     `json:"last_active"`
-	IsActive        bool          `json:"is_active"`
+	TotalBuildTime   time.Duration `json:"total_build_time"`
+	LastActive       time.Time     `json:"last_active"`
+	IsActive         bool          `json:"is_active"`
 }
 
 // NewBuildProgressReporter creates a new build progress reporter.
@@ -167,7 +167,7 @@ func NewBuildProgressReporter() *BuildProgressReporter {
 // StartBuild initiates progress tracking for a new build.
 func (bpr *BuildProgressReporter) StartBuild(component *types.ComponentInfo, priority int, workerID int) string {
 	buildID := fmt.Sprintf("build_%s_%d", component.Name, time.Now().UnixNano())
-	
+
 	progress := &BuildProgressInfo{
 		BuildID:       buildID,
 		ComponentName: component.Name,
@@ -179,13 +179,13 @@ func (bpr *BuildProgressReporter) StartBuild(component *types.ComponentInfo, pri
 		Priority:      priority,
 		WorkerID:      workerID,
 	}
-	
+
 	bpr.activeMutex.Lock()
 	bpr.activeBuilds[buildID] = progress
 	bpr.activeMutex.Unlock()
-	
+
 	atomic.AddInt64(&bpr.totalBuilds, 1)
-	
+
 	// Update queue depth
 	atomic.AddInt64(&bpr.queueDepth, 1)
 	currentDepth := atomic.LoadInt64(&bpr.queueDepth)
@@ -198,12 +198,12 @@ func (bpr *BuildProgressReporter) StartBuild(component *types.ComponentInfo, pri
 			break
 		}
 	}
-	
+
 	bpr.notifyCallbacks(*progress)
-	
-	log.Printf("Started build tracking for %s (ID: %s, Worker: %d)", 
+
+	log.Printf("Started build tracking for %s (ID: %s, Worker: %d)",
 		component.Name, buildID, workerID)
-	
+
 	return buildID
 }
 
@@ -213,16 +213,17 @@ func (bpr *BuildProgressReporter) UpdateProgress(buildID string, phase BuildPhas
 	info, exists := bpr.activeBuilds[buildID]
 	if !exists {
 		bpr.activeMutex.Unlock()
+
 		return
 	}
-	
+
 	// Update progress information
 	now := time.Now()
 	info.Phase = phase.String()
 	info.Progress = progress
 	info.LastUpdate = now
 	info.Duration = formatDuration(now.Sub(info.StartTime))
-	
+
 	// Calculate estimated completion time
 	if progress > 0.0 && progress < 1.0 {
 		elapsed := now.Sub(info.StartTime)
@@ -232,21 +233,21 @@ func (bpr *BuildProgressReporter) UpdateProgress(buildID string, phase BuildPhas
 			info.EstimatedTime = formatDuration(remaining)
 		}
 	}
-	
+
 	// Update worker stats
 	if info.WorkerID > 0 {
 		bpr.updateWorkerStats(info.WorkerID, phase, now)
 	}
-	
+
 	// Create copy for callback
 	progressCopy := *info
 	bpr.activeMutex.Unlock()
-	
+
 	// Notify callbacks
 	bpr.notifyCallbacks(progressCopy)
-	
+
 	if message != "" {
-		log.Printf("Build %s: %s (%.1f%%) - %s", 
+		log.Printf("Build %s: %s (%.1f%%) - %s",
 			buildID, phase.String(), progress*100, message)
 	}
 }
@@ -257,12 +258,13 @@ func (bpr *BuildProgressReporter) FinishBuild(buildID string, result BuildResult
 	info, exists := bpr.activeBuilds[buildID]
 	if !exists {
 		bpr.activeMutex.Unlock()
+
 		return
 	}
-	
+
 	now := time.Now()
 	duration := now.Sub(info.StartTime)
-	
+
 	// Update final progress information
 	if result.Error != nil {
 		info.Phase = PhaseFailed.String()
@@ -273,39 +275,39 @@ func (bpr *BuildProgressReporter) FinishBuild(buildID string, result BuildResult
 		info.Progress = 1.0
 		atomic.AddInt64(&bpr.completedBuilds, 1)
 	}
-	
+
 	info.LastUpdate = now
 	info.Duration = formatDuration(duration)
 	info.CacheHit = result.CacheHit
 	info.OutputSize = int64(len(result.Output))
-	
+
 	// Update build time statistics
 	bpr.updateBuildTimeStats(duration)
-	
+
 	// Update worker completion stats
 	if info.WorkerID > 0 {
 		bpr.finalizeWorkerStats(info.WorkerID, result.Error == nil, duration)
 	}
-	
+
 	// Update queue depth
 	atomic.AddInt64(&bpr.queueDepth, -1)
-	
+
 	// Create copy for callback
 	progressCopy := *info
-	
+
 	// Remove from active builds
 	delete(bpr.activeBuilds, buildID)
 	bpr.activeMutex.Unlock()
-	
+
 	// Final progress notification
 	bpr.notifyCallbacks(progressCopy)
-	
+
 	status := "completed"
 	if result.Error != nil {
 		status = "failed"
 	}
-	
-	log.Printf("Build %s %s in %s (Cache: %v, Size: %d bytes)", 
+
+	log.Printf("Build %s %s in %s (Cache: %v, Size: %d bytes)",
 		buildID, status, formatDuration(duration), result.CacheHit, len(result.Output))
 }
 
@@ -315,23 +317,24 @@ func (bpr *BuildProgressReporter) CancelBuild(buildID string) {
 	info, exists := bpr.activeBuilds[buildID]
 	if !exists {
 		bpr.activeMutex.Unlock()
+
 		return
 	}
-	
+
 	now := time.Now()
 	info.Phase = PhaseCancelled.String()
 	info.LastUpdate = now
 	info.Duration = formatDuration(now.Sub(info.StartTime))
-	
+
 	progressCopy := *info
 	delete(bpr.activeBuilds, buildID)
 	bpr.activeMutex.Unlock()
-	
+
 	atomic.AddInt64(&bpr.cancelledBuilds, 1)
 	atomic.AddInt64(&bpr.queueDepth, -1)
-	
+
 	bpr.notifyCallbacks(progressCopy)
-	
+
 	log.Printf("Build %s cancelled after %s", buildID, progressCopy.Duration)
 }
 
@@ -339,88 +342,88 @@ func (bpr *BuildProgressReporter) CancelBuild(buildID string) {
 func (bpr *BuildProgressReporter) GetActiveBuilds() []BuildProgressInfo {
 	bpr.activeMutex.RLock()
 	defer bpr.activeMutex.RUnlock()
-	
+
 	builds := make([]BuildProgressInfo, 0, len(bpr.activeBuilds))
 	for _, info := range bpr.activeBuilds {
 		builds = append(builds, *info)
 	}
-	
+
 	return builds
 }
 
 // GetBuildStats returns comprehensive build statistics.
 func (bpr *BuildProgressReporter) GetBuildStats() map[string]interface{} {
 	stats := make(map[string]interface{})
-	
+
 	// Basic counters
 	stats["total_builds"] = atomic.LoadInt64(&bpr.totalBuilds)
 	stats["completed_builds"] = atomic.LoadInt64(&bpr.completedBuilds)
 	stats["failed_builds"] = atomic.LoadInt64(&bpr.failedBuilds)
 	stats["cancelled_builds"] = atomic.LoadInt64(&bpr.cancelledBuilds)
-	
+
 	// Active builds
 	bpr.activeMutex.RLock()
 	stats["active_builds"] = len(bpr.activeBuilds)
 	bpr.activeMutex.RUnlock()
-	
+
 	// Queue statistics
 	stats["current_queue_depth"] = atomic.LoadInt64(&bpr.queueDepth)
 	stats["max_queue_depth"] = atomic.LoadInt64(&bpr.maxQueueDepth)
-	
+
 	// Performance statistics
 	bpr.timesMutex.Lock()
 	if len(bpr.buildTimes) > 0 {
 		stats["average_build_time"] = formatDuration(bpr.averageBuildTime)
 		stats["total_build_time"] = formatDuration(bpr.totalBuildTime)
-		
+
 		// Calculate percentiles
 		if len(bpr.buildTimes) >= 5 {
 			sortedTimes := make([]time.Duration, len(bpr.buildTimes))
 			copy(sortedTimes, bpr.buildTimes)
 			// Simple sort for percentiles (not optimal but sufficient for small sizes)
-			for i := 0; i < len(sortedTimes)-1; i++ {
+			for i := range len(sortedTimes) - 1 {
 				for j := i + 1; j < len(sortedTimes); j++ {
 					if sortedTimes[i] > sortedTimes[j] {
 						sortedTimes[i], sortedTimes[j] = sortedTimes[j], sortedTimes[i]
 					}
 				}
 			}
-			
+
 			p50 := sortedTimes[len(sortedTimes)/2]
 			p95 := sortedTimes[int(float64(len(sortedTimes))*0.95)]
-			
+
 			stats["build_time_p50"] = formatDuration(p50)
 			stats["build_time_p95"] = formatDuration(p95)
 		}
 	}
 	bpr.timesMutex.Unlock()
-	
+
 	// Success rates
 	total := atomic.LoadInt64(&bpr.totalBuilds)
 	if total > 0 {
 		completed := atomic.LoadInt64(&bpr.completedBuilds)
 		failed := atomic.LoadInt64(&bpr.failedBuilds)
-		
+
 		stats["success_rate"] = float64(completed) / float64(total) * 100
 		stats["failure_rate"] = float64(failed) / float64(total) * 100
 	}
-	
+
 	// Worker statistics
 	bpr.workerMutex.RLock()
 	workerStats := make(map[string]interface{})
 	for workerID, worker := range bpr.workerStats {
 		workerStats[fmt.Sprintf("worker_%d", workerID)] = map[string]interface{}{
-			"total_builds":      worker.TotalBuilds,
-			"completed_builds":  worker.CompletedBuilds,
-			"failed_builds":     worker.FailedBuilds,
+			"total_builds":       worker.TotalBuilds,
+			"completed_builds":   worker.CompletedBuilds,
+			"failed_builds":      worker.FailedBuilds,
 			"average_build_time": formatDuration(worker.AverageBuildTime),
-			"is_active":         worker.IsActive,
-			"last_active":       worker.LastActive,
+			"is_active":          worker.IsActive,
+			"last_active":        worker.LastActive,
 		}
 	}
 	stats["worker_stats"] = workerStats
 	bpr.workerMutex.RUnlock()
-	
+
 	return stats
 }
 
@@ -437,7 +440,7 @@ func (bpr *BuildProgressReporter) notifyCallbacks(progress BuildProgressInfo) {
 	callbacks := make([]BuildProgressCallback, len(bpr.callbacks))
 	copy(callbacks, bpr.callbacks)
 	bpr.callbackMutex.RUnlock()
-	
+
 	for _, callback := range callbacks {
 		go func(cb BuildProgressCallback, p BuildProgressInfo) {
 			defer func() {
@@ -454,11 +457,11 @@ func (bpr *BuildProgressReporter) notifyCallbacks(progress BuildProgressInfo) {
 func (bpr *BuildProgressReporter) updateBuildTimeStats(duration time.Duration) {
 	bpr.timesMutex.Lock()
 	defer bpr.timesMutex.Unlock()
-	
+
 	// Add new duration
 	bpr.buildTimes = append(bpr.buildTimes, duration)
 	bpr.totalBuildTime += duration
-	
+
 	// Keep history within limits
 	if len(bpr.buildTimes) > bpr.maxHistorySize {
 		// Remove oldest entries
@@ -468,7 +471,7 @@ func (bpr *BuildProgressReporter) updateBuildTimeStats(duration time.Duration) {
 		}
 		bpr.buildTimes = bpr.buildTimes[len(bpr.buildTimes)-bpr.maxHistorySize:]
 	}
-	
+
 	// Update average
 	if len(bpr.buildTimes) > 0 {
 		bpr.averageBuildTime = bpr.totalBuildTime / time.Duration(len(bpr.buildTimes))
@@ -479,7 +482,7 @@ func (bpr *BuildProgressReporter) updateBuildTimeStats(duration time.Duration) {
 func (bpr *BuildProgressReporter) updateWorkerStats(workerID int, phase BuildPhase, timestamp time.Time) {
 	bpr.workerMutex.Lock()
 	defer bpr.workerMutex.Unlock()
-	
+
 	worker, exists := bpr.workerStats[workerID]
 	if !exists {
 		worker = &WorkerStats{
@@ -487,7 +490,7 @@ func (bpr *BuildProgressReporter) updateWorkerStats(workerID int, phase BuildPha
 		}
 		bpr.workerStats[workerID] = worker
 	}
-	
+
 	worker.LastActive = timestamp
 	worker.IsActive = (phase != PhaseCompleted && phase != PhaseFailed && phase != PhaseCancelled)
 }
@@ -496,19 +499,19 @@ func (bpr *BuildProgressReporter) updateWorkerStats(workerID int, phase BuildPha
 func (bpr *BuildProgressReporter) finalizeWorkerStats(workerID int, success bool, duration time.Duration) {
 	bpr.workerMutex.Lock()
 	defer bpr.workerMutex.Unlock()
-	
+
 	worker, exists := bpr.workerStats[workerID]
 	if !exists {
 		return
 	}
-	
+
 	worker.TotalBuilds++
 	if success {
 		worker.CompletedBuilds++
 	} else {
 		worker.FailedBuilds++
 	}
-	
+
 	// Update average build time
 	worker.TotalBuildTime += duration
 	worker.AverageBuildTime = worker.TotalBuildTime / time.Duration(worker.TotalBuilds)
@@ -521,30 +524,30 @@ func (bpr *BuildProgressReporter) CreateWebSocketMessage(progress BuildProgressI
 		"type":     "build_progress",
 		"progress": progress,
 	}
-	
+
 	return json.Marshal(message)
 }
 
 // GetProgressSummary returns a summary of current build progress.
 func (bpr *BuildProgressReporter) GetProgressSummary() map[string]interface{} {
 	summary := make(map[string]interface{})
-	
+
 	// Active builds summary
 	activeBuilds := bpr.GetActiveBuilds()
 	summary["active_builds_count"] = len(activeBuilds)
-	
+
 	if len(activeBuilds) > 0 {
 		phases := make(map[string]int)
 		totalProgress := 0.0
-		
+
 		for _, build := range activeBuilds {
 			phases[build.Phase]++
 			totalProgress += build.Progress
 		}
-		
+
 		summary["phase_breakdown"] = phases
 		summary["average_progress"] = totalProgress / float64(len(activeBuilds))
-		
+
 		// Find longest running build
 		oldestStart := time.Now()
 		oldestBuild := ""
@@ -554,18 +557,18 @@ func (bpr *BuildProgressReporter) GetProgressSummary() map[string]interface{} {
 				oldestBuild = build.ComponentName
 			}
 		}
-		
+
 		summary["longest_running_build"] = oldestBuild
 		summary["longest_running_duration"] = formatDuration(time.Since(oldestStart))
 	}
-	
+
 	// Overall statistics
 	stats := bpr.GetBuildStats()
 	summary["total_builds"] = stats["total_builds"]
 	summary["success_rate"] = stats["success_rate"]
 	summary["average_build_time"] = stats["average_build_time"]
 	summary["queue_depth"] = stats["current_queue_depth"]
-	
+
 	return summary
 }
 

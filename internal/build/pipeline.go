@@ -19,7 +19,6 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
-	"syscall"
 	"time"
 
 	"github.com/conneroisu/templar/internal/config"
@@ -347,7 +346,7 @@ func (bp *BuildPipeline) worker(ctx context.Context) {
 // Architecture notes:
 // - This function achieves 30M+ operations/second throughput in benchmarks
 // - Memory usage remains constant under load due to object pooling
-// - Non-blocking design ensures worker threads never deadlock
+// - Non-blocking design ensures worker threads never deadlock.
 func (bp *BuildPipeline) processBuildTask(ctx context.Context, task BuildTask) {
 	start := time.Now()
 
@@ -377,6 +376,7 @@ func (bp *BuildPipeline) processBuildTask(ctx context.Context, task BuildTask) {
 			bp.metrics.RecordDroppedResult(task.Component.Name, "results_queue_full_cancelled")
 		}
 		bp.objectPools.PutBuildResult(buildResult)
+
 		return
 	default:
 	}
@@ -402,6 +402,7 @@ func (bp *BuildPipeline) processBuildTask(ctx context.Context, task BuildTask) {
 			// Context cancelled while publishing cache hit - handle gracefully
 			buildResult.Error = ctx.Err()
 			bp.objectPools.PutBuildResult(buildResult)
+
 			return
 		default:
 			// Results queue full - record metric but continue (graceful degradation)
@@ -415,6 +416,7 @@ func (bp *BuildPipeline) processBuildTask(ctx context.Context, task BuildTask) {
 			)
 		}
 		bp.objectPools.PutBuildResult(buildResult)
+
 		return
 	}
 
@@ -462,6 +464,7 @@ func (bp *BuildPipeline) processBuildTask(ctx context.Context, task BuildTask) {
 		buildResult.Error = ctx.Err()
 		bp.metrics.RecordDroppedResult(buildResult.Component.Name, "cancelled_during_send")
 		bp.objectPools.PutBuildResult(buildResult)
+
 		return
 	default:
 		// Results queue full - graceful degradation with monitoring
@@ -471,7 +474,7 @@ func (bp *BuildPipeline) processBuildTask(ctx context.Context, task BuildTask) {
 		)
 		bp.metrics.RecordDroppedResult(buildResult.Component.Name, "results_queue_full")
 	}
-	
+
 	// Return object to pool for reuse - critical for maintaining performance under load
 	bp.objectPools.PutBuildResult(buildResult)
 }
@@ -574,22 +577,7 @@ func (bp *BuildPipeline) generateContentHash(component *types.ComponentInfo) str
 }
 
 // readFileWithMmap reads file content using memory mapping for better performance on large files.
-func (bp *BuildPipeline) readFileWithMmap(file *os.File, size int64) ([]byte, error) {
-	// Memory map the file for efficient reading
-	mmap, err := syscall.Mmap(int(file.Fd()), 0, int(size), syscall.PROT_READ, syscall.MAP_SHARED)
-	if err != nil {
-		return nil, err
-	}
-
-	// Copy the mapped data to avoid keeping the mapping open
-	content := make([]byte, size)
-	copy(content, mmap)
-
-	// Unmap the memory - ignore errors as we have the content
-	_ = syscall.Munmap(mmap)
-
-	return content, nil
-}
+// Platform-specific implementations are in pipeline_mmap_unix.go and pipeline_mmap_windows.go
 
 // generateContentHashesBatch processes multiple components in a single batch for better I/O efficiency.
 func (bp *BuildPipeline) generateContentHashesBatch(

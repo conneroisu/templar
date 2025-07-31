@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -11,14 +12,14 @@ import (
 	"time"
 
 	"github.com/conneroisu/templar/internal/config"
-	"github.com/conneroisu/templar/internal/errors"
+	templarerors "github.com/conneroisu/templar/internal/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// TestErrorHandlingCoverage tests comprehensive error handling across all CLI commands
+// TestErrorHandlingCoverage tests comprehensive error handling across all CLI commands.
 func TestErrorHandlingCoverage(t *testing.T) {
 	tests := []struct {
 		name          string
@@ -36,7 +37,7 @@ func TestErrorHandlingCoverage(t *testing.T) {
 			expectedError: "config file not found",
 			errorType:     "config_error",
 		},
-		
+
 		// Validation errors
 		{
 			name:          "invalid port validation",
@@ -45,17 +46,18 @@ func TestErrorHandlingCoverage(t *testing.T) {
 			expectedError: "invalid port",
 			errorType:     "validation_error",
 		},
-		
+
 		// File system errors
 		{
-			name:          "permission denied on directory creation",
-			command:       initCmd,
-			args:          []string{"test-project"},
-			setupError:    func() error {
+			name:    "permission denied on directory creation",
+			command: initCmd,
+			args:    []string{"test-project"},
+			setupError: func() error {
 				// Create readonly directory to simulate permission error
 				if err := os.MkdirAll("test-project", 0444); err != nil {
 					return err
 				}
+
 				return os.Chmod("test-project", 0444)
 			},
 			expectedError: "permission denied",
@@ -103,7 +105,7 @@ func TestErrorHandlingCoverage(t *testing.T) {
 	}
 }
 
-// TestArgumentValidationErrors tests argument validation for security and correctness
+// TestArgumentValidationErrors tests argument validation for security and correctness.
 func TestArgumentValidationErrors(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -118,7 +120,7 @@ func TestArgumentValidationErrors(t *testing.T) {
 			wantErr:  true,
 		},
 		{
-			name:     "command injection detection", 
+			name:     "command injection detection",
 			input:    "file.templ; rm -rf /",
 			validate: validateArgumentForTesting,
 			wantErr:  true,
@@ -155,7 +157,7 @@ func TestArgumentValidationErrors(t *testing.T) {
 	}
 }
 
-// TestConfigValidationErrors tests configuration validation error paths
+// TestConfigValidationErrors tests configuration validation error paths.
 func TestConfigValidationErrors(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -211,16 +213,16 @@ components:
 		t.Run(tt.name, func(t *testing.T) {
 			tempDir := t.TempDir()
 			configFile := filepath.Join(tempDir, ".templar.yml")
-			
+
 			err := os.WriteFile(configFile, []byte(tt.configData), 0644)
 			require.NoError(t, err)
 
 			viper.Reset()
 			viper.SetConfigFile(configFile)
-			
+
 			// Test config loading
 			cfg, err := config.Load()
-			
+
 			if tt.expectError {
 				assert.Error(t, err, "Expected config validation error for: %s", tt.name)
 				assert.Nil(t, cfg, "Config should be nil on error")
@@ -231,22 +233,23 @@ components:
 	}
 }
 
-// TestErrorMessageQuality tests that error messages are helpful and actionable
+// TestErrorMessageQuality tests that error messages are helpful and actionable.
 func TestErrorMessageQuality(t *testing.T) {
 	tests := []struct {
-		name            string
-		errorGenerator  func() error
-		requiredPhrases []string
+		name             string
+		errorGenerator   func() error
+		requiredPhrases  []string
 		forbiddenPhrases []string
 	}{
 		{
 			name: "file not found error",
 			errorGenerator: func() error {
-				templErr := &errors.TemplarError{
-					Type:    errors.ErrorTypeValidation,
+				templErr := &templarerors.TemplarError{
+					Type:    templarerors.ErrorTypeValidation,
 					Code:    "FILE_NOT_FOUND",
 					Message: "Component file not found: button.templ. Run 'templar list' to see available components",
 				}
+
 				return templErr
 			},
 			requiredPhrases:  []string{"not found", "templar list"},
@@ -255,11 +258,12 @@ func TestErrorMessageQuality(t *testing.T) {
 		{
 			name: "port in use error",
 			errorGenerator: func() error {
-				templErr := &errors.TemplarError{
-					Type:    errors.ErrorTypeNetwork,
+				templErr := &templarerors.TemplarError{
+					Type:    templarerors.ErrorTypeNetwork,
 					Code:    "PORT_IN_USE",
 					Message: "Port 8080 is already in use. Try a different port with --port flag",
 				}
+
 				return templErr
 			},
 			requiredPhrases:  []string{"port", "already in use", "--port"},
@@ -268,11 +272,12 @@ func TestErrorMessageQuality(t *testing.T) {
 		{
 			name: "permission denied error",
 			errorGenerator: func() error {
-				templErr := &errors.TemplarError{
-					Type:    errors.ErrorTypeIO,
+				templErr := &templarerors.TemplarError{
+					Type:    templarerors.ErrorTypeIO,
 					Code:    "PERMISSION_DENIED",
 					Message: "Permission denied writing to directory. Check directory permissions or run with appropriate privileges",
 				}
+
 				return templErr
 			},
 			requiredPhrases:  []string{"permission denied", "check", "permissions"},
@@ -284,15 +289,15 @@ func TestErrorMessageQuality(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.errorGenerator()
 			require.Error(t, err)
-			
+
 			errMsg := strings.ToLower(err.Error())
-			
+
 			// Check required phrases are present
 			for _, phrase := range tt.requiredPhrases {
 				assert.Contains(t, errMsg, strings.ToLower(phrase),
 					"Error message should contain '%s'. Message: %s", phrase, err.Error())
 			}
-			
+
 			// Check forbidden phrases are not present
 			for _, phrase := range tt.forbiddenPhrases {
 				assert.NotContains(t, errMsg, strings.ToLower(phrase),
@@ -302,7 +307,7 @@ func TestErrorMessageQuality(t *testing.T) {
 	}
 }
 
-// TestTimeoutAndCancellationErrors tests timeout and cancellation handling
+// TestTimeoutAndCancellationErrors tests timeout and cancellation handling.
 func TestTimeoutAndCancellationErrors(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -362,7 +367,7 @@ func TestTimeoutAndCancellationErrors(t *testing.T) {
 	}
 }
 
-// TestNetworkErrorHandling tests network-related error scenarios
+// TestNetworkErrorHandling tests network-related error scenarios.
 func TestNetworkErrorHandling(t *testing.T) {
 	tests := []struct {
 		name          string
@@ -397,7 +402,7 @@ func TestNetworkErrorHandling(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := validateNetworkConfig(tt.host, tt.port)
-			
+
 			if tt.expectError {
 				assert.Error(t, err, "Expected network validation error")
 				if tt.errorContains != "" {
@@ -417,7 +422,7 @@ func validateFilePath(path string) error {
 	if strings.Contains(path, "..") {
 		return fmt.Errorf("path traversal attempt detected: %s", path)
 	}
-	
+
 	// Check for absolute paths outside allowed directories
 	if filepath.IsAbs(path) {
 		allowed := []string{"/tmp", "/usr/local", "/opt"}
@@ -425,6 +430,7 @@ func validateFilePath(path string) error {
 		for _, allowedPath := range allowed {
 			if strings.HasPrefix(path, allowedPath) {
 				pathAllowed = true
+
 				break
 			}
 		}
@@ -432,7 +438,7 @@ func validateFilePath(path string) error {
 			return fmt.Errorf("absolute path not allowed: %s", path)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -444,12 +450,12 @@ func validateArgumentForTesting(arg string) error {
 			return fmt.Errorf("contains dangerous character: %s", char)
 		}
 	}
-	
+
 	// Check for null bytes
 	if strings.Contains(arg, "\x00") {
-		return fmt.Errorf("contains null byte")
+		return errors.New("contains null byte")
 	}
-	
+
 	return nil
 }
 
@@ -458,27 +464,27 @@ func validateNetworkConfig(host, port string) error {
 	if strings.Contains(host, "..") || strings.HasPrefix(host, ".") || strings.HasSuffix(host, ".") {
 		return fmt.Errorf("invalid host format: %s", host)
 	}
-	
+
 	// Validate port range
 	if port == "70000" || port == "-8080" {
 		return fmt.Errorf("invalid port: %s", port)
 	}
-	
+
 	return nil
 }
 
-// TestErrorRecoveryMechanisms tests graceful error recovery
+// TestErrorRecoveryMechanisms tests graceful error recovery.
 func TestErrorRecoveryMechanisms(t *testing.T) {
 	tests := []struct {
-		name            string
-		errorCondition  func() error
-		recoveryCheck   func() (bool, string)
-		expectRecovery  bool
+		name           string
+		errorCondition func() error
+		recoveryCheck  func() (bool, string)
+		expectRecovery bool
 	}{
 		{
 			name: "fallback to default port on invalid port",
 			errorCondition: func() error {
-				return fmt.Errorf("invalid port: abc")
+				return errors.New("invalid port: abc")
 			},
 			recoveryCheck: func() (bool, string) {
 				// In real implementation, this would check if fallback was used
@@ -489,7 +495,7 @@ func TestErrorRecoveryMechanisms(t *testing.T) {
 		{
 			name: "graceful handling of missing config file",
 			errorCondition: func() error {
-				return fmt.Errorf("config file not found")
+				return errors.New("config file not found")
 			},
 			recoveryCheck: func() (bool, string) {
 				// In real implementation, this would check if defaults were used
@@ -504,10 +510,10 @@ func TestErrorRecoveryMechanisms(t *testing.T) {
 			// Simulate error condition
 			err := tt.errorCondition()
 			require.Error(t, err)
-			
+
 			// Check recovery mechanism
 			recovered, msg := tt.recoveryCheck()
-			
+
 			if tt.expectRecovery {
 				assert.True(t, recovered, "Expected error recovery")
 				assert.NotEmpty(t, msg, "Recovery message should not be empty")
@@ -519,29 +525,29 @@ func TestErrorRecoveryMechanisms(t *testing.T) {
 	}
 }
 
-// TestErrorPathCoverage validates that error paths are properly tested
+// TestErrorPathCoverage validates that error paths are properly tested.
 func TestErrorPathCoverage(t *testing.T) {
 	// This test ensures we have proper error path coverage
 	coverageRequirements := map[string]int{
 		"config_errors":     3, // At least 3 config error scenarios
-		"validation_errors": 5, // At least 5 validation error scenarios  
+		"validation_errors": 5, // At least 5 validation error scenarios
 		"network_errors":    3, // At least 3 network error scenarios
 		"filesystem_errors": 4, // At least 4 filesystem error scenarios
 	}
-	
+
 	actualCoverage := map[string]int{
 		"config_errors":     4, // From TestConfigValidationErrors
 		"validation_errors": 5, // From TestArgumentValidationErrors
 		"network_errors":    3, // From TestNetworkErrorHandling
 		"filesystem_errors": 4, // From TestErrorHandlingCoverage and others
 	}
-	
+
 	for category, required := range coverageRequirements {
 		actual := actualCoverage[category]
 		assert.GreaterOrEqual(t, actual, required,
 			"Error path coverage for %s: expected at least %d, got %d", category, required, actual)
 	}
-	
+
 	t.Logf("Error path coverage validation passed:")
 	for category, count := range actualCoverage {
 		t.Logf("  %s: %d test cases", category, count)

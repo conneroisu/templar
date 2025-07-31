@@ -11,6 +11,7 @@
 package mockdata
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -26,7 +27,7 @@ import (
 // - Pre-compiled regex patterns for performance (avoid recompilation on each validation)
 // - Comprehensive semantic validation based on parameter naming conventions
 // - Layered validation approach: structural → type → semantic
-// - Detailed error messages with context for debugging
+// - Detailed error messages with context for debugging.
 type StandardMockDataValidator struct {
 	emailRegex *regexp.Regexp // Pre-compiled email format validation
 	urlRegex   *regexp.Regexp // Pre-compiled URL format validation
@@ -63,6 +64,7 @@ func (v *StandardMockDataValidator) ValidateData(
 			if !param.Optional {
 				errors = append(errors, fmt.Sprintf("required parameter '%s' is missing", param.Name))
 			}
+
 			continue
 		}
 
@@ -78,6 +80,7 @@ func (v *StandardMockDataValidator) ValidateData(
 		for _, param := range component.Parameters {
 			if param.Name == key {
 				found = true
+
 				break
 			}
 		}
@@ -152,7 +155,7 @@ func (v *StandardMockDataValidator) ValidateConfig(config *MockDataConfig) error
 	// Validate options
 	if config.Options != nil {
 		if err := v.validateGenerationOptions(config.Options); err != nil {
-			errors = append(errors, fmt.Sprintf("options: %s", err.Error()))
+			errors = append(errors, "options: "+err.Error())
 		}
 	}
 
@@ -184,8 +187,9 @@ func (v *StandardMockDataValidator) validateParameter(
 ) error {
 	if value == nil {
 		if !param.Optional {
-			return fmt.Errorf("cannot be null")
+			return errors.New("cannot be null")
 		}
+
 		return nil
 	}
 
@@ -287,7 +291,7 @@ func (v *StandardMockDataValidator) validateType(value interface{}, expectedType
 // Design decisions:
 // - Only validates string values (other types are structurally validated)
 // - Uses parameter name analysis rather than expensive content inspection
-// - Covers common web application data types (email, URL, UUID, phone, date)
+// - Covers common web application data types (email, URL, UUID, phone, date).
 func (v *StandardMockDataValidator) validateSemantic(value interface{}, paramName string) error {
 	strValue, ok := value.(string)
 	if !ok {
@@ -299,7 +303,7 @@ func (v *StandardMockDataValidator) validateSemantic(value interface{}, paramNam
 	// Email validation
 	if strings.Contains(paramLower, "email") || strings.Contains(paramLower, "mail") {
 		if !v.emailRegex.MatchString(strValue) {
-			return fmt.Errorf("invalid email format")
+			return errors.New("invalid email format")
 		}
 	}
 
@@ -307,21 +311,21 @@ func (v *StandardMockDataValidator) validateSemantic(value interface{}, paramNam
 	if strings.Contains(paramLower, "url") || strings.Contains(paramLower, "link") ||
 		strings.Contains(paramLower, "href") {
 		if !v.urlRegex.MatchString(strValue) {
-			return fmt.Errorf("invalid URL format")
+			return errors.New("invalid URL format")
 		}
 	}
 
 	// UUID validation
 	if strings.Contains(paramLower, "uuid") || strings.Contains(paramLower, "guid") {
 		if !v.uuidRegex.MatchString(strings.ToLower(strValue)) {
-			return fmt.Errorf("invalid UUID format")
+			return errors.New("invalid UUID format")
 		}
 	}
 
 	// Phone number validation (basic)
 	if strings.Contains(paramLower, "phone") || strings.Contains(paramLower, "tel") {
 		if len(strValue) < 10 || len(strValue) > 20 {
-			return fmt.Errorf("phone number should be between 10 and 20 characters")
+			return errors.New("phone number should be between 10 and 20 characters")
 		}
 	}
 
@@ -378,7 +382,7 @@ func (v *StandardMockDataValidator) validateTemplateField(fieldName string, fiel
 // Safety measures:
 // - Detects unclosed expressions to prevent template rendering errors
 // - Validates against known expression patterns to catch typos
-// - Handles multiple expressions in single template string
+// - Handles multiple expressions in single template string.
 func (v *StandardMockDataValidator) validateTemplateExpression(expression string) error {
 	// Extract all template expressions using delimiter scanning
 	start := 0
@@ -391,7 +395,7 @@ func (v *StandardMockDataValidator) validateTemplateExpression(expression string
 
 		closeIdx := strings.Index(expression[openIdx:], "}}")
 		if closeIdx == -1 {
-			return fmt.Errorf("unclosed template expression")
+			return errors.New("unclosed template expression")
 		}
 		closeIdx += openIdx
 
@@ -400,7 +404,7 @@ func (v *StandardMockDataValidator) validateTemplateExpression(expression string
 		templateExpr = strings.TrimSpace(templateExpr)
 
 		if templateExpr == "" {
-			return fmt.Errorf("empty template expression")
+			return errors.New("empty template expression")
 		}
 
 		// Validate against known faker expressions
@@ -461,6 +465,7 @@ func (v *StandardMockDataValidator) validateGenerationOptions(options *Generatio
 		for _, level := range validLevels {
 			if options.ValidationLevel == level {
 				valid = true
+
 				break
 			}
 		}
@@ -476,19 +481,22 @@ func (v *StandardMockDataValidator) validateGenerationOptions(options *Generatio
 	return nil
 }
 
-// Helper validation methods
+// Helper validation methods.
 func (v *StandardMockDataValidator) isValidTemplateName(name string) bool {
 	match, _ := regexp.MatchString(`^[a-zA-Z0-9_-]+$`, name)
+
 	return match
 }
 
 func (v *StandardMockDataValidator) isValidVersion(version string) bool {
 	match, _ := regexp.MatchString(`^\d+\.\d+\.\d+(-[a-zA-Z0-9]+)?$`, version)
+
 	return match
 }
 
 func (v *StandardMockDataValidator) isValidLocale(locale string) bool {
 	match, _ := regexp.MatchString(`^[a-z]{2}(-[A-Z]{2})?$`, locale)
+
 	return match
 }
 
@@ -534,5 +542,5 @@ func (v *StandardMockDataValidator) validateDateString(dateStr string) error {
 		}
 	}
 
-	return fmt.Errorf("unrecognized date format")
+	return errors.New("unrecognized date format")
 }

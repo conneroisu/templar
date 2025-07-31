@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestRealWorldTemplComponents validates hot reload with realistic templ components
+// TestRealWorldTemplComponents validates hot reload with realistic templ components.
 func TestRealWorldTemplComponents(t *testing.T) {
 	t.Run("blog_post_component", func(t *testing.T) {
 		tempDir := fmt.Sprintf("blog_test_%d", time.Now().UnixNano())
@@ -68,7 +68,7 @@ templ BlogPostCard(post BlogPost) {
 		// Verify component registration
 		component, exists := reg.Get("BlogPostCard")
 		require.True(t, exists, "BlogPostCard should be registered")
-		
+
 		assert.Equal(t, "BlogPostCard", component.Name)
 		assert.Equal(t, 1, len(component.Parameters), "Should have 1 parameter")
 		assert.Equal(t, "post", component.Parameters[0].Name)
@@ -169,7 +169,7 @@ templ Navigation(props NavigationProps) {
 		// Verify component registration
 		component, exists := reg.Get("Navigation")
 		require.True(t, exists, "Navigation should be registered")
-		
+
 		assert.Equal(t, "Navigation", component.Name)
 		assert.Equal(t, 1, len(component.Parameters), "Should have 1 parameter")
 		assert.Equal(t, "props", component.Parameters[0].Name)
@@ -628,7 +628,7 @@ templ StarRating(rating float64) {
 	})
 }
 
-// TestRealWorldTemplModification tests hot reload with realistic component modifications
+// TestRealWorldTemplModification tests hot reload with realistic component modifications.
 func TestRealWorldTemplModification(t *testing.T) {
 	tempDir := fmt.Sprintf("modification_test_%d", time.Now().UnixNano())
 	require.NoError(t, os.MkdirAll(tempDir, 0755))

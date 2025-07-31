@@ -51,37 +51,37 @@ See also: templar serve, templar build, templar list`,
 }
 
 var (
-	docsOutputDir    string
-	docsFormats      []string
-	docsServe        bool
-	docsServePort    int
+	docsOutputDir       string
+	docsFormats         []string
+	docsServe           bool
+	docsServePort       int
 	docsIncludeInternal bool
-	docsAutoReload   bool
-	docsVersion      string
+	docsAutoReload      bool
+	docsVersion         string
 )
 
 func init() {
 	rootCmd.AddCommand(docsCmd)
 
 	// Output configuration
-	docsCmd.Flags().StringVarP(&docsOutputDir, "output", "o", "./docs/api", 
+	docsCmd.Flags().StringVarP(&docsOutputDir, "output", "o", "./docs/api",
 		"Output directory for generated documentation")
-	docsCmd.Flags().StringSliceVarP(&docsFormats, "format", "f", 
-		[]string{"json", "yaml", "html", "markdown"}, 
+	docsCmd.Flags().StringSliceVarP(&docsFormats, "format", "f",
+		[]string{"json", "yaml", "html", "markdown"},
 		"Output formats (json,yaml,html,markdown)")
 
-	// Server configuration  
-	docsCmd.Flags().BoolVar(&docsServe, "serve", false, 
+	// Server configuration
+	docsCmd.Flags().BoolVar(&docsServe, "serve", false,
 		"Start documentation server after generation")
-	docsCmd.Flags().IntVar(&docsServePort, "serve-port", 8081, 
+	docsCmd.Flags().IntVar(&docsServePort, "serve-port", 8081,
 		"Port for documentation server")
-	docsCmd.Flags().BoolVar(&docsAutoReload, "auto-reload", true, 
+	docsCmd.Flags().BoolVar(&docsAutoReload, "auto-reload", true,
 		"Enable automatic regeneration on code changes")
 
 	// API configuration
-	docsCmd.Flags().StringVarP(&docsVersion, "version", "v", "1.0.0", 
+	docsCmd.Flags().StringVarP(&docsVersion, "version", "v", "1.0.0",
 		"API version to document")
-	docsCmd.Flags().BoolVar(&docsIncludeInternal, "include-internal", false, 
+	docsCmd.Flags().BoolVar(&docsIncludeInternal, "include-internal", false,
 		"Include internal/private endpoints in documentation")
 
 	// Add format validation
@@ -89,19 +89,21 @@ func init() {
 		validFormats := []string{"json", "yaml", "html", "markdown"}
 		formatList := strings.Split(formats, ",")
 		for _, format := range formatList {
-			format = strings.TrimSpace(format)  
+			format = strings.TrimSpace(format)
 			valid := false
 			for _, validFormat := range validFormats {
 				if format == validFormat {
 					valid = true
+
 					break
 				}
 			}
 			if !valid {
-				return fmt.Errorf("unsupported format '%s'. Valid formats: %s", 
+				return fmt.Errorf("unsupported format '%s'. Valid formats: %s",
 					format, strings.Join(validFormats, ", "))
 			}
 		}
+
 		return nil
 	})
 }
@@ -192,12 +194,13 @@ func runDocs(cmd *cobra.Command, args []string) error {
 		fmt.Printf("   • Swagger UI: http://localhost:%d\n", docsServePort)
 		fmt.Printf("   • OpenAPI JSON: http://localhost:%d/openapi.json\n", docsServePort)
 		fmt.Printf("   • OpenAPI YAML: http://localhost:%d/openapi.yaml\n", docsServePort)
-		
+
 		if docsAutoReload {
 			fmt.Println("👀 Watching for code changes...")
 		}
-		
+
 		fmt.Println("\nPress Ctrl+C to stop the server")
+
 		return startDocumentationServer(ctx, genConfig, result)
 	}
 
@@ -207,7 +210,7 @@ func runDocs(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// startDocumentationServer starts the documentation server (placeholder implementation)
+// startDocumentationServer starts the documentation server (placeholder implementation).
 func startDocumentationServer(ctx context.Context, config *apidocs.GenerationConfig, result *apidocs.GenerationResult) error {
 	// This is a placeholder implementation
 	// In a complete implementation, this would:
@@ -215,13 +218,13 @@ func startDocumentationServer(ctx context.Context, config *apidocs.GenerationCon
 	// 2. Set up file watchers if auto-reload is enabled
 	// 3. Handle graceful shutdown on context cancellation
 	// 4. Serve Swagger UI, JSON/YAML specs, and static assets
-	
+
 	fmt.Println("📡 Documentation server would start here...")
 	fmt.Println("   (Server implementation coming in next phase)")
-	
+
 	// For demo purposes, just indicate where files were generated
 	fmt.Printf("💡 You can manually serve the documentation with:\n")
 	fmt.Printf("   cd %s && python -m http.server %d\n", config.OutputDir, config.ServePort)
-	
+
 	return nil
 }

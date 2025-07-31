@@ -18,7 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestHotReloadRaceConditions tests the hot reload flow for race conditions
+// TestHotReloadRaceConditions tests the hot reload flow for race conditions.
 func TestHotReloadRaceConditions(t *testing.T) {
 	// Create test components
 	reg := registry.NewComponentRegistry()
@@ -68,11 +68,11 @@ func TestHotReloadRaceConditions(t *testing.T) {
 		}
 		reg.Register(testComponent)
 
-		for i := 0; i < numGoroutines; i++ {
+		for i := range numGoroutines {
 			wg.Add(1)
 			go func(goroutineID int) {
 				defer wg.Done()
-				for j := 0; j < numEventsPerGoroutine; j++ {
+				for range numEventsPerGoroutine {
 					events := []watcher.ChangeEvent{
 						{
 							Path: "test.templ",
@@ -95,11 +95,11 @@ func TestHotReloadRaceConditions(t *testing.T) {
 		var wg sync.WaitGroup
 		numGoroutines := 10
 
-		for i := 0; i < numGoroutines; i++ {
+		for i := range numGoroutines {
 			wg.Add(1)
 			go func(goroutineID int) {
 				defer wg.Done()
-				
+
 				testComponent := &types.ComponentInfo{
 					Name:     "TestComponent",
 					FilePath: "test.templ",
@@ -110,7 +110,7 @@ func TestHotReloadRaceConditions(t *testing.T) {
 					Component: testComponent,
 					Error:     nil,
 				}
-				
+
 				// This should not cause race conditions
 				orchestrator.handleBuildResult(result)
 			}(i)
@@ -127,11 +127,11 @@ func TestHotReloadRaceConditions(t *testing.T) {
 		numWriters := 3
 
 		// Readers
-		for i := 0; i < numReaders; i++ {
+		for i := range numReaders {
 			wg.Add(1)
 			go func(readerID int) {
 				defer wg.Done()
-				for j := 0; j < 10; j++ {
+				for range 10 {
 					components := reg.GetAll()
 					_ = components // Use the result to prevent optimization
 					time.Sleep(1 * time.Millisecond)
@@ -140,11 +140,11 @@ func TestHotReloadRaceConditions(t *testing.T) {
 		}
 
 		// Writers
-		for i := 0; i < numWriters; i++ {
+		for i := range numWriters {
 			wg.Add(1)
 			go func(writerID int) {
 				defer wg.Done()
-				for j := 0; j < 10; j++ {
+				for range 10 {
 					component := &types.ComponentInfo{
 						Name:     "ConcurrentComponent",
 						FilePath: "concurrent.templ",
@@ -161,7 +161,7 @@ func TestHotReloadRaceConditions(t *testing.T) {
 	})
 }
 
-// TestWebSocketBroadcastRaceConditions tests WebSocket broadcasting for race conditions
+// TestWebSocketBroadcastRaceConditions tests WebSocket broadcasting for race conditions.
 func TestWebSocketBroadcastRaceConditions(t *testing.T) {
 	cfg := &config.Config{
 		Server: config.ServerConfig{
@@ -184,11 +184,11 @@ func TestWebSocketBroadcastRaceConditions(t *testing.T) {
 		numGoroutines := 10
 		numBroadcasts := 5
 
-		for i := 0; i < numGoroutines; i++ {
+		for i := range numGoroutines {
 			wg.Add(1)
 			go func(goroutineID int) {
 				defer wg.Done()
-				for j := 0; j < numBroadcasts; j++ {
+				for range numBroadcasts {
 					// Use select with default to prevent blocking on full channel
 					select {
 					case server.broadcast <- []byte("test"):
@@ -219,11 +219,11 @@ func TestWebSocketBroadcastRaceConditions(t *testing.T) {
 	})
 }
 
-// TestBuildPipelineRaceConditions tests build pipeline operations for race conditions
+// TestBuildPipelineRaceConditions tests build pipeline operations for race conditions.
 func TestBuildPipelineRaceConditions(t *testing.T) {
 	reg := registry.NewComponentRegistry()
 	buildPipeline := build.NewRefactoredBuildPipeline(4, reg)
-	
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -234,26 +234,26 @@ func TestBuildPipelineRaceConditions(t *testing.T) {
 	t.Run("concurrent_builds", func(t *testing.T) {
 		var wg sync.WaitGroup
 		numGoroutines := 8
-		
-		for i := 0; i < numGoroutines; i++ {
+
+		for i := range numGoroutines {
 			wg.Add(1)
 			go func(goroutineID int) {
 				defer wg.Done()
-				
+
 				component := &types.ComponentInfo{
 					Name:     "ConcurrentBuildComponent",
 					FilePath: "concurrent_build.templ",
 					Package:  "test",
 				}
-				
+
 				// Register component first
 				reg.Register(component)
-				
+
 				// Attempt concurrent builds
-				for j := 0; j < 3; j++ {
+				for range 3 {
 					err := buildPipeline.Build(component)
 					// Build may fail due to missing actual file, but shouldn't race
-					_ = err // Ignore error for race condition testing 
+					_ = err // Ignore error for race condition testing
 				}
 			}(i)
 		}

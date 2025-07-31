@@ -66,7 +66,7 @@ func TestRealTimeAdapter(t *testing.T) {
 
 	start := time.Now()
 	now := adapter.Now()
-	
+
 	// Should be very close to actual time
 	assert.WithinDuration(t, start, now, 10*time.Millisecond)
 
@@ -283,13 +283,13 @@ func TestIntegrationWithExistingHelpers(t *testing.T) {
 	// Set up file system mock for config file
 	configContent := []byte(`{"test": true}`)
 	configPath := projectDir + "/config.json"
-	
+
 	mf.FileSystem.CreateFile(configPath, configContent, 0o644)
 	mf.FileSystem.On("ReadFile", configPath).Return(configContent, nil)
 
 	// Create adapter and test
 	adapter := NewMockFileSystemAdapter(mf.FileSystem)
-	
+
 	content, err := adapter.ReadFile(configPath)
 	require.NoError(t, err)
 	assert.Equal(t, configContent, content)
@@ -310,14 +310,14 @@ func TestMockFrameworkPerformance(t *testing.T) {
 	start := time.Now()
 	iterations := 1000
 
-	for i := 0; i < iterations; i++ {
+	for range iterations {
 		content, err := adapter.ReadFile("/test/file.txt")
 		require.NoError(t, err)
 		assert.Equal(t, []byte("content"), content)
 	}
 
 	duration := time.Since(start)
-	t.Logf("Performed %d mock operations in %v (%.2f µs per operation)", 
+	t.Logf("Performed %d mock operations in %v (%.2f µs per operation)",
 		iterations, duration, float64(duration.Nanoseconds())/float64(iterations)/1000)
 
 	// Should be fast
@@ -329,7 +329,7 @@ func TestMockFrameworkMemoryUsage(t *testing.T) {
 	defer mf.Cleanup()
 
 	// Create many files in mock filesystem
-	for i := 0; i < 1000; i++ {
+	for i := range 1000 {
 		filename := "/test/file_" + strings.Repeat("x", i%100) + ".txt"
 		content := []byte(strings.Repeat("content", i%50))
 		mf.FileSystem.CreateFile(filename, content, 0o644)

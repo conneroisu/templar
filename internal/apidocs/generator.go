@@ -7,6 +7,7 @@ package apidocs
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -66,7 +67,7 @@ func NewAPIDocumentationGenerator(config *GenerationConfig) (*APIDocumentationGe
 // 2. Analyze types and generate schemas
 // 3. Build complete OpenAPI specification
 // 4. Write output in requested formats
-// 5. Generate interactive documentation if enabled
+// 5. Generate interactive documentation if enabled.
 func (g *APIDocumentationGenerator) Generate(serverPackagePath string) (*GenerationResult, error) {
 	log.Printf("Starting API documentation generation for: %s", serverPackagePath)
 	startTime := time.Now()
@@ -88,7 +89,7 @@ func (g *APIDocumentationGenerator) Generate(serverPackagePath string) (*Generat
 	if g.config.ServeEnabled {
 		if err := g.generateInteractiveDocumentation(); err != nil {
 			log.Printf("Warning: failed to generate interactive documentation: %v", err)
-			result.Warnings = append(result.Warnings, 
+			result.Warnings = append(result.Warnings,
 				"Interactive documentation generation failed: "+err.Error())
 		}
 	}
@@ -106,6 +107,7 @@ func (g *APIDocumentationGenerator) writeOutput(spec *APISpecification) error {
 			return fmt.Errorf("failed to write %s format: %w", format, err)
 		}
 	}
+
 	return nil
 }
 
@@ -128,7 +130,7 @@ func (g *APIDocumentationGenerator) writeFormatOutput(spec *APISpecification, fo
 // writeJSONOutput writes the OpenAPI specification as JSON.
 func (g *APIDocumentationGenerator) writeJSONOutput(spec *APISpecification) error {
 	filePath := filepath.Join(g.outputDir, "openapi.json")
-	
+
 	file, err := os.Create(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to create JSON file: %w", err)
@@ -137,19 +139,20 @@ func (g *APIDocumentationGenerator) writeJSONOutput(spec *APISpecification) erro
 
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")
-	
+
 	if err := encoder.Encode(spec); err != nil {
 		return fmt.Errorf("failed to encode JSON: %w", err)
 	}
 
 	log.Printf("Generated OpenAPI JSON: %s", filePath)
+
 	return nil
 }
 
 // writeYAMLOutput writes the OpenAPI specification as YAML.
 func (g *APIDocumentationGenerator) writeYAMLOutput(spec *APISpecification) error {
 	filePath := filepath.Join(g.outputDir, "openapi.yaml")
-	
+
 	file, err := os.Create(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to create YAML file: %w", err)
@@ -158,12 +161,13 @@ func (g *APIDocumentationGenerator) writeYAMLOutput(spec *APISpecification) erro
 
 	encoder := yaml.NewEncoder(file)
 	encoder.SetIndent(2)
-	
+
 	if err := encoder.Encode(spec); err != nil {
 		return fmt.Errorf("failed to encode YAML: %w", err)
 	}
 
 	log.Printf("Generated OpenAPI YAML: %s", filePath)
+
 	return nil
 }
 
@@ -171,12 +175,13 @@ func (g *APIDocumentationGenerator) writeYAMLOutput(spec *APISpecification) erro
 func (g *APIDocumentationGenerator) writeHTMLOutput(spec *APISpecification) error {
 	htmlContent := g.generateSwaggerUIHTML(spec)
 	filePath := filepath.Join(g.outputDir, "index.html")
-	
-	if err := os.WriteFile(filePath, []byte(htmlContent), 0644); err != nil {
+
+	if err := os.WriteFile(filePath, []byte(htmlContent), 0600); err != nil {
 		return fmt.Errorf("failed to write HTML file: %w", err)
 	}
 
 	log.Printf("Generated HTML documentation: %s", filePath)
+
 	return nil
 }
 
@@ -184,12 +189,13 @@ func (g *APIDocumentationGenerator) writeHTMLOutput(spec *APISpecification) erro
 func (g *APIDocumentationGenerator) writeMarkdownOutput(spec *APISpecification) error {
 	markdownContent := g.generateMarkdownDocumentation(spec)
 	filePath := filepath.Join(g.outputDir, "README.md")
-	
-	if err := os.WriteFile(filePath, []byte(markdownContent), 0644); err != nil {
+
+	if err := os.WriteFile(filePath, []byte(markdownContent), 0600); err != nil {
 		return fmt.Errorf("failed to write Markdown file: %w", err)
 	}
 
 	log.Printf("Generated Markdown documentation: %s", filePath)
+
 	return nil
 }
 
@@ -283,27 +289,27 @@ func (g *APIDocumentationGenerator) generateMarkdownDocumentation(spec *APISpeci
 
 	// Add API endpoints
 	md += "## API Endpoints\n\n"
-	
+
 	for path, methods := range spec.Paths {
 		md += fmt.Sprintf("### %s\n\n", path)
-		
+
 		for method, endpoint := range methods {
 			md += fmt.Sprintf("#### %s\n\n", strings.ToUpper(method))
-			
+
 			if endpoint.Summary != "" {
 				md += fmt.Sprintf("**Summary:** %s\n\n", endpoint.Summary)
 			}
-			
+
 			if endpoint.Description != "" {
 				md += fmt.Sprintf("**Description:** %s\n\n", endpoint.Description)
 			}
-			
+
 			// Add parameters
 			if len(endpoint.Parameters) > 0 {
 				md += "**Parameters:**\n\n"
 				md += "| Name | Type | In | Required | Description |\n"
 				md += "|------|------|----|---------|--------------|\n"
-				
+
 				for _, param := range endpoint.Parameters {
 					required := "No"
 					if param.Required {
@@ -314,7 +320,7 @@ func (g *APIDocumentationGenerator) generateMarkdownDocumentation(spec *APISpeci
 				}
 				md += "\n"
 			}
-			
+
 			// Add responses
 			md += "**Responses:**\n\n"
 			for status, response := range endpoint.Responses {
@@ -327,28 +333,29 @@ func (g *APIDocumentationGenerator) generateMarkdownDocumentation(spec *APISpeci
 	// Add schema definitions
 	if spec.Components != nil && len(spec.Components.Schemas) > 0 {
 		md += "## Data Models\n\n"
-		
+
 		for name, schema := range spec.Components.Schemas {
 			md += fmt.Sprintf("### %s\n\n", name)
-			
+
 			if schema.Description != "" {
-				md += fmt.Sprintf("%s\n\n", schema.Description)
+				md += schema.Description + "\n\n"
 			}
-			
+
 			if len(schema.Properties) > 0 {
 				md += "**Properties:**\n\n"
 				md += "| Name | Type | Required | Description |\n"
 				md += "|------|------|----------|--------------|\n"
-				
+
 				for propName, prop := range schema.Properties {
 					required := "No"
 					for _, req := range schema.Required {
 						if req == propName {
 							required = "Yes"
+
 							break
 						}
 					}
-					md += fmt.Sprintf("| %s | %s | %s | %s |\n", 
+					md += fmt.Sprintf("| %s | %s | %s | %s |\n",
 						propName, prop.Type, required, prop.Description)
 				}
 				md += "\n"
@@ -394,7 +401,7 @@ func (g *APIDocumentationGenerator) createInteractiveAssets() error {
 `
 
 	cssPath := filepath.Join(g.outputDir, "custom.css")
-	if err := os.WriteFile(cssPath, []byte(cssContent), 0644); err != nil {
+	if err := os.WriteFile(cssPath, []byte(cssContent), 0600); err != nil {
 		return fmt.Errorf("failed to write custom CSS: %w", err)
 	}
 
@@ -424,6 +431,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 
 	log.Printf("Generated interactive documentation assets")
+
 	return nil
 }
 
@@ -443,15 +451,15 @@ func DefaultGenerationConfig() *GenerationConfig {
 // validateGenerationConfig validates the generation configuration.
 func validateGenerationConfig(config *GenerationConfig) error {
 	if config.OutputDir == "" {
-		return fmt.Errorf("output directory is required")
+		return errors.New("output directory is required")
 	}
 
 	if config.Version == "" {
-		return fmt.Errorf("API version is required")
+		return errors.New("API version is required")
 	}
 
 	if len(config.Formats) == 0 {
-		return fmt.Errorf("at least one output format is required")
+		return errors.New("at least one output format is required")
 	}
 
 	// Validate supported formats

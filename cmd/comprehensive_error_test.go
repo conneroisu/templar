@@ -16,46 +16,46 @@ const (
 	windowsOS = "windows"
 )
 
-// TestInitCommandErrorPaths tests error scenarios specific to the init command
+// TestInitCommandErrorPaths tests error scenarios specific to the init command.
 func TestInitCommandErrorPaths(t *testing.T) {
 	tests := []struct {
-		name        string
-		args        []string
-		setup       func(t *testing.T) string
-		cleanup     func(t *testing.T, dir string)
-		expectError bool
+		name          string
+		args          []string
+		setup         func(t *testing.T) string
+		cleanup       func(t *testing.T, dir string)
+		expectError   bool
 		errorContains string
 	}{
 		{
-			name:        "init with path traversal attempt",
-			args:        []string{"../../../invalid"},
-			setup:       createTempTestDir,
-			cleanup:     cleanupTestDir,
-			expectError: true,
+			name:          "init with path traversal attempt",
+			args:          []string{"../../../invalid"},
+			setup:         createTempTestDir,
+			cleanup:       cleanupTestDir,
+			expectError:   true,
 			errorContains: "path traversal",
 		},
 		{
-			name:        "init with command injection attempt",
-			args:        []string{"project; rm -rf /"},
-			setup:       createTempTestDir,
-			cleanup:     cleanupTestDir,
-			expectError: true,
+			name:          "init with command injection attempt",
+			args:          []string{"project; rm -rf /"},
+			setup:         createTempTestDir,
+			cleanup:       cleanupTestDir,
+			expectError:   true,
 			errorContains: "dangerous character",
 		},
 		{
-			name:        "init with permission denied",
-			args:        []string{"readonly-project"},
-			setup:       createReadOnlyTestDir,
-			cleanup:     cleanupReadOnlyTestDir,
-			expectError: true,
+			name:          "init with permission denied",
+			args:          []string{"readonly-project"},
+			setup:         createReadOnlyTestDir,
+			cleanup:       cleanupReadOnlyTestDir,
+			expectError:   true,
 			errorContains: "permission",
 		},
 		{
-			name:        "init with existing non-empty directory",
-			args:        []string{"existing-dir"},
-			setup:       createNonEmptyTestDir,
-			cleanup:     cleanupTestDir,
-			expectError: true,
+			name:          "init with existing non-empty directory",
+			args:          []string{"existing-dir"},
+			setup:         createNonEmptyTestDir,
+			cleanup:       cleanupTestDir,
+			expectError:   true,
 			errorContains: "not empty",
 		},
 	}
@@ -63,46 +63,46 @@ func TestInitCommandErrorPaths(t *testing.T) {
 	runCommandErrorTests(t, tests, initCmd)
 }
 
-// TestServeCommandErrorPaths tests error scenarios specific to the serve command
+// TestServeCommandErrorPaths tests error scenarios specific to the serve command.
 func TestServeCommandErrorPaths(t *testing.T) {
 	tests := []struct {
-		name        string
-		args        []string
-		setup       func(t *testing.T) string
-		cleanup     func(t *testing.T, dir string)
-		expectError bool
+		name          string
+		args          []string
+		setup         func(t *testing.T) string
+		cleanup       func(t *testing.T, dir string)
+		expectError   bool
 		errorContains string
 	}{
 		{
-			name:        "serve with invalid port range",
-			args:        []string{"--port", "99999"},
-			setup:       createTempTestDir,
-			cleanup:     cleanupTestDir,
-			expectError: true,
+			name:          "serve with invalid port range",
+			args:          []string{"--port", "99999"},
+			setup:         createTempTestDir,
+			cleanup:       cleanupTestDir,
+			expectError:   true,
 			errorContains: "port",
 		},
 		{
-			name:        "serve with negative port",
-			args:        []string{"--port", "-8080"},
-			setup:       createTempTestDir,
-			cleanup:     cleanupTestDir,
-			expectError: true,
+			name:          "serve with negative port",
+			args:          []string{"--port", "-8080"},
+			setup:         createTempTestDir,
+			cleanup:       cleanupTestDir,
+			expectError:   true,
 			errorContains: "port",
 		},
 		{
-			name:        "serve with invalid host format",
-			args:        []string{"--host", "invalid..host"},
-			setup:       createTempTestDir,
-			cleanup:     cleanupTestDir,
-			expectError: true,
+			name:          "serve with invalid host format",
+			args:          []string{"--host", "invalid..host"},
+			setup:         createTempTestDir,
+			cleanup:       cleanupTestDir,
+			expectError:   true,
 			errorContains: "host",
 		},
 		{
-			name:        "serve with malformed config",
-			args:        []string{"--config", "invalid-config.yml"},
-			setup:       createInvalidConfigTestDir,
-			cleanup:     cleanupTestDir,
-			expectError: true,
+			name:          "serve with malformed config",
+			args:          []string{"--config", "invalid-config.yml"},
+			setup:         createInvalidConfigTestDir,
+			cleanup:       cleanupTestDir,
+			expectError:   true,
 			errorContains: "config",
 		},
 	}
@@ -110,38 +110,38 @@ func TestServeCommandErrorPaths(t *testing.T) {
 	runCommandErrorTests(t, tests, serveCmd)
 }
 
-// TestBuildCommandErrorPaths tests error scenarios specific to the build command
+// TestBuildCommandErrorPaths tests error scenarios specific to the build command.
 func TestBuildCommandErrorPaths(t *testing.T) {
 	tests := []struct {
-		name        string
-		args        []string
-		setup       func(t *testing.T) string
-		cleanup     func(t *testing.T, dir string)
-		expectError bool
+		name          string
+		args          []string
+		setup         func(t *testing.T) string
+		cleanup       func(t *testing.T, dir string)
+		expectError   bool
 		errorContains string
 	}{
 		{
-			name:        "build with missing templ binary",
-			args:        []string{},
-			setup:       createInvalidPathTestDir,
-			cleanup:     cleanupTestDir,
-			expectError: true,
+			name:          "build with missing templ binary",
+			args:          []string{},
+			setup:         createInvalidPathTestDir,
+			cleanup:       cleanupTestDir,
+			expectError:   true,
 			errorContains: "templ",
 		},
 		{
-			name:        "build with invalid syntax in templ file",
-			args:        []string{},
-			setup:       createInvalidTemplTestDir,
-			cleanup:     cleanupTestDir,
-			expectError: true,
+			name:          "build with invalid syntax in templ file",
+			args:          []string{},
+			setup:         createInvalidTemplTestDir,
+			cleanup:       cleanupTestDir,
+			expectError:   true,
 			errorContains: "build",
 		},
 		{
-			name:        "build with permission denied on cache",
-			args:        []string{},
-			setup:       createReadOnlyCacheTestDir,
-			cleanup:     cleanupReadOnlyTestDir,
-			expectError: true,
+			name:          "build with permission denied on cache",
+			args:          []string{},
+			setup:         createReadOnlyCacheTestDir,
+			cleanup:       cleanupReadOnlyTestDir,
+			expectError:   true,
 			errorContains: "permission",
 		},
 	}
@@ -149,30 +149,30 @@ func TestBuildCommandErrorPaths(t *testing.T) {
 	runCommandErrorTests(t, tests, buildCmd)
 }
 
-// TestListCommandErrorPaths tests error scenarios specific to the list command
+// TestListCommandErrorPaths tests error scenarios specific to the list command.
 func TestListCommandErrorPaths(t *testing.T) {
 	tests := []struct {
-		name        string
-		args        []string
-		setup       func(t *testing.T) string
-		cleanup     func(t *testing.T, dir string)
-		expectError bool
+		name          string
+		args          []string
+		setup         func(t *testing.T) string
+		cleanup       func(t *testing.T, dir string)
+		expectError   bool
 		errorContains string
 	}{
 		{
-			name:        "list with no components directory",
-			args:        []string{},
-			setup:       createEmptyTestDir,
-			cleanup:     cleanupTestDir,
-			expectError: true,
+			name:          "list with no components directory",
+			args:          []string{},
+			setup:         createEmptyTestDir,
+			cleanup:       cleanupTestDir,
+			expectError:   true,
 			errorContains: "components",
 		},
 		{
-			name:        "list with permission denied on components",
-			args:        []string{},
-			setup:       createReadOnlyComponentsTestDir,
-			cleanup:     cleanupReadOnlyTestDir,
-			expectError: true,
+			name:          "list with permission denied on components",
+			args:          []string{},
+			setup:         createReadOnlyComponentsTestDir,
+			cleanup:       cleanupReadOnlyTestDir,
+			expectError:   true,
 			errorContains: "permission",
 		},
 	}
@@ -180,30 +180,30 @@ func TestListCommandErrorPaths(t *testing.T) {
 	runCommandErrorTests(t, tests, listCmd)
 }
 
-// TestPreviewCommandErrorPaths tests error scenarios specific to the preview command
+// TestPreviewCommandErrorPaths tests error scenarios specific to the preview command.
 func TestPreviewCommandErrorPaths(t *testing.T) {
 	tests := []struct {
-		name        string
-		args        []string
-		setup       func(t *testing.T) string
-		cleanup     func(t *testing.T, dir string)
-		expectError bool
+		name          string
+		args          []string
+		setup         func(t *testing.T) string
+		cleanup       func(t *testing.T, dir string)
+		expectError   bool
 		errorContains string
 	}{
 		{
-			name:        "preview with non-existent component",
-			args:        []string{"NonExistentComponent"},
-			setup:       createTempTestDir,
-			cleanup:     cleanupTestDir,
-			expectError: true,
+			name:          "preview with non-existent component",
+			args:          []string{"NonExistentComponent"},
+			setup:         createTempTestDir,
+			cleanup:       cleanupTestDir,
+			expectError:   true,
 			errorContains: "not found",
 		},
 		{
-			name:        "preview with path traversal attempt",
-			args:        []string{"../../../etc/passwd"},
-			setup:       createTempTestDir,
-			cleanup:     cleanupTestDir,
-			expectError: true,
+			name:          "preview with path traversal attempt",
+			args:          []string{"../../../etc/passwd"},
+			setup:         createTempTestDir,
+			cleanup:       cleanupTestDir,
+			expectError:   true,
 			errorContains: "invalid",
 		},
 	}
@@ -211,12 +211,12 @@ func TestPreviewCommandErrorPaths(t *testing.T) {
 	runCommandErrorTests(t, tests, previewCmd)
 }
 
-// TestConfigValidationErrorPaths tests configuration validation error scenarios
+// TestConfigValidationErrorPaths tests configuration validation error scenarios.
 func TestConfigValidationErrorPaths(t *testing.T) {
 	tests := []struct {
-		name        string
-		configYAML  string
-		expectError bool
+		name          string
+		configYAML    string
+		expectError   bool
 		errorContains string
 	}{
 		{
@@ -226,7 +226,7 @@ server:
   port: 8080
 invalid_yaml: [unclosed
 `,
-			expectError: true,
+			expectError:   true,
 			errorContains: "yaml",
 		},
 		{
@@ -235,7 +235,7 @@ invalid_yaml: [unclosed
 server:
   port: 70000
 `,
-			expectError: true,
+			expectError:   true,
 			errorContains: "port",
 		},
 		{
@@ -244,7 +244,7 @@ server:
 server:
   host: "invalid..hostname"
 `,
-			expectError: true,
+			expectError:   true,
 			errorContains: "host",
 		},
 		{
@@ -253,7 +253,7 @@ server:
 components:
   scan_paths: []
 `,
-			expectError: true,
+			expectError:   true,
 			errorContains: "scan_paths",
 		},
 	}
@@ -306,6 +306,7 @@ func createReadOnlyTestDir(t *testing.T) string {
 	if runtime.GOOS != windowsOS {
 		require.NoError(t, os.Chmod(tempDir, 0444))
 	}
+
 	return tempDir
 }
 
@@ -314,6 +315,7 @@ func createNonEmptyTestDir(t *testing.T) string {
 	existingDir := filepath.Join(tempDir, "existing-dir")
 	require.NoError(t, os.Mkdir(existingDir, 0755))
 	require.NoError(t, os.WriteFile(filepath.Join(existingDir, "file.txt"), []byte("content"), 0644))
+
 	return tempDir
 }
 
@@ -325,12 +327,14 @@ server:
   host: [invalid yaml syntax
 `
 	require.NoError(t, os.WriteFile(filepath.Join(tempDir, "invalid-config.yml"), []byte(invalidConfig), 0644))
+
 	return tempDir
 }
 
 func createInvalidPathTestDir(t *testing.T) string {
 	tempDir := t.TempDir()
 	t.Setenv("PATH", "") // Remove PATH to simulate missing templ binary
+
 	return tempDir
 }
 
@@ -346,6 +350,7 @@ templ InvalidComponent( {
 }
 `
 	require.NoError(t, os.WriteFile(filepath.Join(componentsDir, "invalid.templ"), []byte(invalidTempl), 0644))
+
 	return tempDir
 }
 
@@ -356,6 +361,7 @@ func createReadOnlyCacheTestDir(t *testing.T) string {
 	if runtime.GOOS != windowsOS {
 		require.NoError(t, os.Chmod(cacheDir, 0444))
 	}
+
 	return tempDir
 }
 
@@ -366,6 +372,7 @@ func createReadOnlyComponentsTestDir(t *testing.T) string {
 	if runtime.GOOS != windowsOS {
 		require.NoError(t, os.Chmod(componentsDir, 0000))
 	}
+
 	return tempDir
 }
 
@@ -380,12 +387,13 @@ func cleanupReadOnlyTestDir(t *testing.T, dir string) {
 			if err == nil {
 				_ = os.Chmod(path, 0755)
 			}
+
 			return nil
 		})
 	}
 }
 
-// runCommandErrorTests is a helper function to reduce code duplication
+// runCommandErrorTests is a helper function to reduce code duplication.
 func runCommandErrorTests(t *testing.T, tests []struct {
 	name          string
 	args          []string
@@ -393,7 +401,10 @@ func runCommandErrorTests(t *testing.T, tests []struct {
 	cleanup       func(t *testing.T, dir string)
 	expectError   bool
 	errorContains string
-}, cmd interface{ SetArgs([]string); Execute() error }) {
+}, cmd interface {
+	SetArgs([]string)
+	Execute() error
+}) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tempDir := tt.setup(t)

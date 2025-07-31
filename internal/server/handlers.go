@@ -5,9 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/conneroisu/templar/internal/types"
@@ -573,6 +575,7 @@ func validateComponentName(name string) error {
 func (s *PreviewServer) handleAPIDocs(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+
 		return
 	}
 
@@ -584,6 +587,7 @@ func (s *PreviewServer) handleAPIDocs(w http.ResponseWriter, r *http.Request) {
 func (s *PreviewServer) handleAPISpec(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+
 		return
 	}
 
@@ -700,6 +704,7 @@ func (s *PreviewServer) serveOpenAPIJSON(w http.ResponseWriter, r *http.Request)
 	spec, err := s.generateOpenAPISpec()
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to generate OpenAPI spec: %v", err), http.StatusInternalServerError)
+
 		return
 	}
 
@@ -717,6 +722,7 @@ func (s *PreviewServer) serveOpenAPIYAML(w http.ResponseWriter, r *http.Request)
 	spec, err := s.generateOpenAPISpec()
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to generate OpenAPI spec: %v", err), http.StatusInternalServerError)
+
 		return
 	}
 
@@ -735,7 +741,7 @@ func (s *PreviewServer) serveOpenAPIYAML(w http.ResponseWriter, r *http.Request)
 func (s *PreviewServer) generateOpenAPISpec() (interface{}, error) {
 	// Determine API version from server configuration or version package
 	apiVersion := s.getAPIVersion()
-	
+
 	spec := map[string]interface{}{
 		"openapi": "3.0.3",
 		"info": map[string]interface{}{
@@ -755,7 +761,7 @@ func (s *PreviewServer) generateOpenAPISpec() (interface{}, error) {
 		},
 		"servers": []map[string]interface{}{
 			{
-				"url":         fmt.Sprintf("http://%s:%d", s.config.Server.Host, s.config.Server.Port),
+				"url":         "http://" + net.JoinHostPort(s.config.Server.Host, strconv.Itoa(s.config.Server.Port)),
 				"description": "Development server",
 			},
 		},
@@ -1021,19 +1027,20 @@ func (s *PreviewServer) getAPIVersion() string {
 func (s *PreviewServer) handleAPIVersions(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+
 		return
 	}
 
 	versions := map[string]interface{}{
 		"versions": []map[string]interface{}{
 			{
-				"version":     "1.0.0",
-				"status":      "stable",
-				"released":    "2025-07-29",
-				"deprecated":  false,
-				"docs_url":    "/api/docs",
-				"spec_url":    "/api/spec",
-				"changelog":   "https://github.com/conneroisu/templar/releases/tag/v1.0.0",
+				"version":    "1.0.0",
+				"status":     "stable",
+				"released":   "2025-07-29",
+				"deprecated": false,
+				"docs_url":   "/api/docs",
+				"spec_url":   "/api/spec",
+				"changelog":  "https://github.com/conneroisu/templar/releases/tag/v1.0.0",
 			},
 		},
 		"current": "1.0.0",

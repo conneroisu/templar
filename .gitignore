@@ -48,3 +48,4 @@ node_modules
 result
 playwright-report
 test-results/
+scanner_bench_*/

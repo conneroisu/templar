@@ -15,9 +15,9 @@ import (
 // ExampleBasicMockUsage demonstrates basic mock framework usage.
 func ExampleBasicMockUsage() {
 	// This example shows how to use the mock framework in a test
-	
+
 	var t *testing.T // In real code, this comes from the test function parameter
-	
+
 	// Create mock framework
 	mf := NewMockFramework(t)
 	defer mf.Cleanup()
@@ -36,7 +36,7 @@ func ExampleBasicMockUsage() {
 	mf.Time.On("Now").Return(fixedTime)
 
 	// Your test code here...
-	
+
 	// Verify expectations at the end
 	AssertMockExpectations(t, mf)
 }
@@ -44,7 +44,7 @@ func ExampleBasicMockUsage() {
 // ExampleIsolatedTestSuite demonstrates complete test isolation.
 func ExampleIsolatedTestSuite() {
 	var t *testing.T // In real code, this comes from the test function parameter
-	
+
 	// Create completely isolated test environment
 	_, adapters, cleanup := CreateIsolatedTestSuite(t)
 	defer cleanup()
@@ -58,14 +58,14 @@ func ExampleIsolatedTestSuite() {
 
 	now := adapters.Time.Now()
 	_ = now // Use deterministic time
-	
+
 	// All expectations are automatically verified in cleanup()
 }
 
 // ExampleMockingSpecificOperations shows how to mock specific operations.
 func ExampleMockingSpecificOperations() {
 	var t *testing.T
-	
+
 	mf := NewMockFramework(t)
 	defer mf.Cleanup()
 
@@ -84,21 +84,22 @@ func ExampleMockingSpecificOperations() {
 // ExampleConvertingExistingTest shows how to convert an existing test to use mocks.
 //
 // Before: Test that directly uses file system
-// func TestReadConfig(t *testing.T) {
-//     tempDir := t.TempDir()
-//     configFile := filepath.Join(tempDir, "config.json")
-//     
-//     // Create real file
-//     err := os.WriteFile(configFile, []byte(`{"port": 8080}`), 0644)
-//     require.NoError(t, err)
-//     
-//     // Test function that reads file
-//     config, err := ReadConfig(configFile)
-//     require.NoError(t, err)
-//     assert.Equal(t, 8080, config.Port)
-// }
 //
-// After: Test using mocks for better isolation
+//	func TestReadConfig(t *testing.T) {
+//	    tempDir := t.TempDir()
+//	    configFile := filepath.Join(tempDir, "config.json")
+//
+//	    // Create real file
+//	    err := os.WriteFile(configFile, []byte(`{"port": 8080}`), 0644)
+//	    require.NoError(t, err)
+//
+//	    // Test function that reads file
+//	    config, err := ReadConfig(configFile)
+//	    require.NoError(t, err)
+//	    assert.Equal(t, 8080, config.Port)
+//	}
+//
+// After: Test using mocks for better isolation.
 func ExampleConvertingExistingTest(t *testing.T) {
 	// Create mock framework
 	mf := NewMockFramework(t)
@@ -205,7 +206,7 @@ func ExampleConcurrentTesting(t *testing.T) {
 	defer mf.Cleanup()
 
 	// Set up mocks for concurrent access
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		filename := fmt.Sprintf("/data/file_%d.txt", i)
 		content := []byte(fmt.Sprintf("content_%d", i))
 		mf.FileSystem.CreateFile(filename, content, 0o644)
@@ -216,7 +217,7 @@ func ExampleConcurrentTesting(t *testing.T) {
 
 	// Test concurrent file access
 	results := make(chan string, 10)
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		go func(id int) {
 			filename := fmt.Sprintf("/data/file_%d.txt", id)
 			content, err := adapter.ReadFile(filename)
@@ -229,7 +230,7 @@ func ExampleConcurrentTesting(t *testing.T) {
 	}
 
 	// Collect results
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		result := <-results
 		assert.NotEmpty(t, result)
 	}
@@ -257,7 +258,7 @@ func ExampleMockingWebSocketConnections(t *testing.T) {
 	mf.Network.On("Do", mock.AnythingOfType("*http.Request")).Return(upgradeResponse, nil)
 
 	// Your WebSocket testing code here...
-	
+
 	AssertMockExpectations(t, mf)
 }
 
@@ -276,8 +277,8 @@ func ExamplePerformanceTesting(t *testing.T) {
 	// Performance test with mocks
 	start := time.Now()
 	iterations := 1000
-	
-	for i := 0; i < iterations; i++ {
+
+	for range iterations {
 		_, err := adapter.ReadFile("/test/file.txt")
 		require.NoError(t, err)
 	}

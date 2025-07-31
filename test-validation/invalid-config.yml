@@ -1,0 +1,9 @@
+server:
+  port: 99999  # Invalid port
+  host: "localhost"
+components:
+  scan_paths: []  # Empty scan paths should be invalid
+build:
+  command: "rm -rf / ; templ generate"  # Dangerous command
+  watch: 
+    - ""  # Empty watch pattern

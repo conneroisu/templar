@@ -332,12 +332,13 @@ func TestFileTemplateManager_ConcurrentAccess(t *testing.T) {
 	results := make(chan *MockDataTemplate, numGoroutines*iterationsPerGoroutine)
 	errors := make(chan error, numGoroutines*iterationsPerGoroutine)
 
-	for i := 0; i < numGoroutines; i++ {
+	for range numGoroutines {
 		go func() {
-			for j := 0; j < iterationsPerGoroutine; j++ {
+			for range iterationsPerGoroutine {
 				template, err := manager.LoadTemplate("default")
 				if err != nil {
 					errors <- err
+
 					return
 				}
 				results <- template
@@ -346,7 +347,7 @@ func TestFileTemplateManager_ConcurrentAccess(t *testing.T) {
 	}
 
 	// Collect results
-	for i := 0; i < numGoroutines*iterationsPerGoroutine; i++ {
+	for range numGoroutines * iterationsPerGoroutine {
 		select {
 		case template := <-results:
 			assert.Equal(t, "default", template.Name)

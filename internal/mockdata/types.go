@@ -102,7 +102,7 @@ type NumberRange struct {
 // Performance considerations:
 // - Cache enables memoization of expensive operations
 // - Metadata tracks generation decisions for analysis and debugging
-// - Depth tracking prevents stack overflow in recursive structures
+// - Depth tracking prevents stack overflow in recursive structures.
 type GenerationContext struct {
 	ComponentInfo *types.ComponentInfo   // Component being generated for
 	ParentParam   *types.ParameterInfo   // Parent parameter context (for nested generation)
@@ -119,7 +119,7 @@ type GenerationContext struct {
 // - Component-level generation for complete mock objects
 // - Parameter-level generation for individual values
 // - Context-aware generation for complex scenarios
-// - Validation integration for quality assurance
+// - Validation integration for quality assurance.
 type MockDataGenerator interface {
 	// GenerateForComponent generates mock data for all parameters of a component
 	GenerateForComponent(component *types.ComponentInfo) map[string]interface{}

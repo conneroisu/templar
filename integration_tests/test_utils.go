@@ -32,10 +32,10 @@ type TestServerConfig struct {
 func DefaultTestConfig() *TestServerConfig {
 	return &TestServerConfig{
 		Host:                "localhost",
-		Port:                0, // Use random available port
-		ReadinessTimeout:    15 * time.Second, // Reduced from 30s
+		Port:                0,                     // Use random available port
+		ReadinessTimeout:    15 * time.Second,      // Reduced from 30s
 		HealthCheckInterval: 50 * time.Millisecond, // Reduced from 100ms for faster response
-		MaxRetries:          3, // Reduced from 5 for faster failure detection
+		MaxRetries:          3,                     // Reduced from 5 for faster failure detection
 		BaseRetryDelay:      50 * time.Millisecond, // Reduced from 100ms
 	}
 }
@@ -260,7 +260,7 @@ func CleanupTestDirectory(t *testing.T, dir string) {
 	if dir == "" {
 		return
 	}
-	
+
 	for attempt := 0; attempt < 3; attempt++ {
 		if err := os.RemoveAll(dir); err != nil {
 			if attempt == 2 { // Last attempt
@@ -281,7 +281,7 @@ func SafeTestCleanup(t *testing.T, cleanup func() error) {
 			t.Logf("Panic during cleanup: %v", r)
 		}
 	}()
-	
+
 	if cleanup != nil {
 		if err := cleanup(); err != nil {
 			t.Logf("Cleanup error: %v", err)
@@ -351,16 +351,16 @@ func WaitForRegistryStable(registry interface{ Count() int }, expectedCount int,
 	if timeout == 0 {
 		timeout = 3 * time.Second // Reduced default timeout
 	}
-	
+
 	stable := false
 	stableCount := 0
 	lastCount := -1
-	
+
 	ticker := time.NewTicker(10 * time.Millisecond) // Faster polling
 	defer ticker.Stop()
-	
+
 	timeoutChan := time.After(timeout)
-	
+
 	for {
 		select {
 		case <-timeoutChan:
@@ -370,10 +370,10 @@ func WaitForRegistryStable(registry interface{ Count() int }, expectedCount int,
 			return fmt.Errorf("registry never stabilized at count %d, last count: %d", expectedCount, lastCount)
 		case <-ticker.C:
 			currentCount := registry.Count()
-			
+
 			// Check if count matches expectation or if we don't care about specific count
 			countMatches := (expectedCount == -1) || (currentCount == expectedCount)
-			
+
 			if countMatches {
 				// Count matches (or we don't care) - check if it's stable
 				if currentCount == lastCount {
@@ -384,14 +384,14 @@ func WaitForRegistryStable(registry interface{ Count() int }, expectedCount int,
 				} else {
 					stableCount = 0 // Reset stability counter
 				}
-				
+
 				if stable {
 					return nil
 				}
 			} else {
 				stableCount = 0 // Reset if count doesn't match
 			}
-			
+
 			lastCount = currentCount
 		}
 	}
@@ -402,19 +402,19 @@ func WaitForServerHealthy(baseURL string, timeout time.Duration) error {
 	if timeout == 0 {
 		timeout = 30 * time.Second
 	}
-	
+
 	client := &http.Client{
 		Timeout: 2 * time.Second,
 	}
-	
+
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
-	
+
 	timeoutChan := time.After(timeout)
-	
+
 	consecutiveSuccess := 0
 	requiredConsecutive := 3 // Require 3 consecutive successful health checks
-	
+
 	for {
 		select {
 		case <-timeoutChan:
@@ -425,11 +425,11 @@ func WaitForServerHealthy(baseURL string, timeout time.Duration) error {
 				consecutiveSuccess = 0
 				continue
 			}
-			
+
 			if resp.StatusCode == http.StatusOK {
 				consecutiveSuccess++
 				resp.Body.Close()
-				
+
 				if consecutiveSuccess >= requiredConsecutive {
 					return nil
 				}

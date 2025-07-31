@@ -4,6 +4,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"math/rand"
@@ -82,32 +83,32 @@ func DefaultReconnectionConfig() *ReconnectionConfig {
 // ConnectionMetrics tracks connection reliability statistics.
 type ConnectionMetrics struct {
 	// Connection attempt counters
-	TotalAttempts     int64
-	SuccessfulConns   int64
-	FailedAttempts    int64
-	
+	TotalAttempts   int64
+	SuccessfulConns int64
+	FailedAttempts  int64
+
 	// Reconnection statistics
 	ReconnectAttempts int64
 	ReconnectSuccess  int64
-	
+
 	// Connection duration tracking
 	TotalConnectedTime int64 // nanoseconds
 	LongestConnection  int64 // nanoseconds
 	AverageConnection  int64 // nanoseconds
-	
+
 	// Health check statistics
-	PingSent          int64
-	PongReceived      int64
-	TimeoutCount      int64
-	
+	PingSent     int64
+	PongReceived int64
+	TimeoutCount int64
+
 	// Error tracking
-	NetworkErrors     int64
-	ProtocolErrors    int64
-	UnexpectedErrors  int64
-	
+	NetworkErrors    int64
+	ProtocolErrors   int64
+	UnexpectedErrors int64
+
 	// Current connection info
-	CurrentConnStart  int64 // Unix nano timestamp
-	LastDisconnect    int64 // Unix nano timestamp
+	CurrentConnStart    int64 // Unix nano timestamp
+	LastDisconnect      int64 // Unix nano timestamp
 	ConsecutiveFailures int64
 }
 
@@ -123,37 +124,37 @@ type WebSocketReliabilityManager struct {
 	// Configuration
 	config *ReconnectionConfig
 	url    string
-	
+
 	// Connection management
-	conn        *websocket.Conn
-	connMutex   sync.RWMutex
-	status      int32 // atomic ConnectionStatus
-	
+	conn      *websocket.Conn
+	connMutex sync.RWMutex
+	status    int32 // atomic ConnectionStatus
+
 	// Lifecycle management
-	ctx         context.Context
-	cancel      context.CancelFunc
-	wg          sync.WaitGroup
-	
+	ctx    context.Context
+	cancel context.CancelFunc
+	wg     sync.WaitGroup
+
 	// Callback handlers
 	statusCallbacks  []StatusCallback
 	messageCallbacks []MessageCallback
 	callbackMutex    sync.RWMutex
-	
+
 	// Metrics and monitoring
-	metrics       *ConnectionMetrics
-	
+	metrics *ConnectionMetrics
+
 	// Internal state
 	// TODO: Implement periodic reconnect and health checking
-	reconnectTicker   *time.Ticker //nolint:unused
-	healthTicker      *time.Ticker //nolint:unused
-	currentDelay      time.Duration
-	attemptCount      int64
-	forceOffline      int32 // atomic bool
-	
+	reconnectTicker *time.Ticker //nolint:unused
+	healthTicker    *time.Ticker //nolint:unused
+	currentDelay    time.Duration
+	attemptCount    int64
+	forceOffline    int32 // atomic bool
+
 	// Message queuing for offline mode
-	messageQueue      [][]byte
-	queueMutex        sync.Mutex
-	maxQueueSize      int
+	messageQueue [][]byte
+	queueMutex   sync.Mutex
+	maxQueueSize int
 }
 
 // NewWebSocketReliabilityManager creates a new WebSocket reliability manager.
@@ -161,9 +162,9 @@ func NewWebSocketReliabilityManager(url string, config *ReconnectionConfig) *Web
 	if config == nil {
 		config = DefaultReconnectionConfig()
 	}
-	
+
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	return &WebSocketReliabilityManager{
 		config:           config,
 		url:              url,
@@ -184,11 +185,11 @@ func (wsrm *WebSocketReliabilityManager) Start() error {
 	// Start the main connection management goroutine
 	wsrm.wg.Add(1)
 	go wsrm.connectionManager()
-	
+
 	// Start health checking goroutine
 	wsrm.wg.Add(1)
 	go wsrm.healthChecker()
-	
+
 	return nil
 }
 
@@ -196,28 +197,28 @@ func (wsrm *WebSocketReliabilityManager) Start() error {
 func (wsrm *WebSocketReliabilityManager) Stop() error {
 	wsrm.cancel()
 	wsrm.wg.Wait()
-	
+
 	wsrm.connMutex.Lock()
 	if wsrm.conn != nil {
 		_ = wsrm.conn.Close(websocket.StatusNormalClosure, "Shutting down")
 		wsrm.conn = nil
 	}
 	wsrm.connMutex.Unlock()
-	
+
 	return nil
 }
 
 // Connect attempts to establish a WebSocket connection.
 func (wsrm *WebSocketReliabilityManager) Connect() error {
 	if atomic.LoadInt32(&wsrm.forceOffline) == 1 {
-		return fmt.Errorf("manager is in offline mode")
+		return errors.New("manager is in offline mode")
 	}
-	
+
 	wsrm.setStatus(StatusConnecting)
-	
+
 	ctx, cancel := context.WithTimeout(wsrm.ctx, wsrm.config.ConnectionTimeout)
 	defer cancel()
-	
+
 	conn, resp, err := websocket.Dial(ctx, wsrm.url, nil)
 	if resp != nil && resp.Body != nil {
 		defer func() { _ = resp.Body.Close() }()
@@ -227,32 +228,33 @@ func (wsrm *WebSocketReliabilityManager) Connect() error {
 		atomic.AddInt64(&wsrm.metrics.ConsecutiveFailures, 1)
 		wsrm.updateError(err)
 		wsrm.setStatus(StatusDisconnected)
+
 		return fmt.Errorf("failed to connect: %w", err)
 	}
-	
+
 	wsrm.connMutex.Lock()
 	wsrm.conn = conn
 	wsrm.connMutex.Unlock()
-	
+
 	// Reset reconnection state on successful connection
 	wsrm.currentDelay = wsrm.config.InitialDelay
 	atomic.StoreInt64(&wsrm.attemptCount, 0)
 	atomic.StoreInt64(&wsrm.metrics.ConsecutiveFailures, 0)
-	
+
 	// Update metrics
 	atomic.AddInt64(&wsrm.metrics.TotalAttempts, 1)
 	atomic.AddInt64(&wsrm.metrics.SuccessfulConns, 1)
 	wsrm.metrics.CurrentConnStart = time.Now().UnixNano()
-	
+
 	wsrm.setStatus(StatusConnected)
-	
+
 	// Start read pump for this connection
 	wsrm.wg.Add(1)
 	go wsrm.readPump(conn)
-	
+
 	// Process any queued messages
 	wsrm.processQueuedMessages()
-	
+
 	return nil
 }
 
@@ -260,15 +262,16 @@ func (wsrm *WebSocketReliabilityManager) Connect() error {
 func (wsrm *WebSocketReliabilityManager) Disconnect() error {
 	wsrm.connMutex.Lock()
 	defer wsrm.connMutex.Unlock()
-	
+
 	if wsrm.conn != nil {
 		err := wsrm.conn.Close(websocket.StatusNormalClosure, "User disconnect")
 		wsrm.conn = nil
 		wsrm.updateConnectionDuration()
 		wsrm.setStatus(StatusDisconnected)
+
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -294,16 +297,17 @@ func (wsrm *WebSocketReliabilityManager) SendMessage(messageType websocket.Messa
 	wsrm.connMutex.RLock()
 	conn := wsrm.conn
 	wsrm.connMutex.RUnlock()
-	
+
 	if conn == nil {
 		// Queue message for when connection is restored
 		wsrm.queueMessage(data)
-		return fmt.Errorf("no active connection, message queued")
+
+		return errors.New("no active connection, message queued")
 	}
-	
+
 	ctx, cancel := context.WithTimeout(wsrm.ctx, 10*time.Second)
 	defer cancel()
-	
+
 	return conn.Write(ctx, messageType, data)
 }
 
@@ -352,24 +356,24 @@ func (wsrm *WebSocketReliabilityManager) AddMessageCallback(callback MessageCall
 // connectionManager handles the main connection lifecycle and reconnection logic.
 func (wsrm *WebSocketReliabilityManager) connectionManager() {
 	defer wsrm.wg.Done()
-	
+
 	// Initial connection attempt
 	if err := wsrm.Connect(); err != nil {
 		log.Printf("Initial WebSocket connection failed: %v", err)
 	}
-	
+
 	for {
 		select {
 		case <-wsrm.ctx.Done():
 			return
-			
+
 		default:
 			// Check if we need to reconnect
 			status := wsrm.GetStatus()
 			if status == StatusDisconnected && atomic.LoadInt32(&wsrm.forceOffline) == 0 {
 				wsrm.attemptReconnection()
 			}
-			
+
 			// Wait before next check
 			time.Sleep(1 * time.Second)
 		}
@@ -381,32 +385,33 @@ func (wsrm *WebSocketReliabilityManager) attemptReconnection() {
 	// Check if we've exceeded max attempts
 	if wsrm.config.MaxAttempts > 0 && atomic.LoadInt64(&wsrm.attemptCount) >= int64(wsrm.config.MaxAttempts) {
 		wsrm.setStatus(StatusOffline)
+
 		return
 	}
-	
+
 	wsrm.setStatus(StatusReconnecting)
 	atomic.AddInt64(&wsrm.attemptCount, 1)
 	atomic.AddInt64(&wsrm.metrics.ReconnectAttempts, 1)
-	
+
 	// Calculate delay with jitter
 	delay := wsrm.calculateBackoffDelay()
-	
+
 	select {
 	case <-wsrm.ctx.Done():
 		return
 	case <-time.After(delay):
 		// Attempt reconnection
 		if err := wsrm.Connect(); err != nil {
-			log.Printf("WebSocket reconnection attempt %d failed: %v", 
+			log.Printf("WebSocket reconnection attempt %d failed: %v",
 				atomic.LoadInt64(&wsrm.attemptCount), err)
-			
+
 			// Increase delay for next attempt
 			wsrm.currentDelay = time.Duration(float64(wsrm.currentDelay) * wsrm.config.BackoffMultiplier)
 			if wsrm.currentDelay > wsrm.config.MaxDelay {
 				wsrm.currentDelay = wsrm.config.MaxDelay
 			}
 		} else {
-			log.Printf("WebSocket reconnection successful after %d attempts", 
+			log.Printf("WebSocket reconnection successful after %d attempts",
 				atomic.LoadInt64(&wsrm.attemptCount))
 			atomic.AddInt64(&wsrm.metrics.ReconnectSuccess, 1)
 		}
@@ -416,27 +421,27 @@ func (wsrm *WebSocketReliabilityManager) attemptReconnection() {
 // calculateBackoffDelay calculates the next backoff delay with jitter.
 func (wsrm *WebSocketReliabilityManager) calculateBackoffDelay() time.Duration {
 	baseDelay := wsrm.currentDelay
-	
+
 	// Add jitter to prevent thundering herd
 	if wsrm.config.JitterFactor > 0 {
 		jitter := float64(baseDelay) * wsrm.config.JitterFactor * (2*rand.Float64() - 1)
 		baseDelay = time.Duration(float64(baseDelay) + jitter)
 	}
-	
+
 	if baseDelay < 0 {
 		baseDelay = wsrm.config.InitialDelay
 	}
-	
+
 	return baseDelay
 }
 
 // healthChecker periodically pings the connection to ensure it's healthy.
 func (wsrm *WebSocketReliabilityManager) healthChecker() {
 	defer wsrm.wg.Done()
-	
+
 	ticker := time.NewTicker(wsrm.config.HealthCheckInterval)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-wsrm.ctx.Done():
@@ -454,20 +459,20 @@ func (wsrm *WebSocketReliabilityManager) performHealthCheck() {
 	wsrm.connMutex.RLock()
 	conn := wsrm.conn
 	wsrm.connMutex.RUnlock()
-	
+
 	if conn == nil {
 		return
 	}
-	
+
 	ctx, cancel := context.WithTimeout(wsrm.ctx, 5*time.Second)
 	defer cancel()
-	
+
 	atomic.AddInt64(&wsrm.metrics.PingSent, 1)
-	
+
 	if err := conn.Ping(ctx); err != nil {
 		log.Printf("WebSocket health check failed: %v", err)
 		atomic.AddInt64(&wsrm.metrics.TimeoutCount, 1)
-		
+
 		// Connection appears unhealthy, trigger disconnect
 		wsrm.handleConnectionError(err)
 	} else {
@@ -479,7 +484,7 @@ func (wsrm *WebSocketReliabilityManager) performHealthCheck() {
 func (wsrm *WebSocketReliabilityManager) readPump(conn *websocket.Conn) {
 	defer wsrm.wg.Done()
 	defer wsrm.handleConnectionClosed()
-	
+
 	for {
 		select {
 		case <-wsrm.ctx.Done():
@@ -491,15 +496,16 @@ func (wsrm *WebSocketReliabilityManager) readPump(conn *websocket.Conn) {
 					log.Printf("WebSocket read error: %v", err)
 					wsrm.handleConnectionError(err)
 				}
+
 				return
 			}
-			
+
 			// Notify message callbacks
 			wsrm.callbackMutex.RLock()
 			callbacks := make([]MessageCallback, len(wsrm.messageCallbacks))
 			copy(callbacks, wsrm.messageCallbacks)
 			wsrm.callbackMutex.RUnlock()
-			
+
 			for _, callback := range callbacks {
 				go callback(messageType, data)
 			}
@@ -511,25 +517,25 @@ func (wsrm *WebSocketReliabilityManager) readPump(conn *websocket.Conn) {
 func (wsrm *WebSocketReliabilityManager) handleConnectionError(err error) {
 	wsrm.updateError(err)
 	wsrm.updateConnectionDuration()
-	
+
 	wsrm.connMutex.Lock()
 	if wsrm.conn != nil {
 		_ = wsrm.conn.Close(websocket.StatusAbnormalClosure, "Connection error")
 		wsrm.conn = nil
 	}
 	wsrm.connMutex.Unlock()
-	
+
 	wsrm.setStatus(StatusDisconnected)
 }
 
 // handleConnectionClosed handles normal connection closure.
 func (wsrm *WebSocketReliabilityManager) handleConnectionClosed() {
 	wsrm.updateConnectionDuration()
-	
+
 	wsrm.connMutex.Lock()
 	wsrm.conn = nil
 	wsrm.connMutex.Unlock()
-	
+
 	if wsrm.GetStatus() != StatusOffline {
 		wsrm.setStatus(StatusDisconnected)
 	}
@@ -538,15 +544,15 @@ func (wsrm *WebSocketReliabilityManager) handleConnectionClosed() {
 // setStatus updates the connection status and notifies callbacks.
 func (wsrm *WebSocketReliabilityManager) setStatus(status ConnectionStatus) {
 	oldStatus := ConnectionStatus(atomic.SwapInt32(&wsrm.status, int32(status)))
-	
+
 	if oldStatus != status {
 		log.Printf("WebSocket status changed: %s -> %s", oldStatus, status)
-		
+
 		wsrm.callbackMutex.RLock()
 		callbacks := make([]StatusCallback, len(wsrm.statusCallbacks))
 		copy(callbacks, wsrm.statusCallbacks)
 		wsrm.callbackMutex.RUnlock()
-		
+
 		for _, callback := range callbacks {
 			go callback(status, nil)
 		}
@@ -572,14 +578,14 @@ func (wsrm *WebSocketReliabilityManager) updateConnectionDuration() {
 	if startTime == 0 {
 		return
 	}
-	
+
 	duration := time.Now().UnixNano() - startTime
 	atomic.StoreInt64(&wsrm.metrics.LastDisconnect, time.Now().UnixNano())
 	atomic.StoreInt64(&wsrm.metrics.CurrentConnStart, 0)
-	
+
 	// Update total connected time
 	atomic.AddInt64(&wsrm.metrics.TotalConnectedTime, duration)
-	
+
 	// Update longest connection
 	for {
 		current := atomic.LoadInt64(&wsrm.metrics.LongestConnection)
@@ -590,7 +596,7 @@ func (wsrm *WebSocketReliabilityManager) updateConnectionDuration() {
 			break
 		}
 	}
-	
+
 	// Update average connection time
 	successfulConns := atomic.LoadInt64(&wsrm.metrics.SuccessfulConns)
 	if successfulConns > 0 {
@@ -603,14 +609,14 @@ func (wsrm *WebSocketReliabilityManager) updateConnectionDuration() {
 func (wsrm *WebSocketReliabilityManager) queueMessage(data []byte) {
 	wsrm.queueMutex.Lock()
 	defer wsrm.queueMutex.Unlock()
-	
+
 	// Prevent queue from growing too large
 	if len(wsrm.messageQueue) >= wsrm.maxQueueSize {
 		// Remove oldest message
 		copy(wsrm.messageQueue, wsrm.messageQueue[1:])
 		wsrm.messageQueue = wsrm.messageQueue[:len(wsrm.messageQueue)-1]
 	}
-	
+
 	// Add new message
 	messageCopy := make([]byte, len(data))
 	copy(messageCopy, data)
@@ -624,7 +630,7 @@ func (wsrm *WebSocketReliabilityManager) processQueuedMessages() {
 	copy(queue, wsrm.messageQueue)
 	wsrm.messageQueue = wsrm.messageQueue[:0] // Clear queue
 	wsrm.queueMutex.Unlock()
-	
+
 	for _, message := range queue {
 		if err := wsrm.SendMessage(websocket.MessageText, message); err != nil {
 			log.Printf("Failed to send queued message: %v", err)
@@ -632,7 +638,7 @@ func (wsrm *WebSocketReliabilityManager) processQueuedMessages() {
 			wsrm.queueMessage(message)
 		}
 	}
-	
+
 	if len(queue) > 0 {
 		log.Printf("Processed %d queued messages", len(queue))
 	}
@@ -649,5 +655,6 @@ func containsAny(s string, substrings []string) bool {
 			}
 		}
 	}
+
 	return false
 }

@@ -91,7 +91,7 @@ func (s *PreviewServer) handleWebSocket(w http.ResponseWriter, r *http.Request) 
 //
 // Security threat model:
 // - CSWSH Attack: Malicious websites can establish WebSocket connections to localhost applications
-// - Data Exfiltration: Unauthorized scripts could read development server data through WebSocket messages  
+// - Data Exfiltration: Unauthorized scripts could read development server data through WebSocket messages
 // - Command Injection: Malicious origins could potentially send harmful messages to trigger server actions
 // - Session Hijacking: Cross-origin connections could bypass same-origin policy protections
 //
@@ -104,7 +104,7 @@ func (s *PreviewServer) handleWebSocket(w http.ResponseWriter, r *http.Request) 
 // Integration with broader security:
 // - Complements Content Security Policy (CSP) by validating at the protocol level
 // - Works alongside rate limiting to prevent abuse from permitted origins
-// - Integrates with centralized validation framework for consistent security patterns
+// - Integrates with centralized validation framework for consistent security patterns.
 func (s *PreviewServer) checkOrigin(r *http.Request) bool {
 	// Extract the Origin header which browsers automatically include for WebSocket requests
 	// This header is set by the browser and cannot be modified by client-side JavaScript
@@ -114,11 +114,11 @@ func (s *PreviewServer) checkOrigin(r *http.Request) bool {
 	// Includes the configured server host/port plus common development server configurations
 	expectedHost := fmt.Sprintf("%s:%d", s.config.Server.Host, s.config.Server.Port)
 	allowedOrigins := []string{
-		expectedHost,                                           // Primary server configuration
-		fmt.Sprintf("localhost:%d", s.config.Server.Port),     // Localhost variant of server port
-		fmt.Sprintf("127.0.0.1:%d", s.config.Server.Port),     // IP variant of server port
-		"localhost:3000",                                       // Common frontend dev server (React, Vue, Angular)
-		"127.0.0.1:3000",                                       // IP variant for frontend dev server
+		expectedHost, // Primary server configuration
+		fmt.Sprintf("localhost:%d", s.config.Server.Port), // Localhost variant of server port
+		fmt.Sprintf("127.0.0.1:%d", s.config.Server.Port), // IP variant of server port
+		"localhost:3000", // Common frontend dev server (React, Vue, Angular)
+		"127.0.0.1:3000", // IP variant for frontend dev server
 	}
 
 	// Delegate to centralized validation system for consistent security policy enforcement

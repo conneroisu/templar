@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-// Schema format constants
+// Schema format constants.
 const (
 	FormatInt32    = "int32"
 	FormatInt64    = "int64"
@@ -77,7 +77,7 @@ func NewTypeAnalyzer() *TypeAnalyzer {
 // - JSON tag interpretation for field naming and optional markers
 // - Format detection for common patterns (email, UUID, date-time)
 // - Reference-based schema reuse for complex types
-// - Comprehensive error reporting with type context
+// - Comprehensive error reporting with type context.
 func (ta *TypeAnalyzer) AnalyzeType(goType reflect.Type) (*APISchema, error) {
 	// Handle nil types gracefully - represents unknown or any type
 	if goType == nil {
@@ -87,13 +87,13 @@ func (ta *TypeAnalyzer) AnalyzeType(goType reflect.Type) (*APISchema, error) {
 	// Generate canonical type name for caching and reference generation
 	// This ensures consistent naming across the schema and prevents duplicates
 	typeName := ta.getTypeName(goType)
-	
+
 	// Cache lookup to prevent infinite recursion in self-referential types
 	// Also provides significant performance improvement for repeated type analysis
 	if _, exists := ta.analyzedTypes[typeName]; exists {
 		// Return schema reference instead of inline definition for complex types
 		// This keeps the generated OpenAPI specification clean and reduces size
-		return &APISchema{Ref: fmt.Sprintf("#/components/schemas/%s", typeName)}, nil
+		return &APISchema{Ref: "#/components/schemas/" + typeName}, nil
 	}
 
 	// Perform actual type analysis using internal dispatch mechanism
@@ -107,7 +107,8 @@ func (ta *TypeAnalyzer) AnalyzeType(goType reflect.Type) (*APISchema, error) {
 	// Simple types (primitives) are inlined, complex types become reusable components
 	if ta.isComplexType(goType) {
 		ta.analyzedTypes[typeName] = schema
-		return &APISchema{Ref: fmt.Sprintf("#/components/schemas/%s", typeName)}, nil
+
+		return &APISchema{Ref: "#/components/schemas/" + typeName}, nil
 	}
 
 	return schema, nil
@@ -287,7 +288,7 @@ func (ta *TypeAnalyzer) analyzeBoolType(goType reflect.Type) (*APISchema, error)
 // analyzeSliceType analyzes slice and array types.
 func (ta *TypeAnalyzer) analyzeSliceType(goType reflect.Type) (*APISchema, error) {
 	elementType := goType.Elem()
-	
+
 	// Recursively analyze the element type
 	elementSchema, err := ta.AnalyzeType(elementType)
 	if err != nil {
@@ -323,7 +324,7 @@ func (ta *TypeAnalyzer) analyzeMapType(goType reflect.Type) (*APISchema, error) 
 		}, nil
 	}
 
-	// Analyze the value type  
+	// Analyze the value type
 	_, err := ta.AnalyzeType(valueType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to analyze map value type: %w", err)
@@ -346,9 +347,9 @@ func (ta *TypeAnalyzer) analyzeStructType(goType reflect.Type) (*APISchema, erro
 	var required []string
 
 	// Analyze each field in the struct
-	for i := 0; i < goType.NumField(); i++ {
+	for i := range goType.NumField() {
 		field := goType.Field(i)
-		
+
 		// Skip unexported fields
 		if !field.IsExported() {
 			continue
@@ -403,7 +404,7 @@ func (ta *TypeAnalyzer) analyzeInterfaceType(goType reflect.Type) (*APISchema, e
 	// For interfaces with methods, create a more specific schema
 	return &APISchema{
 		Type:        "object",
-		Description: fmt.Sprintf("Interface type: %s", goType.Name()),
+		Description: "Interface type: " + goType.Name(),
 	}, nil
 }
 
@@ -473,6 +474,7 @@ func (ta *TypeAnalyzer) toCamelCase(s string) string {
 	if len(s) == 0 {
 		return s
 	}
+
 	return strings.ToLower(s[:1]) + s[1:]
 }
 
@@ -482,7 +484,7 @@ func (ta *TypeAnalyzer) addFieldDocumentation(field reflect.StructField, schema 
 	if desc := field.Tag.Get("description"); desc != "" {
 		schema.Description = desc
 	}
-	
+
 	if example := field.Tag.Get("example"); example != "" {
 		schema.Example = example
 	}
@@ -506,13 +508,14 @@ func (ta *TypeAnalyzer) addValidationConstraints(field reflect.StructField, sche
 	if validate := field.Tag.Get("validate"); validate != "" {
 		parts := strings.Split(validate, ",")
 		for _, part := range parts {
-			if strings.HasPrefix(part, "min=") {
+			switch {
+			case strings.HasPrefix(part, "min="):
 				// Extract minimum value (simplified)
-			} else if strings.HasPrefix(part, "max=") {
+			case strings.HasPrefix(part, "max="):
 				// Extract maximum value (simplified)
-			} else if part == "email" {
+			case part == "email":
 				schema.Format = FormatEmail
-			} else if part == "uuid" {
+			case part == "uuid":
 				schema.Format = FormatUUID
 			}
 		}

@@ -29,20 +29,20 @@ import (
 
 // HotReloadTestSystem represents a complete hot reload test environment
 type HotReloadTestSystem struct {
-	ProjectDir      string
-	ComponentsDir   string
-	Registry        *registry.ComponentRegistry
-	Scanner         *scanner.ComponentScanner
-	Watcher         *watcher.FileWatcher
-	BuildPipeline   *build.RefactoredBuildPipeline
-	Server          *server.RefactoredPreviewServer
-	ServerURL       string
-	WSConnection    *websocket.Conn
-	ctx             context.Context
-	cancel          context.CancelFunc
-	messageCount    int64
-	lastMessage     *server.UpdateMessage
-	buildResults    []build.BuildResult
+	ProjectDir    string
+	ComponentsDir string
+	Registry      *registry.ComponentRegistry
+	Scanner       *scanner.ComponentScanner
+	Watcher       *watcher.FileWatcher
+	BuildPipeline *build.RefactoredBuildPipeline
+	Server        *server.RefactoredPreviewServer
+	ServerURL     string
+	WSConnection  *websocket.Conn
+	ctx           context.Context
+	cancel        context.CancelFunc
+	messageCount  int64
+	lastMessage   *server.UpdateMessage
+	buildResults  []build.BuildResult
 }
 
 // NewHotReloadTestSystem creates a comprehensive hot reload test system
@@ -57,13 +57,13 @@ func NewHotReloadTestSystem(t *testing.T) (*HotReloadTestSystem, error) {
 	// Initialize core components
 	reg := registry.NewComponentRegistry()
 	componentScanner := scanner.NewComponentScanner(reg)
-	
+
 	fileWatcher, err := watcher.NewFileWatcher(100 * time.Millisecond)
 	require.NoError(t, err)
 
 	// Create build pipeline
 	buildPipeline := build.NewRefactoredBuildPipeline(2, reg)
-	
+
 	ctx, cancel := context.WithCancel(context.Background())
 
 	system := &HotReloadTestSystem{
@@ -132,18 +132,18 @@ func (h *HotReloadTestSystem) Start(t *testing.T) error {
 	// Set up file watcher with proper filters and handlers
 	h.Watcher.AddFilter(interfaces.FileFilterFunc(watcher.TemplFilter))
 	h.Watcher.AddFilter(interfaces.FileFilterFunc(watcher.NoTestFilter))
-	
+
 	h.Watcher.AddHandler(func(events []interfaces.ChangeEvent) error {
 		t.Logf("File change events detected: %d events", len(events))
 		for _, event := range events {
 			t.Logf("  - %s: %s", event.Type, event.Path)
-			
+
 			// Rescan the changed file
 			if err := h.Scanner.ScanFile(event.Path); err != nil {
 				t.Logf("Failed to rescan file %s: %v", event.Path, err)
 				return err
 			}
-			
+
 			// Find and rebuild affected components
 			components := h.Registry.GetAll()
 			for _, component := range components {
@@ -182,7 +182,7 @@ func (h *HotReloadTestSystem) Start(t *testing.T) error {
 // ConnectWebSocket establishes WebSocket connection and sets up message handling
 func (h *HotReloadTestSystem) ConnectWebSocket(t *testing.T) error {
 	wsURL := strings.Replace(h.ServerURL, "http://", "ws://", 1) + "/ws"
-	
+
 	ctx, cancel := context.WithTimeout(h.ctx, 10*time.Second)
 	defer cancel()
 
@@ -231,8 +231,8 @@ func (h *HotReloadTestSystem) handleWebSocketMessages(t *testing.T) {
 
 			atomic.AddInt64(&h.messageCount, 1)
 			h.lastMessage = &updateMsg
-			
-			t.Logf("Received WebSocket message: Type=%s, Target=%s, Content=%s", 
+
+			t.Logf("Received WebSocket message: Type=%s, Target=%s, Content=%s",
 				updateMsg.Type, updateMsg.Target, updateMsg.Content)
 		}
 	}
@@ -256,7 +256,7 @@ func (h *HotReloadTestSystem) ModifyTestComponent(t *testing.T, filePath, newCon
 func (h *HotReloadTestSystem) WaitForMessage(t *testing.T, messageType string, timeout time.Duration) *server.UpdateMessage {
 	deadline := time.Now().Add(timeout)
 	initialCount := atomic.LoadInt64(&h.messageCount)
-	
+
 	for time.Now().Before(deadline) {
 		currentCount := atomic.LoadInt64(&h.messageCount)
 		if currentCount > initialCount && h.lastMessage != nil && h.lastMessage.Type == messageType {
@@ -264,7 +264,7 @@ func (h *HotReloadTestSystem) WaitForMessage(t *testing.T, messageType string, t
 		}
 		time.Sleep(50 * time.Millisecond)
 	}
-	
+
 	t.Fatalf("Timeout waiting for WebSocket message type: %s", messageType)
 	return nil
 }
@@ -273,7 +273,7 @@ func (h *HotReloadTestSystem) WaitForMessage(t *testing.T, messageType string, t
 func (h *HotReloadTestSystem) WaitForBuildResult(t *testing.T, componentName string, timeout time.Duration) *build.BuildResult {
 	deadline := time.Now().Add(timeout)
 	initialCount := len(h.buildResults)
-	
+
 	for time.Now().Before(deadline) {
 		if len(h.buildResults) > initialCount {
 			for i := initialCount; i < len(h.buildResults); i++ {
@@ -285,7 +285,7 @@ func (h *HotReloadTestSystem) WaitForBuildResult(t *testing.T, componentName str
 		}
 		time.Sleep(50 * time.Millisecond)
 	}
-	
+
 	t.Fatalf("Timeout waiting for build result for component: %s", componentName)
 	return nil
 }
@@ -348,21 +348,21 @@ templ Button(text string) {
 }`
 
 	componentPath := system.CreateTestComponent(t, "Button", initialTemplate)
-	
+
 	// Manually trigger scan since file watcher might need time to detect
 	err = system.Scanner.ScanFile(componentPath)
 	require.NoError(t, err, "Manual scan should succeed")
-	
+
 	// Wait for component to be scanned and registered
 	time.Sleep(500 * time.Millisecond)
 	t.Logf("Components in registry: %d", system.GetComponentCount())
-	
+
 	// Let's debug what's in the registry
 	allComponents := system.Registry.GetAll()
 	for _, comp := range allComponents {
 		t.Logf("Found component: %s at %s", comp.Name, comp.FilePath)
 	}
-	
+
 	if system.GetComponentCount() == 0 {
 		// Try directory scan as fallback
 		t.Log("No components found, trying directory scan...")
@@ -371,7 +371,7 @@ templ Button(text string) {
 		time.Sleep(200 * time.Millisecond)
 		t.Logf("After directory scan, components in registry: %d", system.GetComponentCount())
 	}
-	
+
 	assert.Equal(t, 1, system.GetComponentCount(), "Component should be registered")
 
 	// Verify component exists in registry
@@ -384,7 +384,7 @@ templ Button(text string) {
 	t.Log("Manually triggering build for Button component...")
 	err = system.BuildPipeline.Build(button)
 	require.NoError(t, err, "Manual build should succeed")
-	
+
 	// Wait for initial build
 	buildResult := system.WaitForBuildResult(t, "Button", 3*time.Second)
 	assert.NotNil(t, buildResult, "Should receive build result")
@@ -402,16 +402,16 @@ templ Button(text string, variant string) {
 
 	// Give file watcher time to detect the change
 	time.Sleep(1 * time.Second)
-	
+
 	// Let's manually trigger the file change handling to ensure it works
 	t.Log("Manually triggering file change handling...")
 	err = system.Scanner.ScanFile(componentPath)
 	require.NoError(t, err, "Manual rescan should succeed")
-	
+
 	// Get the updated component and trigger rebuild
 	updatedButton, exists := system.Registry.Get("Button")
 	require.True(t, exists, "Button should still exist after modification")
-	
+
 	err = system.BuildPipeline.Build(updatedButton)
 	require.NoError(t, err, "Manual rebuild should succeed")
 
@@ -630,7 +630,7 @@ templ Component%d(data string, extra string) {
 	// Wait for all build success messages
 	successCount := 0
 	timeout := time.Now().Add(10 * time.Second)
-	
+
 	for time.Now().Before(timeout) && successCount < 3 {
 		message := system.WaitForMessage(t, "build_success", 2*time.Second)
 		if message != nil {
@@ -681,7 +681,7 @@ templ PerfTest(data string) {
 
 		start := time.Now()
 		system.ModifyTestComponent(t, path, modifiedTemplate)
-		
+
 		// Wait for build success
 		message := system.WaitForMessage(t, "build_success", 3*time.Second)
 		duration := time.Since(start)
@@ -695,7 +695,7 @@ templ PerfTest(data string) {
 	t.Logf("Average hot reload time: %v", averageDuration)
 
 	// Hot reload should complete within reasonable time
-	assert.Less(t, averageDuration.Milliseconds(), int64(2000), 
+	assert.Less(t, averageDuration.Milliseconds(), int64(2000),
 		"Average hot reload should complete within 2 seconds")
 
 	t.Log("✅ Hot reload performance characteristics verified successfully")

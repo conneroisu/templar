@@ -2,7 +2,7 @@ package testutils
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"io"
 	"net/http"
 	"os"
@@ -175,7 +175,7 @@ func TestMockFileSystem_ReadDirectory(t *testing.T) {
 	mfs := NewMockFileSystem()
 
 	mfs.CreateDir("/test/dir", 0o755)
-	mfs.On("ReadFile", "/test/dir").Return([]byte(nil), fmt.Errorf("read /test/dir: is a directory"))
+	mfs.On("ReadFile", "/test/dir").Return([]byte(nil), errors.New("read /test/dir: is a directory"))
 
 	_, err := mfs.ReadFile("/test/dir")
 	assert.Error(t, err)
@@ -189,7 +189,7 @@ func TestMockNetwork_HTTPResponse(t *testing.T) {
 
 	// Create mock HTTP response
 	response := &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Body:       io.NopCloser(strings.NewReader("response body")),
 	}
 
@@ -211,7 +211,7 @@ func TestMockNetwork_HTTPResponse(t *testing.T) {
 func TestMockNetwork_HTTPError(t *testing.T) {
 	mn := NewMockNetwork()
 
-	expectedError := fmt.Errorf("network error")
+	expectedError := errors.New("network error")
 	mn.MockHTTPResponse("http://bad-url.com", nil, expectedError)
 	mn.On("Get", "http://bad-url.com").Return((*http.Response)(nil), expectedError)
 
@@ -229,7 +229,7 @@ func TestMockNetwork_Post(t *testing.T) {
 	mn := NewMockNetwork()
 
 	response := &http.Response{
-		StatusCode: 201,
+		StatusCode: http.StatusCreated,
 		Body:       io.NopCloser(strings.NewReader("created")),
 	}
 
@@ -332,7 +332,7 @@ func TestMockCommandRunner_BasicExecution(t *testing.T) {
 func TestMockCommandRunner_CommandError(t *testing.T) {
 	mcr := NewMockCommandRunner()
 
-	expectedError := fmt.Errorf("command failed")
+	expectedError := errors.New("command failed")
 	result := &CommandResult{
 		Stdout:   "",
 		Stderr:   "error message",
@@ -364,7 +364,7 @@ func TestMockFramework_Integration(t *testing.T) {
 
 	// Set up network mock
 	response := &http.Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Body:       io.NopCloser(strings.NewReader(`{"status": "ok"}`)),
 	}
 	mf.Network.MockHTTPResponse("http://api.example.com/status", response, nil)
@@ -424,10 +424,10 @@ func TestMockFramework_ConcurrentAccess(t *testing.T) {
 	done := make(chan bool, 10)
 
 	// Launch multiple goroutines
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		go func() {
 			defer func() { done <- true }()
-			
+
 			content, err := mf.FileSystem.ReadFile("/test/file.txt")
 			assert.NoError(t, err)
 			assert.Equal(t, []byte("content"), content)
@@ -435,7 +435,7 @@ func TestMockFramework_ConcurrentAccess(t *testing.T) {
 	}
 
 	// Wait for all goroutines to complete
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		<-done
 	}
 

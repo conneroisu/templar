@@ -16,13 +16,13 @@ import (
 
 // MockFramework provides comprehensive mocking capabilities for testing.
 type MockFramework struct {
-	t              *testing.T
-	FileSystem     *MockFileSystem
-	Network        *MockNetwork
-	Time           *MockTime
-	CommandRunner  *MockCommandRunner
-	cleanupFuncs   []func()
-	mu             sync.RWMutex
+	t             *testing.T
+	FileSystem    *MockFileSystem
+	Network       *MockNetwork
+	Time          *MockTime
+	CommandRunner *MockCommandRunner
+	cleanupFuncs  []func()
+	mu            sync.RWMutex
 }
 
 // NewMockFramework creates a new mock framework instance.
@@ -76,15 +76,15 @@ type MockFileSystem struct {
 
 // MockFile represents a mock file with content and metadata.
 type MockFile struct {
-	Content    []byte
-	Mode       os.FileMode
-	ModTime    time.Time
-	IsDir      bool
-	Entries    []fs.DirEntry
-	ReadPos    int64
-	WritePos   int64
-	closed     bool        //nolint:unused  // TODO: implement file closing tracking
-	mu         sync.RWMutex //nolint:unused  // TODO: implement proper concurrency control
+	Content  []byte
+	Mode     os.FileMode
+	ModTime  time.Time
+	IsDir    bool
+	Entries  []fs.DirEntry
+	ReadPos  int64
+	WritePos int64
+	closed   bool         //nolint:unused  // TODO: implement file closing tracking
+	mu       sync.RWMutex //nolint:unused  // TODO: implement proper concurrency control
 }
 
 // NewMockFileSystem creates a new mock file system.
@@ -99,7 +99,7 @@ func NewMockFileSystem() *MockFileSystem {
 func (mfs *MockFileSystem) Reset() {
 	mfs.mu.Lock()
 	defer mfs.mu.Unlock()
-	
+
 	mfs.ExpectedCalls = nil
 	mfs.Calls = nil
 	mfs.files = make(map[string]*MockFile)
@@ -110,7 +110,7 @@ func (mfs *MockFileSystem) Reset() {
 func (mfs *MockFileSystem) CreateFile(path string, content []byte, mode os.FileMode) {
 	mfs.mu.Lock()
 	defer mfs.mu.Unlock()
-	
+
 	mfs.files[path] = &MockFile{
 		Content: content,
 		Mode:    mode,
@@ -124,7 +124,7 @@ func (mfs *MockFileSystem) CreateFile(path string, content []byte, mode os.FileM
 func (mfs *MockFileSystem) CreateDir(path string, mode os.FileMode) {
 	mfs.mu.Lock()
 	defer mfs.mu.Unlock()
-	
+
 	mfs.files[path] = &MockFile{
 		Mode:    mode | fs.ModeDir,
 		ModTime: time.Now(),
@@ -137,27 +137,28 @@ func (mfs *MockFileSystem) CreateDir(path string, mode os.FileMode) {
 // ReadFile mocks os.ReadFile functionality.
 func (mfs *MockFileSystem) ReadFile(filename string) ([]byte, error) {
 	args := mfs.Called(filename)
-	
+
 	mfs.mu.RLock()
 	defer mfs.mu.RUnlock()
-	
+
 	if file, exists := mfs.files[filename]; exists {
 		if file.IsDir {
 			return nil, fmt.Errorf("read %s: is a directory", filename)
 		}
+
 		return file.Content, args.Error(1)
 	}
-	
+
 	return args.Get(0).([]byte), args.Error(1)
 }
 
 // WriteFile mocks os.WriteFile functionality.
 func (mfs *MockFileSystem) WriteFile(filename string, data []byte, perm os.FileMode) error {
 	args := mfs.Called(filename, data, perm)
-	
+
 	mfs.mu.Lock()
 	defer mfs.mu.Unlock()
-	
+
 	mfs.files[filename] = &MockFile{
 		Content: data,
 		Mode:    perm,
@@ -165,17 +166,17 @@ func (mfs *MockFileSystem) WriteFile(filename string, data []byte, perm os.FileM
 		IsDir:   false,
 	}
 	mfs.permissions[filename] = perm
-	
+
 	return args.Error(0)
 }
 
 // Stat mocks os.Stat functionality.
 func (mfs *MockFileSystem) Stat(name string) (fs.FileInfo, error) {
 	args := mfs.Called(name)
-	
+
 	mfs.mu.RLock()
 	defer mfs.mu.RUnlock()
-	
+
 	if file, exists := mfs.files[name]; exists {
 		return &MockFileInfo{
 			name:    name,
@@ -185,20 +186,21 @@ func (mfs *MockFileSystem) Stat(name string) (fs.FileInfo, error) {
 			isDir:   file.IsDir,
 		}, args.Error(1)
 	}
-	
+
 	if args.Get(0) != nil {
 		return args.Get(0).(fs.FileInfo), args.Error(1)
 	}
+
 	return nil, args.Error(1)
 }
 
 // MkdirAll mocks os.MkdirAll functionality.
 func (mfs *MockFileSystem) MkdirAll(path string, perm os.FileMode) error {
 	args := mfs.Called(path, perm)
-	
+
 	mfs.mu.Lock()
 	defer mfs.mu.Unlock()
-	
+
 	mfs.files[path] = &MockFile{
 		Mode:    perm | fs.ModeDir,
 		ModTime: time.Now(),
@@ -206,20 +208,20 @@ func (mfs *MockFileSystem) MkdirAll(path string, perm os.FileMode) error {
 		Entries: make([]fs.DirEntry, 0),
 	}
 	mfs.permissions[path] = perm
-	
+
 	return args.Error(0)
 }
 
 // Remove mocks os.Remove functionality.
 func (mfs *MockFileSystem) Remove(name string) error {
 	args := mfs.Called(name)
-	
+
 	mfs.mu.Lock()
 	defer mfs.mu.Unlock()
-	
+
 	delete(mfs.files, name)
 	delete(mfs.permissions, name)
-	
+
 	return args.Error(0)
 }
 
@@ -259,7 +261,7 @@ func NewMockNetwork() *MockNetwork {
 func (mn *MockNetwork) Reset() {
 	mn.mu.Lock()
 	defer mn.mu.Unlock()
-	
+
 	mn.ExpectedCalls = nil
 	mn.Calls = nil
 	mn.httpResponses = make(map[string]*http.Response)
@@ -270,7 +272,7 @@ func (mn *MockNetwork) Reset() {
 func (mn *MockNetwork) MockHTTPResponse(url string, response *http.Response, err error) {
 	mn.mu.Lock()
 	defer mn.mu.Unlock()
-	
+
 	mn.httpResponses[url] = response
 	mn.httpErrors[url] = err
 }
@@ -278,20 +280,21 @@ func (mn *MockNetwork) MockHTTPResponse(url string, response *http.Response, err
 // Get mocks http.Get functionality.
 func (mn *MockNetwork) Get(url string) (*http.Response, error) {
 	args := mn.Called(url)
-	
+
 	mn.mu.RLock()
 	defer mn.mu.RUnlock()
-	
+
 	if response, exists := mn.httpResponses[url]; exists {
 		return response, mn.httpErrors[url]
 	}
-	
+
 	return args.Get(0).(*http.Response), args.Error(1)
 }
 
 // Post mocks http.Post functionality.
 func (mn *MockNetwork) Post(url, contentType string, body io.Reader) (*http.Response, error) {
 	args := mn.Called(url, contentType, body)
+
 	return args.Get(0).(*http.Response), args.Error(1)
 }
 
@@ -315,7 +318,7 @@ func NewMockTime() *MockTime {
 func (mt *MockTime) Reset() {
 	mt.mu.Lock()
 	defer mt.mu.Unlock()
-	
+
 	mt.ExpectedCalls = nil
 	mt.Calls = nil
 	mt.currentTime = time.Now()
@@ -325,10 +328,10 @@ func (mt *MockTime) Reset() {
 // Now returns the current mock time.
 func (mt *MockTime) Now() time.Time {
 	mt.Called()
-	
+
 	mt.mu.RLock()
 	defer mt.mu.RUnlock()
-	
+
 	return mt.currentTime
 }
 
@@ -394,7 +397,7 @@ func NewMockCommandRunner() *MockCommandRunner {
 func (mcr *MockCommandRunner) Reset() {
 	mcr.mu.Lock()
 	defer mcr.mu.Unlock()
-	
+
 	mcr.ExpectedCalls = nil
 	mcr.Calls = nil
 	mcr.commands = make(map[string]*CommandResult)
@@ -411,13 +414,13 @@ func (mcr *MockCommandRunner) MockCommand(cmd string, result *CommandResult) {
 func (mcr *MockCommandRunner) RunCommand(ctx context.Context, name string, args ...string) (*CommandResult, error) {
 	cmdStr := fmt.Sprintf("%s %v", name, args)
 	mockArgs := mcr.Called(ctx, name, args)
-	
+
 	mcr.mu.RLock()
 	defer mcr.mu.RUnlock()
-	
+
 	if result, exists := mcr.commands[cmdStr]; exists {
 		return result, result.Error
 	}
-	
+
 	return mockArgs.Get(0).(*CommandResult), mockArgs.Error(1)
 }

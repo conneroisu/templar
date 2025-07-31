@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	// Type constants specific to generator
+	// Type constants specific to generator.
 	typeInt32    = "int32"
 	typeInt64    = "int64"
 	typeFloat32  = "float32"

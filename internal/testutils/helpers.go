@@ -273,12 +273,12 @@ func CleanupTestEnvironment(projectDir string) error {
 func CreateTestEnvironmentWithMocks(t *testing.T) (string, *config.Config, *MockFramework) {
 	projectDir, cfg := CreateSecureTestEnvironment(t)
 	mf := NewMockFramework(t)
-	
+
 	// Set up cleanup
 	t.Cleanup(func() {
 		mf.Cleanup()
 	})
-	
+
 	return projectDir, cfg, mf
 }
 
@@ -287,7 +287,7 @@ func SetupMockFileSystem(mf *MockFramework, projectDir string, cfg *config.Confi
 	// Mock common file operations
 	mf.FileSystem.On("Stat", projectDir).Return(nil, nil).Maybe()
 	mf.FileSystem.On("MkdirAll", cfg.Build.CacheDir, os.FileMode(0o755)).Return(nil).Maybe()
-	
+
 	// Create mock component files
 	for name, content := range StandardTemplContent {
 		filePath := filepath.Join(projectDir, "components", name+".templ")
@@ -313,11 +313,11 @@ func SetupMockCommands(mf *MockFramework) {
 		Error:    nil,
 	}
 	mf.CommandRunner.MockCommand("templ generate", templResult)
-	mf.CommandRunner.On("RunCommand", 
-		mock.AnythingOfType("*context.Context"), 
-		"templ", 
+	mf.CommandRunner.On("RunCommand",
+		mock.AnythingOfType("*context.Context"),
+		"templ",
 		[]string{"generate"}).Return(templResult, nil).Maybe()
-	
+
 	// Mock go build command
 	buildResult := &CommandResult{
 		Stdout:   "Build successful",
@@ -326,9 +326,9 @@ func SetupMockCommands(mf *MockFramework) {
 		Error:    nil,
 	}
 	mf.CommandRunner.MockCommand("go build", buildResult)
-	mf.CommandRunner.On("RunCommand", 
-		mock.AnythingOfType("*context.Context"), 
-		"go", 
+	mf.CommandRunner.On("RunCommand",
+		mock.AnythingOfType("*context.Context"),
+		"go",
 		[]string{"build"}).Return(buildResult, nil).Maybe()
 }
 
@@ -341,9 +341,9 @@ func MockBuildFailure(mf *MockFramework, errorMsg string) {
 		Error:    fmt.Errorf("build failed: %s", errorMsg),
 	}
 	mf.CommandRunner.MockCommand("templ generate", failureResult)
-	mf.CommandRunner.On("RunCommand", 
-		mock.AnythingOfType("*context.Context"), 
-		"templ", 
+	mf.CommandRunner.On("RunCommand",
+		mock.AnythingOfType("*context.Context"),
+		"templ",
 		[]string{"generate"}).Return(failureResult, failureResult.Error).Maybe()
 }
 
@@ -357,7 +357,7 @@ func MockNetworkError(mf *MockFramework, url string, errorMsg string) {
 // MockFileSystemError configures mocks to simulate file system errors.
 func MockFileSystemError(mf *MockFramework, operation, path, errorMsg string) {
 	fsError := fmt.Errorf("filesystem error: %s", errorMsg)
-	
+
 	switch operation {
 	case "ReadFile":
 		mf.FileSystem.On("ReadFile", path).Return([]byte(nil), fsError).Maybe()
@@ -384,16 +384,16 @@ func AssertMockExpectations(t *testing.T, mf *MockFramework) {
 func CreateIsolatedTestSuite(t *testing.T) (*MockFramework, *TestEnvironmentAdapters, func()) {
 	mf := NewMockFramework(t)
 	adapters := NewMockAdapters(mf)
-	
+
 	// Set up base time for deterministic testing
 	baseTime := time.Date(2023, 1, 1, 12, 0, 0, 0, time.UTC)
 	SetupMockTime(mf, baseTime)
-	
+
 	cleanup := func() {
 		AssertMockExpectations(t, mf)
 		mf.Cleanup()
 	}
-	
+
 	return mf, adapters, cleanup
 }
 

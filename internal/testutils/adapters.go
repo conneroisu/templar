@@ -159,20 +159,20 @@ func NewRealCommandAdapter() *RealCommandAdapter {
 func (r *RealCommandAdapter) RunCommand(ctx context.Context, name string, args ...string) (*CommandResult, error) {
 	cmd := exec.CommandContext(ctx, name, args...)
 	output, err := cmd.CombinedOutput()
-	
+
 	result := &CommandResult{
 		Stdout:   string(output),
 		Stderr:   "",
 		ExitCode: 0,
 		Error:    err,
 	}
-	
+
 	if err != nil {
 		if exitError, ok := err.(*exec.ExitError); ok {
 			result.ExitCode = exitError.ExitCode()
 		}
 	}
-	
+
 	return result, err
 }
 
@@ -180,20 +180,20 @@ func (r *RealCommandAdapter) RunCommandWithDir(ctx context.Context, dir, name st
 	cmd := exec.CommandContext(ctx, name, args...)
 	cmd.Dir = dir
 	output, err := cmd.CombinedOutput()
-	
+
 	result := &CommandResult{
 		Stdout:   string(output),
 		Stderr:   "",
 		ExitCode: 0,
 		Error:    err,
 	}
-	
+
 	if err != nil {
 		if exitError, ok := err.(*exec.ExitError); ok {
 			result.ExitCode = exitError.ExitCode()
 		}
 	}
-	
+
 	return result, err
 }
 
@@ -233,16 +233,19 @@ func (m *MockFileSystemAdapter) Remove(name string) error {
 
 func (m *MockFileSystemAdapter) RemoveAll(path string) error {
 	args := m.mock.Called(path)
+
 	return args.Error(0)
 }
 
 func (m *MockFileSystemAdapter) Chmod(name string, mode os.FileMode) error {
 	args := m.mock.Called(name, mode)
+
 	return args.Error(0)
 }
 
 func (m *MockFileSystemAdapter) Open(name string) (*os.File, error) {
 	args := m.mock.Called(name)
+
 	return args.Get(0).(*os.File), args.Error(1)
 }
 
@@ -266,6 +269,7 @@ func (m *MockNetworkAdapter) Post(url, contentType string, body any) (*http.Resp
 
 func (m *MockNetworkAdapter) Do(req *http.Request) (*http.Response, error) {
 	args := m.mock.Called(req)
+
 	return args.Get(0).(*http.Response), args.Error(1)
 }
 
@@ -289,26 +293,31 @@ func (m *MockTimeAdapter) Sleep(d time.Duration) {
 
 func (m *MockTimeAdapter) Since(t time.Time) time.Duration {
 	args := m.mock.Called(t)
+
 	return args.Get(0).(time.Duration)
 }
 
 func (m *MockTimeAdapter) Until(t time.Time) time.Duration {
 	args := m.mock.Called(t)
+
 	return args.Get(0).(time.Duration)
 }
 
 func (m *MockTimeAdapter) After(d time.Duration) <-chan time.Time {
 	args := m.mock.Called(d)
+
 	return args.Get(0).(<-chan time.Time)
 }
 
 func (m *MockTimeAdapter) NewTimer(d time.Duration) *time.Timer {
 	args := m.mock.Called(d)
+
 	return args.Get(0).(*time.Timer)
 }
 
 func (m *MockTimeAdapter) NewTicker(d time.Duration) *time.Ticker {
 	args := m.mock.Called(d)
+
 	return args.Get(0).(*time.Ticker)
 }
 
@@ -328,11 +337,13 @@ func (m *MockCommandAdapter) RunCommand(ctx context.Context, name string, args .
 
 func (m *MockCommandAdapter) RunCommandWithDir(ctx context.Context, dir, name string, args ...string) (*CommandResult, error) {
 	mockArgs := m.mock.Called(ctx, dir, name, args)
+
 	return mockArgs.Get(0).(*CommandResult), mockArgs.Error(1)
 }
 
 func (m *MockCommandAdapter) LookPath(file string) (string, error) {
 	args := m.mock.Called(file)
+
 	return args.String(0), args.Error(1)
 }
 

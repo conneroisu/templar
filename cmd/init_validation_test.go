@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestRunInitValidation tests that the runInit function properly validates arguments
+// TestRunInitValidation tests that the runInit function properly validates arguments.
 func TestRunInitValidation(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -47,13 +47,13 @@ func TestRunInitValidation(t *testing.T) {
 			// Test the runInit function directly
 			cmd := &cobra.Command{}
 			err := runInit(cmd, tt.args)
-			
+
 			if tt.expectError {
 				assert.Error(t, err, "Expected error for test case: %s", tt.name)
 				if tt.errorText != "" && err != nil {
 					t.Logf("Full error message: %s", err.Error())
 					// Check if the error message contains the expected text (case insensitive)
-					assert.Contains(t, strings.ToLower(err.Error()), strings.ToLower(tt.errorText), 
+					assert.Contains(t, strings.ToLower(err.Error()), strings.ToLower(tt.errorText),
 						"Error should contain '%s' for test: %s. Got: %s", tt.errorText, tt.name, err.Error())
 				}
 			} else if err != nil {

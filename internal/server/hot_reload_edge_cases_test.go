@@ -20,7 +20,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestHotReload_EdgeCases tests various edge cases and failure scenarios
+// TestHotReload_EdgeCases tests various edge cases and failure scenarios.
 func TestHotReload_EdgeCases(t *testing.T) {
 	t.Run("corrupted_component_file", func(t *testing.T) {
 		// Create temporary directory for test
@@ -136,7 +136,7 @@ templ Vanishing() {
 		numGoroutines := 5
 
 		// Some goroutines try to scan the file
-		for i := 0; i < numGoroutines; i++ {
+		for i := range numGoroutines {
 			wg.Add(1)
 			go func(id int) {
 				defer wg.Done()
@@ -297,13 +297,13 @@ templ InvalidHTML() {
 
 		// Create very large component file
 		largeFile := filepath.Join(tempDir, "large.templ")
-		
+
 		var content strings.Builder
 		content.WriteString("package components\n\n")
 		content.WriteString("templ LargeComponent() {\n")
-		
+
 		// Generate large HTML content
-		for i := 0; i < 10000; i++ {
+		for i := range 10000 {
 			content.WriteString(fmt.Sprintf("\t<div class=\"item-%d\">Item %d</div>\n", i, i))
 		}
 		content.WriteString("}")
@@ -346,6 +346,7 @@ templ InvalidHTML() {
 			mu.Lock()
 			eventCount += int64(len(events))
 			mu.Unlock()
+
 			return nil
 		})
 
@@ -359,7 +360,7 @@ templ InvalidHTML() {
 
 		// Create and rapidly delete/recreate files
 		testFile := filepath.Join(tempDir, "rapid.templ")
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			require.NoError(t, os.WriteFile(testFile, []byte(fmt.Sprintf("// Version %d", i)), 0644))
 			time.Sleep(5 * time.Millisecond)
 			_ = os.Remove(testFile)
@@ -378,7 +379,7 @@ templ InvalidHTML() {
 	})
 }
 
-// TestHotReload_FailureRecovery tests the system's ability to recover from failures
+// TestHotReload_FailureRecovery tests the system's ability to recover from failures.
 func TestHotReload_FailureRecovery(t *testing.T) {
 	t.Run("build_failure_recovery", func(t *testing.T) {
 		tempDir := fmt.Sprintf("recovery_test_%d", time.Now().UnixNano())

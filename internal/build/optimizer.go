@@ -172,18 +172,18 @@ type BuildOptimizer struct {
 	// Configuration
 	config           *config.Config
 	progressReporter *BuildProgressReporter
-	
+
 	// Analysis state
 	recommendations     []OptimizationRecommendation
 	recommendationMutex sync.RWMutex
-	
+
 	// Analysis history
-	analysisHistory     []AnalysisResult
-	historyMutex        sync.Mutex
-	maxHistorySize      int
-	
+	analysisHistory []AnalysisResult
+	historyMutex    sync.Mutex
+	maxHistorySize  int
+
 	// Thresholds for analysis
-	slowBuildThreshold      time.Duration
+	slowBuildThreshold       time.Duration
 	highFailureRateThreshold float64
 	lowCacheHitThreshold     float64
 	highMemoryThreshold      int64
@@ -191,13 +191,13 @@ type BuildOptimizer struct {
 
 // AnalysisResult represents the result of a build performance analysis.
 type AnalysisResult struct {
-	Timestamp       time.Time                    `json:"timestamp"`
-	TotalBuilds     int64                        `json:"total_builds"`
-	SuccessRate     float64                      `json:"success_rate"`
-	AverageBuildTime time.Duration               `json:"average_build_time"`
-	CacheHitRate    float64                      `json:"cache_hit_rate"`
-	Recommendations []OptimizationRecommendation `json:"recommendations"`
-	Score           float64                      `json:"score"` // Overall performance score 0-100
+	Timestamp        time.Time                    `json:"timestamp"`
+	TotalBuilds      int64                        `json:"total_builds"`
+	SuccessRate      float64                      `json:"success_rate"`
+	AverageBuildTime time.Duration                `json:"average_build_time"`
+	CacheHitRate     float64                      `json:"cache_hit_rate"`
+	Recommendations  []OptimizationRecommendation `json:"recommendations"`
+	Score            float64                      `json:"score"` // Overall performance score 0-100
 }
 
 // NewBuildOptimizer creates a new build optimizer.
@@ -209,8 +209,8 @@ func NewBuildOptimizer(cfg *config.Config, progressReporter *BuildProgressReport
 		analysisHistory:          make([]AnalysisResult, 0, 50),
 		maxHistorySize:           50,
 		slowBuildThreshold:       10 * time.Second,
-		highFailureRateThreshold: 0.05, // 5%
-		lowCacheHitThreshold:     0.70, // 70%
+		highFailureRateThreshold: 0.05,              // 5%
+		lowCacheHitThreshold:     0.70,              // 70%
 		highMemoryThreshold:      512 * 1024 * 1024, // 512MB
 	}
 }
@@ -218,72 +218,72 @@ func NewBuildOptimizer(cfg *config.Config, progressReporter *BuildProgressReport
 // AnalyzeBuildPerformance performs comprehensive build performance analysis.
 func (bo *BuildOptimizer) AnalyzeBuildPerformance() AnalysisResult {
 	stats := bo.progressReporter.GetBuildStats()
-	
+
 	// Extract key metrics
 	totalBuilds := int64(0)
 	if val, ok := stats["total_builds"].(int64); ok {
 		totalBuilds = val
 	}
-	
+
 	successRate := float64(0)
 	if val, ok := stats["success_rate"].(float64); ok {
 		successRate = val
 	}
-	
+
 	averageBuildTime := time.Duration(0)
 	if val, ok := stats["average_build_time"].(string); ok {
 		if parsed, err := time.ParseDuration(val); err == nil {
 			averageBuildTime = parsed
 		}
 	}
-	
+
 	// Analyze different aspects of build performance
 	recommendations := make([]OptimizationRecommendation, 0)
-	
+
 	// Performance analysis
 	recommendations = append(recommendations, bo.analyzePerformance(stats)...)
-	
+
 	// Reliability analysis
 	recommendations = append(recommendations, bo.analyzeReliability(stats)...)
-	
+
 	// Resource utilization analysis
 	recommendations = append(recommendations, bo.analyzeResourceUtilization(stats)...)
-	
+
 	// Caching effectiveness analysis
 	recommendations = append(recommendations, bo.analyzeCaching(stats)...)
-	
+
 	// Concurrency analysis
 	recommendations = append(recommendations, bo.analyzeConcurrency(stats)...)
-	
+
 	// Configuration analysis
 	recommendations = append(recommendations, bo.analyzeConfiguration(stats)...)
-	
+
 	// Calculate overall performance score
 	score := bo.calculatePerformanceScore(stats, recommendations)
-	
+
 	result := AnalysisResult{
-		Timestamp:       time.Now(),
-		TotalBuilds:     totalBuilds,
-		SuccessRate:     successRate,
+		Timestamp:        time.Now(),
+		TotalBuilds:      totalBuilds,
+		SuccessRate:      successRate,
 		AverageBuildTime: averageBuildTime,
-		Recommendations: recommendations,
-		Score:           score,
+		Recommendations:  recommendations,
+		Score:            score,
 	}
-	
+
 	// Update internal state
 	bo.updateRecommendations(recommendations)
 	bo.addToHistory(result)
-	
-	log.Printf("Build performance analysis completed: Score=%.1f, Recommendations=%d", 
+
+	log.Printf("Build performance analysis completed: Score=%.1f, Recommendations=%d",
 		score, len(recommendations))
-	
+
 	return result
 }
 
 // analyzePerformance analyzes build speed and timing performance.
 func (bo *BuildOptimizer) analyzePerformance(stats map[string]interface{}) []OptimizationRecommendation {
 	recommendations := make([]OptimizationRecommendation, 0)
-	
+
 	// Check average build time
 	if avgTimeStr, ok := stats["average_build_time"].(string); ok {
 		if avgTime, err := time.ParseDuration(avgTimeStr); err == nil {
@@ -295,7 +295,7 @@ func (bo *BuildOptimizer) analyzePerformance(stats map[string]interface{}) []Opt
 				if avgTime > bo.slowBuildThreshold*5 {
 					level = OptimizationCritical
 				}
-				
+
 				recommendations = append(recommendations, OptimizationRecommendation{
 					ID:          "slow-build-time",
 					Title:       "Slow Build Performance",
@@ -320,7 +320,7 @@ func (bo *BuildOptimizer) analyzePerformance(stats map[string]interface{}) []Opt
 			}
 		}
 	}
-	
+
 	// Analyze build time percentiles
 	if p95Str, ok := stats["build_time_p95"].(string); ok {
 		if p95Time, err := time.ParseDuration(p95Str); err == nil {
@@ -355,14 +355,14 @@ func (bo *BuildOptimizer) analyzePerformance(stats map[string]interface{}) []Opt
 			}
 		}
 	}
-	
+
 	return recommendations
 }
 
 // analyzeReliability analyzes build success rates and error patterns.
 func (bo *BuildOptimizer) analyzeReliability(stats map[string]interface{}) []OptimizationRecommendation {
 	recommendations := make([]OptimizationRecommendation, 0)
-	
+
 	// Check failure rate
 	if failureRate, ok := stats["failure_rate"].(float64); ok {
 		if failureRate > bo.highFailureRateThreshold*100 {
@@ -373,7 +373,7 @@ func (bo *BuildOptimizer) analyzeReliability(stats map[string]interface{}) []Opt
 			if failureRate > bo.highFailureRateThreshold*500 {
 				level = OptimizationCritical
 			}
-			
+
 			recommendations = append(recommendations, OptimizationRecommendation{
 				ID:          "high-failure-rate",
 				Title:       "High Build Failure Rate",
@@ -397,19 +397,19 @@ func (bo *BuildOptimizer) analyzeReliability(stats map[string]interface{}) []Opt
 			})
 		}
 	}
-	
+
 	return recommendations
 }
 
 // analyzeResourceUtilization analyzes memory and CPU usage patterns.
 func (bo *BuildOptimizer) analyzeResourceUtilization(stats map[string]interface{}) []OptimizationRecommendation {
 	recommendations := make([]OptimizationRecommendation, 0)
-	
+
 	// Analyze worker utilization
 	if workerStats, ok := stats["worker_stats"].(map[string]interface{}); ok {
 		activeWorkers := 0
 		totalWorkers := 0
-		
+
 		for _, workerData := range workerStats {
 			if worker, ok := workerData.(map[string]interface{}); ok {
 				totalWorkers++
@@ -418,10 +418,10 @@ func (bo *BuildOptimizer) analyzeResourceUtilization(stats map[string]interface{
 				}
 			}
 		}
-		
+
 		if totalWorkers > 0 {
 			utilization := float64(activeWorkers) / float64(totalWorkers)
-			
+
 			// Low utilization
 			if utilization < 0.3 {
 				recommendations = append(recommendations, OptimizationRecommendation{
@@ -445,7 +445,7 @@ func (bo *BuildOptimizer) analyzeResourceUtilization(stats map[string]interface{
 					CreatedAt: time.Now(),
 				})
 			}
-			
+
 			// High utilization
 			if utilization > 0.9 {
 				recommendations = append(recommendations, OptimizationRecommendation{
@@ -472,14 +472,14 @@ func (bo *BuildOptimizer) analyzeResourceUtilization(stats map[string]interface{
 			}
 		}
 	}
-	
+
 	return recommendations
 }
 
 // analyzeCaching analyzes build caching effectiveness.
 func (bo *BuildOptimizer) analyzeCaching(stats map[string]interface{}) []OptimizationRecommendation {
 	recommendations := make([]OptimizationRecommendation, 0)
-	
+
 	// For now, we'll add a placeholder recommendation to improve caching
 	// This would be enhanced with actual cache hit rate metrics
 	recommendations = append(recommendations, OptimizationRecommendation{
@@ -499,20 +499,20 @@ func (bo *BuildOptimizer) analyzeCaching(stats map[string]interface{}) []Optimiz
 		},
 		CreatedAt: time.Now(),
 	})
-	
+
 	return recommendations
 }
 
 // analyzeConcurrency analyzes parallel processing effectiveness.
 func (bo *BuildOptimizer) analyzeConcurrency(stats map[string]interface{}) []OptimizationRecommendation {
 	recommendations := make([]OptimizationRecommendation, 0)
-	
+
 	// Analyze queue depth patterns
 	if currentDepth, ok := stats["current_queue_depth"].(int64); ok {
 		if maxDepth, ok := stats["max_queue_depth"].(int64); ok {
 			if maxDepth > 0 {
 				queueUtilization := float64(currentDepth) / float64(maxDepth)
-				
+
 				if maxDepth > 100 {
 					recommendations = append(recommendations, OptimizationRecommendation{
 						ID:          "high-queue-depth",
@@ -539,14 +539,14 @@ func (bo *BuildOptimizer) analyzeConcurrency(stats map[string]interface{}) []Opt
 			}
 		}
 	}
-	
+
 	return recommendations
 }
 
 // analyzeConfiguration analyzes build configuration for optimizations.
 func (bo *BuildOptimizer) analyzeConfiguration(stats map[string]interface{}) []OptimizationRecommendation {
 	recommendations := make([]OptimizationRecommendation, 0)
-	
+
 	// General configuration optimization recommendation
 	recommendations = append(recommendations, OptimizationRecommendation{
 		ID:          "optimize-configuration",
@@ -565,14 +565,14 @@ func (bo *BuildOptimizer) analyzeConfiguration(stats map[string]interface{}) []O
 		},
 		CreatedAt: time.Now(),
 	})
-	
+
 	return recommendations
 }
 
 // calculatePerformanceScore calculates an overall performance score (0-100).
 func (bo *BuildOptimizer) calculatePerformanceScore(stats map[string]interface{}, recommendations []OptimizationRecommendation) float64 {
 	score := 100.0
-	
+
 	// Deduct points based on recommendation severity
 	for _, rec := range recommendations {
 		switch rec.Level {
@@ -588,12 +588,12 @@ func (bo *BuildOptimizer) calculatePerformanceScore(stats map[string]interface{}
 			score -= 1.0
 		}
 	}
-	
+
 	// Ensure score doesn't go below 0
 	if score < 0 {
 		score = 0
 	}
-	
+
 	return score
 }
 
@@ -601,7 +601,7 @@ func (bo *BuildOptimizer) calculatePerformanceScore(stats map[string]interface{}
 func (bo *BuildOptimizer) updateRecommendations(recommendations []OptimizationRecommendation) {
 	bo.recommendationMutex.Lock()
 	defer bo.recommendationMutex.Unlock()
-	
+
 	bo.recommendations = recommendations
 }
 
@@ -609,9 +609,9 @@ func (bo *BuildOptimizer) updateRecommendations(recommendations []OptimizationRe
 func (bo *BuildOptimizer) addToHistory(result AnalysisResult) {
 	bo.historyMutex.Lock()
 	defer bo.historyMutex.Unlock()
-	
+
 	bo.analysisHistory = append(bo.analysisHistory, result)
-	
+
 	// Keep history within limits
 	if len(bo.analysisHistory) > bo.maxHistorySize {
 		bo.analysisHistory = bo.analysisHistory[len(bo.analysisHistory)-bo.maxHistorySize:]
@@ -622,11 +622,11 @@ func (bo *BuildOptimizer) addToHistory(result AnalysisResult) {
 func (bo *BuildOptimizer) GetCurrentRecommendations() []OptimizationRecommendation {
 	bo.recommendationMutex.RLock()
 	defer bo.recommendationMutex.RUnlock()
-	
+
 	// Return a copy to prevent race conditions
 	recommendations := make([]OptimizationRecommendation, len(bo.recommendations))
 	copy(recommendations, bo.recommendations)
-	
+
 	return recommendations
 }
 
@@ -634,13 +634,13 @@ func (bo *BuildOptimizer) GetCurrentRecommendations() []OptimizationRecommendati
 func (bo *BuildOptimizer) GetRecommendationsByLevel(level OptimizationLevel) []OptimizationRecommendation {
 	all := bo.GetCurrentRecommendations()
 	filtered := make([]OptimizationRecommendation, 0)
-	
+
 	for _, rec := range all {
 		if rec.Level == level {
 			filtered = append(filtered, rec)
 		}
 	}
-	
+
 	return filtered
 }
 
@@ -648,13 +648,13 @@ func (bo *BuildOptimizer) GetRecommendationsByLevel(level OptimizationLevel) []O
 func (bo *BuildOptimizer) GetRecommendationsByCategory(category OptimizationCategory) []OptimizationRecommendation {
 	all := bo.GetCurrentRecommendations()
 	filtered := make([]OptimizationRecommendation, 0)
-	
+
 	for _, rec := range all {
 		if rec.Category == category {
 			filtered = append(filtered, rec)
 		}
 	}
-	
+
 	return filtered
 }
 
@@ -662,35 +662,35 @@ func (bo *BuildOptimizer) GetRecommendationsByCategory(category OptimizationCate
 func (bo *BuildOptimizer) GetAnalysisHistory() []AnalysisResult {
 	bo.historyMutex.Lock()
 	defer bo.historyMutex.Unlock()
-	
+
 	// Return a copy to prevent race conditions
 	history := make([]AnalysisResult, len(bo.analysisHistory))
 	copy(history, bo.analysisHistory)
-	
+
 	return history
 }
 
 // GetOptimizationSummary returns a summary of current optimization status.
 func (bo *BuildOptimizer) GetOptimizationSummary() map[string]interface{} {
 	recommendations := bo.GetCurrentRecommendations()
-	
+
 	summary := make(map[string]interface{})
 	summary["total_recommendations"] = len(recommendations)
-	
+
 	// Count by level
 	levelCounts := make(map[string]int)
 	for _, rec := range recommendations {
 		levelCounts[rec.Level.String()]++
 	}
 	summary["by_level"] = levelCounts
-	
+
 	// Count by category
 	categoryCounts := make(map[string]int)
 	for _, rec := range recommendations {
 		categoryCounts[rec.Category.String()]++
 	}
 	summary["by_category"] = categoryCounts
-	
+
 	// Get latest analysis score
 	history := bo.GetAnalysisHistory()
 	if len(history) > 0 {
@@ -698,6 +698,6 @@ func (bo *BuildOptimizer) GetOptimizationSummary() map[string]interface{} {
 		summary["performance_score"] = latest.Score
 		summary["last_analysis"] = latest.Timestamp
 	}
-	
+
 	return summary
 }

@@ -26,7 +26,7 @@ type cacheEntry struct {
 // - Uses RWMutex for read-heavy workloads (multiple generators reading cached values)
 // - TTL-based expiration prevents stale data while allowing configurable cache lifetime
 // - Background cleanup is disabled by default to avoid goroutine leaks in tests
-// - Channel-based cleanup coordination allows graceful shutdown
+// - Channel-based cleanup coordination allows graceful shutdown.
 type MemoryMockDataCache struct {
 	data    map[string]*cacheEntry // Thread-safe map of cached values with expiration
 	mutex   sync.RWMutex           // Read-write mutex optimized for read-heavy access
@@ -101,6 +101,7 @@ func (c *MemoryMockDataCache) Size() int {
 
 // cleanupExpired removes expired entries periodically.
 // TODO: Enable periodic cleanup in future version
+//
 //nolint:unused
 func (c *MemoryMockDataCache) cleanupExpired() {
 	ticker := time.NewTicker(5 * time.Minute) // Cleanup every 5 minutes
@@ -119,6 +120,7 @@ func (c *MemoryMockDataCache) cleanupExpired() {
 }
 
 // removeExpired removes expired entries from the cache.
+//
 //nolint:unused
 func (c *MemoryMockDataCache) removeExpired() {
 	c.mutex.Lock()
@@ -147,7 +149,7 @@ func (c *MemoryMockDataCache) Close() {
 // Implementation notes:
 // - Uses dummy head/tail nodes to simplify edge cases in list manipulation
 // - Combines hash map (O(1) lookup) with doubly-linked list (O(1) reordering)
-// - All operations are atomic to maintain consistency under concurrent access
+// - All operations are atomic to maintain consistency under concurrent access.
 type LRUMockDataCache struct {
 	maxSize int                  // Maximum number of entries before eviction
 	data    map[string]*lruEntry // Hash map for O(1) key lookup
@@ -209,6 +211,7 @@ func (c *LRUMockDataCache) Get(key string) (interface{}, bool) {
 	// Check if expired - immediately remove to free space
 	if time.Now().After(entry.expiresAt) {
 		c.removeEntry(entry)
+
 		return nil, false
 	}
 
@@ -229,6 +232,7 @@ func (c *LRUMockDataCache) Set(key string, value interface{}, ttl time.Duration)
 		existing.value = value
 		existing.expiresAt = time.Now().Add(ttl)
 		c.moveToFront(existing)
+
 		return
 	}
 
@@ -306,7 +310,8 @@ func (c *LRUMockDataCache) evictLRU() {
 }
 
 // cleanupExpired removes expired entries periodically.
-// TODO: Enable periodic cleanup in future version  
+// TODO: Enable periodic cleanup in future version
+//
 //nolint:unused
 func (c *LRUMockDataCache) cleanupExpired() {
 	ticker := time.NewTicker(5 * time.Minute) // Cleanup every 5 minutes
@@ -325,6 +330,7 @@ func (c *LRUMockDataCache) cleanupExpired() {
 }
 
 // removeExpiredLRU removes expired entries from the LRU cache.
+//
 //nolint:unused
 func (c *LRUMockDataCache) removeExpiredLRU() {
 	c.mutex.Lock()
