@@ -385,12 +385,9 @@ func (s *PreviewServer) openBrowser(url string) {
 }
 
 func (s *PreviewServer) addMiddleware(handler http.Handler) http.Handler {
-	// Create authentication middleware
-	authHandler := AuthMiddleware(&s.config.Server.Auth)(handler)
-
 	// Create security middleware
 	securityConfig := SecurityConfigFromAppConfig(s.config)
-	securityHandler := SecurityMiddleware(securityConfig)(authHandler)
+	securityHandler := SecurityMiddleware(securityConfig)(handler)
 
 	// Create rate limiting middleware
 	rateLimitConfig := securityConfig.RateLimiting

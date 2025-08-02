@@ -146,8 +146,6 @@ func (mc *MiddlewareChain) buildDefaultStack() {
 	securityConfig := SecurityConfigFromAppConfig(mc.config)
 	mc.AddMiddleware(SecurityMiddleware(securityConfig))
 
-	// 6. Authentication middleware (innermost - last to execute, first to complete)
-	mc.AddMiddleware(AuthMiddleware(&mc.config.Server.Auth))
 }
 
 // AddMiddleware adds a middleware to the chain.
@@ -394,10 +392,6 @@ func NewCustomMiddlewareChain(
 	if config.EnableSecurity {
 		securityConfig := SecurityConfigFromAppConfig(chain.config)
 		chain.AddMiddleware(SecurityMiddleware(securityConfig))
-	}
-
-	if config.EnableAuth {
-		chain.AddMiddleware(AuthMiddleware(&chain.config.Server.Auth))
 	}
 
 	// Add custom middlewares

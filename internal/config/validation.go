@@ -112,48 +112,6 @@ func (cv *ConfigValidator) validateServer(config *ServerConfig) {
 		)
 	}
 
-	// Validate authentication
-	cv.validateAuth(&config.Auth)
-}
-
-// validateAuth validates authentication configuration.
-func (cv *ConfigValidator) validateAuth(config *AuthConfig) {
-	if !config.Enabled {
-		return
-	}
-
-	validModes := []string{"token", "basic", "none"}
-	if !cv.contains(validModes, config.Mode) {
-		cv.addError(
-			"server.auth.mode",
-			fmt.Errorf("invalid auth mode '%s', must be one of: %v", config.Mode, validModes),
-		)
-	}
-
-	// Validate mode-specific requirements
-	switch config.Mode {
-	case "token":
-		if config.Token == "" && config.RequireAuth {
-			cv.addError(
-				"server.auth.token",
-				errors.New("token is required when auth mode is 'token'"),
-			)
-		}
-	case "basic":
-		if (config.Username == "" || config.Password == "") && config.RequireAuth {
-			cv.addError(
-				"server.auth.basic",
-				errors.New("username and password are required when auth mode is 'basic'"),
-			)
-		}
-	}
-
-	// Validate allowed IPs
-	for i, ip := range config.AllowedIPs {
-		if err := cv.validateIPAddress(ip); err != nil {
-			cv.addError(fmt.Sprintf("server.auth.allowed_ips[%d]", i), err)
-		}
-	}
 }
 
 // validateBuild validates build configuration.
@@ -435,23 +393,6 @@ func (cv *ConfigValidator) validatePath(path string) error {
 	return nil
 }
 
-// validateIPAddress performs basic IP address validation.
-func (cv *ConfigValidator) validateIPAddress(ip string) error {
-	// Basic validation - should be enhanced with proper IP parsing
-	if ip == "" {
-		return errors.New("empty IP address")
-	}
-
-	// Check for dangerous characters
-	dangerousChars := []string{";", "&", "|", "$", "`", "(", ")", "<", ">"}
-	for _, char := range dangerousChars {
-		if strings.Contains(ip, char) {
-			return fmt.Errorf("IP address contains dangerous character: %s", char)
-		}
-	}
-
-	return nil
-}
 
 // Utility functions
 

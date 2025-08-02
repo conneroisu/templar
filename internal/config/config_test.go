@@ -228,14 +228,7 @@ func TestLoadDefaults(t *testing.T) {
 					Ignore:   []string{"node_modules", ".git"},
 					CacheDir: ".templar/cache",
 				},
-				Server: ServerConfig{
-					Auth: AuthConfig{
-						Mode:            "none",
-						Enabled:         false,
-						LocalhostBypass: true,
-						RequireAuth:     false,
-					},
-				},
+				Server: ServerConfig{},
 				Preview: PreviewConfig{
 					MockData:  "auto",
 					Wrapper:   "layout.templ",
@@ -280,14 +273,7 @@ func TestLoadDefaults(t *testing.T) {
 					Ignore:   []string{"node_modules", ".git"},
 					CacheDir: ".templar/cache",
 				},
-				Server: ServerConfig{
-					Auth: AuthConfig{
-						Mode:            "none",
-						Enabled:         false,
-						LocalhostBypass: true,
-						RequireAuth:     false,
-					},
-				},
+				Server: ServerConfig{},
 				Preview: PreviewConfig{
 					MockData:  "custom", // Preserved
 					Wrapper:   "layout.templ",
@@ -325,7 +311,6 @@ func TestLoadDefaults(t *testing.T) {
 			loadDefaults(&tt.config)
 
 			assert.Equal(t, tt.expected.Build, tt.config.Build)
-			assert.Equal(t, tt.expected.Server.Auth, tt.config.Server.Auth)
 			assert.Equal(t, tt.expected.Preview, tt.config.Preview)
 			assert.Equal(t, tt.expected.Components, tt.config.Components)
 			assert.Equal(t, tt.expected.Development, tt.config.Development)

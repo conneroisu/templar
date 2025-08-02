@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/conneroisu/templar/internal/config"
-	"github.com/conneroisu/templar/internal/monitoring"
 )
 
 // MiddlewareChain manages the HTTP middleware stack following the Chain of Responsibility pattern
@@ -41,7 +40,7 @@ import (
 type MiddlewareChain struct {
 	config          *config.Config             // Application configuration for middleware behavior
 	rateLimiter     *RateLimiter               // Global rate limiter (optional)
-	monitor         *monitoring.TemplarMonitor // Monitoring system (optional)
+	monitor         Monitor // Monitoring system (optional)
 	originValidator OriginValidator            // Origin validation for CORS
 	middlewares     []Middleware               // Ordered list of middleware functions
 }
@@ -49,11 +48,17 @@ type MiddlewareChain struct {
 // Middleware represents a single middleware function.
 type Middleware func(http.Handler) http.Handler
 
+// Monitor represents the monitoring interface needed by middleware.
+type Monitor interface {
+	CreateTemplarMiddleware() func(http.Handler) http.Handler
+	RecordWebSocketEvent(eventType string, clientCount int)
+}
+
 // MiddlewareDependencies contains all dependencies needed for middleware construction.
 type MiddlewareDependencies struct {
 	Config          *config.Config
 	RateLimiter     *RateLimiter
-	Monitor         *monitoring.TemplarMonitor
+	Monitor         Monitor
 	OriginValidator OriginValidator
 }
 
@@ -146,8 +151,6 @@ func (mc *MiddlewareChain) buildDefaultStack() {
 	securityConfig := SecurityConfigFromAppConfig(mc.config)
 	mc.AddMiddleware(SecurityMiddleware(securityConfig))
 
-	// 6. Authentication middleware (innermost - last to execute, first to complete)
-	mc.AddMiddleware(AuthMiddleware(&mc.config.Server.Auth))
 }
 
 // AddMiddleware adds a middleware to the chain.
@@ -400,9 +403,6 @@ func NewCustomMiddlewareChain(
 		chain.AddMiddleware(SecurityMiddleware(securityConfig))
 	}
 
-	if config.EnableAuth {
-		chain.AddMiddleware(AuthMiddleware(&chain.config.Server.Auth))
-	}
 
 	// Add custom middlewares
 	for _, middleware := range config.CustomMiddlewares {

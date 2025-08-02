@@ -3,7 +3,7 @@
 // Package build provides hash generation and file I/O optimization for build caching.
 //
 // HashProvider implements efficient content hash generation using CRC32 Castagnoli
-// algorithm with standard file I/O for Windows compatibility. It achieves 70-90% 
+// algorithm with standard file I/O for Windows compatibility. It achieves 70-90%
 // reduction in file I/O operations through metadata-based cache lookups.
 package build
 

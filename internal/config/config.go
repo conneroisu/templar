@@ -43,25 +43,13 @@ type Config struct {
 }
 
 type ServerConfig struct {
-	Port           int        `yaml:"port"`
-	Host           string     `yaml:"host"`
-	Open           bool       `yaml:"open"`
-	NoOpen         bool       `yaml:"no-open"`
-	Middleware     []string   `yaml:"middleware"`
-	AllowedOrigins []string   `yaml:"allowed_origins"`
-	Environment    string     `yaml:"environment"`
-	Auth           AuthConfig `yaml:"auth"`
-}
-
-type AuthConfig struct {
-	Enabled         bool     `yaml:"enabled"`
-	Mode            string   `yaml:"mode"`             // "token", "basic", "none"
-	Token           string   `yaml:"token"`            // Simple token for token mode
-	Username        string   `yaml:"username"`         // Username for basic auth
-	Password        string   `yaml:"password"`         // Password for basic auth
-	AllowedIPs      []string `yaml:"allowed_ips"`      // IP allowlist
-	RequireAuth     bool     `yaml:"require_auth"`     // Require auth for non-localhost
-	LocalhostBypass bool     `yaml:"localhost_bypass"` // Allow localhost without auth
+	Port           int      `yaml:"port"`
+	Host           string   `yaml:"host"`
+	Open           bool     `yaml:"open"`
+	NoOpen         bool     `yaml:"no-open"`
+	Middleware     []string `yaml:"middleware"`
+	AllowedOrigins []string `yaml:"allowed_origins"`
+	Environment    string   `yaml:"environment"`
 }
 
 type BuildConfig struct {
@@ -462,20 +450,6 @@ func loadDefaults(config *Config) {
 	}
 	if config.Build.CacheDir == "" {
 		config.Build.CacheDir = ".templar/cache"
-	}
-
-	// Apply default values for AuthConfig if not set
-	if config.Server.Auth.Mode == "" {
-		config.Server.Auth.Mode = "none"
-	}
-	if !viper.IsSet("server.auth.enabled") {
-		config.Server.Auth.Enabled = false
-	}
-	if !viper.IsSet("server.auth.localhost_bypass") {
-		config.Server.Auth.LocalhostBypass = true // Default to allowing localhost without auth
-	}
-	if !viper.IsSet("server.auth.require_auth") {
-		config.Server.Auth.RequireAuth = false // Default to not requiring auth
 	}
 
 	// Apply default values for PreviewConfig if not set

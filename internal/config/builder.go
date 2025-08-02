@@ -160,15 +160,6 @@ func (cb *ConfigBuilder) WithProductionOptimizations() *ConfigBuilder {
 func (cb *ConfigBuilder) WithEnterpriseFeatures() *ConfigBuilder {
 	cb.tier = TierEnterprise
 
-	// Add authentication
-	cb.config.Server.Auth = AuthConfig{
-		Enabled:         true,
-		Mode:            "token",
-		RequireAuth:     true,
-		LocalhostBypass: false,
-		AllowedIPs:      []string{},
-	}
-
 	// Enhanced monitoring
 	cb.config.Monitoring.AlertsEnabled = true
 

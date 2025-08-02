@@ -345,3 +345,38 @@ ci: clean deps generate fmt lint test-ci security-scan fuzz-short
 
 # Pre-commit checks
 pre-commit: fmt lint test-race test-security
+
+# Parallel testing targets
+test-parallel:
+	@echo "🚀 Running parallel tests..."
+	./scripts/parallel-testing.sh all
+
+test-parallel-unit:
+	@echo "⚡ Running parallel unit tests..."
+	./scripts/parallel-testing.sh unit
+
+test-parallel-integration:
+	@echo "🔗 Running parallel integration tests..."
+	./scripts/parallel-testing.sh integration
+
+test-parallel-security:
+	@echo "🔒 Running parallel security tests..."
+	./scripts/parallel-testing.sh security
+
+test-parallel-fuzz:
+	@echo "🔍 Running parallel fuzz tests..."
+	./scripts/parallel-testing.sh fuzz
+
+test-optimized: test-parallel
+
+# Test performance analysis
+test-analyze:
+	@echo "📊 Analyzing test performance..."
+	@mkdir -p reports
+	go test -bench=. -benchmem -cpuprofile=reports/cpu.prof -memprofile=reports/mem.prof ./...
+	@echo "Performance profiles saved in reports/"
+
+# Test with optimal settings for CI
+test-ci-optimized: generate
+	@echo "🤖 Running optimized CI test suite..."
+	PARALLEL_JOBS=4 FUZZ_TIME=15s ./scripts/parallel-testing.sh all
