@@ -552,7 +552,7 @@ templ Demo() {
 
 	for path, content := range files {
 		fullPath := filepath.Join(dir, path)
-		err := os.WriteFile(fullPath, []byte(content), 0644)
+		err := os.WriteFile(fullPath, []byte(content), 0600)
 		if err != nil {
 			t.Fatalf("Failed to create file %s: %v", path, err)
 		}

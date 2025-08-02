@@ -20,7 +20,7 @@ import (
 // createTestComponent creates a test component file with specified content
 func createTestComponent(dir, name, content string) string {
 	filePath := filepath.Join(dir, name+".templ")
-	if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(filePath, []byte(content), 0600); err != nil {
 		panic(fmt.Sprintf("Failed to create test component %s: %v", name, err))
 	}
 	return filePath
@@ -146,7 +146,7 @@ templ Button(text string, disabled bool) {
 	<button class="btn" disabled?={disabled}>{text}</button>
 }`
 
-	err = os.WriteFile(buttonFile, []byte(modifiedContent), 0644)
+	err = os.WriteFile(buttonFile, []byte(modifiedContent), 0600)
 	require.NoError(t, err)
 
 	// Rescan directory
@@ -471,7 +471,7 @@ templ TestComponent(text string, active bool) {
 }`
 
 	testFile := filepath.Join(testDir, "TestComponent.templ")
-	require.NoError(t, os.WriteFile(testFile, []byte(modifiedContent), 0644))
+	require.NoError(t, os.WriteFile(testFile, []byte(modifiedContent), 0600))
 
 	// Rescan
 	err = componentScanner.ScanDirectory(testDir)

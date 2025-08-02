@@ -389,7 +389,7 @@ func TestMockDataFileOverwrite(t *testing.T) {
 
 	// Create existing file
 	existingFile := filepath.Join(tempDir, "testcomponent.json")
-	err = os.WriteFile(existingFile, []byte(`{"existing": "data"}`), 0644)
+	err = os.WriteFile(existingFile, []byte(`{"existing": "data"}`), 0600)
 	if err != nil {
 		t.Fatalf("Failed to create existing file: %v", err)
 	}

@@ -193,11 +193,12 @@ func (pc *ProjectContext) analyzeDirectory(fullPath, relPath string, info os.Fil
 
 	// Categorize directory
 	dirLower := strings.ToLower(relPath)
-	if hasComponents || strings.Contains(dirLower, "component") {
+	switch {
+	case hasComponents || strings.Contains(dirLower, "component"):
 		// Don't add to ComponentFiles here, individual files will be added
-	} else if hasStatic || strings.Contains(dirLower, "static") || strings.Contains(dirLower, "asset") {
+	case hasStatic || strings.Contains(dirLower, "static") || strings.Contains(dirLower, "asset"):
 		pc.ProjectFiles.StaticDirs = append(pc.ProjectFiles.StaticDirs, relPath)
-	} else if hasExamples || strings.Contains(dirLower, "example") || strings.Contains(dirLower, "demo") {
+	case hasExamples || strings.Contains(dirLower, "example") || strings.Contains(dirLower, "demo"):
 		pc.ProjectFiles.ExampleDirs = append(pc.ProjectFiles.ExampleDirs, relPath)
 	}
 
@@ -357,19 +358,20 @@ func (pc *ProjectContext) GetRecentErrorPatterns() map[string]int {
 		errStr := te.Error.Error()
 
 		// Look for common patterns
-		if strings.Contains(errStr, "component not found") {
+		switch {
+		case strings.Contains(errStr, "component not found"):
 			patterns["component_not_found"]++
-		} else if strings.Contains(errStr, "build failed") {
+		case strings.Contains(errStr, "build failed"):
 			patterns["build_failed"]++
-		} else if strings.Contains(errStr, "port") && strings.Contains(errStr, "use") {
+		case strings.Contains(errStr, "port") && strings.Contains(errStr, "use"):
 			patterns["port_in_use"]++
-		} else if strings.Contains(errStr, "permission") {
+		case strings.Contains(errStr, "permission"):
 			patterns["permission_denied"]++
-		} else if strings.Contains(errStr, "config") {
+		case strings.Contains(errStr, "config"):
 			patterns["config_error"]++
-		} else if strings.Contains(errStr, "path") {
+		case strings.Contains(errStr, "path"):
 			patterns["path_error"]++
-		} else {
+		default:
 			patterns["other"]++
 		}
 	}

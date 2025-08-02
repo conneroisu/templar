@@ -154,7 +154,7 @@ func (tfs *TestFileSystem) CreateFile(relativePath, content string) string {
 	require.NoError(tfs.t, os.MkdirAll(dir, 0755), "Failed to create directory: %s", dir)
 
 	// Write file
-	require.NoError(tfs.t, os.WriteFile(fullPath, []byte(content), 0644), "Failed to write file: %s", fullPath)
+	require.NoError(tfs.t, os.WriteFile(fullPath, []byte(content), 0600), "Failed to write file: %s", fullPath)
 
 	return fullPath
 }

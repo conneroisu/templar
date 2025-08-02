@@ -241,14 +241,14 @@ func (h *HotReloadTestSystem) handleWebSocketMessages(t *testing.T) {
 // CreateTestComponent creates a test templ component file
 func (h *HotReloadTestSystem) CreateTestComponent(t *testing.T, name, content string) string {
 	filePath := filepath.Join(h.ComponentsDir, name+".templ")
-	require.NoError(t, os.WriteFile(filePath, []byte(content), 0644))
+	require.NoError(t, os.WriteFile(filePath, []byte(content), 0600))
 	t.Logf("Created test component: %s", filePath)
 	return filePath
 }
 
 // ModifyTestComponent modifies an existing test component
 func (h *HotReloadTestSystem) ModifyTestComponent(t *testing.T, filePath, newContent string) {
-	require.NoError(t, os.WriteFile(filePath, []byte(newContent), 0644))
+	require.NoError(t, os.WriteFile(filePath, []byte(newContent), 0600))
 	t.Logf("Modified test component: %s", filePath)
 }
 

@@ -707,13 +707,14 @@ func (bm *BuildMetrics) AnalyzePerformanceTrends(windowDuration time.Duration) P
 	}
 
 	// Determine trend direction (simplified)
-	if trend.AverageTime < bm.performanceBaseline {
+	switch {
+	case trend.AverageTime < bm.performanceBaseline:
 		trend.TrendDirection = "improving"
 		trend.PerformanceScore = 85.0
-	} else if trend.AverageTime > bm.performanceBaseline*2 {
+	case trend.AverageTime > bm.performanceBaseline*2:
 		trend.TrendDirection = "degrading"
 		trend.PerformanceScore = 45.0
-	} else {
+	default:
 		trend.TrendDirection = "stable"
 		trend.PerformanceScore = 70.0
 	}

@@ -75,7 +75,7 @@ templ Button(text string, disabled bool) {
 	<button class="btn" disabled?={disabled}>{text}</button>
 }`
 
-	err = os.WriteFile(buttonFile, []byte(modifiedContent), 0644)
+	err = os.WriteFile(buttonFile, []byte(modifiedContent), 0600)
 	require.NoError(t, err)
 
 	// Wait for file change detection and debouncing
@@ -179,7 +179,7 @@ templ Modal(title string, visible bool) {
 
 	for name, content := range modifiedComponents {
 		filePath := filepath.Join(testDir, name+".templ")
-		err = os.WriteFile(filePath, []byte(content), 0644)
+		err = os.WriteFile(filePath, []byte(content), 0600)
 		require.NoError(t, err)
 		time.Sleep(50 * time.Millisecond) // Small delay between modifications
 	}
@@ -399,7 +399,7 @@ templ Component() {
 
 	for name, content := range fileContents {
 		filePath := filepath.Join(testDir, name)
-		require.NoError(t, os.WriteFile(filePath, []byte(content), 0644))
+		require.NoError(t, os.WriteFile(filePath, []byte(content), 0600))
 	}
 
 	// Initialize components
@@ -437,7 +437,7 @@ templ Component() {
 	nonTemplFiles := []string{"readme.md", "config.json", "script.js", "style.css"}
 	for _, fileName := range nonTemplFiles {
 		filePath := filepath.Join(testDir, fileName)
-		err = os.WriteFile(filePath, []byte("modified content"), 0644)
+		err = os.WriteFile(filePath, []byte("modified content"), 0600)
 		require.NoError(t, err)
 		time.Sleep(50 * time.Millisecond)
 	}
@@ -456,7 +456,7 @@ templ Component() {
 templ Component(text string) {
 	<div>{text}</div>
 }`
-	err = os.WriteFile(templFile, []byte(modifiedContent), 0644)
+	err = os.WriteFile(templFile, []byte(modifiedContent), 0600)
 	require.NoError(t, err)
 
 	// Wait for processing

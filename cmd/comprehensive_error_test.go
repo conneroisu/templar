@@ -263,7 +263,7 @@ components:
 			tempDir := t.TempDir()
 
 			configPath := filepath.Join(tempDir, ".templar.yml")
-			require.NoError(t, os.WriteFile(configPath, []byte(tt.configYAML), 0644))
+			require.NoError(t, os.WriteFile(configPath, []byte(tt.configYAML), 0600))
 
 			oldDir, err := os.Getwd()
 			require.NoError(t, err)
@@ -314,7 +314,7 @@ func createNonEmptyTestDir(t *testing.T) string {
 	tempDir := t.TempDir()
 	existingDir := filepath.Join(tempDir, "existing-dir")
 	require.NoError(t, os.Mkdir(existingDir, 0755))
-	require.NoError(t, os.WriteFile(filepath.Join(existingDir, "file.txt"), []byte("content"), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(existingDir, "file.txt"), []byte("content"), 0600))
 
 	return tempDir
 }
@@ -326,7 +326,7 @@ server:
   port: invalid_port
   host: [invalid yaml syntax
 `
-	require.NoError(t, os.WriteFile(filepath.Join(tempDir, "invalid-config.yml"), []byte(invalidConfig), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(tempDir, "invalid-config.yml"), []byte(invalidConfig), 0600))
 
 	return tempDir
 }
@@ -349,7 +349,7 @@ templ InvalidComponent( {
 	<div>Unclosed syntax
 }
 `
-	require.NoError(t, os.WriteFile(filepath.Join(componentsDir, "invalid.templ"), []byte(invalidTempl), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(componentsDir, "invalid.templ"), []byte(invalidTempl), 0600))
 
 	return tempDir
 }

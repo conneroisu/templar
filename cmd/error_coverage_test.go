@@ -214,7 +214,7 @@ components:
 			tempDir := t.TempDir()
 			configFile := filepath.Join(tempDir, ".templar.yml")
 
-			err := os.WriteFile(configFile, []byte(tt.configData), 0644)
+			err := os.WriteFile(configFile, []byte(tt.configData), 0600)
 			require.NoError(t, err)
 
 			viper.Reset()
@@ -356,11 +356,12 @@ func TestTimeoutAndCancellationErrors(t *testing.T) {
 
 			err := tt.operation(ctx)
 
-			if tt.expectTimeout {
+			switch {
+			case tt.expectTimeout:
 				assert.ErrorIs(t, err, context.DeadlineExceeded, "Expected timeout error")
-			} else if tt.expectCanceled {
+			case tt.expectCanceled:
 				assert.ErrorIs(t, err, context.Canceled, "Expected cancellation error")
-			} else {
+			default:
 				assert.NoError(t, err, "Expected successful operation")
 			}
 		})

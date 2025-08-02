@@ -574,13 +574,14 @@ func (bpr *BuildProgressReporter) GetProgressSummary() map[string]interface{} {
 
 // formatDuration formats a duration for human readability.
 func formatDuration(d time.Duration) string {
-	if d < time.Millisecond {
+	switch {
+	case d < time.Millisecond:
 		return fmt.Sprintf("%.0fμs", float64(d.Nanoseconds())/1000)
-	} else if d < time.Second {
+	case d < time.Second:
 		return fmt.Sprintf("%.0fms", float64(d.Nanoseconds())/1000000)
-	} else if d < time.Minute {
+	case d < time.Minute:
 		return fmt.Sprintf("%.1fs", d.Seconds())
-	} else {
+	default:
 		return fmt.Sprintf("%.1fm", d.Minutes())
 	}
 }

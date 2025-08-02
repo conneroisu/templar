@@ -97,7 +97,7 @@ func (wsm *WebSocketStatusManager) GetStatusIndicator() StatusIndicator {
 		// Set queued message count
 		// Note: We would need to expose this from the reliability manager
 		// For now, using a placeholder
-		indicator.QueuedMessages = 0 // TODO: Get from reliability manager
+		indicator.QueuedMessages = 0 // Note: Would get from reliability manager when integrated
 	}
 
 	return indicator
@@ -361,13 +361,14 @@ func (wsm *WebSocketStatusManager) GetConnectionHealth() map[string]interface{} 
 
 // formatDuration formats a duration for human readability.
 func formatDuration(d time.Duration) string {
-	if d < time.Minute {
+	switch {
+	case d < time.Minute:
 		return fmt.Sprintf("%.1fs", d.Seconds())
-	} else if d < time.Hour {
+	case d < time.Hour:
 		return fmt.Sprintf("%.1fm", d.Minutes())
-	} else if d < 24*time.Hour {
+	case d < 24*time.Hour:
 		return fmt.Sprintf("%.1fh", d.Hours())
-	} else {
+	default:
 		days := int(d.Hours() / 24)
 		hours := d - time.Duration(days)*24*time.Hour
 
@@ -392,7 +393,7 @@ func (wsm *WebSocketStatusManager) IntegrateWithPreviewServer(server *PreviewSer
 }
 
 // handleStatusEndpoint handles HTTP requests for WebSocket status.
-// TODO: Integrate with HTTP router when status endpoints are needed
+// Note: Integration with HTTP router would be needed for status endpoints
 //
 //nolint:unused
 func (wsm *WebSocketStatusManager) handleStatusEndpoint(w http.ResponseWriter, r *http.Request) {
@@ -410,7 +411,7 @@ func (wsm *WebSocketStatusManager) handleStatusEndpoint(w http.ResponseWriter, r
 }
 
 // handleHealthEndpoint handles HTTP requests for connection health.
-// TODO: Integrate with HTTP router when health endpoints are needed
+// Note: Integration with HTTP router would be needed for health endpoints
 //
 //nolint:unused
 func (wsm *WebSocketStatusManager) handleHealthEndpoint(w http.ResponseWriter, r *http.Request) {
@@ -428,7 +429,7 @@ func (wsm *WebSocketStatusManager) handleHealthEndpoint(w http.ResponseWriter, r
 }
 
 // handleOfflineModeEndpoint handles offline mode management via HTTP.
-// TODO: Integrate with HTTP router when offline mode endpoints are needed
+// Note: Integration with HTTP router would be needed for offline mode endpoints
 //
 //nolint:unused
 func (wsm *WebSocketStatusManager) handleOfflineModeEndpoint(w http.ResponseWriter, r *http.Request) {

@@ -55,7 +55,7 @@ func TestScannerTimeout(t *testing.T) {
 				templFile, []byte(`package test
 templ TestComponent`+string(rune('A'+i))+`() {
 	<div>Test`+string(rune('A'+i))+`</div>
-}`), 0644)
+}`), 0600)
 			assert.NoError(t, err)
 		}
 

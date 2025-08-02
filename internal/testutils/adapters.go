@@ -2,10 +2,12 @@ package testutils
 
 import (
 	"context"
+	"errors"
 	"io/fs"
 	"net/http"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
 )
 
@@ -105,7 +107,18 @@ func (r *RealNetworkAdapter) Get(url string) (*http.Response, error) {
 }
 
 func (r *RealNetworkAdapter) Post(url, contentType string, body any) (*http.Response, error) {
-	return http.Post(url, contentType, nil) // Simplified for now
+	// Validate URL to prevent security issues
+	if url == "" {
+		return nil, errors.New("empty URL not allowed")
+	}
+	// For tests, only allow localhost and 127.0.0.1
+	if !strings.HasPrefix(url, "http://localhost:") && !strings.HasPrefix(url, "http://127.0.0.1:") {
+		return nil, errors.New("only localhost URLs allowed in tests")
+	}
+	// Validated URL is safe to use
+	safeURL := url
+
+	return http.Post(safeURL, contentType, nil) //nolint:gosec // URL validated above
 }
 
 func (r *RealNetworkAdapter) Do(req *http.Request) (*http.Response, error) {

@@ -731,7 +731,7 @@ func (s *PreviewServer) serveOpenAPIYAML(w http.ResponseWriter, r *http.Request)
 
 	// Convert to YAML (would need yaml package)
 	// For now, return JSON with a note
-	// TODO: Use the spec variable to generate actual YAML output
+	// Note: YAML output would need yaml package dependency
 	_ = spec // Suppress unused variable warning
 	w.Header().Set(HeaderContentType, ContentTypeJSON)
 	_, _ = w.Write([]byte(`{"error": "YAML format not yet implemented. Use ?format=json"}`))

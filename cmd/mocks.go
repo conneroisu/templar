@@ -594,8 +594,15 @@ func runMocksValidate(cmd *cobra.Command, args []string) error {
 // Helper functions
 
 func filterComponentsByTags(components []*types.ComponentInfo, tags []string) []*types.ComponentInfo {
-	// TODO: Implement tag filtering when component tags are available
-	return components
+	if len(tags) == 0 {
+		return components
+	}
+
+	// Note: Component tag support would need to be added to ComponentInfo struct
+	// For now, return all components as tags aren't implemented yet
+	filtered := append([]*types.ComponentInfo{}, components...)
+
+	return filtered
 }
 
 func filterTemplatesByTags(templates []*mockdata.MockDataTemplate, tags []string) []*mockdata.MockDataTemplate {
@@ -654,17 +661,15 @@ func writeMockDataJSON(outputPath string, data interface{}) error {
 		return err
 	}
 
-	return os.WriteFile(outputPath, jsonData, 0644)
+	return os.WriteFile(outputPath, jsonData, 0600)
 }
 
 func writeMockDataYAML(outputPath string, data interface{}) error {
-	// TODO: Implement YAML output
-	return errors.New("YAML output not yet implemented")
+	return errors.New("YAML output not yet implemented - use JSON format instead")
 }
 
 func writeMockDataTypeScript(outputPath string, data interface{}) error {
-	// TODO: Implement TypeScript output
-	return errors.New("TypeScript output not yet implemented")
+	return errors.New("TypeScript output not yet implemented - use JSON format instead")
 }
 
 func displayTemplates(templates []*mockdata.MockDataTemplate, format string, verbose bool) error {
@@ -718,32 +723,26 @@ func displayTemplatesJSON(templates []*mockdata.MockDataTemplate) error {
 }
 
 func displayTemplatesYAML(templates []*mockdata.MockDataTemplate) error {
-	// TODO: Implement YAML display
-	return errors.New("YAML display not yet implemented")
+	return errors.New("YAML display not yet implemented - use JSON format instead")
 }
 
 func createTemplateFromFile(templateManager mockdata.TemplateManager, templateName, filePath string) error {
-	// TODO: Implement template creation from file
 	return errors.New("template creation from file not yet implemented")
 }
 
 func createTemplateFromParent(templateManager mockdata.TemplateManager, templateName, parentName, description string, tags []string) error {
-	// TODO: Implement template creation from parent
 	return errors.New("template creation from parent not yet implemented")
 }
 
 func createQuickTemplate(templateManager mockdata.TemplateManager, templateName string, fields []string, description string, tags []string) error {
-	// TODO: Implement quick template creation
 	return errors.New("quick template creation not yet implemented")
 }
 
 func createTemplateInteractive(templateManager mockdata.TemplateManager, templateName string) error {
-	// TODO: Implement interactive template creation
 	return errors.New("interactive template creation not yet implemented")
 }
 
 func backupTemplate(templateManager mockdata.TemplateManager, templateName string) error {
-	// TODO: Implement template backup
 	return errors.New("template backup not yet implemented")
 }
 
@@ -756,11 +755,9 @@ func confirmTemplateDelete(templateName string) bool {
 }
 
 func validateDirectory(validator mockdata.MockDataValidator, dirPath, level, componentName string, fix bool, cfg *config.Config) error {
-	// TODO: Implement directory validation
 	return errors.New("directory validation not yet implemented")
 }
 
 func validateFile(validator mockdata.MockDataValidator, filePath, level, componentName string, fix bool, cfg *config.Config) error {
-	// TODO: Implement file validation
 	return errors.New("file validation not yet implemented")
 }

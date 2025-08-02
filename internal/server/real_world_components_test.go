@@ -59,7 +59,7 @@ templ BlogPostCard(post BlogPost) {
 }`
 
 		componentPath := filepath.Join(tempDir, "blog_post.templ")
-		require.NoError(t, os.WriteFile(componentPath, []byte(blogComponent), 0644))
+		require.NoError(t, os.WriteFile(componentPath, []byte(blogComponent), 0600))
 
 		// Scan component
 		err := scanner.ScanFile(componentPath)
@@ -160,7 +160,7 @@ templ Navigation(props NavigationProps) {
 }`
 
 		componentPath := filepath.Join(tempDir, "navigation.templ")
-		require.NoError(t, os.WriteFile(componentPath, []byte(navComponent), 0644))
+		require.NoError(t, os.WriteFile(componentPath, []byte(navComponent), 0600))
 
 		// Scan component
 		err := scanner.ScanFile(componentPath)
@@ -305,7 +305,7 @@ func hasFieldError(fieldName string, errors []ValidationError) bool {
 }`
 
 		componentPath := filepath.Join(tempDir, "contact_form.templ")
-		require.NoError(t, os.WriteFile(componentPath, []byte(formComponent), 0644))
+		require.NoError(t, os.WriteFile(componentPath, []byte(formComponent), 0600))
 
 		// Scan component
 		err := scanner.ScanFile(componentPath)
@@ -422,7 +422,7 @@ templ LineChart(data ChartData) {
 }`
 
 		componentPath := filepath.Join(tempDir, "dashboard.templ")
-		require.NoError(t, os.WriteFile(componentPath, []byte(dashboardComponent), 0644))
+		require.NoError(t, os.WriteFile(componentPath, []byte(dashboardComponent), 0600))
 
 		// Scan component
 		err := scanner.ScanFile(componentPath)
@@ -605,7 +605,7 @@ templ StarRating(rating float64) {
 }`
 
 		componentPath := filepath.Join(tempDir, "product.templ")
-		require.NoError(t, os.WriteFile(componentPath, []byte(productComponent), 0644))
+		require.NoError(t, os.WriteFile(componentPath, []byte(productComponent), 0600))
 
 		// Scan component
 		err := scanner.ScanFile(componentPath)
@@ -647,7 +647,7 @@ templ Button(text string, variant string) {
 }`
 
 	componentPath := filepath.Join(tempDir, "button.templ")
-	require.NoError(t, os.WriteFile(componentPath, []byte(originalComponent), 0644))
+	require.NoError(t, os.WriteFile(componentPath, []byte(originalComponent), 0600))
 
 	// Initial scan
 	err := scanner.ScanFile(componentPath)
@@ -706,7 +706,7 @@ templ LinkButton(text string, href string, variant string) {
 	</a>
 }`
 
-	require.NoError(t, os.WriteFile(componentPath, []byte(enhancedComponent), 0644))
+	require.NoError(t, os.WriteFile(componentPath, []byte(enhancedComponent), 0600))
 
 	// Re-scan after modification
 	err = scanner.ScanFile(componentPath)

@@ -393,7 +393,7 @@ func simulateCacheOperations(cache *mockCache, componentCount int, expectedHitRa
 
 // Contention simulation functions.
 func startCPUContention(ctx context.Context) {
-	for i := 0; i < runtime.NumCPU(); i++ {
+	for range runtime.NumCPU() {
 		go func() {
 			for {
 				select {

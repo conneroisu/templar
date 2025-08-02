@@ -291,7 +291,7 @@ templ Button(text string, variant string) {
 		{ text } - Modified
 	</button>
 }`
-		err = os.WriteFile(componentFile, []byte(modifiedContent), 0644)
+		err = os.WriteFile(componentFile, []byte(modifiedContent), 0600)
 		require.NoError(t, err)
 
 		// Give watch time to detect change
@@ -418,7 +418,7 @@ templ InvalidComponent() {
 	</div>
 }`
 		componentFile := filepath.Join(projectDir, "components", "Invalid.templ")
-		err = os.WriteFile(componentFile, []byte(invalidComponent), 0644)
+		err = os.WriteFile(componentFile, []byte(invalidComponent), 0600)
 		require.NoError(t, err)
 
 		// Try to build - should handle syntax errors gracefully
@@ -453,7 +453,7 @@ components:
   scan_paths: []
 `
 		configFile := filepath.Join(projectDir, ".templar.yml")
-		err := os.WriteFile(configFile, []byte(invalidConfig), 0644)
+		err := os.WriteFile(configFile, []byte(invalidConfig), 0600)
 		require.NoError(t, err)
 
 		// Try to use invalid config
@@ -512,7 +512,7 @@ templ Button(text string, variant string) {
 		{ text }
 	</button>
 }`
-	err = os.WriteFile(filepath.Join(componentsDir, "Button.templ"), []byte(buttonContent), 0644)
+	err = os.WriteFile(filepath.Join(componentsDir, "Button.templ"), []byte(buttonContent), 0600)
 	require.NoError(t, err)
 
 	// Create Card component
@@ -528,7 +528,7 @@ templ Card(title string, content string) {
 		</div>
 	</div>
 }`
-	err = os.WriteFile(filepath.Join(componentsDir, "Card.templ"), []byte(cardContent), 0644)
+	err = os.WriteFile(filepath.Join(componentsDir, "Card.templ"), []byte(cardContent), 0600)
 	require.NoError(t, err)
 
 	// Create Layout component
@@ -546,7 +546,7 @@ templ Layout(title string) {
 		</body>
 	</html>
 }`
-	err = os.WriteFile(filepath.Join(componentsDir, "Layout.templ"), []byte(layoutContent), 0644)
+	err = os.WriteFile(filepath.Join(componentsDir, "Layout.templ"), []byte(layoutContent), 0600)
 	require.NoError(t, err)
 }
 
@@ -696,13 +696,11 @@ func TestCLIExitCodes(t *testing.T) {
 
 			if test.expectError {
 				assert.Error(t, err, "Command should fail: %s", string(output))
-			} else {
+			} else if err != nil {
 				// Help commands might exit with code 0 or 1
-				if err != nil {
-					if exitErr, ok := err.(*exec.ExitError); ok {
-						assert.LessOrEqual(t, exitErr.ExitCode(), 1,
-							"Help commands should exit with code 0 or 1")
-					}
+				if exitErr, ok := err.(*exec.ExitError); ok {
+					assert.LessOrEqual(t, exitErr.ExitCode(), 1,
+						"Help commands should exit with code 0 or 1")
 				}
 			}
 

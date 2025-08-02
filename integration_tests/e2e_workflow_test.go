@@ -236,7 +236,7 @@ func (s *E2ETestSystem) Stop() error {
 // CreateComponent creates a new component in the system
 func (s *E2ETestSystem) CreateComponent(name, content string) error {
 	filePath := filepath.Join(s.ComponentsDir, name+".templ")
-	return os.WriteFile(filePath, []byte(content), 0644)
+	return os.WriteFile(filePath, []byte(content), 0600)
 }
 
 // ModifyComponent modifies an existing component

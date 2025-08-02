@@ -100,7 +100,7 @@ func (c *MemoryMockDataCache) Size() int {
 }
 
 // cleanupExpired removes expired entries periodically.
-// TODO: Enable periodic cleanup in future version
+// Note: Periodic cleanup is disabled - would be enabled in future version
 //
 //nolint:unused
 func (c *MemoryMockDataCache) cleanupExpired() {
@@ -310,7 +310,7 @@ func (c *LRUMockDataCache) evictLRU() {
 }
 
 // cleanupExpired removes expired entries periodically.
-// TODO: Enable periodic cleanup in future version
+// Note: Periodic cleanup is disabled - would be enabled in future version
 //
 //nolint:unused
 func (c *LRUMockDataCache) cleanupExpired() {

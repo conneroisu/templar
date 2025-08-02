@@ -36,7 +36,7 @@ func TestHotReload_EdgeCases(t *testing.T) {
 		corruptedFile := filepath.Join(tempDir, "corrupted.templ")
 		corruptedContent := "package components\n\ntempl Corrupted { // Missing parameters and closing brace\n\t<div>Invalid"
 
-		require.NoError(t, os.WriteFile(corruptedFile, []byte(corruptedContent), 0644))
+		require.NoError(t, os.WriteFile(corruptedFile, []byte(corruptedContent), 0600))
 
 		// Try to scan corrupted file - should handle gracefully
 		err := componentScanner.ScanFile(corruptedFile)
@@ -69,7 +69,7 @@ func TestHotReload_EdgeCases(t *testing.T) {
 
 		// Create empty file
 		emptyFile := filepath.Join(tempDir, "empty.templ")
-		require.NoError(t, os.WriteFile(emptyFile, []byte(""), 0644))
+		require.NoError(t, os.WriteFile(emptyFile, []byte(""), 0600))
 
 		// Try to scan empty file
 		err := componentScanner.ScanFile(emptyFile)
@@ -103,7 +103,7 @@ func TestHotReload_EdgeCases(t *testing.T) {
 templ Restricted() {
 	<div>Access denied</div>
 }`
-		require.NoError(t, os.WriteFile(restrictedFile, []byte(validContent), 0644))
+		require.NoError(t, os.WriteFile(restrictedFile, []byte(validContent), 0600))
 		require.NoError(t, os.Chmod(restrictedFile, 0000)) // No permissions
 
 		// Try to scan restricted file
@@ -129,7 +129,7 @@ templ Restricted() {
 templ Vanishing() {
 	<div>Here one moment, gone the next</div>
 }`
-		require.NoError(t, os.WriteFile(testFile, []byte(validContent), 0644))
+		require.NoError(t, os.WriteFile(testFile, []byte(validContent), 0600))
 
 		// Start concurrent operations
 		var wg sync.WaitGroup
@@ -206,7 +206,7 @@ templ InvalidHTML() {
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
 				malformedFile := filepath.Join(tempDir, tc.name+".templ")
-				require.NoError(t, os.WriteFile(malformedFile, []byte(tc.content), 0644))
+				require.NoError(t, os.WriteFile(malformedFile, []byte(tc.content), 0600))
 
 				// Should handle malformed syntax gracefully
 				err := componentScanner.ScanFile(malformedFile)
@@ -308,7 +308,7 @@ templ InvalidHTML() {
 		}
 		content.WriteString("}")
 
-		require.NoError(t, os.WriteFile(largeFile, []byte(content.String()), 0644))
+		require.NoError(t, os.WriteFile(largeFile, []byte(content.String()), 0600))
 
 		// Should handle large file without issues (might be slow)
 		start := time.Now()
@@ -361,7 +361,7 @@ templ InvalidHTML() {
 		// Create and rapidly delete/recreate files
 		testFile := filepath.Join(tempDir, "rapid.templ")
 		for i := range 10 {
-			require.NoError(t, os.WriteFile(testFile, []byte(fmt.Sprintf("// Version %d", i)), 0644))
+			require.NoError(t, os.WriteFile(testFile, []byte(fmt.Sprintf("// Version %d", i)), 0600))
 			time.Sleep(5 * time.Millisecond)
 			_ = os.Remove(testFile)
 			time.Sleep(5 * time.Millisecond)
@@ -403,7 +403,7 @@ func TestHotReload_FailureRecovery(t *testing.T) {
 templ Recovery() {
 	<div>Valid component</div>
 }`
-		require.NoError(t, os.WriteFile(validFile, []byte(validContent), 0644))
+		require.NoError(t, os.WriteFile(validFile, []byte(validContent), 0600))
 		require.NoError(t, componentScanner.ScanFile(validFile))
 
 		component, exists := reg.Get("Recovery")
@@ -419,7 +419,7 @@ templ Recovery() {
 templ Recovery() {
 	<div>Invalid { syntax
 }`
-		require.NoError(t, os.WriteFile(validFile, []byte(invalidContent), 0644))
+		require.NoError(t, os.WriteFile(validFile, []byte(invalidContent), 0600))
 		require.NoError(t, componentScanner.ScanFile(validFile))
 
 		// Build should fail
@@ -430,7 +430,7 @@ templ Recovery() {
 		assert.Error(t, err, "Invalid component should fail to build")
 
 		// Step 3: Fix the error
-		require.NoError(t, os.WriteFile(validFile, []byte(validContent), 0644))
+		require.NoError(t, os.WriteFile(validFile, []byte(validContent), 0600))
 		require.NoError(t, componentScanner.ScanFile(validFile))
 
 		// Build should succeed again

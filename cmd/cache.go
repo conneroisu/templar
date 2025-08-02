@@ -602,19 +602,20 @@ func previewCacheClear(cacheDir string, opts ClearOptions) error {
 
 // executeCacheClear performs the actual cache clearing operation.
 func executeCacheClear(cacheDir string, opts ClearOptions) error {
-	if opts.Component != "" {
+	switch {
+	case opts.Component != "":
 		fmt.Printf("   Clearing cache for component: %s\n", opts.Component)
 		// Implementation would clear specific component cache
-	} else if opts.OlderThan != "" {
+	case opts.OlderThan != "":
 		fmt.Printf("   Clearing entries older than: %s\n", opts.OlderThan)
 		// Implementation would parse duration and clear old entries
-	} else if opts.Size != "" {
+	case opts.Size != "":
 		fmt.Printf("   Clearing ~%s of largest entries\n", opts.Size)
 		// Implementation would clear largest entries up to size limit
-	} else if opts.FailedOnly {
+	case opts.FailedOnly:
 		fmt.Println("   Clearing failed/corrupted entries")
 		// Implementation would identify and clear corrupted entries
-	} else {
+	default:
 		fmt.Println("   Clearing ALL cache entries")
 		// Implementation would remove entire cache directory
 		err := os.RemoveAll(cacheDir)

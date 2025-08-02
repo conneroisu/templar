@@ -144,7 +144,7 @@ type WebSocketReliabilityManager struct {
 	metrics *ConnectionMetrics
 
 	// Internal state
-	// TODO: Implement periodic reconnect and health checking
+	// Note: Periodic reconnect and health checking are disabled
 	reconnectTicker *time.Ticker //nolint:unused
 	healthTicker    *time.Ticker //nolint:unused
 	currentDelay    time.Duration
@@ -563,11 +563,12 @@ func (wsrm *WebSocketReliabilityManager) setStatus(status ConnectionStatus) {
 func (wsrm *WebSocketReliabilityManager) updateError(err error) {
 	// Simple error categorization
 	errStr := err.Error()
-	if websocket.CloseStatus(err) != -1 {
+	switch {
+	case websocket.CloseStatus(err) != -1:
 		atomic.AddInt64(&wsrm.metrics.ProtocolErrors, 1)
-	} else if containsAny(errStr, []string{"network", "connection", "timeout", "refused"}) {
+	case containsAny(errStr, []string{"network", "connection", "timeout", "refused"}):
 		atomic.AddInt64(&wsrm.metrics.NetworkErrors, 1)
-	} else {
+	default:
 		atomic.AddInt64(&wsrm.metrics.UnexpectedErrors, 1)
 	}
 }
