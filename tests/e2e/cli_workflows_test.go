@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestCLIWorkflows provides comprehensive end-to-end testing of CLI commands
+// TestCLIWorkflows provides comprehensive end-to-end testing of CLI commands.
 func TestCLIWorkflows(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping end-to-end CLI tests in short mode")
@@ -57,7 +57,7 @@ func TestCLIWorkflows(t *testing.T) {
 	})
 }
 
-// testCompleteProjectLifecycle tests a complete project workflow from init to serve
+// testCompleteProjectLifecycle tests a complete project workflow from init to serve.
 func testCompleteProjectLifecycle(t *testing.T, templarBinary string) {
 	tc := testutils.NewTestContext(t)
 	projectDir := tc.TempDir()
@@ -102,7 +102,7 @@ func testCompleteProjectLifecycle(t *testing.T, templarBinary string) {
 	t.Logf("Complete project lifecycle test passed")
 }
 
-// testInitCommandWorkflows tests various init command scenarios
+// testInitCommandWorkflows tests various init command scenarios.
 func testInitCommandWorkflows(t *testing.T, templarBinary string) {
 	testCases := []struct {
 		name     string
@@ -159,7 +159,7 @@ func testInitCommandWorkflows(t *testing.T, templarBinary string) {
 	}
 }
 
-// testComponentManagementWorkflows tests component creation, listing, and management
+// testComponentManagementWorkflows tests component creation, listing, and management.
 func testComponentManagementWorkflows(t *testing.T, templarBinary string) {
 	tc := testutils.NewTestContext(t)
 	projectDir := tc.TempDir()
@@ -180,7 +180,7 @@ func testComponentManagementWorkflows(t *testing.T, templarBinary string) {
 		if err != nil && strings.Contains(string(output), "command not found") {
 			t.Skip("Component generation not implemented")
 		}
-		
+
 		if err == nil {
 			assert.FileExists(t, filepath.Join(projectDir, "components", "TestComponent.templ"))
 		}
@@ -192,7 +192,7 @@ func testComponentManagementWorkflows(t *testing.T, templarBinary string) {
 	// Test listing with different formats
 	t.Run("list_formats", func(t *testing.T) {
 		formats := []string{"", "--format=json", "--format=table"}
-		
+
 		for _, format := range formats {
 			args := []string{"list"}
 			if format != "" {
@@ -202,11 +202,11 @@ func testComponentManagementWorkflows(t *testing.T, templarBinary string) {
 			listCmd := exec.Command(templarBinary, args...)
 			listCmd.Dir = projectDir
 			output, err := listCmd.CombinedOutput()
-			
+
 			if err != nil && strings.Contains(string(output), "unknown flag") {
 				continue // Skip unsupported formats
 			}
-			
+
 			require.NoError(t, err, "list command should succeed: %s", output)
 			assert.Contains(t, string(output), "Button")
 		}
@@ -217,18 +217,18 @@ func testComponentManagementWorkflows(t *testing.T, templarBinary string) {
 		listCmd := exec.Command(templarBinary, "list", "--show-props")
 		listCmd.Dir = projectDir
 		output, err := listCmd.CombinedOutput()
-		
+
 		if err != nil && strings.Contains(string(output), "unknown flag") {
 			t.Skip("--show-props flag not implemented")
 		}
-		
+
 		if err == nil {
 			assert.Contains(t, string(output), "Button")
 		}
 	})
 }
 
-// testBuildAndWatchWorkflows tests build and watch functionality
+// testBuildAndWatchWorkflows tests build and watch functionality.
 func testBuildAndWatchWorkflows(t *testing.T, templarBinary string) {
 	tc := testutils.NewTestContext(t)
 	projectDir := tc.TempDir()
@@ -257,11 +257,11 @@ func testBuildAndWatchWorkflows(t *testing.T, templarBinary string) {
 		buildCmd := exec.Command(templarBinary, "build", "--production")
 		buildCmd.Dir = projectDir
 		output, err := buildCmd.CombinedOutput()
-		
+
 		if err != nil && strings.Contains(string(output), "unknown flag") {
 			t.Skip("--production flag not implemented")
 		}
-		
+
 		if err == nil {
 			validateBuildArtifacts(t, projectDir)
 		}
@@ -274,7 +274,7 @@ func testBuildAndWatchWorkflows(t *testing.T, templarBinary string) {
 
 		watchCmd := exec.CommandContext(ctx, templarBinary, "watch")
 		watchCmd.Dir = projectDir
-		
+
 		// Start watch in background
 		err := watchCmd.Start()
 		require.NoError(t, err, "watch command should start")
@@ -309,7 +309,7 @@ templ Button(text string, variant string) {
 	})
 }
 
-// testServerWorkflows tests server functionality
+// testServerWorkflows tests server functionality.
 func testServerWorkflows(t *testing.T, templarBinary string) {
 	tc := testutils.NewTestContext(t)
 	projectDir := tc.TempDir()
@@ -357,29 +357,29 @@ func testServerWorkflows(t *testing.T, templarBinary string) {
 		previewCmd := exec.Command(templarBinary, "preview", "Button")
 		previewCmd.Dir = projectDir
 		output, err := previewCmd.CombinedOutput()
-		
+
 		if err != nil && strings.Contains(string(output), "command not found") {
 			t.Skip("preview command not implemented")
 		}
-		
+
 		if err == nil {
 			assert.Contains(t, string(output), "Button")
 		}
 	})
 }
 
-// testErrorHandlingWorkflows tests error scenarios and error handling
+// testErrorHandlingWorkflows tests error scenarios and error handling.
 func testErrorHandlingWorkflows(t *testing.T, templarBinary string) {
 	tc := testutils.NewTestContext(t)
 
 	// Test invalid project directory
 	t.Run("invalid_project_directory", func(t *testing.T) {
 		invalidDir := filepath.Join(tc.TempDir(), "nonexistent")
-		
+
 		listCmd := exec.Command(templarBinary, "list")
 		listCmd.Dir = invalidDir
 		output, err := listCmd.CombinedOutput()
-		
+
 		// Should handle invalid directory gracefully
 		assert.Error(t, err)
 		assert.Contains(t, string(output), "no such file")
@@ -388,11 +388,11 @@ func testErrorHandlingWorkflows(t *testing.T, templarBinary string) {
 	// Test project without config
 	t.Run("project_without_config", func(t *testing.T) {
 		projectDir := tc.TempDir()
-		
+
 		listCmd := exec.Command(templarBinary, "list")
 		listCmd.Dir = projectDir
 		output, err := listCmd.CombinedOutput()
-		
+
 		// Should handle missing config gracefully
 		if err != nil {
 			assert.Contains(t, string(output), "config")
@@ -402,7 +402,7 @@ func testErrorHandlingWorkflows(t *testing.T, templarBinary string) {
 	// Test invalid component syntax
 	t.Run("invalid_component_syntax", func(t *testing.T) {
 		projectDir := tc.TempDir()
-		
+
 		// Initialize project
 		initCmd := exec.Command(templarBinary, "init", "--minimal")
 		initCmd.Dir = projectDir
@@ -425,14 +425,14 @@ templ InvalidComponent() {
 		buildCmd := exec.Command(templarBinary, "build")
 		buildCmd.Dir = projectDir
 		output, err := buildCmd.CombinedOutput()
-		
+
 		// Expect error but should not crash
 		assert.Error(t, err)
 		assert.NotEmpty(t, output)
 	})
 }
 
-// testConfigurationWorkflows tests configuration management
+// testConfigurationWorkflows tests configuration management.
 func testConfigurationWorkflows(t *testing.T, templarBinary string) {
 	tc := testutils.NewTestContext(t)
 	projectDir := tc.TempDir()
@@ -460,7 +460,7 @@ components:
 		listCmd := exec.Command(templarBinary, "list")
 		listCmd.Dir = projectDir
 		output, err := listCmd.CombinedOutput()
-		
+
 		// Should detect invalid config
 		if err != nil {
 			assert.Contains(t, string(output), "config")
@@ -472,11 +472,11 @@ components:
 		doctorCmd := exec.Command(templarBinary, "doctor")
 		doctorCmd.Dir = projectDir
 		output, err := doctorCmd.CombinedOutput()
-		
+
 		if err != nil && strings.Contains(string(output), "command not found") {
 			t.Skip("doctor command not implemented")
 		}
-		
+
 		if err == nil {
 			assert.NotEmpty(t, output)
 		}
@@ -488,14 +488,14 @@ components:
 func buildTemplarBinary(t *testing.T) string {
 	tempDir := t.TempDir()
 	binaryPath := filepath.Join(tempDir, "templar")
-	
+
 	// Build templar binary
 	buildCmd := exec.Command("go", "build", "-o", binaryPath, "./main.go")
 	buildCmd.Dir = "/home/connerohnesorge/Documents/001Repos/templar"
-	
+
 	output, err := buildCmd.CombinedOutput()
 	require.NoError(t, err, "Failed to build templar binary: %s", output)
-	
+
 	return binaryPath
 }
 
@@ -553,7 +553,7 @@ templ Layout(title string) {
 func validateBuildArtifacts(t *testing.T, projectDir string) {
 	// Check for generated Go files (templ generates .go files)
 	componentsDir := filepath.Join(projectDir, "components")
-	
+
 	// Look for any .go files generated by templ
 	entries, err := os.ReadDir(componentsDir)
 	if err != nil {
@@ -564,6 +564,7 @@ func validateBuildArtifacts(t *testing.T, projectDir string) {
 	for _, entry := range entries {
 		if strings.HasSuffix(entry.Name(), "_templ.go") {
 			goFileFound = true
+
 			break
 		}
 	}
@@ -577,7 +578,7 @@ func testServerResponse(t *testing.T, port string) {
 	// Simple connectivity test - just check if something is listening
 	// In a more comprehensive test, we'd make HTTP requests
 	t.Logf("Server should be running on port %s", port)
-	
+
 	// This is a basic test - in reality we'd want to:
 	// - Make HTTP requests to verify endpoints
 	// - Check WebSocket connections
@@ -585,7 +586,7 @@ func testServerResponse(t *testing.T, port string) {
 	// - Test hot reload functionality
 }
 
-// TestCLIHelp tests help and version commands
+// TestCLIHelp tests help and version commands.
 func TestCLIHelp(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping CLI help tests in short mode")
@@ -614,7 +615,7 @@ func TestCLIHelp(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			cmd := exec.Command(templarBinary, tc.args...)
 			output, err := cmd.CombinedOutput()
-			
+
 			// Help and version commands might exit with status 0 or 1
 			// depending on implementation
 			if err != nil {
@@ -622,7 +623,7 @@ func TestCLIHelp(t *testing.T) {
 				if exitErr, ok := err.(*exec.ExitError); ok {
 					// Exit code 1 is often used for help commands
 					if exitErr.ExitCode() > 2 {
-						t.Errorf("Help command failed with exit code %d: %s", 
+						t.Errorf("Help command failed with exit code %d: %s",
 							exitErr.ExitCode(), output)
 					}
 				} else {
@@ -632,7 +633,7 @@ func TestCLIHelp(t *testing.T) {
 
 			// Should produce some output
 			assert.NotEmpty(t, output, "Help command should produce output")
-			
+
 			// Common help indicators
 			outputStr := string(output)
 			hasHelpIndicators := strings.Contains(outputStr, "Usage:") ||
@@ -640,14 +641,14 @@ func TestCLIHelp(t *testing.T) {
 				strings.Contains(outputStr, "Flags:") ||
 				strings.Contains(outputStr, "templar") ||
 				strings.Contains(outputStr, "version")
-			
-			assert.True(t, hasHelpIndicators, 
+
+			assert.True(t, hasHelpIndicators,
 				"Help output should contain usage information: %s", outputStr)
 		})
 	}
 }
 
-// TestCLIExitCodes tests proper exit code handling
+// TestCLIExitCodes tests proper exit code handling.
 func TestCLIExitCodes(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping CLI exit code tests in short mode")
@@ -673,7 +674,7 @@ func TestCLIExitCodes(t *testing.T) {
 	}
 
 	tc := testutils.NewTestContext(t)
-	
+
 	for _, test := range testCases {
 		t.Run(test.name, func(t *testing.T) {
 			var workDir string
@@ -699,7 +700,7 @@ func TestCLIExitCodes(t *testing.T) {
 				// Help commands might exit with code 0 or 1
 				if err != nil {
 					if exitErr, ok := err.(*exec.ExitError); ok {
-						assert.LessOrEqual(t, exitErr.ExitCode(), 1, 
+						assert.LessOrEqual(t, exitErr.ExitCode(), 1,
 							"Help commands should exit with code 0 or 1")
 					}
 				}

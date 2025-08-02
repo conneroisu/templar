@@ -373,7 +373,7 @@ fields:
   - valid yaml structure
   - for our template format
 `
-	err = os.WriteFile(invalidFile, []byte(invalidYAML), 0644)
+	err = os.WriteFile(invalidFile, []byte(invalidYAML), 0600)
 	require.NoError(t, err)
 
 	manager := &FileTemplateManager{

@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -16,12 +17,370 @@ type ErrorSuggestion struct {
 }
 
 // SuggestionContext provides context for generating suggestions.
+// Deprecated: Use ProjectContext for enhanced context-aware suggestions.
 type SuggestionContext struct {
 	Registry          *registry.ComponentRegistry
 	AvailableCommands []string
 	ConfigPath        string
 	ComponentsPath    []string
 	LastKnownError    string
+}
+
+// ContextualSuggestionProvider provides intelligent, context-aware error suggestions.
+type ContextualSuggestionProvider struct {
+	projectCtx *ProjectContext
+}
+
+// NewContextualSuggestionProvider creates a new contextual suggestion provider.
+func NewContextualSuggestionProvider(projectCtx *ProjectContext) *ContextualSuggestionProvider {
+	return &ContextualSuggestionProvider{
+		projectCtx: projectCtx,
+	}
+}
+
+// GetEnhancedSuggestions provides context-aware suggestions with learning resources.
+func (csp *ContextualSuggestionProvider) GetEnhancedSuggestions(err error) []ErrorSuggestion {
+	var te *TemplarError
+	if !errors.As(err, &te) {
+		return csp.getGenericEnhancedSuggestions(err)
+	}
+
+	// Track this error for pattern analysis
+	context := csp.extractErrorContext(te)
+	csp.projectCtx.AddRecentError(err, context)
+
+	// Get contextual suggestions based on error type
+	suggestions := csp.projectCtx.GetContextualSuggestions(
+		csp.categorizeError(te),
+		context,
+	)
+
+	// Add learning resources
+	suggestions = append(suggestions, csp.getLearningResources(te)...)
+
+	// Add configuration-aware suggestions
+	suggestions = append(suggestions, csp.getConfigAwareSuggestions(te)...)
+
+	// Add pattern-based suggestions from recent errors
+	suggestions = append(suggestions, csp.getPatternBasedSuggestions()...)
+
+	return csp.limitAndPrioritizeSuggestions(suggestions)
+}
+
+// GetComponentNotFoundSuggestions provides enhanced component not found suggestions.
+func (csp *ContextualSuggestionProvider) GetComponentNotFoundSuggestions(componentName string) []ErrorSuggestion {
+	context := map[string]interface{}{
+		"component":  componentName,
+		"error_type": "component_not_found",
+	}
+
+	return csp.projectCtx.GetContextualSuggestions("component_not_found", context)
+}
+
+// GetBuildFailureSuggestions provides enhanced build failure suggestions.
+func (csp *ContextualSuggestionProvider) GetBuildFailureSuggestions(buildOutput string, component string) []ErrorSuggestion {
+	context := map[string]interface{}{
+		"build_output": buildOutput,
+		"component":    component,
+		"error_type":   "build_failed",
+	}
+
+	suggestions := csp.projectCtx.GetContextualSuggestions("build_failed", context)
+
+	// Add build-specific learning resources
+	suggestions = append(suggestions, ErrorSuggestion{
+		Title:       "Learn about templ syntax",
+		Description: "Official documentation for templ component syntax",
+		Command:     "xdg-open https://templ.guide/syntax-and-usage",
+		Example:     "templ ComponentName(props Type) { <div>Content</div> }",
+	})
+
+	return suggestions
+}
+
+// GetServerStartSuggestions provides enhanced server startup suggestions.
+func (csp *ContextualSuggestionProvider) GetServerStartSuggestions(err error, port int) []ErrorSuggestion {
+	context := map[string]interface{}{
+		"port":          port,
+		"error_type":    "server_start",
+		"error_message": err.Error(),
+	}
+
+	suggestions := csp.projectCtx.GetContextualSuggestions("server_start", context)
+
+	// Add server-specific learning resources
+	suggestions = append(suggestions, ErrorSuggestion{
+		Title:       "Learn about development server",
+		Description: "Documentation for Templar development server features",
+		Command:     "templar serve --help",
+		Example:     "templar serve --port 3000 --no-open",
+	})
+
+	return suggestions
+}
+
+// GetConfigurationSuggestions provides configuration-aware suggestions.
+func (csp *ContextualSuggestionProvider) GetConfigurationSuggestions(configError string) []ErrorSuggestion {
+	context := map[string]interface{}{
+		"config_error": configError,
+		"error_type":   "config_error",
+		"config_path":  csp.projectCtx.ConfigPath,
+	}
+
+	suggestions := csp.projectCtx.GetContextualSuggestions("config_error", context)
+
+	// Add configuration learning resources
+	suggestions = append(suggestions, ErrorSuggestion{
+		Title:       "Learn about configuration",
+		Description: "Complete guide to Templar configuration options",
+		Command:     "cat CONFIGURATION.md",
+		Example:     "server:\n  port: 8080\ncomponents:\n  scan_paths: [\"./components\"]",
+	})
+
+	return suggestions
+}
+
+// extractErrorContext extracts relevant context from a TemplarError.
+func (csp *ContextualSuggestionProvider) extractErrorContext(te *TemplarError) map[string]interface{} {
+	context := make(map[string]interface{})
+
+	context["error_type"] = string(te.Type)
+	context["error_code"] = te.Code
+	context["component"] = te.Component
+	context["file_path"] = te.FilePath
+	context["line"] = te.Line
+	context["column"] = te.Column
+	context["recoverable"] = te.Recoverable
+
+	// Merge in existing context
+	for k, v := range te.Context {
+		context[k] = v
+	}
+
+	return context
+}
+
+// categorizeError categorizes errors for suggestion lookup.
+func (csp *ContextualSuggestionProvider) categorizeError(te *TemplarError) string {
+	errMsg := strings.ToLower(te.Message)
+
+	switch {
+	case strings.Contains(errMsg, "component not found") || te.Code == ErrCodeComponentNotFound:
+		return "component_not_found"
+	case strings.Contains(errMsg, "build failed") || te.Code == ErrCodeBuildFailed:
+		return "build_failed"
+	case strings.Contains(errMsg, "config") || te.Type == ErrorTypeConfig:
+		return "config_error"
+	case strings.Contains(errMsg, "server") || strings.Contains(errMsg, "port"):
+		return "server_start"
+	case strings.Contains(errMsg, "path") || te.Code == ErrCodeInvalidPath:
+		return "path_error"
+	default:
+		return "general"
+	}
+}
+
+// getLearningResources adds educational content to suggestions.
+func (csp *ContextualSuggestionProvider) getLearningResources(te *TemplarError) []ErrorSuggestion {
+	var suggestions []ErrorSuggestion
+
+	// Add learning resources based on error type
+	switch te.Type {
+	case ErrorTypeBuild:
+		suggestions = append(suggestions, ErrorSuggestion{
+			Title:       "📚 Learn: templ Component Basics",
+			Description: "Understand the fundamentals of creating templ components",
+			Command:     "templar tutorial build",
+			Example:     "Visit https://templ.guide for comprehensive documentation",
+		})
+
+	case ErrorTypeValidation:
+		suggestions = append(suggestions, ErrorSuggestion{
+			Title:       "📚 Learn: CLI Command Usage",
+			Description: "Master Templar CLI commands and flags",
+			Command:     "templar --help",
+			Example:     "Each command has detailed help: templar serve --help",
+		})
+
+	case ErrorTypeConfig:
+		suggestions = append(suggestions, ErrorSuggestion{
+			Title:       "📚 Learn: Configuration Best Practices",
+			Description: "Optimize your Templar configuration for your workflow",
+			Command:     "cat docs/CONFIGURATION.md",
+			Example:     "Use environment variables for different deployment environments",
+		})
+
+	case ErrorTypeNetwork:
+		suggestions = append(suggestions, ErrorSuggestion{
+			Title:       "📚 Learn: Development Server Features",
+			Description: "Maximize productivity with hot reload and live preview",
+			Command:     "templar tutorial server",
+			Example:     "WebSocket connections provide real-time updates",
+		})
+
+	case ErrorTypeSecurity, ErrorTypeIO, ErrorTypeInternal:
+		// No specific learning resources for these error types yet
+	}
+
+	// Add general troubleshooting resource
+	suggestions = append(suggestions, ErrorSuggestion{
+		Title:       "🔧 Troubleshooting Guide",
+		Description: "Common issues and solutions for Templar development",
+		Command:     "cat docs/TROUBLESHOOTING.md",
+		Example:     "Step-by-step debugging for common scenarios",
+	})
+
+	return suggestions
+}
+
+// getConfigAwareSuggestions provides suggestions based on current configuration.
+func (csp *ContextualSuggestionProvider) getConfigAwareSuggestions(te *TemplarError) []ErrorSuggestion {
+	var suggestions []ErrorSuggestion
+
+	if csp.projectCtx.Config == nil {
+		suggestions = append(suggestions, ErrorSuggestion{
+			Title:       "⚙️ Initialize Configuration",
+			Description: "Create a configuration file to customize Templar behavior",
+			Command:     "templar config init > " + csp.projectCtx.ConfigPath,
+			Example:     "Configuration enables custom scan paths, server settings, and more",
+		})
+
+		return suggestions
+	}
+
+	cfg := csp.projectCtx.Config
+
+	// Server configuration suggestions
+	if te.Type == ErrorTypeNetwork {
+		suggestions = append(suggestions, ErrorSuggestion{
+			Title: "⚙️ Current Server Config",
+			Description: fmt.Sprintf("Port: %d, Host: %s, Open Browser: %t",
+				cfg.Server.Port, cfg.Server.Host, cfg.Server.Open),
+			Command: fmt.Sprintf("templar serve --port %d", cfg.Server.Port+1),
+			Example: "Modify server settings in your configuration file",
+		})
+	}
+
+	// Component scanning suggestions
+	if te.Type == ErrorTypeValidation && strings.Contains(te.Message, "component") {
+		scanPaths := cfg.Components.ScanPaths
+		if len(scanPaths) == 0 {
+			scanPaths = []string{"./components"}
+		}
+
+		suggestions = append(suggestions, ErrorSuggestion{
+			Title:       "⚙️ Current Scan Paths",
+			Description: "Scanning: " + strings.Join(scanPaths, ", "),
+			Command:     fmt.Sprintf("find %s -name '*.templ' -type f", strings.Join(scanPaths, " ")),
+			Example:     "Add more directories to scan_paths in configuration",
+		})
+	}
+
+	// Build configuration suggestions
+	if te.Type == ErrorTypeBuild {
+		suggestions = append(suggestions, ErrorSuggestion{
+			Title: "⚙️ Build Configuration",
+			Description: fmt.Sprintf("Build command: %s, Cache dir: %s",
+				cfg.Build.Command, cfg.Build.CacheDir),
+			Command: cfg.Build.Command,
+			Example: "Customize build behavior in the build section of your config",
+		})
+	}
+
+	return suggestions
+}
+
+// getPatternBasedSuggestions analyzes recent errors for patterns.
+func (csp *ContextualSuggestionProvider) getPatternBasedSuggestions() []ErrorSuggestion {
+	patterns := csp.projectCtx.GetRecentErrorPatterns()
+	var suggestions []ErrorSuggestion
+
+	// Suggest solutions based on error patterns
+	for pattern, count := range patterns {
+		if count >= 3 { // Only suggest if pattern repeats 3+ times
+			switch pattern {
+			case "component_not_found":
+				suggestions = append(suggestions, ErrorSuggestion{
+					Title:       "🔄 Recurring Issue: Component Discovery",
+					Description: fmt.Sprintf("You've had %d component not found errors recently", count),
+					Command:     "templar list --verbose",
+					Example:     "Consider updating your scan paths configuration",
+				})
+
+			case "build_failed":
+				suggestions = append(suggestions, ErrorSuggestion{
+					Title:       "🔄 Recurring Issue: Build Failures",
+					Description: fmt.Sprintf("You've had %d build failures recently", count),
+					Command:     "templ fmt ./...",
+					Example:     "Run format and syntax check on all components",
+				})
+
+			case "port_in_use":
+				suggestions = append(suggestions, ErrorSuggestion{
+					Title:       "🔄 Recurring Issue: Port Conflicts",
+					Description: fmt.Sprintf("You've had %d port conflicts recently", count),
+					Command:     "templar serve --port 0", // Use random available port
+					Example:     "Use --port 0 to automatically find an available port",
+				})
+			}
+		}
+	}
+
+	return suggestions
+}
+
+// limitAndPrioritizeSuggestions limits suggestions and orders them by priority.
+func (csp *ContextualSuggestionProvider) limitAndPrioritizeSuggestions(suggestions []ErrorSuggestion) []ErrorSuggestion {
+	// Priority order: immediate fixes, configuration, learning resources, patterns
+	var prioritized []ErrorSuggestion
+	var learning []ErrorSuggestion
+	var config []ErrorSuggestion
+	var patterns []ErrorSuggestion
+	var other []ErrorSuggestion
+
+	for _, suggestion := range suggestions {
+		title := suggestion.Title
+		switch {
+		case strings.Contains(title, "📚"):
+			learning = append(learning, suggestion)
+		case strings.Contains(title, "⚙️"):
+			config = append(config, suggestion)
+		case strings.Contains(title, "🔄"):
+			patterns = append(patterns, suggestion)
+		default:
+			other = append(other, suggestion)
+		}
+	}
+
+	// Combine in priority order, limiting each category
+	prioritized = append(prioritized, other[:min(4, len(other))]...)
+	prioritized = append(prioritized, config[:min(2, len(config))]...)
+	prioritized = append(prioritized, learning[:min(2, len(learning))]...)
+	prioritized = append(prioritized, patterns[:min(1, len(patterns))]...)
+
+	// Overall limit
+	if len(prioritized) > 8 {
+		prioritized = prioritized[:8]
+	}
+
+	return prioritized
+}
+
+// getGenericEnhancedSuggestions provides fallback suggestions for non-TemplarError types.
+func (csp *ContextualSuggestionProvider) getGenericEnhancedSuggestions(err error) []ErrorSuggestion {
+	return []ErrorSuggestion{
+		{
+			Title:       "Check project status",
+			Description: "Verify your project structure and configuration",
+			Command:     "templar list --verbose",
+		},
+		{
+			Title:       "📚 Learn: Getting Started",
+			Description: "Complete guide to using Templar effectively",
+			Command:     "templar tutorial",
+			Example:     "Interactive tutorials for common workflows",
+		},
+	}
 }
 
 // ComponentNotFoundError generates suggestions for component not found errors.

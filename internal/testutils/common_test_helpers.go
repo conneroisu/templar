@@ -23,15 +23,15 @@ import (
 
 // TestContext provides a standardized test context with timeout and cleanup.
 type TestContext struct {
-	ctx      context.Context
-	cancel   context.CancelFunc
-	cleanup  []func()
-	tmpDir   string
-	mu       sync.Mutex
-	t        *testing.T
+	ctx     context.Context
+	cancel  context.CancelFunc
+	cleanup []func()
+	tmpDir  string
+	mu      sync.Mutex
+	t       *testing.T
 }
 
-// TestingT represents the common interface between *testing.T and *testing.B
+// TestingT represents the common interface between *testing.T and *testing.B.
 type TestingT interface {
 	Cleanup(func())
 	TempDir() string
@@ -48,14 +48,14 @@ func NewTestContext(t TestingT) *TestContext {
 		cleanup: make([]func(), 0),
 		t:       t.(*testing.T), // Safe cast for backwards compatibility
 	}
-	
+
 	// Ensure cleanup is called even if test panics
 	t.Cleanup(tc.Cleanup)
-	
+
 	return tc
 }
 
-// NewBenchmarkContext creates a new test context for benchmarks
+// NewBenchmarkContext creates a new test context for benchmarks.
 func NewBenchmarkContext(b *testing.B) *TestContext {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	tc := &TestContext{
@@ -64,10 +64,10 @@ func NewBenchmarkContext(b *testing.B) *TestContext {
 		cleanup: make([]func(), 0),
 		t:       nil, // B doesn't implement same interface as T
 	}
-	
+
 	// Ensure cleanup is called even if benchmark panics
 	b.Cleanup(tc.Cleanup)
-	
+
 	return tc
 }
 
@@ -87,29 +87,29 @@ func (tc *TestContext) AddCleanup(cleanup func()) {
 func (tc *TestContext) TempDir() string {
 	tc.mu.Lock()
 	defer tc.mu.Unlock()
-	
+
 	if tc.tmpDir == "" {
 		var err error
 		tc.tmpDir, err = os.MkdirTemp("", "templar-test-*")
 		require.NoError(tc.t, err, "Failed to create temporary directory")
-		
+
 		tc.cleanup = append(tc.cleanup, func() {
 			if err := os.RemoveAll(tc.tmpDir); err != nil {
 				tc.t.Logf("Warning: failed to remove temp dir %s: %v", tc.tmpDir, err)
 			}
 		})
 	}
-	
+
 	return tc.tmpDir
 }
 
 // Cleanup executes all registered cleanup functions in reverse order.
 func (tc *TestContext) Cleanup() {
 	tc.cancel()
-	
+
 	tc.mu.Lock()
 	defer tc.mu.Unlock()
-	
+
 	// Execute cleanup functions in reverse order (LIFO)
 	for i := len(tc.cleanup) - 1; i >= 0; i-- {
 		func() {
@@ -137,7 +137,7 @@ func NewTestFileSystem(t *testing.T, baseDir string) *TestFileSystem {
 	}
 }
 
-// NewBenchmarkFileSystem creates a new test file system for benchmarks
+// NewBenchmarkFileSystem creates a new test file system for benchmarks.
 func NewBenchmarkFileSystem(b *testing.B, baseDir string) *TestFileSystem {
 	return &TestFileSystem{
 		baseDir: baseDir,
@@ -148,14 +148,14 @@ func NewBenchmarkFileSystem(b *testing.B, baseDir string) *TestFileSystem {
 // CreateFile creates a file with the given content at the specified path.
 func (tfs *TestFileSystem) CreateFile(relativePath, content string) string {
 	fullPath := filepath.Join(tfs.baseDir, relativePath)
-	
+
 	// Ensure directory exists
 	dir := filepath.Dir(fullPath)
 	require.NoError(tfs.t, os.MkdirAll(dir, 0755), "Failed to create directory: %s", dir)
-	
+
 	// Write file
 	require.NoError(tfs.t, os.WriteFile(fullPath, []byte(content), 0644), "Failed to write file: %s", fullPath)
-	
+
 	return fullPath
 }
 
@@ -163,18 +163,21 @@ func (tfs *TestFileSystem) CreateFile(relativePath, content string) string {
 func (tfs *TestFileSystem) CreateDir(relativePath string) string {
 	fullPath := filepath.Join(tfs.baseDir, relativePath)
 	require.NoError(tfs.t, os.MkdirAll(fullPath, 0755), "Failed to create directory: %s", fullPath)
+
 	return fullPath
 }
 
 // WriteTemplFile creates a templ component file with the given content.
 func (tfs *TestFileSystem) WriteTemplFile(name, content string) string {
-	filename := fmt.Sprintf("%s.templ", name)
+	filename := name + ".templ"
+
 	return tfs.CreateFile(filename, content)
 }
 
 // WriteGoFile creates a Go file with the given content.
 func (tfs *TestFileSystem) WriteGoFile(name, content string) string {
-	filename := fmt.Sprintf("%s.go", name)
+	filename := name + ".go"
+
 	return tfs.CreateFile(filename, content)
 }
 
@@ -214,7 +217,7 @@ func GenerateTestComponent(name, pkg string, params []TestParameter) TestCompone
 	for _, p := range params {
 		paramStrs = append(paramStrs, fmt.Sprintf("%s %s", p.Name, p.Type))
 	}
-	
+
 	content := fmt.Sprintf(`package %s
 
 templ %s(%s) {
@@ -227,7 +230,7 @@ templ %s(%s) {
 	return TestComponent{
 		Name:       name,
 		Package:    pkg,
-		FilePath:   fmt.Sprintf("%s.templ", strings.ToLower(name)),
+		FilePath:   strings.ToLower(name) + ".templ",
 		Function:   name,
 		Parameters: params,
 		Content:    content,
@@ -245,9 +248,9 @@ type TestServer struct {
 func NewTestServer(t *testing.T) *TestServer {
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	require.NoError(t, err, "Failed to create test server listener")
-	
+
 	addr := listener.Addr().(*net.TCPAddr)
-	
+
 	return &TestServer{
 		listener: listener,
 		port:     addr.Port,
@@ -290,10 +293,10 @@ type CaptureOutput struct {
 func NewCaptureOutput(t *testing.T) *CaptureOutput {
 	stdoutR, stdoutW, err := os.Pipe()
 	require.NoError(t, err, "Failed to create stdout pipe")
-	
+
 	stderrR, stderrW, err := os.Pipe()
 	require.NoError(t, err, "Failed to create stderr pipe")
-	
+
 	return &CaptureOutput{
 		origStdout: os.Stdout,
 		origStderr: os.Stderr,
@@ -309,7 +312,7 @@ func NewCaptureOutput(t *testing.T) *CaptureOutput {
 func (co *CaptureOutput) Start() {
 	os.Stdout = co.stdoutW
 	os.Stderr = co.stderrW
-	
+
 	// Also redirect log output
 	log.SetOutput(co.stderrW)
 }
@@ -320,7 +323,7 @@ func (co *CaptureOutput) Stop() (stdout, stderr string) {
 	os.Stdout = co.origStdout
 	os.Stderr = co.origStderr
 	log.SetOutput(co.origStderr)
-	
+
 	// Close writers
 	if err := co.stdoutW.Close(); err != nil {
 		co.t.Logf("Warning: failed to close stdout writer: %v", err)
@@ -328,21 +331,21 @@ func (co *CaptureOutput) Stop() (stdout, stderr string) {
 	if err := co.stderrW.Close(); err != nil {
 		co.t.Logf("Warning: failed to close stderr writer: %v", err)
 	}
-	
+
 	// Read captured output
 	stdoutBytes, err := io.ReadAll(co.stdoutR)
 	require.NoError(co.t, err, "Failed to read captured stdout")
-	
+
 	stderrBytes, err := io.ReadAll(co.stderrR)
 	require.NoError(co.t, err, "Failed to read captured stderr")
-	
+
 	if err := co.stdoutR.Close(); err != nil {
 		co.t.Logf("Warning: failed to close stdout reader: %v", err)
 	}
 	if err := co.stderrR.Close(); err != nil {
 		co.t.Logf("Warning: failed to close stderr reader: %v", err)
 	}
-	
+
 	return string(stdoutBytes), string(stderrBytes)
 }
 
@@ -379,12 +382,12 @@ func GetCaller() (file string, line int, function string) {
 	if !ok {
 		return "unknown", 0, "unknown"
 	}
-	
+
 	fn := runtime.FuncForPC(pc)
 	if fn != nil {
 		function = fn.Name()
 	}
-	
+
 	return filepath.Base(file), line, function
 }
 
@@ -393,16 +396,16 @@ func AssertEventually(t *testing.T, condition func() bool, timeout time.Duration
 	start := time.Now()
 	ticker := time.NewTicker(10 * time.Millisecond)
 	defer ticker.Stop()
-	
+
 	for {
 		if condition() {
 			return
 		}
-		
+
 		if time.Since(start) >= timeout {
 			t.Fatalf("Condition never became true within %v: %s", timeout, message)
 		}
-		
+
 		<-ticker.C
 	}
 }
@@ -412,16 +415,16 @@ func AssertNever(t *testing.T, condition func() bool, timeout time.Duration, mes
 	start := time.Now()
 	ticker := time.NewTicker(10 * time.Millisecond)
 	defer ticker.Stop()
-	
+
 	for {
 		if condition() {
 			t.Fatalf("Condition became true when it should never have: %s", message)
 		}
-		
+
 		if time.Since(start) >= timeout {
 			return // Success - condition never became true
 		}
-		
+
 		<-ticker.C
 	}
 }

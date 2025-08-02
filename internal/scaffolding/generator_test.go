@@ -553,7 +553,7 @@ func BenchmarkComponentGeneration(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		// Use unique names to avoid file conflicts
 		opts.Name = fmt.Sprintf("BenchmarkComponent%d", i)
 		err := generator.Generate(opts)
@@ -576,7 +576,7 @@ func BenchmarkTemplateExecution(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		filename := fmt.Sprintf("/tmp/bench_%d.templ", i)
 		err := generator.generateFile(filename, templateContent, ctx)
 		if err != nil {

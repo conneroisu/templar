@@ -100,7 +100,7 @@ func (tm *FileTemplateManager) SaveTemplate(template *MockDataTemplate) error {
 
 	// Save to file
 	filename := filepath.Join(tm.baseDir, template.Name+".yml")
-	if err := os.WriteFile(filename, data, 0644); err != nil {
+	if err := os.WriteFile(filename, data, 0600); err != nil {
 		return fmt.Errorf("failed to write template file: %w", err)
 	}
 

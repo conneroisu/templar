@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// TestOptimizer provides intelligent test execution optimization
+// TestOptimizer provides intelligent test execution optimization.
 type TestOptimizer struct {
 	maxWorkers    int
 	testTimeout   time.Duration
@@ -20,26 +20,26 @@ type TestOptimizer struct {
 	mu            sync.RWMutex
 }
 
-// OptimizerConfig configures the test optimizer
+// OptimizerConfig configures the test optimizer.
 type OptimizerConfig struct {
 	MaxWorkers   int
 	TestTimeout  time.Duration
 	CacheEnabled bool
 }
 
-// TestMetrics tracks test execution metrics
+// TestMetrics tracks test execution metrics.
 type TestMetrics struct {
-	StartTime     time.Time
-	EndTime       time.Time
-	Duration      time.Duration
-	MemoryUsage   uint64
+	StartTime      time.Time
+	EndTime        time.Time
+	Duration       time.Duration
+	MemoryUsage    uint64
 	GoroutineCount int
-	CacheHit      bool
-	TestName      string
-	PackageName   string
+	CacheHit       bool
+	TestName       string
+	PackageName    string
 }
 
-// NewTestOptimizer creates a new test optimizer with optimal settings
+// NewTestOptimizer creates a new test optimizer with optimal settings.
 func NewTestOptimizer(config OptimizerConfig) *TestOptimizer {
 	maxWorkers := config.MaxWorkers
 	if maxWorkers <= 0 {
@@ -62,7 +62,7 @@ func NewTestOptimizer(config OptimizerConfig) *TestOptimizer {
 	}
 }
 
-// OptimizeTest applies optimizations to test execution
+// OptimizeTest applies optimizations to test execution.
 func (to *TestOptimizer) OptimizeTest(t *testing.T, testFunc func(*testing.T)) {
 	// Enable parallel execution for suitable tests
 	if to.canRunInParallel(t.Name()) {
@@ -102,7 +102,7 @@ func (to *TestOptimizer) OptimizeTest(t *testing.T, testFunc func(*testing.T)) {
 	}
 }
 
-// OptimizeParallelTests runs a group of tests with optimal parallelization
+// OptimizeParallelTests runs a group of tests with optimal parallelization.
 func (to *TestOptimizer) OptimizeParallelTests(t *testing.T, tests map[string]func(*testing.T)) {
 	workerChan := make(chan struct{}, to.maxWorkers)
 	var wg sync.WaitGroup
@@ -111,7 +111,7 @@ func (to *TestOptimizer) OptimizeParallelTests(t *testing.T, tests map[string]fu
 		wg.Add(1)
 		go func(testName string, fn func(*testing.T)) {
 			defer wg.Done()
-			
+
 			// Acquire worker slot
 			workerChan <- struct{}{}
 			defer func() { <-workerChan }()
@@ -126,7 +126,7 @@ func (to *TestOptimizer) OptimizeParallelTests(t *testing.T, tests map[string]fu
 	wg.Wait()
 }
 
-// canRunInParallel determines if a test can run in parallel safely
+// canRunInParallel determines if a test can run in parallel safely.
 func (to *TestOptimizer) canRunInParallel(testName string) bool {
 	to.mu.RLock()
 	defer to.mu.RUnlock()
@@ -138,7 +138,7 @@ func (to *TestOptimizer) canRunInParallel(testName string) bool {
 
 	// Apply heuristics to determine parallelization safety
 	canParallel := to.analyzeTestParallelSafety(testName)
-	
+
 	to.mu.Lock()
 	to.parallelTests[testName] = canParallel
 	to.mu.Unlock()
@@ -146,14 +146,14 @@ func (to *TestOptimizer) canRunInParallel(testName string) bool {
 	return canParallel
 }
 
-// analyzeTestParallelSafety uses heuristics to determine if test is parallel-safe
+// analyzeTestParallelSafety uses heuristics to determine if test is parallel-safe.
 func (to *TestOptimizer) analyzeTestParallelSafety(testName string) bool {
 	// Tests that typically shouldn't run in parallel
 	unsafePatterns := []string{
 		"Integration",
 		"E2E",
 		"Server",
-		"Database", 
+		"Database",
 		"FileSystem",
 		"Port",
 		"Network",
@@ -188,7 +188,7 @@ func (to *TestOptimizer) analyzeTestParallelSafety(testName string) bool {
 	return true
 }
 
-// startMetrics begins tracking test metrics
+// startMetrics begins tracking test metrics.
 func (to *TestOptimizer) startMetrics(testName string) *TestMetrics {
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
@@ -201,14 +201,14 @@ func (to *TestOptimizer) startMetrics(testName string) *TestMetrics {
 	}
 }
 
-// finishMetrics completes test metrics tracking
+// finishMetrics completes test metrics tracking.
 func (to *TestOptimizer) finishMetrics(metrics *TestMetrics) {
 	metrics.EndTime = time.Now()
 	metrics.Duration = metrics.EndTime.Sub(metrics.StartTime)
 
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
-	
+
 	// Calculate memory delta
 	if memStats.Alloc > metrics.MemoryUsage {
 		metrics.MemoryUsage = memStats.Alloc - metrics.MemoryUsage
@@ -223,7 +223,7 @@ func (to *TestOptimizer) finishMetrics(metrics *TestMetrics) {
 	}
 }
 
-// OptimizedTestContext provides an optimized context for test execution
+// OptimizedTestContext provides an optimized context for test execution.
 type OptimizedTestContext struct {
 	*testing.T
 	context.Context
@@ -232,24 +232,24 @@ type OptimizedTestContext struct {
 	metrics *TestMetrics
 }
 
-// TempDir returns the temporary directory for the test
+// TempDir returns the temporary directory for the test.
 func (otc *OptimizedTestContext) TempDir() string {
 	return otc.tempDir
 }
 
-// AddCleanup adds a cleanup function to be called after test completion
+// AddCleanup adds a cleanup function to be called after test completion.
 func (otc *OptimizedTestContext) AddCleanup(cleanup func()) {
 	otc.cleanup = append(otc.cleanup, cleanup)
 }
 
-// Cleanup runs all registered cleanup functions
+// Cleanup runs all registered cleanup functions.
 func (otc *OptimizedTestContext) Cleanup() {
 	for i := len(otc.cleanup) - 1; i >= 0; i-- {
 		otc.cleanup[i]()
 	}
 }
 
-// SmartTestRunner provides intelligent test selection and execution
+// SmartTestRunner provides intelligent test selection and execution.
 type SmartTestRunner struct {
 	optimizer     *TestOptimizer
 	changedFiles  []string
@@ -257,7 +257,7 @@ type SmartTestRunner struct {
 	affectedTests map[string]bool
 }
 
-// NewSmartTestRunner creates a new smart test runner
+// NewSmartTestRunner creates a new smart test runner.
 func NewSmartTestRunner() *SmartTestRunner {
 	return &SmartTestRunner{
 		optimizer:     NewTestOptimizer(OptimizerConfig{CacheEnabled: true}),
@@ -266,7 +266,7 @@ func NewSmartTestRunner() *SmartTestRunner {
 	}
 }
 
-// ShouldRunTest determines if a test should be executed based on file changes
+// ShouldRunTest determines if a test should be executed based on file changes.
 func (str *SmartTestRunner) ShouldRunTest(testName, packagePath string) bool {
 	// Always run if no change tracking
 	if len(str.changedFiles) == 0 {
@@ -290,7 +290,7 @@ func (str *SmartTestRunner) ShouldRunTest(testName, packagePath string) bool {
 	return false
 }
 
-// fileHasChanged checks if a file has been modified recently
+// fileHasChanged checks if a file has been modified recently.
 func (str *SmartTestRunner) fileHasChanged(filePath string) bool {
 	info, err := os.Stat(filePath)
 	if err != nil {
@@ -304,28 +304,28 @@ func (str *SmartTestRunner) fileHasChanged(filePath string) bool {
 	return true // Run test if no cache entry exists
 }
 
-// UpdateFileCache updates the file modification cache
+// UpdateFileCache updates the file modification cache.
 func (str *SmartTestRunner) UpdateFileCache(filePath string) {
 	str.testCache[filePath] = time.Now()
 }
 
-// TestProfiler provides performance profiling for tests
+// TestProfiler provides performance profiling for tests.
 type TestProfiler struct {
 	profiles map[string]*TestMetrics
 	mu       sync.RWMutex
 }
 
-// NewTestProfiler creates a new test profiler
+// NewTestProfiler creates a new test profiler.
 func NewTestProfiler() *TestProfiler {
 	return &TestProfiler{
 		profiles: make(map[string]*TestMetrics),
 	}
 }
 
-// ProfileTest runs a test with performance profiling
+// ProfileTest runs a test with performance profiling.
 func (tp *TestProfiler) ProfileTest(t *testing.T, testFunc func(*testing.T)) {
 	startTime := time.Now()
-	
+
 	var startMem, endMem runtime.MemStats
 	runtime.GC()
 	runtime.ReadMemStats(&startMem)
@@ -362,15 +362,16 @@ func (tp *TestProfiler) ProfileTest(t *testing.T, testFunc func(*testing.T)) {
 	}
 }
 
-// GetProfile returns the performance profile for a test
+// GetProfile returns the performance profile for a test.
 func (tp *TestProfiler) GetProfile(testName string) (*TestMetrics, bool) {
 	tp.mu.RLock()
 	defer tp.mu.RUnlock()
 	profile, exists := tp.profiles[testName]
+
 	return profile, exists
 }
 
-// GetSlowTests returns tests that exceed the duration threshold
+// GetSlowTests returns tests that exceed the duration threshold.
 func (tp *TestProfiler) GetSlowTests(threshold time.Duration) []*TestMetrics {
 	tp.mu.RLock()
 	defer tp.mu.RUnlock()
@@ -381,10 +382,11 @@ func (tp *TestProfiler) GetSlowTests(threshold time.Duration) []*TestMetrics {
 			slowTests = append(slowTests, profile)
 		}
 	}
+
 	return slowTests
 }
 
-// GetMemoryIntensiveTests returns tests that exceed the memory threshold
+// GetMemoryIntensiveTests returns tests that exceed the memory threshold.
 func (tp *TestProfiler) GetMemoryIntensiveTests(threshold uint64) []*TestMetrics {
 	tp.mu.RLock()
 	defer tp.mu.RUnlock()
@@ -395,16 +397,17 @@ func (tp *TestProfiler) GetMemoryIntensiveTests(threshold uint64) []*TestMetrics
 			memoryIntensiveTests = append(memoryIntensiveTests, profile)
 		}
 	}
+
 	return memoryIntensiveTests
 }
 
 // Helper functions
 
 func containsIgnoreCase(s, substr string) bool {
-	return len(s) >= len(substr) && 
-		(s == substr || 
-		 (len(s) > len(substr) && 
-		  (s[:len(substr)] == substr || containsIgnoreCaseRec(s[1:], substr))))
+	return len(s) >= len(substr) &&
+		(s == substr ||
+			(len(s) > len(substr) &&
+				(s[:len(substr)] == substr || containsIgnoreCaseRec(s[1:], substr))))
 }
 
 func containsIgnoreCaseRec(s, substr string) bool {
@@ -414,27 +417,28 @@ func containsIgnoreCaseRec(s, substr string) bool {
 	if s[:len(substr)] == substr {
 		return true
 	}
+
 	return containsIgnoreCaseRec(s[1:], substr)
 }
 
-// Global optimizer instance for easy access
+// Global optimizer instance for easy access.
 var globalOptimizer = NewTestOptimizer(OptimizerConfig{
 	CacheEnabled: true,
 })
 
 var globalProfiler = NewTestProfiler()
 
-// OptimizedTest is a helper function for optimized test execution
+// OptimizedTest is a helper function for optimized test execution.
 func OptimizedTest(t *testing.T, testFunc func(*testing.T)) {
 	globalOptimizer.OptimizeTest(t, testFunc)
 }
 
-// ProfiledTest is a helper function for profiled test execution
+// ProfiledTest is a helper function for profiled test execution.
 func ProfiledTest(t *testing.T, testFunc func(*testing.T)) {
 	globalProfiler.ProfileTest(t, testFunc)
 }
 
-// OptimizedAndProfiledTest combines optimization and profiling
+// OptimizedAndProfiledTest combines optimization and profiling.
 func OptimizedAndProfiledTest(t *testing.T, testFunc func(*testing.T)) {
 	globalOptimizer.OptimizeTest(t, func(innerT *testing.T) {
 		globalProfiler.ProfileTest(innerT, testFunc)

@@ -174,6 +174,17 @@ func NewInternalError(code, message string, cause error) *TemplarError {
 	}
 }
 
+// NewNetworkError creates a network error.
+func NewNetworkError(code, message string, cause error) *TemplarError {
+	return &TemplarError{
+		Type:        ErrorTypeNetwork,
+		Code:        code,
+		Message:     message,
+		Cause:       cause,
+		Recoverable: true, // Network errors are often temporary
+	}
+}
+
 // Error recovery and handling utilities
 
 // IsRecoverable checks if an error is recoverable.

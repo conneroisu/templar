@@ -206,7 +206,7 @@ func TestServerComponentIntegration(t *testing.T) {
 
 		// Test CORS headers
 		t.Run("cors_headers", func(t *testing.T) {
-			req, err := http.NewRequest("GET", testServer.URL+"/api/components", nil)
+			req, err := http.NewRequest(http.MethodGet, testServer.URL+"/api/components", nil)
 			require.NoError(t, err)
 			req.Header.Set("Origin", "http://localhost:3000")
 
@@ -223,7 +223,7 @@ func TestServerComponentIntegration(t *testing.T) {
 
 		// Test preflight requests
 		t.Run("preflight_requests", func(t *testing.T) {
-			req, err := http.NewRequest("OPTIONS", testServer.URL+"/api/components", nil)
+			req, err := http.NewRequest(http.MethodOptions, testServer.URL+"/api/components", nil)
 			require.NoError(t, err)
 			req.Header.Set("Origin", "http://localhost:3000")
 
@@ -413,7 +413,7 @@ func TestRateLimiting(t *testing.T) {
 		const numRequests = 20
 		var statusCodes []int
 
-		for i := 0; i < numRequests; i++ {
+		for range numRequests {
 			resp, err := http.Get(testServer.URL + "/api/components")
 			require.NoError(t, err)
 			statusCodes = append(statusCodes, resp.StatusCode)
@@ -455,11 +455,12 @@ func TestServerPerformance(t *testing.T) {
 
 		timer := testutils.NewTestTimer(t)
 
-		for i := 0; i < numConcurrent; i++ {
+		for i := range numConcurrent {
 			go func(reqID int) {
 				resp, err := http.Get(testServer.URL + "/health")
 				if err != nil {
 					done <- fmt.Errorf("request %d failed: %w", reqID, err)
+
 					return
 				}
 				if err := resp.Body.Close(); err != nil {
@@ -468,6 +469,7 @@ func TestServerPerformance(t *testing.T) {
 
 				if resp.StatusCode != http.StatusOK {
 					done <- fmt.Errorf("request %d returned %d", reqID, resp.StatusCode)
+
 					return
 				}
 
@@ -476,7 +478,7 @@ func TestServerPerformance(t *testing.T) {
 		}
 
 		// Wait for all requests
-		for i := 0; i < numConcurrent; i++ {
+		for range numConcurrent {
 			select {
 			case err := <-done:
 				if err != nil {
@@ -492,7 +494,7 @@ func TestServerPerformance(t *testing.T) {
 	})
 }
 
-// Mock server creation for testing
+// Mock server creation for testing.
 func createMockServer(t *testing.T, cfg *config.Config) http.Handler {
 	// This would create a real server instance in the actual implementation
 	// For now, return a mock handler
@@ -528,6 +530,7 @@ func createMockServer(t *testing.T, cfg *config.Config) http.Handler {
 
 		if componentName == "NonExistentComponent" {
 			http.NotFound(w, r)
+
 			return
 		}
 
@@ -586,7 +589,7 @@ http_requests_total{method="GET",handler="/api/components"} 42
 	return mux
 }
 
-// Response types for testing
+// Response types for testing.
 type HealthResponse struct {
 	Status    string `json:"status"`
 	Timestamp string `json:"timestamp"`

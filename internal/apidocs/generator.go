@@ -426,7 +426,7 @@ document.addEventListener('DOMContentLoaded', function() {
 `
 
 	jsPath := filepath.Join(g.outputDir, "custom.js")
-	if err := os.WriteFile(jsPath, []byte(jsContent), 0644); err != nil {
+	if err := os.WriteFile(jsPath, []byte(jsContent), 0600); err != nil {
 		return fmt.Errorf("failed to write custom JavaScript: %w", err)
 	}
 

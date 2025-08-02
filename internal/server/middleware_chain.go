@@ -145,7 +145,6 @@ func (mc *MiddlewareChain) buildDefaultStack() {
 	// 5. Security middleware
 	securityConfig := SecurityConfigFromAppConfig(mc.config)
 	mc.AddMiddleware(SecurityMiddleware(securityConfig))
-
 }
 
 // AddMiddleware adds a middleware to the chain.

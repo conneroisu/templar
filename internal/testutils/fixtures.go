@@ -3,6 +3,7 @@
 package testutils
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -262,29 +263,29 @@ type MockData struct {
 
 // User represents a mock user for testing.
 type User struct {
-	ID       int    `json:"id"`
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Active   bool   `json:"active"`
-	Role     string `json:"role"`
-	Created  time.Time `json:"created"`
+	ID      int       `json:"id"`
+	Name    string    `json:"name"`
+	Email   string    `json:"email"`
+	Active  bool      `json:"active"`
+	Role    string    `json:"role"`
+	Created time.Time `json:"created"`
 }
 
 // Product represents a mock product for testing.
 type Product struct {
-	ID          int     `json:"id"`
-	Name        string  `json:"name"`
-	Description string  `json:"description"`
-	Price       float64 `json:"price"`
-	Category    string  `json:"category"`
-	InStock     bool    `json:"in_stock"`
+	ID          int      `json:"id"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Price       float64  `json:"price"`
+	Category    string   `json:"category"`
+	InStock     bool     `json:"in_stock"`
 	Tags        []string `json:"tags"`
 }
 
 // GenerateMockData creates comprehensive mock data for testing.
 func (tf *TestFixtures) GenerateMockData() *MockData {
 	now := time.Now()
-	
+
 	return &MockData{
 		Strings: []string{
 			"",
@@ -293,8 +294,8 @@ func (tf *TestFixtures) GenerateMockData() *MockData {
 			"Unicode: 🚀 ñoño αβγ",
 			"Very long text that spans multiple lines and contains various characters including numbers 123, symbols @#$%, and unicode characters ñoño αβγ δεζ",
 			"<script>alert('xss')</script>", // XSS attempt
-			"'; DROP TABLE users; --",        // SQL injection attempt
-			"../../../etc/passwd",            // Path traversal attempt
+			"'; DROP TABLE users; --",       // SQL injection attempt
+			"../../../etc/passwd",           // Path traversal attempt
 		},
 		Numbers: []int{
 			0, 1, -1, 42, 100, 1000, 999999, -999999,
@@ -314,17 +315,17 @@ func (tf *TestFixtures) GenerateMockData() *MockData {
 		},
 		Products: []Product{
 			{
-				ID: 1, Name: "Laptop", Description: "High-performance laptop", 
+				ID: 1, Name: "Laptop", Description: "High-performance laptop",
 				Price: 999.99, Category: "Electronics", InStock: true,
 				Tags: []string{"computer", "portable", "work"},
 			},
 			{
-				ID: 2, Name: "Coffee Mug", Description: "Ceramic coffee mug", 
+				ID: 2, Name: "Coffee Mug", Description: "Ceramic coffee mug",
 				Price: 12.99, Category: "Kitchen", InStock: true,
 				Tags: []string{"drink", "ceramic", "kitchen"},
 			},
 			{
-				ID: 3, Name: "Book", Description: "Programming guide", 
+				ID: 3, Name: "Book", Description: "Programming guide",
 				Price: 29.99, Category: "Books", InStock: false,
 				Tags: []string{"education", "programming", "guide"},
 			},
@@ -344,22 +345,22 @@ func (tf *TestFixtures) GenerateMockData() *MockData {
 func (tf *TestFixtures) ErrorScenarios() map[string]func() error {
 	return map[string]func() error{
 		"file_not_found": func() error {
-			return fmt.Errorf("file not found: /nonexistent/path")
+			return errors.New("file not found: /nonexistent/path")
 		},
 		"permission_denied": func() error {
-			return fmt.Errorf("permission denied: cannot read file")
+			return errors.New("permission denied: cannot read file")
 		},
 		"network_timeout": func() error {
-			return fmt.Errorf("network timeout: connection timed out after 30s")
+			return errors.New("network timeout: connection timed out after 30s")
 		},
 		"invalid_syntax": func() error {
-			return fmt.Errorf("syntax error at line 42: unexpected token '}'")
+			return errors.New("syntax error at line 42: unexpected token '}'")
 		},
 		"out_of_memory": func() error {
-			return fmt.Errorf("out of memory: allocation failed")
+			return errors.New("out of memory: allocation failed")
 		},
 		"context_cancelled": func() error {
-			return fmt.Errorf("context cancelled: operation interrupted")
+			return errors.New("context cancelled: operation interrupted")
 		},
 	}
 }
@@ -416,7 +417,7 @@ func (tf *TestFixtures) PerformanceTestData() map[string][]string {
 	medium := make([]string, 100)
 	large := make([]string, 1000)
 	xlarge := make([]string, 10000)
-	
+
 	// Fill with varied content
 	for i := range small {
 		small[i] = fmt.Sprintf("small_item_%d", i)
@@ -430,7 +431,7 @@ func (tf *TestFixtures) PerformanceTestData() map[string][]string {
 	for i := range xlarge {
 		xlarge[i] = fmt.Sprintf("xlarge_item_%d_%s", i, strings.Repeat("x", 100))
 	}
-	
+
 	return map[string][]string{
 		"small":  small,
 		"medium": medium,
@@ -443,7 +444,7 @@ func (tf *TestFixtures) PerformanceTestData() map[string][]string {
 func (tf *TestFixtures) ComponentRegistry() map[string]*types.ComponentInfo {
 	components := tf.SampleComponents()
 	registry := make(map[string]*types.ComponentInfo)
-	
+
 	for name, comp := range components {
 		registry[name] = &types.ComponentInfo{
 			Name:     comp.Name,
@@ -452,7 +453,7 @@ func (tf *TestFixtures) ComponentRegistry() map[string]*types.ComponentInfo {
 			// Add other fields as needed
 		}
 	}
-	
+
 	return registry
 }
 

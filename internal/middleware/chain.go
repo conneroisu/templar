@@ -38,11 +38,11 @@ import (
 // - middleware execution order is deterministic
 // - Apply() is safe for concurrent access (read-only operation).
 type MiddlewareChain struct {
-	config          *config.Config             // Application configuration for middleware behavior
-	rateLimiter     *RateLimiter               // Global rate limiter (optional)
-	monitor         Monitor // Monitoring system (optional)
-	originValidator OriginValidator            // Origin validation for CORS
-	middlewares     []Middleware               // Ordered list of middleware functions
+	config          *config.Config  // Application configuration for middleware behavior
+	rateLimiter     *RateLimiter    // Global rate limiter (optional)
+	monitor         Monitor         // Monitoring system (optional)
+	originValidator OriginValidator // Origin validation for CORS
+	middlewares     []Middleware    // Ordered list of middleware functions
 }
 
 // Middleware represents a single middleware function.
@@ -150,7 +150,6 @@ func (mc *MiddlewareChain) buildDefaultStack() {
 	// 5. Security middleware
 	securityConfig := SecurityConfigFromAppConfig(mc.config)
 	mc.AddMiddleware(SecurityMiddleware(securityConfig))
-
 }
 
 // AddMiddleware adds a middleware to the chain.
@@ -402,7 +401,6 @@ func NewCustomMiddlewareChain(
 		securityConfig := SecurityConfigFromAppConfig(chain.config)
 		chain.AddMiddleware(SecurityMiddleware(securityConfig))
 	}
-
 
 	// Add custom middlewares
 	for _, middleware := range config.CustomMiddlewares {

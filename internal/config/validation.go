@@ -111,7 +111,6 @@ func (cv *ConfigValidator) validateServer(config *ServerConfig) {
 			),
 		)
 	}
-
 }
 
 // validateBuild validates build configuration.
@@ -392,7 +391,6 @@ func (cv *ConfigValidator) validatePath(path string) error {
 
 	return nil
 }
-
 
 // Utility functions
 

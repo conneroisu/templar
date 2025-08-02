@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Performance regression test constants
+// Performance regression test constants.
 const (
 	MinScannerOpsPerSec = 1000.0
 	MaxScanLatency      = 100 * time.Millisecond
@@ -56,7 +56,7 @@ func TestPerformanceRegression(t *testing.T) {
 		runtime.ReadMemStats(&memBefore)
 
 		// Simulate some memory-intensive operations
-		for i := 0; i < 100; i++ {
+		for range 100 {
 			_ = make([]byte, 1024) // Small allocations
 		}
 
@@ -83,7 +83,7 @@ func TestPerformanceBenchmarkBaseline(t *testing.T) {
 		// Basic CPU performance baseline
 		start := time.Now()
 		sum := 0
-		for i := 0; i < 1000000; i++ {
+		for i := range 1000000 {
 			sum += i
 		}
 		cpuBaseline := time.Since(start)
