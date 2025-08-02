@@ -628,7 +628,7 @@ func hasMatchingTags(templateTags, filterTags []string) bool {
 func generateMockDataFilename(componentName, format string) string {
 	baseFilename := strings.ToLower(componentName)
 	switch format {
-	case "yaml", "yml":
+	case OutputFormatYAML, OutputFormatYML:
 		return baseFilename + ".yml"
 	case "typescript", "ts":
 		return baseFilename + ".mock.ts"

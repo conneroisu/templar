@@ -169,7 +169,7 @@ func runDocs(cmd *cobra.Command, args []string) error {
 		switch format {
 		case "json":
 			filename = "openapi.json"
-		case "yaml":
+		case OutputFormatYAML:
 			filename = "openapi.yaml"
 		case "html":
 			filename = "index.html"

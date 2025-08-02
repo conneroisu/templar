@@ -20,6 +20,12 @@ const (
 	ErrorTypeInternal   ErrorType = "internal"
 )
 
+// Error context type constants.
+const (
+	ErrorContextComponentNotFound = "component_not_found"
+	ErrorContextBuildFailed       = "build_failed"
+)
+
 // TemplarError is a structured error type with context.
 type TemplarError struct {
 	Type        ErrorType

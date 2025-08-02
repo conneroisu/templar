@@ -285,9 +285,9 @@ func runInteractiveList() error {
 	var format string
 	switch formatChoice {
 	case "2":
-		format = "json"
+		format = OutputFormatJSON
 	case "3":
-		format = "yaml"
+		format = OutputFormatYAML
 	default:
 		format = OutputFormatTable
 	}

@@ -380,9 +380,9 @@ func (pc *ProjectContext) GetRecentErrorPatterns() map[string]int {
 // GetContextualSuggestions provides intelligent suggestions based on project analysis.
 func (pc *ProjectContext) GetContextualSuggestions(errorType string, errorContext map[string]interface{}) []ErrorSuggestion {
 	switch errorType {
-	case "component_not_found":
+	case ErrorContextComponentNotFound:
 		return pc.getComponentNotFoundSuggestions(errorContext)
-	case "build_failed":
+	case ErrorContextBuildFailed:
 		return pc.getBuildFailedSuggestions(errorContext)
 	case "config_error":
 		return pc.getConfigErrorSuggestions(errorContext)

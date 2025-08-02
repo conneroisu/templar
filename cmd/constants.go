@@ -93,6 +93,7 @@ const (
 	StatusUnknown     = "unknown"
 	OutputFormatJSON  = "json"
 	OutputFormatYAML  = "yaml"
+	OutputFormatYML   = "yml"
 	OutputFormatTable = "table"
 )
 
