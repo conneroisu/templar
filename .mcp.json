@@ -1,31 +1,22 @@
 {
   "mcpServers": {
-    "playwright": {
-      "type": "stdio",
-      "command": "nix",
-      "args": [
-        "run",
-        "github:conneroisu/nix-playwright-mcp"
-      ],
-      "env": {}
-    },
-    "context7": {
-      "type": "stdio",
+    "claude-flow": {
       "command": "npx",
       "args": [
-        "-y",
-        "@upstash/context7-mcp"
+        "claude-flow@alpha",
+        "mcp",
+        "start"
       ],
-      "env": {}
+      "type": "stdio"
     },
-    "shadcn-ui": {
-      "type": "stdio",
-      "command": "pnpx",
+    "ruv-swarm": {
+      "command": "npx",
       "args": [
-        "shadcn@latest",
-        "registry:mcp"
+        "ruv-swarm@latest",
+        "mcp",
+        "start"
       ],
-      "env": {}
+      "type": "stdio"
     }
   }
 }
